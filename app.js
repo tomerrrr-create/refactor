@@ -78,6 +78,21 @@
 paletteName_healing: { en: "Healing", he: "ריפוי", ru: "Исцеление", nl: "Genezing" },
 paletteName_focus: { en: "Focus", he: "ריכוז", ru: "Фокус", nl: "Focus" },
 
+
+help_category_simulations: { en: "Simulations & Automations", he: "סימולציות ואוטומציה", ru: "Симуляции и автоматизация", nl: "Simulaties & Automatisering" },
+
+        help_toggleSimMode: { en: 'Simulation Mode: Toggles a UI layout focused on automation tools. Long-press prepares the board for simulation (max size, dark background, light brush).', he: 'מצב סימולציה: משנה את פריסת הכפתורים לממשק ייעודי לסימולציות. לחיצה ארוכה מכינה את הלוח לסימולציה (גודל מקסימלי, רקע כהה, מכחול בהיר).', ru: 'Режим симуляции: переключает раскладку интерфейса на инструменты автоматизации. Долгое нажатие подготавливает доску для симуляции (макс. размер, тёмный фон, светлая кисть).', nl: 'Simulatiemodus: Schakelt een UI-layout in die gericht is op automatiseringstools. Lang indrukken bereidt het bord voor op simulatie (maximale grootte, donkere achtergrond, lichte kwast).' },
+        
+        help_playPauseLife: { en: 'Play/Pause Life: (In Sim Mode) Runs the "Game of Life" as a continuous animation, generation after generation. Press again to pause.', he: 'הפעלה/השהיה: (במצב סימולציה) מריץ את "משחק החיים" כאנימציה רציפה, דור אחר דור. לחיצה נוספת משהה את הסימולציה.', ru: 'Запуск/Пауза Жизни: (в режиме симуляции) запускает "Игру в жизнь" как непрерывную анимацию, поколение за поколением. Нажмите ещё раз для паузы.', nl: 'Leven Starten/Pauzeren: (In Sim Modus) Voert het "Game of Life" uit als een continue animatie, generatie na generatie. Druk nogmaals om te pauzeren.' },
+
+        // --- Updated Keys ---
+        help_gameOfLife: { en: 'Run one generation of Life. "Dead" cells are defined by rules. New cells are born from their parents. Long-press to configure the rules.', he: 'הרצת דור אחד של "משחק החיים". תאים חדשים נולדים מהוריהם על פי חוקים. לחיצה ארוכה פותחת חלון להגדרת חוקי המשחק.', ru: 'Запускает одно поколение "Игры в жизнь". Новые клетки рождаются от родителей согласно правилам. Долгое нажатие для настройки правил.', nl: 'Voert één generatie van Leven uit. Nieuwe cellen worden geboren uit hun ouders volgens regels. Lang indrukken om de regels te configureren.' },
+
+        help_palette: { en: 'Cycle through available color palettes. Long-press to open a gallery for direct selection.', he: 'מעבר בין פלטות צבעים. לחיצה ארוכה פותחת גלריה לבחירה ישירה של פלטה.', ru: 'Переключает доступные цветовые палитры. Долгое нажатие открывает галерею для прямого выбора.', nl: 'Bladert door beschikbare kleurpaletten. Lang indrukken opent een galerij voor directe selectie.' },
+
+
+
+
         help_invert: { en: 'Invert all colors to their opposite in the current palette.', he: 'הופך כל צבע על הלוח לצבע המשלים שלו בפלטה הנוכחית.', ru: 'Инвертирует все цвета на их противоположные в текущей палитре.', nl: 'Keert alle kleuren om naar hun tegenovergestelde in het huidige palet.' },
         help_palette: { en: 'Cycle through available color palettes.', he: 'מעבר בין פלטות צבעים.', ru: 'Переключает доступные цветовые палитры.', nl: 'Bladert door beschikbare kleurpaletten.' },
         help_random: { en: 'Fill the entire grid with random colors from the current palette.', he: 'מילוי הלוח בצבעים אקראיים מהפלטה הנוכחית.', ru: 'Заполняет всю сетку случайными цветами из текущей палитры.', nl: 'Vult het hele raster met willekeurige kleuren uit het huidige palet.' },
@@ -837,7 +852,7 @@ function getCurrentState() {
 
 
 function toggleSimMode() {
-  const duration = 600; // משך אנימציית ה-Fade
+  const duration = 500; // משך אנימציית ה-Fade
 
   // שלב 1: העלם את כל לוח הבקרה
   controlsContainer.style.opacity = '0';
@@ -854,7 +869,8 @@ function toggleSimMode() {
 
       const controlsToHide = [
           btnBrushMode, btnGap, btnResetBoard,
-          btnTutorial, btnSave, btnSpecialReset
+          btnTutorial, btnSave, btnSpecialReset,
+    btnPalette, btnInvert
       ];
 
       controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
@@ -2002,14 +2018,20 @@ function runBrightnessEvolution() {
           }, LONG_PRESS_SHOW_MS);
       }
       
-      function populateHelpModal() {
+
+
+function populateHelpModal() {
         const contentDiv = document.getElementById('helpModalContent');
         contentDiv.innerHTML = '';
         
         const categories = {
+            simulations: {
+                titleKey: 'help_category_simulations',
+                buttons: ['btnToggleSimMode', 'btnGameOfLife', 'btnBrightnessEvo', 'btnPlayPauseLife']
+            },
             inspiration: {
                 titleKey: 'help_category_inspiration',
-                buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset', 'btnDark', 'btnGameOfLife', 'btnBrightnessEvo']
+                buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset', 'btnDark']
             },
             order: {
                 titleKey: 'help_category_order',
@@ -2036,7 +2058,10 @@ function runBrightnessEvolution() {
           'btnSpecialReset': getText('help_specialReset'), 'btnResetBoard': getText('help_resetBoard'),
           'btnResizeUp': getText('help_resizeUp'), 'btnResizeDown': getText('help_resizeDown'), 'btnGap': getText('help_gap'),
           'btnSave': getText('help_save'), 'btnShowBreatheMenu': getText('help_breathe'),
-          'btnGameOfLife': getText('help_gameOfLife'), 'btnBrightnessEvo': getText('help_brightnessEvo')
+          'btnToggleSimMode': getText('help_toggleSimMode'),
+          'btnGameOfLife': getText('help_gameOfLife'), 
+          'btnBrightnessEvo': getText('help_brightnessEvo'),
+          'btnPlayPauseLife': getText('help_playPauseLife')
         };
 
         for (const categoryKey in categories) {
@@ -2057,6 +2082,14 @@ function runBrightnessEvolution() {
                 const iconWrapper = document.createElement('div');
                 iconWrapper.className = 'help-item-icon-wrapper';
                 iconWrapper.innerHTML = btn.innerHTML;
+                
+                // Special handling for Play/Pause icon state
+                if (btnId === 'btnPlayPauseLife') {
+                    const playIcon = iconWrapper.querySelector('#iconPlay');
+                    if(playIcon) playIcon.style.display = 'block';
+                    const pauseIcon = iconWrapper.querySelector('#iconPause');
+                    if(pauseIcon) pauseIcon.style.display = 'none';
+                }
 
                 const svg = iconWrapper.querySelector('svg');
                 if (svg && (btnId === 'btnBrushMode' || btnId === 'btnGap' || btnId === 'btnResizeUp' || btnId === 'btnResizeDown' || btnId === 'btnShowBreatheMenu')) {
@@ -2143,6 +2176,7 @@ function runBrightnessEvolution() {
         contentDiv.appendChild(shortcutsContainer);
         // --- END: Add Keyboard Shortcuts Section ---
       }
+
 
       function setTextContent() {
         const splashTextEl = document.getElementById('splashText');
