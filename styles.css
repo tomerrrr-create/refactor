@@ -247,6 +247,7 @@ body {
 /* Left Panel */
 .sim-mode-active #btnRedo         { grid-area: 4 / 1; }
 .sim-mode-active #btnResizeDown  { grid-area: 3 / 1; }
+/* REVERTED: Moved Color Picker back up */
 .sim-mode-active #btnColorPicker     { grid-area: 1 / 1; }
 
 
@@ -263,6 +264,7 @@ body {
 
 
 /* Right Panel */
+/* REVERTED: Moved Symmetry back up */
 .sim-mode-active #btnSymmetry        { grid-area: 1 / 7; }
 .sim-mode-active #btnRandom {
     grid-area: 1 / 7;
@@ -674,9 +676,9 @@ body {
 }
 /* --- END: MODIFIED STYLE FOR "ARMED" SIMULATION BUTTON --- */
 
-/* Color the play icon gold when a simulation is armed */
+/* MODIFIED: Color the play icon white when a simulation is armed */
 .sim-mode-active #btnPlayPauseLife:not(:disabled) #iconPlay {
-  fill: var(--gold);
+  fill: #fff;
 }
 
 
