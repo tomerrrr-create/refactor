@@ -244,25 +244,22 @@ body {
     transform: scale(1);
 }
 
-/* Left Panel (Unchanged from original Sim Mode) */
+/* Left Panel */
 .sim-mode-active #btnRedo         { grid-area: 4 / 1; }
 .sim-mode-active #btnResizeDown  { grid-area: 3 / 1; }
+.sim-mode-active #btnColorPicker     { grid-area: 1 / 1; } /* MODIFIED */
 
-/* --- START: NEW SIMULATION MODE LAYOUT (CENTRAL PANEL) --- */
 
+/* Center Panel */
 .sim-mode-active #btnPlayPauseLife   { grid-area: 1 / 4; }
 .sim-mode-active #btnGameOfLife      { grid-area: 2 / 3; }
 .sim-mode-active #btnShowBreatheMenu { grid-area: 2 / 4; }
 .sim-mode-active #btnBrightnessEvo   { grid-area: 2 / 5; }
-.sim-mode-active #btnSymmetry        { grid-area: 3 / 3; }
-.sim-mode-active #btnColorPicker     { grid-area: 3 / 5; }
-
-.sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; } /* Unchanged */
-
-/* --- END: NEW SIMULATION MODE LAYOUT (CENTRAL PANEL) --- */
+.sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; }
 
 
-/* Right Panel (Unchanged from original Sim Mode) */
+/* Right Panel */
+.sim-mode-active #btnSymmetry        { grid-area: 1 / 7; } /* MODIFIED */
 .sim-mode-active #btnRandom {
     grid-area: 1 / 7;
     display: none;
@@ -272,7 +269,6 @@ body {
     grid-area: 2 / 7;
     display: none;
 }
-
 .sim-mode-active #btnUndo   { grid-area: 4 / 7; }
 
 
@@ -666,7 +662,17 @@ body {
     box-shadow: 0 0 8px 3px var(--gold);
     border-radius: 8px; /* Match hover style */
 }
+
 /* --- END: NEW STYLE FOR "ARMED" SIMULATION BUTTON --- */
+
+
+/* Change simulation icon color to gold when active */
+#btnGameOfLife.simulation-active svg,
+#btnBrightnessEvo.simulation-active svg,
+#btnShowBreatheMenu.simulation-active svg {
+  stroke: var(--gold);
+}
+
 
 
 /* --- START: Game of Life Settings Modal Styles --- */
