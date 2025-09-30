@@ -370,6 +370,7 @@ const PALETTES = [
       const btnPlayPauseLife = document.getElementById('btnPlayPauseLife');
       const iconPlay = document.getElementById('iconPlay');
       const iconPause = document.getElementById('iconPause');
+      const btnStepForward = document.getElementById('btnStepForward');
 
       const gameOfLifeSettingsModal = document.getElementById('gameOfLifeSettingsModal');
       const golSurvivalMin = document.getElementById('golSurvivalMin');
@@ -826,9 +827,21 @@ const PALETTES = [
         iconPlay.style.display = 'block';
         iconPause.style.display = 'none';
 
+        if (armedSimulation === 'gameOfLife' || armedSimulation === 'brightnessEvo') {
+          btnStepForward.disabled = false;
+        }
+
         btnGameOfLife.disabled = false;
         btnBrightnessEvo.disabled = false;
         btnShowBreatheMenu.disabled = false;
+      }
+
+      function stepForward() {
+        if (armedSimulation === 'gameOfLife') {
+          performAction(runGameOfLifeGeneration);
+        } else if (armedSimulation === 'brightnessEvo') {
+          performAction(runBrightnessEvolution);
+        }
       }
 
       function togglePlayPauseLife() {
@@ -847,6 +860,7 @@ const PALETTES = [
                   btnGameOfLife.disabled = true;
                   btnBrightnessEvo.disabled = true;
                   btnShowBreatheMenu.disabled = true;
+                  btnStepForward.disabled = true;
                   lifeIntervalId = setInterval(() => {
                       performAction(runGameOfLifeGeneration);
                   }, 200);
@@ -859,6 +873,7 @@ const PALETTES = [
                   btnGameOfLife.disabled = true;
                   btnBrightnessEvo.disabled = true;
                   btnShowBreatheMenu.disabled = true;
+                  btnStepForward.disabled = true;
                   lifeIntervalId = setInterval(() => {
                       performAction(runBrightnessEvolution);
                   }, 200);
@@ -872,23 +887,27 @@ const PALETTES = [
       
       function armSimulation(simulationName) {
         if (isLifePlaying) return;
-
+      
         const simButtons = [btnGameOfLife, btnBrightnessEvo, btnShowBreatheMenu];
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
-
+      
         if (armedSimulation === simulationName) {
-            armedSimulation = null;
-            btnPlayPauseLife.disabled = true;
+          armedSimulation = null;
+          btnPlayPauseLife.disabled = true;
+          btnStepForward.disabled = true;
         } else {
-            armedSimulation = simulationName;
-            btnPlayPauseLife.disabled = false;
-            
-            if (simulationName === 'gameOfLife') btnGameOfLife.classList.add('simulation-active');
-            if (simulationName === 'brightnessEvo') btnBrightnessEvo.classList.add('simulation-active');
-            if (simulationName === 'breathe') btnShowBreatheMenu.classList.add('simulation-active');
-
-            if (simulationName === 'gameOfLife') performAction(runGameOfLifeGeneration);
-            if (simulationName === 'brightnessEvo') performAction(runBrightnessEvolution);
+          armedSimulation = simulationName;
+          btnPlayPauseLife.disabled = false;
+          
+          if (simulationName === 'gameOfLife' || simulationName === 'brightnessEvo') {
+            btnStepForward.disabled = false;
+          } else {
+            btnStepForward.disabled = true;
+          }
+          
+          if (simulationName === 'gameOfLife') btnGameOfLife.classList.add('simulation-active');
+          if (simulationName === 'brightnessEvo') btnBrightnessEvo.classList.add('simulation-active');
+          if (simulationName === 'breathe') btnShowBreatheMenu.classList.add('simulation-active');
         }
       }
 
@@ -897,6 +916,7 @@ const PALETTES = [
         const simButtons = [btnGameOfLife, btnBrightnessEvo, btnShowBreatheMenu];
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
         btnPlayPauseLife.disabled = true;
+        btnStepForward.disabled = true;
       }
       
       function startBreathingEffect(isGrouped = false) {
@@ -2373,6 +2393,7 @@ const PALETTES = [
         btnBrightnessEvo.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('brightnessEvo')));
         btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('breathe')));
         btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
+        btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
         // ---- END: UPDATED SIMULATION BUTTON LISTENERS ----
         
         btnModalClose.addEventListener('click', closeModal);

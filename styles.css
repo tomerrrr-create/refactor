@@ -255,6 +255,10 @@ body {
 .sim-mode-active #btnGameOfLife      { grid-area: 2 / 3; }
 .sim-mode-active #btnShowBreatheMenu { grid-area: 2 / 4; }
 .sim-mode-active #btnBrightnessEvo   { grid-area: 2 / 5; }
+.sim-mode-active #btnStepForward { 
+  display: inline-flex;
+  grid-area: 3 / 4; 
+}
 .sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; }
 
 
@@ -688,3 +692,16 @@ body {
     background-color: #e6c200 !important;
 }
 /* --- END: Game of Life Settings Modal Styles --- */
+
+
+/* --- START: New Step Forward Button Styles --- */
+#btnStepForward {
+  display: none; /* Hide by default */
+  color: #666; /* Default disabled color */
+  transition: color 0.3s ease;
+}
+
+#btnStepForward:not(:disabled) {
+  color: #fff
+}
+/* --- END: New Step Forward Button Styles --- */
