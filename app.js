@@ -11,6 +11,15 @@
 
       // ---- I18N Translations Object ----
       const translations = {
+        help_category_evolution: { en: "Evolution", he: "אבולוציה", ru: "Эволюция", nl: "Evolutie" },
+        help_category_tips: { en: "Tips & Tricks", he: "טיפים וטריקים", ru: "Советы и хитрости", nl: "Tips & Trucs" },
+        help_tip1: { en: "Long-press Sim Mode to prep the board: max size, dark background, and lightest brush.", he: "לחיצה ארוכה על מצב סימולציה מכינה את הלוח ליצירה: גודל מקסימלי, רקע כהה ומכחול בהיר.", ru: "Длительное нажатие на режим симуляции готовит холст: макс. размер, тёмный фон и светлая кисть.", nl: "Druk lang op Sim Modus om het bord voor te bereiden: max. grootte, donkere achtergrond en lichtste penseel." },
+        help_tip2: { en: "Long-press the Palette button to open a gallery for quick selection.", he: "לחיצה ארוכה על כפתור הפלטות פותחת גלריה לבחירה מהירה של פלטה.", ru: "Длительное нажатие на кнопку палитры открывает галерею для быстрого выбора.", nl: "Druk lang op de Paletknop om een galerij te openen voor een snelle keuze." },
+        help_tip3: { en: "Long-press a tile to open the color picker.", he: "לחיצה ארוכה על אריח בלוח פותחת את תפריט בחירת הצבע.", ru: "Длительное нажатие на плитку открывает палитру цветов.", nl: "Druk lang op een tegel om de kleurenkiezer te openen." },
+        help_tip4: { en: "With a color selected, long-press a tile to deselect it.", he: "כשיש צבע נבחר, לחיצה ארוכה על אריח מבטלת את הבחירה.", ru: "Если цвет выбран, длительное нажатие на плитку отменит выбор.", nl: "Als een kleur is geselecteerd, druk lang op een tegel om de selectie op te heffen." },
+        help_tip5: { en: "Long-press the resize buttons (+/-) to set a custom grid size.", he: "לחיצה ארוכה על כפתורי הגדלה/הקטנה מאפשרת לבחור גודל מותאם אישית.", ru: "Длительное нажатие на кнопки размера (+/-) позволяет задать свой размер сетки.", nl: "Druk lang op de formaatknoppen (+/-) om een aangepaste rastergrootte in te stellen." },
+        help_tip6: { en: "Long-press the 'Life' button to configure its evolution rules.", he: "לחיצה ארוכה על כפתור \"משחק החיים\" מאפשרת להגדיר את חוקי האבולוציה.", ru: "Длительное нажатие на кнопку 'Жизнь' позволяет настроить правила эволюции.", nl: "Druk lang op de 'Leven'-knop om de evolutieregels te configureren." },
+
         splashTitle: { en: "Follow Your Intuition", he: "היום יצרתי", ru: "Следуй своей интуиции", nl: "Volg je intuïtie" },
         startCreating: { en: "Start Creating", he: "יצירה", ru: "Начать творить", nl: "Begin met creëren" },
         skip: { en: "Skip", he: "דלגו", ru: "Пропустить", nl: "Overslaan" },
@@ -75,21 +84,17 @@
         paletteName_cosmos: { en: "Cosmos", he: "הקיום", ru: "Космос", nl: "Kosmos" },
         paletteName_jasmine: { en: "Jasmine Dream", he: "יסמין", ru: "Жасминовая мечта", nl: "Jasmijndroom" },
         paletteName_sky: { en: "Sky", he: "רקיע", ru: "Небо", nl: "Lucht" },
-paletteName_healing: { en: "Healing", he: "ריפוי", ru: "Исцеление", nl: "Genezing" },
-paletteName_focus: { en: "Focus", he: "ריכוז", ru: "Фокус", nl: "Focus" },
+        paletteName_healing: { en: "Healing", he: "ריפוי", ru: "Исцеление", nl: "Genezing" },
+        paletteName_focus: { en: "Focus", he: "ריכוז", ru: "Фокус", nl: "Focus" },
 
 
-help_category_simulations: { en: "Simulations & Automations", he: "סימולציות ואוטומציה", ru: "Симуляции и автоматизация", nl: "Simulaties & Automatisering" },
+        help_category_simulations: { en: "Simulations & Automations", he: "סימולציות ואוטומציה", ru: "Симуляции и автоматизация", nl: "Simulaties & Automatisering" },
 
         help_toggleSimMode: { en: 'Simulation Mode: Toggles a UI layout focused on automation tools. Long-press prepares the board for simulation (max size, dark background, light brush).', he: 'מצב סימולציה: משנה את פריסת הכפתורים לממשק ייעודי לסימולציות. לחיצה ארוכה מכינה את הלוח לסימולציה (גודל מקסימלי, רקע כהה, מכחול בהיר).', ru: 'Режим симуляции: переключает раскладку интерфейса на инструменты автоматизации. Долгое нажатие подготавливает доску для симуляции (макс. размер, тёмный фон, светлая кисть).', nl: 'Simulatiemodus: Schakelt een UI-layout in die gericht is op automatiseringstools. Lang indrukken bereidt het bord voor op simulatie (maximale grootte, donkere achtergrond, lichte kwast).' },
         
         help_playPauseLife: { en: 'Play/Pause Life: (In Sim Mode) Runs the "Game of Life" as a continuous animation, generation after generation. Press again to pause.', he: 'הפעלה/השהיה: (במצב סימולציה) מריץ את "משחק החיים" כאנימציה רציפה, דור אחר דור. לחיצה נוספת משהה את הסימולציה.', ru: 'Запуск/Пауза Жизни: (в режиме симуляции) запускает "Игру в жизнь" как непрерывную анимацию, поколение за поколением. Нажмите ещё раз для паузы.', nl: 'Leven Starten/Pauzeren: (In Sim Modus) Voert het "Game of Life" uit als een continue animatie, generatie na generatie. Druk nogmaals om te pauzeren.' },
 
         // --- Updated Keys ---
-        help_gameOfLife: { en: 'Run one generation of Life. "Dead" cells are defined by rules. New cells are born from their parents. Long-press to configure the rules.', he: 'הרצת דור אחד של "משחק החיים". תאים חדשים נולדים מהוריהם על פי חוקים. לחיצה ארוכה פותחת חלון להגדרת חוקי המשחק.', ru: 'Запускает одно поколение "Игры в жизнь". Новые клетки рождаются от родителей согласно правилам. Долгое нажатие для настройки правил.', nl: 'Voert één generatie van Leven uit. Nieuwe cellen worden geboren uit hun ouders volgens regels. Lang indrukken om de regels te configureren.' },
-
-        help_palette: { en: 'Cycle through available color palettes. Long-press to open a gallery for direct selection.', he: 'מעבר בין פלטות צבעים. לחיצה ארוכה פותחת גלריה לבחירה ישירה של פלטה.', ru: 'Переключает доступные цветовые палитры. Долгое нажатие открывает галерею для прямого выбора.', nl: 'Bladert door beschikbare kleurpaletten. Lang indrukken opent een galerij voor directe selectie.' },
-
 
 
 
@@ -250,11 +255,11 @@ const PALETTES = [
       
       // ---- START: Game of Life Rules Object ----
       const defaultGameOfLifeRules = {
-    survivalMin: 3, // שונה מ-2
-    survivalMax: 5, // שונה מ-4
-    birth: 3,
-    liveCellDef: 'notDarkest',
-    colorGenetics: 'average' // שונה מ-'randomMix'
+        survivalMin: 3, 
+        survivalMax: 5,
+        birth: 3,
+        liveCellDef: 'notDarkest',
+        colorGenetics: 'average'
       };
       let gameOfLifeRules = { ...defaultGameOfLifeRules };
       // ---- END: Game of Life Rules Object ----
@@ -276,9 +281,10 @@ const PALETTES = [
       let colorPickerPage = 0;
       const COLORS_PER_PAGE = 24;
 
-      // ---- START: New state variables for Play/Pause ----
+      // ---- START: State variables for new "Arm & Play" logic ----
       let isLifePlaying = false;
       let lifeIntervalId = null;
+      let armedSimulation = null; // Can be 'gameOfLife', 'brightnessEvo', or 'breathe'
       // ---- END: New state variables ----
 
       const SYMMETRY_MODES = ['off', 'vertical', 'horizontal', 'mandala', 'kaleidoscope'];
@@ -361,13 +367,10 @@ const PALETTES = [
       let wasLongPress = false;
       const btnLangToggle = document.getElementById('btnLangToggle');
       
-      // ---- START: Cache new button and icons ----
       const btnPlayPauseLife = document.getElementById('btnPlayPauseLife');
       const iconPlay = document.getElementById('iconPlay');
       const iconPause = document.getElementById('iconPause');
-      // ---- END: Cache new button ----
 
-      // ---- START: Cache Game of Life Settings Modal elements ----
       const gameOfLifeSettingsModal = document.getElementById('gameOfLifeSettingsModal');
       const golSurvivalMin = document.getElementById('golSurvivalMin');
       const golSurvivalMax = document.getElementById('golSurvivalMax');
@@ -377,26 +380,25 @@ const PALETTES = [
       const btnGolSettingsSave = document.getElementById('btnGolSettingsSave');
       const btnGolSettingsCancel = document.getElementById('btnGolSettingsCancel');
       const btnGolSettingsReset = document.getElementById('btnGolSettingsReset');
-      // ---- END: Cache GOL elements ----
       
       function palette() { return PALETTES[activePaletteIndex].colors; }
 
-function getCurrentState() {
-    return { 
-      n, 
-      activePaletteIndex, 
-      paletteName: PALETTES[activePaletteIndex].originalName, 
-      separatorPx, 
-      symmetryMode,
-      selectedColor,
-      isRainbowModeActive,
-      tiles: tiles().map(el => ({ 
-          k: getIndex(el), 
-          isGold: isGold(el),
-          v: el.dataset.v !== undefined ? parseFloat(el.dataset.v) : getIndex(el) 
-      }))
-    };
-}
+      function getCurrentState() {
+          return { 
+            n, 
+            activePaletteIndex, 
+            paletteName: PALETTES[activePaletteIndex].originalName, 
+            separatorPx, 
+            symmetryMode,
+            selectedColor,
+            isRainbowModeActive,
+            tiles: tiles().map(el => ({ 
+                k: getIndex(el), 
+                isGold: isGold(el),
+                v: el.dataset.v !== undefined ? parseFloat(el.dataset.v) : getIndex(el) 
+            }))
+          };
+      }
 
       function areStatesEqual(stateA, stateB) {
         if (!stateA || !stateB) return false;
@@ -407,57 +409,57 @@ function getCurrentState() {
         return true;
       }
       function applyState(state) {
-    let paletteIdx = PALETTES.findIndex(p => p.originalName === state.paletteName);
-    if (paletteIdx === -1) {
-        paletteIdx = state.activePaletteIndex;
-    }
-    activePaletteIndex = paletteIdx >= 0 && paletteIdx < PALETTES.length ? paletteIdx : 0;
-    
-    separatorPx = state.separatorPx;
-    symmetryMode = state.symmetryMode || 'off';
-
-    selectedColor = state.selectedColor || null;
-    isRainbowModeActive = state.isRainbowModeActive || false;
-    if (selectedColor) {
-        selectedColorIndex = palette().indexOf(selectedColor);
-        if (selectedColorIndex === -1) {
-            selectedColor = null;
+        let paletteIdx = PALETTES.findIndex(p => p.originalName === state.paletteName);
+        if (paletteIdx === -1) {
+            paletteIdx = state.activePaletteIndex;
         }
-    } else {
-        selectedColorIndex = -1;
-    }
-    updateGlowEffect();
-    updateColorPickerButtonUI();
+        activePaletteIndex = paletteIdx >= 0 && paletteIdx < PALETTES.length ? paletteIdx : 0;
+        
+        separatorPx = state.separatorPx;
+        symmetryMode = state.symmetryMode || 'off';
 
-    updatePaletteHeader();
-    applySeparator();
-    updateSymmetryUI();
-    if (n !== state.n) {
-        n = state.n;
-        buildBoard(n, false);
-    }
-    const tileElements = tiles();
-    state.tiles.forEach((tileState, i) => {
-        if (tileElements[i]) {
-            const el = tileElements[i];
-            const k = (typeof tileState === 'object' && tileState !== null) ? tileState.k : tileState;
-            const isG = (typeof tileState === 'object' && tileState !== null) ? tileState.isGold : false;
-
-            if (isG) {
-                applyGoldOverlay(el);
-            } else {
-                clearGoldOverlay(el);
-                setIndex(el, k);
+        selectedColor = state.selectedColor || null;
+        isRainbowModeActive = state.isRainbowModeActive || false;
+        if (selectedColor) {
+            selectedColorIndex = palette().indexOf(selectedColor);
+            if (selectedColorIndex === -1) {
+                selectedColor = null;
             }
-            
-            if (tileState && typeof tileState.v !== 'undefined') {
-                el.dataset.v = tileState.v;
-            } else {
-                delete el.dataset.v;
-            }
+        } else {
+            selectedColorIndex = -1;
         }
-    });
-}
+        updateGlowEffect();
+        updateColorPickerButtonUI();
+
+        updatePaletteHeader();
+        applySeparator();
+        updateSymmetryUI();
+        if (n !== state.n) {
+            n = state.n;
+            buildBoard(n, false);
+        }
+        const tileElements = tiles();
+        state.tiles.forEach((tileState, i) => {
+            if (tileElements[i]) {
+                const el = tileElements[i];
+                const k = (typeof tileState === 'object' && tileState !== null) ? tileState.k : tileState;
+                const isG = (typeof tileState === 'object' && tileState !== null) ? tileState.isGold : false;
+
+                if (isG) {
+                    applyGoldOverlay(el);
+                } else {
+                    clearGoldOverlay(el);
+                    setIndex(el, k);
+                }
+                
+                if (tileState && typeof tileState.v !== 'undefined') {
+                    el.dataset.v = tileState.v;
+                } else {
+                    delete el.dataset.v;
+                }
+            }
+        });
+      }
       function pushHistory(state) {
         history.push(state);
         if (history.length > HISTORY_LIMIT) { history.shift(); }
@@ -504,17 +506,17 @@ function getCurrentState() {
         return d;
       }
       function setIndex(el, k, v) {
-    const finalK = Math.round(k);
-    el.dataset.k = String(finalK);
-    if (!isGold(el)) {
-      el.style.background = getPaletteColor(finalK);
-    }
-    if (v !== undefined) {
-        el.dataset.v = v;
-    } else {
-        delete el.dataset.v;
-    }
-}
+        const finalK = Math.round(k);
+        el.dataset.k = String(finalK);
+        if (!isGold(el)) {
+          el.style.background = getPaletteColor(finalK);
+        }
+        if (v !== undefined) {
+            el.dataset.v = v;
+        } else {
+            delete el.dataset.v;
+        }
+      }
       function getIndex(el) { return parseInt(el.dataset.k || '0', 10); }
       function applyGoldOverlay(el) { el.style.background = GOLD; el.dataset.goldOverlay = '1'; }
       function clearGoldOverlay(el) {
@@ -604,6 +606,22 @@ function getCurrentState() {
       function randomizeAll() {
         performAction(fillRandom);
         hasUsedRandomize = true;
+      }
+
+      function shuffleExistingColors() {
+          const nonGoldTiles = tiles().filter(tile => !isGold(tile));
+          if (nonGoldTiles.length < 2) return;
+
+          const existingColors = nonGoldTiles.map(tile => getIndex(tile));
+
+          for (let i = existingColors.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [existingColors[i], existingColors[j]] = [existingColors[j], existingColors[i]];
+          }
+
+          nonGoldTiles.forEach((tile, index) => {
+              setIndex(tile, existingColors[index]);
+          });
       }
 
       function getDarkestColorIndex(colors) {
@@ -786,9 +804,21 @@ function getCurrentState() {
         animateBoardTransition(() => performAction(() => _performResize(newSize)));
       }
       
-      // ---- START: New Play/Pause logic ----
+      // ---- START: "Arm & Play" and Breathing Logic ----
+
+      function _stopBreatheAnimation() {
+        tiles().forEach(tile => {
+            tile.classList.remove('breathing-tile');
+            tile.style.animationDelay = '';
+        });
+        isBreathing = false;
+      }
+
       function pauseLife() {
         if (!isLifePlaying) return;
+        
+        _stopBreatheAnimation();
+
         isLifePlaying = false;
         clearInterval(lifeIntervalId);
         lifeIntervalId = null;
@@ -798,31 +828,113 @@ function getCurrentState() {
 
         btnGameOfLife.disabled = false;
         btnBrightnessEvo.disabled = false;
+        btnShowBreatheMenu.disabled = false;
       }
 
       function togglePlayPauseLife() {
-        if (isLifePlaying) {
-            pauseLife();
+          if (isLifePlaying) {
+              pauseLife();
+              return;
+          }
+
+          if (!armedSimulation) return;
+
+          switch (armedSimulation) {
+              case 'gameOfLife':
+                  isLifePlaying = true;
+                  iconPlay.style.display = 'none';
+                  iconPause.style.display = 'block';
+                  btnGameOfLife.disabled = true;
+                  btnBrightnessEvo.disabled = true;
+                  btnShowBreatheMenu.disabled = true;
+                  lifeIntervalId = setInterval(() => {
+                      performAction(runGameOfLifeGeneration);
+                  }, 200);
+                  break;
+
+              case 'brightnessEvo':
+                  isLifePlaying = true;
+                  iconPlay.style.display = 'none';
+                  iconPause.style.display = 'block';
+                  btnGameOfLife.disabled = true;
+                  btnBrightnessEvo.disabled = true;
+                  btnShowBreatheMenu.disabled = true;
+                  lifeIntervalId = setInterval(() => {
+                      performAction(runBrightnessEvolution);
+                  }, 200);
+                  break;
+
+              case 'breathe':
+                  openBreatheModal();
+                  break;
+          }
+      }
+      
+      function armSimulation(simulationName) {
+        if (isLifePlaying) return;
+
+        const simButtons = [btnGameOfLife, btnBrightnessEvo, btnShowBreatheMenu];
+        simButtons.forEach(btn => btn.classList.remove('simulation-active'));
+
+        if (armedSimulation === simulationName) {
+            armedSimulation = null;
+            btnPlayPauseLife.disabled = true;
         } else {
-            isLifePlaying = true;
-            iconPlay.style.display = 'none';
-            iconPause.style.display = 'block';
+            armedSimulation = simulationName;
+            btnPlayPauseLife.disabled = false;
+            
+            if (simulationName === 'gameOfLife') btnGameOfLife.classList.add('simulation-active');
+            if (simulationName === 'brightnessEvo') btnBrightnessEvo.classList.add('simulation-active');
+            if (simulationName === 'breathe') btnShowBreatheMenu.classList.add('simulation-active');
 
-            // Disable other sim buttons while playing
-            btnGameOfLife.disabled = true;
-            btnBrightnessEvo.disabled = true;
-
-            lifeIntervalId = setInterval(() => {
-                performAction(runGameOfLifeGeneration);
-            }, 200);
+            if (simulationName === 'gameOfLife') performAction(runGameOfLifeGeneration);
+            if (simulationName === 'brightnessEvo') performAction(runBrightnessEvolution);
         }
       }
-      // ---- END: New Play/Pause logic ----
 
-      // --- START: MODIFIED SIM MODE LOGIC ---
+      function resetArmedState() {
+        armedSimulation = null;
+        const simButtons = [btnGameOfLife, btnBrightnessEvo, btnShowBreatheMenu];
+        simButtons.forEach(btn => btn.classList.remove('simulation-active'));
+        btnPlayPauseLife.disabled = true;
+      }
+      
+      function startBreathingEffect(isGrouped = false) {
+          if (isLifePlaying) return;
+          isBreathing = true;
+          isLifePlaying = true;
 
-      // This function PREPARES the board state for a new simulation.
-      // It is called on LONG PRESS.
+          iconPlay.style.display = 'none';
+          iconPause.style.display = 'block';
+          btnGameOfLife.disabled = true;
+          btnBrightnessEvo.disabled = true;
+          btnShowBreatheMenu.disabled = true;
+          
+          const allTiles = tiles();
+          if (isGrouped) {
+              const colorDelayMap = new Map();
+              const uniqueColors = [...new Set(allTiles.map(tile => {
+                  return isGold(tile) ? GOLD : tile.style.backgroundColor;
+              }))];
+              uniqueColors.forEach(color => {
+                  colorDelayMap.set(color, Math.random() * 3);
+              });
+              allTiles.forEach(tile => {
+                  const colorKey = isGold(tile) ? GOLD : tile.style.backgroundColor;
+                  const delay = colorDelayMap.get(colorKey);
+                  tile.style.animationDelay = `${delay}s`;
+                  tile.classList.add('breathing-tile');
+              });
+          } else {
+              allTiles.forEach(tile => {
+                  tile.style.animationDelay = `${Math.random() * 3}s`;
+                  tile.classList.add('breathing-tile');
+              });
+          }
+      }
+
+      // --- END: "Arm & Play" and Breathing Logic ---
+
       function prepareBoardForSimMode() {
         animateBoardTransition(() => {
             performAction(() => {
@@ -834,7 +946,7 @@ function getCurrentState() {
                 symmetryMode = 'kaleidoscope'; 
                 updateSymmetryUI();
 
-                goDark(); // Use existing function to paint board dark
+                goDark();
 
                 const currentPalette = palette();
                 const lightestIndex = currentPalette.length - 1;
@@ -847,43 +959,36 @@ function getCurrentState() {
         });
       }
 
-      // This function TOGGLES the UI LAYOUT for simulation mode.
-      // It is called on SHORT CLICK.
+      function toggleSimMode() {
+        const duration = 500;
 
+        controlsContainer.style.opacity = '0';
 
-function toggleSimMode() {
-  const duration = 500; // משך אנימציית ה-Fade
+        setTimeout(() => {
+            isSimModeActive = !isSimModeActive;
+            controlsContainer.classList.toggle('sim-mode-active', isSimModeActive);
 
-  // שלב 1: העלם את כל לוח הבקרה
-  controlsContainer.style.opacity = '0';
+            if (isSimModeActive) {
+                pauseLife();
+                resetArmedState();
+            } else {
+                pauseLife();
+                resetArmedState();
+            }
 
-  // שלב 2: המתן לסיום ה-Fade Out
-  setTimeout(() => {
-      // בצע את כל שינויי הסידור בזמן שהלוח שקוף
-      isSimModeActive = !isSimModeActive;
-      controlsContainer.classList.toggle('sim-mode-active', isSimModeActive);
+            const controlsToHide = [
+                btnBrushMode, btnGap, btnResetBoard,
+                btnTutorial, btnSave, btnSpecialReset,
+                btnPalette, btnInvert
+            ];
 
-      if (!isSimModeActive) {
-          pauseLife();
+            controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
+            btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
+            btnToggleSimMode.classList.toggle('active', isSimModeActive);
+
+            controlsContainer.style.opacity = '1';
+        }, duration);
       }
-
-      const controlsToHide = [
-          btnBrushMode, btnGap, btnResetBoard,
-          btnTutorial, btnSave, btnSpecialReset,
-    btnPalette, btnInvert
-      ];
-
-      controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
-      btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
-      btnToggleSimMode.classList.toggle('active', isSimModeActive);
-
-      // שלב 3: הופע מחדש את לוח הבקרה עם הכפתורים החדשים
-      controlsContainer.style.opacity = '1';
-  }, duration);
-}
-
-     // --- END: MODIFIED SIM MODE LOGIC ---
-
 
       function setBrushMode(isBrushOn) {
           isBrushModeOn = isBrushOn;
@@ -904,38 +1009,29 @@ function toggleSimMode() {
         generatedImageFile = null;
       }
 
-      // ==================================================================
-      // == START: OPTIMIZED SAVE FUNCTION ================================
-      // ==================================================================
       async function savePNG_Optimized() {
         btnSave.disabled = true;
-
-        // 1. Define canvas dimensions
-        const TILE_SIZE = 20; // Base size for each tile in pixels, can be adjusted
-        const GAP_SIZE = separatorPx > 0 ? 2 : 0; // Small gap if it exists in the UI
-        const PADDING = 50; // Black padding around the grid
+        const TILE_SIZE = 20;
+        const GAP_SIZE = separatorPx > 0 ? 2 : 0;
+        const PADDING = 50;
         const canvasSize = (n * TILE_SIZE) + ((n - 1) * GAP_SIZE) + PADDING;
 
-        // 2. Create the canvas in memory
         const canvas = document.createElement('canvas');
         canvas.width = canvasSize;
         canvas.height = canvasSize;
         const ctx = canvas.getContext('2d');
 
-        // 3. Paint the background
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvasSize, canvasSize);
 
         const currentTiles = tiles();
         const currentPalette = palette();
 
-        // 4. Loop through all tiles and draw them
-        for (let i = 0; i < n; i++) { // rows loop (y)
-            for (let j = 0; j < n; j++) { // columns loop (x)
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
                 const tileIndex = i * n + j;
                 const tileElement = currentTiles[tileIndex];
                 
-                // Set the fill color
                 if (isGold(tileElement)) {
                     ctx.fillStyle = GOLD;
                 } else {
@@ -943,16 +1039,13 @@ function toggleSimMode() {
                     ctx.fillStyle = currentPalette[norm(colorIndex, currentPalette.length)];
                 }
 
-                // Calculate the tile's position
                 const x = (j * (TILE_SIZE + GAP_SIZE)) + (PADDING / 2);
                 const y = (i * (TILE_SIZE + GAP_SIZE)) + (PADDING / 2);
 
-                // Draw the rectangle
                 ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
             }
         }
         
-        // 5. Convert canvas to Blob and show the modal (same as the original code)
         canvas.toBlob((blob) => {
             if (!blob) {
                 console.error('Blob creation failed');
@@ -966,44 +1059,6 @@ function toggleSimMode() {
             btnSave.disabled = false;
         }, 'image/png');
       }
-      // ==================================================================
-      // == END: OPTIMIZED SAVE FUNCTION ==================================
-      // ==================================================================
-
-
-      /*
-      // OLD SLOW SAVE FUNCTION - COMMENTED OUT
-      async function savePNG() {
-        btnSave.disabled = true;
-        clearAllHighlights();
-        tiles().forEach(el => el.classList.remove('ring-inset', 'ring-4', 'ring-white', 'ring-white/90'));
-        if (separatorPx === 0) { board.classList.add('no-gap-fix'); }
-        try {
-            const boardCanvas = await html2canvas(board, { backgroundColor: null, scale: 2 });
-            const padding = 50;
-            const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = boardCanvas.width + padding;
-            finalCanvas.height = boardCanvas.height + padding;
-            const ctx = finalCanvas.getContext('2d');
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-            ctx.drawImage(boardCanvas, padding / 2, padding / 2);
-            finalCanvas.toBlob(async (blob) => {
-                if (!blob) { console.error('Blob creation failed'); btnSave.disabled = false; return; }
-                generatedImageFile = new File([blob], 'board.png', { type: 'image/png' });
-                imagePreview.src = URL.createObjectURL(blob);
-                fileNameInput.value = PALETTES[activePaletteIndex]?.originalName === 'Default' ? getText('saveModal_defaultFilename') : PALETTES[activePaletteIndex]?.name || getText('saveModal_defaultFilename');
-                saveModal.classList.add('modal-visible');
-                btnSave.disabled = false;
-            }, 'image/png');
-        } catch (err) {
-            console.error("Failed to save PNG:", err);
-            btnSave.disabled = false;
-        } finally {
-            if (separatorPx === 0) { board.classList.remove('no-gap-fix'); }
-        }
-      }
-      */
 
       function getSanitizedFileName(extension) {
         let defaultName = PALETTES[activePaletteIndex]?.originalName === 'Default' ? getText('saveModal_defaultFilename') : PALETTES[activePaletteIndex]?.name;
@@ -1107,7 +1162,7 @@ function toggleSimMode() {
       }
 
       function onPointerDown(e) {
-        if (isBreathing || isLifePlaying) return; // <-- Block drawing while playing
+        if (isLifePlaying) return;
         const el = e.target.closest('.tile'); if (!el) return;
         e.preventDefault();
         el.setPointerCapture(e.pointerId);
@@ -1248,89 +1303,13 @@ function toggleSimMode() {
       board.addEventListener('pointerup', onPointerUp);
       board.addEventListener('pointercancel', onPointerUp);
 
-      function setAllControlsDisabled(disabled) {
-        document.querySelectorAll('.ctrl').forEach(btn => {
-            if (btn.id !== 'btnBreatheModalClose') {
-                btn.disabled = disabled;
-            }
-        });
-        if (breatheModal.classList.contains('modal-visible')) {
-            btnStartSoloBreathe.disabled = disabled;
-            btnStartGroupBreathe.disabled = disabled;
-        }
-      }
-
-      async function stopBreathingEffect() {
-        btnExitBreathe.classList.remove('visible');
-        const allTiles = tiles();
-        const fadeOutPromises = allTiles
-            .filter(tile => tile.classList.contains('breathing-tile'))
-            .map(tile => {
-                return new Promise(resolve => {
-                    tile.addEventListener('animationiteration', () => {
-                        tile.classList.remove('breathing-tile');
-                        tile.style.animationDelay = '';
-                        resolve();
-                    }, { once: true });
-                });
-            });
-        await Promise.all(fadeOutPromises);
-        controlsContainer.style.transition = 'opacity 1.2s linear';
-        controlsContainer.classList.remove('controls-hidden');
-        await new Promise(resolve => setTimeout(resolve, 1200));
-        setAllControlsDisabled(false);
-        updateUndoRedoButtons();
-        isBreathing = false;
-        controlsContainer.style.transition = '';
-      }
-
-      async function startBreathingEffect(isGrouped = false) {
-          if (isBreathing) return;
-          isBreathing = true;
-          setAllControlsDisabled(true);
-          controlsContainer.style.transition = 'opacity 2s linear';
-          controlsContainer.classList.add('controls-hidden');
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          const allTiles = tiles();
-          if (isGrouped) {
-              const colorDelayMap = new Map();
-              const uniqueColors = [...new Set(allTiles.map(tile => {
-                  return isGold(tile) ? GOLD : tile.style.backgroundColor;
-              }))];
-              uniqueColors.forEach(color => {
-                  colorDelayMap.set(color, Math.random() * 3);
-              });
-              allTiles.forEach(tile => {
-                  const colorKey = isGold(tile) ? GOLD : tile.style.backgroundColor;
-                  const delay = colorDelayMap.get(colorKey);
-                  tile.style.animationDelay = `${delay}s`;
-                  tile.classList.add('breathing-tile');
-              });
-          } else {
-              allTiles.forEach(tile => {
-                  tile.style.animationDelay = `${Math.random() * 3}s`;
-                  tile.classList.add('breathing-tile');
-              });
-          }
-          setTimeout(() => {
-            if (isBreathing) {
-              btnExitBreathe.classList.add('visible');
-            }
-          }, 4000);
-          const exitHandler = () => { stopBreathingEffect(); };
-          appContainer.addEventListener('pointerdown', exitHandler, { once: true });
-      }
-
       function openBreatheModal() {
-        if (isBreathing) return;
-        setAllControlsDisabled(true); 
+        if (isLifePlaying) return;
         breatheModal.classList.add('modal-visible');
       }
 
       function closeBreatheModal() {
         breatheModal.classList.remove('modal-visible');
-        setAllControlsDisabled(false);
-        updateUndoRedoButtons(); 
       }
 
       function openResizeModal() {
@@ -1725,60 +1704,60 @@ function toggleSimMode() {
       }
 
 
-function runBrightnessEvolution() {
-    const smoothingFactor = 0.5;
+      function runBrightnessEvolution() {
+          const smoothingFactor = 0.5;
 
-    const allCurrentTiles = tiles();
-    const currentState = allCurrentTiles.map(tile => ({
-        v: tile.dataset.v !== undefined ? parseFloat(tile.dataset.v) : getIndex(tile),
-        isGold: isGold(tile)
-    }));
+          const allCurrentTiles = tiles();
+          const currentState = allCurrentTiles.map(tile => ({
+              v: tile.dataset.v !== undefined ? parseFloat(tile.dataset.v) : getIndex(tile),
+              isGold: isGold(tile)
+          }));
 
-    const nextStateV = [];
+          const nextStateV = [];
 
-    for (let i = 0; i < n * n; i++) {
-        const cell = currentState[i];
-        if (cell.isGold) {
-            nextStateV[i] = cell.v;
-            continue;
-        }
-        const row = Math.floor(i / n);
-        const col = i % n;
-        
-        let totalBrightness = 0;
-        let neighborCount = 0;
+          for (let i = 0; i < n * n; i++) {
+              const cell = currentState[i];
+              if (cell.isGold) {
+                  nextStateV[i] = cell.v;
+                  continue;
+              }
+              const row = Math.floor(i / n);
+              const col = i % n;
+              
+              let totalBrightness = 0;
+              let neighborCount = 0;
 
-        for (let di = -1; di <= 1; di++) {
-            for (let dj = -1; dj <= 1; dj++) {
-                const ni = row + di;
-                const nj = col + dj;
-                if (ni >= 0 && ni < n && nj >= 0 && nj < n) {
-                    const neighbor = currentState[ni * n + nj];
-                    if (!neighbor.isGold) {
-                        totalBrightness += neighbor.v;
-                        neighborCount++;
-                    }
-                }
-            }
-        }
+              for (let di = -1; di <= 1; di++) {
+                  for (let dj = -1; dj <= 1; dj++) {
+                      const ni = row + di;
+                      const nj = col + dj;
+                      if (ni >= 0 && ni < n && nj >= 0 && nj < n) {
+                          const neighbor = currentState[ni * n + nj];
+                          if (!neighbor.isGold) {
+                              totalBrightness += neighbor.v;
+                              neighborCount++;
+                          }
+                      }
+                  }
+              }
 
-        if (neighborCount > 0) {
-            const averageBrightness = totalBrightness / neighborCount;
-            const currentV = cell.v;
-            const newV = currentV + (averageBrightness - currentV) * smoothingFactor;
-            nextStateV[i] = newV;
-        } else {
-            nextStateV[i] = cell.v;
-        }
-    }
+              if (neighborCount > 0) {
+                  const averageBrightness = totalBrightness / neighborCount;
+                  const currentV = cell.v;
+                  const newV = currentV + (averageBrightness - currentV) * smoothingFactor;
+                  nextStateV[i] = newV;
+              } else {
+                  nextStateV[i] = cell.v;
+              }
+          }
 
-    allCurrentTiles.forEach((tile, i) => {
-        if (!isGold(tile)) {
-            const newV = nextStateV[i];
-            setIndex(tile, newV, newV);
-        }
-    });
-}
+          allCurrentTiles.forEach((tile, i) => {
+              if (!isGold(tile)) {
+                  const newV = nextStateV[i];
+                  setIndex(tile, newV, newV);
+              }
+          });
+      }
 
       // ---- Color manipulation helper functions ----
       function hexToRgb(hex) {
@@ -1877,7 +1856,9 @@ function runBrightnessEvolution() {
       }
 
       function handleCtrlClick(e, actionFn) {
-        if (isBreathing) return;
+        // Allow the play/pause button to function even when breathing
+        if (isBreathing && e.currentTarget.id !== 'btnPlayPauseLife') return;
+
         if (wasLongPress) {
           wasLongPress = false;
           return;
@@ -1956,19 +1937,19 @@ function runBrightnessEvolution() {
           const btn = e.currentTarget;
           longPressTimer = setTimeout(() => {
               wasLongPress = true;
+
+              if (btn.id === 'btnRandom') {
+                  performAction(shuffleExistingColors);
+                  return;
+              }
               
-// --- START: MODIFIED LONG PRESS LOGIC ---
               if (btn.id === 'btnToggleSimMode') {
-                  // If we are not in sim mode yet, turn the UI on.
                   if (!isSimModeActive) {
                       toggleSimMode();
                   }
-                  // Always run the board preparation on long press.
                   prepareBoardForSimMode();
-                  return; // Stop further execution for this button
+                  return;
               }
-              // --- END: MODIFIED LONG PRESS LOGIC ---
-
 
               if (btn.id === 'btnGameOfLife') {
                   openGolSettingsModal();
@@ -2018,55 +1999,46 @@ function runBrightnessEvolution() {
           }, LONG_PRESS_SHOW_MS);
       }
       
-
-
-function populateHelpModal() {
+      function populateHelpModal() {
         const contentDiv = document.getElementById('helpModalContent');
         contentDiv.innerHTML = '';
-        
+
         const categories = {
-            simulations: {
-                titleKey: 'help_category_simulations',
-                buttons: ['btnToggleSimMode', 'btnGameOfLife', 'btnBrightnessEvo', 'btnPlayPauseLife']
-            },
             inspiration: {
                 titleKey: 'help_category_inspiration',
-                buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset', 'btnDark']
+                buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset']
             },
             order: {
                 titleKey: 'help_category_order',
-                buttons: ['btnResizeUp', 'btnResizeDown', 'btnGap', 'btnResetBoard']
+                buttons: ['btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark']
             },
             touch: {
                 titleKey: 'help_category_touch',
                 buttons: ['btnBrushMode', 'btnSymmetry', 'btnColorPicker']
             },
-            expression: {
-                titleKey: 'help_category_expression',
-                buttons: ['btnSave', 'btnShowBreatheMenu']
+            evolution: {
+                titleKey: 'help_category_evolution',
+                buttons: ['btnToggleSimMode', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnPlayPauseLife']
             },
             tools: {
                 titleKey: 'help_category_tools',
-                buttons: ['btnUndo', 'btnRedo']
+                buttons: ['btnUndo', 'btnRedo', 'btnSave', 'btnResetBoard']
             }
         };
 
         const helpData = {
-          'btnInvert': getText('help_invert'), 'btnPalette': getText('help_palette'), 'btnRandom': getText('help_random'),
-          'btnColorPicker': getText('help_colorPicker'), 'btnSymmetry': getText('help_symmetry'), 'btnBrushMode': getText('help_brushMode'),
-          'btnRedo': getText('help_redo'), 'btnUndo': getText('help_undo'), 'btnDark': getText('help_dark'),
-          'btnSpecialReset': getText('help_specialReset'), 'btnResetBoard': getText('help_resetBoard'),
-          'btnResizeUp': getText('help_resizeUp'), 'btnResizeDown': getText('help_resizeDown'), 'btnGap': getText('help_gap'),
-          'btnSave': getText('help_save'), 'btnShowBreatheMenu': getText('help_breathe'),
-          'btnToggleSimMode': getText('help_toggleSimMode'),
-          'btnGameOfLife': getText('help_gameOfLife'), 
-          'btnBrightnessEvo': getText('help_brightnessEvo'),
-          'btnPlayPauseLife': getText('help_playPauseLife')
+            'btnPalette': getText('help_palette'), 'btnRandom': getText('help_random'), 'btnInvert': getText('help_invert'),
+            'btnSpecialReset': getText('help_specialReset'), 'btnResizeUp': getText('help_resizeUp'),
+            'btnResizeDown': getText('help_resizeDown'), 'btnGap': getText('help_gap'), 'btnDark': getText('help_dark'),
+            'btnBrushMode': getText('help_brushMode'), 'btnSymmetry': getText('help_symmetry'), 'btnColorPicker': getText('help_colorPicker'),
+            'btnToggleSimMode': getText('help_toggleSimMode'), 'btnShowBreatheMenu': getText('help_breathe'),
+            'btnGameOfLife': getText('help_gameOfLife'), 'btnBrightnessEvo': getText('help_brightnessEvo'),
+            'btnPlayPauseLife': getText('help_playPauseLife'), 'btnUndo': getText('help_undo'), 'btnRedo': getText('help_redo'),
+            'btnSave': getText('help_save'), 'btnResetBoard': getText('help_resetBoard')
         };
 
         for (const categoryKey in categories) {
             const category = categories[categoryKey];
-            
             const titleEl = document.createElement('h3');
             titleEl.className = 'help-category-title';
             titleEl.textContent = getText(category.titleKey);
@@ -2083,34 +2055,11 @@ function populateHelpModal() {
                 iconWrapper.className = 'help-item-icon-wrapper';
                 iconWrapper.innerHTML = btn.innerHTML;
                 
-                // Special handling for Play/Pause icon state
                 if (btnId === 'btnPlayPauseLife') {
                     const playIcon = iconWrapper.querySelector('#iconPlay');
                     if(playIcon) playIcon.style.display = 'block';
                     const pauseIcon = iconWrapper.querySelector('#iconPause');
                     if(pauseIcon) pauseIcon.style.display = 'none';
-                }
-
-                const svg = iconWrapper.querySelector('svg');
-                if (svg && (btnId === 'btnBrushMode' || btnId === 'btnGap' || btnId === 'btnResizeUp' || btnId === 'btnResizeDown' || btnId === 'btnShowBreatheMenu')) {
-                    svg.style.width = 'var(--side-icon-size)';
-                    svg.style.height = 'var(--side-icon-size)';
-                }
-                
-                if (btn.id === 'btnSymmetry') {
-                    const originalPaths = btn.querySelectorAll('.part');
-                    const clonedPaths = iconWrapper.querySelectorAll('.part');
-                    originalPaths.forEach((part, index) => {
-                        if (clonedPaths[index]) {
-                            clonedPaths[index].style.stroke = part.style.stroke;
-                        }
-                    });
-                }
-                if (btn.id === 'btnBrushMode') {
-                    const path = iconWrapper.querySelector('svg path');
-                    if (path) {
-                        path.setAttribute('fill', isBrushModeOn ? '#fff' : '#000');
-                    }
                 }
 
                 const textWrapper = document.createElement('div');
@@ -2123,7 +2072,28 @@ function populateHelpModal() {
             });
         }
         
-        // --- START: Add Keyboard Shortcuts Section ---
+        const tipsTitle = document.createElement('h3');
+        tipsTitle.className = 'help-category-title';
+        tipsTitle.textContent = getText('help_category_tips');
+        contentDiv.appendChild(tipsTitle);
+
+        const tipsContainer = document.createElement('div');
+        tipsContainer.className = 'space-y-3 text-sm text-gray-300 pl-2';
+        const tips = ['help_tip1', 'help_tip2', 'help_tip3', 'help_tip4', 'help_tip5', 'help_tip6'];
+
+        tips.forEach(tipKey => {
+            const tipItem = document.createElement('p');
+            const accent = document.createElement('span');
+            accent.textContent = '*';
+            accent.style.color = GOLD;
+            accent.style.marginRight = '8px';
+            tipItem.appendChild(accent);
+            tipItem.appendChild(document.createTextNode(getText(tipKey)));
+            tipsContainer.appendChild(tipItem);
+        });
+
+        contentDiv.appendChild(tipsContainer);
+
         const shortcutsTitle = document.createElement('h3');
         shortcutsTitle.className = 'help-category-title';
         shortcutsTitle.textContent = getText('help_category_shortcuts');
@@ -2133,33 +2103,24 @@ function populateHelpModal() {
         shortcutsContainer.className = 'space-y-2';
 
         const shortcuts = [
-            { keys: ['Ctrl', '+', 'Z'], descriptionKey: 'help_shortcut_undo' },
-            { keys: ['Ctrl', '+', 'Y'], descriptionKey: 'help_shortcut_redo' },
-            { keys: ['Ctrl', '+', 'S'], descriptionKey: 'help_shortcut_save' },
-            { keys: ['I'], descriptionKey: 'help_shortcut_invert' },
-            { keys: ['R'], descriptionKey: 'help_shortcut_random' },
-            { keys: ['D'], descriptionKey: 'help_shortcut_dark' },
-            { keys: ['B'], descriptionKey: 'help_shortcut_brush' },
-            { keys: ['M'], descriptionKey: 'help_shortcut_symmetry' },
-            { keys: ['G'], descriptionKey: 'help_shortcut_gap' },
-            { keys: ['←', '/', '→'], descriptionKey: 'help_shortcut_palette' },
+            { keys: ['Ctrl', '+', 'Z'], descriptionKey: 'help_shortcut_undo' }, { keys: ['Ctrl', '+', 'Y'], descriptionKey: 'help_shortcut_redo' },
+            { keys: ['Ctrl', '+', 'S'], descriptionKey: 'help_shortcut_save' }, { keys: ['I'], descriptionKey: 'help_shortcut_invert' },
+            { keys: ['R'], descriptionKey: 'help_shortcut_random' }, { keys: ['D'], descriptionKey: 'help_shortcut_dark' },
+            { keys: ['B'], descriptionKey: 'help_shortcut_brush' }, { keys: ['M'], descriptionKey: 'help_shortcut_symmetry' },
+            { keys: ['G'], descriptionKey: 'help_shortcut_gap' }, { keys: ['←', '/', '→'], descriptionKey: 'help_shortcut_palette' },
             { keys: ['+', '/', '-'], descriptionKey: 'help_shortcut_resize' }
         ];
 
         shortcuts.forEach(shortcut => {
             const item = document.createElement('div');
             item.className = 'flex items-center justify-between gap-4';
-
             const description = document.createElement('span');
             description.className = 'text-gray-300 text-sm';
             description.textContent = getText(shortcut.descriptionKey);
-
             const keysWrapper = document.createElement('div');
-            
-            shortcut.keys.forEach((key, index) => {
+            shortcut.keys.forEach(key => {
                 if (key === '+' || key === '/') {
-                    const separator = document.createTextNode(` ${key} `);
-                    keysWrapper.appendChild(separator);
+                    keysWrapper.appendChild(document.createTextNode(` ${key} `));
                 } else {
                     const keyEl = document.createElement('span');
                     keyEl.className = 'kbd-key';
@@ -2167,14 +2128,11 @@ function populateHelpModal() {
                     keysWrapper.appendChild(keyEl);
                 }
             });
-
             item.appendChild(description);
             item.appendChild(keysWrapper);
             shortcutsContainer.appendChild(item);
         });
-
         contentDiv.appendChild(shortcutsContainer);
-        // --- END: Add Keyboard Shortcuts Section ---
       }
 
 
@@ -2367,7 +2325,6 @@ function populateHelpModal() {
         updateGlowEffect();
         updateLayout();
         
-        // ---- Onboarding Debug Button ----
         const helpModalContent = document.getElementById('helpModalContent');
         const btnResetOnboarding = document.createElement('button');
         btnResetOnboarding.id = 'btnResetOnboarding';
@@ -2407,19 +2364,17 @@ function populateHelpModal() {
         btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, openHelpModal));
         btnSymmetry.addEventListener('click', (e) => handleCtrlClick(e, cycleSymmetryMode));
-        btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, openBreatheModal));
         btnColorPicker.addEventListener('click', (e) => handleCtrlClick(e, handleColorPickerClick));
         btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
-        btnGameOfLife.addEventListener('click', (e) => handleCtrlClick(e, () => {
-            performAction(runGameOfLifeGeneration);
-        }));
         btnToggleSimMode.addEventListener('click', (e) => handleCtrlClick(e, toggleSimMode));
-        btnBrightnessEvo.addEventListener('click', (e) => handleCtrlClick(e, () => {
-            performAction(runBrightnessEvolution);
-        }));
-        // ---- START: Add event listener for the new button ----
+        
+        // ---- START: UPDATED SIMULATION BUTTON LISTENERS ----
+        btnGameOfLife.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('gameOfLife')));
+        btnBrightnessEvo.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('brightnessEvo')));
+        btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('breathe')));
         btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
-        // ---- END: Add event listener ----
+        // ---- END: UPDATED SIMULATION BUTTON LISTENERS ----
+        
         btnModalClose.addEventListener('click', closeModal);
         saveModal.addEventListener('click', (e) => { if (e.target === saveModal) { closeModal(); } });
         btnBreatheModalClose.addEventListener('click', closeBreatheModal);
@@ -2445,11 +2400,9 @@ function populateHelpModal() {
         btnPaletteModalClose.addEventListener('click', closePaletteModal);
         paletteModal.addEventListener('click', (e) => { if (e.target === paletteModal) { closePaletteModal(); } });
         
-        // ---- START: Add event listeners for GOL Settings Modal ----
         btnGolSettingsSave.addEventListener('click', saveGolSettings);
         btnGolSettingsCancel.addEventListener('click', closeGolSettingsModal);
         btnGolSettingsReset.addEventListener('click', resetGolSettings);
-        // ---- END: Add event listeners for GOL Settings Modal ----
 
         document.querySelectorAll('.ctrl').forEach(btn => {
             btn.addEventListener('pointerdown', handlePointerDownCtrl);
@@ -2460,9 +2413,8 @@ function populateHelpModal() {
         window.addEventListener('resize', updateLayout);
         window.addEventListener('contextmenu', e => e.preventDefault());
 
-        // --- START: Keyboard Shortcuts ---
+        // --- Keyboard Shortcuts ---
         window.addEventListener('keydown', (e) => {
-            // Do not trigger shortcuts if a modal is open, or if typing in an input field.
             if (document.querySelector('.modal-visible') || e.target.tagName === 'INPUT') {
                 return;
             }
@@ -2481,9 +2433,8 @@ function populateHelpModal() {
                 redo();
             } else if (isCtrlOrCmd && e.key.toLowerCase() === 's') {
                 e.preventDefault();
-                savePNG_Optimized(); // Use the optimized function here too for consistency
+                savePNG_Optimized();
             } else {
-                // Single-key shortcuts
                 switch (e.key.toLowerCase()) {
                     case 'i': invertGrid(); break;
                     case 'r': randomizeAll(); break;
@@ -2493,14 +2444,14 @@ function populateHelpModal() {
                     case 'g': cycleSeparator(); break;
                     case 'arrowright':
                     case 'pagedown':
-                        switchPalette(false); // Next palette
+                        switchPalette(false);
                         break;
                     case 'arrowleft':
                     case 'pageup':
-                        switchPalette(true); // Previous palette
+                        switchPalette(true);
                         break;
                     case '+':
-                    case '=': // The '+' key is often Shift + '='
+                    case '=':
                         resizeGrid(true);
                         break;
                     case '-':
@@ -2509,8 +2460,6 @@ function populateHelpModal() {
                 }
             }
         });
-        // --- END: Keyboard Shortcuts ---
-
 
         // --- Splash Screen & Onboarding ---
         let hasCompletedOnboarding = true;
