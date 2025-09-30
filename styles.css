@@ -247,7 +247,7 @@ body {
 /* Left Panel */
 .sim-mode-active #btnRedo         { grid-area: 4 / 1; }
 .sim-mode-active #btnResizeDown  { grid-area: 3 / 1; }
-.sim-mode-active #btnColorPicker     { grid-area: 1 / 1; } /* MODIFIED */
+.sim-mode-active #btnColorPicker     { grid-area: 1 / 1; }
 
 
 /* Center Panel */
@@ -259,7 +259,7 @@ body {
 
 
 /* Right Panel */
-.sim-mode-active #btnSymmetry        { grid-area: 1 / 7; } /* MODIFIED */
+.sim-mode-active #btnSymmetry        { grid-area: 1 / 7; }
 .sim-mode-active #btnRandom {
     grid-area: 1 / 7;
     display: none;
@@ -657,22 +657,23 @@ body {
     stroke: var(--gold);
 }
 
-/* --- START: NEW STYLE FOR "ARMED" SIMULATION BUTTON --- */
+/* --- START: MODIFIED STYLE FOR "ARMED" SIMULATION BUTTON --- */
 .ctrl.simulation-active {
-    box-shadow: 0 0 8px 3px var(--gold);
-    border-radius: 8px; /* Match hover style */
+    transform: scale(1.1); /* Make button slightly larger */
 }
 
-/* --- END: NEW STYLE FOR "ARMED" SIMULATION BUTTON --- */
-
-
-/* Change simulation icon color to gold when active */
 #btnGameOfLife.simulation-active svg,
 #btnBrightnessEvo.simulation-active svg,
 #btnShowBreatheMenu.simulation-active svg {
   stroke: var(--gold);
+  stroke-width: 2.5; /* Make the icon lines thicker */
 }
+/* --- END: MODIFIED STYLE FOR "ARMED" SIMULATION BUTTON --- */
 
+/* Color the play icon gold when a simulation is armed */
+.sim-mode-active #btnPlayPauseLife:not(:disabled) #iconPlay {
+  fill: var(--gold);
+}
 
 
 /* --- START: Game of Life Settings Modal Styles --- */
