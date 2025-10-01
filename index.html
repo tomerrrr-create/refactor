@@ -109,14 +109,25 @@
               </svg>
           </button>
 
-<button id="btnGameOfLife" class="ctrl">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round">
-        <ellipse cx="12" cy="7" rx="3" ry="5"></ellipse>
-        <path d="M12 12v7"></path>
-        <path d="M9 14h6"></path>
-    </svg>
-</button>
+          <button id="btnGameOfLife" class="ctrl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="7" rx="3" ry="5"></ellipse>
+                  <path d="M12 12v7"></path>
+                  <path d="M9 14h6"></path>
+              </svg>
+          </button>
 
+          <button id="btnGravitationalSort" class="ctrl">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="8" cy="6" r="1.5"></circle>
+    <circle cx="16" cy="8" r="1.5"></circle>
+    <circle cx="12" cy="18" r="1.5"></circle>
+    <circle cx="7" cy="18" r="1.5"></circle>
+    <circle cx="17" cy="18" r="1.5"></circle>
+    <path d="M4 21 h16"></path>
+</svg>
+
+          </button>
           <button id="btnToggleSimMode" class="ctrl">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
                    stroke-linecap="round" stroke-linejoin="round" style="transform: scale(0.8);">
@@ -334,7 +345,38 @@
           <button id="btnGolSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">שמור וסגור</button>
         </div>
       </div>
+    </div>
+  </div>
 
+  <div id="gravitationalSortSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
+    <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+      <h2 id="gsSettingsTitle" class="text-xl font-bold text-center text-gray-200">הגדרות מיון כבידתי</h2>
+      
+      <div class="flex flex-col gap-2">
+        <h3 class="font-semibold text-gray-300 text-center">כיוון המיון</h3>
+        <div class="flex items-center justify-center gap-4">
+          <button class="gs-direction-btn" data-direction="down">⬇️</button>
+          <button class="gs-direction-btn" data-direction="up">⬆️</button>
+          <button class="gs-direction-btn" data-direction="right">➡️</button>
+          <button class="gs-direction-btn" data-direction="left">⬅️</button>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <h3 class="font-semibold text-gray-300 text-center">עוצמת המיון</h3>
+        <p class="text-sm text-gray-400 text-center">סיכוי של כל תא "ליפול" בכל צעד</p>
+        <div class="flex items-center justify-center gap-4">
+            <input type="range" id="gsStrength" min="1" max="100" value="100" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+            <span id="gsStrengthValue" class="text-gray-300 font-mono w-12 text-center">100%</span>
+        </div>
+      </div>
+
+      <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
+        <div class="flex gap-4">
+          <button id="btnGsSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">ביטול</button>
+          <button id="btnGsSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">שמור וסגור</button>
+        </div>
+      </div>
     </div>
   </div>
   <script src="app.js"></script>

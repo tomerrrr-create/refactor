@@ -180,7 +180,8 @@ body {
 
 #btnGameOfLife,
 #btnBrightnessEvo,
-#btnShowBreatheMenu {
+#btnShowBreatheMenu,
+#btnGravitationalSort {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
@@ -237,7 +238,8 @@ body {
 
 .sim-mode-active #btnGameOfLife,
 .sim-mode-active #btnBrightnessEvo,
-.sim-mode-active #btnShowBreatheMenu {
+.sim-mode-active #btnShowBreatheMenu,
+.sim-mode-active #btnGravitationalSort {
     opacity: 1;
     pointer-events: auto;
     visibility: visible;
@@ -256,6 +258,7 @@ body {
 .sim-mode-active #btnGameOfLife      { grid-area: 2 / 3; }
 .sim-mode-active #btnShowBreatheMenu { grid-area: 2 / 4; }
 .sim-mode-active #btnBrightnessEvo   { grid-area: 2 / 5; }
+.sim-mode-active #btnGravitationalSort { grid-area: 3 / 3; } /* New Button Position */
 .sim-mode-active #btnStepForward { 
   display: inline-flex;
   grid-area: 3 / 4; 
@@ -312,12 +315,12 @@ body {
 .glow-animation-separator svg {
   animation: glow-effect 2s ease-in-out infinite;
 }
-#saveModal, #breatheModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal {
+#saveModal, #breatheModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal {
   transition: opacity 300ms ease-in-out, visibility 300ms ease-in-out;
   visibility: hidden;
   opacity: 0;
 }
-#saveModal.modal-visible, #breatheModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible {
+#saveModal.modal-visible, #breatheModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible {
   visibility: visible;
   opacity: 1;
 }
@@ -520,7 +523,6 @@ body {
 .help-item-icon-wrapper #btnGap svg,
 .help-item-icon-wrapper #btnBrushMode svg {
     width: var(--side-icon-size);
-    height: var(--side-icon-size);
 }
 
 #resizeInput:focus {
@@ -670,7 +672,8 @@ body {
 
 #btnGameOfLife.simulation-active svg,
 #btnBrightnessEvo.simulation-active svg,
-#btnShowBreatheMenu.simulation-active svg {
+#btnShowBreatheMenu.simulation-active svg,
+#btnGravitationalSort.simulation-active svg {
   stroke: var(--gold);
   stroke-width: 2.5; /* Make the icon lines thicker */
 }
@@ -694,6 +697,57 @@ body {
     background-color: #e6c200 !important;
 }
 /* --- END: Game of Life Settings Modal Styles --- */
+
+/* --- START: New Gravitational Sort Settings Modal Styles --- */
+.gs-direction-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #444;
+  background-color: #2a2a2a;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.gs-direction-btn:hover {
+  border-color: #666;
+  transform: translateY(-2px);
+}
+.gs-direction-btn.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+  color: var(--gold);
+}
+
+#gsStrength::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eaeaea;
+  cursor: pointer;
+  margin-top: -6px; /* Center thumb on the track */
+}
+#gsStrength::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eaeaea;
+  cursor: pointer;
+}
+#gsStrength:focus {
+    outline: none;
+}
+#gsStrength:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.5);
+}
+
+#btnGsSettingsSave:hover {
+    background-color: #e6c200 !important;
+}
+
+/* --- END: New Gravitational Sort Settings Modal Styles --- */
 
 
 /* --- START: New Step Forward Button Styles --- */

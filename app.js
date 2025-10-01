@@ -56,6 +56,15 @@
         tooltip_tutorial: { en: "Help Guide", he: "מדריך עזרה", ru: "Справка", nl: "Hulp" },
         tooltip_gameOfLife: { en: "Run 'Life' Generation. Long-press to configure rules.", he: "הפעל דור 'חיים'. לחיצה ארוכה להגדרת החוקים.", ru: "Запустить поколение 'Жизни'. Долгое нажатие для настройки правил.", nl: "Start 'Leven' Generatie. Lang indrukken om regels in te stellen." },
         tooltip_brightnessEvo: { en: "Run Brightness Evolution", he: "הפעל אבולוציית בהירות", ru: "Запустить эволюцию яркости", nl: "Start Helderheidsevolutie" },
+        tooltip_gravitationalSort: { en: "Gravitational Sort", he: "מיון כבידתי", ru: "Гравитационная сортировка", nl: "Zwaartekrachtsortering" },
+        
+        gs_modal_title: { en: "Gravitational Sort Settings", he: "הגדרות מיון כבידתי", ru: "Настройки гравитационной сортировки", nl: "Instellingen Zwaartekrachtsortering" },
+        gs_modal_direction: { en: "Sort Direction", he: "כיוון המיון", ru: "Направление сортировки", nl: "Sorteerrichting" },
+        gs_modal_strength: { en: "Sort Strength", he: "עוצמת המיון", ru: "Сила сортировки", nl: "Sorteerkracht" },
+        gs_modal_strength_desc: { en: "Chance for a tile to 'fall' each step", he: "סיכוי של כל תא \"ליפול\" בכל צעד", ru: "Шанс 'падения' плитки на каждом шаге", nl: "Kans dat een tegel 'valt' per stap" },
+        gs_modal_save_close: { en: "Save & Close", he: "שמור וסגור", ru: "Сохранить и закрыть", nl: "Opslaan & Sluiten" },
+        gs_modal_cancel: { en: "Cancel", he: "ביטול", ru: "Отмена", nl: "Annuleren" },
+
         help_title: { en: "Controls Guide", he: "מה כל כפתור עושה?", ru: "Руководство по управлению", nl: "Gids voor besturing" },
         help_intro: { en: "Everything starts with a touch. The best way to discover is to simply tap or drag on the tiles. These tools are here to help you explore.", he: "הכל מתחיל במגע. הדרך הטובה ביותר לגלות היא פשוט ללחוץ או לגרור את האצבע על האריחים ולראות מה קורה. הכלים כאן כדי לעזור לך לחקור.", ru: "Всё начинается с прикосновения. Лучший способ исследовать — просто нажимать или перетаскивать плитки. Эти инструменты помогут вам в исследовании.", nl: "Alles begint met een aanraking. De beste manier om te ontdekken is door simpelweg op de tegels te tikken of te slepen. Deze tools zijn er om je te helpen verkennen." },
         help_category_inspiration: { en: "Inspiration & Discovery", he: "השראה וגילוי", ru: "Вдохновение и открытия", nl: "Inspiratie & Ontdekking" },
@@ -95,9 +104,6 @@
         help_playPauseLife: { en: 'Play/Pause Life: (In Sim Mode) Runs the "Game of Life" as a continuous animation, generation after generation. Press again to pause.', he: 'הפעלה/השהיה: (במצב סימולציה) מריץ את "משחק החיים" כאנימציה רציפה, דור אחר דור. לחיצה נוספת משהה את הסימולציה.', ru: 'Запуск/Пауза Жизни: (в режиме симуляции) запускает "Игру в жизнь" как непрерывную анимацию, поколение за поколением. Нажмите ещё раз для паузы.', nl: 'Leven Starten/Pauzeren: (In Sim Modus) Voert het "Game of Life" uit als een continue animatie, generatie na generatie. Druk nogmaals om te pauzeren.' },
 
         // --- Updated Keys ---
-
-
-
         help_invert: { en: 'Invert all colors to their opposite in the current palette.', he: 'הופך כל צבע על הלוח לצבע המשלים שלו בפלטה הנוכחית.', ru: 'Инвертирует все цвета на их противоположные в текущей палитре.', nl: 'Keert alle kleuren om naar hun tegenovergestelde in het huidige palet.' },
         help_palette: { en: 'Cycle through available color palettes.', he: 'מעבר בין פלטות צבעים.', ru: 'Переключает доступные цветовые палитры.', nl: 'Bladert door beschikbare kleurpaletten.' },
         help_random: { en: 'Fill the entire grid with random colors from the current palette.', he: 'מילוי הלוח בצבעים אקראיים מהפלטה הנוכחית.', ru: 'Заполняет всю сетку случайными цветами из текущей палитры.', nl: 'Vult het hele raster met willekeurige kleuren uit het huidige palet.' },
@@ -110,6 +116,7 @@
         help_specialReset: { en: 'Generate a completely new grid with a random size, gap, and color palette.', he: 'יצירת לוח חדש לגמרי עם גודל, רווח ופלטת צבעים אקראיים.', ru: 'Создаёт совершенно новую сетку со случайным размером, зазором и цветовой палитрой.', nl: 'Genereert een compleet nieuw raster met een willekeurige grootte, tussenruimte en kleurenpalet.' },
         help_gameOfLife: { en: 'Run one generation of Life. "Dead" cells are the darkest and lightest colors. New cells are born from a genetic combination of their three parents.', he: 'הרצת דור אחד של "משחק החיים". תא "מת" הוא הצבע הכהה ביותר או הבהיר ביותר. תאים חדשים נולדים משילוב גנטי של שלושת הוריהם.', ru: 'Запускает одно поколение "Игры в жизнь". "Мёртвые" клетки — это самые тёмные и самые светлые цвета. Новые клетки рождаются из генетической комбинации трёх родителей.', nl: 'Voert één generatie van Leven uit. "Dode" cellen zijn de donkerste en lichtste kleuren. Nieuwe cellen worden geboren uit een genetische combinatie van hun drie ouders.' },
         help_brightnessEvo: { en: "Each cell becomes lighter or darker based on its neighbors, creating flowing patterns.", he: "כל תא הופך לבהיר או כהה יותר בהתבסס על שכניו, ויוצר תבניות זורמות.", ru: "Каждая клетка становится светлее или темнее в зависимости от соседей, создавая плавные узоры.", nl: "Elke cel wordt lichter of donkerder op basis van zijn buren, waardoor vloeiende patronen ontstaan." },
+        help_gravitationalSort: { en: "Sorts colors by 'weight' (palette order), creating a layered effect. Long-press to configure direction and strength.", he: "ממיין את הצבעים לפי 'משקל' (סדר הפלטה), ויוצר אפקט של שכבות. לחיצה ארוכה מאפשרת לקבוע כיוון ועוצמה.", ru: "Сортирует цвета по 'весу' (порядку в палитре), создавая эффект слоёв. Долгое нажатие для настройки направления и силы.", nl: "Sorteert kleuren op 'gewicht' (paletvolgorde), wat een gelaagd effect creëert. Druk lang om richting en sterkte in te stellen." },
         help_resetBoard: { en: 'Restart the grid to its original "Journey" state.', he: 'איפוס הלוח למצב ההתחלתי של "מסע".', ru: 'Перезапускает сетку в исходное состояние "Путешествие".', nl: 'Herstart het raster naar de oorspronkelijke "Reis"-staat.' },
         help_resizeUp: { en: 'Increase the number of tiles on the grid. Long-press to set a custom size.', he: 'הגדלת מספר האריחים בלוח. לחיצה ארוכה לקביעת גודל מותאם.', ru: 'Увеличивает количество плиток на сетке. Долгое нажатие для установки пользовательского размера.', nl: 'Verhoogt het aantal tegels op het raster. Druk lang om een aangaste grootte in te stellen.' },
         help_resizeDown: { en: 'Decrease the number of tiles on the grid. Long-press to set a custom size.', he: 'הקטנת מספר האריחים בלוח. לחיצה ארוכה לקביעת גודל מותאם.', ru: 'Уменьшает количество плиток на сетке. Долгое нажатие для установки пользовательского размера.', nl: 'Verlaagt het aantal tegels op het raster. Druk lang om een aangaste grootte in te stellen.' },
@@ -264,6 +271,14 @@ const PALETTES = [
       let gameOfLifeRules = { ...defaultGameOfLifeRules };
       // ---- END: Game of Life Rules Object ----
 
+      // ---- START: Gravitational Sort Rules Object ----
+      const defaultGravitationalSortRules = {
+        direction: 'down', // 'up', 'left', 'right'
+        strength: 1.0      // 1.0 = 100%
+      };
+      let gravitationalSortRules = { ...defaultGravitationalSortRules };
+      // ---- END: Gravitational Sort Rules Object ----
+
       let activePaletteIndex = 0;
       let n = 11;
       const GOLD = '#FFD700';
@@ -284,7 +299,7 @@ const PALETTES = [
       // ---- START: State variables for new "Arm & Play" logic ----
       let isLifePlaying = false;
       let lifeIntervalId = null;
-      let armedSimulation = null; // Can be 'gameOfLife', 'brightnessEvo', or 'breathe'
+      let armedSimulation = null; // Can be 'gameOfLife', 'brightnessEvo', 'breathe', 'gravitationalSort'
       // ---- END: New state variables ----
 
       const SYMMETRY_MODES = ['off', 'vertical', 'horizontal', 'mandala', 'kaleidoscope'];
@@ -321,6 +336,7 @@ const PALETTES = [
       const btnGameOfLife = document.getElementById('btnGameOfLife');
       const btnToggleSimMode = document.getElementById('btnToggleSimMode');
       const btnBrightnessEvo = document.getElementById('btnBrightnessEvo');
+      const btnGravitationalSort = document.getElementById('btnGravitationalSort');
       const root = document.documentElement;
       const tileClasses = 'tile aspect-square w-full outline-none focus-visible:ring-inset focus-visible:ring-4 focus-visible:ring-white/90';
       const btnShowBreatheMenu = document.getElementById('btnShowBreatheMenu');
@@ -381,7 +397,15 @@ const PALETTES = [
       const btnGolSettingsSave = document.getElementById('btnGolSettingsSave');
       const btnGolSettingsCancel = document.getElementById('btnGolSettingsCancel');
       const btnGolSettingsReset = document.getElementById('btnGolSettingsReset');
-      
+
+      // Gravitational Sort Modal Elements
+      const gravitationalSortSettingsModal = document.getElementById('gravitationalSortSettingsModal');
+      const gsDirectionButtons = gravitationalSortSettingsModal.querySelectorAll('.gs-direction-btn');
+      const gsStrengthSlider = document.getElementById('gsStrength');
+      const gsStrengthValue = document.getElementById('gsStrengthValue');
+      const btnGsSettingsSave = document.getElementById('btnGsSettingsSave');
+      const btnGsSettingsCancel = document.getElementById('btnGsSettingsCancel');
+
       function palette() { return PALETTES[activePaletteIndex].colors; }
 
       function getCurrentState() {
@@ -827,13 +851,14 @@ const PALETTES = [
         iconPlay.style.display = 'block';
         iconPause.style.display = 'none';
 
-        if (armedSimulation === 'gameOfLife' || armedSimulation === 'brightnessEvo') {
+        if (armedSimulation === 'gameOfLife' || armedSimulation === 'brightnessEvo' || armedSimulation === 'gravitationalSort') {
           btnStepForward.disabled = false;
         }
 
         btnGameOfLife.disabled = false;
         btnBrightnessEvo.disabled = false;
         btnShowBreatheMenu.disabled = false;
+        btnGravitationalSort.disabled = false;
       }
 
       function stepForward() {
@@ -841,6 +866,8 @@ const PALETTES = [
           performAction(runGameOfLifeGeneration);
         } else if (armedSimulation === 'brightnessEvo') {
           performAction(runBrightnessEvolution);
+        } else if (armedSimulation === 'gravitationalSort') {
+          performAction(runGravitationalSortGeneration);
         }
       }
 
@@ -852,43 +879,44 @@ const PALETTES = [
 
           if (!armedSimulation) return;
 
+          let simulationFunction;
+          let interval = 200;
+
           switch (armedSimulation) {
               case 'gameOfLife':
-                  isLifePlaying = true;
-                  iconPlay.style.display = 'none';
-                  iconPause.style.display = 'block';
-                  btnGameOfLife.disabled = true;
-                  btnBrightnessEvo.disabled = true;
-                  btnShowBreatheMenu.disabled = true;
-                  btnStepForward.disabled = true;
-                  lifeIntervalId = setInterval(() => {
-                      performAction(runGameOfLifeGeneration);
-                  }, 200);
+                  simulationFunction = runGameOfLifeGeneration;
                   break;
-
               case 'brightnessEvo':
-                  isLifePlaying = true;
-                  iconPlay.style.display = 'none';
-                  iconPause.style.display = 'block';
-                  btnGameOfLife.disabled = true;
-                  btnBrightnessEvo.disabled = true;
-                  btnShowBreatheMenu.disabled = true;
-                  btnStepForward.disabled = true;
-                  lifeIntervalId = setInterval(() => {
-                      performAction(runBrightnessEvolution);
-                  }, 200);
+                  simulationFunction = runBrightnessEvolution;
                   break;
-
+              case 'gravitationalSort':
+                  simulationFunction = runGravitationalSortGeneration;
+                  interval = 150; // Faster interval for sorting
+                  break;
               case 'breathe':
                   openBreatheModal();
-                  break;
+                  return; // Exit here for breathe mode
+          }
+          
+          if (simulationFunction) {
+              isLifePlaying = true;
+              iconPlay.style.display = 'none';
+              iconPause.style.display = 'block';
+              btnGameOfLife.disabled = true;
+              btnBrightnessEvo.disabled = true;
+              btnShowBreatheMenu.disabled = true;
+              btnGravitationalSort.disabled = true;
+              btnStepForward.disabled = true;
+              lifeIntervalId = setInterval(() => {
+                  performAction(simulationFunction);
+              }, interval);
           }
       }
       
       function armSimulation(simulationName) {
         if (isLifePlaying) return;
       
-        const simButtons = [btnGameOfLife, btnBrightnessEvo, btnShowBreatheMenu];
+        const simButtons = [btnGameOfLife, btnBrightnessEvo, btnShowBreatheMenu, btnGravitationalSort];
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
       
         if (armedSimulation === simulationName) {
@@ -899,21 +927,22 @@ const PALETTES = [
           armedSimulation = simulationName;
           btnPlayPauseLife.disabled = false;
           
-          if (simulationName === 'gameOfLife' || simulationName === 'brightnessEvo') {
+          if (simulationName !== 'breathe') {
             btnStepForward.disabled = false;
           } else {
             btnStepForward.disabled = true;
           }
           
-          if (simulationName === 'gameOfLife') btnGameOfLife.classList.add('simulation-active');
-          if (simulationName === 'brightnessEvo') btnBrightnessEvo.classList.add('simulation-active');
-          if (simulationName === 'breathe') btnShowBreatheMenu.classList.add('simulation-active');
+          const buttonToActivate = simButtons.find(btn => btn.id.toLowerCase().includes(simulationName.toLowerCase()));
+          if(buttonToActivate) {
+            buttonToActivate.classList.add('simulation-active');
+          }
         }
       }
 
       function resetArmedState() {
         armedSimulation = null;
-        const simButtons = [btnGameOfLife, btnBrightnessEvo, btnShowBreatheMenu];
+        const simButtons = [btnGameOfLife, btnBrightnessEvo, btnShowBreatheMenu, btnGravitationalSort];
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
         btnPlayPauseLife.disabled = true;
         btnStepForward.disabled = true;
@@ -1589,7 +1618,6 @@ const PALETTES = [
       function openGolSettingsModal() {
         if (isBreathing || isLifePlaying) return;
         
-        // Populate inputs with current rules
         golSurvivalMin.value = gameOfLifeRules.survivalMin;
         golSurvivalMax.value = gameOfLifeRules.survivalMax;
         golBirth.value = gameOfLifeRules.birth;
@@ -1616,7 +1644,6 @@ const PALETTES = [
 
       function resetGolSettings() {
         gameOfLifeRules = { ...defaultGameOfLifeRules };
-        // Repopulate inputs with default values
         golSurvivalMin.value = gameOfLifeRules.survivalMin;
         golSurvivalMax.value = gameOfLifeRules.survivalMax;
         golBirth.value = gameOfLifeRules.birth;
@@ -1625,6 +1652,35 @@ const PALETTES = [
       }
       // ---- END: Game of Life Settings Modal Functions ----
 
+      // ---- START: Gravitational Sort Settings Modal Functions ----
+      function openGravitationalSortSettingsModal() {
+          if (isBreathing || isLifePlaying) return;
+          
+          gsDirectionButtons.forEach(btn => {
+              btn.classList.toggle('active', btn.dataset.direction === gravitationalSortRules.direction);
+          });
+          
+          gsStrengthSlider.value = gravitationalSortRules.strength * 100;
+          gsStrengthValue.textContent = `${Math.round(gravitationalSortRules.strength * 100)}%`;
+
+          gravitationalSortSettingsModal.style.display = 'flex';
+          setTimeout(() => gravitationalSortSettingsModal.classList.add('modal-visible'), 10);
+      }
+
+      function closeGravitationalSortSettingsModal() {
+          gravitationalSortSettingsModal.classList.remove('modal-visible');
+          setTimeout(() => gravitationalSortSettingsModal.style.display = 'none', 300);
+      }
+
+      function saveGravitationalSortSettings() {
+          const activeBtn = gravitationalSortSettingsModal.querySelector('.gs-direction-btn.active');
+          if (activeBtn) {
+              gravitationalSortRules.direction = activeBtn.dataset.direction;
+          }
+          gravitationalSortRules.strength = parseInt(gsStrengthSlider.value, 10) / 100;
+          closeGravitationalSortSettingsModal();
+      }
+      // ---- END: Gravitational Sort Settings Modal Functions ----
 
       // ---- Simulation Core Logic ----
       function runGameOfLifeGeneration() {
@@ -1723,7 +1779,6 @@ const PALETTES = [
           }
       }
 
-
       function runBrightnessEvolution() {
           const smoothingFactor = 0.5;
 
@@ -1777,6 +1832,72 @@ const PALETTES = [
                   setIndex(tile, newV, newV);
               }
           });
+      }
+
+      function runGravitationalSortGeneration() {
+          const allCurrentTiles = tiles();
+          const currentStateIndices = allCurrentTiles.map(tile => getIndex(tile));
+          const strength = gravitationalSortRules.strength;
+          let changed = false;
+
+          switch (gravitationalSortRules.direction) {
+              case 'down':
+                  for (let row = n - 2; row >= 0; row--) {
+                      for (let col = 0; col < n; col++) {
+                          const i = row * n + col;
+                          const below_i = (row + 1) * n + col;
+                          if (currentStateIndices[i] < currentStateIndices[below_i] && Math.random() < strength) {
+                              [currentStateIndices[i], currentStateIndices[below_i]] = [currentStateIndices[below_i], currentStateIndices[i]];
+                              changed = true;
+                          }
+                      }
+                  }
+                  break;
+              case 'up':
+                  for (let row = 1; row < n; row++) {
+                      for (let col = 0; col < n; col++) {
+                          const i = row * n + col;
+                          const above_i = (row - 1) * n + col;
+                          if (currentStateIndices[i] > currentStateIndices[above_i] && Math.random() < strength) {
+                              [currentStateIndices[i], currentStateIndices[above_i]] = [currentStateIndices[above_i], currentStateIndices[i]];
+                              changed = true;
+                          }
+                      }
+                  }
+                  break;
+              case 'right':
+                  for (let col = n - 2; col >= 0; col--) {
+                      for (let row = 0; row < n; row++) {
+                          const i = row * n + col;
+                          const right_i = row * n + (col + 1);
+                          if (currentStateIndices[i] < currentStateIndices[right_i] && Math.random() < strength) {
+                              [currentStateIndices[i], currentStateIndices[right_i]] = [currentStateIndices[right_i], currentStateIndices[i]];
+                              changed = true;
+                          }
+                      }
+                  }
+                  break;
+              case 'left':
+                  for (let col = 1; col < n; col++) {
+                      for (let row = 0; row < n; row++) {
+                          const i = row * n + col;
+                          const left_i = row * n + (col - 1);
+                          if (currentStateIndices[i] > currentStateIndices[left_i] && Math.random() < strength) {
+                              [currentStateIndices[i], currentStateIndices[left_i]] = [currentStateIndices[left_i], currentStateIndices[i]];
+                              changed = true;
+                          }
+                      }
+                  }
+                  break;
+          }
+
+          if (changed) {
+              allCurrentTiles.forEach((tile, i) => {
+                  if (getIndex(tile) !== currentStateIndices[i]) {
+                      setIndex(tile, currentStateIndices[i]);
+                  }
+              });
+          }
       }
 
       // ---- Color manipulation helper functions ----
@@ -1976,6 +2097,11 @@ const PALETTES = [
                   return;
               }
 
+              if (btn.id === 'btnGravitationalSort') {
+                  openGravitationalSortSettingsModal();
+                  return;
+              }
+
               if (btn.id === 'btnPalette') {
                   openPaletteModal();
                   return;
@@ -2038,7 +2164,7 @@ const PALETTES = [
             },
             evolution: {
                 titleKey: 'help_category_evolution',
-                buttons: ['btnToggleSimMode', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnPlayPauseLife']
+                buttons: ['btnToggleSimMode', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnPlayPauseLife']
             },
             tools: {
                 titleKey: 'help_category_tools',
@@ -2053,6 +2179,7 @@ const PALETTES = [
             'btnBrushMode': getText('help_brushMode'), 'btnSymmetry': getText('help_symmetry'), 'btnColorPicker': getText('help_colorPicker'),
             'btnToggleSimMode': getText('help_toggleSimMode'), 'btnShowBreatheMenu': getText('help_breathe'),
             'btnGameOfLife': getText('help_gameOfLife'), 'btnBrightnessEvo': getText('help_brightnessEvo'),
+            'btnGravitationalSort': getText('help_gravitationalSort'),
             'btnPlayPauseLife': getText('help_playPauseLife'), 'btnUndo': getText('help_undo'), 'btnRedo': getText('help_redo'),
             'btnSave': getText('help_save'), 'btnResetBoard': getText('help_resetBoard')
         };
@@ -2155,7 +2282,6 @@ const PALETTES = [
         contentDiv.appendChild(shortcutsContainer);
       }
 
-
       function setTextContent() {
         const splashTextEl = document.getElementById('splashText');
         if (splashTextEl) splashTextEl.textContent = getText('splashTitle');
@@ -2181,6 +2307,16 @@ const PALETTES = [
         if(paletteModalTitleEl) paletteModalTitleEl.textContent = getText('paletteModal_title');
         const helpIntroTextEl = document.getElementById('helpIntroText');
         if (helpIntroTextEl) helpIntroTextEl.textContent = getText('help_intro');
+        
+        // Modal Titles
+        const gsSettingsTitle = document.getElementById('gsSettingsTitle');
+        if (gsSettingsTitle) gsSettingsTitle.textContent = getText('gs_modal_title');
+        const btnGsSettingsCancelEl = document.getElementById('btnGsSettingsCancel');
+        if (btnGsSettingsCancelEl) btnGsSettingsCancelEl.textContent = getText('gs_modal_cancel');
+        const btnGsSettingsSaveEl = document.getElementById('btnGsSettingsSave');
+        if (btnGsSettingsSaveEl) btnGsSettingsSaveEl.textContent = getText('gs_modal_save_close');
+        
+        // Tooltips
         if(btnInvert) btnInvert.title = getText('tooltip_invert');
         if(btnRandom) btnRandom.title = getText('tooltip_random');
         if(btnColorPicker) btnColorPicker.title = getText('tooltip_colorPicker');
@@ -2197,6 +2333,7 @@ const PALETTES = [
         if(btnTutorial) btnTutorial.title = getText('tooltip_tutorial');
         if(btnGameOfLife) btnGameOfLife.title = getText('tooltip_gameOfLife');
         if(btnBrightnessEvo) btnBrightnessEvo.title = getText('tooltip_brightnessEvo');
+        if(btnGravitationalSort) btnGravitationalSort.title = getText('tooltip_gravitationalSort');
         if(btnLangToggle) btnLangToggle.textContent = currentLang.toUpperCase();
         
         const allButtonsForAria = document.querySelectorAll('.ctrl');
@@ -2392,6 +2529,7 @@ const PALETTES = [
         btnGameOfLife.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('gameOfLife')));
         btnBrightnessEvo.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('brightnessEvo')));
         btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('breathe')));
+        btnGravitationalSort.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('gravitationalSort')));
         btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
         // ---- END: UPDATED SIMULATION BUTTON LISTENERS ----
@@ -2424,6 +2562,20 @@ const PALETTES = [
         btnGolSettingsSave.addEventListener('click', saveGolSettings);
         btnGolSettingsCancel.addEventListener('click', closeGolSettingsModal);
         btnGolSettingsReset.addEventListener('click', resetGolSettings);
+
+        // Gravitational Sort Modal Listeners
+        gsDirectionButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                gsDirectionButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        gsStrengthSlider.addEventListener('input', () => {
+            gsStrengthValue.textContent = `${gsStrengthSlider.value}%`;
+        });
+        btnGsSettingsSave.addEventListener('click', saveGravitationalSortSettings);
+        btnGsSettingsCancel.addEventListener('click', closeGravitationalSortSettingsModal);
+
 
         document.querySelectorAll('.ctrl').forEach(btn => {
             btn.addEventListener('pointerdown', handlePointerDownCtrl);
