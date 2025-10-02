@@ -181,7 +181,9 @@ body {
 #btnGameOfLife,
 #btnBrightnessEvo,
 #btnShowBreatheMenu,
-#btnGravitationalSort {
+#btnGravitationalSort,
+#btnErosion,
+#btnDla {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
@@ -239,7 +241,9 @@ body {
 .sim-mode-active #btnGameOfLife,
 .sim-mode-active #btnBrightnessEvo,
 .sim-mode-active #btnShowBreatheMenu,
-.sim-mode-active #btnGravitationalSort {
+.sim-mode-active #btnGravitationalSort,
+.sim-mode-active #btnErosion,
+.sim-mode-active #btnDla {
     opacity: 1;
     pointer-events: auto;
     visibility: visible;
@@ -249,25 +253,22 @@ body {
 /* Left Panel */
 .sim-mode-active #btnRedo         { grid-area: 4 / 1; }
 .sim-mode-active #btnResizeDown  { grid-area: 3 / 1; }
-/* REVERTED: Moved Color Picker back up */
 .sim-mode-active #btnColorPicker     { grid-area: 1 / 1; }
 
 
 /* Center Panel */
 .sim-mode-active #btnPlayPauseLife   { grid-area: 1 / 4; }
+.sim-mode-active #btnStepForward     { display: inline-flex; grid-area: 1 / 5; }
 .sim-mode-active #btnGameOfLife      { grid-area: 2 / 3; }
 .sim-mode-active #btnShowBreatheMenu { grid-area: 2 / 4; }
 .sim-mode-active #btnBrightnessEvo   { grid-area: 2 / 5; }
-.sim-mode-active #btnGravitationalSort { grid-area: 3 / 3; } /* New Button Position */
-.sim-mode-active #btnStepForward { 
-  display: inline-flex;
-  grid-area: 3 / 4; 
-}
+.sim-mode-active #btnGravitationalSort { grid-area: 3 / 3; }
+.sim-mode-active #btnDla             { grid-area: 3 / 4; }
+.sim-mode-active #btnErosion         { grid-area: 3 / 5; }
 .sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; }
 
 
 /* Right Panel */
-/* REVERTED: Moved Symmetry back up */
 .sim-mode-active #btnSymmetry        { grid-area: 1 / 7; }
 .sim-mode-active #btnRandom {
     grid-area: 1 / 7;
@@ -315,12 +316,12 @@ body {
 .glow-animation-separator svg {
   animation: glow-effect 2s ease-in-out infinite;
 }
-#saveModal, #breatheModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal {
+#saveModal, #breatheModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal {
   transition: opacity 300ms ease-in-out, visibility 300ms ease-in-out;
   visibility: hidden;
   opacity: 0;
 }
-#saveModal.modal-visible, #breatheModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible {
+#saveModal.modal-visible, #breatheModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible {
   visibility: visible;
   opacity: 1;
 }
@@ -673,7 +674,9 @@ body {
 #btnGameOfLife.simulation-active svg,
 #btnBrightnessEvo.simulation-active svg,
 #btnShowBreatheMenu.simulation-active svg,
-#btnGravitationalSort.simulation-active svg {
+#btnGravitationalSort.simulation-active svg,
+#btnErosion.simulation-active svg,
+#btnDla.simulation-active svg {
   stroke: var(--gold);
   stroke-width: 2.5; /* Make the icon lines thicker */
 }
@@ -748,6 +751,12 @@ body {
 }
 
 /* --- END: New Gravitational Sort Settings Modal Styles --- */
+
+/* --- START: New DLA Settings Modal Styles --- */
+#btnDlaSettingsSave:hover {
+    background-color: #e6c200 !important;
+}
+/* --- END: New DLA Settings Modal Styles --- */
 
 
 /* --- START: New Step Forward Button Styles --- */
