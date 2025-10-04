@@ -183,7 +183,9 @@ body {
 #btnShowBreatheMenu,
 #btnGravitationalSort,
 #btnErosion,
-#btnDla {
+#btnDla,
+#btnNudgeBrighter,
+#btnNudgeDarker {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
@@ -243,13 +245,14 @@ body {
 .sim-mode-active #btnShowBreatheMenu,
 .sim-mode-active #btnGravitationalSort,
 .sim-mode-active #btnErosion,
-.sim-mode-active #btnDla {
+.sim-mode-active #btnDla,
+.sim-mode-active #btnNudgeBrighter,
+.sim-mode-active #btnNudgeDarker {
     opacity: 1;
     pointer-events: auto;
     visibility: visible;
     transform: scale(1);
 }
-
 /* Left Panel */
 .sim-mode-active #btnRedo         { grid-area: 4 / 1; }
 .sim-mode-active #btnResizeDown  { grid-area: 3 / 1; }
@@ -280,6 +283,8 @@ body {
     display: none;
 }
 .sim-mode-active #btnUndo   { grid-area: 4 / 7; }
+.sim-mode-active #btnNudgeBrighter { grid-area: 2 / 1; }
+.sim-mode-active #btnNudgeDarker   { grid-area: 2 / 7; }
 
 
 #btnBrushMode svg path {
