@@ -30,25 +30,30 @@ body {
   -ms-user-select: none; /* IE 10+ */
   user-select: none; /* Standard syntax */
 }
-.board {
-  display: grid;
-  grid-template-columns: repeat(var(--grid-size), 1fr);
-  gap: var(--gap-px);
-  border-width: var(--gap-px);
-  border-radius: 6px;
-  transition: gap 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+
+/* START: --- Structural Change for Canvas --- */
+#board {
   position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  /* --- תיקון: הסרנו את התלות של המסגרת במשתנה --- */
+  /* עכשיו תמיד תהיה מסגרת דקה, והמרווחים יצוירו בקנבס */
+  border: 0px solid black; 
+  background-color: #000;
+  border-radius: 6px;
+  transition: box-shadow 0.3s ease-in-out;
 }
-.tile {
-  border-radius: var(--tile-radius);
-  transition: background-color 0.4s ease, box-shadow 0.2s ease, border-radius 0.6s ease-in-out;
+
+#boardCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px; /* Slightly smaller radius to fit inside the container's border */
 }
+/* END: --- Structural Change for Canvas --- */
+
 
 /* --- CONTROL BUTTON STYLES --- */
-
-/* MODIFIED: Unified grid for all controls */
-
-
 #controlsContainer {
     position: relative;
     display: grid;
@@ -64,10 +69,6 @@ body {
     opacity: 0;
     pointer-events: none;
 }
-
-/* DELETED: Old specific grid container styles are no longer needed */
-/* #controls { ... } */
-/* .side-controls { ... } */
 
 .ctrl {
   width: 50px;
@@ -227,8 +228,6 @@ body {
 
 
 /* --- Simulation Mode Layout Overrides --- */
-
-/* This prevents a jump of buttons that disappear on transition */
 .sim-mode-active #btnBrushMode,
 .sim-mode-active #btnGap,
 .sim-mode-active #btnResetBoard,
@@ -263,10 +262,10 @@ body {
 .sim-mode-active #btnPlayPauseLife   { grid-area: 1 / 4; }
 .sim-mode-active #btnStepForward     { display: inline-flex; grid-area: 1 / 5; }
 .sim-mode-active #btnGameOfLife      { grid-area: 2 / 3; }
-.sim-mode-active #btnShowBreatheMenu { grid-area: 2 / 4; }
+.sim-mode-active #btnShowBreatheMenu { grid-area: 3 / 4; } /* UPDATED */
 .sim-mode-active #btnBrightnessEvo   { grid-area: 2 / 5; }
 .sim-mode-active #btnGravitationalSort { grid-area: 3 / 3; }
-.sim-mode-active #btnDla             { grid-area: 3 / 4; }
+.sim-mode-active #btnDla             { grid-area: 2 / 4; } /* UPDATED */
 .sim-mode-active #btnErosion         { grid-area: 3 / 5; }
 .sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; }
 
@@ -283,8 +282,8 @@ body {
     display: none;
 }
 .sim-mode-active #btnUndo   { grid-area: 4 / 7; }
-.sim-mode-active #btnNudgeBrighter { grid-area: 2 / 1; }
-.sim-mode-active #btnNudgeDarker   { grid-area: 2 / 7; }
+.sim-mode-active #btnNudgeBrighter { grid-area: 2 / 1; } /* UPDATED and MOVED */
+.sim-mode-active #btnNudgeDarker   { grid-area: 2 / 7; } /* UPDATED and MOVED */
 
 
 #btnBrushMode svg path {
@@ -292,12 +291,6 @@ body {
 }
 #btnBrushMode.brush-on svg path {
     fill: #fff;
-}
-.tile.source-highlight {
-    box-shadow: 0 0 0 4px var(--gold) inset;
-}
-.tile.target-highlight {
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8) inset;
 }
 .app-shell {
   width: min(85vmin, 720px);
@@ -321,12 +314,12 @@ body {
 .glow-animation-separator svg {
   animation: glow-effect 2s ease-in-out infinite;
 }
-#saveModal, #breatheModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal {
+#saveModal, #breatheModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal, #advancedColorMappingModal {
   transition: opacity 300ms ease-in-out, visibility 300ms ease-in-out;
   visibility: hidden;
   opacity: 0;
 }
-#saveModal.modal-visible, #breatheModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible {
+#saveModal.modal-visible, #breatheModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible, #advancedColorMappingModal.modal-visible {
   visibility: visible;
   opacity: 1;
 }
@@ -349,15 +342,11 @@ body {
 }
 
 @media (max-width: 480px) {
-  /* MODIFIED: Adjust grid for smaller screens */
   #controlsContainer {
     grid-template-columns: 44px 1fr 44px 44px 44px 1fr 44px;
     grid-template-rows: repeat(4, 44px);
   }
   .ctrl { width: 44px; height: 44px; }
-}
-.board.no-gap-fix .tile {
-  transform: scale(1.02);
 }
 
 #btnSymmetry .part {
@@ -367,9 +356,6 @@ body {
 @keyframes breathe {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(0.4); }
-}
-.breathing-tile {
-  animation: breathe 4s infinite;
 }
 
 #breatheExitContainer {
@@ -560,10 +546,10 @@ body {
 }
 
 /* --- Glowing Border for Selected Color --- */
-.board.glowing-border {
+#board.glowing-border {
   animation: glow-border 3s infinite;
 }
-.board.glowing-border-rainbow {
+#board.glowing-border-rainbow {
    animation: glow-border-rainbow 5s infinite;
 }
 
