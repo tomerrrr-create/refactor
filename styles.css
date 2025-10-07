@@ -10,6 +10,8 @@
   --stroke: 3px;
   --gold: #FFD700;
   --glow-color: var(--gold);
+ --sim-color: #455A64;
+
 }
 
 /* --- MOBILE STABILITY FIXES --- */
@@ -234,7 +236,6 @@ body {
 .sim-mode-active #btnTutorial,
 .sim-mode-active #btnSave,
 .sim-mode-active #btnSpecialReset,
-.sim-mode-active #btnPalette,
 .sim-mode-active #btnInvert {
   display: none;
 }
@@ -259,13 +260,17 @@ body {
 
 
 /* Center Panel */
-.sim-mode-active #btnPlayPauseLife   { grid-area: 1 / 4; }
-.sim-mode-active #btnStepForward     { display: inline-flex; grid-area: 1 / 5; }
+/* שורה ראשונה (השינוי שביקשת) */
+.sim-mode-active #btnStepForward     { display: inline-flex; grid-area: 1 / 3; } /* מיקום 1: צעד קדימה */
+.sim-mode-active #btnPalette        { grid-area: 1 / 4; }                      /* מיקום 2: החלף פלטה */
+.sim-mode-active #btnPlayPauseLife   { grid-area: 1 / 5; }                      /* מיקום 3: הפעל / השהה */
+
+/* שורות אחרות (נשארות ללא שינוי) */
 .sim-mode-active #btnGameOfLife      { grid-area: 2 / 3; }
-.sim-mode-active #btnShowBreatheMenu { grid-area: 3 / 4; } /* UPDATED */
+.sim-mode-active #btnShowBreatheMenu { grid-area: 3 / 4; }
 .sim-mode-active #btnBrightnessEvo   { grid-area: 2 / 5; }
 .sim-mode-active #btnGravitationalSort { grid-area: 3 / 3; }
-.sim-mode-active #btnDla             { grid-area: 2 / 4; } /* UPDATED */
+.sim-mode-active #btnDla             { grid-area: 2 / 4; }
 .sim-mode-active #btnErosion         { grid-area: 3 / 5; }
 .sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; }
 
@@ -760,4 +765,23 @@ body {
 #btnStepForward:not(:disabled) {
   color: #fff
 }
+
 /* --- END: New Step Forward Button Styles --- */
+
+
+/* --- Custom Simulation Button Color --- */
+#btnGameOfLife svg,
+#btnBrightnessEvo svg,
+#btnShowBreatheMenu svg,
+#btnGravitationalSort svg,
+#btnErosion svg {
+    stroke: var(--sim-color); /* צובע את קווי המתאר של האייקון */
+}
+
+#btnShowBreatheMenu svg circle {
+    fill: var(--sim-color); /* צובע את העיגולים המלאים באייקון הנשימה */
+}
+
+#btnDla svg {
+    fill: var(--sim-color); /* צובע את האייקון המלא של DLA */
+}

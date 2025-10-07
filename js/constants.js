@@ -7,15 +7,13 @@ export const PALETTES = [
     // --- Group 1: The Foundations ---
 
 
-
-
-
-
     {
         originalName: "Journey",
         emoji: '🌓',
         colors: ["#000000", "#424242", "#7B1FA2", "#5E35B1", "#3949AB", "#673AB7", "#8E24AA", "#AD1457", "#3F51B5", "#B71C1C", "#9C27B0", "#C2185B", "#C62828", "#2E7D32", "#D32F2F", "#D81B60", "#AB47BC", "#757575", "#1976D2", "#E91E63", "#E53935", "#FF1744", "#EC407A", "#F44336", "#1E88E5", "#0097A7", "#EF5350", "#F4511E", "#FF4081", "#43A047", "#FF5252", "#FF5722", "#2196F3", "#F06292", "#4CAF50", "#FF7043", "#F57C00", "#9E9E9E", "#42A5F5", "#FB8C00", "#66BB6A", "#FF8C00", "#00BCD4", "#AFB42B", "#F48FB1", "#FF9800", "#8BC34A", "#26C6DA", "#FFA726", "#BDBDBD", "#9CCC65", "#FBC02D", "#CDDC39", "#FFE082", "#FFEE58"]
     },
+
+
     {
         originalName: "Focus",
         emoji: '🧘',
@@ -63,6 +61,23 @@ export const PALETTES = [
         emoji: '☁️', 
         colors: ["#303F9F", "#0D47A1", "#304FFE", "#3F51B5", "#01579B", "#1565C0", "#3D5AFE", "#2962FF", "#1976D2", "#0277BD", "#2979FF", "#1E88E5", "#0288D1", "#0091EA", "#039BE5", "#03A9F4", "#00B0FF", "#29B6F6", "#4FC3F7", "#40C4FF", "#81D4FA", "#B3E5FC", "#E1F5FE"]
     },
+
+
+{
+    originalName: "Sky–Magenta–Mint (Refined)",
+    emoji: '🌈',
+    colors: [
+        "#B8DCEC", "#A6D3E7", "#94CAE2", "#82C1DD", "#70B8D8", "#5EAED3", "#4CA5CE", "#3A9CC9",
+        "#3490C0", "#3184B7", "#2F78AE", "#2C6CA5", "#29609C", "#275493", "#24488A", "#223C81",
+        "#3A3C8C", "#513C97", "#683CA2", "#7F3CAD", "#963CB8", "#AD3CC3", "#C33CCE", "#CA46C4",
+        "#D250BA", "#D95AB0", "#E064A6", "#E76E9C", "#EE7892", "#F58288", "#F98B7D", "#FD9472",
+        "#FB946E", "#F9946A", "#F79466", "#F59462", "#EFA06B", "#E8AC74", "#E1B87D", "#DAC486",
+        "#CFC98F", "#C4CE98", "#B9D3A1", "#AED8AA", "#A3DDB3", "#98E2BC", "#8DE7C5", "#82ECCE",
+        "#78E9C9", "#6EE6C4", "#64E3BF", "#5AD0B5", "#50BDAA", "#46AAA0", "#3C9795", "#32848B",
+        "#297180", "#1F5E75", "#174E69", "#104E5C", "#0B4D4F", "#094C42", "#084A35", "#084828"
+    ]
+},
+
 
 { 
         originalName: "Tel Aviv Sunset",

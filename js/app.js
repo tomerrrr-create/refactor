@@ -620,18 +620,27 @@ finalColor = adjustBrightness(originalColor, brightnessFactor);
         animateBoardTransition(() => performAction(() => _performResize(newSize)));
       }
       
-      function syncDlaCrystalState() {
-          if (!dlaState) {
-              initializeDla();
-              return;
-          }
-          dlaState.crystal.clear();
-          boardState.forEach((tile, index) => {
-              if (tile.k > 0 && !tile.isGold) {
-                  dlaState.crystal.add(index);
-              }
-          });
-      }
+
+
+function syncDlaCrystalState() {
+    if (!dlaState) {
+        initializeDla();
+        return;
+    }
+    dlaState.crystal.clear();
+    dlaState.emptyIndices = []; // <-- הוספה: מאפסים את רשימת הריקים
+
+    boardState.forEach((tile, index) => {
+        if (tile.k > 0 && !tile.isGold) {
+            dlaState.crystal.add(index);
+        } else {
+            // <-- הוספה: כל תא שאינו חלק מהגביש הוא תא ריק
+            dlaState.emptyIndices.push(index);
+        }
+    });
+}
+
+
 
       function gameLoop() {
         if (!isLifePlaying) return;
@@ -751,13 +760,15 @@ finalColor = adjustBrightness(originalColor, brightnessFactor);
           return { x, y };
       }
       
-      function initializeDla() {
+
+function initializeDla() {
         const initialCrystal = new Set();
         boardState.forEach((tile, index) => {
             if (tile.k > 0 && !tile.isGold) {
                 initialCrystal.add(index);
             }
         });
+
         if (initialCrystal.size === 0) {
             const centerIndex = Math.floor((n * n) / 2);
             initialCrystal.add(centerIndex);
@@ -766,15 +777,39 @@ finalColor = adjustBrightness(originalColor, brightnessFactor);
             boardState[centerIndex].v = seedColorIndex;
             boardState[centerIndex].isGold = false;
         }
+
+        // --- START: NEW EFFICIENT LOGIC ---
+        // 1. Create a list of all empty indices by checking which ones are NOT in the crystal
+        const emptyIndices = [];
+        for (let i = 0; i < n * n; i++) {
+            if (!initialCrystal.has(i)) {
+                emptyIndices.push(i);
+            }
+        }
+
         const walkerCount = n * 4;
         const initialWalkers = [];
         for (let i = 0; i < walkerCount; i++) {
-            let position = dlaRules.injectFromEdges ? getRandomEdgePosition(n) : getRandomGridPosition(n);
-            initialWalkers.push({ y: position.y, x: position.x });
+            if (emptyIndices.length === 0) break; // Stop if no empty space is left
+
+            // 2. Pick a random starting position ONLY from the list of empty spots
+            const randomIndexInEmptyList = Math.floor(Math.random() * emptyIndices.length);
+            const boardIndex = emptyIndices[randomIndexInEmptyList];
+            
+            // Convert board index to {x, y} coordinates
+            const y = Math.floor(boardIndex / n);
+            const x = boardIndex % n;
+            initialWalkers.push({ y, x });
         }
-        dlaState = { crystal: initialCrystal, walkers: initialWalkers, isInitialized: true, isFinished: false, lastWalkerIndex: 0 };
+        
+        // 3. Store the list of empty indices in the simulation state
+        dlaState = { crystal: initialCrystal, walkers: initialWalkers, emptyIndices: emptyIndices, isInitialized: true, isFinished: false, lastWalkerIndex: 0 };
+        // --- END: NEW EFFICIENT LOGIC ---
+        
         renderToScreen(null);
       }
+
+
 
       function armSimulation(simulationName) {
         if (isLifePlaying) return;
@@ -1075,7 +1110,7 @@ finalColor = adjustBrightness(originalColor, brightnessFactor);
                 pauseLife();
                 resetArmedState();
             }
-            const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.btnTutorial, dom.btnSave, dom.btnSpecialReset, dom.btnPalette, dom.btnInvert ];
+            const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.btnTutorial, dom.btnSave, dom.btnSpecialReset, dom.btnInvert ];
             controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
             dom.btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
             dom.btnToggleSimMode.classList.toggle('active', isSimModeActive);

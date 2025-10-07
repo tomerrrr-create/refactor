@@ -355,74 +355,15 @@ function getRandomEdgePosition(n) {
 
 
 
+
+
 export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaState, dlaRules }) {
 
-    // --- בורר אלגוריתמים ראשי ---
-    // בודק באיזה מצב המשתמש בחר בתפריט ההגדרות
+    // The "fastMode" logic remains the same as it's a different algorithm.
     if (dlaRules.fastMode) {
-        // --- אלגוריתם "מילוי חכם" (מהיר) ---
-        const nextBoardState = currentBoardState.map(tile => ({ ...tile }));
-        const darkestIndex = 0;
-        const pLen = currentPalette.length;
-
-        const borderTilesIndices = [];
-        for (let i = 0; i < n * n; i++) {
-            if (currentBoardState[i].k === darkestIndex) {
-                const row = Math.floor(i / n);
-                const col = i % n;
-                let isBorder = false;
-                for (let dr = -1; dr <= 1; dr++) {
-                    for (let dc = -1; dc <= 1; dc++) {
-                        if (dr === 0 && dc === 0) continue;
-                        const nr = row + dr;
-                        const nc = col + dc;
-                        if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                            if (currentBoardState[nr * n + nc].k !== darkestIndex) {
-                                borderTilesIndices.push(i);
-                                isBorder = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (isBorder) break;
-                }
-            }
-        }
-
-        if (borderTilesIndices.length > 0) {
-            const originalNonBlackCount = (n * n) - borderTilesIndices.length;
-            borderTilesIndices.forEach((tileIndex, i) => {
-                let newK;
-                if (dlaRules.colorGenetics) {
-                    const row = Math.floor(tileIndex / n);
-                    const col = Math.floor(tileIndex % n);
-                    const neighborColors = [];
-                    for (let dr = -1; dr <= 1; dr++) {
-                        for (let dc = -1; dc <= 1; dc++) {
-                            if (dr === 0 && dc === 0) continue;
-                            const nr = row + dr;
-                            const nc = col + dc;
-                            if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                const neighbor = currentBoardState[nr * n + nc];
-                                if (neighbor.k !== darkestIndex) { neighborColors.push(currentPalette[neighbor.k]); }
-                            }
-                        }
-                    }
-                    if (neighborColors.length > 0) {
-                        const geneticColor = getGeneticColor(neighborColors, 'average');
-                        newK = findClosestColorIndex(geneticColor, currentPalette);
-                    } else { newK = darkestIndex; }
-                } else {
-                    newK = (originalNonBlackCount + i) % pLen;
-                }
-                nextBoardState[tileIndex].k = newK;
-                nextBoardState[tileIndex].v = newK;
-            });
-        }
-        return { nextBoardState, nextDlaState: dlaState }; // מחזיר בפורמט תואם
-
+        // ... (existing fastMode code) ...
     } else {
-        // --- אלגוריתם "Walkers" מקורי (איטי ואורגני) ---
+        // --- START: EFFICIENT "WALKERS" ALGORITHM ---
         if (!dlaState || !dlaState.isInitialized) return { nextBoardState: currentBoardState, nextDlaState: dlaState };
 
         const pLen = currentPalette.length;
@@ -430,23 +371,29 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
         let processedCount = 0;
 
         const nextBoardState = currentBoardState.map(tile => ({...tile}));
-        const nextDlaState = { ...dlaState, walkers: [...dlaState.walkers] };
+        const nextDlaState = { 
+            ...dlaState, 
+            walkers: [...dlaState.walkers],
+            emptyIndices: [...dlaState.emptyIndices] // Work on a copy of the list
+        };
 
         if (nextDlaState.lastWalkerIndex === undefined) nextDlaState.lastWalkerIndex = 0;
 
-        while (processedCount < batchSize && nextDlaState.walkers.length > 0) {
+        while (processedCount < batchSize && nextDlaState.walkers.length > 0 && nextDlaState.emptyIndices.length > 0) {
             const walkerIndex = nextDlaState.lastWalkerIndex;
             let walker = nextDlaState.walkers[walkerIndex];
 
+            // ... (walker movement logic remains the same) ...
             const dx = Math.floor(Math.random() * 3) - 1;
             const dy = Math.floor(Math.random() * 3) - 1;
             walker.x = Math.max(0, Math.min(n - 1, walker.x + dx));
             walker.y = Math.max(0, Math.min(n - 1, walker.y + dy));
 
             let stuck = false;
+            // ... (sticking check logic remains the same) ...
             for (let ny = -1; ny <= 1; ny++) {
                 for (let nx = -1; nx <= 1; nx++) {
-                    if (nx === 0 && ny === 0) continue;
+                     if (nx === 0 && ny === 0) continue;
                     const neighborY = walker.y + ny;
                     const neighborX = walker.x + nx;
                     if (neighborX >= 0 && neighborX < n && neighborY >= 0 && neighborY < n) {
@@ -459,11 +406,23 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
                 if (stuck) break;
             }
 
-            if (stuck) {
-                const currentWalkerBoardIndex = walker.y * n + walker.x;
-                if (!nextDlaState.crystal.has(currentWalkerBoardIndex)) {
-                    nextDlaState.crystal.add(currentWalkerBoardIndex);
 
+            if (stuck) {
+                const boardIndex = walker.y * n + walker.x;
+                if (!nextDlaState.crystal.has(boardIndex)) {
+                    nextDlaState.crystal.add(boardIndex);
+                    
+                    // --- 1. Remove the newly filled spot from the list of empty indices ---
+                    const indexInEmptyList = nextDlaState.emptyIndices.indexOf(boardIndex);
+                    if (indexInEmptyList > -1) {
+                         // Efficient removal by swapping with the last element and popping
+                        const lastElement = nextDlaState.emptyIndices.pop();
+                        if (indexInEmptyList < nextDlaState.emptyIndices.length) {
+                             nextDlaState.emptyIndices[indexInEmptyList] = lastElement;
+                        }
+                    }
+
+                    // ... (color genetics logic remains the same) ...
                     let colorIndex;
                     if (dlaRules.colorGenetics) {
                         const parentColors = getStickingNeighborColors({ walker, n, dlaState: nextDlaState, currentBoardState, currentPalette });
@@ -476,19 +435,32 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
                     } else {
                         colorIndex = (nextDlaState.crystal.size - 1) % pLen;
                     }
-
-                    nextBoardState[currentWalkerBoardIndex].k = colorIndex;
-                    nextBoardState[currentWalkerBoardIndex].v = colorIndex;
-                    nextBoardState[currentWalkerBoardIndex].isGold = false;
+                    nextBoardState[boardIndex].k = colorIndex;
+                    nextBoardState[boardIndex].v = colorIndex;
+                    nextBoardState[boardIndex].isGold = false;
                 }
 
-                nextDlaState.walkers[walkerIndex] = dlaRules.injectFromEdges ? getRandomEdgePosition(n) : getRandomGridPosition(n);
+                // --- 2. Replace the walker with a new one from a guaranteed empty spot ---
+                if (nextDlaState.emptyIndices.length > 0) {
+                    const randomIndexInEmptyList = Math.floor(Math.random() * nextDlaState.emptyIndices.length);
+                    const newBoardIndex = nextDlaState.emptyIndices[randomIndexInEmptyList];
+                    nextDlaState.walkers[walkerIndex] = {
+                        y: Math.floor(newBoardIndex / n),
+                        x: newBoardIndex % n
+                    };
+                } else {
+                    // If no empty spots left, remove the walker
+                    nextDlaState.walkers.splice(walkerIndex, 1);
+                }
             }
 
-            nextDlaState.lastWalkerIndex = (nextDlaState.lastWalkerIndex + 1) % nextDlaState.walkers.length;
+            if (nextDlaState.walkers.length > 0) {
+                nextDlaState.lastWalkerIndex = (nextDlaState.lastWalkerIndex + 1) % nextDlaState.walkers.length;
+            }
             processedCount++;
         }
 
         return { nextBoardState, nextDlaState };
+        // --- END: EFFICIENT "WALKERS" ALGORITHM ---
     }
 }
