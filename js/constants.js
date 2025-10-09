@@ -69,7 +69,7 @@ export const PALETTES = [
 {
         originalName: "Zen Sand",
         iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M 3 18 Q 12 12 21 18 M 3 14 Q 12 8 21 14 M 3 10 Q 12 4 21 10" stroke="#EAEAEA" stroke-width="1.5" fill="none" stroke-linecap="round"></path></svg>',
-        colors: ["#483C32", "#4B4036", "#4F443A", "#52483E", "#564C42", "#595046", "#5D544A", "#60584E", "#645C52", "#676056", "#6B645A", "#6E685E", "#726C62", "#757066", "#79746A", "#7C786E", "#807C72", "#838076", " #87847A", "#8A887E", "#8E8C82", "#919086", "#95948A", "#98988E", "#9C9C92", "#9FA096", "#A3A49A", "#A6A89E", "#AAACA2", "#ADB0A6", "#B1B4AA", "#B4B8AE", "#B8BCB2", "#BCC0B6", "#BFC3BA", "#C3C7BE", "#C6CBC2", "#CACFC6", "#CED3CA", "#D1D7CE", "#D5DBD2", "#D8DFD6", "#DCE3DA", "#DFE7DE", "#E3EBE2", "#E6EFE6", "#EAF3EA", "#EDF7EE"]
+        colors: ["#483C32", "#4B4036", "#4F443A", "#52483E", "#564C42", "#595046", "#5D544A", "#60584E", "#645C52", "#676056", "#6B645A", "#6E685E", "#726C62", "#757066", "#79746A", "#7C786E", "#807C72", "#838076", "#87847A", "#8A887E", "#8E8C82", "#919086", "#95948A", "#98988E", "#9C9C92", "#9FA096", "#A3A49A", "#A6A89E", "#AAACA2", "#ADB0A6", "#B1B4AA", "#B4B8AE", "#B8BCB2", "#BCC0B6", "#BFC3BA", "#C3C7BE", "#C6CBC2", "#CACFC6", "#CED3CA", "#D1D7CE", "#D5DBD2", "#D8DFD6", "#DCE3DA", "#DFE7DE", "#E3EBE2", "#E6EFE6", "#EAF3EA", "#EDF7EE"]
     },
 
 

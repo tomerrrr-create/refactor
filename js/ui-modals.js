@@ -85,6 +85,13 @@ function closeAdvancedColorMappingModal() {
 }
 
 
+function closeBrightnessEvoSettingsModal() {
+    app.dom.brightnessEvoSettingsModal.classList.remove('modal-visible');
+    setTimeout(() => app.dom.brightnessEvoSettingsModal.style.display = 'none', 300);
+    app.resetWasLongPress();
+}
+
+
 // --- Modal Management Functions ---
 
 function openBreatheModal() {
@@ -464,6 +471,31 @@ function saveGravitationalSortSettings() {
 
 
 
+let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית של המשתמש
+
+function openBrightnessEvoSettingsModal() {
+    if (app.isBreathing() || app.isLifePlaying()) return;
+    
+    // קובעים את המצב הנוכחי מהאפליקציה
+    selectedEvoMode = app.getBrightnessEvoMode(); 
+
+    // מעדכנים את הכפתורים במודאל כדי להציג את הבחירה הנוכחית
+    app.dom.evoModeBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === selectedEvoMode);
+    });
+    
+    app.dom.brightnessEvoSettingsModal.style.display = 'flex';
+    setTimeout(() => app.dom.brightnessEvoSettingsModal.classList.add('modal-visible'), 10);
+}
+
+function saveBrightnessEvoSettings() {
+    app.setBrightnessEvoMode(selectedEvoMode);
+    closeBrightnessEvoSettingsModal();
+}
+
+
+
+
 
 function openDlaSettingsModal() {
     if (app.isBreathing() || app.isLifePlaying()) return;
@@ -583,6 +615,18 @@ export function initializeModals(appContext) {
     app.dom.btnDlaSettingsSave.addEventListener('click', saveDlaSettings);
     app.dom.btnDlaSettingsCancel.addEventListener('click', closeDlaSettingsModal);
 
+// Brightness Evolution Settings Modal
+    app.dom.evoModeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedEvoMode = btn.dataset.mode;
+            app.dom.evoModeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+    app.dom.btnEvoSettingsSave.addEventListener('click', saveBrightnessEvoSettings);
+    app.dom.btnEvoSettingsCancel.addEventListener('click', closeBrightnessEvoSettingsModal);
+
+
     // Phase 1 Addition: Advanced Color Mapping Modal
     app.dom.btnAdaptModalClose.addEventListener('click', closeAdvancedColorMappingModal);
     app.dom.advancedColorMappingModal.addEventListener('click', (e) => { if (e.target === app.dom.advancedColorMappingModal) { closeAdvancedColorMappingModal(); } });
@@ -601,6 +645,7 @@ export function initializeModals(appContext) {
         openGolSettingsModal,
         openGravitationalSortSettingsModal,
         openDlaSettingsModal,
+        openBrightnessEvoSettingsModal,
         openAdvancedColorMappingModal, // Phase 1 Addition
         closeModal,
         renderColorPickerContent,

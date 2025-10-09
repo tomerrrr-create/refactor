@@ -77,7 +77,8 @@ import { initializeModals } from './ui-modals.js';
       let animationFrameId = null;
       let armedSimulation = null;
       let symmetryMode = 'off';
-      
+     let brightnessEvoMode = 'brightness'; // ישמור את המצב הנבחר: 'brightness' או 'contrast'
+ 
       const isGold = (index) => boardState[index]?.isGold;
       const paletteLen = () => palette().length;
       const norm = (k, m = paletteLen()) => ((k % m) + m) % m;
@@ -230,6 +231,18 @@ import { initializeModals } from './ui-modals.js';
           }
       }
       
+function getBrightnessEvoMode() {
+          return brightnessEvoMode;
+      }
+
+      function setBrightnessEvoMode(mode) {
+          if (mode === 'brightness' || mode === 'contrast') {
+              brightnessEvoMode = mode;
+          }
+      }
+
+
+
 
 
 
@@ -644,7 +657,15 @@ function syncDlaCrystalState() {
         let nextState;
         switch(armedSimulation) {
             case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration(context); boardState = nextState; break;
-            case 'brightnessEvo': nextState = Simulations.runBrightnessEvolution(context); boardState = nextState; break;
+case 'brightnessEvo':
+    if (brightnessEvoMode === 'contrast') {
+        nextState = Simulations.runContrastGeneration(context);
+    } else {
+        nextState = Simulations.runBrightnessEvolution(context);
+    }
+    boardState = nextState;
+    break;
+
             case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration(context); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
             case 'dla':
@@ -670,9 +691,14 @@ function syncDlaCrystalState() {
                 case 'gameOfLife': 
                     boardState = Simulations.runGameOfLifeGeneration(context); 
                     break;
-                case 'brightnessEvo': 
-                    boardState = Simulations.runBrightnessEvolution(context); 
-                    break;
+case 'brightnessEvo': 
+    if (brightnessEvoMode === 'contrast') {
+        boardState = Simulations.runContrastGeneration(context);
+    } else {
+        boardState = Simulations.runBrightnessEvolution(context);
+    }
+    break;
+
                 case 'gravitationalSort': 
                     boardState = Simulations.runGravitationalSortGeneration(context); 
                     break;
@@ -1036,6 +1062,7 @@ function initializeDla() {
             if (btn.id === 'btnGameOfLife') { modals.openGolSettingsModal(); return; }
             if (btn.id === 'btnGravitationalSort') { modals.openGravitationalSortSettingsModal(); return; }
             if (btn.id === 'btnDla') { modals.openDlaSettingsModal(); return; }
+if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); return; }
             if (btn.id === 'btnPalette') { modals.openPaletteModal(); return; }
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
         }, C.LONG_PRESS_SHOW_MS);
@@ -1496,6 +1523,11 @@ function getTilesInRadius(centerIndex, radius) {
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: (r) => { gameOfLifeRules = r; },
             getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; },
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
+
+getBrightnessEvoMode,
+            setBrightnessEvoMode,
+
+
             handleSaveProject, handleLoadProject, onProjectFileSelected,
             pointerState,
             resetWasLongPress,

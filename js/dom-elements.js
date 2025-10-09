@@ -55,6 +55,15 @@ export const dom = {
   paletteModal: document.getElementById('paletteModal'),
   gameOfLifeSettingsModal: document.getElementById('gameOfLifeSettingsModal'),
   gravitationalSortSettingsModal: document.getElementById('gravitationalSortSettingsModal'),
+
+// Brightness Evolution Settings Modal Elements
+  brightnessEvoSettingsModal: document.getElementById('brightnessEvoSettingsModal'),
+  evoSettingsTitle: document.getElementById('evoSettingsTitle'),
+  evoModeBtns: document.querySelectorAll('.evo-mode-btn'),
+  btnEvoSettingsSave: document.getElementById('btnEvoSettingsSave'),
+  btnEvoSettingsCancel: document.getElementById('btnEvoSettingsCancel'),
+
+
   longPressOverlay: document.getElementById('longPressOverlay'),
   longPressDisplay: document.getElementById('longPressDisplay'),
 

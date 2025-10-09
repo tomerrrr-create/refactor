@@ -486,6 +486,40 @@
       <button id="btnAdaptColors" class="w-full text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);"></button>
     </div>
   </div>
+
+
+<div id="brightnessEvoSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
+    <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+      <h2 id="evoSettingsTitle" class="text-xl font-bold text-center text-gray-200">הגדרות אבולוציית בהירות</h2>
+      
+      <div class="flex flex-col gap-2">
+        <h3 class="font-semibold text-gray-300 text-center">בחר מצב סימולציה</h3>
+        <div class="flex items-center justify-center gap-4 pt-2">
+          <button class="evo-mode-btn flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-gray-600 bg-gray-800 transition" data-mode="brightness">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 mb-1"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+            <span class="text-sm">בהירות</span>
+          </button>
+          <button class="evo-mode-btn flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-gray-600 bg-gray-800 transition" data-mode="contrast">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-8 h-8 mb-1"><path d="M12 3v18M3 12h18" stroke-linecap="round" stroke-linejoin="round" transform="rotate(45 12 12)"></path><circle cx="12" cy="12" r="4" fill="none"></circle></svg>
+            <span class="text-sm">קונטרסט</span>
+          </button>
+          <button class="evo-mode-btn flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-gray-600 bg-gray-800 transition opacity-50" data-mode="placeholder" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-8 h-8 mb-1"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
+            <span class="text-sm">עתידי</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
+        <div class="flex gap-4">
+          <button id="btnEvoSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">ביטול</button>
+          <button id="btnEvoSettingsSave" class="text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">שמור וסגור</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <script type="module" src="js/ui-modals.js"></script>
 <script type="module" src="js/app.js"></script></body>
 </html>
