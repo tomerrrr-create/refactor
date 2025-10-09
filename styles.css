@@ -10,7 +10,7 @@
   --stroke: 3px;
   --gold: #FFD700;
   --glow-color: var(--gold);
- --sim-color: #455A64;
+ --sim-color: #3F51B5;
 
 }
 
@@ -552,10 +552,10 @@ body {
 
 /* --- Glowing Border for Selected Color --- */
 #board.glowing-border {
-  animation: glow-border 3s infinite;
+  animation: glow-border 3s 2;
 }
 #board.glowing-border-rainbow {
-   animation: glow-border-rainbow 5s infinite;
+   animation: glow-border-rainbow 3s 2;
 }
 
 @keyframes glow-border {
@@ -678,9 +678,12 @@ body {
 }
 /* --- END: MODIFIED STYLE FOR "ARMED" SIMULATION BUTTON --- */
 
-/* MODIFIED: Color the play icon white when a simulation is armed */
-.sim-mode-active #btnPlayPauseLife:not(:disabled) #iconPlay {
-  fill: #fff;
+/* --- Play/Pause Button Icon Colors --- */
+
+/* צובע את אייקון ה-Play (כשהוא זמין) ואת אייקון ה-Pause בצבע זהב */
+.sim-mode-active #btnPlayPauseLife:not(:disabled) #iconPlay,
+.sim-mode-active #btnPlayPauseLife #iconPause {
+  fill: var(--gold);
 }
 
 
@@ -762,9 +765,11 @@ body {
   transition: color 0.3s ease;
 }
 
+/* Color the Step Forward icon with gold when active */
 #btnStepForward:not(:disabled) {
-  color: #fff
+  color: var(--gold); /* <-- שינוי הצבע לזהב */
 }
+
 
 /* --- END: New Step Forward Button Styles --- */
 
@@ -785,3 +790,59 @@ body {
 #btnDla svg {
     fill: var(--sim-color); /* צובע את האייקון המלא של DLA */
 }
+
+
+/* --- Styling for the central grid wrapper in simulation mode --- */
+
+/* זהו אלמנט הרקע החדש שהוספנו. הוא מוסתר כברירת מחדל */
+#simModeBackground {
+  display: none;
+  z-index: -1; /* ממקם אותו מאחורי הכפתורים */
+}
+
+/* כשאנחנו במצב סימולציה, אנחנו מציגים את הרקע ומעצבים אותו */
+.sim-mode-active #simModeBackground {
+  display: block;
+  
+  /* מיקום הרקע בדיוק על 3 העמודות המרכזיות ו-4 השורות */
+  grid-column: 3 / span 3;
+  grid-row: 2 / span 2;
+  
+  /* העיצוב של המעטפת */
+  background: linear-gradient(to bottom, #0f172a, #000000);
+  border-radius: 12px;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+
+
+
+/* --- Brush Size Slider Styles --- */
+#brushSizeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eaeaea;
+  cursor: pointer;
+  margin-top: -6px; 
+}
+
+#brushSizeSlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eaeaea;
+  cursor: pointer;
+}
+
+#brushSizeSlider:focus {
+    outline: none;
+}
+
+#brushSizeSlider:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.5);
+}
+

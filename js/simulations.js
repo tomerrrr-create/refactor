@@ -165,9 +165,10 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
     return nextBoardState;
 }
 
-export function runBrightnessEvolution({ n, currentBoardState }) {
+export function runBrightnessEvolution({ n, currentBoardState, currentPalette }) {
     const smoothingFactor = 0.5;
     const nextBoardState = currentBoardState.map(tile => ({ ...tile })); // Create a mutable copy
+    const maxIndex = currentPalette.length - 1; // קביעת האינדקס המקסימלי המותר
 
     for (let i = 0; i < n * n; i++) {
         const cell = currentBoardState[i];
@@ -196,7 +197,13 @@ export function runBrightnessEvolution({ n, currentBoardState }) {
         if (neighborCount > 0) {
             const averageBrightness = totalBrightness / neighborCount;
             const currentV = cell.v;
-            const newV = currentV + (averageBrightness - currentV) * smoothingFactor;
+            let newV = currentV + (averageBrightness - currentV) * smoothingFactor;
+
+            // --- התיקון המרכזי ---
+            // תחימת הערך החדש בין 0 לאינדקס המקסימלי של הפלטה
+            newV = Math.max(0, Math.min(newV, maxIndex)); 
+            // ---------------------
+
             nextBoardState[i].v = newV;
             nextBoardState[i].k = Math.round(newV);
         }
@@ -204,6 +211,10 @@ export function runBrightnessEvolution({ n, currentBoardState }) {
 
     return nextBoardState;
 }
+
+
+
+
 
 export function runGravitationalSortGeneration({ n, currentBoardState, gravitationalSortRules }) {
     const nextBoardState = currentBoardState.map(tile => ({...tile}));

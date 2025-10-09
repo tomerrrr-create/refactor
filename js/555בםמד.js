@@ -4,10 +4,25 @@ import { getText, translations } from './i18n.js';
 
 // --- Data ---
 export const PALETTES = [
-    // --- Group 1: The Foundations -
+    // --- Group 1: The Foundations ---
+ 
+    {
+        originalName: "Coral Reef",
+        emoji: '🐠',
+        colors: ["#001f3f", "#00264d", "#002d5b", "#00346a", "#003b78", "#004286", "#004994", "#0050a3", "#0057b1", "#005ec0", "#0065ce", "#006cdd", "#0073eb", "#007af9", "#0081ff", "#198cff", "#3397ff", "#4da2ff", "#66adff", "#80b8ff", "#99c3ff", "#b3ceff", "#ccd9ff", "#e6e4ff", "#f2e7f9", "#f6e8f2", "#f9e9ec", "#fcebe5", "#ffede0", "#ffefe0", "#fff0e1", "#fff2e3", "#fff3e5", "#fff5e7", "#fff6e9", "#fff8eb", "#fff9ed", "#fffbee", "#fffcf0", "#fffdf2", "#fffef4", "#fffef6", "#fffef8", "#fffefa", "#fffefc", "#fffefe", "#ffffff", "#ffffff"]
+    },
 
+{
+        originalName: "Misty Forest",
+        emoji: '🌲',
+        colors: ["#2F4F4F", "#325252", "#365655", "#395958", "#3D5D5B", "#40605F", "#446362", "#476765", "#4B6A68", "#4E6D6C", "#52716F", "#557472", "#597876", "#5C7B79", "#607F7C", "#638280", "#678584", "#6B8987", "#6F8D8B", "#72908F", "#769492", "#7A9896", "#7E9C9A", "#829FA0", "#86A3A3", "#8AA7A7", "#8EABAC", "#92AFB0", "#96B2B4", "#9AB6B8", "#9EBABC", "#A2BEC0", "#A6C2C4", "#AAC5C8", "#AEC9CC", "#B2CDD0", "#B6D1D4", "#BAD4D8", "#BED8DC", "#C2DBE0", "#C6DFE4", "#CAE3E8", "#CEE6EC", "#D2EAF0", "#D6EDF4", "#DAF1F8", "#DEF5FC", "#E2F9FF"]
+    },
 
-
+{
+        originalName: "Zen Sand",
+        iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M 3 18 Q 12 12 21 18 M 3 14 Q 12 8 21 14 M 3 10 Q 12 4 21 10" stroke="#EAEAEA" stroke-width="1.5" fill="none" stroke-linecap="round"></path></svg>',
+        colors: ["#483C32", "#4B4036", "#4F443A", "#52483E", "#564C42", "#595046", "#5D544A", "#60584E", "#645C52", "#676056", "#6B645A", "#6E685E", "#726C62", "#757066", "#79746A", "#7C786E", "#807C72", "#838076", " #87847A", "#8A887E", "#8E8C82", "#919086", "#95948A", "#98988E", "#9C9C92", "#9FA096", "#A3A49A", "#A6A89E", "#AAACA2", "#ADB0A6", "#B1B4AA", "#B4B8AE", "#B8BCB2", "#BCC0B6", "#BFC3BA", "#C3C7BE", "#C6CBC2", "#CACFC6", "#CED3CA", "#D1D7CE", "#D5DBD2", "#D8DFD6", "#DCE3DA", "#DFE7DE", "#E3EBE2", "#E6EFE6", "#EAF3EA", "#EDF7EE"]
+    },
 
     {
         originalName: "Journey",
@@ -65,6 +80,17 @@ export const PALETTES = [
     },
 
 
+    {
+        originalName: "Coral Reef",
+        emoji: '🐠',
+        colors: ["#001f3f", "#00264d", "#002d5b", "#00346a", "#003b78", "#004286", "#004994", "#0050a3", "#0057b1", "#005ec0", "#0065ce", "#006cdd", "#0073eb", "#007af9", "#0081ff", "#198cff", "#3397ff", "#4da2ff", "#66adff", "#80b8ff", "#99c3ff", "#b3ceff", "#ccd9ff", "#e6e4ff", "#f2e7f9", "#f6e8f2", "#f9e9ec", "#fcebe5", "#ffede0", "#ffefe0", "#fff0e1", "#fff2e3", "#fff3e5", "#fff5e7", "#fff6e9", "#fff8eb", "#fff9ed", "#fffbee", "#fffcf0", "#fffdf2", "#fffef4", "#fffef6", "#fffef8", "#fffefa", "#fffefc", "#fffefe", "#ffffff", "#ffffff"]
+    },
+
+{
+        originalName: "Misty Forest",
+        emoji: '🌲',
+        colors: ["#2F4F4F", "#325252", "#365655", "#395958", "#3D5D5B", "#40605F", "#446362", "#476765", "#4B6A68", "#4E6D6C", "#52716F", "#557472", "#597876", "#5C7B79", "#607F7C", "#638280", "#678584", "#6B8987", "#6F8D8B", "#72908F", "#769492", "#7A9896", "#7E9C9A", "#829FA0", "#86A3A3", "#8AA7A7", "#8EABAC", "#92AFB0", "#96B2B4", "#9AB6B8", "#9EBABC", "#A2BEC0", "#A6C2C4", "#AAC5C8", "#AEC9CC", "#B2CDD0", "#B6D1D4", "#BAD4D8", "#BED8DC", "#C2DBE0", "#C6DFE4", "#CAE3E8", "#CEE6EC", "#D2EAF0", "#D6EDF4", "#DAF1F8", "#DEF5FC", "#E2F9FF"]
+    },
 
 {
         originalName: "Zen Sand",
@@ -88,6 +114,12 @@ export const PALETTES = [
     ]
 },
 
+
+{ 
+        originalName: "Tel Aviv Sunset",
+        emoji: '🌇',
+        colors: ["#0d3b66", "#1c294a", "#2b213b", "#481b5e", "#6a0d83", "#892d8a", "#ad3f8f", "#ce4993", "#e05481", "#ee5d6c", "#f57667", "#fb9062", "#fc9d54", "#ffac4a", "#ff8c42", "#f99e52", "#f4ae58", "#eeaf61", "#f8c87f", "#fcdca2", "#f8c0cb", "#f5e3e0", "#fdf6f4"]
+    },
 
 /*
 {

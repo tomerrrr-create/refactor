@@ -72,7 +72,7 @@ import { initializeModals } from './ui-modals.js';
       let colorPickerPage = 0;
       let longPressTimer = null;
       let wasLongPress = false;
-      
+      let brushSize = 1; 
       let isLifePlaying = false;
       let animationFrameId = null;
       let armedSimulation = null;
@@ -230,87 +230,83 @@ import { initializeModals } from './ui-modals.js';
           }
       }
       
-      function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
-          if (!targetCtx) return;
 
-          if (separatorPx > 0) {
-              targetCtx.fillStyle = '#000000';
-              targetCtx.fillRect(0, 0, width, height);
-          } else {
-              targetCtx.clearRect(0, 0, width, height);
-          }
 
-          if (boardState.length === 0) return;
-          
-          const totalGapSize = (n - 1) * separatorPx;
-          const tileSize = (width - totalGapSize) / n;
-          
-          const currentPalette = palette();
-          const paletteAsRgb = currentPalette.map(hexToRgb);
 
-          for (let i = 0; i < n * n; i++) {
-              const tileData = boardState[i];
-              if (!tileData) continue;
+function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
+    if (!targetCtx) return;
 
-              let finalColor;
+    if (separatorPx > 0) {
+        targetCtx.fillStyle = '#000000';
+        targetCtx.fillRect(0, 0, width, height);
+    } else {
+        targetCtx.clearRect(0, 0, width, height);
+    }
 
-              if (isBreathing && !tileData.isGold) {
-                  const BREATHE_SPEED = 0.0015;
-                  const elapsed = timestamp - breatheStartTime;
-                  let wave;
+    if (boardState.length === 0) return;
+    
+    const totalGapSize = (n - 1) * separatorPx;
+    const tileSize = (width - totalGapSize) / n;
+    
+    const currentPalette = palette();
+    const paletteAsRgb = currentPalette.map(hexToRgb);
 
-                  if (breatheMode === 'solo') {
-                      // --- MODIFIED: Use the pre-calculated random offset ---
-                      wave = Math.sin(elapsed * BREATHE_SPEED + tileData.breatheOffset);
-                  } else { // 'group' mode
-                      wave = Math.sin(elapsed * BREATHE_SPEED + tileData.k * 0.8);
-                  }
-                  
-// ... (חישוב ה-wave נשאר זהה) ...
+    for (let i = 0; i < n * n; i++) {
+        const tileData = boardState[i];
+        if (!tileData) continue;
 
-const FADE_IN_DURATION = 2000; // 2 שניות לכניסה עדינה
-const fadeInProgress = Math.min(elapsed / FADE_IN_DURATION, 1.0);
+        let finalColor;
 
-// הנוסחה הקודמת, מנוסחת מחדש לנוחות:
-const animatedFactor = 0.7 + wave * 0.3; 
+        if (isBreathing && !tileData.isGold) {
+            const BREATHE_SPEED = 0.0015;
+            const elapsed = timestamp - breatheStartTime;
+            let wave;
 
-// נוסחת האינטרפולציה: מערבבים בין בהירות מלאה (1.0) לבין הבהירות המונפשת
-const brightnessFactor = (1.0 * (1 - fadeInProgress)) + (animatedFactor * fadeInProgress);
+            if (breatheMode === 'solo') {
+                wave = Math.sin(elapsed * BREATHE_SPEED + tileData.breatheOffset);
+            } else { // 'group' mode
+                wave = Math.sin(elapsed * BREATHE_SPEED + tileData.k * 0.8);
+            }
+            
+            const FADE_IN_DURATION = 2000;
+            const fadeInProgress = Math.min(elapsed / FADE_IN_DURATION, 1.0);
+            const animatedFactor = 0.7 + wave * 0.3; 
+            const brightnessFactor = (1.0 * (1 - fadeInProgress)) + (animatedFactor * fadeInProgress);
 
-const originalColor = getPaletteColor(tileData.k);
-finalColor = adjustBrightness(originalColor, brightnessFactor);
+            const originalColor = getPaletteColor(tileData.k);
+            finalColor = adjustBrightness(originalColor, brightnessFactor);
 
-              } else if (tileData.isGold) {
-                  finalColor = C.GOLD;
-              } else if (tileData.prevK !== null && timestamp) {
-                  const elapsed = timestamp - tileData.animStart;
-                  const progress = Math.min(elapsed / ANIMATION_DURATION, 1.0);
-                  
-                  const fromRgb = paletteAsRgb[norm(tileData.prevK)];
-                  const toRgb = paletteAsRgb[norm(tileData.k)];
+        } else if (tileData.isGold) {
+            finalColor = C.GOLD;
+        } else if (tileData.prevK !== null && timestamp) {
+            const elapsed = timestamp - tileData.animStart;
+            const progress = Math.min(elapsed / ANIMATION_DURATION, 1.0);
+            
+            const fromRgb = paletteAsRgb[norm(tileData.prevK)];
+            const toRgb = paletteAsRgb[norm(tileData.k)];
 
-                  const r = Math.round(lerp(fromRgb[0], toRgb[0], progress));
-                  const g = Math.round(lerp(fromRgb[1], toRgb[1], progress));
-                  const b = Math.round(lerp(fromRgb[2], toRgb[2], progress));
-                  
-                  finalColor = `rgb(${r},${g},${b})`;
-              } else {
-                  finalColor = getPaletteColor(tileData.k);
-              }
+            const r = Math.round(lerp(fromRgb[0], toRgb[0], progress));
+            const g = Math.round(lerp(fromRgb[1], toRgb[1], progress));
+            const b = Math.round(lerp(fromRgb[2], toRgb[2], progress));
+            
+            finalColor = `rgb(${r},${g},${b})`;
+        } else {
+            finalColor = getPaletteColor(tileData.k);
+        }
 
-              targetCtx.fillStyle = finalColor;
-              const row = Math.floor(i / n);
-              const col = i % n;
-              const x = col * (tileSize + separatorPx);
-              const y = row * (tileSize + separatorPx);
-              
-              if (separatorPx === 0) {
-                  targetCtx.fillRect(x - 0.5, y - 0.5, tileSize + 1, tileSize + 1);
-              } else {
-                  targetCtx.fillRect(x, y, tileSize, tileSize);
-              }
-          }
-      }
+        targetCtx.fillStyle = finalColor;
+        const row = Math.floor(i / n);
+        const col = i % n;
+        const x = col * (tileSize + separatorPx);
+        const y = row * (tileSize + separatorPx);
+        
+        if (separatorPx === 0) {
+            targetCtx.fillRect(x - 0.5, y - 0.5, tileSize + 1, tileSize + 1);
+        } else {
+            targetCtx.fillRect(x, y, tileSize, tileSize);
+        }
+    }
+}
 
       function renderToScreen(timestamp) {
         if (!ctx || !canvas) return;
@@ -622,24 +618,24 @@ finalColor = adjustBrightness(originalColor, brightnessFactor);
       
 
 
+
+
 function syncDlaCrystalState() {
     if (!dlaState) {
         initializeDla();
         return;
     }
     dlaState.crystal.clear();
-    dlaState.emptyIndices = []; // <-- הוספה: מאפסים את רשימת הריקים
+    dlaState.emptyIndices = [];
 
     boardState.forEach((tile, index) => {
         if (tile.k > 0 && !tile.isGold) {
             dlaState.crystal.add(index);
         } else {
-            // <-- הוספה: כל תא שאינו חלק מהגביש הוא תא ריק
             dlaState.emptyIndices.push(index);
         }
     });
 }
-
 
 
       function gameLoop() {
@@ -787,7 +783,13 @@ function initializeDla() {
             }
         }
 
-        const walkerCount = n * 4;
+// Calculate walker count using a direct, pre-calibrated formula.
+        let calculatedWalkers = Math.round(1.2 * n * Math.sqrt(n));
+
+        // IMPORTANT: Ensure we don't create more walkers than there are empty spaces.
+        const walkerCount = Math.min(calculatedWalkers, emptyIndices.length);
+
+
         const initialWalkers = [];
         for (let i = 0; i < walkerCount; i++) {
             if (emptyIndices.length === 0) break; // Stop if no empty space is left
@@ -871,16 +873,22 @@ function initializeDla() {
         return fileName.replace(/[<>:"/\\|?*]/g, '_') + `.${extension}`;
       }
 
-      function downloadHighQualityImage() {
-        const exportSize = 4096;
-        const borderSize = Math.round(exportSize * 0.01); 
-        const drawingAreaSize = exportSize - (borderSize * 2);
 
-        const offscreenCanvas = document.createElement('canvas');
-        offscreenCanvas.width = exportSize;
-        offscreenCanvas.height = exportSize;
-        const offscreenCtx = offscreenCanvas.getContext('2d');
 
+
+// "כלי עזר" קטן שמבצע את ההורדה הישירה למחשב
+      function triggerDownload(file) {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file);
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }
+
+      // הפונקציה הראשית החדשה שמחליפה את הקודמת
+      async function shareOrDownloadImage() {
         const originalButtonText = dom.btnSaveImage.innerHTML;
         dom.btnSaveImage.innerHTML = `
             <svg class="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -890,37 +898,65 @@ function initializeDla() {
         `;
         dom.btnSaveImage.disabled = true;
         
-        setTimeout(() => {
+        // שלב א': יצירת התמונה באיכות גבוהה (נשאר ללא שינוי)
+        const exportSize = 4096;
+        const borderSize = Math.round(exportSize * 0.01); 
+        const drawingAreaSize = exportSize - (borderSize * 2);
+
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = exportSize;
+        offscreenCanvas.height = exportSize;
+        const offscreenCtx = offscreenCanvas.getContext('2d');
+        
+        await new Promise(resolve => setTimeout(() => {
             offscreenCtx.fillStyle = '#000000';
             offscreenCtx.fillRect(0, 0, exportSize, exportSize);
-
             offscreenCtx.save();
             offscreenCtx.translate(borderSize, borderSize);
-            
             renderBoard(offscreenCtx, drawingAreaSize, drawingAreaSize, null);
-
             offscreenCtx.restore();
-    
-            offscreenCanvas.toBlob((blob) => {
-                if (blob) {
-                    const highQualityFile = new File([blob], getSanitizedFileName('png'), { type: 'image/png' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(highQualityFile);
-                    link.download = highQualityFile.name;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(link.href);
-                } else {
-                    alert("Error creating high-quality image.");
+            resolve();
+        }, 50));
+        
+        const blob = await new Promise(resolve => offscreenCanvas.toBlob(resolve, 'image/png'));
+        
+        if (!blob) {
+            alert("Error creating high-quality image.");
+            dom.btnSaveImage.innerHTML = originalButtonText;
+            dom.btnSaveImage.disabled = false;
+            return;
+        }
+
+        const fileName = getSanitizedFileName('png');
+        const imageFile = new File([blob], fileName, { type: 'image/png' });
+        const shareData = {
+            files: [imageFile],
+            title: fileName.replace('.png', ''),
+            text: 'נוצר באמצעות האפליקציה',
+        };
+
+        // שלב ב': בדיקה אם המכשיר תומך בשיתוף
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            // אם כן (מובייל) - פותחים את תפריט השיתוף
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Share API error:', err);
+                    triggerDownload(imageFile); // אם השיתוף נכשל, נבצע הורדה רגילה
                 }
-                
-                dom.btnSaveImage.innerHTML = originalButtonText;
-                dom.btnSaveImage.disabled = false;
-                modals.closeModal();
-            }, 'image/png');
-        }, 50);
+            }
+        } else {
+            // אם לא (דסקטופ) - מבצעים הורדה ישירה
+            triggerDownload(imageFile);
+        }
+        
+        dom.btnSaveImage.innerHTML = originalButtonText;
+        dom.btnSaveImage.disabled = false;
+        modals.closeModal();
       }
+
+
       
       async function handleSaveProject() {
           const stateString = JSON.stringify(getCurrentState(), null, 2);
@@ -1177,11 +1213,105 @@ function applyActionToTiles(indices, actionFn) {
         if (changed) startAnimationLoop();
       }
 
+function handleDragPaint(targetIndex) {
+    if (targetIndex === -1 || targetIndex === pointerState.lastPaintedIndex) return;
+    pointerState.lastPaintedIndex = targetIndex;
 
-      function handleDragPaint(targetIndex) {
-        if (targetIndex === -1 || targetIndex === pointerState.lastPaintedIndex) return;
-        pointerState.lastPaintedIndex = targetIndex;
-        const targetIndices = getSymmetricIndices(targetIndex);
+    const baseTiles = getTilesInRadius(targetIndex, brushSize);
+    const finalTiles = new Set();
+    baseTiles.forEach(baseIndex => {
+        getSymmetricIndices(baseIndex).forEach(symIndex => finalTiles.add(symIndex));
+    });
+
+    const targetIndices = Array.from(finalTiles);
+
+    if (isRainbowModeActive) {
+        applyActionToTiles(targetIndices, tile => {
+            tile.isGold = false;
+            tile.k = Math.floor(Math.random() * paletteLen());
+        });
+    } else if (selectedColorIndex !== -1) {
+        applyActionToTiles(targetIndices, tile => {
+            tile.isGold = false;
+            tile.k = selectedColorIndex;
+        });
+    } else if (pointerState.dragSourceIndex !== null) {
+        const sourceK = boardState[pointerState.dragSourceIndex].k;
+        applyActionToTiles(targetIndices, tile => {
+            tile.isGold = false;
+            tile.k = sourceK;
+        });
+    }
+}
+
+const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null };
+
+function onPointerDown(e) {
+    if (isLifePlaying || isBreathing) return;
+    const index = getTileIndexFromCoords(e.clientX, e.clientY);
+    if (index === -1) return;
+    e.target.setPointerCapture(e.pointerId);
+    Object.assign(pointerState, { id: e.pointerId, downIndex: index, downX: e.clientX, downY: e.clientY, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: getCurrentState() });
+    pointerState.longPressTimer = setTimeout(() => {
+        if (pointerState.isDragging) return;
+        pointerState.suppressClick = true;
+        if (selectedColor || isRainbowModeActive) {
+            performAction(resetSelectedColor);
+        } else {
+            modals.openColorPickerModal(index);
+        }
+    }, C.LONG_PRESS_SHOW_MS);
+    if (!isBrushModeOn) { pointerState.dragSourceIndex = index; }
+}
+
+function onPointerMove(e) {
+    if (pointerState.id !== e.pointerId) return;
+    const currentIndex = getTileIndexFromCoords(e.clientX, e.clientY);
+    if (!pointerState.isDragging) {
+        const dist = Math.hypot(e.clientX - pointerState.downX, e.clientY - pointerState.downY);
+        if (dist >= 8) {
+            clearTimeout(pointerState.longPressTimer);
+            pointerState.longPressTimer = null;
+            pointerState.isDragging = true;
+            pointerState.suppressClick = true;
+            if (isBrushModeOn) {
+                if (selectedColorIndex === -1) { pointerState.dragSourceIndex = pointerState.downIndex; }
+                handleDragPaint(pointerState.downIndex);
+            }
+        }
+    }
+    if (pointerState.isDragging && isBrushModeOn) {
+        handleDragPaint(currentIndex); 
+    }
+}
+
+function onPointerUp(e) {
+    if (pointerState.id !== e.pointerId) return;
+    clearTimeout(pointerState.longPressTimer);
+    const upIndex = getTileIndexFromCoords(e.clientX, e.clientY);
+
+    if (pointerState.isDragging) {
+        if (!isBrushModeOn && pointerState.dragSourceIndex !== null && upIndex !== -1) {
+            const sourceData = { ...boardState[pointerState.dragSourceIndex] };
+            const baseTiles = getTilesInRadius(upIndex, brushSize);
+            const finalTiles = new Set();
+            baseTiles.forEach(baseIndex => {
+                getSymmetricIndices(baseIndex).forEach(symIndex => finalTiles.add(symIndex));
+            });
+            const targetIndices = Array.from(finalTiles);
+            applyActionToTiles(targetIndices, tile => {
+                tile.k = sourceData.k;
+                tile.isGold = sourceData.isGold;
+            });
+        }
+    } else if (!pointerState.suppressClick && upIndex !== -1) {
+         const baseTiles = getTilesInRadius(upIndex, brushSize);
+         const finalTiles = new Set();
+         baseTiles.forEach(baseIndex => {
+             getSymmetricIndices(baseIndex).forEach(symIndex => finalTiles.add(symIndex));
+         });
+         const targetIndices = Array.from(finalTiles);
+
         if (isRainbowModeActive) {
             applyActionToTiles(targetIndices, tile => {
                 tile.isGold = false;
@@ -1192,97 +1322,24 @@ function applyActionToTiles(indices, actionFn) {
                 tile.isGold = false;
                 tile.k = selectedColorIndex;
             });
-        } else if (pointerState.dragSourceIndex !== null) {
-            const sourceK = boardState[pointerState.dragSourceIndex].k;
+        } else {
             applyActionToTiles(targetIndices, tile => {
-                tile.isGold = false;
-                tile.k = sourceK;
+                if (!tile.isGold) {
+                    tile.k = (tile.k + 1) % paletteLen();
+                } else {
+                    tile.isGold = false;
+                }
             });
         }
-      }
-      const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null };
-      function onPointerDown(e) {
-        if (isLifePlaying || isBreathing) return;
-        const index = getTileIndexFromCoords(e.clientX, e.clientY);
-        if (index === -1) return;
-        e.target.setPointerCapture(e.pointerId);
-        Object.assign(pointerState, { id: e.pointerId, downIndex: index, downX: e.clientX, downY: e.clientY, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: getCurrentState() });
-        pointerState.longPressTimer = setTimeout(() => {
-            if (pointerState.isDragging) return;
-            pointerState.suppressClick = true;
-            if (selectedColor || isRainbowModeActive) {
-                performAction(resetSelectedColor);
-            } else {
-                modals.openColorPickerModal(index);
-            }
-        }, C.LONG_PRESS_SHOW_MS);
-        if (!isBrushModeOn) { pointerState.dragSourceIndex = index; }
-      }
+    }
+    const afterState = getCurrentState();
+    if (pointerState.beforeState && !areStatesEqual(pointerState.beforeState, afterState)) {
+         pushHistory({ before: pointerState.beforeState, after: afterState }); 
+         hasPerformedInitialAutofill = true;
+    }
+    Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null });
+}
 
-      function onPointerMove(e) {
-        if (pointerState.id !== e.pointerId) return;
-        const currentIndex = getTileIndexFromCoords(e.clientX, e.clientY);
-        if (!pointerState.isDragging) {
-            const dist = Math.hypot(e.clientX - pointerState.downX, e.clientY - pointerState.downY);
-            if (dist >= 8) {
-                clearTimeout(pointerState.longPressTimer);
-                pointerState.longPressTimer = null;
-                pointerState.isDragging = true;
-                pointerState.suppressClick = true;
-                if (isBrushModeOn) {
-                    if (selectedColorIndex === -1) { pointerState.dragSourceIndex = pointerState.downIndex; }
-                    handleDragPaint(pointerState.downIndex);
-                }
-            }
-        }
-        if (pointerState.isDragging && isBrushModeOn) {
-            handleDragPaint(currentIndex); 
-        }
-      }
-
-      function onPointerUp(e) {
-        if (pointerState.id !== e.pointerId) return;
-        clearTimeout(pointerState.longPressTimer);
-        const upIndex = getTileIndexFromCoords(e.clientX, e.clientY);
-
-        if (pointerState.isDragging) {
-            if (!isBrushModeOn && pointerState.dragSourceIndex !== null && upIndex !== -1) {
-                const sourceData = { ...boardState[pointerState.dragSourceIndex] };
-                const targetIndices = getSymmetricIndices(upIndex);
-                applyActionToTiles(targetIndices, tile => {
-                    tile.k = sourceData.k;
-                    tile.isGold = sourceData.isGold;
-                });
-            }
-        } else if (!pointerState.suppressClick && upIndex !== -1) {
-            const targetIndices = getSymmetricIndices(upIndex);
-            if (isRainbowModeActive) {
-                applyActionToTiles(targetIndices, tile => {
-                    tile.isGold = false;
-                    tile.k = Math.floor(Math.random() * paletteLen());
-                });
-            } else if (selectedColorIndex !== -1) {
-                applyActionToTiles(targetIndices, tile => {
-                    tile.isGold = false;
-                    tile.k = selectedColorIndex;
-                });
-            } else {
-                applyActionToTiles(targetIndices, tile => {
-                    if (!tile.isGold) {
-                        tile.k = (tile.k + 1) % paletteLen();
-                    } else {
-                        tile.isGold = false;
-                    }
-                });
-            }
-        }
-        const afterState = getCurrentState();
-        if (pointerState.beforeState && !areStatesEqual(pointerState.beforeState, afterState)) {
-             pushHistory({ before: pointerState.beforeState, after: afterState }); 
-             hasPerformedInitialAutofill = true;
-        }
-        Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null });
-      }
       
       function updateLayout() {
         const shell = dom.appShell;
@@ -1341,6 +1398,30 @@ function applyActionToTiles(indices, actionFn) {
             colorPickerPage = (colorPickerPage - 1 + totalPages) % totalPages;
         }
     }
+
+function getTilesInRadius(centerIndex, radius) {
+    if (radius <= 1) return [centerIndex];
+
+    const tilesInRadius = new Set();
+    const centerCol = centerIndex % n;
+    const centerRow = Math.floor(centerIndex / n);
+    const r = Math.floor(radius / 2);
+
+    for (let rowOffset = -r; rowOffset <= r; rowOffset++) {
+        for (let colOffset = -r; colOffset <= r; colOffset++) {
+            const dist = Math.sqrt(rowOffset * rowOffset + colOffset * colOffset);
+            if (dist <= r) {
+                const targetRow = centerRow + rowOffset;
+                const targetCol = centerCol + colOffset;
+                if (targetRow >= 0 && targetRow < n && targetCol >= 0 && targetCol < n) {
+                    tilesInRadius.add(targetRow * n + targetCol);
+                }
+            }
+        }
+    }
+    return Array.from(tilesInRadius);
+}
+
       
     function getSymmetricIndices(index) {
           if (index === -1) return [];
@@ -1418,7 +1499,7 @@ function applyActionToTiles(indices, actionFn) {
             handleSaveProject, handleLoadProject, onProjectFileSelected,
             pointerState,
             resetWasLongPress,
-            downloadImage: downloadHighQualityImage,
+downloadImage: shareOrDownloadImage,
             startBreatheAnimation: startBreatheAnimation,
             adaptColors, // Pass the new function to the modals context
         };
@@ -1477,6 +1558,16 @@ function applyActionToTiles(indices, actionFn) {
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
         });
+// Brush Size Slider Logic
+const brushSizeSlider = document.getElementById('brushSizeSlider');
+const brushSizeValue = document.getElementById('brushSizeValue');
+if (brushSizeSlider) {
+    brushSizeSlider.addEventListener('input', (e) => {
+        brushSize = parseInt(e.target.value, 10);
+        if(brushSizeValue) brushSizeValue.textContent = brushSize;
+    });
+}
+
 
         window.addEventListener('resize', updateLayout);
         window.addEventListener('contextmenu', e => e.preventDefault());
