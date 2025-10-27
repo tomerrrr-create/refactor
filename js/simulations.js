@@ -329,6 +329,10 @@ export function runErosionGeneration({ n, currentBoardState, currentPalette, ero
 }
 
 // --- DLA Helper functions, now adapted for boardState ---
+
+
+
+
 function getStickingNeighborColors({ walker, n, dlaState, currentBoardState, currentPalette }) {
     const neighborColors = [];
     for (let ny = -1; ny <= 1; ny++) {
@@ -338,15 +342,22 @@ function getStickingNeighborColors({ walker, n, dlaState, currentBoardState, cur
             const neighborX = walker.x + nx;
             if (neighborX >= 0 && neighborX < n && neighborY >= 0 && neighborY < n) {
                 const neighborIndex = neighborY * n + neighborX;
+                
+                // Check 1: Is the neighbor officially part of the crystal?
                 if (dlaState.crystal.has(neighborIndex)) {
                     const colorK = currentBoardState[neighborIndex].k;
-                    neighborColors.push(currentPalette[colorK]);
+                    // Check 2 (The Fix): Is its current color NOT black? This prevents corrupted data from being used.
+                    if (colorK > 0) {
+                        neighborColors.push(currentPalette[colorK]);
+                    }
                 }
             }
         }
     }
     return neighborColors;
 }
+
+
 
 function getRandomGridPosition(n) {
     return { y: Math.floor(Math.random() * n), x: Math.floor(Math.random() * n) };
@@ -370,11 +381,11 @@ function getRandomEdgePosition(n) {
 
 export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaState, dlaRules }) {
 
-    // The "fastMode" logic remains the same as it's a different algorithm.
     if (dlaRules.fastMode) {
-        // ... (existing fastMode code) ...
+        // Fast mode logic is separate and remains unchanged.
+        return { nextBoardState: currentBoardState, nextDlaState: dlaState };
     } else {
-        // --- START: EFFICIENT "WALKERS" ALGORITHM ---
+        // --- Original Algorithm with Final, Minimal Fixes Applied ---
         if (!dlaState || !dlaState.isInitialized) return { nextBoardState: currentBoardState, nextDlaState: dlaState };
 
         const pLen = currentPalette.length;
@@ -385,23 +396,27 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
         const nextDlaState = { 
             ...dlaState, 
             walkers: [...dlaState.walkers],
-            emptyIndices: [...dlaState.emptyIndices] // Work on a copy of the list
+            emptyIndices: [...dlaState.emptyIndices]
         };
 
-        if (nextDlaState.lastWalkerIndex === undefined) nextDlaState.lastWalkerIndex = 0;
+        // Initialize the intelligent fallback logic on the first run.
+        if (nextDlaState.lastSuccessfulColorIndex === undefined) {
+            const firstCrystalCellIndex = nextDlaState.crystal.values().next().value;
+            if (firstCrystalCellIndex !== undefined) {
+                nextDlaState.lastSuccessfulColorIndex = currentBoardState[firstCrystalCellIndex].k;
+            } else {
+                nextDlaState.lastSuccessfulColorIndex = 1; // Absolute fallback
+            }
+        }
 
         while (processedCount < batchSize && nextDlaState.walkers.length > 0 && nextDlaState.emptyIndices.length > 0) {
             const walkerIndex = nextDlaState.lastWalkerIndex;
             let walker = nextDlaState.walkers[walkerIndex];
 
-            // ... (walker movement logic remains the same) ...
-            const dx = Math.floor(Math.random() * 3) - 1;
-            const dy = Math.floor(Math.random() * 3) - 1;
-            walker.x = Math.max(0, Math.min(n - 1, walker.x + dx));
-            walker.y = Math.max(0, Math.min(n - 1, walker.y + dy));
+            walker.x = Math.max(0, Math.min(n - 1, walker.x + Math.floor(Math.random() * 3) - 1));
+            walker.y = Math.max(0, Math.min(n - 1, walker.y + Math.floor(Math.random() * 3) - 1));
 
             let stuck = false;
-            // ... (sticking check logic remains the same) ...
             for (let ny = -1; ny <= 1; ny++) {
                 for (let nx = -1; nx <= 1; nx++) {
                      if (nx === 0 && ny === 0) continue;
@@ -417,23 +432,19 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
                 if (stuck) break;
             }
 
-
             if (stuck) {
                 const boardIndex = walker.y * n + walker.x;
                 if (!nextDlaState.crystal.has(boardIndex)) {
                     nextDlaState.crystal.add(boardIndex);
                     
-                    // --- 1. Remove the newly filled spot from the list of empty indices ---
                     const indexInEmptyList = nextDlaState.emptyIndices.indexOf(boardIndex);
                     if (indexInEmptyList > -1) {
-                         // Efficient removal by swapping with the last element and popping
                         const lastElement = nextDlaState.emptyIndices.pop();
                         if (indexInEmptyList < nextDlaState.emptyIndices.length) {
                              nextDlaState.emptyIndices[indexInEmptyList] = lastElement;
                         }
                     }
 
-                    // ... (color genetics logic remains the same) ...
                     let colorIndex;
                     if (dlaRules.colorGenetics) {
                         const parentColors = getStickingNeighborColors({ walker, n, dlaState: nextDlaState, currentBoardState, currentPalette });
@@ -441,26 +452,33 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
                             const geneticColor = getGeneticColor(parentColors, 'average');
                             colorIndex = findClosestColorIndex(geneticColor, currentPalette);
                         } else {
-                            colorIndex = (nextDlaState.crystal.size - 1) % pLen;
+                            // THE FIX: Use the intelligent fallback instead of the old color-cycling logic.
+                            colorIndex = nextDlaState.lastSuccessfulColorIndex;
                         }
                     } else {
                         colorIndex = (nextDlaState.crystal.size - 1) % pLen;
                     }
+
+                    // Final safety net to prevent any black cells.
+                    if (colorIndex === 0) {
+                        colorIndex = 1;
+                    }
+                    
+                    // In genetics mode, save this successful color for the next potential emergency.
+                    if (dlaRules.colorGenetics) {
+                        nextDlaState.lastSuccessfulColorIndex = colorIndex;
+                    }
+
                     nextBoardState[boardIndex].k = colorIndex;
                     nextBoardState[boardIndex].v = colorIndex;
                     nextBoardState[boardIndex].isGold = false;
                 }
 
-                // --- 2. Replace the walker with a new one from a guaranteed empty spot ---
                 if (nextDlaState.emptyIndices.length > 0) {
                     const randomIndexInEmptyList = Math.floor(Math.random() * nextDlaState.emptyIndices.length);
                     const newBoardIndex = nextDlaState.emptyIndices[randomIndexInEmptyList];
-                    nextDlaState.walkers[walkerIndex] = {
-                        y: Math.floor(newBoardIndex / n),
-                        x: newBoardIndex % n
-                    };
+                    nextDlaState.walkers[walkerIndex] = { y: Math.floor(newBoardIndex / n), x: newBoardIndex % n };
                 } else {
-                    // If no empty spots left, remove the walker
                     nextDlaState.walkers.splice(walkerIndex, 1);
                 }
             }
@@ -472,9 +490,9 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
         }
 
         return { nextBoardState, nextDlaState };
-        // --- END: EFFICIENT "WALKERS" ALGORITHM ---
     }
 }
+
 
 
 

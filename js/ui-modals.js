@@ -38,10 +38,6 @@ function closeModal() {
     app.dom.imagePreview.src = '';
 }
 
-function closeBreatheModal() {
-    app.dom.breatheModal.classList.remove('modal-visible');
-}
-
 function closeResizeModal() {
     app.dom.resizeModal.classList.remove('modal-visible');
 }
@@ -71,11 +67,6 @@ function closeGravitationalSortSettingsModal() {
     app.resetWasLongPress();
 }
 
-function closeDlaSettingsModal() {
-    app.dom.dlaSettingsModal.classList.remove('modal-visible');
-    setTimeout(() => app.dom.dlaSettingsModal.style.display = 'none', 300);
-    app.resetWasLongPress();
-}
 
 // Phase 1 Addition
 function closeAdvancedColorMappingModal() {
@@ -85,19 +76,7 @@ function closeAdvancedColorMappingModal() {
 }
 
 
-function closeBrightnessEvoSettingsModal() {
-    app.dom.brightnessEvoSettingsModal.classList.remove('modal-visible');
-    setTimeout(() => app.dom.brightnessEvoSettingsModal.style.display = 'none', 300);
-    app.resetWasLongPress();
-}
-
-
 // --- Modal Management Functions ---
-
-function openBreatheModal() {
-    if (app.isLifePlaying()) return;
-    app.dom.breatheModal.classList.add('modal-visible');
-}
 
 function openResizeModal() {
     if (app.isBreathing()) return;
@@ -119,7 +98,7 @@ function openAdvancedColorMappingModal() {
 
 function handleConfirmResize() {
     let newSize = parseInt(app.dom.resizeInput.value, 10);
-    if (isNaN(newSize) || newSize < 1 || newSize > 150) {
+    if (isNaN(newSize) || newSize < 1 || newSize > 300) {
         app.dom.resizeInput.style.borderColor = 'red';
         setTimeout(() => { app.dom.resizeInput.style.borderColor = ''; }, 1000);
         return;
@@ -473,65 +452,8 @@ function saveGravitationalSortSettings() {
 
 let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית של המשתמש
 
-function openBrightnessEvoSettingsModal() {
-    if (app.isBreathing() || app.isLifePlaying()) return;
-    
-    // קובעים את המצב הנוכחי מהאפליקציה
-    selectedEvoMode = app.getBrightnessEvoMode(); 
-
-    // מעדכנים את הכפתורים במודאל כדי להציג את הבחירה הנוכחית
-    app.dom.evoModeBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === selectedEvoMode);
-    });
-    
-    app.dom.brightnessEvoSettingsModal.style.display = 'flex';
-    setTimeout(() => app.dom.brightnessEvoSettingsModal.classList.add('modal-visible'), 10);
-}
-
-function saveBrightnessEvoSettings() {
-    app.setBrightnessEvoMode(selectedEvoMode);
-    closeBrightnessEvoSettingsModal();
-}
 
 
-
-
-
-function openDlaSettingsModal() {
-    if (app.isBreathing() || app.isLifePlaying()) return;
-    const rules = app.getDlaRules();
-
-    // עדכון המתגים והטקסטים הקיימים
-    app.dom.dlaColorGeneticsToggle.checked = rules.colorGenetics;
-    app.dom.dlaInjectFromEdgesToggle.checked = rules.injectFromEdges;
-    app.dom.dlaSettingsModal.querySelector('#dlaSettingsTitle').textContent = app.getText('dla_modal_title');
-    app.dom.dlaSettingsModal.querySelector('#dlaColorGeneticsLabel').textContent = app.getText('dla_genetics_label');
-    app.dom.dlaSettingsModal.querySelector('#dlaColorGeneticsDesc').textContent = app.getText('dla_genetics_desc');
-    app.dom.dlaSettingsModal.querySelector('#dlaInjectFromEdgesLabel').textContent = app.getText('dla_edges_label');
-    app.dom.dlaSettingsModal.querySelector('#dlaInjectFromEdgesDesc').textContent = app.getText('dla_edges_desc');
-
-    // עדכון המתג והטקסטים החדשים שהוספנו
-    app.dom.dlaFastModeToggle.checked = rules.fastMode;
-    app.dom.dlaSettingsModal.querySelector('#dlaFastModeLabel').textContent = app.getText('dla_fastmode_label');
-    app.dom.dlaSettingsModal.querySelector('#dlaFastModeDesc').textContent = app.getText('dla_fastmode_desc');
-
-    // עדכון כפתורים והצגת המודל
-    app.dom.btnDlaSettingsSave.textContent = app.getText('dla_modal_save_close');
-    app.dom.btnDlaSettingsCancel.textContent = app.getText('dla_modal_cancel');
-    app.dom.dlaSettingsModal.style.display = 'flex';
-    setTimeout(() => app.dom.dlaSettingsModal.classList.add('modal-visible'), 10);
-}
-
-
-function saveDlaSettings() {
-    const newRules = {
-        colorGenetics: app.dom.dlaColorGeneticsToggle.checked,
-        injectFromEdges: app.dom.dlaInjectFromEdgesToggle.checked,
-        fastMode: app.dom.dlaFastModeToggle.checked,
-    };
-    app.setDlaRules(newRules);
-    closeDlaSettingsModal();
-}
 
 export function initializeModals(appContext) {
     app = appContext;
@@ -543,25 +465,6 @@ export function initializeModals(appContext) {
     app.dom.btnSaveProjectIdea.addEventListener('click', app.handleSaveProject);
     app.dom.btnLoadProjectIdea.addEventListener('click', app.handleLoadProject);
     app.dom.projectFileInput.addEventListener('change', app.onProjectFileSelected);
-
-    // Breathe Modal
-    app.dom.btnBreatheModalClose.addEventListener('click', closeBreatheModal);
-    app.dom.breatheModal.addEventListener('click', (e) => { if (e.target === app.dom.breatheModal) { closeBreatheModal(); } });
-    
-    // --- START: MODIFIED Breathe button listeners for gentle start ---
-    app.dom.btnStartSoloBreathe.addEventListener('click', () => {
-        closeBreatheModal();
-        setTimeout(() => {
-            app.startBreatheAnimation('solo');
-        }, 1000); // Increased delay to 1 second
-    });
-    app.dom.btnStartGroupBreathe.addEventListener('click', () => {
-        closeBreatheModal();
-        setTimeout(() => {
-            app.startBreatheAnimation('group');
-        }, 1000); // Increased delay to 1 second
-    });
-    // --- END: MODIFIED Breathe button listeners ---
 
     // Resize Modal
     app.dom.btnConfirmResize.addEventListener('click', handleConfirmResize);
@@ -611,20 +514,6 @@ export function initializeModals(appContext) {
     app.dom.btnGsSettingsSave.addEventListener('click', saveGravitationalSortSettings);
     app.dom.btnGsSettingsCancel.addEventListener('click', closeGravitationalSortSettingsModal);
 
-    // DLA Settings Modal
-    app.dom.btnDlaSettingsSave.addEventListener('click', saveDlaSettings);
-    app.dom.btnDlaSettingsCancel.addEventListener('click', closeDlaSettingsModal);
-
-// Brightness Evolution Settings Modal
-    app.dom.evoModeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            selectedEvoMode = btn.dataset.mode;
-            app.dom.evoModeBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
-    });
-    app.dom.btnEvoSettingsSave.addEventListener('click', saveBrightnessEvoSettings);
-    app.dom.btnEvoSettingsCancel.addEventListener('click', closeBrightnessEvoSettingsModal);
 
 
     // Phase 1 Addition: Advanced Color Mapping Modal
@@ -637,15 +526,12 @@ export function initializeModals(appContext) {
 
 
     return {
-        openBreatheModal,
         openResizeModal,
         openColorPickerModal,
         openHelpModal,
         openPaletteModal,
         openGolSettingsModal,
         openGravitationalSortSettingsModal,
-        openDlaSettingsModal,
-        openBrightnessEvoSettingsModal,
         openAdvancedColorMappingModal, // Phase 1 Addition
         closeModal,
         renderColorPickerContent,

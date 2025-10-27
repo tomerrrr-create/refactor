@@ -40,15 +40,15 @@ export const dom = {
   btnPlayPauseLife: document.getElementById('btnPlayPauseLife'),
   iconPlay: document.getElementById('iconPlay'),
   iconPause: document.getElementById('iconPause'),
+  iconBreatheSolo: document.getElementById('iconBreatheSolo'),
+  iconBreatheGroup: document.getElementById('iconBreatheGroup'),
   btnStepForward: document.getElementById('btnStepForward'),
-  btnExitBreathe: document.getElementById('btnExitBreathe'),
   btnNudgeBrighter: document.getElementById('btnNudgeBrighter'),
   btnNudgeDarker: document.getElementById('btnNudgeDarker'),
 
   
   // Modals & Overlays
   saveModal: document.getElementById('saveModal'),
-  breatheModal: document.getElementById('breatheModal'),
   colorPickerModal: document.getElementById('colorPickerModal'),
   helpModal: document.getElementById('helpModal'),
   resizeModal: document.getElementById('resizeModal'),
@@ -56,12 +56,6 @@ export const dom = {
   gameOfLifeSettingsModal: document.getElementById('gameOfLifeSettingsModal'),
   gravitationalSortSettingsModal: document.getElementById('gravitationalSortSettingsModal'),
 
-// Brightness Evolution Settings Modal Elements
-  brightnessEvoSettingsModal: document.getElementById('brightnessEvoSettingsModal'),
-  evoSettingsTitle: document.getElementById('evoSettingsTitle'),
-  evoModeBtns: document.querySelectorAll('.evo-mode-btn'),
-  btnEvoSettingsSave: document.getElementById('btnEvoSettingsSave'),
-  btnEvoSettingsCancel: document.getElementById('btnEvoSettingsCancel'),
 
 
   longPressOverlay: document.getElementById('longPressOverlay'),
@@ -76,13 +70,6 @@ export const dom = {
   btnSaveProjectIdea: document.getElementById('btnSaveProjectIdea'),
   btnLoadProjectIdea: document.getElementById('btnLoadProjectIdea'),
   projectFileInput: document.getElementById('projectFileInput'),
-
-  // Breathe Modal Elements
-  btnBreatheModalClose: document.getElementById('btnBreatheModalClose'),
-  btnStartSoloBreathe: document.getElementById('btnStartSoloBreathe'),
-  btnStartGroupBreathe: document.getElementById('btnStartGroupBreathe'),
-  breatheSoloLabel: document.getElementById('breatheSoloLabel'),
-  breatheGroupLabel: document.getElementById('breatheGroupLabel'),
 
   // Color Picker Modal Elements
   colorPickerHeader: document.getElementById('colorPickerHeader'),
@@ -127,14 +114,6 @@ export const dom = {
   btnGsSettingsSave: document.getElementById('btnGsSettingsSave'),
   btnGsSettingsCancel: document.getElementById('btnGsSettingsCancel'),
 
-  // DLA Settings Modal Elements
-  dlaSettingsModal: document.getElementById('dlaSettingsModal'),
-  dlaColorGeneticsToggle: document.getElementById('dlaColorGeneticsToggle'),
-  dlaInjectFromEdgesToggle: document.getElementById('dlaInjectFromEdgesToggle'),
-  btnDlaSettingsSave: document.getElementById('btnDlaSettingsSave'),
-  btnDlaSettingsCancel: document.getElementById('btnDlaSettingsCancel'),
-  dlaFastModeToggle: document.getElementById('dlaFastModeToggle'),
-  
   // Phase 1 Additions: Advanced Color Mapping Modal
   advancedColorMappingModal: document.getElementById('advancedColorMappingModal'),
   btnAdaptModalClose: document.getElementById('btnAdaptModalClose'),

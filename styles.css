@@ -319,12 +319,12 @@ body {
 .glow-animation-separator svg {
   animation: glow-effect 2s ease-in-out infinite;
 }
-#saveModal, #breatheModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal, #advancedColorMappingModal {
+#saveModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal, #advancedColorMappingModal {
   transition: opacity 300ms ease-in-out, visibility 300ms ease-in-out;
   visibility: hidden;
   opacity: 0;
 }
-#saveModal.modal-visible, #breatheModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible, #advancedColorMappingModal.modal-visible {
+#saveModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible, #advancedColorMappingModal.modal-visible {
   visibility: visible;
   opacity: 1;
 }
@@ -363,47 +363,6 @@ body {
   50% { filter: brightness(0.4); }
 }
 
-#breatheExitContainer {
-  position: absolute;
-  bottom: 82px;
-  left: 0;
-  right: 0;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  pointer-events: none;
-  z-index: 10;
-}
-
-#btnExitBreathe {
-  width: 50px;
-  height: 50px;
-  background-color: black;
-  border: 2px solid #383838;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 1.5s ease-in-out;
-}
-
-#btnExitBreathe.visible {
-  opacity: 0.7;
-  pointer-events: auto;
-}
-
-#btnExitBreathe::after {
-  content: '';
-  width: 6px;
-  height: 6px;
-  background-color: #4a4a4a;
-  border-radius: 50%;
-}
-
 #splashScreen {
     transition: opacity 2s linear;
 }
@@ -423,25 +382,6 @@ body {
 @keyframes fadeOutText {
   from { color: var(--gold); opacity: 1; }
   to { color: black; opacity: 0; }
-}
-
-.breathe-option-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px;
-    width: 120px;
-    height: 120px;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out, transform 0.2s ease-out;
-}
-.breathe-option-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    transform: translateY(-4px);
 }
 
 .save-tile {
@@ -846,17 +786,36 @@ body {
     box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.5);
 }
 
-
-
-/* Styles for the new Brightness Evolution Modal */
-.evo-mode-btn:hover {
-  border-color: #888;
+/* --- Brightness Evolution Button States --- */
+#btnBrightnessEvo.mode-brightness svg {
+    stroke: var(--gold);
 }
-.evo-mode-btn.active {
-  border-color: var(--gold);
-  box-shadow: 0 0 8px var(--gold);
-  color: var(--gold);
+#btnBrightnessEvo.mode-contrast svg {
+    stroke: url(#contrastGradient);
 }
-.evo-mode-btn.active svg {
-  stroke: var(--gold);
+
+/* --- DLA Button States --- */
+#btnDla.mode-genetics svg circle {
+    fill: var(--gold);
+}
+#btnDla.mode-no-genetics svg #dla-circle-top {
+    fill: var(--gold);
+}
+
+/* --- Breathe Button States --- */
+#btnShowBreatheMenu #iconBreatheSolo {
+    display: block;
+}
+#btnShowBreatheMenu #iconBreatheGroup {
+    display: none;
+}
+/* Solo mode (Armed) */
+#btnShowBreatheMenu.mode-solo #iconBreatheSolo { display: block; }
+#btnShowBreatheMenu.mode-solo #iconBreatheGroup { display: none; }
+#btnShowBreatheMenu.mode-solo svg { stroke: var(--gold); }
+
+/* Group mode (Armed) */
+#btnShowBreatheMenu.mode-group #iconBreatheSolo { display: none; }
+#btnShowBreatheMenu.mode-group #iconBreatheGroup { display: block; }
+#btnShowBreatheMenu.mode-group svg { stroke: var(--gold); }
 }

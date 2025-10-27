@@ -47,19 +47,12 @@
  <div id="simModeBackground"></div>   
        
 <button id="btnShowBreatheMenu" class="ctrl">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M16 20 C14 18 10 16 8 10" transform="rotate(5, 12, 12)"></path>
-        <circle cx="8.5" cy="8.5" r="2" fill="currentColor"></circle>
-        <circle cx="6.5" cy="7.5" r="1.2" fill="currentColor"></circle>
-        <circle cx="7.5" cy="6.5" r="1.2" fill="currentColor"></circle>
-        <circle cx="9.5" cy="6.5" r="1.2" fill="currentColor"></circle>
-        <circle cx="10.5" cy="7.5" r="1.2" fill="currentColor"></circle>
-        <circle cx="10.5" cy="9.5" r="1.2" fill="currentColor"></circle>
-        <circle cx="9.5" cy="10.5" r="1.2" fill="currentColor"></circle>
-        <circle cx="7.5" cy="10.5" r="1.2" fill="currentColor"></circle>
-        <circle cx="6.5" cy="9.5" r="1.2" fill="currentColor"></circle>
-        
-        <path d="M12 14 Q10 13 9 15" stroke-width="1.2"></path>
+    <svg id="iconBreatheSolo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12 C3 6 9 6 12 12 S 15 18 21 12"></path>
+    </svg>
+    <svg id="iconBreatheGroup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+      <path d="M3 10 C3 4 9 4 12 10 S 15 16 21 10"></path>
+      <path d="M3 14 C3 8 9 8 12 14 S 15 20 21 14"></path>
     </svg>
 </button>
 
@@ -138,18 +131,20 @@
               </svg>
           </button>
           
+
+
 <button id="btnDla" class="ctrl">
             <svg viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="9.5" r="2.5"></circle>
-              <circle cx="9.5" cy="14" r="2.5"></circle>
-              <circle cx="14.5" cy="14" r="2.5"></circle>
+              <circle id="dla-circle-top" cx="12" cy="9.5" r="2.5"></circle>
+              <circle id="dla-circle-left" cx="9.5" cy="14" r="2.5"></circle>
+              <circle id="dla-circle-right" cx="14.5" cy="14" r="2.5"></circle>
             </svg>
           </button>
 
 
-          <button id="btnErosion" class="ctrl">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 12Q9 6 12 12T21 12"></path>
+<button id="btnErosion" class="ctrl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 15 L12 9 L18 15"></path>
               </svg>
           </button>
 
@@ -159,13 +154,23 @@
                   <circle cx="12" cy="12" r="1"></circle>
                   <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"></ellipse>
               </svg>
-          </button>
-          <button id="btnBrightnessEvo" class="ctrl">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: scale(0.8); transform-origin: center;">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-              </svg>
-          </button>
+         
+ </button>
+
+
+<button id="btnBrightnessEvo" class="ctrl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: scale(0.8); transform-origin: center;">
+              <defs>
+                  <linearGradient id="contrastGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="50%" stop-color="var(--gold)" />
+                      <stop offset="50%" stop-color="var(--sim-color)" />
+                  </linearGradient>
+              </defs>
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+          </svg>
+      </button>
+
 
           <button id="btnResizeUp" class="ctrl">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -219,10 +224,6 @@
 
       </div>
       
-      <div id="breatheExitContainer">
-        <button id="btnExitBreathe"></button>
-      </div>
-
     </div>
   </div>
 
@@ -258,24 +259,6 @@
       </div>
 
       <input type="file" id="projectFileInput" accept=".json, .cga" style="display: none;" />
-    </div>
-  </div>
-
-  <div id="breatheModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50">
-    <div class="bg-[#1c1c1c] rounded-lg p-6 max-w-xs w-full text-center relative">
-        <button id="btnBreatheModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <button id="btnStartSoloBreathe" class="breathe-option-btn">
-               <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 C3 6 9 6 12 12 S 15 18 21 12"></path></svg>
-               <span id="breatheSoloLabel" class="text-sm mt-2 text-gray-300"></span>
-            </button>
-            <button id="btnStartGroupBreathe" class="breathe-option-btn">
-              <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 C3 4 9 4 12 10 S 15 16 21 10"></path><path d="M3 14 C3 8 9 8 12 14 S 15 20 21 14"></path></svg>
-              <span id="breatheGroupLabel" class="text-sm mt-2 text-gray-300"></span>
-            </button>
-        </div>
     </div>
   </div>
 
@@ -425,56 +408,9 @@
     </div>
   </div>
 
-  <div id="dlaSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
-    <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
-      <h2 id="dlaSettingsTitle" class="text-xl font-bold text-center text-gray-200"></h2>
-      
-      <div class="flex flex-col gap-4">
-        <div class="flex items-center justify-between">
-          <div class="flex flex-col">
-            <label for="dlaColorGeneticsToggle" id="dlaColorGeneticsLabel" class="font-semibold text-gray-300"></label>
-            <p id="dlaColorGeneticsDesc" class="text-sm text-gray-400"></p>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="dlaColorGeneticsToggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-yellow-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
-          </label>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="flex flex-col">
-            <label for="dlaInjectFromEdgesToggle" id="dlaInjectFromEdgesLabel" class="font-semibold text-gray-300"></label>
-            <p id="dlaInjectFromEdgesDesc" class="text-sm text-gray-400"></p>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="dlaInjectFromEdgesToggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-yellow-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
-          </label>
-        </div>
-  
-
-<div class="flex items-center justify-between mt-4 border-t border-gray-600 pt-4">
-        <div class="flex flex-col">
-          <label for="dlaFastModeToggle" id="dlaFastModeLabel" class="font-semibold text-gray-300"></label>
-          <p id="dlaFastModeDesc" class="text-sm text-gray-400"></p>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="dlaFastModeToggle" class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-yellow-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
-        </label>
-      </div>
 
 
-    </div>
 
-      <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
-        <div class="flex gap-4">
-          <button id="btnDlaSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"></button>
-          <button id="btnDlaSettingsSave" class="text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);"></button>
-        </div>
-      </div>
-    </div>
-  </div>
   
   <div id="advancedColorMappingModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50" style="display: none;">
     <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-4">
@@ -484,38 +420,6 @@
       <h2 id="adaptModalTitle" class="text-xl font-bold text-center text-gray-200"></h2>
       <p id="adaptModalDesc" class="text-sm text-gray-400 text-center"></p>
       <button id="btnAdaptColors" class="w-full text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);"></button>
-    </div>
-  </div>
-
-
-<div id="brightnessEvoSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
-    <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
-      <h2 id="evoSettingsTitle" class="text-xl font-bold text-center text-gray-200">הגדרות אבולוציית בהירות</h2>
-      
-      <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300 text-center">בחר מצב סימולציה</h3>
-        <div class="flex items-center justify-center gap-4 pt-2">
-          <button class="evo-mode-btn flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-gray-600 bg-gray-800 transition" data-mode="brightness">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 mb-1"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
-            <span class="text-sm">בהירות</span>
-          </button>
-          <button class="evo-mode-btn flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-gray-600 bg-gray-800 transition" data-mode="contrast">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-8 h-8 mb-1"><path d="M12 3v18M3 12h18" stroke-linecap="round" stroke-linejoin="round" transform="rotate(45 12 12)"></path><circle cx="12" cy="12" r="4" fill="none"></circle></svg>
-            <span class="text-sm">קונטרסט</span>
-          </button>
-          <button class="evo-mode-btn flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-gray-600 bg-gray-800 transition opacity-50" data-mode="placeholder" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-8 h-8 mb-1"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
-            <span class="text-sm">עתידי</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
-        <div class="flex gap-4">
-          <button id="btnEvoSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">ביטול</button>
-          <button id="btnEvoSettingsSave" class="text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">שמור וסגור</button>
-        </div>
-      </div>
     </div>
   </div>
 
