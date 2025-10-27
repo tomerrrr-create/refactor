@@ -447,7 +447,15 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
 
                     let colorIndex;
                     if (dlaRules.colorGenetics) {
-                        const parentColors = getStickingNeighborColors({ walker, n, dlaState: nextDlaState, currentBoardState, currentPalette });
+
+const parentColors = getStickingNeighborColors({ 
+    walker, 
+    n, 
+    dlaState: nextDlaState, 
+    currentBoardState: nextBoardState,
+    currentPalette 
+});
+
                         if (parentColors.length > 0) {
                             const geneticColor = getGeneticColor(parentColors, 'average');
                             colorIndex = findClosestColorIndex(geneticColor, currentPalette);
