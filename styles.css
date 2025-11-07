@@ -819,3 +819,31 @@ body {
 #btnShowBreatheMenu.mode-group #iconBreatheGroup { display: block; }
 #btnShowBreatheMenu.mode-group svg { stroke: var(--gold); }
 }
+
+
+/* --- START: GOL Preset Button Styles --- */
+.gol-preset-btn {
+  font-size: 0.8rem; /* גודל פונט קטן יותר שיתאים לכפתורים */
+  padding: 8px 4px; /* ריפוד פנימי */
+  background-color: #37474F; /* רקע כהה שמתאים לאפליקציה */
+  color: #ECEFF1; /* צבע טקסט בהיר */
+  border: 1px solid #546E7A; /* מסגרת עדינה */
+  border-radius: 6px; /* פינות מעוגלות */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
+}
+
+/* אפקט ריחוף (עכבר מעל) */
+.gol-preset-btn:hover {
+  background-color: #455A64;
+  border-color: #78909C;
+  transform: translateY(-2px); /* הרמה קלה */
+}
+
+/* אפקט לחיצה */
+.gol-preset-btn:active {
+  background-color: #263238;
+  transform: translateY(0); /* החזרה למקום */
+}
+/* --- END: GOL Preset Button Styles --- */

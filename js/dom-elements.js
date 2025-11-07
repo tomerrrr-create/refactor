@@ -99,9 +99,10 @@ export const dom = {
   // Game of Life Settings Modal Elements
   golSurvivalMin: document.getElementById('golSurvivalMin'),
   golSurvivalMax: document.getElementById('golSurvivalMax'),
-  golBirth: document.getElementById('golBirth'),
-  golLiveCellDef: document.getElementById('golLiveCellDef'),
-  golColorGenetics: document.getElementById('golColorGenetics'),
+  // === START MODIFICATION ===
+  golBirthMin: document.getElementById('golBirthMin'),
+  golBirthMax: document.getElementById('golBirthMax'),
+  // === END MODIFICATION ===
   btnGolSettingsSave: document.getElementById('btnGolSettingsSave'),
   btnGolSettingsCancel: document.getElementById('btnGolSettingsCancel'),
   btnGolSettingsReset: document.getElementById('btnGolSettingsReset'),

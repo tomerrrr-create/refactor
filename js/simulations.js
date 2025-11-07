@@ -98,15 +98,12 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
             const tileData = currentBoardState[i * n + j];
             const tileIndex = tileData.k;
 
-            let isAlive = false;
-            switch (gameOfLifeRules.liveCellDef) {
-                case 'notDarkest': isAlive = tileIndex !== darkestIndex; break;
-                case 'notLightest': isAlive = tileIndex !== lightestIndex; break;
-                case 'notDarkestAndLightest': isAlive = tileIndex !== darkestIndex && tileIndex !== lightestIndex; break;
-                case 'topHalf': isAlive = tileIndex > halfIndex; break;
-                case 'bottomHalf': isAlive = tileIndex < halfIndex && tileIndex !== darkestIndex; break;
-                default: isAlive = tileIndex !== darkestIndex;
-            }
+            // --- START: MODIFICATION 1 ---
+            // The 'liveCellDef' logic is now hard-coded to 'notDarkest' as requested.
+            // The old switch statement has been removed.
+            let isAlive = tileIndex !== darkestIndex;
+            // --- END: MODIFICATION 1 ---
+
             if (tileData.isGold) isAlive = false;
 
             internalCurrentState[i][j] = { isAlive, k: tileIndex };
@@ -140,9 +137,14 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
             if (cell.isAlive) {
                 becomesAlive = liveNeighbors >= gameOfLifeRules.survivalMin && liveNeighbors <= gameOfLifeRules.survivalMax;
             } else {
-                becomesAlive = liveNeighbors === gameOfLifeRules.birth;
+                // === START MODIFICATION ===
+                becomesAlive = liveNeighbors >= gameOfLifeRules.birthMin && liveNeighbors <= gameOfLifeRules.birthMax;
+                // === END MODIFICATION ===
                 if (becomesAlive) {
-                    const geneticColor = getGeneticColor(neighborColors, gameOfLifeRules.colorGenetics);
+                    // --- START: MODIFICATION 2 ---
+                    // The 'colorGenetics' method is now hard-coded to 'average' as requested.
+                    const geneticColor = getGeneticColor(neighborColors, 'average');
+                    // --- END: MODIFICATION 2 ---
                     newK = findClosestColorIndex(geneticColor, currentPalette);
                 }
             }

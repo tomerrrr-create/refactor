@@ -63,7 +63,7 @@
           <button id="btnSave" class="ctrl">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12 4v12"></path>
-                  <path d="m16 12-4 4-4-4"></path>
+                  <path d="m16 12-4 4-4 4"></path>
               </svg>
           </button>
           <button id="btnTutorial" class="ctrl">
@@ -338,34 +338,25 @@
 
       <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300">כללי לידה</h3>
-        <p class="text-sm text-gray-400">תא מת ייוולד אם יש לו מספר שכנים חיים:</p>
-        <div class="flex items-center justify-center">
-            <input type="number" id="golBirth" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-20 p-2">
+        <p class="text-sm text-gray-400">תא מת ייוולד אם מספר שכניו בטווח זה:</p>
+        <div class="flex items-center justify-center gap-4">
+            <input type="number" id="golBirthMin" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-20 p-2">
+            <span class="text-gray-400">עד</span>
+            <input type="number" id="golBirthMax" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-20 p-2">
         </div>
       </div>
-
       <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300">הגדרת תא "חי"</h3>
-        <p class="text-sm text-gray-400">אילו תאים ייחשבו 'חיים' בתחילת הסיבוב?</p>
-        <select id="golLiveCellDef" class="bg-gray-700 border border-gray-600 text-white rounded-lg p-2">
-          <option value="notDarkest">כל הצבעים פרט לכהה ביותר</option>
-          <option value="notLightest">כל הצבעים פרט לבהיר ביותר</option>
-          <option value="notDarkestAndLightest">כל הצבעים פרט לכהה והבהיר ביותר</option>
-          <option value="topHalf">רק החצי הבהיר של הפלטה</option>
-          <option value="bottomHalf">רק החצי הכהה של הפלטה</option>
-        </select>
+        <h3 class="font-semibold text-gray-300">הגדרות מוכנות</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btnGolPresetHarmonic" class="gol-preset-btn">הרמוני</button>
+          <button id="btnGolPresetRapid" class="gol-preset-btn">התפשטות</button>
+          <button id="btnGolPresetClassic" class="gol-preset-btn">קלאסי</button>
+          <button id="btnGolPresetChaos" class="gol-preset-btn">כאוס</button>
+          <button id="btnGolPresetHive" class="gol-preset-btn">הכוורת</button>
+          <button id="btnGolPresetMoon" class="gol-preset-btn">ירח מלא</button>
+          <button id="btnGolPresetCoral" class="gol-preset-btn">אלמוג</button>
+        </div>
       </div>
-
-      <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300">גנטיקת צבעים</h3>
-        <p class="text-sm text-gray-400">כיצד יקבע צבע של תא חדש?</p>
-        <select id="golColorGenetics" class="bg-gray-700 border border-gray-600 text-white rounded-lg p-2">
-          <option value="randomMix">שילוב גנטי אקראי (ברירת מחדל)</option>
-          <option value="average">צבע ממוצע של ההורים</option>
-          <option value="dominant">צבע ההורה הדומיננטי</option>
-        </select>
-      </div>
-
       <div class="flex justify-between items-center mt-4 border-t border-gray-700 pt-4">
         <button id="btnGolSettingsReset" class="text-gray-400 hover:text-white text-sm">איפוס לברירת מחדל</button>
         <div class="flex gap-4">

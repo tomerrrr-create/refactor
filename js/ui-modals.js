@@ -396,21 +396,33 @@ function openGolSettingsModal() {
     const rules = app.getGameOfLifeRules();
     app.dom.golSurvivalMin.value = rules.survivalMin;
     app.dom.golSurvivalMax.value = rules.survivalMax;
-    app.dom.golBirth.value = rules.birth;
-    app.dom.golLiveCellDef.value = rules.liveCellDef;
-    app.dom.golColorGenetics.value = rules.colorGenetics;
+    // === START MODIFICATION ===
+    app.dom.golBirthMin.value = rules.birthMin;
+    app.dom.golBirthMax.value = rules.birthMax;
+    // === END MODIFICATION ===
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
 }
 
+// --- START: MODIFICATION ---
+// עדכון החתימה של הפונקציה
+function applyGolPreset(min, max, birthMin, birthMax) {
+    app.dom.golSurvivalMin.value = min;
+    app.dom.golSurvivalMax.value = max;
+    app.dom.golBirthMin.value = birthMin;
+    app.dom.golBirthMax.value = birthMax;
+}
+// --- END: MODIFICATION ---
+
 function saveGolSettings() {
+    // === START MODIFICATION ===
     const newRules = {
         survivalMin: parseInt(app.dom.golSurvivalMin.value, 10) || 0,
         survivalMax: parseInt(app.dom.golSurvivalMax.value, 10) || 0,
-        birth: parseInt(app.dom.golBirth.value, 10) || 0,
-        liveCellDef: app.dom.golLiveCellDef.value,
-        colorGenetics: app.dom.golColorGenetics.value,
+        birthMin: parseInt(app.dom.golBirthMin.value, 10) || 0,
+        birthMax: parseInt(app.dom.golBirthMax.value, 10) || 0,
     };
+    // === END MODIFICATION ===
     app.setGameOfLifeRules(newRules);
     closeGolSettingsModal();
 }
@@ -420,9 +432,10 @@ function resetGolSettings() {
     const rules = app.getGameOfLifeRules();
     app.dom.golSurvivalMin.value = rules.survivalMin;
     app.dom.golSurvivalMax.value = rules.survivalMax;
-    app.dom.golBirth.value = rules.birth;
-    app.dom.golLiveCellDef.value = rules.liveCellDef;
-    app.dom.golColorGenetics.value = rules.colorGenetics;
+    // === START MODIFICATION ===
+    app.dom.golBirthMin.value = rules.birthMin;
+    app.dom.golBirthMax.value = rules.birthMax;
+    // === END MODIFICATION ===
 }
 
 function openGravitationalSortSettingsModal() {
@@ -500,6 +513,18 @@ export function initializeModals(appContext) {
     app.dom.btnGolSettingsSave.addEventListener('click', saveGolSettings);
     app.dom.btnGolSettingsCancel.addEventListener('click', closeGolSettingsModal);
     app.dom.btnGolSettingsReset.addEventListener('click', resetGolSettings);
+
+    // --- START: MODIFICATION ---
+    // (אני קולט את הכפתורים כאן כי הם לא ב-dom-elements.js)
+    // עדכון הקריאות ל-applyGolPreset עם 4 ארגומנטים
+    document.getElementById('btnGolPresetHarmonic').addEventListener('click', () => applyGolPreset(3, 5, 3, 3));
+    document.getElementById('btnGolPresetRapid').addEventListener('click', () => applyGolPreset(2, 9, 3, 3));
+    document.getElementById('btnGolPresetClassic').addEventListener('click', () => applyGolPreset(2, 3, 3, 3));
+    document.getElementById('btnGolPresetChaos').addEventListener('click', () => applyGolPreset(3, 3, 2, 2));
+    document.getElementById('btnGolPresetHive').addEventListener('click', () => applyGolPreset(2, 5, 4, 4));
+    document.getElementById('btnGolPresetMoon').addEventListener('click', () => applyGolPreset(1, 4, 2, 2));
+    document.getElementById('btnGolPresetCoral').addEventListener('click', () => applyGolPreset(4, 8, 3, 3));
+    // --- END: MODIFICATION ---
 
     // Gravitational Sort Settings Modal
     app.dom.gsDirectionButtons.forEach(btn => {
