@@ -57,6 +57,11 @@ function closePaletteModal() {
 
 function closeGolSettingsModal() {
     app.dom.gameOfLifeSettingsModal.classList.remove('modal-visible');
+    // --- START MODIFICATION ---
+    // Reset borders on close
+    app.dom.golSurvivalRules.style.borderColor = '';
+    app.dom.golBirthRules.style.borderColor = '';
+    // --- END MODIFICATION ---
     setTimeout(() => app.dom.gameOfLifeSettingsModal.style.display = 'none', 300);
     app.resetWasLongPress();
 }
@@ -394,35 +399,95 @@ function populateHelpModal() {
 function openGolSettingsModal() {
     if (app.isBreathing() || app.isLifePlaying()) return;
     const rules = app.getGameOfLifeRules();
-    app.dom.golSurvivalMin.value = rules.survivalMin;
-    app.dom.golSurvivalMax.value = rules.survivalMax;
-    // === START MODIFICATION ===
-    app.dom.golBirthMin.value = rules.birthMin;
-    app.dom.golBirthMax.value = rules.birthMax;
-    // === END MODIFICATION ===
+    
+    // --- START MODIFICATION ---
+    // Convert arrays back to comma-separated strings
+    app.dom.golSurvivalRules.value = rules.survival.join(', ');
+    app.dom.golBirthRules.value = rules.birth.join(', ');
+
+    // Reset validation styles
+    app.dom.golSurvivalRules.style.borderColor = '';
+    app.dom.golBirthRules.style.borderColor = '';
+    // --- END MODIFICATION ---
+    
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
 }
 
 // --- START: MODIFICATION ---
-// עדכון החתימה של הפונקציה
-function applyGolPreset(min, max, birthMin, birthMax) {
-    app.dom.golSurvivalMin.value = min;
-    app.dom.golSurvivalMax.value = max;
-    app.dom.golBirthMin.value = birthMin;
-    app.dom.golBirthMax.value = birthMax;
+// Helper function to parse and validate rule strings
+function validateRuleString(ruleString) {
+    const rules = new Set();
+    const parts = ruleString.trim().split(',');
+
+    // Handle empty string as a valid empty list
+    if (ruleString.trim() === '') {
+        return [];
+    }
+
+    for (const part of parts) {
+        const trimmedPart = part.trim();
+        if (trimmedPart === '') continue; // Allow for trailing commas or double commas
+
+        const num = parseInt(trimmedPart, 10);
+        
+        // Check for invalid numbers (NaN, out of range 0-8)
+        if (isNaN(num) || num < 0 || num > 8 || num.toString() !== trimmedPart) {
+            return null; // Invalid input
+        }
+        rules.add(num);
+    }
+    return Array.from(rules).sort((a, b) => a - b); // Return sorted, unique numbers
+}
+
+
+// Updated function to set preset strings
+function applyGolPreset(survivalString, birthString) {
+    app.dom.golSurvivalRules.value = survivalString;
+    app.dom.golBirthRules.value = birthString;
+    // Clear any error states
+    app.dom.golSurvivalRules.style.borderColor = '';
+    app.dom.golBirthRules.style.borderColor = '';
 }
 // --- END: MODIFICATION ---
 
 function saveGolSettings() {
-    // === START MODIFICATION ===
+    // --- START MODIFICATION ---
+    const survivalInput = app.dom.golSurvivalRules;
+    const birthInput = app.dom.golBirthRules;
+
+    // Reset borders
+    survivalInput.style.borderColor = '';
+    birthInput.style.borderColor = '';
+
+    const newSurvivalRules = validateRuleString(survivalInput.value);
+    const newBirthRules = validateRuleString(birthInput.value);
+
+    let hasError = false;
+
+    if (newSurvivalRules === null) {
+        survivalInput.style.borderColor = 'red';
+        hasError = true;
+    }
+    
+    if (newBirthRules === null) {
+        birthInput.style.borderColor = 'red';
+        hasError = true;
+    }
+
+    if (hasError) {
+        // We could show a more formal alert here, but for now, the red border indicates the error
+        // as requested ("prevent saving").
+        console.error("Invalid GOL rules. Please enter only numbers between 0 and 8, separated by commas.");
+        return; // Don't save, don't close
+    }
+
     const newRules = {
-        survivalMin: parseInt(app.dom.golSurvivalMin.value, 10) || 0,
-        survivalMax: parseInt(app.dom.golSurvivalMax.value, 10) || 0,
-        birthMin: parseInt(app.dom.golBirthMin.value, 10) || 0,
-        birthMax: parseInt(app.dom.golBirthMax.value, 10) || 0,
+        survival: newSurvivalRules,
+        birth: newBirthRules,
     };
-    // === END MODIFICATION ===
+    // --- END MODIFICATION ---
+
     app.setGameOfLifeRules(newRules);
     closeGolSettingsModal();
 }
@@ -430,12 +495,16 @@ function saveGolSettings() {
 function resetGolSettings() {
     app.setGameOfLifeRules({ ...app.C.defaultGameOfLifeRules });
     const rules = app.getGameOfLifeRules();
-    app.dom.golSurvivalMin.value = rules.survivalMin;
-    app.dom.golSurvivalMax.value = rules.survivalMax;
-    // === START MODIFICATION ===
-    app.dom.golBirthMin.value = rules.birthMin;
-    app.dom.golBirthMax.value = rules.birthMax;
-    // === END MODIFICATION ===
+    
+    // --- START MODIFICATION ---
+    // Convert default arrays to strings
+    app.dom.golSurvivalRules.value = rules.survival.join(', ');
+    app.dom.golBirthRules.value = rules.birth.join(', ');
+    
+    // Clear any error states
+    app.dom.golSurvivalRules.style.borderColor = '';
+    app.dom.golBirthRules.style.borderColor = '';
+    // --- END MODIFICATION ---
 }
 
 function openGravitationalSortSettingsModal() {
@@ -516,14 +585,21 @@ export function initializeModals(appContext) {
 
     // --- START: MODIFICATION ---
     // (אני קולט את הכפתורים כאן כי הם לא ב-dom-elements.js)
-    // עדכון הקריאות ל-applyGolPreset עם 4 ארגומנטים
-    document.getElementById('btnGolPresetHarmonic').addEventListener('click', () => applyGolPreset(3, 5, 3, 3));
-    document.getElementById('btnGolPresetRapid').addEventListener('click', () => applyGolPreset(2, 9, 3, 3));
-    document.getElementById('btnGolPresetClassic').addEventListener('click', () => applyGolPreset(2, 3, 3, 3));
-    document.getElementById('btnGolPresetChaos').addEventListener('click', () => applyGolPreset(3, 3, 2, 2));
-    document.getElementById('btnGolPresetHive').addEventListener('click', () => applyGolPreset(2, 5, 4, 4));
-    document.getElementById('btnGolPresetMoon').addEventListener('click', () => applyGolPreset(1, 4, 2, 2));
-    document.getElementById('btnGolPresetCoral').addEventListener('click', () => applyGolPreset(4, 8, 3, 3));
+    // Updated preset calls to use the new string-based function
+    document.getElementById('btnGolPresetHarmonic').addEventListener('click', () => applyGolPreset('3, 4, 5', '3'));
+    document.getElementById('btnGolPresetClassic').addEventListener('click', () => applyGolPreset('2, 3', '3'));
+    document.getElementById('btnGolPresetHive').addEventListener('click', () => applyGolPreset('2, 3, 4, 5', '4'));
+
+document.getElementById('btnGolPresetGeometric').addEventListener('click', () => applyGolPreset('1, 2, 3, 4, 8', '2'));
+
+document.getElementById('btnGolPresetLivingTexture').addEventListener('click', () => applyGolPreset('3, 4, 6, 7, 8', '3, 6, 7, 8'));
+
+document.getElementById('btnGolPresetMystery').addEventListener('click', () => applyGolPreset('2, 3, 4, 5', '4, 5, 6, 7'));
+
+document.getElementById('btnGolPresetAmoeba').addEventListener('click', () => applyGolPreset('1, 3, 5, 8', '3, 5, 7'));
+
+document.getElementById('btnGolPresetPaint').addEventListener('click', () => applyGolPreset('1, 2, 3, 4, 5, 6, 7, 8', '1, 2, 3, 4, 5, 6, 7, 8'));
+    document.getElementById('btnGolPresetCoral').addEventListener('click', () => applyGolPreset('4, 5, 6, 7, 8', '3'));
     // --- END: MODIFICATION ---
 
     // Gravitational Sort Settings Modal

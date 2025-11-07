@@ -97,11 +97,9 @@ export const dom = {
   paletteModalTitle: document.getElementById('paletteModalTitle'),
   
   // Game of Life Settings Modal Elements
-  golSurvivalMin: document.getElementById('golSurvivalMin'),
-  golSurvivalMax: document.getElementById('golSurvivalMax'),
   // === START MODIFICATION ===
-  golBirthMin: document.getElementById('golBirthMin'),
-  golBirthMax: document.getElementById('golBirthMax'),
+  golSurvivalRules: document.getElementById('golSurvivalRules'),
+  golBirthRules: document.getElementById('golBirthRules'),
   // === END MODIFICATION ===
   btnGolSettingsSave: document.getElementById('btnGolSettingsSave'),
   btnGolSettingsCancel: document.getElementById('btnGolSettingsCancel'),

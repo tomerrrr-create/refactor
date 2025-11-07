@@ -328,32 +328,30 @@
       
       <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300">כללי הישרדות</h3>
-        <p class="text-sm text-gray-400">תא חי ימשיך לחיות אם מספר שכניו בטווח זה:</p>
+        <p class="text-sm text-gray-400">תא חי ימשיך לחיות אם מספר שכניו הוא (הפרד בפסיק):</p>
         <div class="flex items-center justify-center gap-4">
-          <input type="number" id="golSurvivalMin" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-20 p-2">
-          <span class="text-gray-400">עד</span>
-          <input type="number" id="golSurvivalMax" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-20 p-2">
+          <input type="text" id="golSurvivalRules" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-full p-2" placeholder="3, 4, 5">
         </div>
       </div>
 
       <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300">כללי לידה</h3>
-        <p class="text-sm text-gray-400">תא מת ייוולד אם מספר שכניו בטווח זה:</p>
+        <p class="text-sm text-gray-400">תא מת ייוולד אם מספר שכניו הוא (הפרד בפסיק):</p>
         <div class="flex items-center justify-center gap-4">
-            <input type="number" id="golBirthMin" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-20 p-2">
-            <span class="text-gray-400">עד</span>
-            <input type="number" id="golBirthMax" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-20 p-2">
+            <input type="text" id="golBirthRules" class="bg-gray-700 border border-gray-600 text-white text-center rounded-lg w-full p-2" placeholder="3">
         </div>
       </div>
       <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300">הגדרות מוכנות</h3>
         <div class="grid grid-cols-3 gap-2">
           <button id="btnGolPresetHarmonic" class="gol-preset-btn">הרמוני</button>
-          <button id="btnGolPresetRapid" class="gol-preset-btn">התפשטות</button>
           <button id="btnGolPresetClassic" class="gol-preset-btn">קלאסי</button>
-          <button id="btnGolPresetChaos" class="gol-preset-btn">כאוס</button>
           <button id="btnGolPresetHive" class="gol-preset-btn">הכוורת</button>
-          <button id="btnGolPresetMoon" class="gol-preset-btn">ירח מלא</button>
+<button id="btnGolPresetGeometric" class="gol-preset-btn">גאומטרי</button>
+<button id="btnGolPresetLivingTexture" class="gol-preset-btn">מרקם חי</button>
+<button id="btnGolPresetMystery" class="gol-preset-btn">מסתורין</button>
+<button id="btnGolPresetAmoeba" class="gol-preset-btn">אמבה</button>
+<button id="btnGolPresetPaint" class="gol-preset-btn">צביעה</button>
           <button id="btnGolPresetCoral" class="gol-preset-btn">אלמוג</button>
         </div>
       </div>

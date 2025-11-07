@@ -135,10 +135,14 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
             let newK = cell.k;
 
             if (cell.isAlive) {
-                becomesAlive = liveNeighbors >= gameOfLifeRules.survivalMin && liveNeighbors <= gameOfLifeRules.survivalMax;
+                // === START MODIFICATION ===
+                // Use list-based rule check instead of range
+                becomesAlive = gameOfLifeRules.survival.includes(liveNeighbors);
+                // === END MODIFICATION ===
             } else {
                 // === START MODIFICATION ===
-                becomesAlive = liveNeighbors >= gameOfLifeRules.birthMin && liveNeighbors <= gameOfLifeRules.birthMax;
+                // Use list-based rule check instead of range
+                becomesAlive = gameOfLifeRules.birth.includes(liveNeighbors);
                 // === END MODIFICATION ===
                 if (becomesAlive) {
                     // --- START: MODIFICATION 2 ---
