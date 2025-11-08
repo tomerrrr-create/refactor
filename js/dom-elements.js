@@ -98,8 +98,8 @@ export const dom = {
   
   // Game of Life Settings Modal Elements
   // === START MODIFICATION ===
-  golSurvivalRules: document.getElementById('golSurvivalRules'),
-  golBirthRules: document.getElementById('golBirthRules'),
+  golSurvivalChipsContainer: document.getElementById('golSurvivalChipsContainer'),
+  golBirthChipsContainer: document.getElementById('golBirthChipsContainer'),
   // === END MODIFICATION ===
   btnGolSettingsSave: document.getElementById('btnGolSettingsSave'),
   btnGolSettingsCancel: document.getElementById('btnGolSettingsCancel'),

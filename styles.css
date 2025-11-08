@@ -846,4 +846,40 @@ body {
   background-color: #263238;
   transform: translateY(0); /* החזרה למקום */
 }
+
 /* --- END: GOL Preset Button Styles --- */
+
+
+
+/* --- START: New GOL Chip Button Styles --- */
+.gol-chip-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Make them circular */
+  border: 1px solid #546E7A; /* Subtle border */
+  background-color: #37474F; /* Default dark background */
+  color: #ECEFF1; /* Light text */
+  font-family: monospace; /* Give it a 'tech' feel */
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gol-chip-btn:hover {
+  background-color: #455A64;
+  border-color: #78909C;
+  transform: scale(1.05); /* Slight grow on hover */
+}
+
+/* This is the active/selected state */
+.gol-chip-btn.active {
+  background-color: var(--gold); /* Gold background */
+  color: #000000; /* Black text */
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+/* --- END: New GOL Chip Button Styles --- */
