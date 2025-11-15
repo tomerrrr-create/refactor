@@ -37,6 +37,7 @@ export const dom = {
   btnGravitationalSort: document.getElementById('btnGravitationalSort'),
   btnErosion: document.getElementById('btnErosion'),
   btnDla: document.getElementById('btnDla'),
+  btnContour: document.getElementById('btnContour'),
   btnPlayPauseLife: document.getElementById('btnPlayPauseLife'),
   iconPlay: document.getElementById('iconPlay'),
   iconPause: document.getElementById('iconPause'),

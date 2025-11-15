@@ -55,6 +55,7 @@ resizeModal_prompt: { en: "Enter a number between 1 and 150.", he: "בין 1 ל-
   tooltip_gravitationalSort: { en: "Gravitational Sort", he: "מיון כבידתי", ru: "Гравитационная сортировка", nl: "Zwaartekrachtsortering" },
   tooltip_erosion: { en: "Erosion Simulation", he: "סימולציית ארוזיה", ru: "Симуляция эрозии", nl: "Erosiesimulatie" },
   tooltip_dla: { en: "Fractal Growth Simulation (DLA)", he: "סימולציית צמיחה פרקטלית (DLA)", ru: "Симуляция фрактального роста (DLA)", nl: "Fractale Groei Simulatie (DLA)" },
+  tooltip_contour: { en: "Contour", he: "קווי מתאר", ru: "Контуры", nl: "Contour" }, // <-- ADDED HERE
   gs_modal_title: { en: "Gravitational Sort Settings", he: "הגדרות מיון כבידתי", ru: "Настройки гравитационной сортировки", nl: "Instellingen Zwaartekrachtsortering" },
   gs_modal_direction: { en: "Sort Direction", he: "כיוון המיון", ru: "Направление сортировки", nl: "Sorteerrichting" },
   gs_modal_strength: { en: "Sort Strength", he: "עוצמת המיון", ru: "Сила сортировки", nl: "Sorteerkracht" },
@@ -103,7 +104,7 @@ resizeModal_prompt: { en: "Enter a number between 1 and 150.", he: "בין 1 ל-
   help_symmetry: { en: 'Cycle through symmetry modes: Off, Vertical, Horizontal, Mandala, and Kaleidoscope.', he: 'מעבר בין מצבי סימטריה: כבוי, אנכי, אופקי, מנדלה וקליידוסקופ.', ru: 'Переключает режимы симметрии: выкл., вертикальная, горизонтальная, мандала и калейдоскоп.', nl: 'Schakelt tussen symmetriemodi: Uit, Verticaal, Horizontaal, Mandala en Caleidoscoop.' },
   help_brushMode: { en: 'Toggle between Paint mode (drag to paint) and Copy mode (tap source, then tap destination).', he: 'שינוי מצב בין ציור (גרירה) להעתקה (הקשה על מקור ואז על יעד).', ru: 'Переключает между режимом рисования (перетаскивание) и режимом копирования (нажмите на источник, затем на место назначения).', nl: 'Schakelt tussen Verfmodus (slepen om te schilderen) en Kopieermodus (tik op bron, dan op bestemming).' },
   help_redo: { en: 'Redo the last action that was undone.', he: 'ביצוע מחדש של הפעולה האחרונה שבוטלה.', ru: 'Повторяет последнее отменённое действие.', nl: 'Voert de laatste ongedaan gemaakte actie opnieuw uit.' },
-  help_undo: { en: 'Undo the last action.', he: 'ביטול הפעולה האחרוна.', ru: 'Отменяет последнее действие.', nl: 'Maakt de laatste actie ongedaan.' },
+  help_undo: { en: 'Undo the last action.', he: 'ביטול הפעולה האחרונה.', ru: 'Отменяет последнее действие.', nl: 'Maakt de laatste actie ongedaan.' },
   help_dark: { en: 'Fill the entire grid with the darkest color from the current palette.', he: 'מילוי הלוח בצבע הכהה ביותר מהפלטה הנוכחית.', ru: 'Заполняет всю сетку самым тёмным цветом из текущей палитры.', nl: 'Vult het hele raster met de donkerste kleur uit het huidige palet.' },
   help_specialReset: { en: 'Generate a completely new grid with a random size, gap, and color palette.', he: 'יצירת לוח חדש לגמרי עם גודל, רווח ופלטת צבעים אקראיים.', ru: 'Создаёт совершенно новую сетку со случайным размером, зазором и цветовой палитрой.', nl: 'Genereert een compleet nieuw raster met een willekeurige grootte, tussenruimte en kleurenpalet.' },
   help_gameOfLife: { en: 'Run one generation of Life. "Dead" cells are the darkest and lightest colors. New cells are born from a genetic combination of their three parents.', he: 'הרצת דור אחד של "משחק החיים". תא "מת" הוא הצבע הכהה ביותר או הבהיר ביותר. תאים חדשים נולדים משילוב גנטי של שלושת הוריהם.', ru: 'Запускает одно поколение "Игры в жизнь". "Мёртвые" клетки — это самые тёмные и самые светлые цвета. Новые клетки рождаются из генетической комбинации трёх родителей.', nl: 'Voert één generatie van Leven uit. "Dode" cellen zijn de donkerste en lichtste kleuren. Nieuwe cellen worden geboren uit een genetische combinatie van hun drie ouders.' },
@@ -119,7 +120,7 @@ resizeModal_prompt: { en: "Enter a number between 1 and 150.", he: "בין 1 ל-
   help_breathe: { en: 'Start a calming, pulsing animation across the grid.', he: 'הפעלת אנימציית נשימה מרגיעה על הלוח.', ru: 'Запускает успокаивающую, пульсирующую анимацию по всей сетке.', nl: 'Start een kalmerende, pulserende animatie over het raster.' },
   help_tutorial: { en: 'Opens this guide.', he: 'פתיחת מדריך זה.', ru: 'Открывает это руководство.', nl: 'Opent deze gids.' },
   help_shortcut_undo: { en: "Undo last action", he: "בטל פעולה אחרונה", ru: "Отменить последнее действие", nl: "Laatste actie ongedaan maken" },
-  help_shortcut_redo: { en: "Redo last action", he: "בצע שוב פעולה אחרוна", ru: "Повторить последнее действие", nl: "Laatste actie opnieuw uitvoeren" },
+  help_shortcut_redo: { en: "Redo last action", he: "בצע שוב פעולה אחרונה", ru: "Повторить последнее действие", nl: "Laatste actie opnieuw uitvoeren" },
   help_shortcut_save: { en: "Save as image", he: "שמור כתמונה", ru: "Сохранить как изображение", nl: "Opslaan als afbeelding" },
   help_shortcut_invert: { en: "Invert colors", he: "הפוך צבעים", ru: "Инвертировать цвета", nl: "Kleuren omkeren" },
   help_shortcut_random: { en: "Randomize board", he: "ערבב לוח", ru: "Случайное заполнение", nl: "Willekeurig bord" },
@@ -140,7 +141,7 @@ resizeModal_prompt: { en: "Enter a number between 1 and 150.", he: "בין 1 ל-
   dla_modal_save_close: { en: "Save & Close", he: "שמור וסגור", ru: "Сохранить и закрыть", nl: "Opslaan & Sluiten" },
   dla_modal_cancel: { en: "Cancel", he: "ביטול", ru: "Отмена", nl: "Annuleren" },
   dla_fastmode_label: { en: "Fast Fill Mode", he: "מצב מילוי מהיר", ru: "Быстрое заполнение", nl: "Snelle Vulmodus" },
-  dla_fastmode_desc: { en: "Uses a faster algorithm for filling gaps.", he: "משתמש באלגוריתם מהיר למילוי חללים.", ru: "Использует быстрый алгоритм для заполнения.", nl: "Gebruikt een sneller algoritme om gaten te vullen." },
+  dla_fastmode_desc: { en: "Uses a faster algorithm for filling gaps.", he: "משתמש באלגוריתם מהיר למילוי חללים.", ru: "Использует быстрый алгоритם для заполнения.", nl: "Gebruikt een sneller algoritme om gaten te vullen." },
 
   // Phase 1 Additions
   adaptModal_title: { en: "Adapt Colors to Palette", he: "התאם צבעים לפלטה", ru: "Адаптировать цвета к палитре", nl: "Kleuren aan palet aanpassen" },

@@ -187,6 +187,7 @@ body {
 #btnGravitationalSort,
 #btnErosion,
 #btnDla,
+#btnContour, /* <-- ADDED HERE */
 #btnNudgeBrighter,
 #btnNudgeDarker {
     opacity: 0;
@@ -246,6 +247,7 @@ body {
 .sim-mode-active #btnGravitationalSort,
 .sim-mode-active #btnErosion,
 .sim-mode-active #btnDla,
+.sim-mode-active #btnContour, /* <-- ADDED HERE */
 .sim-mode-active #btnNudgeBrighter,
 .sim-mode-active #btnNudgeDarker {
     opacity: 1;
@@ -273,6 +275,7 @@ body {
 .sim-mode-active #btnDla             { grid-area: 2 / 4; }
 .sim-mode-active #btnErosion         { grid-area: 3 / 5; }
 .sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; }
+.sim-mode-active #btnContour         { grid-area: 4 / 5; } /* <-- ADDED HERE */
 
 
 /* Right Panel */
@@ -612,7 +615,8 @@ body {
 #btnShowBreatheMenu.simulation-active svg,
 #btnGravitationalSort.simulation-active svg,
 #btnErosion.simulation-active svg,
-#btnDla.simulation-active svg {
+#btnDla.simulation-active svg,
+#btnContour.simulation-active svg /* <-- ADDED HERE */ {
   stroke: var(--gold);
   stroke-width: 2.5; /* Make the icon lines thicker */
 }
@@ -719,11 +723,12 @@ body {
 #btnBrightnessEvo svg,
 #btnShowBreatheMenu svg,
 #btnGravitationalSort svg,
-#btnErosion svg {
+#btnErosion svg,
+#btnContour svg /* <-- ADDED HERE */ {
     stroke: var(--sim-color); /* צובע את קווי המתאר של האייקון */
 }
 
-#btnShowBreatheMenu svg circle {
+#btnShowBfreatheMenu svg circle {
     fill: var(--sim-color); /* צובע את העיגולים המלאים באייקון הנשימה */
 }
 
@@ -883,3 +888,15 @@ body {
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
 }
 /* --- END: New GOL Chip Button Styles --- */
+
+
+/* === START: New Preset Button Active Style === */
+.gol-preset-btn.active {
+  background-color: var(--gold); /* Gold background */
+  color: #000000; /* Black text */
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  transform: translateY(-2px); /* Lift it up slightly */
+}
+/* === END: New Preset Button Active Style === */
+}

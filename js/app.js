@@ -643,8 +643,12 @@ case 'brightnessEvo':
 
             case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration(context); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
-            case 'dla':
+       case 'contour': 
+                nextState = Simulations.runContourGeneration(context); 
+                boardState = nextState; 
+                break;
 
+            case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
 const dlaContext = { ...context, dlaRules: currentDlaRules };
 const { nextBoardState, nextDlaState } = Simulations.runDlaGeneration(dlaContext);
@@ -686,8 +690,12 @@ case 'brightnessEvo':
                 case 'erosion': 
                     boardState = Simulations.runErosionGeneration(context); 
                     break;
-                case 'dla': 
+            
+case 'contour': 
+                boardState = Simulations.runContourGeneration(context); 
+                break;
 
+            case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
 const dlaContext = { ...context, dlaRules: currentDlaRules };
 const { nextBoardState, nextDlaState } = Simulations.runDlaGeneration(dlaContext);
@@ -724,7 +732,9 @@ break;
           dom.btnGravitationalSort.disabled = false;
           dom.btnErosion.disabled = false;
           dom.btnDla.disabled = false;
+dom.btnContour.disabled = false;
       }
+
       
       function togglePlayPauseLife() {
           if (isLifePlaying) {
@@ -755,7 +765,7 @@ const BREATHE_SPEED = 0.0015;
               dom.btnGravitationalSort.disabled = true;
               dom.btnErosion.disabled = true;
               dom.btnDla.disabled = true;
-              
+     dom.btnContour.disabled = true;         
               startAnimationLoop(); // Start the smooth animation loop
               return; // Exit here, don't start gameLoop
           }
@@ -777,6 +787,7 @@ const BREATHE_SPEED = 0.0015;
           dom.btnGravitationalSort.disabled = true;
           dom.btnErosion.disabled = true;
           dom.btnDla.disabled = true;
+dom.btnContour.disabled = true;
           gameLoop();
       }
       
@@ -866,7 +877,7 @@ function armSimulation(simulationName) {
     dlaMode = 'off';
     breatheEvoMode = 'off';
     
-    const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla];
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour];
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     updateBrightnessEvoButtonUI(); // Update UI to reflect the reset
     updateDlaButtonUI();           // Update UI to reflect the reset
@@ -1173,7 +1184,8 @@ if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); re
         dom.btnGravitationalSort.title = getText('tooltip_gravitationalSort'); 
         dom.btnErosion.title = getText('tooltip_erosion');
         dom.btnDla.title = getText('tooltip_dla'); 
-        dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
+        dom.btnContour.title = getText('tooltip_contour');
+dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         dom.btnBrushMode.title = isBrushModeOn ? getText('brushMode_paint') : getText('brushMode_copy');
 
         document.querySelectorAll('.ctrl').forEach(btn => { 
@@ -1237,7 +1249,9 @@ if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); re
       function resetArmedState() {
         armedSimulation = null;
         dlaState = null;
-        const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla];
+
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour];
+
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
         dom.btnPlayPauseLife.disabled = true;
         dom.btnStepForward.disabled = true;
@@ -1770,6 +1784,8 @@ dom.btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, cycle
 
 dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 
+
+dom.btnContour.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('contour')));
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
         dom.btnNudgeBrighter.addEventListener('click', (e) => handleCtrlClick(e, () => nudgeColors(1)));
