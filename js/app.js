@@ -54,6 +54,7 @@ import { initializeModals } from './ui-modals.js';
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
+      let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
       let dlaState = null;
 
       let activePaletteIndex = 0;
@@ -113,7 +114,7 @@ let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
         if (!stateA || !stateB) return false;
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
         for (let i = 0; i < stateA.tiles.length; i++) {
-          if (stateA.tiles[i].k !== stateB.tiles[i].k || stateA.tiles[i].isGold !== stateB.tiles[i].isGold) return false;
+          if (stateA.tiles[i].k !== stateB.k || stateA.tiles[i].isGold !== stateB.isGold) return false;
         }
         return true;
       }
@@ -620,7 +621,7 @@ function syncDlaCrystalState() {
         if (tile.k > 0 && !tile.isGold) {
             dlaState.crystal.add(index);
         } else {
-            dlaState.emptyIndices.push(index);
+dlaState.emptyIndices.push(index);
         }
     });
 }
@@ -628,7 +629,7 @@ function syncDlaCrystalState() {
 
       function gameLoop() {
         if (!isLifePlaying) return;
-        const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, gravitationalSortRules, erosionRules, dlaState, dlaRules };
+        const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, gravitationalSortRules, erosionRules, dlaState, dlaRules, contourRules };
         let nextState;
         switch(armedSimulation) {
             case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration(context); boardState = nextState; break;
@@ -670,7 +671,7 @@ break;
                 syncDlaCrystalState();
             }
       
-            const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, gravitationalSortRules, erosionRules, dlaState, dlaRules };
+            const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, gravitationalSortRules, erosionRules, dlaState, dlaRules, contourRules };
             
             switch(armedSimulation) {
                 case 'gameOfLife': 
@@ -1128,6 +1129,7 @@ const brushSizeSlider = document.getElementById('brushSizeSlider');
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
             if (btn.id === 'btnGameOfLife') { modals.openGolSettingsModal(); return; }
             if (btn.id === 'btnGravitationalSort') { modals.openGravitationalSortSettingsModal(); return; }
+            if (btn.id === 'btnContour') { modals.openContourSettingsModal(); return; } // <-- ADDED HERE
 if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); return; }
             if (btn.id === 'btnPalette') { modals.openPaletteModal(); return; }
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
@@ -1238,7 +1240,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
                 pauseLife();
                 resetArmedState();
             }
-            const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.btnTutorial, dom.btnSave, dom.btnSpecialReset, dom.btnInvert ];
+            const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.btnTutorial, dom.btnSpecialReset, dom.btnInvert ];
             controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
             dom.btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
             dom.btnToggleSimMode.classList.toggle('active', isSimModeActive);
@@ -1723,6 +1725,7 @@ function cycleBreatheEvoMode() {
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: (r) => { gameOfLifeRules = r; },
             getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; },
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
+            getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
 
 
 

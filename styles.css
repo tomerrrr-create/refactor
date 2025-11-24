@@ -235,7 +235,6 @@ body {
 .sim-mode-active #btnGap,
 .sim-mode-active #btnResetBoard,
 .sim-mode-active #btnTutorial,
-.sim-mode-active #btnSave,
 .sim-mode-active #btnSpecialReset,
 .sim-mode-active #btnInvert {
   display: none;
@@ -262,21 +261,23 @@ body {
 
 
 /* Center Panel */
-/* שורה ראשונה (השינוי שביקשת) */
 .sim-mode-active #btnStepForward     { display: inline-flex; grid-area: 1 / 3; } /* מיקום 1: צעד קדימה */
 .sim-mode-active #btnPalette        { grid-area: 1 / 4; }                      /* מיקום 2: החלף פלטה */
 .sim-mode-active #btnPlayPauseLife   { grid-area: 1 / 5; }                      /* מיקום 3: הפעל / השהה */
 
-/* שורות אחרות (נשארות ללא שינוי) */
-.sim-mode-active #btnGameOfLife      { grid-area: 2 / 3; }
-.sim-mode-active #btnShowBreatheMenu { grid-area: 3 / 4; }
+.sim-mode-active #btnGameOfLife      { grid-area: 3 / 4; }
+.sim-mode-active #btnShowBreatheMenu { grid-area: 4 / 3; }
 .sim-mode-active #btnBrightnessEvo   { grid-area: 2 / 5; }
 .sim-mode-active #btnGravitationalSort { grid-area: 3 / 3; }
 .sim-mode-active #btnDla             { grid-area: 2 / 4; }
 .sim-mode-active #btnErosion         { grid-area: 3 / 5; }
 .sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; }
-.sim-mode-active #btnContour         { grid-area: 4 / 5; } /* <-- ADDED HERE */
+.sim-mode-active #btnContour         { grid-area: 2 / 3; }
 
+.sim-mode-active #btnSave {
+    display: inline-flex; /* הופך את הכפתור לנראה */
+    grid-area: 4 / 5;     /* שורה 4, עמודה 3 (מתחת לגרביטציה) */
+}
 
 /* Right Panel */
 .sim-mode-active #btnSymmetry        { grid-area: 1 / 7; }
@@ -322,12 +323,12 @@ body {
 .glow-animation-separator svg {
   animation: glow-effect 2s ease-in-out infinite;
 }
-#saveModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal, #advancedColorMappingModal {
+#saveModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal, #advancedColorMappingModal, #contourSettingsModal {
   transition: opacity 300ms ease-in-out, visibility 300ms ease-in-out;
   visibility: hidden;
   opacity: 0;
 }
-#saveModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible, #advancedColorMappingModal.modal-visible {
+#saveModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible, #advancedColorMappingModal.modal-visible, #contourSettingsModal.modal-visible {
   visibility: visible;
   opacity: 1;
 }
@@ -689,7 +690,7 @@ body {
     box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.5);
 }
 
-#btnGsSettingsSave:hover {
+#btnGsSettingsSave:hover, #btnContourSettingsSave:hover {
     background-color: #e6c200 !important;
 }
 
@@ -721,7 +722,6 @@ body {
 /* --- Custom Simulation Button Color --- */
 #btnGameOfLife svg,
 #btnBrightnessEvo svg,
-#btnShowBreatheMenu svg,
 #btnGravitationalSort svg,
 #btnErosion svg,
 #btnContour svg /* <-- ADDED HERE */ {
@@ -900,3 +900,33 @@ body {
 }
 /* === END: New Preset Button Active Style === */
 }
+
+/* --- START: New Contour Settings Modal Styles --- */
+#contourSensitivitySlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eaeaea;
+  cursor: pointer;
+  margin-top: -6px; /* Center thumb on the track */
+}
+#contourSensitivitySlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eaeaea;
+  cursor: pointer;
+}
+#contourSensitivitySlider:focus {
+    outline: none;
+}
+#contourSensitivitySlider:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.5);
+}
+
+#btnContourSettingsSave:hover {
+    background-color: #e6c200 !important;
+}
+/* --- END: New Contour Settings Modal Styles --- */

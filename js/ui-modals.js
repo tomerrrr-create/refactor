@@ -78,6 +78,14 @@ function closeAdvancedColorMappingModal() {
     app.resetWasLongPress();
 }
 
+// --- START: Added for Contour Settings ---
+function closeContourSettingsModal() {
+    app.dom.contourSettingsModal.classList.remove('modal-visible');
+    setTimeout(() => app.dom.contourSettingsModal.style.display = 'none', 300);
+    app.resetWasLongPress();
+}
+// --- END: Added for Contour Settings ---
+
 
 // --- Modal Management Functions ---
 
@@ -404,6 +412,8 @@ const PRESET_RULES = {
   'btnGolPresetLivingTexture': { survival: [3, 4, 6, 7, 8], birth: [3, 6, 7, 8] },
   'btnGolPresetAmoeba': { survival: [1, 3, 5, 8], birth: [3, 5, 7] },
   'btnGolPresetPaint': { survival: [1, 2, 3, 4, 5, 6, 7, 8], birth: [4, 5, 6, 7, 8] },
+  'btnGolPresetPaint2': { survival: [1, 2, 3, 4, 5, 6, 7, 8], birth: [1, 2,3] },
+
   'btnGolPresetCoral': { survival: [4, 5, 6, 7, 8], birth: [3] },
     'btnGolPresetMeditation': { survival: [1, 2, 3, 4, 5], birth: [3] },
   'btnGolPresetJoelson': { survival: [2, 3, 4, 5], birth: [4, 5, 6, 7, 8] },
@@ -550,6 +560,52 @@ function saveGravitationalSortSettings() {
 }
 
 
+// --- START: Added for Contour Settings ---
+function openContourSettingsModal() {
+    if (app.isBreathing() || app.isLifePlaying()) return;
+
+    // 1. Set all texts from i18n
+    app.dom.contourSettingsTitle.textContent = app.getText('contour_modal_title');
+    app.dom.contourSensitivityLabel.textContent = app.getText('contour_sensitivity_label');
+    app.dom.contourSensitivityDesc.textContent = app.getText('contour_sensitivity_desc');
+    app.dom.contourSensitivityLabelLow.textContent = app.getText('contour_sensitivity_low');
+    app.dom.contourSensitivityLabelHigh.textContent = app.getText('contour_sensitivity_high');
+    app.dom.contourColorLabel.textContent = app.getText('contour_color_label');
+    app.dom.btnContourColorDark.title = app.getText('contour_color_darkest');
+    app.dom.btnContourColorLight.title = app.getText('contour_color_lightest');
+    app.dom.btnContourSettingsCancel.textContent = app.getText('gs_modal_cancel'); // Re-use "Cancel"
+    app.dom.btnContourSettingsSave.textContent = app.getText('gs_modal_save_close'); // Re-use "Save & Close"
+
+    // 2. Get current rules and set UI elements
+    const rules = app.getContourRules();
+    app.dom.contourSensitivitySlider.value = rules.sensitivity;
+    app.dom.contourSensitivityValue.textContent = `${rules.sensitivity}%`; // Set initial text value
+    
+    app.dom.btnContourColorDark.classList.toggle('active', rules.lineColor === 'darkest');
+    app.dom.btnContourColorLight.classList.toggle('active', rules.lineColor === 'lightest');
+
+    // 3. Show the modal
+    app.dom.contourSettingsModal.style.display = 'flex';
+    setTimeout(() => app.dom.contourSettingsModal.classList.add('modal-visible'), 10);
+}
+
+function saveContourSettings() {
+    // 1. Read values from UI
+    const newSensitivity = parseInt(app.dom.contourSensitivitySlider.value, 10);
+    const activeColorBtn = app.dom.contourSettingsModal.querySelector('.contour-color-btn.active');
+    const newLineColor = activeColorBtn ? activeColorBtn.dataset.color : 'darkest'; // Default to darkest if none selected
+
+    // 2. Set new rules
+    app.setContourRules({
+        sensitivity: newSensitivity,
+        lineColor: newLineColor,
+    });
+
+    // 3. Close modal
+    closeContourSettingsModal();
+}
+// --- END: Added for Contour Settings ---
+
 
 let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית של המשתמש
 
@@ -648,6 +704,25 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
         closeAdvancedColorMappingModal();
     });
 
+    // --- START: Added for Contour Settings ---
+    app.dom.btnContourModalClose.addEventListener('click', closeContourSettingsModal);
+    app.dom.contourSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.contourSettingsModal) { closeContourSettingsModal(); } });
+    app.dom.btnContourSettingsSave.addEventListener('click', saveContourSettings);
+    app.dom.btnContourSettingsCancel.addEventListener('click', closeContourSettingsModal);
+
+    // Listen for slider changes to update the text value
+    app.dom.contourSensitivitySlider.addEventListener('input', () => {
+        app.dom.contourSensitivityValue.textContent = `${app.dom.contourSensitivitySlider.value}%`;
+    });
+
+    app.dom.contourColorButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            app.dom.contourColorButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+    // --- END: Added for Contour Settings ---
+
 
     return {
         openResizeModal,
@@ -657,6 +732,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
         openGolSettingsModal,
         openGravitationalSortSettingsModal,
         openAdvancedColorMappingModal, // Phase 1 Addition
+        openContourSettingsModal, // <-- ADDED HERE
         closeModal,
         renderColorPickerContent,
         populateHelpModal,
