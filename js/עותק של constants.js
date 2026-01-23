@@ -44,35 +44,6 @@ export const PALETTES = [
   ]
     },
 
-{
-        originalName: "Magic Aurora (23)",
-        emoji: '🦄',
-        colors: ["#10002B", "#240046", "#3C096C", "#5A189A", "#7B2CBF", "#9D4EDD", "#C77DFF", "#E0AAFF", "#F8D7DA", "#FFC8DD", "#FF9EBB", "#FF6392", "#FF0A54", "#F72585", "#B5179E", "#7209B7", "#4CC9F0", "#4895EF", "#4361EE", "#3F37C9", "#3A0CA3", "#480CA8", "#32004F"]
-    },
-
-
-
-{
-  originalName: "Classic Painter",
-  emoji: "🎨",
-  colors: [
-    "#1B1B1B", "#FFFFFF", "#F2E9DC", "#D4C4A8", "#8D6E63",
-    "#A52A2A", "#C0392B", "#E74C3C", "#F39C12", "#F1C40F",
-    "#F7E06F", "#27AE60", "#2ECC71", "#16A085", "#1ABC9C",
-    "#2471A3", "#3498DB", "#5DADE2", "#7F8C8D", "#95A5A6",
-    "#8E44AD", "#9B59B6", "#D35400"
-  ]
-    },
-
-
-{
-  originalName: "Northern Lights",
-  emoji: '🌈',
-  colors: ["#020617","#030712","#040815","#05091A","#05101F","#061826","#052E3B","#044155","#036672","#059669","#22C55E","#A3E635","#ECFE71","#E5F3FF","#C7D2FE","#A5B4FC","#818CF8","#7C3AED","#6D28D9","#5B21B6","#4C1D95","#312E81","#020617"]
-},
-
-
-
   { 
         originalName: "New-York Autumn", 
         emoji: '🍂', 
@@ -92,15 +63,7 @@ export const PALETTES = [
         emoji: '🌸', 
         colors: ["#B39DDB", "#F48FB1", "#64B5F6", "#81C784", "#90CAF9", "#87CEFA", "#81D4FA", "#A5D6A7", "#D1C4E9", "#FFB7C5", "#F8BBD0", "#80DEEA", "#FFC0CB", "#C1E1C1", "#FFD1DC", "#B3E5FC", "#DCEDC8", "#E6E6FA", "#FFECB3", "#A7FFEB", "#FFF59D", "#FFF9C4", "#FFF8DC"] 
     },
-
-{ 
-        originalName: "Cosmos", 
-        emoji: '🌌', 
-        colors: ["#000000", "#0B0C10", "#00008B", "#1F2833", "#191970", "#263238", "#4B0082", "#37474F", "#483D8B", "#8A2BE2", "#BA55D3", "#9370DB", "#1E90FF", "#FF00FF", "#DA70D6", "#FF69B4", "#00BFFF", "#40E0D0", "#B0E0E6", "#FFFACD", "#F8F8FF", "#E0FFFF", "#FFFFFF"] 
-    },
-
   
-
   { 
         originalName: "Brazilian Summer", 
         emoji: '☀️', 
@@ -113,15 +76,7 @@ export const PALETTES = [
         emoji: '🌳', 
         colors: ["#013220", "#0B5345", "#145A32", "#0E6655", "#196F3D", "#117864", "#117A65", "#1D8348", "#1E8449", "#138D75", "#229954", "#239B56", "#16A085", "#27AE60", "#28B463", "#45B39D", "#52BE80", "#2ECC71", "#48C9B0", "#73C6B6", "#58D68D", "#82E0AA", "#A9DFBF"] 
     },
- 
-
-  { 
-        originalName: "Sky", 
-        emoji: '☁️', 
-        colors: ["#303F9F", "#0D47A1", "#304FFE", "#3F51B5", "#01579B", "#1565C0", "#3D5AFE", "#2962FF", "#1976D2", "#0277BD", "#2979FF", "#1E88E5", "#0288D1", "#0091EA", "#039BE5", "#03A9F4", "#00B0FF", "#29B6F6", "#4FC3F7", "#40C4FF", "#81D4FA", "#B3E5FC", "#E1F5FE"]
-    },
-
- 
+  
   { 
         originalName: "Desert Sunrise", 
         emoji: '🐪', 
@@ -134,6 +89,12 @@ export const PALETTES = [
         colors: ["#000000", "#0B0C10", "#1C1C1C", "#000080", "#252525", "#00008B", "#191970", "#0000CD", "#36454F", "#483D8B", "#2F4F4F", "#0000FF", "#8A2BE2", "#9932CC", "#6A5ACD", "#008080", "#008B8B", "#BA55D3", "#9370DB", "#5F9EA0", "#20B2AA", "#66CDAA", "#40E0D0", "#00FFFF", "#7FFFD4"] 
     },
   
+  { 
+        originalName: "Sky", 
+        emoji: '☁️', 
+        colors: ["#303F9F", "#0D47A1", "#304FFE", "#3F51B5", "#01579B", "#1565C0", "#3D5AFE", "#2962FF", "#1976D2", "#0277BD", "#2979FF", "#1E88E5", "#0288D1", "#0091EA", "#039BE5", "#03A9F4", "#00B0FF", "#29B6F6", "#4FC3F7", "#40C4FF", "#81D4FA", "#B3E5FC", "#E1F5FE"]
+    },
+
 
 
     { 
@@ -151,6 +112,13 @@ export const PALETTES = [
     },
     
 
+{ 
+        originalName: "Cosmos", 
+        emoji: '🌌', 
+        colors: ["#000000", "#0B0C10", "#00008B", "#1F2833", "#191970", "#263238", "#4B0082", "#37474F", "#483D8B", "#8A2BE2", "#BA55D3", "#9370DB", "#1E90FF", "#FF00FF", "#DA70D6", "#FF69B4", "#00BFFF", "#40E0D0", "#B0E0E6", "#FFFACD", "#F8F8FF", "#E0FFFF", "#FFFFFF"] 
+    },
+
+
  { 
         originalName: "Jasmine Dream", 
         iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="jasmineGradient" gradientTransform="rotate(90)"><stop offset="5%" stop-color="#AB6BB7" /><stop offset="95%" stop-color="#4B0082" /></linearGradient></defs><g transform="translate(12,12) rotate(18)"><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(0)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(72)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(144)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(216)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(288)" fill="url(#jasmineGradient)"/></g><circle cx="12" cy="12" r="2.5" fill="#FFD700"/></svg>', 
@@ -162,6 +130,13 @@ export const PALETTES = [
         originalName: "Focus",
         emoji: '🧘',
         colors: ["#000000", "#1A0B2E", "#0B172E", "#333333", "#7F7F7F", "#CCCCCC", "#4A0072", "#8E24AA", "#C2185B", "#E91E63", "#EC407A", "#F8BBD0", "#B71C1C", "#D32F2F", "#F4511E", "#FB8C00", "#FFA726", "#FFECB3", "#FBC02D", "#FDD835", "#FFEE58", "#FFF176", "#FFF9C4", "#FFFFFF", "#1B5E20", "#388E3C", "#4CAF50", "#81C784", "#A5D6A7", "#E8F5E9", "#0D47A1", "#1976D2", "#2196F3", "#42A5F5", "#90CAF9", "#E3F2FD", "#004D40", "#00796B", "#009688", "#4DB6AC", "#80CBC4", "#B2DFDB", "#1A237E", "#303F9F", "#3F51B5", "#5C6BC0", "#9FA8DA", "#C5CAE9"]
+    },
+
+
+{
+        originalName: "Monochrome",
+        emoji: '☯️',
+        colors: ["#FFFFFF", "#F9F9F9", "#F3F3F3", "#EDEDED", "#E7E7E7", "#E1E1E1", "#DBDBDB", "#D5D5D5", "#CFCFCF", "#C9C9C9", "#C3C3C3", "#BDBDBD", "#B7B7B7", "#B1B1B1", "#ABABAB", "#A5A5A5", "#9F9F9F", "#999999", "#939393", "#8D8D8D", "#878787", "#818181", "#7B7B7B", "#757575", "#6F6F6F", "#696969", "#636363", "#5D5D5D", "#575757", "#515151", "#4B4B4B", "#454545", "#3F3F3F", "#393939", "#333333", "#2D2D2D", "#272727", "#212121", "#1B1B1B", "#151515", "#0F0F0F", "#0C0C0C", "#090909", "#060606", "#040404", "#020202", "#000000"]
     },
 
 
@@ -183,13 +158,6 @@ export const PALETTES = [
     emoji: '🔮',
     colors: ["#1a0b1e", "#220e29", "#2b1235", "#331541", "#3b184d", "#441b59", "#4c1e65", "#552171", "#5d247d", "#662789", "#6e2a95", "#772da1", "#7f30ad", "#813ec3", "#8b4ec8", "#955dcd", "#9f6dd2", "#a97cd7", "#b38cdc", "#bd9be1", "#c7aae6", "#d1baeb", "#dbc9f0", "#e5d8f5", "#efe8fa", "#f9f7ff", "#f5eeff", "#f0e2ff", "#ebd6ff", "#e6caff", "#e2bdff", "#deafff", "#d9a2ff", "#d494ff", "#cf85ff", "#ca76ff", "#c568ff", "#c059ff", "#bb4aff", "#b243f5", "#aa40e9", "#a13cdd", "#9939d1", "#9036c5", "#8833b9", "#772ebf"]
 },
-
-{
-        originalName: "Monochrome",
-        emoji: '☯️',
-        colors: ["#FFFFFF", "#F9F9F9", "#F3F3F3", "#EDEDED", "#E7E7E7", "#E1E1E1", "#DBDBDB", "#D5D5D5", "#CFCFCF", "#C9C9C9", "#C3C3C3", "#BDBDBD", "#B7B7B7", "#B1B1B1", "#ABABAB", "#A5A5A5", "#9F9F9F", "#999999", "#939393", "#8D8D8D", "#878787", "#818181", "#7B7B7B", "#757575", "#6F6F6F", "#696969", "#636363", "#5D5D5D", "#575757", "#515151", "#4B4B4B", "#454545", "#3F3F3F", "#393939", "#333333", "#2D2D2D", "#272727", "#212121", "#1B1B1B", "#151515", "#0F0F0F", "#0C0C0C", "#090909", "#060606", "#040404", "#020202", "#000000"]
-    },
-
 
 
 {
@@ -227,13 +195,13 @@ export const SIZES = [299, 249, 199, 149, 101, 75, 65, 55, 49, 35, 27, 21, 15, 1
 
 // --- Default Simulation Rules ---
 export const defaultGameOfLifeRules = {
-    survival: [0, 1, 2, 3, 4, 5, 6, 7, 8],
-    birth: [4, 5, 6, 7, 8]
+    survival: [3, 4, 5],
+    birth: [3]
 };
 
 export const defaultGravitationalSortRules = {
-    direction: 'up',
-    strength: 0.6
+    direction: 'down',
+    strength: 0.7
 };
 
 export const defaultErosionRules = {

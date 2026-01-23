@@ -58,8 +58,8 @@ import { initializeModals } from './ui-modals.js';
       let dlaState = null;
 
       let activePaletteIndex = 0;
-      let n = 11;
-      let separatorPx = 0;
+      let n = 7;
+      let separatorPx = 2;
       let isBrushModeOn = true; 
       let hasPerformedInitialAutofill = false; 
       let hasTriggeredFirstNudge = false;
@@ -506,8 +506,8 @@ const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;
       function resetToGoldAndDefaultPalette() {
         performAction(() => {
             activePaletteIndex = 0;
-            separatorPx = 0;
-            n = 11;
+            separatorPx = 2;
+            n = 5;
             symmetryMode = 'off';
             resetSelectedColor();
             updatePaletteHeader();
@@ -1080,7 +1080,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
       function prepareBoardForSimMode() {
         animateBoardTransition(() => {
             performAction(() => {
-                if (n !== 149) _performResize(149);
+                if (n !== 199) _performResize(199);
                 separatorPx = 0; 
                 applySeparator();
                 goDark();
@@ -1089,7 +1089,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
                 selectedColor = currentPalette[lightestIndex];
                 selectedColorIndex = lightestIndex;
 
-brushSize = 3;
+brushSize = 1;
 const brushSizeSlider = document.getElementById('brushSizeSlider');
                 const brushSizeValue = document.getElementById('brushSizeValue');
                 if (brushSizeSlider) brushSizeSlider.value = brushSize;
@@ -1116,14 +1116,9 @@ const brushSizeSlider = document.getElementById('brushSizeSlider');
                 modals.openAdvancedColorMappingModal();
                 return;
             }
-            if (btn.id === 'btnColorPicker') {
-              const darkestColor = palette()[0];
-              selectedColor = darkestColor;
-              selectedColorIndex = 0;
-              isRainbowModeActive = false;
-              updateGlowEffect();
-              updateColorPickerButtonUI();
-              return;
+if (btn.id === 'btnColorPicker') {
+                modals.openColorPickerModal();
+                return;
             }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
@@ -1142,14 +1137,23 @@ if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); re
         actionFn();
       }
 
-      function handleColorPickerClick() {
-        if (selectedColor || isRainbowModeActive) {
-            performAction(resetSelectedColor);
-        } else {
-            modals.openColorPickerModal();
+function handleColorPickerClick() {
+        // אם היינו במצב קשת, נבטל אותו ונתחיל מהצבע הראשון
+        if (isRainbowModeActive) {
+            isRainbowModeActive = false;
+            selectedColorIndex = -1;
         }
-      }
-      
+
+        const p = palette();
+        // חישוב האינדקס הבא (כולל חזרה להתחלה כשהרשימה נגמרת)
+        const nextIndex = (selectedColorIndex + 1) % p.length;
+        
+        selectedColorIndex = nextIndex;
+        selectedColor = p[nextIndex];
+        
+        updateGlowEffect();
+        updateColorPickerButtonUI();
+      }      
       function setTextContent() {
         dom.splashText.textContent = getText('splashTitle');
         dom.fileNameLabel.textContent = getText('saveModal_feelsLike');
