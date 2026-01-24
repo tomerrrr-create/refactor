@@ -45,6 +45,37 @@ export const PALETTES = [
     },
 
 {
+        originalName: "Magma Flow",
+        emoji: '🌋',
+        colors: [
+            "#000000", // Black (Ash)
+            "#1a0505", // Deepest dark red
+            "#2b0505", 
+            "#3d0505",
+            "#5c0808", // Dark red
+            "#7a0a0a",
+            "#9e0e0e", // Blood red
+            "#bd1111",
+            "#de1414", // Vivid red
+            "#ff0000", // Pure Red
+            "#ff3300", // Red-Orange
+            "#ff4500", // Orange Red
+            "#ff5e00",
+            "#ff7300",
+            "#ff8c00", // Dark Orange
+            "#ffa500", // Orange
+            "#ffb700",
+            "#ffcc00",
+            "#ffd700", // Gold/Yellow
+            "#ffe100",
+            "#ffff00", // Pure Yellow
+            "#ffffbf", // Pale Yellow
+            "#ffffff"  // White hot
+        ]
+    },
+
+
+{
         originalName: "Magic Aurora (23)",
         emoji: '🦄',
         colors: ["#10002B", "#240046", "#3C096C", "#5A189A", "#7B2CBF", "#9D4EDD", "#C77DFF", "#E0AAFF", "#F8D7DA", "#FFC8DD", "#FF9EBB", "#FF6392", "#FF0A54", "#F72585", "#B5179E", "#7209B7", "#4CC9F0", "#4895EF", "#4361EE", "#3F37C9", "#3A0CA3", "#480CA8", "#32004F"]
@@ -119,6 +150,35 @@ export const PALETTES = [
         originalName: "Sky", 
         emoji: '☁️', 
         colors: ["#303F9F", "#0D47A1", "#304FFE", "#3F51B5", "#01579B", "#1565C0", "#3D5AFE", "#2962FF", "#1976D2", "#0277BD", "#2979FF", "#1E88E5", "#0288D1", "#0091EA", "#039BE5", "#03A9F4", "#00B0FF", "#29B6F6", "#4FC3F7", "#40C4FF", "#81D4FA", "#B3E5FC", "#E1F5FE"]
+    },
+{
+        originalName: "Radioactive",
+        emoji: '☢️',
+        colors: [
+            "#000000", // Black
+            "#051105", // Very Dark Green
+            "#0a220a",
+            "#0f330f",
+            "#144414",
+            "#1a551a",
+            "#1f661f",
+            "#247724",
+            "#298829",
+            "#2e992e",
+            "#33aa33",
+            "#00ff00", // Neon Green
+            "#33ff33",
+            "#66ff66",
+            "#99ff99",
+            "#ccff00", // Acid Yellow-Green
+            "#ddff00",
+            "#eeff00",
+            "#ffff00", // Pure Yellow
+            "#ffff33",
+            "#ffff66",
+            "#ffff99",
+            "#ffffff"  // White
+        ]
     },
 
  
