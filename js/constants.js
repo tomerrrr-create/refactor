@@ -181,7 +181,63 @@ export const PALETTES = [
         ]
     },
 
- 
+{
+        originalName: "Coffee House",
+        emoji: '☕',
+        colors: [
+            "#2b1b17", // Espresso (Almost Black)
+            "#3b2f2f", // Dark Roast
+            "#4e3629", // Mocha
+            "#5d4037", // Bean Brown
+            "#6f4e37", // Coffee
+            "#795548", // Cocoa
+            "#8d6e63", // Light Brown
+            "#a1887f", // Latte
+            "#bcaaa4", // Cappuccino
+            "#d7ccc8", // Foam
+            "#efebe9", // Milk
+            "#ffffff", // Sugar
+            "#d2b48c", // Tan
+            "#f5f5dc", // Beige
+            "#fff8e7", // Cosmic Latte
+            "#deb887", // Burlywood
+            "#cd853f", // Peru
+            "#8b4513", // Saddle Brown
+            "#a0522d", // Sienna
+            "#fffdd0", // Cream
+            "#f4a460"  // Sandy Brown
+        ]
+    },
+
+{
+        originalName: "Sin City",
+        emoji: '💋',
+        colors: [
+            "#000000", // Black
+            "#1a1a1a",
+            "#333333",
+            "#4d4d4d",
+            "#666666",
+            "#808080", // Grey
+            "#999999",
+            "#b3b3b3",
+            "#cccccc",
+            "#e6e6e6",
+            "#ffffff", // White
+            "#ff0000", // Pure Red
+            "#d30000", // Darker Red
+            "#a80000", // Blood Red
+            "#7a0000",
+            "#2b2b2b", // Dark Grey
+            "#f0f0f0", // Off White
+            "#ff3333", // Bright Red
+            "#0a0a0a", // Almost Black
+            "#550000", // Deep Red
+            "#111111"
+        ]
+    }, 
+
+
   { 
         originalName: "Desert Sunrise", 
         emoji: '🐪', 
