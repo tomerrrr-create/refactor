@@ -418,7 +418,10 @@ const PRESET_RULES = {
     'btnGolPresetMeditation': { survival: [1, 2, 3, 4, 5], birth: [3] },
   'btnGolPresetJoelson': { survival: [2, 3, 4, 5], birth: [4, 5, 6, 7, 8] },
   'btnGolPresetVibration': { survival: [5, 6, 7, 8], birth: [4, 5, 6, 7, 8] },
-  'btnGolPresetCharlie': { survival: [2, 5, 8], birth: [3, 5, 7, 8] }
+'btnGolPresetCharlie': { survival: [2, 5, 8], birth: [3, 5, 7, 8] },
+  'btnGolPresetNaive': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [3] },
+  'btnGolPresetSpace': { survival: [2, 3, 5, 6, 7, 8], birth: [3, 6, 7, 8] },
+  'btnGolPresetYuval': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [4, 6, 7, 8] }
 };
 
 // 2. הפונקציה החדשה שבודקת ומעדכנת את כפתורי הפריסט

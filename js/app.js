@@ -1085,7 +1085,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
       function prepareBoardForSimMode() {
         animateBoardTransition(() => {
             performAction(() => {
-                if (n !== 199) _performResize(199);
+                if (n !== 249) _performResize(249);
                 separatorPx = 0; 
                 applySeparator();
                 goDark();

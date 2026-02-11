@@ -930,3 +930,63 @@ body {
     background-color: #e6c200 !important;
 }
 /* --- END: New Contour Settings Modal Styles --- */
+
+
+/* --- Game of Life Responsive Fix --- */
+
+/* 1. הגדרות ברירת מחדל (דסקטופ) - מראה נקי ומרווח */
+#golSurvivalChipsContainer,
+#golBirthChipsContainer {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* בדסקטופ: אפשר לרדת שורה, זה בסדר */
+    gap: 6px;
+}
+
+.gol-chip-btn {
+    width: 36px;  /* גודל נוח ללחיצה עם העכבר */
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: transform 0.1s, background-color 0.2s; /* אנימציה חלקה */
+}
+
+/* ביטול אפקט הגדלה במובייל כדי למנוע קפיצות, השארת צבע בלבד */
+@media (hover: hover) {
+    .gol-chip-btn:hover {
+        transform: scale(1.1); 
+    }
+}
+
+/* 2. הגדרות מובייל בלבד (עד רוחב 600px) - שורה אחת קומפקטית */
+@media (max-width: 600px) {
+    #golSurvivalChipsContainer,
+    #golBirthChipsContainer {
+        flex-wrap: nowrap !important; /* הכרח שורה אחת */
+        overflow-x: auto;             /* אפשר גלילה הצידה אם צריך */
+        justify-content: center;      /* מירכוז */
+        gap: 3px !important;          /* צמצום רווחים */
+        padding-bottom: 4px;          /* מונע חיתוך של הצל */
+        
+        /* הסתרת פס הגלילה (Scrollbar) שיהיה אסתטי */
+        -ms-overflow-style: none;  /* IE/Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
+    
+    /* הסתרת פס גלילה לכרום/ספארי */
+    #golSurvivalChipsContainer::-webkit-scrollbar,
+    #golBirthChipsContainer::-webkit-scrollbar {
+        display: none;
+    }
+
+    .gol-chip-btn {
+        width: 30px !important;   /* ריבועים קטנים */
+        height: 30px !important;
+        font-size: 0.85rem;
+        flex-shrink: 0;           /* שלא יתכווצו */
+    }
+}
