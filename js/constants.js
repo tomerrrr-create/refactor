@@ -234,15 +234,29 @@ export const PALETTES = [
     emoji: '🔮',
     colors: ["#1a0b1e", "#220e29", "#2b1235", "#331541", "#3b184d", "#441b59", "#4c1e65", "#552171", "#5d247d", "#662789", "#6e2a95", "#772da1", "#7f30ad", "#813ec3", "#8b4ec8", "#955dcd", "#9f6dd2", "#a97cd7", "#b38cdc", "#bd9be1", "#c7aae6", "#d1baeb", "#dbc9f0", "#e5d8f5", "#efe8fa", "#f9f7ff", "#f5eeff", "#f0e2ff", "#ebd6ff", "#e6caff", "#e2bdff", "#deafff", "#d9a2ff", "#d494ff", "#cf85ff", "#ca76ff", "#c568ff", "#c059ff", "#bb4aff", "#b243f5", "#aa40e9", "#a13cdd", "#9939d1", "#9036c5", "#8833b9", "#772ebf"]
 },
-
-
+{
+  "originalName": "Bioluminescent Forest",
+  "emoji": "🌿✨",
+  "colors": [
+    "#000000", "#0A1A0F", "#0F2A1A", "#13391F", "#1A4A2A",
+    "#205B33", "#286C3C", "#307D45", "#3A8E50", "#4A9F5C",
+    "#5AB06A", "#6AC178", "#7AD286", "#8AE394", "#A0F0A8",
+    "#B8FFB8", "#D0FFD0", "#E0FFE0", "#00FFAA", "#00CC99",
+    "#009977", "#006655", "#003322"
+  ]
+},
 
 {
-        originalName: "Emerald Grove",
-        emoji: '🌿',
-        colors: ["#E8FFF5", "#E1FDF0", "#DAFBEB", "#D3F9E6", "#CCF7E1", "#C5F5DC", "#BEF3D7", "#B7F1D2", "#B0EFCD", "#A9EDC8", "#A2EBC3", "#9BE9BE", "#94E7B9", "#8DE5B4", "#86E3AF", "#7FE1AA", "#78DFA5", "#71DDA0", "#6AD89A", "#63D394", "#5CCE8E", "#55C988", "#4EC482", "#47BF7C", "#40BA76", "#39B570", "#32B06A", "#2BAA64", "#24A55E", "#1DA058", "#169B52", "#10964C", "#0A9146", "#088C42", "#07873E", "#06823A", "#057D36", "#047832", "#03732E", "#026E2A", "#016926", "#016422", "#015F1E", "#015A1A", "#015516", "#015012", "#014B0E", "#01460A", "#014206", "#013E04", "#013A03", "#013703", "#013403", "#013103", "#012E03", "#012B03", "#012803", "#012503", "#012203", "#011F03", "#011C03", "#011A03", "#011803", "#00180E"]
-    }
-
+  "originalName": "Neon Metropolis",
+  "emoji": "🛣️",
+  "colors": [
+    "#000000", "#1A1A1A", "#2E2E2E", "#FF00FF", "#FF1493",
+    "#00FFFF", "#00FF00", "#FFFF00", "#FF4500", "#4B0082",
+    "#8A2BE2", "#00BFFF", "#FF69B4", "#FFD700", "#40E0D0",
+    "#FF8C00", "#BA55D3", "#20B2AA", "#FF1493", "#9370DB",
+    "#00FA9A", "#FF00FF", "#B0E0E6"
+  ]
+}
 
 
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
