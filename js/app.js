@@ -748,7 +748,8 @@ break;
           dom.btnErosion.disabled = false;
           dom.btnDla.disabled = false;
 dom.btnContour.disabled = false;
-      }
+ dom.btnSandpile.disabled = false;     
+}
 
       
       function togglePlayPauseLife() {
@@ -781,7 +782,8 @@ const BREATHE_SPEED = 0.0015;
               dom.btnErosion.disabled = true;
               dom.btnDla.disabled = true;
      dom.btnContour.disabled = true;         
-              startAnimationLoop(); // Start the smooth animation loop
+            dom.btnSandpile.disabled = true;
+  startAnimationLoop(); // Start the smooth animation loop
               return; // Exit here, don't start gameLoop
           }
 
@@ -796,13 +798,14 @@ const BREATHE_SPEED = 0.0015;
           dom.iconPlay.style.display = 'none';
           dom.iconPause.style.display = 'block';
           dom.btnStepForward.disabled = true;
-          dom.btnGameOfLife.disabled = true;
+dom.btnGameOfLife.disabled = true;
           dom.btnBrightnessEvo.disabled = true;
           dom.btnShowBreatheMenu.disabled = true;
           dom.btnGravitationalSort.disabled = true;
           dom.btnErosion.disabled = true;
           dom.btnDla.disabled = true;
-dom.btnContour.disabled = true;
+          dom.btnContour.disabled = true;
+          dom.btnSandpile.disabled = true;
           gameLoop();
       }
       
@@ -1257,8 +1260,11 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
                 pauseLife();
                 resetArmedState();
             }
-            const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.btnTutorial, dom.btnSpecialReset, dom.btnInvert ];
+            
+
+const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.btnTutorial, dom.btnSpecialReset ];
             controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
+
             dom.btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
             dom.btnToggleSimMode.classList.toggle('active', isSimModeActive);
             dom.controlsContainer.style.opacity = '1';

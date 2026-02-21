@@ -231,12 +231,41 @@ body {
 
 
 /* --- Simulation Mode Layout Overrides --- */
+
+
+/* --- שינוי מבנה הגריד למצב סימולציה (9 עמודות סך הכל, 5 במרכז) --- */
+#controlsContainer.sim-mode-active {
+    grid-template-columns: 50px 1fr 50px 50px 50px 50px 50px 1fr 50px;
+}
+@media (max-width: 480px) {
+  #controlsContainer.sim-mode-active {
+    grid-template-columns: 44px 1fr 44px 44px 44px 44px 44px 1fr 44px;
+  }
+}
+
+/* הרקע (האזור המוקף) - מתפרס על 5 עמודות המרכז */
+#simModeBackground {
+  display: none;
+  z-index: -1; 
+}
+.sim-mode-active #simModeBackground {
+  display: block;
+  grid-column: 3 / span 5; 
+  grid-row: 2 / span 2;    
+  background: linear-gradient(to bottom, #0f172a, #000000);
+  border-radius: 12px;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Simulation Mode Layout Overrides --- */
 .sim-mode-active #btnBrushMode,
 .sim-mode-active #btnGap,
 .sim-mode-active #btnResetBoard,
 .sim-mode-active #btnTutorial,
 .sim-mode-active #btnSpecialReset,
-.sim-mode-active #btnInvert {
+.sim-mode-active #btnInvert,
+.sim-mode-active #btnDark {
   display: none;
 }
 
@@ -246,53 +275,53 @@ body {
 .sim-mode-active #btnGravitationalSort,
 .sim-mode-active #btnErosion,
 .sim-mode-active #btnDla,
-.sim-mode-active #btnContour, /* <-- ADDED HERE */
+.sim-mode-active #btnContour,
 .sim-mode-active #btnNudgeBrighter,
-.sim-mode-active #btnNudgeDarker {
+.sim-mode-active #btnNudgeDarker,
+.sim-mode-active #btnSandpile,
+.sim-mode-active #btnRandom {
     opacity: 1;
     pointer-events: auto;
     visibility: visible;
     transform: scale(1);
 }
-/* Left Panel */
-.sim-mode-active #btnRedo         { grid-area: 4 / 1; }
-.sim-mode-active #btnResizeDown  { grid-area: 3 / 1; }
-.sim-mode-active #btnColorPicker     { grid-area: 1 / 1; }
 
+/* Left Panel (Col 1) */
+.sim-mode-active #btnColorPicker   { grid-area: 1 / 1; }
+.sim-mode-active #btnNudgeBrighter { grid-area: 2 / 1; }
+.sim-mode-active #btnResizeDown    { grid-area: 3 / 1; }
+.sim-mode-active #btnRedo          { grid-area: 4 / 1; }
 
-/* Center Panel */
-.sim-mode-active #btnStepForward     { display: inline-flex; grid-area: 1 / 3; } /* מיקום 1: צעד קדימה */
-.sim-mode-active #btnPalette        { grid-area: 1 / 4; }                      /* מיקום 2: החלף פלטה */
-.sim-mode-active #btnPlayPauseLife   { grid-area: 1 / 5; }                      /* מיקום 3: הפעל / השהה */
+/* Center Panel (Cols 3, 4, 5, 6, 7) */
 
-.sim-mode-active #btnGameOfLife      { grid-area: 3 / 4; }
-.sim-mode-active #btnShowBreatheMenu { grid-area: 4 / 3; }
-.sim-mode-active #btnBrightnessEvo   { grid-area: 2 / 5; }
-.sim-mode-active #btnGravitationalSort { grid-area: 3 / 3; }
-.sim-mode-active #btnDla             { grid-area: 2 / 4; }
-.sim-mode-active #btnErosion         { grid-area: 3 / 5; }
-.sim-mode-active #btnToggleSimMode   { grid-area: 4 / 4; }
-.sim-mode-active #btnContour         { grid-area: 2 / 3; }
+/* שורה 1 - ניווט ושליטה */
+.sim-mode-active #btnStepForward   { display: inline-flex; grid-area: 1 / 4; } 
+.sim-mode-active #btnPalette       { grid-area: 1 / 5; }                      
+.sim-mode-active #btnPlayPauseLife { grid-area: 1 / 6; }                      
 
-.sim-mode-active #btnSave {
-    display: inline-flex; /* הופך את הכפתור לנראה */
-    grid-area: 4 / 5;     /* שורה 4, עמודה 3 (מתחת לגרביטציה) */
-}
+/* שורה 2 - (בתוך הרקע הכחול) */
+.sim-mode-active #btnContour       { grid-area: 2 / 4; } 
+.sim-mode-active #btnDla           { grid-area: 2 / 5; }
+.sim-mode-active #btnBrightnessEvo { grid-area: 2 / 6; }
 
-/* Right Panel */
-.sim-mode-active #btnSymmetry        { grid-area: 1 / 7; }
-.sim-mode-active #btnRandom {
-    grid-area: 1 / 7;
-    display: none;
-}
-.sim-mode-active #btnResizeUp   { grid-area: 3 / 7; }
-.sim-mode-active #btnDark {
-    grid-area: 2 / 7;
-    display: none;
-}
-.sim-mode-active #btnUndo   { grid-area: 4 / 7; }
-.sim-mode-active #btnNudgeBrighter { grid-area: 2 / 1; } /* UPDATED and MOVED */
-.sim-mode-active #btnNudgeDarker   { grid-area: 2 / 7; } /* UPDATED and MOVED */
+/* שורה 3 - (בתוך הרקע הכחול) */
+.sim-mode-active #btnSandpile      { grid-area: 3 / 3; } 
+.sim-mode-active #btnGravitationalSort { grid-area: 3 / 4; } 
+.sim-mode-active #btnGameOfLife    { grid-area: 3 / 5; } 
+.sim-mode-active #btnErosion       { grid-area: 3 / 6; }
+.sim-mode-active #btnShowBreatheMenu { grid-area: 3 / 7; }
+
+/* שורה 4 - כפתורי מערכת (מתחת לרקע) */
+.sim-mode-active #btnRandom        { display: inline-flex; grid-area: 4 / 6; }
+.sim-mode-active #btnToggleSimMode { grid-area: 4 / 5; } 
+.sim-mode-active #btnSave          { display: inline-flex; grid-area: 4 / 4; } 
+
+/* Right Panel (Col 9) */
+.sim-mode-active #btnSymmetry      { grid-area: 1 / 9; }
+.sim-mode-active #btnNudgeDarker   { grid-area: 2 / 9; }
+.sim-mode-active #btnResizeUp      { grid-area: 3 / 9; }
+.sim-mode-active #btnUndo          { grid-area: 4 / 9; }
+
 
 
 #btnBrushMode svg path {
@@ -617,7 +646,8 @@ body {
 #btnGravitationalSort.simulation-active svg,
 #btnErosion.simulation-active svg,
 #btnDla.simulation-active svg,
-#btnContour.simulation-active svg /* <-- ADDED HERE */ {
+#btnContour.simulation-active svg,
+#btnSandpile.simulation-active svg {
   stroke: var(--gold);
   stroke-width: 2.5; /* Make the icon lines thicker */
 }
@@ -724,40 +754,14 @@ body {
 #btnBrightnessEvo svg,
 #btnGravitationalSort svg,
 #btnErosion svg,
-#btnContour svg /* <-- ADDED HERE */ {
-    stroke: var(--sim-color); /* צובע את קווי המתאר של האייקון */
-}
-
-#btnShowBfreatheMenu svg circle {
-    fill: var(--sim-color); /* צובע את העיגולים המלאים באייקון הנשימה */
+#btnContour svg,
+#btnSandpile svg,
+#btnShowBreatheMenu svg {
+    stroke: var(--sim-color); /* צובע את קווי המתאר של האייקון בכחול */
 }
 
 #btnDla svg {
-    fill: var(--sim-color); /* צובע את האייקון המלא של DLA */
-}
-
-
-/* --- Styling for the central grid wrapper in simulation mode --- */
-
-/* זהו אלמנט הרקע החדש שהוספנו. הוא מוסתר כברירת מחדל */
-#simModeBackground {
-  display: none;
-  z-index: -1; /* ממקם אותו מאחורי הכפתורים */
-}
-
-/* כשאנחנו במצב סימולציה, אנחנו מציגים את הרקע ומעצבים אותו */
-.sim-mode-active #simModeBackground {
-  display: block;
-  
-  /* מיקום הרקע בדיוק על 3 העמודות המרכזיות ו-4 השורות */
-  grid-column: 3 / span 3;
-  grid-row: 2 / span 2;
-  
-  /* העיצוב של המעטפת */
-  background: linear-gradient(to bottom, #0f172a, #000000);
-  border-radius: 12px;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    fill: var(--sim-color); /* צובע את האייקון המלא של DLA בכחול */
 }
 
 
