@@ -38,6 +38,7 @@ export const dom = {
   btnErosion: document.getElementById('btnErosion'),
   btnDla: document.getElementById('btnDla'),
   btnContour: document.getElementById('btnContour'),
+btnSandpile: document.getElementById('btnSandpile'),
   btnPlayPauseLife: document.getElementById('btnPlayPauseLife'),
   iconPlay: document.getElementById('iconPlay'),
   iconPause: document.getElementById('iconPause'),

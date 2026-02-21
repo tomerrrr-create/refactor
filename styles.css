@@ -990,3 +990,9 @@ body {
         flex-shrink: 0;           /* שלא יתכווצו */
     }
 }
+
+
+
+#controlsContainer:not(.sim-mode-active) #btnSandpile {
+    display: none;
+}

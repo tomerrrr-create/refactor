@@ -643,3 +643,63 @@ export function runContourGeneration({ n, currentBoardState, currentPalette, con
     return nextBoardState;
 }
 // --- END: MODIFIED FOR CONTOUR FEATURE ---
+
+
+export function generateSandpile(currentBoardState, currentPalette) {
+    const n = Math.sqrt(currentBoardState.length);
+    const nextBoardState = currentBoardState.map(cell => ({ ...cell }));
+    let hasChanged = false;
+    const numColors = currentPalette.length;
+
+    // מגנטיות גמישה - מותאם לפלטות הגדולות שלך
+    const pullReach = Math.max(2, Math.floor(numColors / 6)); 
+
+    for (let i = 0; i < currentBoardState.length; i++) {
+        const row = Math.floor(i / n);
+        const col = i % n;
+        const currentK = currentBoardState[i].k;
+        
+        let neighborsWithEnergy = 0;
+        let pullingNeighborsCount = 0;
+
+        // בדיקת 8 שכנים (כולל עטיפת הלוח)
+        for (let r = -1; r <= 1; r++) {
+            for (let c = -1; c <= 1; c++) {
+                if (r === 0 && c === 0) continue;
+                
+                const wrapRow = (row + r + n) % n;
+                const wrapCol = (col + c + n) % n;
+                const neighborIdx = wrapRow * n + wrapCol;
+                const neighborK = currentBoardState[neighborIdx].k;
+
+                if (neighborK > 0) neighborsWithEnergy++;
+
+                let dist = neighborK - currentK;
+                if (dist < 0) dist += numColors;
+
+                if (dist > 0 && dist <= pullReach) {
+                    pullingNeighborsCount++;
+                }
+            }
+        }
+
+        // חוק 1: התעוררות עדינה מהחשיכה
+        // העלינו את הסף מ-2 ל-3 שכנים. זה ימנע מהשחור "להיעלם" מהר מדי
+        if (currentK === 0 && neighborsWithEnergy >= 3) {
+            nextBoardState[i].k = 1;
+            nextBoardState[i].v = 1;
+            hasChanged = true;
+        } 
+        // חוק 2: זרימה ממוקדת
+        // תא ישנה צבע רק אם יש לו בדיוק 2 או 3 שכנים שמושכים אותו.
+        // אם יש יותר מדי (4+), נוצר "עומס אנרגיה" והוא קופא. זה יוצר את הקווים הדקים.
+        else if (currentK > 0 && (pullingNeighborsCount === 2 || pullingNeighborsCount === 3)) {
+            const nextK = (currentK + 1) % numColors;
+            nextBoardState[i].k = nextK;
+            nextBoardState[i].v = nextK;
+            hasChanged = true;
+        }
+    }
+
+    return { nextBoardState, hasChanged };
+}

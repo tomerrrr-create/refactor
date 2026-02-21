@@ -654,6 +654,11 @@ case 'brightnessEvo':
                 boardState = nextState; 
                 break;
 
+case 'sandpile': 
+                nextState = Simulations.generateSandpile(boardState, palette()).nextBoardState; 
+                boardState = nextState; 
+                break;
+
             case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
 const dlaContext = { ...context, dlaRules: currentDlaRules };
@@ -699,6 +704,10 @@ case 'brightnessEvo':
             
 case 'contour': 
                 boardState = Simulations.runContourGeneration(context); 
+                break;
+
+case 'sandpile': 
+                boardState = Simulations.generateSandpile(boardState, palette()).nextBoardState; 
                 break;
 
             case 'dla':
@@ -883,8 +892,7 @@ function armSimulation(simulationName) {
     dlaMode = 'off';
     breatheEvoMode = 'off';
     
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour];
-    simButtons.forEach(btn => btn.classList.remove('simulation-active'));
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile];    simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     updateBrightnessEvoButtonUI(); // Update UI to reflect the reset
     updateDlaButtonUI();           // Update UI to reflect the reset
     updateBreatheEvoButtonUI();    // Update UI to reflect the reset
@@ -1261,7 +1269,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         armedSimulation = null;
         dlaState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour];
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile];
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
         dom.btnPlayPauseLife.disabled = true;
@@ -1798,6 +1806,10 @@ dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 
 
 dom.btnContour.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('contour')));
+
+dom.btnSandpile.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('sandpile')));
+
+
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
         dom.btnNudgeBrighter.addEventListener('click', (e) => handleCtrlClick(e, () => nudgeColors(1)));
