@@ -137,4 +137,28 @@ btnSandpile: document.getElementById('btnSandpile'),
   btnContourSettingsCancel: document.getElementById('btnContourSettingsCancel'),
   btnContourSettingsSave: document.getElementById('btnContourSettingsSave'),
   // --- END: Contour Settings Modal Elements ---
+
+// --- START: Chi Flow Settings Modal Elements ---
+  chiFlowSettingsModal: document.getElementById('chiFlowSettingsModal'),
+  chiFlowModalClose: document.getElementById('chiFlowModalClose'),
+  chiFlowModalTitle: document.getElementById('chiFlowModalTitle'),
+  chiAwakeningLabel: document.getElementById('chiAwakeningLabel'),
+  chiAwakeningDesc: document.getElementById('chiAwakeningDesc'),
+  chiAwakeningChipsContainer: document.getElementById('chiAwakeningChipsContainer'),
+  chiFlowLabel: document.getElementById('chiFlowLabel'),
+  chiFlowDesc: document.getElementById('chiFlowDesc'),
+  chiFlowChipsContainer: document.getElementById('chiFlowChipsContainer'),
+  chiReachLabel: document.getElementById('chiReachLabel'),
+  chiReachDesc: document.getElementById('chiReachDesc'),
+  chiReachSlider: document.getElementById('chiReachSlider'),
+  chiReachValue: document.getElementById('chiReachValue'),
+  btnChiPresetTopography: document.getElementById('btnChiPresetTopography'),
+  btnChiPresetWildfire: document.getElementById('btnChiPresetWildfire'),
+  btnChiPresetCrystals: document.getElementById('btnChiPresetCrystals'),
+  btnChiPresetRipples: document.getElementById('btnChiPresetRipples'),
+  btnChiSettingsReset: document.getElementById('btnChiSettingsReset'),
+  btnChiSettingsCancel: document.getElementById('btnChiSettingsCancel'),
+  btnChiSettingsSave: document.getElementById('btnChiSettingsSave'),
+  // --- END: Chi Flow Settings Modal Elements ---
+
 };

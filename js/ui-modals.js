@@ -78,6 +78,7 @@ function closeAdvancedColorMappingModal() {
     app.resetWasLongPress();
 }
 
+
 // --- START: Added for Contour Settings ---
 function closeContourSettingsModal() {
     app.dom.contourSettingsModal.classList.remove('modal-visible');
@@ -86,6 +87,108 @@ function closeContourSettingsModal() {
 }
 // --- END: Added for Contour Settings ---
 
+
+// --- START: Chi Flow Modal Logic ---
+    let tempChiAwakening = [];
+    let tempChiFlow = [];
+    let tempChiReach = 2;
+
+    const CHI_PRESETS = {
+        'Topography': { awakening: [3,4,5,6,7,8], flow: [2,3], reach: 0 },
+        'Wildfire': { awakening: [1,2,3,4,5,6,7,8], flow: [2,3,4], reach: 0 },
+        'Crystals': { awakening: [3,4,5,6,7,8], flow: [3,4,5,6,7,8], reach: 0 },
+        'Ripples': { awakening: [3,4,5,6,7,8], flow: [2,4,5,6], reach: 0 }
+    };
+
+    function closeChiFlowSettingsModal() {
+        app.dom.chiFlowSettingsModal.classList.add('hidden');
+    }
+
+    function renderChiFlowChips(container, activeValues, maxVal) {
+        container.innerHTML = '';
+        for (let i = 1; i <= maxVal; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.className = 'gol-chip-btn w-10 h-10 rounded-lg font-bold text-lg transition-all ' +
+                (activeValues.includes(i) ? 'bg-[var(--sim-color)] text-white shadow-md' : 'bg-gray-700 text-gray-400 hover:bg-gray-600');
+            btn.onclick = () => {
+                if (activeValues.includes(i)) {
+                    activeValues.splice(activeValues.indexOf(i), 1);
+                    btn.classList.remove('bg-[var(--sim-color)]', 'text-white', 'shadow-md');
+                    btn.classList.add('bg-gray-700', 'text-gray-400', 'hover:bg-gray-600');
+                } else {
+                    activeValues.push(i);
+                    activeValues.sort((a, b) => a - b);
+                    btn.classList.remove('bg-gray-700', 'text-gray-400', 'hover:bg-gray-600');
+                    btn.classList.add('bg-[var(--sim-color)]', 'text-white', 'shadow-md');
+                }
+            };
+            container.appendChild(btn);
+        }
+    }
+
+    function updateChiPresetButtons(activeId) {
+        const btns = [app.dom.btnChiPresetTopography, app.dom.btnChiPresetWildfire, app.dom.btnChiPresetCrystals, app.dom.btnChiPresetRipples];
+        btns.forEach(b => {
+            if (b.id === activeId) b.classList.add('border-white', 'bg-gray-600');
+            else b.classList.remove('border-white', 'bg-gray-600');
+        });
+    }
+
+    function applyChiPreset(presetName, btnElement) {
+        const p = CHI_PRESETS[presetName];
+        if (!p) return;
+        tempChiAwakening = [...p.awakening];
+        tempChiFlow = [...p.flow];
+        tempChiReach = p.reach;
+
+        renderChiFlowChips(app.dom.chiAwakeningChipsContainer, tempChiAwakening, 8);
+        renderChiFlowChips(app.dom.chiFlowChipsContainer, tempChiFlow, 8);
+        app.dom.chiReachSlider.value = tempChiReach;
+app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
+
+        updateChiPresetButtons(btnElement ? btnElement.id : '');
+    }
+
+    function saveChiFlowSettings() {
+        app.setChiFlowRules({
+            awakening: [...tempChiAwakening],
+            flow: [...tempChiFlow],
+            reach: parseInt(app.dom.chiReachSlider.value, 10)
+        });
+        closeChiFlowSettingsModal();
+    }
+
+    function openChiFlowSettingsModal() {
+        const currentRules = app.getChiFlowRules();
+        tempChiAwakening = [...currentRules.awakening];
+        tempChiFlow = [...currentRules.flow];
+        tempChiReach = currentRules.reach;
+
+        renderChiFlowChips(app.dom.chiAwakeningChipsContainer, tempChiAwakening, 8);
+        renderChiFlowChips(app.dom.chiFlowChipsContainer, tempChiFlow, 8);
+        
+        app.dom.chiReachSlider.value = tempChiReach;
+app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
+
+        // טעינת הטקסטים לפי השפה הנוכחית
+        app.dom.chiFlowModalTitle.textContent = app.getText('chi_modal_title');
+        app.dom.chiAwakeningLabel.textContent = app.getText('chi_awakening_label');
+        app.dom.chiAwakeningDesc.textContent = app.getText('chi_awakening_desc');
+        app.dom.chiFlowLabel.textContent = app.getText('chi_flow_label');
+        app.dom.chiFlowDesc.textContent = app.getText('chi_flow_desc');
+        app.dom.chiReachLabel.textContent = app.getText('chi_reach_label');
+        app.dom.chiReachDesc.textContent = app.getText('chi_reach_desc');
+        app.dom.btnChiPresetTopography.textContent = app.getText('chi_preset_topography');
+        app.dom.btnChiPresetWildfire.textContent = app.getText('chi_preset_wildfire');
+        app.dom.btnChiPresetCrystals.textContent = app.getText('chi_preset_crystals');
+        app.dom.btnChiPresetRipples.textContent = app.getText('chi_preset_ripples');
+
+        updateChiPresetButtons('');
+        app.dom.chiFlowSettingsModal.classList.remove('hidden');
+    }
+
+    // --- END: Chi Flow Modal Logic ---
 
 // --- Modal Management Functions ---
 
@@ -727,6 +830,30 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     // --- END: Added for Contour Settings ---
 
 
+// --- START: Added for Chi Flow Settings ---
+
+    app.dom.chiFlowModalClose.addEventListener('click', closeChiFlowSettingsModal);
+    app.dom.btnChiSettingsCancel.addEventListener('click', closeChiFlowSettingsModal);
+    app.dom.btnChiSettingsSave.addEventListener('click', saveChiFlowSettings);
+    app.dom.chiFlowSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.chiFlowSettingsModal) closeChiFlowSettingsModal(); });
+
+
+app.dom.chiReachSlider.addEventListener('input', (e) => {
+    tempChiReach = parseInt(e.target.value, 10);
+    app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
+    updateChiPresetButtons('');
+});
+
+
+
+    app.dom.btnChiSettingsReset.addEventListener('click', () => applyChiPreset('Topography', app.dom.btnChiPresetTopography));
+    app.dom.btnChiPresetTopography.addEventListener('click', (e) => applyChiPreset('Topography', e.target));
+    app.dom.btnChiPresetWildfire.addEventListener('click', (e) => applyChiPreset('Wildfire', e.target));
+    app.dom.btnChiPresetCrystals.addEventListener('click', (e) => applyChiPreset('Crystals', e.target));
+    app.dom.btnChiPresetRipples.addEventListener('click', (e) => applyChiPreset('Ripples', e.target));
+
+// --- END: Added for Chi Flow Settings ---
+
     return {
         openResizeModal,
         openColorPickerModal,
@@ -736,6 +863,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
         openGravitationalSortSettingsModal,
         openAdvancedColorMappingModal, // Phase 1 Addition
         openContourSettingsModal, // <-- ADDED HERE
+openChiFlowSettingsModal,
         closeModal,
         renderColorPickerContent,
         populateHelpModal,

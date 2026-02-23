@@ -155,11 +155,24 @@ resizeModal_prompt: { en: "Enter a number between 1 and 150.", he: "בין 1 ל-
   // --- END: Contour Settings Modal ---
 
 
-  // Phase 1 Additions
+// Phase 1 Additions
   adaptModal_title: { en: "Adapt Colors to Palette", he: "התאם צבעים לפלטה", ru: "Адаптировать цвета к палитре", nl: "Kleuren aan palet aanpassen" },
-  adaptModal_desc: { en: "This will remap the board's colors to the current palette for consistent tool behavior. This action can be undone.", he: "פעולה זו תתאים את צבעי היצירה לפלטה הנוכחית. ניתן לבטל באמצעות כפתור ה-Undo.", ru: "Это действие переназначит цвета на доске к текущей палитре для последовательной работы инструментов. Это действие можно отменить.", nl: "Dit zal de kleuren van het bord opnieuw toewijzen aan het huidige palet voor consistent gedrag van de tools. Deze actie kan ongedaan worden gemaakt." },
-  adaptModal_confirmBtn: { en: "Confirm & Adapt", he: "אשר והתאם", ru: "Подтвердить и адаптировать", nl: "Bevestig & Pas aan" }
-};
+  adaptModal_desc: { en: "This will remap the board's colors to the current palette for consistent tool behavior. This action can be undone.", he: "פעולה זו תתאם את צבעי היצירה לפלטה הנוכחית. ניתן לבטל באמצעות כפתור ה-Undo.", ru: "Это действие переназначит цвета на доске к текущей палитре для последовательной работы инструментов. Это действие можно отменить.", nl: "Dit zal de kleuren van het bord opnieuw toewijzen aan het huidige palet voor consistent gedrag van de tools. Deze actie kan ongedaan worden gemaakt." },
+  adaptModal_confirmBtn: { en: "Confirm & Adapt", he: "אשר והתאם", ru: "Подтвердить и адаптировать", nl: "Bevestig & Pas aan" }, 
+
+// --- START: Chi Flow Settings Modal ---
+  chi_modal_title: { en: "Chi Flow Settings", he: "הגדרות זרימת צ'י", ru: "Настройки потока Ци", nl: "Chi Flow Instellingen" },
+  chi_awakening_label: { en: "Awakening Rules", he: "חוקי התעוררות", ru: "Правила пробуждения", nl: "Ontwakingsregels" },
+  chi_awakening_desc: { en: "A dark cell ignites if it has this many active neighbors:", he: "תא חשוך נדלק אם יש סביבו כך וכך שכנים פעילים:", ru: "Темная клетка загорается, если вокруг столько активных соседей:", nl: "Een donkere cel ontbrandt als het zoveel actieve buren heeft:" },
+  chi_flow_label: { en: "Flow Rules", he: "חוקי זרימה", ru: "Правила потока", nl: "Stroomregels" },
+  chi_flow_desc: { en: "An active cell flows to the next color if pulled by:", he: "תא פעיל מתקדם לצבע הבא אם הוא נמשך על ידי:", ru: "Активная клетка перетекает в следующий цвет, если ее тянут:", nl: "Een active cel stroomt naar de volgende kleur als deze wordt getrokken door:" },
+  chi_reach_label: { en: "Magnetic Reach", he: "טווח משיכה (מגנטיות)", ru: "Магнитный охват", nl: "Magnetisch bereik" },
+  chi_reach_desc: { en: "How far ahead a neighbor's color can be to pull a cell.", he: "כמה צבעים קדימה שכן יכול להיות כדי למשוך את התא.", ru: "Насколько цвет соседа может опережать, чтобы притянуть клетку.", nl: "Hoe ver vooruit de kleur van een buurman kan zijn om een cel te trekken." },
+  chi_preset_topography: { en: "Topography", he: "טופוגרפיה", ru: "Топография", nl: "Topografie" },
+  chi_preset_wildfire: { en: "Wildfire", he: "אש פראית", ru: "Лесной пожар", nl: "Natuurbrand" },
+  chi_preset_crystals: { en: "Crystals", he: "גבישים", ru: "Кристаллы", nl: "Kristallen" },
+  chi_preset_ripples: { en: "Ripples", he: "אדוות", ru: "Ряבь", nl: "Rimpelingen" }
+}; // הסוגר המסולסל עבר לכאן!  // --- END: Chi Flow Settings Modal ---
 
 export function getCurrentLang() {
   return currentLang;

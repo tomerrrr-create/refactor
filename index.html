@@ -494,5 +494,54 @@
     </div>
   </div>
   <script type="module" src="js/ui-modals.js"></script>
+<div id="chiFlowSettingsModal" class="modal-overlay hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800/90 border border-gray-600 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative flex flex-col gap-5">
+      
+      <button id="chiFlowModalClose" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      
+      <h2 id="chiFlowModalTitle" class="text-2xl font-bold text-white text-center">Chi Flow Settings</h2>
+
+      <div class="flex flex-col gap-1">
+        <h3 id="chiAwakeningLabel" class="font-semibold text-gray-300">Awakening Rules</h3>
+        <p id="chiAwakeningDesc" class="text-xs text-gray-400"></p>
+        <div id="chiAwakeningChipsContainer" class="flex flex-wrap gap-2 mt-1">
+          </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <h3 id="chiFlowLabel" class="font-semibold text-gray-300">Flow Rules</h3>
+        <p id="chiFlowDesc" class="text-xs text-gray-400"></p>
+        <div id="chiFlowChipsContainer" class="flex flex-wrap gap-2 mt-1">
+          </div>
+      </div>
+
+      <div class="flex flex-col gap-1 mt-1">
+        <div class="flex justify-between items-end">
+          <h3 id="chiReachLabel" class="font-semibold text-gray-300">Magnetic Reach</h3>
+          <span id="chiReachValue" class="text-gray-300 font-mono text-sm bg-gray-700 px-2 py-0.5 rounded">2</span>
+        </div>
+        <p id="chiReachDesc" class="text-xs text-gray-400"></p>
+        <input type="range" id="chiReachSlider" min="0" max="10" step="1" value="0" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-2">
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <button id="btnChiPresetTopography" class="gs-preset-btn bg-gray-700 hover:bg-gray-600 text-white text-sm py-1.5 px-3 rounded transition-colors border border-transparent">Topography</button>
+        <button id="btnChiPresetWildfire" class="gs-preset-btn bg-gray-700 hover:bg-gray-600 text-white text-sm py-1.5 px-3 rounded transition-colors border border-transparent">Wildfire</button>
+        <button id="btnChiPresetCrystals" class="gs-preset-btn bg-gray-700 hover:bg-gray-600 text-white text-sm py-1.5 px-3 rounded transition-colors border border-transparent">Crystals</button>
+        <button id="btnChiPresetRipples" class="gs-preset-btn bg-gray-700 hover:bg-gray-600 text-white text-sm py-1.5 px-3 rounded transition-colors border border-transparent">Ripples</button>
+      </div>
+
+      <div class="flex justify-between items-center mt-1 border-t border-gray-700 pt-4">
+        <button id="btnChiSettingsReset" class="text-sm text-gray-400 hover:text-white transition-colors underline decoration-gray-600 underline-offset-4">Reset</button>
+        <div class="flex gap-4">
+          <button id="btnChiSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
+          <button id="btnChiSettingsSave" class="bg-[var(--sim-color)] hover:opacity-90 text-white font-semibold py-2 px-6 rounded-lg transition-all shadow-lg shadow-indigo-500/30">Save</button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
 <script type="module" src="js/app.js"></script></body>
 </html>

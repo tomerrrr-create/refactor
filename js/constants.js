@@ -301,3 +301,13 @@ export const defaultContourRules = {
     lineColor: 'darkest'
 };
 // --- END: Added for Contour Settings ---
+
+
+// --- START: Added for Chi Flow (Sandpile) Settings ---
+export const defaultChiFlowRules = {
+    awakening: [3, 4, 5, 6, 7, 8], // מקביל ל: neighborsWithEnergy >= 3
+    flow: [2, 3],                  // מקביל ל: pullingNeighborsCount === 2 || 3
+    reach: 0                       // ערך התחלתי לסליידר המגנטיות (טווח 1-10)
+};
+// --- END: Added for Chi Flow (Sandpile) Settings ---
+

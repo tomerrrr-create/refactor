@@ -644,15 +644,18 @@ export function runContourGeneration({ n, currentBoardState, currentPalette, con
 }
 // --- END: MODIFIED FOR CONTOUR FEATURE ---
 
-
-export function generateSandpile(currentBoardState, currentPalette) {
+export function generateSandpile(currentBoardState, currentPalette, chiFlowRules) {
     const n = Math.sqrt(currentBoardState.length);
     const nextBoardState = currentBoardState.map(cell => ({ ...cell }));
     let hasChanged = false;
     const numColors = currentPalette.length;
 
-    // מגנטיות גמישה - מותאם לפלטות הגדולות שלך
-    const pullReach = Math.max(2, Math.floor(numColors / 6)); 
+    // מגנטיות - עכשיו נשלטת על ידי המשתמש (reach) במקום חישוב קשיח
+let pullReach = chiFlowRules.reach;
+// אם המשתמש בחר 0 (Auto), נשתמש בנוסחה הדינמית החכמה מהקוד הישן שלך
+if (pullReach === 0) {
+    pullReach = Math.max(2, Math.floor(numColors / 6));
+}
 
     for (let i = 0; i < currentBoardState.length; i++) {
         const row = Math.floor(i / n);
@@ -683,23 +686,59 @@ export function generateSandpile(currentBoardState, currentPalette) {
             }
         }
 
-        // חוק 1: התעוררות עדינה מהחשיכה
-        // העלינו את הסף מ-2 ל-3 שכנים. זה ימנע מהשחור "להיעלם" מהר מדי
-        if (currentK === 0 && neighborsWithEnergy >= 3) {
+        // חוק 1: התעוררות - נבדק מול מערך החוקים הדינמי (awakening)
+        if (currentK === 0 && chiFlowRules.awakening.includes(neighborsWithEnergy)) {
             nextBoardState[i].k = 1;
             nextBoardState[i].v = 1;
             hasChanged = true;
         } 
-        // חוק 2: זרימה ממוקדת
-        // תא ישנה צבע רק אם יש לו בדיוק 2 או 3 שכנים שמושכים אותו.
-        // אם יש יותר מדי (4+), נוצר "עומס אנרגיה" והוא קופא. זה יוצר את הקווים הדקים.
-        else if (currentK > 0 && (pullingNeighborsCount === 2 || pullingNeighborsCount === 3)) {
+        // חוק 2: זרימה ממוקדת - נבדק מול מערך החוקים הדינמי (flow)
+        else if (currentK > 0 && chiFlowRules.flow.includes(pullingNeighborsCount)) {
             const nextK = (currentK + 1) % numColors;
             nextBoardState[i].k = nextK;
             nextBoardState[i].v = nextK;
             hasChanged = true;
         }
     }
+
+    // --- התחלת מנגנון ההצתה (Ignition) ---
+    // (הקוד שהוספנו קודם נשאר כאן ללא שינוי, הוא עדיין רלוונטי)
+    let activeCellsCount = 0;
+    const activeCellsIndices = [];
+
+    for (let i = 0; i < currentBoardState.length; i++) {
+        if (currentBoardState[i].k > 0) {
+            activeCellsCount++;
+            activeCellsIndices.push(i);
+        }
+    }
+
+    if (activeCellsCount > 0 && activeCellsCount < 150) {
+        for (const index of activeCellsIndices) {
+            const row = Math.floor(index / n);
+            const col = index % n;
+
+            for (let r = -4; r <= 4; r++) {
+                for (let c = -4; c <= 4; c++) {
+                    const newRow = row + r;
+                    const newCol = col + c;
+
+                    if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < n) {
+                        if (Math.random() > 0.3) {
+                            const newIndex = newRow * n + newCol;
+                            const randomColorK = Math.floor(Math.random() * numColors);
+                            
+                            nextBoardState[newIndex].k = randomColorK;
+                            nextBoardState[newIndex].v = randomColorK;
+                            hasChanged = true;
+                        }
+                    }
+                }
+            }
+        }
+        return { nextBoardState, hasChanged };
+    }
+    // --- סוף מנגנון ההצתה ---
 
     return { nextBoardState, hasChanged };
 }

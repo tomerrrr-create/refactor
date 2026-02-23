@@ -60,7 +60,8 @@ function getLuminance(hex) {
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
-      let dlaState = null;
+     let chiFlowRules = { ...C.defaultChiFlowRules };
+ let dlaState = null;
 
       let activePaletteIndex = 0;
       let n = 7;
@@ -655,9 +656,9 @@ case 'brightnessEvo':
                 break;
 
 case 'sandpile': 
-                nextState = Simulations.generateSandpile(boardState, palette()).nextBoardState; 
-                boardState = nextState; 
-                break;
+    nextState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
+    boardState = nextState; 
+    break;
 
             case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
@@ -707,8 +708,9 @@ case 'contour':
                 break;
 
 case 'sandpile': 
-                boardState = Simulations.generateSandpile(boardState, palette()).nextBoardState; 
-                break;
+    boardState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
+    break;
+
 
             case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
@@ -1141,6 +1143,7 @@ if (btn.id === 'btnColorPicker') {
             if (btn.id === 'btnGameOfLife') { modals.openGolSettingsModal(); return; }
             if (btn.id === 'btnGravitationalSort') { modals.openGravitationalSortSettingsModal(); return; }
             if (btn.id === 'btnContour') { modals.openContourSettingsModal(); return; } // <-- ADDED HERE
+if (btn.id === 'btnSandpile') { modals.openChiFlowSettingsModal(); return; }
 if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); return; }
             if (btn.id === 'btnPalette') { modals.openPaletteModal(); return; }
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
@@ -1750,7 +1753,7 @@ function cycleBreatheEvoMode() {
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
 
-
+getChiFlowRules: () => chiFlowRules, setChiFlowRules: (r) => { chiFlowRules = r; },
 
             handleSaveProject, handleLoadProject, onProjectFileSelected,
             pointerState,
