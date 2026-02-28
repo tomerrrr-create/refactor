@@ -279,6 +279,7 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
     return nextBoardState;
 }
 
+
 export function runErosionGeneration({ n, currentBoardState, currentPalette, erosionRules }) {
     const pLen = currentPalette.length;
     const earthEndIndex = Math.floor(pLen * 0.20);
@@ -288,30 +289,37 @@ export function runErosionGeneration({ n, currentBoardState, currentPalette, ero
     const isAir = (k) => k >= earthEndIndex && k < airEndIndex;
     const isWater = (k) => k >= airEndIndex;
     
-    // Operate on a mutable array of indices for easier swapping
     const currentStateIndices = currentBoardState.map(tile => tile.k);
 
-    for (let i = n * n - 1; i >= 0; i--) {
-        const k = currentStateIndices[i];
-        if (!isWater(k)) continue;
+    // הפתרון: מגרילים את כיוון הסריקה בכל פריים כדי למנוע נטייה לצד מסוים
+    const sweepDirection = Math.random() < 0.5 ? 1 : -1;
 
-        const row = Math.floor(i / n);
-        const col = i % n;
+    // רצים על השורות מלמטה למעלה (מדלגים על השורה התחתונה ביותר כי ממנה אי אפשר ליפול)
+    for (let row = n - 2; row >= 0; row--) {
+        for (let c = 0; c < n; c++) {
+            // קובע אם העמודה תיסרק משמאל לימין או מימין לשמאל בהתאם להגרלה
+            const col = sweepDirection === 1 ? c : (n - 1 - c);
+            const i = row * n + col;
+            const k = currentStateIndices[i];
 
-        if (row < n - 1) { // Not the bottom row
+            if (!isWater(k)) continue;
+
             const belowIdx = i + n;
             const belowK = currentStateIndices[belowIdx];
 
+            // נפילה ישרה למטה
             if (isAir(belowK)) {
                 [currentStateIndices[i], currentStateIndices[belowIdx]] = [belowK, k];
                 continue;
             }
+            // שחיקת אדמה
             if (isEarth(belowK) && Math.random() < erosionRules.erosionStrength) {
-                currentStateIndices[belowIdx]++; // Erode earth
+                currentStateIndices[belowIdx]++; 
                 [currentStateIndices[i], currentStateIndices[belowIdx]] = [currentStateIndices[belowIdx], k];
                 continue;
             }
             
+            // בדיקת אלכסונים (למטה-שמאלה או למטה-ימינה)
             const canGoLeft = col > 0 && isAir(currentStateIndices[belowIdx - 1]);
             const canGoRight = col < n - 1 && isAir(currentStateIndices[belowIdx + 1]);
 

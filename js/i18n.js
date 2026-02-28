@@ -171,7 +171,14 @@ resizeModal_prompt: { en: "Enter a number between 1 and 150.", he: "בין 1 ל-
   chi_preset_topography: { en: "Topography", he: "טופוגרפיה", ru: "Топография", nl: "Topografie" },
   chi_preset_wildfire: { en: "Wildfire", he: "אש פראית", ru: "Лесной пожар", nl: "Natuurbrand" },
   chi_preset_crystals: { en: "Crystals", he: "גבישים", ru: "Кристаллы", nl: "Kristallen" },
+chi_preset_electric: { en: "Electric", he: "חשמל", ru: "Электричество", nl: "Elektrisch" },
+  chi_preset_fluent: { en: "Fluent", he: "שוטף", ru: "Плавный", nl: "Vloeiend" },
+  chi_preset_harmony: { en: "Harmony", he: "הרמוני", ru: "Гармония", nl: "Harmonie" },
   chi_preset_ripples: { en: "Ripples", he: "אדוות", ru: "Ряבь", nl: "Rimpelingen" }
+
+
+
+
 }; // הסוגר המסולסל עבר לכאן!  // --- END: Chi Flow Settings Modal ---
 
 export function getCurrentLang() {

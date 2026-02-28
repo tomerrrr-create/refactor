@@ -93,47 +93,76 @@ function closeContourSettingsModal() {
     let tempChiFlow = [];
     let tempChiReach = 2;
 
-    const CHI_PRESETS = {
+const CHI_PRESETS = {
         'Topography': { awakening: [3,4,5,6,7,8], flow: [2,3], reach: 0 },
         'Wildfire': { awakening: [1,2,3,4,5,6,7,8], flow: [2,3,4], reach: 0 },
         'Crystals': { awakening: [3,4,5,6,7,8], flow: [3,4,5,6,7,8], reach: 0 },
-        'Ripples': { awakening: [3,4,5,6,7,8], flow: [2,4,5,6], reach: 0 }
+        'Ripples': { awakening: [3,4,5,6,7,8], flow: [2,4,5,6], reach: 0 },
+        'Electric': { awakening: [3,4,5,6,7,8], flow: [1], reach: 0 },
+        'Fluent': { awakening: [3,4,5,6], flow: [1,2,3,4,5], reach: 0 },
+        'Harmony': { awakening: [3,4,5,6,7,8], flow: [3,5,7], reach: 0 }
     };
+
 
     function closeChiFlowSettingsModal() {
         app.dom.chiFlowSettingsModal.classList.add('hidden');
     }
 
-    function renderChiFlowChips(container, activeValues, maxVal) {
+
+function renderChiFlowChips(container, activeValues, maxVal) {
         container.innerHTML = '';
         for (let i = 1; i <= maxVal; i++) {
             const btn = document.createElement('button');
             btn.textContent = i;
-            btn.className = 'gol-chip-btn w-10 h-10 rounded-lg font-bold text-lg transition-all ' +
-                (activeValues.includes(i) ? 'bg-[var(--sim-color)] text-white shadow-md' : 'bg-gray-700 text-gray-400 hover:bg-gray-600');
+            
+            // שימוש בקלאסים של ה-Game of Life
+            btn.className = 'gol-chip-btn' + (activeValues.includes(i) ? ' active' : '');
+            
             btn.onclick = () => {
                 if (activeValues.includes(i)) {
                     activeValues.splice(activeValues.indexOf(i), 1);
-                    btn.classList.remove('bg-[var(--sim-color)]', 'text-white', 'shadow-md');
-                    btn.classList.add('bg-gray-700', 'text-gray-400', 'hover:bg-gray-600');
+                    btn.classList.remove('active');
                 } else {
                     activeValues.push(i);
                     activeValues.sort((a, b) => a - b);
-                    btn.classList.remove('bg-gray-700', 'text-gray-400', 'hover:bg-gray-600');
-                    btn.classList.add('bg-[var(--sim-color)]', 'text-white', 'shadow-md');
+                    btn.classList.add('active');
                 }
+                updateActiveChiPresetButton(); // <-- זו השורה שהוספנו!
             };
             container.appendChild(btn);
         }
     }
 
-    function updateChiPresetButtons(activeId) {
-        const btns = [app.dom.btnChiPresetTopography, app.dom.btnChiPresetWildfire, app.dom.btnChiPresetCrystals, app.dom.btnChiPresetRipples];
+
+function updateChiPresetButtons(activeId) {
+const btns = [
+            app.dom.btnChiPresetTopography, app.dom.btnChiPresetWildfire, 
+            app.dom.btnChiPresetCrystals, app.dom.btnChiPresetRipples,
+            app.dom.btnChiPresetElectric, app.dom.btnChiPresetFluent, 
+            app.dom.btnChiPresetHarmony
+        ];
         btns.forEach(b => {
-            if (b.id === activeId) b.classList.add('border-white', 'bg-gray-600');
-            else b.classList.remove('border-white', 'bg-gray-600');
+            if (b.id === activeId) b.classList.add('active');
+            else b.classList.remove('active');
         });
     }
+
+function updateActiveChiPresetButton() {
+        const arraysAreEqual = (a, b) => a.length === b.length && a.every((val, index) => val === b[index]);
+
+        let activeId = '';
+        for (const [presetName, rules] of Object.entries(CHI_PRESETS)) {
+            // בודק אם החוקים הזמניים זהים לחוקים של אחד הפריסטים
+            if (arraysAreEqual(tempChiAwakening, rules.awakening) &&
+                arraysAreEqual(tempChiFlow, rules.flow) &&
+                tempChiReach === rules.reach) {
+                activeId = 'btnChiPreset' + presetName;
+                break;
+            }
+        }
+        updateChiPresetButtons(activeId);
+    }
+
 
     function applyChiPreset(presetName, btnElement) {
         const p = CHI_PRESETS[presetName];
@@ -183,9 +212,11 @@ app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
         app.dom.btnChiPresetWildfire.textContent = app.getText('chi_preset_wildfire');
         app.dom.btnChiPresetCrystals.textContent = app.getText('chi_preset_crystals');
         app.dom.btnChiPresetRipples.textContent = app.getText('chi_preset_ripples');
+app.dom.btnChiPresetElectric.textContent = app.getText('chi_preset_electric');
+        app.dom.btnChiPresetFluent.textContent = app.getText('chi_preset_fluent');
+        app.dom.btnChiPresetHarmony.textContent = app.getText('chi_preset_harmony');
 
-        updateChiPresetButtons('');
-        app.dom.chiFlowSettingsModal.classList.remove('hidden');
+updateActiveChiPresetButton();        app.dom.chiFlowSettingsModal.classList.remove('hidden');
     }
 
     // --- END: Chi Flow Modal Logic ---
@@ -841,9 +872,8 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
 app.dom.chiReachSlider.addEventListener('input', (e) => {
     tempChiReach = parseInt(e.target.value, 10);
     app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
-    updateChiPresetButtons('');
+    updateActiveChiPresetButton(); // <-- שינינו את שם הפונקציה כאן
 });
-
 
 
     app.dom.btnChiSettingsReset.addEventListener('click', () => applyChiPreset('Topography', app.dom.btnChiPresetTopography));
@@ -851,6 +881,10 @@ app.dom.chiReachSlider.addEventListener('input', (e) => {
     app.dom.btnChiPresetWildfire.addEventListener('click', (e) => applyChiPreset('Wildfire', e.target));
     app.dom.btnChiPresetCrystals.addEventListener('click', (e) => applyChiPreset('Crystals', e.target));
     app.dom.btnChiPresetRipples.addEventListener('click', (e) => applyChiPreset('Ripples', e.target));
+app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('Electric', e.target));
+    app.dom.btnChiPresetFluent.addEventListener('click', (e) => applyChiPreset('Fluent', e.target));
+    app.dom.btnChiPresetHarmony.addEventListener('click', (e) => applyChiPreset('Harmony', e.target));
+
 
 // --- END: Added for Chi Flow Settings ---
 
