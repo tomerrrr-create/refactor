@@ -280,6 +280,8 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
 }
 
 
+
+
 export function runErosionGeneration({ n, currentBoardState, currentPalette, erosionRules }) {
     const pLen = currentPalette.length;
     const earthEndIndex = Math.floor(pLen * 0.20);
@@ -291,19 +293,15 @@ export function runErosionGeneration({ n, currentBoardState, currentPalette, ero
     
     const currentStateIndices = currentBoardState.map(tile => tile.k);
 
-    // הפתרון: מגרילים את כיוון הסריקה בכל פריים כדי למנוע נטייה לצד מסוים
-    const sweepDirection = Math.random() < 0.5 ? 1 : -1;
+    // חזרנו ללולאה המקורית והרציפה שיוצרת תנועת גל חלקה (תמיד רצה מהסוף להתחלה)
+    for (let i = n * n - 1; i >= 0; i--) {
+        const k = currentStateIndices[i];
+        if (!isWater(k)) continue;
 
-    // רצים על השורות מלמטה למעלה (מדלגים על השורה התחתונה ביותר כי ממנה אי אפשר ליפול)
-    for (let row = n - 2; row >= 0; row--) {
-        for (let c = 0; c < n; c++) {
-            // קובע אם העמודה תיסרק משמאל לימין או מימין לשמאל בהתאם להגרלה
-            const col = sweepDirection === 1 ? c : (n - 1 - c);
-            const i = row * n + col;
-            const k = currentStateIndices[i];
+        const row = Math.floor(i / n);
+        const col = i % n;
 
-            if (!isWater(k)) continue;
-
+        if (row < n - 1) {
             const belowIdx = i + n;
             const belowK = currentStateIndices[belowIdx];
 
@@ -312,6 +310,7 @@ export function runErosionGeneration({ n, currentBoardState, currentPalette, ero
                 [currentStateIndices[i], currentStateIndices[belowIdx]] = [belowK, k];
                 continue;
             }
+            
             // שחיקת אדמה
             if (isEarth(belowK) && Math.random() < erosionRules.erosionStrength) {
                 currentStateIndices[belowIdx]++; 
@@ -319,12 +318,13 @@ export function runErosionGeneration({ n, currentBoardState, currentPalette, ero
                 continue;
             }
             
-            // בדיקת אלכסונים (למטה-שמאלה או למטה-ימינה)
+            // בדיקת אלכסונים
             const canGoLeft = col > 0 && isAir(currentStateIndices[belowIdx - 1]);
             const canGoRight = col < n - 1 && isAir(currentStateIndices[belowIdx + 1]);
 
             if (canGoLeft && canGoRight) {
-                const moveIdx = (Math.random() < 0.5) ? belowIdx - 1 : belowIdx + 1;
+                // הפתרון: הסריקה דוחפת שמאלה, לכן ניתן פה משקל יתר לימינה כדי לאזן את הערימה!
+                const moveIdx = (Math.random() < 0.75) ? belowIdx + 1 : belowIdx - 1;
                 [currentStateIndices[i], currentStateIndices[moveIdx]] = [currentStateIndices[moveIdx], k];
             } else if (canGoLeft) {
                 [currentStateIndices[i], currentStateIndices[belowIdx - 1]] = [currentStateIndices[belowIdx - 1], k];

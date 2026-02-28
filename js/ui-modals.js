@@ -36,24 +36,31 @@ function closeModal() {
     app.dom.saveModal.classList.remove('modal-visible');
     if (app.dom.imagePreview.src) { URL.revokeObjectURL(app.dom.imagePreview.src); }
     app.dom.imagePreview.src = '';
+    app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
 function closeResizeModal() {
     app.dom.resizeModal.classList.remove('modal-visible');
+    app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
 function closeColorPickerModal() {
     app.dom.colorPickerModal.classList.remove('modal-visible');
     app.pointerState.longPressTarget = null;
+    app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
 function closeHelpModal() {
     app.dom.helpModal.classList.remove('modal-visible');
+    app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
 function closePaletteModal() {
     app.dom.paletteModal.classList.remove('modal-visible');
+    app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
+
+
 
 function closeGolSettingsModal() {
     app.dom.gameOfLifeSettingsModal.classList.remove('modal-visible');
@@ -104,8 +111,9 @@ const CHI_PRESETS = {
     };
 
 
-    function closeChiFlowSettingsModal() {
+function closeChiFlowSettingsModal() {
         app.dom.chiFlowSettingsModal.classList.add('hidden');
+        app.resetWasLongPress(); // <-- תוספת תיקון הבאג
     }
 
 
