@@ -164,6 +164,15 @@
               </svg>
           </button>
 
+
+<button id="btnTuring" class="ctrl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                 <path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"></path>
+                 <path d="M8 12a4 4 0 1 0 8 0 4 4 0 1 0-8 0"></path>
+                 <circle cx="12" cy="12" r="1"></circle>
+              </svg>
+          </button>
+
           <button id="btnToggleSimMode" class="ctrl">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
                    stroke-linecap="round" stroke-linejoin="round" style="transform: scale(0.8);">
@@ -553,6 +562,37 @@
     
   </div>
 </div>
+
+<div id="turingSettingsModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
+  <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+    <button id="turingModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    <h2 id="turingModalTitle" class="text-xl font-bold text-center text-gray-200">Turing Patterns</h2>
+    
+    <div class="flex flex-col gap-2 mt-2">
+      <h3 class="font-semibold text-gray-300 text-center">Presets (צורות)</h3>
+<div class="grid grid-cols-2 gap-3 mt-2">
+        <button id="btnTuringPresetCoral" class="gol-preset-btn">Coral</button>
+        <button id="btnTuringPresetMaze" class="gol-preset-btn">Maze</button>
+        <button id="btnTuringPresetSpots" class="gol-preset-btn">Spots</button>
+        <button id="btnTuringPresetCells" class="gol-preset-btn">Cells</button>
+        <button id="btnTuringPresetBoiling" class="gol-preset-btn">Boiling</button>
+        <button id="btnTuringPresetUSkate" class="gol-preset-btn">U-Skate</button>
+        <button id="btnTuringPresetChaos" class="gol-preset-btn">Chaos</button>
+        <button id="btnTuringPresetWaves" class="gol-preset-btn">Waves</button>
+      </div>
+    </div>
+
+    <div class="flex justify-end items-center mt-6 border-t border-gray-700 pt-4">
+      <div class="flex gap-4">
+        <button id="btnTuringSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+        <button id="btnTuringSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">Save & Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script type="module" src="js/app.js"></script></body>
 </html>

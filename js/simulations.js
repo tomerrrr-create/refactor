@@ -750,3 +750,173 @@ if (pullReach === 0) {
 
     return { nextBoardState, hasChanged };
 }
+
+
+// --- Turing Patterns (Reaction-Diffusion) Helper ---
+export function runTuringGeneration({ n, currentBoardState, currentPalette, turingState, turingRules }) {
+    let state = turingState;
+    const pLen = currentPalette.length;
+    
+    // מכפיל להמרה ויזואלית
+    const STRETCH_FACTOR = 1.6; 
+    
+    // 1. אתחול ראשוני (Ping-Pong Buffers - מניעת יצירת מערכים חדשים בכל פריים)
+    if (!state || !state.isInitialized || state.A.length !== n * n) {
+        state = { 
+            A: new Float32Array(n * n).fill(1.0), 
+            B: new Float32Array(n * n).fill(0.0),
+            nextA: new Float32Array(n * n), // באפר חלופי לחישובים
+            nextB: new Float32Array(n * n), // באפר חלופי לחישובים
+            lastBoardK: new Uint16Array(n * n), 
+            isInitialized: true 
+        };
+        
+        let hasDrawing = false;
+        
+        for (let i = 0; i < n * n; i++) {
+            const currentK = currentBoardState[i].k;
+            state.lastBoardK[i] = currentK;
+            
+            if (currentK > 0 && !currentBoardState[i].isGold) {
+                hasDrawing = true;
+                // מיפוי לא-ליניארי (חזקה) כדי שצבעים בהירים לא יישרפו מהר מדי
+                const bLevel = Math.pow(currentK / pLen, 1.5); 
+                state.B[i] = Math.min(1.0, bLevel); 
+                state.A[i] = Math.max(0.0, 1.0 - state.B[i]);
+            }
+        }
+        
+        if (!hasDrawing) {
+            const center = Math.floor(n / 2);
+            for (let dy = -2; dy <= 2; dy++) {
+                for (let dx = -2; dx <= 2; dx++) {
+                    const idx = (center + dy) * n + (center + dx);
+                    if(idx >= 0 && idx < n * n) {
+                        state.B[idx] = 1.0;
+                        state.A[idx] = 0.0;
+                    }
+                }
+            }
+        }
+    } else {
+        // סנכרון חי לציור של המשתמש
+        for (let i = 0; i < n * n; i++) {
+            const currentK = currentBoardState[i].k;
+            if (currentK !== state.lastBoardK[i]) {
+                if (currentK > 0 && !currentBoardState[i].isGold) {
+                    const bLevel = Math.pow(currentK / pLen, 1.5);
+                    state.B[i] = Math.min(1.0, bLevel);
+                    state.A[i] = Math.max(0.0, 1.0 - state.B[i]);
+                } else if (currentK === 0) {
+                    state.B[i] = 0.0;
+                    state.A[i] = 1.0;
+                }
+                state.lastBoardK[i] = currentK;
+            }
+        }
+    }
+
+    const { feed, kill, dA, dB, timeStep } = turingRules;
+    
+    // קביעת מספר האיטרציות דינמית לפי גודל הלוח (פותר את בעיית ה-Scale ואת איטיות הסימולציה)
+    const iterations = Math.max(3, Math.floor(n / 25)); 
+
+    let currA = state.A;
+    let currB = state.B;
+    let nextA = state.nextA;
+    let nextB = state.nextB;
+    
+    // 2. חישוב הריאקציה-דיפוזיה בלולאה פנימית מרובה
+    for (let step = 0; step < iterations; step++) {
+        for (let y = 0; y < n; y++) {
+            for (let x = 0; x < n; x++) {
+                const i = y * n + x;
+                const a = currA[i];
+                const b = currB[i];
+                
+                // --- חישוב לפלסיאן (Inlined) ללא פעולות Modulo יקרות ---
+                const yUp = (y === 0) ? n - 1 : y - 1;
+                const yDown = (y === n - 1) ? 0 : y + 1;
+                const xLeft = (x === 0) ? n - 1 : x - 1;
+                const xRight = (x === n - 1) ? 0 : x + 1;
+
+                const top = yUp * n;
+                const bottom = yDown * n;
+                const row = y * n;
+
+                const sumA = (a * -1.0) +
+                             (currA[top + x] * 0.2) + (currA[bottom + x] * 0.2) +
+                             (currA[row + xLeft] * 0.2) + (currA[row + xRight] * 0.2) +
+                             (currA[top + xLeft] * 0.05) + (currA[top + xRight] * 0.05) +
+                             (currA[bottom + xLeft] * 0.05) + (currA[bottom + xRight] * 0.05);
+
+                const sumB = (b * -1.0) +
+                             (currB[top + x] * 0.2) + (currB[bottom + x] * 0.2) +
+                             (currB[row + xLeft] * 0.2) + (currB[row + xRight] * 0.2) +
+                             (currB[top + xLeft] * 0.05) + (currB[top + xRight] * 0.05) +
+                             (currB[bottom + xLeft] * 0.05) + (currB[bottom + xRight] * 0.05);
+                // --- סוף חישוב לפלסיאן ---
+                
+                const reaction = a * b * b;
+                
+                let newA = a + ((dA * sumA) - reaction + (feed * (1 - a))) * timeStep;
+                let newB = b + ((dB * sumB) + reaction - ((kill + feed) * b)) * timeStep;
+                
+                nextA[i] = Math.max(0, Math.min(1, newA));
+                nextB[i] = Math.max(0, Math.min(1, newB));
+            }
+        }
+        
+        // החלפת מערכים (Ping-Pong) לקראת האיטרציה הבאה
+        let tempA = currA; currA = nextA; nextA = tempA;
+        let tempB = currB; currB = nextB; nextB = tempB;
+    }
+    
+    // עדכון הסטייט הקבוע במערכים המעודכנים ביותר
+    state.A = currA;
+    state.B = currB;
+    state.nextA = nextA;
+    state.nextB = nextB;
+
+// 3. תרגום הריכוזים הכימיים לצבעים
+    const nextBoardState = currentBoardState.map((tile, i) => {
+        if (tile.isGold) {
+            state.lastBoardK[i] = tile.k;
+            return tile;
+        }
+        
+        const concentrationA = state.A[i];
+        
+        // ---------------------------------------------------------
+        // מתיחת קונטרסט (Contrast Stretch):
+        // הופכים את הכיוון - מקום ריק (A גבוה) שווה 0 (כהה), 
+        // ליבת התבנית (A נמוך) שווה 1 (בהיר).
+        // ---------------------------------------------------------
+        let visualValue = 1.0 - concentrationA; 
+        
+        // נגדיר את הגבולות ה"אמיתיים" של הריאקציה 
+        // (אפשר לשחק עם המספרים האלה כדי לשנות את הקונטרסט הכללי)
+        const lowerBound = 0.05; // מתחת לזה, התא יקבל את הצבע הכי כהה בפלטה
+        const upperBound = 0.85; // מעל לזה, התא יקבל את הצבע הכי בהיר בפלטה
+        
+        // מתיחה מתמטית של הטווח הספציפי על פני 0 עד 1
+        visualValue = (visualValue - lowerBound) / (upperBound - lowerBound);
+        
+        // חיתוך (Clamp) כדי לוודא שאין חריגות מהגבולות
+        visualValue = Math.max(0.0, Math.min(1.0, visualValue));
+        
+        // מיפוי מדויק לאינדקס הצבע (עכשיו מובטח שנגיע ל-0 ול-pLen - 1)
+        const colorIndex = Math.round(visualValue * (pLen - 1));
+        
+        state.lastBoardK[i] = colorIndex;
+        
+        return { ...tile, k: colorIndex, v: colorIndex };
+    });
+
+    return { 
+        nextBoardState, 
+        nextTuringState: state 
+    };
+}
+
+   

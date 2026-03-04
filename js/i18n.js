@@ -174,12 +174,20 @@ resizeModal_prompt: { en: "Enter a number between 1 and 150.", he: "בין 1 ל-
 chi_preset_electric: { en: "Electric", he: "חשמל", ru: "Электричество", nl: "Elektrisch" },
   chi_preset_fluent: { en: "Fluent", he: "שוטף", ru: "Плавный", nl: "Vloeiend" },
   chi_preset_harmony: { en: "Harmony", he: "הרמוני", ru: "Гармония", nl: "Harmonie" },
-  chi_preset_ripples: { en: "Ripples", he: "אדוות", ru: "Ряבь", nl: "Rimpelingen" }
+ chi_preset_ripples: { en: "Ripples", he: "אדוות", ru: "Ряבь", nl: "Rimpelingen" },
+  tooltip_turing: { en: "Turing Patterns", he: "תבניות טיורינג (ביולוגיה)", ru: "Паттерны Тьюринга", nl: "Turing Patronen" },
+  turing_modal_title: { en: "Turing Patterns", he: "תבניות טיורינג", ru: "Паттерны Тьюринга", nl: "Turing Patronen" },
+  turing_preset_coral: { en: "Coral", he: "אלמוג", ru: "Коралл", nl: "Koraal" },
+  turing_preset_maze: { en: "Maze", he: "מבוך", ru: "Лабиринт", nl: "Doolhof" },
+  turing_preset_spots: { en: "Spots", he: "כתמים", ru: "Пятна", nl: "Vlekken" },
+turing_preset_cells: { en: "Cells", he: "תאים", ru: "Клетки", nl: "Cellen" },
+  turing_preset_boiling: { en: "Boiling", he: "רתיחה", ru: "Кипение", nl: "Koken" },
+  turing_preset_uskate: { en: "U-Skate", he: "גלישה", ru: "Скейт", nl: "U-Skate" },
+  turing_preset_chaos: { en: "Chaos", he: "כאוס", ru: "Хаос", nl: "Chaos" },
+  turing_preset_waves: { en: "Waves", he: "גלים", ru: "Волны", nl: "Golven" }
 
+}; // הסוגר המסולסל עבר לכאן!
 
-
-
-}; // הסוגר המסולסל עבר לכאן!  // --- END: Chi Flow Settings Modal ---
 
 export function getCurrentLang() {
   return currentLang;

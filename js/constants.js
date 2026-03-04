@@ -311,3 +311,14 @@ export const defaultChiFlowRules = {
 };
 // --- END: Added for Chi Flow (Sandpile) Settings ---
 
+// --- START: Added for Turing Patterns Settings ---
+export const defaultTuringRules = {
+    feed: 0.054, // הערך המדויק של פריסט Coral (אלמוג)
+    kill: 0.062, 
+    dA: 1.0,     
+    dB: 0.5,     
+    timeStep: 1.0
+};
+// --- END: Added for Turing Patterns Settings ---
+
+

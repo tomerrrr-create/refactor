@@ -39,6 +39,7 @@ export const dom = {
   btnDla: document.getElementById('btnDla'),
   btnContour: document.getElementById('btnContour'),
 btnSandpile: document.getElementById('btnSandpile'),
+btnTuring: document.getElementById('btnTuring'),
   btnPlayPauseLife: document.getElementById('btnPlayPauseLife'),
   iconPlay: document.getElementById('iconPlay'),
   iconPause: document.getElementById('iconPause'),
@@ -164,5 +165,22 @@ btnChiPresetRipples: document.getElementById('btnChiPresetRipples'),
   btnChiSettingsCancel: document.getElementById('btnChiSettingsCancel'),
   btnChiSettingsSave: document.getElementById('btnChiSettingsSave'),
   // --- END: Chi Flow Settings Modal Elements ---
+
+// --- START: Turing Settings Modal Elements ---
+  turingSettingsModal: document.getElementById('turingSettingsModal'),
+  turingModalClose: document.getElementById('turingModalClose'),
+  turingModalTitle: document.getElementById('turingModalTitle'),
+  btnTuringPresetCoral: document.getElementById('btnTuringPresetCoral'),
+  btnTuringPresetMaze: document.getElementById('btnTuringPresetMaze'),
+  btnTuringPresetSpots: document.getElementById('btnTuringPresetSpots'),
+  btnTuringPresetCells: document.getElementById('btnTuringPresetCells'),
+btnTuringPresetBoiling: document.getElementById('btnTuringPresetBoiling'),
+  btnTuringPresetUSkate: document.getElementById('btnTuringPresetUSkate'),
+  btnTuringPresetChaos: document.getElementById('btnTuringPresetChaos'),
+  btnTuringPresetWaves: document.getElementById('btnTuringPresetWaves'),
+  btnTuringSettingsCancel: document.getElementById('btnTuringSettingsCancel'),
+  btnTuringSettingsSave: document.getElementById('btnTuringSettingsSave'),
+  // --- END: Turing Settings Modal Elements ---
+
 
 };

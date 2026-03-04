@@ -60,8 +60,11 @@ function getLuminance(hex) {
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
-     let chiFlowRules = { ...C.defaultChiFlowRules };
- let dlaState = null;
+
+let chiFlowRules = { ...C.defaultChiFlowRules };
+      let turingRules = { ...C.defaultTuringRules };
+      let dlaState = null;
+      let turingState = null;
 
       let activePaletteIndex = 0;
       let n = 7;
@@ -436,7 +439,12 @@ const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;
               tile.v = darkestIndex;
           }
         });
+
+dlaState = null; // איפוס לפרקטלים
+        turingState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
+
         startAnimationLoop();
+
       }
 
       function goDarkAction() {
@@ -660,6 +668,13 @@ case 'sandpile':
     boardState = nextState; 
     break;
 
+case 'turing': 
+                const turingContext = { n, currentBoardState: boardState, currentPalette: palette(), turingState, turingRules };
+                const turingRes = Simulations.runTuringGeneration(turingContext);
+                boardState = turingRes.nextBoardState;
+                turingState = turingRes.nextTuringState;
+                break;
+
             case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
 const dlaContext = { ...context, dlaRules: currentDlaRules };
@@ -711,6 +726,12 @@ case 'sandpile':
     boardState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
     break;
 
+case 'turing': 
+                    const turingStepCtx = { n, currentBoardState: boardState, currentPalette: palette(), turingState, turingRules };
+                    const turingStepRes = Simulations.runTuringGeneration(turingStepCtx);
+                    boardState = turingStepRes.nextBoardState;
+                    turingState = turingStepRes.nextTuringState;
+                    break;
 
             case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
@@ -896,8 +917,11 @@ function armSimulation(simulationName) {
     brightnessEvoMode = 'off';
     dlaMode = 'off';
     breatheEvoMode = 'off';
-    
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile];    simButtons.forEach(btn => btn.classList.remove('simulation-active'));
+    turingState = null;
+
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring].filter(Boolean);
+
+    simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     updateBrightnessEvoButtonUI(); // Update UI to reflect the reset
     updateDlaButtonUI();           // Update UI to reflect the reset
     updateBreatheEvoButtonUI();    // Update UI to reflect the reset
@@ -1144,6 +1168,7 @@ if (btn.id === 'btnColorPicker') {
             if (btn.id === 'btnGravitationalSort') { modals.openGravitationalSortSettingsModal(); return; }
             if (btn.id === 'btnContour') { modals.openContourSettingsModal(); return; } // <-- ADDED HERE
 if (btn.id === 'btnSandpile') { modals.openChiFlowSettingsModal(); return; }
+if (btn.id === 'btnTuring') { modals.openTuringSettingsModal(); return; }
 if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); return; }
             if (btn.id === 'btnPalette') { modals.openPaletteModal(); return; }
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
@@ -1210,6 +1235,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnErosion.title = getText('tooltip_erosion');
         dom.btnDla.title = getText('tooltip_dla'); 
         dom.btnContour.title = getText('tooltip_contour');
+dom.btnTuring.title = getText('tooltip_turing');
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         dom.btnBrushMode.title = isBrushModeOn ? getText('brushMode_paint') : getText('brushMode_copy');
 
@@ -1277,8 +1303,9 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
       function resetArmedState() {
         armedSimulation = null;
         dlaState = null;
+turingState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile];
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring].filter(Boolean);
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
         dom.btnPlayPauseLife.disabled = true;
@@ -1754,6 +1781,9 @@ function cycleBreatheEvoMode() {
             getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
 
 getChiFlowRules: () => chiFlowRules, setChiFlowRules: (r) => { chiFlowRules = r; },
+getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
+
+
 
             handleSaveProject, handleLoadProject, onProjectFileSelected,
             pointerState,
@@ -1818,6 +1848,7 @@ dom.btnContour.addEventListener('click', (e) => handleCtrlClick(e, () => armSimu
 
 dom.btnSandpile.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('sandpile')));
 
+dom.btnTuring.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('turing')));
 
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
