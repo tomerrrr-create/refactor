@@ -887,25 +887,32 @@ export function runTuringGeneration({ n, currentBoardState, currentPalette, turi
         
         const concentrationA = state.A[i];
         
-        // ---------------------------------------------------------
-        // מתיחת קונטרסט (Contrast Stretch):
-        // הופכים את הכיוון - מקום ריק (A גבוה) שווה 0 (כהה), 
-        // ליבת התבנית (A נמוך) שווה 1 (בהיר).
-        // ---------------------------------------------------------
+
+
+// 1. הפיכת הכיוון 
         let visualValue = 1.0 - concentrationA; 
-        
-        // נגדיר את הגבולות ה"אמיתיים" של הריאקציה 
-        // (אפשר לשחק עם המספרים האלה כדי לשנות את הקונטרסט הכללי)
-        const lowerBound = 0.05; // מתחת לזה, התא יקבל את הצבע הכי כהה בפלטה
-        const upperBound = 0.85; // מעל לזה, התא יקבל את הצבע הכי בהיר בפלטה
-        
-        // מתיחה מתמטית של הטווח הספציפי על פני 0 עד 1
-        visualValue = (visualValue - lowerBound) / (upperBound - lowerBound);
-        
-        // חיתוך (Clamp) כדי לוודא שאין חריגות מהגבולות
+
+        // 2. פריסה על כל הפלטה (החזרנו את המתיחה החסרה!)
+        // זה מבטיח שהטווח הכימי (0.05 עד 0.78) נמתח על פני 100% מהצבעים, 
+        // כך ששום צבע בפלטה לא ילך לאיבוד.
+        visualValue = (visualValue - 0.05) / (0.78 - 0.05);
         visualValue = Math.max(0.0, Math.min(1.0, visualValue));
+
+// 3. העברת המשקל לכהים (Gamma > 1.0): 
+        // במקום 0.85, אנחנו משתמשים ב-1.5. 
+        // זה "ישקע" את רוב הלוח לתוך הצבעים העמוקים והכהים,
+        // וישאיר את הבהירים רק לקצוות המודגשים.
+        visualValue = Math.pow(visualValue, 1.5);
+
+        // 4. קונטרסט מותנה (השארנו את מה שמונע את כאב הראש)
+        if (visualValue > 0.5) {
+            let t = (visualValue - 0.5) * 2.0; 
+            t = 1.0 - Math.pow(1.0 - t, 2.0);  
+            visualValue = 0.5 + (t * 0.5);     
+        }
+
         
-        // מיפוי מדויק לאינדקס הצבע (עכשיו מובטח שנגיע ל-0 ול-pLen - 1)
+        // מיפוי מדויק לאינדקס הצבע
         const colorIndex = Math.round(visualValue * (pLen - 1));
         
         state.lastBoardK[i] = colorIndex;

@@ -241,7 +241,7 @@ const TURING_PRESETS = {
     'Boiling': { feed: 0.0367, kill: 0.0649, dA: 1.0, dB: 0.5, timeStep: 1.0 },
     'USkate': { feed: 0.014, kill: 0.054, dA: 1.0, dB: 0.5, timeStep: 1.0 },
     'Chaos': { feed: 0.034, kill: 0.056, dA: 1.0, dB: 0.5, timeStep: 1.0 },
-    'Waves': { feed: 0.014, kill: 0.045, dA: 1.0, dB: 0.5, timeStep: 1.0 }
+'Waves': { feed: 0.025, kill: 0.052, dA: 1.0, dB: 0.5, timeStep: 1.0 }
 };
 
 function closeTuringSettingsModal() {
