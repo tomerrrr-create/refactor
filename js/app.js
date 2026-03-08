@@ -13,6 +13,7 @@ import { initializeModals } from './ui-modals.js';
       
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
+let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge האוטומטית
 
       // --- Breathe Animation State ---
       let isBreathing = false; // This variable is now effectively replaced by (isLifePlaying && armedSimulation === 'breathe')
@@ -741,12 +742,12 @@ dlaState = null; // איפוס לפרקטלים
       }
       
 
-function nudgeColors(direction) {
-        performAction(() => {
+
+function applyNudgeLogic(direction) {
           const now = performance.now();
+          let changed = false;
           boardState.forEach(tile => {
             if (!tile.isGold) {
-                // שימוש בפונקציית norm כדי ליצור התנהגות מעגלית מושלמת (טורוס)
                 let newIndex = norm(tile.k + direction);
                 
                 if (tile.k !== newIndex) {
@@ -754,12 +755,27 @@ function nudgeColors(direction) {
                     tile.animStart = now;
                     tile.k = newIndex;
                     tile.v = newIndex;
+                    changed = true;
                 }
             }
           });
-          startAnimationLoop();
-        });
+          if (changed) startAnimationLoop();
       }
+
+      function nudgeColors(direction) {
+          performAction(() => applyNudgeLogic(direction));
+      }
+
+      function handleNudgeBrighterClick() {
+          nudgeColors(1);
+          armSimulation('nudgeBrighter');
+      }
+
+      function handleNudgeDarkerClick() {
+          nudgeColors(-1);
+          armSimulation('nudgeDarker');
+      }
+
 
 
 
@@ -929,6 +945,22 @@ case 'turing':
                 turingState = turingRes.nextTuringState;
                 break;
 
+case 'nudgeBrighter':
+    if (performance.now() - lastNudgeTime >= ANIMATION_DURATION) {
+        applyNudgeLogic(1);
+        lastNudgeTime = performance.now();
+    }
+    break;
+
+case 'nudgeDarker':
+    if (performance.now() - lastNudgeTime >= ANIMATION_DURATION) {
+        applyNudgeLogic(-1);
+        lastNudgeTime = performance.now();
+    }
+    break;
+
+
+
             case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
 const dlaContext = { ...context, dlaRules: currentDlaRules };
@@ -939,7 +971,10 @@ break;
             case 'breathe': break; // This loop only handles discrete simulations. Breathe uses animationLoop.
 
         }
-        renderToScreen(null);
+if (armedSimulation !== 'nudgeBrighter' && armedSimulation !== 'nudgeDarker') {
+            renderToScreen(null);
+        }
+
         animationFrameId = requestAnimationFrame(gameLoop);
       }
 
@@ -986,6 +1021,15 @@ case 'turing':
                     boardState = turingStepRes.nextBoardState;
                     turingState = turingStepRes.nextTuringState;
                     break;
+
+case 'nudgeBrighter':
+                    applyNudgeLogic(1);
+                    break;
+case 'nudgeDarker':
+                    applyNudgeLogic(-1);
+                    break;
+
+
 
             case 'dla':
 const currentDlaRules = { ...dlaRules, colorGenetics: dlaMode === 'genetics' };
@@ -1173,7 +1217,7 @@ function armSimulation(simulationName) {
     breatheEvoMode = 'off';
     turingState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     updateBrightnessEvoButtonUI(); // Update UI to reflect the reset
@@ -1559,7 +1603,7 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
         dlaState = null;
 turingState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
         dom.btnPlayPauseLife.disabled = true;
@@ -2126,8 +2170,9 @@ dom.btnTuring.addEventListener('click', (e) => handleCtrlClick(e, () => armSimul
 
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
-        dom.btnNudgeBrighter.addEventListener('click', (e) => handleCtrlClick(e, () => nudgeColors(1)));
-        dom.btnNudgeDarker.addEventListener('click', (e) => handleCtrlClick(e, () => nudgeColors(-1)));
+dom.btnNudgeBrighter.addEventListener('click', (e) => handleCtrlClick(e, handleNudgeBrighterClick));
+        dom.btnNudgeDarker.addEventListener('click', (e) => handleCtrlClick(e, handleNudgeDarkerClick));
+
         dom.btnLangToggle.addEventListener('click', toggleLanguage);
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         

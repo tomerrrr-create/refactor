@@ -12,6 +12,56 @@ export const PALETTES = [
   colors: ["#000000","#424242","#7B1FA2","#5E35B1","#673AB7","#9C27B0","#C2185B","#E91E63","#FF1744","#C62828","#D32F2F","#3F51B5","#1976D2","#2196F3","#42A5F5","#0097A7","#00BCD4","#4CAF50","#66BB6A","#FF5722","#FFA726","#FFC107","#BDBDBD"]
     },
 
+
+{
+  originalName: "Night Rainbow",
+  emoji: '🌌',
+  colors: (function() {
+    // הגדרת "תחנות" הצבע: מחושך, לשיא (שפיץ), וחוזר חלילה.
+    const stops = [
+      { pos: 0,   r: 0,   g: 0,   b: 0 },     // שחור מוחלט
+      { pos: 15,  r: 15,  g: 0,   b: 30 },    // סגול עמוק (בסיס)
+      { pos: 32,  r: 140, g: 40,  b: 220 },   // שפיץ 1: סגול בוהק
+      { pos: 50,  r: 0,   g: 15,  b: 40 },    // כחול לילה
+      { pos: 68,  r: 0,   g: 180, b: 255 },   // שפיץ 2: תכלת זוהר
+      { pos: 85,  r: 0,   g: 25,  b: 15 },    // ירוק יער אפל
+      { pos: 104, r: 16,  g: 150, b: 100 },   // שפיץ 3: ירוק יער בקבוקי רך
+      { pos: 122, r: 25,  g: 20,  b: 0 },     // זית עמוק
+      { pos: 140, r: 255, g: 200, b: 0 },     // שפיץ 4: זהב בוהק
+      { pos: 158, r: 35,  g: 5,   b: 10 },    // בורדו אפל
+      { pos: 176, r: 235, g: 90,  b: 90 },    // שפיץ 5: אדום רך ונעים (Pastel/Coral)
+      { pos: 194, r: 25,  g: 0,   b: 20 },    // שזיף עמוק
+      { pos: 214, r: 255, g: 50,  b: 150 },   // שפיץ 6: ורוד מגנטה
+      { pos: 236, r: 15,  g: 0,   b: 10 },    // דעיכה חזרה
+      { pos: 255, r: 0,   g: 0,   b: 0 }      // שחור מוחלט
+    ];
+    
+    const out = [];
+    for (let i = 0; i < 256; i++) {
+        let s = 0;
+        // מציאת המקטע הנוכחי
+        while (s < stops.length - 2 && i >= stops[s+1].pos) { s++; }
+        
+        const start = stops[s];
+        const end = stops[s+1];
+        const segmentLen = end.pos - start.pos;
+        const progress = segmentLen === 0 ? 0 : (i - start.pos) / segmentLen;
+        
+        // שימוש בפונקציית החלקה (Smoothstep) למעברים אורגניים וטבעיים
+        const ease = progress * progress * (3 - 2 * progress); 
+        
+        const r = Math.round(start.r + (end.r - start.r) * ease);
+        const g = Math.round(start.g + (end.g - start.g) * ease);
+        const b = Math.round(start.b + (end.b - start.b) * ease);
+        
+        out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+    }
+    return out;
+  })()
+},
+
+
+
 {
   originalName: "Earth & Spirit",
   emoji: '🌿',
