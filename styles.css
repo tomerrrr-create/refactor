@@ -187,15 +187,17 @@ body {
 #btnGravitationalSort,
 #btnErosion,
 #btnDla,
-#btnContour, /* <-- ADDED HERE */
+#btnContour,
+#btnSandpile,
+#btnTuring, 
 #btnNudgeBrighter,
-#btnNudgeDarker {
+#btnNudgeDarker,
+#btnCycleSort {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
     transform: scale(0.5);
 }
-
 
 /* --- Default Layout --- */
 /* Left Panel */
@@ -259,12 +261,13 @@ body {
 }
 
 /* --- Simulation Mode Layout Overrides --- */
+
+
 .sim-mode-active #btnBrushMode,
 .sim-mode-active #btnGap,
 .sim-mode-active #btnResetBoard,
 .sim-mode-active #btnTutorial,
 .sim-mode-active #btnSpecialReset,
-.sim-mode-active #btnInvert,
 .sim-mode-active #btnDark {
   display: none;
 }
@@ -276,15 +279,19 @@ body {
 .sim-mode-active #btnErosion,
 .sim-mode-active #btnDla,
 .sim-mode-active #btnContour,
+.sim-mode-active #btnSandpile,
+.sim-mode-active #btnTuring,
 .sim-mode-active #btnNudgeBrighter,
 .sim-mode-active #btnNudgeDarker,
 .sim-mode-active #btnSandpile,
-.sim-mode-active #btnRandom {
+.sim-mode-active #btnRandom,
+.sim-mode-active #btnCycleSort {
     opacity: 1;
     pointer-events: auto;
     visibility: visible;
     transform: scale(1);
 }
+
 
 /* Left Panel (Col 1) */
 .sim-mode-active #btnColorPicker   { grid-area: 1 / 1; }
@@ -313,9 +320,12 @@ body {
 .sim-mode-active #btnShowBreatheMenu { grid-area: 3 / 7; }
 
 /* שורה 4 - כפתורי מערכת (מתחת לרקע) */
+.sim-mode-active #btnSave          { display: inline-flex; grid-area: 4 / 3; }
+.sim-mode-active #btnInvert        { display: inline-flex; grid-area: 4 / 4; }
+.sim-mode-active #btnToggleSimMode { grid-area: 4 / 5; }
 .sim-mode-active #btnRandom        { display: inline-flex; grid-area: 4 / 6; }
-.sim-mode-active #btnToggleSimMode { grid-area: 4 / 5; } 
-.sim-mode-active #btnSave          { display: inline-flex; grid-area: 4 / 4; } 
+.sim-mode-active #btnCycleSort     { display: inline-flex; grid-area: 4 / 7; }
+
 
 /* Right Panel (Col 9) */
 .sim-mode-active #btnSymmetry      { grid-area: 1 / 9; }
@@ -1001,6 +1011,3 @@ body {
 
 
 
-#controlsContainer:not(.sim-mode-active) #btnSandpile {
-    display: none;
-}

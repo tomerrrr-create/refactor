@@ -98,8 +98,11 @@ btnTuring: document.getElementById('btnTuring'),
   // Palette Modal Elements
   btnPaletteModalClose: document.getElementById('btnPaletteModalClose'),
   paletteModalGrid: document.getElementById('paletteModalGrid'),
-  paletteModalTitle: document.getElementById('paletteModalTitle'),
-  
+
+paletteModalTitle: document.getElementById('paletteModalTitle'),
+btnCycleSort: document.getElementById('btnCycleSort'),
+  sortIconGroup: document.getElementById('sortIconGroup'),
+
   // Game of Life Settings Modal Elements
   golSurvivalChipsContainer: document.getElementById('golSurvivalChipsContainer'),
   golBirthChipsContainer: document.getElementById('golBirthChipsContainer'),

@@ -19,6 +19,23 @@ import { initializeModals } from './ui-modals.js';
       let breatheStartTime = 0;
       let breatheEvoMode = 'off'; // 'off', 'solo' or 'group'
 
+
+
+// --- הגדרות מיון פלטות ואייקוני SVG (עיצוב מינימליסטי ורוחני) ---
+      const SORT_MODES = [
+          { method: 'luminance', icon: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>' }, // עין
+          { method: 'hue', icon: '<path d="M5 18v-5a7 7 0 0 1 14 0v5"/>' }, 
+{ method: 'dark-rainbow', icon: '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M7 18v-6a5 5 0 0 1 10 0v6"/>' }, 
+        
+{ method: 'temperature', icon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>' }, // חצי סהר (איסלאם)
+
+          { method: 'reversed', icon: '<path d="M12 4v16M7 9h10"/>' }, // צלב (נצרות)
+          { method: 'center-out', icon: '<polygon points="12 3 20 16.5 4 16.5"/><polygon points="12 21 4 7.5 20 7.5"/>' } // מגן דוד (יהדות)
+      ];
+      let currentSortIndex = 0;
+
+
+
       // --- Color Helper for Breathing ---
       function adjustBrightness(hex, factor) {
         const rgb = hexToRgb(hex);
@@ -51,9 +68,222 @@ function getLuminance(hex) {
         );
       }
 
+// פונקציית עזר לחישוב גוון (Hue) של צבע (עבור מיון קשת בענן)
+      function getHue(hex) {
+          const rgb = hexToRgb(hex);
+          if (!rgb) return 0;
+          const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          let h = 0;
+          if (max !== min) {
+              const d = max - min;
+              switch (max) {
+                  case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                  case g: h = (b - r) / d + 2; break;
+                  case b: h = (r - g) / d + 4; break;
+              }
+              h /= 6;
+          }
+          return h * 360;
+      }
+
+// פונקציית עזר לחישוב נתוני צבע מתקדמים (Hue, Saturation, Value)
+      function getHSV(hex) {
+          const rgb = hexToRgb(hex);
+          if (!rgb) return { h: 0, s: 0, v: 0 };
+          const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          const v = max;
+          const d = max - min;
+          const s = max === 0 ? 0 : d / max;
+          let h = 0;
+          if (max !== min) {
+              switch (max) {
+                  case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                  case g: h = (b - r) / d + 2; break;
+                  case b: h = (r - g) / d + 4; break;
+              }
+              h /= 6;
+          }
+          return { h: h * 360, s: s, v: v };
+      }
+
+
+
+// --- מערכת מיון פלטות צבעים (Sorting Infrastructure) ---
+      let currentSortMethod = 'luminance'; // שיטת המיון הפעילה כברירת מחדל
+
+
+
+function sortColorsArray(colorsArray, method) {
+          // קודם כל, ממיינים לפי בהירות כבסיס
+          const sortedByLuminance = [...colorsArray].sort((a, b) => getLuminance(a) - getLuminance(b));
+
+          switch (method) {
+              case 'center-out':
+                  const centerOut = new Array(sortedByLuminance.length);
+                  let center = Math.floor(sortedByLuminance.length / 2);
+                  let left = center - 1; let right = center + 1;
+                  centerOut[center] = sortedByLuminance[0];
+                  for(let i = 1; i < sortedByLuminance.length; i++) {
+                      if (i % 2 !== 0) {
+                          if (right < sortedByLuminance.length) centerOut[right++] = sortedByLuminance[i];
+                          else centerOut[left--] = sortedByLuminance[i];
+                      } else {
+                          if (left >= 0) centerOut[left--] = sortedByLuminance[i];
+                          else centerOut[right++] = sortedByLuminance[i];
+                      }
+                  }
+                  return centerOut;
+                  
+              case 'reversed':
+                  // היפוך: מהבהיר ביותר לכהה ביותר
+                  return [...sortedByLuminance].reverse();
+                  
+
+case 'hue':
+                  // קשת בענן: מיון ראשוני לפי מיקום על גלגל הצבעים, שניוני לפי בהירות
+                  return [...colorsArray].sort((a, b) => {
+                      const hueDiff = getHue(a) - getHue(b);
+                      // אם הגוון זהה או כמעט זהה (הפרש קטן מ-1 מעלה), נמיין מהכהה לבהיר
+                      if (Math.abs(hueDiff) < 1) {
+                          return getLuminance(a) - getLuminance(b);
+                      }
+                      return hueDiff;
+                  });
+         
+
+
+
+case 'dark-rainbow': {
+                  const darks = [];
+                  const lights = [];
+                  const colors = [];
+                  
+                  colorsArray.forEach(hex => {
+                      const hsv = getHSV(hex);
+                      const lum = getLuminance(hex);
+                      
+                      // סינון חכם לניטרליים
+                      if (hsv.s < 0.12 || hsv.v < 0.08) {
+                          if (lum < 128) {
+                              darks.push(hex);
+                          } else {
+                              lights.push(hex);
+                          }
+                      } else {
+                          colors.push(hex);
+                      }
+                  });
+
+                  darks.sort((a, b) => getLuminance(a) - getLuminance(b));
+                  lights.sort((a, b) => getLuminance(a) - getLuminance(b));
+
+                  colors.sort((a, b) => {
+                      const hsvA = getHSV(a);
+                      const hsvB = getHSV(b);
+                      
+                      const hueA = (hsvA.h + 30) % 360;
+                      const hueB = (hsvB.h + 30) % 360;
+                      
+                      // נגדיל קצת את ה"דליים" ל-20 מעלות כדי לתפוס משפחות רחבות יותר
+                      const bucketSize = 20; 
+                      const bucketA = Math.floor(hueA / bucketSize);
+                      const bucketB = Math.floor(hueB / bucketSize);
+                      
+                      if (bucketA === bucketB) {
+                          const lumA = getLuminance(a);
+                          const lumB = getLuminance(b);
+                          
+                          // הפתרון לקפיצות: מיון גלי (Serpentine)!
+                          // דלי זוגי ימוין מכהה לבהיר, דלי אי-זוגי ימוין מבהיר לכהה.
+                          // זה יוצר זרימה חלקה: בהיר פוגש בהיר, וכהה פוגש כהה.
+                          return bucketA % 2 === 0 ? lumA - lumB : lumB - lumA;
+                      }
+                      
+                      return bucketA - bucketB;
+                  });
+
+                  return [...darks, ...colors, ...lights];
+              }
+
+         
+              case 'temperature':
+                  // טמפרטורה: אדום (חם) עד כחול (קר), שניוני לפי בהירות
+                  return [...colorsArray].sort((a, b) => {
+                      const rgbA = hexToRgb(a) || [0,0,0];
+                      const rgbB = hexToRgb(b) || [0,0,0];
+                      const tempA = rgbA[0] - rgbA[2];
+                      const tempB = rgbB[0] - rgbB[2];
+                      const tempDiff = tempB - tempA; // החמים ביותר יהיו בהתחלה
+                      
+                      // אם הטמפרטורה זהה בדיוק, נמיין מהכהה לבהיר
+                      if (tempDiff === 0) {
+                          return getLuminance(a) - getLuminance(b);
+                      }
+                      return tempDiff;
+                  });
+
+
+              
+              case 'luminance':
+              default:
+                  return sortedByLuminance;
+          }
+      }
+
+      // אתחול ראשוני: שומרים את סדר הצבעים המקורי וממיינים לפי ברירת המחדל
       C.PALETTES.forEach(palette => {
-        palette.colors.sort((a, b) => getLuminance(a) - getLuminance(b));
+          if (!palette.originalColors) {
+              palette.originalColors = [...palette.colors]; 
+          }
+          palette.colors = sortColorsArray(palette.originalColors, currentSortMethod);
       });
+      // --------------------------------------------------------
+
+// --- שלב 2: לוגיקת המיפוי (Remapping) ---
+      function applySortMethod(newMethod) {
+          if (currentSortMethod === newMethod) return; // לא עושים כלום אם זו כבר השיטה הפעילה
+
+          // 1. שומרים את צבע ה-Hex המדויק של כל תא לפני השינוי
+          const currentPalette = C.PALETTES[activePaletteIndex].colors;
+          const currentColors = boardState.map(tile => currentPalette[tile.k]);
+          
+          // שומרים גם את הצבע הקודם (prevK) כדי לא לשבור אנימציות של מעברי צבע אם הן קורות עכשיו
+          const currentPrevColors = boardState.map(tile => tile.prevK !== null ? currentPalette[tile.prevK] : null);
+
+          // 2. מעדכנים את השיטה הפעילה וממיינים את כל הפלטות מחדש
+          currentSortMethod = newMethod;
+          C.PALETTES.forEach(palette => {
+              palette.colors = sortColorsArray(palette.originalColors, currentSortMethod);
+          });
+
+          // 3. ממפים מחדש את הלוח שלנו לאינדקסים החדשים
+          const newPalette = C.PALETTES[activePaletteIndex].colors;
+          
+          boardState.forEach((tile, index) => {
+              // מעדכנים את הצבע הראשי של התא
+              const oldHex = currentColors[index];
+              const newK = newPalette.indexOf(oldHex);
+              tile.k = newK !== -1 ? newK : 0; // אם בטעות לא מצא (לא אמור לקרות), נשים 0
+tile.v = tile.k;
+
+              // מעדכנים את צבע האנימציה, אם קיים
+              if (currentPrevColors[index] !== null) {
+                  const oldPrevHex = currentPrevColors[index];
+                  const newPrevK = newPalette.indexOf(oldPrevHex);
+                  tile.prevK = newPrevK !== -1 ? newPrevK : null;
+              }
+          });
+
+          // 4. מרנדרים מחדש את תפריט הצבעים כדי שהמשתמש יראה את הסדר החדש
+          if (typeof renderColorPickerContent === 'function') {
+              renderColorPickerContent();
+          }
+      }
+      // ------------------------------------------
+
+
       
       let gameOfLifeRules = { ...C.defaultGameOfLifeRules };
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
@@ -110,7 +340,8 @@ let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
             n, 
             activePaletteIndex, 
             paletteName: C.PALETTES[activePaletteIndex].originalName, 
-            separatorPx, 
+            separatorPx,
+currentSortMethod, 
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
                 isGold: tile.isGold,
@@ -133,10 +364,30 @@ let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
         if (paletteIdx === -1) {
             paletteIdx = state.activePaletteIndex;
         }
-        activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? paletteIdx : 0;
+
+activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? paletteIdx : 0;
         separatorPx = state.separatorPx;
 
+        if (state.currentSortMethod && state.currentSortMethod !== currentSortMethod) {
+            currentSortMethod = state.currentSortMethod;
+            C.PALETTES.forEach(palette => {
+                palette.colors = sortColorsArray(palette.originalColors, currentSortMethod);
+            });
+            // עדכון האייקון של הכפתור
+            const modeIndex = SORT_MODES.findIndex(m => m.method === currentSortMethod);
+            if (modeIndex !== -1) {
+                currentSortIndex = modeIndex;
+                if (dom.sortIconGroup) dom.sortIconGroup.innerHTML = SORT_MODES[currentSortIndex].icon;
+            }
+            // רענון חלונית בחירת הצבעים
+            if (modals && typeof modals.renderColorPickerContent === 'function') {
+                modals.renderColorPickerContent();
+            }
+        }
+
         updateGlowEffect();
+
+
         updateColorPickerButtonUI();
         updatePaletteHeader();
         applySeparator();
@@ -489,14 +740,15 @@ dlaState = null; // איפוס לפרקטלים
         });
       }
       
-      function nudgeColors(direction) {
+
+function nudgeColors(direction) {
         performAction(() => {
-          const maxIndex = paletteLen() - 1;
           const now = performance.now();
           boardState.forEach(tile => {
             if (!tile.isGold) {
-                let newIndex = tile.k + direction;
-                newIndex = Math.max(0, Math.min(newIndex, maxIndex));
+                // שימוש בפונקציית norm כדי ליצור התנהגות מעגלית מושלמת (טורוס)
+                let newIndex = norm(tile.k + direction);
+                
                 if (tile.k !== newIndex) {
                     tile.prevK = tile.k;
                     tile.animStart = now;
@@ -508,6 +760,8 @@ dlaState = null; // איפוס לפרקטלים
           startAnimationLoop();
         });
       }
+
+
 
       function resetSelectedColor() {
           selectedColor = null;
@@ -1755,6 +2009,24 @@ function cycleBreatheEvoMode() {
           });
       }
 
+
+
+function cycleSortMethod() {
+          performAction(() => { // עטפנו כדי שהשינוי יירשם בהיסטוריה
+              currentSortIndex = (currentSortIndex + 1) % SORT_MODES.length;
+              const nextMode = SORT_MODES[currentSortIndex];
+              
+              // עדכון ה-SVG בתוך הכפתור
+              if (dom.sortIconGroup) {
+                  dom.sortIconGroup.innerHTML = nextMode.icon;
+              }
+              
+              applySortMethod(nextMode.method);
+          });
+      }
+
+
+
       async function initializeApp() {
         const splashScreen = document.getElementById('splashScreen'), splashText = document.getElementById('splashText');
         initializeLanguage();
@@ -1790,7 +2062,8 @@ getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
             resetWasLongPress,
 downloadImage: shareOrDownloadImage,
             // startBreatheAnimation is removed
-            adaptColors, // Pass the new function to the modals context
+            adaptColors, 
+applySortMethod,
         };
         modals = initializeModals(contextForModals);
         
@@ -1828,6 +2101,7 @@ updateBrightnessEvoButtonUI();
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         dom.btnSymmetry.addEventListener('click', (e) => handleCtrlClick(e, cycleSymmetryMode));
+dom.btnCycleSort.addEventListener('click', (e) => handleCtrlClick(e, cycleSortMethod));
         dom.btnColorPicker.addEventListener('click', (e) => handleCtrlClick(e, handleColorPickerClick));
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
         dom.btnToggleSimMode.addEventListener('click', (e) => handleCtrlClick(e, toggleSimMode));

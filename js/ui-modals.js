@@ -236,9 +236,9 @@ let tempTuringRules = { feed: 0.055, kill: 0.062, dA: 1.0, dB: 0.5, timeStep: 1.
 const TURING_PRESETS = {
     'Coral': { feed: 0.054, kill: 0.062, dA: 1.0, dB: 0.5, timeStep: 1.0 },
     'Maze':  { feed: 0.029, kill: 0.057, dA: 1.0, dB: 0.5, timeStep: 1.0 },
-    'Spots': { feed: 0.034, kill: 0.062, dA: 1.0, dB: 0.5, timeStep: 1.0 },
+    'Spots': { feed: 0.0383, kill: 0.061, dA: 1.0, dB: 0.5, timeStep: 1.0 },
     'Cells': { feed: 0.018, kill: 0.051, dA: 1.0, dB: 0.5, timeStep: 1.0 },
-    'Boiling': { feed: 0.0367, kill: 0.0649, dA: 1.0, dB: 0.5, timeStep: 1.0 },
+    'Boiling': { feed: 0.0367, kill: 0.062, dA: 1.0, dB: 0.5, timeStep: 1.0 },
     'USkate': { feed: 0.014, kill: 0.054, dA: 1.0, dB: 0.5, timeStep: 1.0 },
     'Chaos': { feed: 0.034, kill: 0.056, dA: 1.0, dB: 0.5, timeStep: 1.0 },
 'Waves': { feed: 0.025, kill: 0.052, dA: 1.0, dB: 0.5, timeStep: 1.0 }
@@ -869,6 +869,10 @@ export function initializeModals(appContext) {
     // Palette Modal
     app.dom.btnPaletteModalClose.addEventListener('click', closePaletteModal);
     app.dom.paletteModal.addEventListener('click', (e) => { if (e.target === app.dom.paletteModal) { closePaletteModal(); } });
+
+
+
+
 
     // Game of Life Settings Modal
     app.dom.btnGolSettingsSave.addEventListener('click', saveGolSettings);
