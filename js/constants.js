@@ -61,6 +61,58 @@ export const PALETTES = [
 },
 
 
+{
+  originalName: "Endless Sunset",
+  emoji: '🌇',
+  colors: (function() {
+    const out = [];
+    for (let i = 0; i < 256; i++) {
+      // המשתנה t מתקדם מ-0 ל-1 לאורך הפלטה
+      const t = i / 255; 
+      
+      // כאן הקסם: אנחנו מטיילים על גלגל הצבעים ממעלה 0 (אדום) למעלה 60 (צהוב)
+      const hue = Math.round(0 + (60 * t)); 
+      
+      // רוויה מלאה כל הזמן (צבעים חיים)
+      const saturation = 100; 
+      
+      // הבהירות עולה מ-10% (אדום כהה מאוד) ל-70% (צהוב בוהק)
+      const lightness = Math.round(10 + (60 * t)); 
+
+      // המרה מתמטית מ-HSL לפורמט שהדפדפן מבין (Hex)
+      const h = hue, s = saturation / 100, l = lightness / 100;
+      const k = n => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      const r = Math.round(255 * f(0)), g = Math.round(255 * f(8)), b = Math.round(255 * f(4));
+      
+      out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+    }
+    return out;
+  })()
+},
+
+
+{
+  originalName: "Holo Ocean",
+  emoji: '🌊',
+  colors: (function() {
+    const out = [];
+    for (let i = 0; i < 256; i++) {
+      const t = i / 255; // מתקדם מ-0 ל-1
+      
+      // משחקים עם התדרים של גלי הקוסינוס ליצירת מעברים רציפים ומהפנטים
+      // ככל שהמספר בכפל גדול יותר, יהיו יותר "גלים" בפלטה
+      const r = Math.round(255 * (0.5 + 0.5 * Math.cos(6.28318 * (1.0 * t + 0.00))));
+      const g = Math.round(255 * (0.5 + 0.5 * Math.cos(6.28318 * (1.0 * t + 0.33))));
+      const b = Math.round(255 * (0.5 + 0.5 * Math.cos(6.28318 * (1.0 * t + 0.67))));
+      
+      out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+    }
+    return out;
+  })()
+},
+
 
 {
   originalName: "Earth & Spirit",
