@@ -1,0 +1,196 @@
+// js/dom-elements.js
+export const dom = {
+  // Main Layout & Board
+  appContainer: document.getElementById('appContainer'),
+  appShell: document.querySelector('.app-shell'),
+  controlsContainer: document.getElementById('controlsContainer'),
+  board: document.getElementById('board'), // This now correctly refers to the container div
+  boardCanvas: document.getElementById('boardCanvas'), // Added a specific reference to the canvas
+  boardOverlay: document.getElementById('boardOverlay'),
+  root: document.documentElement,
+  splashText: document.getElementById('splashText'),
+
+  // Control Buttons
+  btnRandom: document.getElementById('btnRandom'),
+  btnPalette: document.getElementById('btnPalette'),
+  btnGap: document.getElementById('btnGap'),
+  btnUndo: document.getElementById('btnUndo'),
+  btnRedo: document.getElementById('btnRedo'),
+  btnInvert: document.getElementById('btnInvert'),
+  btnBrushMode: document.getElementById('btnBrushMode'),
+  btnSpecialReset: document.getElementById('btnSpecialReset'),
+  btnTutorial: document.getElementById('btnTutorial'),
+  btnDark: document.getElementById('btnDark'),
+  btnSymmetry: document.getElementById('btnSymmetry'),
+  btnColorPicker: document.getElementById('btnColorPicker'),
+  btnResetBoard: document.getElementById('btnResetBoard'),
+  btnResizeUp: document.getElementById('btnResizeUp'),
+  btnResizeDown: document.getElementById('btnResizeDown'),
+  btnSave: document.getElementById('btnSave'),
+  btnLangToggle: document.getElementById('btnLangToggle'),
+
+  // Simulation & Breathing Buttons
+  btnToggleSimMode: document.getElementById('btnToggleSimMode'),
+  btnShowBreatheMenu: document.getElementById('btnShowBreatheMenu'),
+  btnGameOfLife: document.getElementById('btnGameOfLife'),
+  btnBrightnessEvo: document.getElementById('btnBrightnessEvo'),
+  btnGravitationalSort: document.getElementById('btnGravitationalSort'),
+  btnErosion: document.getElementById('btnErosion'),
+  btnDla: document.getElementById('btnDla'),
+  btnContour: document.getElementById('btnContour'),
+btnSandpile: document.getElementById('btnSandpile'),
+btnTuring: document.getElementById('btnTuring'),
+btnSpiral: document.getElementById('btnSpiral'),
+  btnPlayPauseLife: document.getElementById('btnPlayPauseLife'),
+  iconPlay: document.getElementById('iconPlay'),
+  iconPause: document.getElementById('iconPause'),
+  iconBreatheSolo: document.getElementById('iconBreatheSolo'),
+  iconBreatheGroup: document.getElementById('iconBreatheGroup'),
+  btnStepForward: document.getElementById('btnStepForward'),
+  btnNudgeBrighter: document.getElementById('btnNudgeBrighter'),
+  btnNudgeDarker: document.getElementById('btnNudgeDarker'),
+
+  
+  // Modals & Overlays
+  saveModal: document.getElementById('saveModal'),
+  colorPickerModal: document.getElementById('colorPickerModal'),
+  helpModal: document.getElementById('helpModal'),
+  resizeModal: document.getElementById('resizeModal'),
+  paletteModal: document.getElementById('paletteModal'),
+  gameOfLifeSettingsModal: document.getElementById('gameOfLifeSettingsModal'),
+  gravitationalSortSettingsModal: document.getElementById('gravitationalSortSettingsModal'),
+  contourSettingsModal: document.getElementById('contourSettingsModal'), 
+spiralSettingsModal: document.getElementById('spiralSettingsModal'),
+
+  longPressOverlay: document.getElementById('longPressOverlay'),
+  longPressDisplay: document.getElementById('longPressDisplay'),
+
+  // Save Modal Elements
+  imagePreview: document.getElementById('imagePreview'),
+  btnModalClose: document.getElementById('btnModalClose'),
+  fileNameInput: document.getElementById('fileNameInput'),
+  fileNameLabel: document.getElementById('fileNameLabel'),
+  btnSaveImage: document.getElementById('btnSaveImage'),
+  btnSaveProjectIdea: document.getElementById('btnSaveProjectIdea'),
+  btnLoadProjectIdea: document.getElementById('btnLoadProjectIdea'),
+  projectFileInput: document.getElementById('projectFileInput'),
+
+  // Color Picker Modal Elements
+  colorPickerHeader: document.getElementById('colorPickerHeader'),
+  colorPickerPaletteName: document.getElementById('colorPickerPaletteName'),
+  colorPickerSwatches: document.getElementById('colorPickerSwatches'),
+  btnPrevPalette: document.getElementById('btnPrevPalette'),
+  btnNextPalette: document.getElementById('btnNextPalette'),
+  colorPickerPagination: document.getElementById('colorPickerPagination'),
+
+  // Help Modal Elements
+  btnHelpModalClose: document.getElementById('btnHelpModalClose'),
+  helpModalTitle: document.getElementById('helpModalTitle'),
+  helpIntroText: document.getElementById('helpIntroText'),
+
+  // Resize Modal Elements
+  btnResizeModalClose: document.getElementById('btnResizeModalClose'),
+  resizeInput: document.getElementById('resizeInput'),
+  btnConfirmResize: document.getElementById('btnConfirmResize'),
+  resizeModalTitle: document.getElementById('resizeModalTitle'),
+  resizeModalPrompt: document.getElementById('resizeModalPrompt'),
+  
+  // Palette Modal Elements
+  btnPaletteModalClose: document.getElementById('btnPaletteModalClose'),
+  paletteModalGrid: document.getElementById('paletteModalGrid'),
+
+paletteModalTitle: document.getElementById('paletteModalTitle'),
+btnCycleSort: document.getElementById('btnCycleSort'),
+  sortIconGroup: document.getElementById('sortIconGroup'),
+
+  // Game of Life Settings Modal Elements
+  golSurvivalChipsContainer: document.getElementById('golSurvivalChipsContainer'),
+  golBirthChipsContainer: document.getElementById('golBirthChipsContainer'),
+  btnGolSettingsSave: document.getElementById('btnGolSettingsSave'),
+  btnGolSettingsCancel: document.getElementById('btnGolSettingsCancel'),
+  btnGolSettingsReset: document.getElementById('btnGolSettingsReset'),
+
+  // Gravitational Sort Settings Modal Elements
+  gsSettingsTitle: document.getElementById('gsSettingsTitle'),
+  gsDirectionButtons: document.querySelectorAll('.gs-direction-btn'),
+  gsStrengthSlider: document.getElementById('gsStrength'),
+  gsStrengthValue: document.getElementById('gsStrengthValue'),
+  btnGsSettingsSave: document.getElementById('btnGsSettingsSave'),
+  btnGsSettingsCancel: document.getElementById('btnGsSettingsCancel'),
+
+  // Phase 1 Additions: Advanced Color Mapping Modal
+  advancedColorMappingModal: document.getElementById('advancedColorMappingModal'),
+  btnAdaptModalClose: document.getElementById('btnAdaptModalClose'),
+  adaptModalTitle: document.getElementById('adaptModalTitle'),
+  adaptModalDesc: document.getElementById('adaptModalDesc'),
+  btnAdaptColors: document.getElementById('btnAdaptColors'),
+
+  // --- START: Contour Settings Modal Elements ---
+  btnContourModalClose: document.getElementById('btnContourModalClose'),
+  contourSettingsTitle: document.getElementById('contourSettingsTitle'),
+  contourSensitivityLabel: document.getElementById('contourSensitivityLabel'),
+  contourSensitivityDesc: document.getElementById('contourSensitivityDesc'),
+  contourSensitivityLabelLow: document.getElementById('contourSensitivityLabelLow'),
+  contourSensitivitySlider: document.getElementById('contourSensitivitySlider'),
+  contourSensitivityLabelHigh: document.getElementById('contourSensitivityLabelHigh'),
+  contourSensitivityValue: document.getElementById('contourSensitivityValue'), // <-- ADDED HERE (New Element)
+  contourColorLabel: document.getElementById('contourColorLabel'),
+  btnContourColorDark: document.getElementById('btnContourColorDark'),
+  btnContourColorLight: document.getElementById('btnContourColorLight'),
+  contourColorButtons: document.querySelectorAll('.contour-color-btn'), // Helper selector
+  btnContourSettingsCancel: document.getElementById('btnContourSettingsCancel'),
+  btnContourSettingsSave: document.getElementById('btnContourSettingsSave'),
+  // --- END: Contour Settings Modal Elements ---
+
+// --- START: Chi Flow Settings Modal Elements ---
+  chiFlowSettingsModal: document.getElementById('chiFlowSettingsModal'),
+  chiFlowModalClose: document.getElementById('chiFlowModalClose'),
+  chiFlowModalTitle: document.getElementById('chiFlowModalTitle'),
+  chiAwakeningLabel: document.getElementById('chiAwakeningLabel'),
+  chiAwakeningDesc: document.getElementById('chiAwakeningDesc'),
+  chiAwakeningChipsContainer: document.getElementById('chiAwakeningChipsContainer'),
+  chiFlowLabel: document.getElementById('chiFlowLabel'),
+  chiFlowDesc: document.getElementById('chiFlowDesc'),
+  chiFlowChipsContainer: document.getElementById('chiFlowChipsContainer'),
+  chiReachLabel: document.getElementById('chiReachLabel'),
+  chiReachDesc: document.getElementById('chiReachDesc'),
+  chiReachSlider: document.getElementById('chiReachSlider'),
+  chiReachValue: document.getElementById('chiReachValue'),
+  btnChiPresetTopography: document.getElementById('btnChiPresetTopography'),
+  btnChiPresetWildfire: document.getElementById('btnChiPresetWildfire'),
+  btnChiPresetCrystals: document.getElementById('btnChiPresetCrystals'),
+  btnChiPresetRipples: document.getElementById('btnChiPresetRipples'),
+btnChiPresetRipples: document.getElementById('btnChiPresetRipples'),
+  btnChiPresetElectric: document.getElementById('btnChiPresetElectric'),
+  btnChiPresetFluent: document.getElementById('btnChiPresetFluent'),
+  btnChiPresetHarmony: document.getElementById('btnChiPresetHarmony'),
+  btnChiSettingsReset: document.getElementById('btnChiSettingsReset'),
+  btnChiSettingsCancel: document.getElementById('btnChiSettingsCancel'),
+  btnChiSettingsSave: document.getElementById('btnChiSettingsSave'),
+  // --- END: Chi Flow Settings Modal Elements ---
+
+// --- START: Turing Settings Modal Elements ---
+  turingSettingsModal: document.getElementById('turingSettingsModal'),
+  turingModalClose: document.getElementById('turingModalClose'),
+  turingModalTitle: document.getElementById('turingModalTitle'),
+  btnTuringPresetCoral: document.getElementById('btnTuringPresetCoral'),
+  btnTuringPresetMaze: document.getElementById('btnTuringPresetMaze'),
+  btnTuringPresetSpots: document.getElementById('btnTuringPresetSpots'),
+  btnTuringPresetCells: document.getElementById('btnTuringPresetCells'),
+btnTuringPresetBoiling: document.getElementById('btnTuringPresetBoiling'),
+  btnTuringPresetUSkate: document.getElementById('btnTuringPresetUSkate'),
+  btnTuringPresetChaos: document.getElementById('btnTuringPresetChaos'),
+  btnTuringPresetWaves: document.getElementById('btnTuringPresetWaves'),
+  btnTuringSettingsCancel: document.getElementById('btnTuringSettingsCancel'),
+  btnTuringSettingsSave: document.getElementById('btnTuringSettingsSave'),
+  // --- END: Turing Settings Modal Elements ---
+
+// --- START: Spiral Settings Modal Elements ---
+  spiralSettingsTitle: document.getElementById('spiralSettingsTitle'),
+  spiralMethodLabel: document.getElementById('spiralMethodLabel'),
+  spiralMethodButtons: document.querySelectorAll('.spiral-method-btn'),
+  btnSpiralSettingsCancel: document.getElementById('btnSpiralSettingsCancel'),
+  btnSpiralSettingsSave: document.getElementById('btnSpiralSettingsSave'),
+  // --- END: Spiral Settings Modal Elements ---
+
+};
