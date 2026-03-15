@@ -184,9 +184,14 @@ turing_preset_cells: { en: "Cells", he: "תאים", ru: "Клетки", nl: "Cel
   turing_preset_boiling: { en: "Boiling", he: "רתיחה", ru: "Кипение", nl: "Koken" },
   turing_preset_uskate: { en: "U-Skate", he: "גלישה", ru: "Скейт", nl: "U-Skate" },
   turing_preset_chaos: { en: "Chaos", he: "כאוס", ru: "Хаос", nl: "Chaos" },
-  turing_preset_waves: { en: "Waves", he: "גלים", ru: "Волны", nl: "Golven" }
+turing_preset_waves: { en: "Waves", he: "גלים", ru: "Волны", nl: "Golven" },
+  
+  // --- START: Added for Spiral Settings ---
+  tooltip_spiral: { en: "Spiral Pattern", he: "ספירלה", ru: "Спираль", nl: "Spiraal" }
+  // --- END: Added for Spiral Settings ---
 
-}; // הסוגר המסולסל עבר לכאן!
+}; 
+
 
 
 export function getCurrentLang() {

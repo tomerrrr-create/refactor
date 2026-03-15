@@ -44,6 +44,34 @@ function closeResizeModal() {
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
+// --- START: Spiral Settings Helper Functions ---
+function closeSpiralSettingsModal() {
+    app.dom.spiralSettingsModal.style.display = 'none';
+    app.dom.spiralSettingsModal.classList.remove('modal-visible');
+    app.resetWasLongPress(); 
+}
+
+function openSpiralSettingsModal() {
+    app.dom.spiralSettingsModal.style.display = 'flex';
+    // השהייה קטנטנה כדי לאפשר לאנימציה לעבוד כמו שצריך
+    setTimeout(() => {
+        app.dom.spiralSettingsModal.classList.add('modal-visible');
+    }, 10);
+    
+    // סימון הכפתור הנכון לפי מה ששמור בהגדרות
+    const currentMethod = app.spiralRules ? app.spiralRules.method : 'classic';
+    app.dom.spiralMethodButtons.forEach(btn => {
+        if (btn.dataset.method === currentMethod) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+// --- END: Spiral Settings Helper Functions ---
+
+
+
 function closeColorPickerModal() {
     app.dom.colorPickerModal.classList.remove('modal-visible');
     app.pointerState.longPressTarget = null;
@@ -988,6 +1016,36 @@ app.dom.btnTuringPresetBoiling.addEventListener('click', (e) => applyTuringPrese
     app.dom.btnTuringPresetWaves.addEventListener('click', (e) => applyTuringPreset('Waves', e.target));
     // --- END: Added for Turing Settings ---
 
+
+// --- START: Added for Spiral Settings ---
+    app.dom.btnSpiralSettingsCancel.addEventListener('click', closeSpiralSettingsModal);
+    
+    // שמירת ההגדרות כשהמשתמש לוחץ 'שמור וסגור'
+    app.dom.btnSpiralSettingsSave.addEventListener('click', () => {
+        const activeBtn = Array.from(app.dom.spiralMethodButtons).find(b => b.classList.contains('active'));
+        if (activeBtn && app.spiralRules) {
+            app.spiralRules.method = activeBtn.dataset.method;
+        }
+        closeSpiralSettingsModal();
+    });
+
+    // שינוי עיצוב הכפתורים כשלוחצים עליהם (איזה מהם פעיל)
+    app.dom.spiralMethodButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            app.dom.spiralMethodButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+        });
+    });
+
+    // סגירת החלון בלחיצה על הרקע השחור מסביב
+    app.dom.spiralSettingsModal.addEventListener('click', (e) => { 
+        if (e.target === app.dom.spiralSettingsModal) closeSpiralSettingsModal(); 
+    });
+    // --- END: Added for Spiral Settings ---
+
+
+
+
     return {
         openResizeModal,
         openColorPickerModal,
@@ -1002,6 +1060,7 @@ openTuringSettingsModal,
         closeModal,
         renderColorPickerContent,
         populateHelpModal,
+openSpiralSettingsModal,
         populatePaletteModal
     };
 }

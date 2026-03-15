@@ -12,6 +12,50 @@ export const PALETTES = [
   colors: ["#000000","#424242","#7B1FA2","#5E35B1","#673AB7","#9C27B0","#C2185B","#E91E63","#FF1744","#C62828","#D32F2F","#3F51B5","#1976D2","#2196F3","#42A5F5","#0097A7","#00BCD4","#4CAF50","#66BB6A","#FF5722","#FFA726","#FFC107","#BDBDBD"]
     },
 
+{
+  originalName: "Behind Eyelids 24",
+  emoji: '🌑✨',
+  colors: [
+    "#000000",     // 0  – שחור מוחלט (רקע בסיסי)
+    "#0a000f",     // 1
+    "#11001a",     // 2
+    "#180024",     // 3
+    "#1f0033",     // 4
+    "#002233",     // 5   כחול-שחור עמוק
+    "#00334d",     // 6
+    "#004466",     // 7
+    "#005577",     // 8   כחול-טורקיז כהה
+    "#1a664d",     // 9   ירוק-כהה עדין
+    "#33664d",     // 10
+    "#4d664d",     // 11  ירוק-אפור-כהה
+    "#66334d",     // 12  מגנטה-סגול כהה
+    "#804d66",     // 13
+    "#996680",     // 14  ורוד-סגול רך
+    "#b28099",     // 15
+    "#cc99b2",     // 16  ורוד בהיר-רך יותר
+    "#e6b2cc",     // 17
+    "#ffcc99",     // 18  כתום-צהוב חלש מאוד
+    "#ffddaa",     // 19
+    "#ffeedd",     // 20  צהוב-קרם עדין
+    "#e6e6ff",     // 21  לבן-כחול-בהיר מאוד
+    "#d9e6ff",     // 22
+    "#cce6ff"      // 23  כחול-לבן קר-בהיר (נקודות זוהרות)
+  ]
+},
+
+
+{
+  originalName: "Behind the Eyelids",
+  emoji: '👁️',
+  colors: [
+    "#000000", "#020204", "#040308", "#06050e", "#080714", "#0a091a", 
+    "#0c0b20", "#100e2b", "#141136", "#191542", "#1e194e", "#241f5a", 
+    "#2a2667", "#312d74", "#393581", "#413d8f", "#4a459d", "#395e8f", 
+    "#297782", "#199174", "#09ab67", "#0ec351", "#4fcc41", "#8fd631", 
+    "#ccde20", "#ffee10", "#ffbf20", "#ff8f30", "#b85c30", "#6b2c2c"
+  ]
+},
+
 
 {
   originalName: "Night Rainbow",
@@ -485,6 +529,12 @@ export const defaultGravitationalSortRules = {
     direction: 'up',
     strength: 0.6
 };
+// --- START: Added for Spiral Settings ---
+export const defaultSpiralRules = {
+    method: 'classic' // אפשרויות: 'classic', 'vortex', 'expand'
+};
+// --- END: Added for Spiral Settings ---
+
 
 export const defaultErosionRules = {
     erosionStrength: 0.1

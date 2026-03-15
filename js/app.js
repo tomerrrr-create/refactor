@@ -293,7 +293,7 @@ tile.v = tile.k;
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
-
+let spiralRules = { ...C.defaultSpiralRules };
 let chiFlowRules = { ...C.defaultChiFlowRules };
       let turingRules = { ...C.defaultTuringRules };
       let dlaState = null;
@@ -935,6 +935,12 @@ case 'brightnessEvo':
                 boardState = nextState; 
                 break;
 
+case 'spiral': 
+                nextState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
+                boardState = nextState; 
+                break;
+
+
 case 'sandpile': 
     nextState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
     boardState = nextState; 
@@ -1012,6 +1018,11 @@ case 'brightnessEvo':
 case 'contour': 
                 boardState = Simulations.runContourGeneration(context); 
                 break;
+
+case 'spiral': 
+                boardState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
+                break;
+
 
 case 'sandpile': 
     boardState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
@@ -1219,7 +1230,8 @@ function armSimulation(simulationName) {
     breatheEvoMode = 'off';
     turingState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     updateBrightnessEvoButtonUI(); // Update UI to reflect the reset
@@ -1467,6 +1479,8 @@ if (btn.id === 'btnColorPicker') {
             if (btn.id === 'btnGameOfLife') { modals.openGolSettingsModal(); return; }
             if (btn.id === 'btnGravitationalSort') { modals.openGravitationalSortSettingsModal(); return; }
             if (btn.id === 'btnContour') { modals.openContourSettingsModal(); return; } // <-- ADDED HERE
+
+if (btn.id === 'btnSpiral') { modals.openSpiralSettingsModal(); return; }
 if (btn.id === 'btnSandpile') { modals.openChiFlowSettingsModal(); return; }
 if (btn.id === 'btnTuring') { modals.openTuringSettingsModal(); return; }
 if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); return; }
@@ -1535,6 +1549,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnErosion.title = getText('tooltip_erosion');
         dom.btnDla.title = getText('tooltip_dla'); 
         dom.btnContour.title = getText('tooltip_contour');
+dom.btnSpiral.title = getText('tooltip_spiral');
 dom.btnTuring.title = getText('tooltip_turing');
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         dom.btnBrushMode.title = isBrushModeOn ? getText('brushMode_paint') : getText('brushMode_copy');
@@ -1605,7 +1620,8 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
         dlaState = null;
 turingState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
         dom.btnPlayPauseLife.disabled = true;
@@ -2098,6 +2114,9 @@ function cycleSortMethod() {
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
 
+spiralRules,
+
+
 getChiFlowRules: () => chiFlowRules, setChiFlowRules: (r) => { chiFlowRules = r; },
 getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
 
@@ -2165,6 +2184,8 @@ dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 
 
 dom.btnContour.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('contour')));
+
+dom.btnSpiral.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('spiral')));
 
 dom.btnSandpile.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('sandpile')));
 

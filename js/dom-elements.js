@@ -40,6 +40,7 @@ export const dom = {
   btnContour: document.getElementById('btnContour'),
 btnSandpile: document.getElementById('btnSandpile'),
 btnTuring: document.getElementById('btnTuring'),
+btnSpiral: document.getElementById('btnSpiral'),
   btnPlayPauseLife: document.getElementById('btnPlayPauseLife'),
   iconPlay: document.getElementById('iconPlay'),
   iconPause: document.getElementById('iconPause'),
@@ -59,8 +60,7 @@ btnTuring: document.getElementById('btnTuring'),
   gameOfLifeSettingsModal: document.getElementById('gameOfLifeSettingsModal'),
   gravitationalSortSettingsModal: document.getElementById('gravitationalSortSettingsModal'),
   contourSettingsModal: document.getElementById('contourSettingsModal'), 
-
-
+spiralSettingsModal: document.getElementById('spiralSettingsModal'),
 
   longPressOverlay: document.getElementById('longPressOverlay'),
   longPressDisplay: document.getElementById('longPressDisplay'),
@@ -185,5 +185,12 @@ btnTuringPresetBoiling: document.getElementById('btnTuringPresetBoiling'),
   btnTuringSettingsSave: document.getElementById('btnTuringSettingsSave'),
   // --- END: Turing Settings Modal Elements ---
 
+// --- START: Spiral Settings Modal Elements ---
+  spiralSettingsTitle: document.getElementById('spiralSettingsTitle'),
+  spiralMethodLabel: document.getElementById('spiralMethodLabel'),
+  spiralMethodButtons: document.querySelectorAll('.spiral-method-btn'),
+  btnSpiralSettingsCancel: document.getElementById('btnSpiralSettingsCancel'),
+  btnSpiralSettingsSave: document.getElementById('btnSpiralSettingsSave'),
+  // --- END: Spiral Settings Modal Elements ---
 
 };
