@@ -59,8 +59,10 @@ function openSpiralSettingsModal() {
     }, 10);
     
     // סימון הכפתור הנכון לפי מה ששמור בהגדרות
-    const currentMethod = app.spiralRules ? app.spiralRules.method : 'classic';
-    app.dom.spiralMethodButtons.forEach(btn => {
+
+const currentMethod = app.spiralRules ? app.spiralRules.method : 'magnet';    app.dom.spiralMethodButtons.forEach(btn => {
+
+
         if (btn.dataset.method === currentMethod) {
             btn.classList.add('active');
         } else {
@@ -258,7 +260,7 @@ updateActiveChiPresetButton();        app.dom.chiFlowSettingsModal.classList.rem
     // --- END: Chi Flow Modal Logic ---
 
 // --- START: Turing Patterns Modal Logic ---
-let tempTuringRules = { feed: 0.055, kill: 0.062, dA: 1.0, dB: 0.5, timeStep: 1.0 };
+let tempTuringRules = { feed: 0.034, kill: 0.056, dA: 1.0, dB: 0.5, timeStep: 1.0 };
 
 
 const TURING_PRESETS = {
@@ -801,10 +803,14 @@ function saveGravitationalSortSettings() {
     }
     newRules.strength = parseInt(app.dom.gsStrengthSlider.value, 10) / 100;
     app.setGravitationalSortRules(newRules);
+    
+    // עדכון: סנכרון האייקון בלוח הבקרה למצב החדש שנבחר
+    if (typeof app.syncGsModeFromModal === 'function') {
+        app.syncGsModeFromModal(newRules.direction);
+    }
+    
     closeGravitationalSortSettingsModal();
 }
-
-
 // --- START: Added for Contour Settings ---
 function openContourSettingsModal() {
     if (app.isBreathing() || app.isLifePlaying()) return;
@@ -1020,14 +1026,23 @@ app.dom.btnTuringPresetBoiling.addEventListener('click', (e) => applyTuringPrese
 // --- START: Added for Spiral Settings ---
     app.dom.btnSpiralSettingsCancel.addEventListener('click', closeSpiralSettingsModal);
     
-    // שמירת ההגדרות כשהמשתמש לוחץ 'שמור וסגור'
+
+
+
+// שמירת ההגדרות כשהמשתמש לוחץ 'שמור וסגור'
     app.dom.btnSpiralSettingsSave.addEventListener('click', () => {
         const activeBtn = Array.from(app.dom.spiralMethodButtons).find(b => b.classList.contains('active'));
         if (activeBtn && app.spiralRules) {
             app.spiralRules.method = activeBtn.dataset.method;
+            
+            // עדכון: סנכרון האייקון בלוח הבקרה למצב החדש שנבחר בספירלה
+            if (typeof app.syncSpiralModeFromModal === 'function') {
+                app.syncSpiralModeFromModal(activeBtn.dataset.method);
+            }
         }
         closeSpiralSettingsModal();
     });
+
 
     // שינוי עיצוב הכפתורים כשלוחצים עליהם (איזה מהם פעיל)
     app.dom.spiralMethodButtons.forEach(btn => {
