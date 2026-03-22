@@ -41,6 +41,7 @@ export const dom = {
 btnSandpile: document.getElementById('btnSandpile'),
 btnTuring: document.getElementById('btnTuring'),
 btnSpiral: document.getElementById('btnSpiral'),
+btnMagnetModes: document.getElementById('btnMagnetModes'),
   btnPlayPauseLife: document.getElementById('btnPlayPauseLife'),
   iconPlay: document.getElementById('iconPlay'),
   iconPause: document.getElementById('iconPause'),

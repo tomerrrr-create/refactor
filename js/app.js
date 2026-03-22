@@ -294,6 +294,7 @@ tile.v = tile.k;
       let dlaRules = { ...C.defaultDlaRules };
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
+let magnetRules = { ...C.defaultMagnetRules };
 let chiFlowRules = { ...C.defaultChiFlowRules };
       let turingRules = { ...C.defaultTuringRules };
       let dlaState = null;
@@ -323,6 +324,7 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
+let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
       // breatheEvoMode is defined at the top
@@ -942,7 +944,10 @@ case 'spiral':
                 nextState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
                 boardState = nextState; 
                 break;
-
+case 'magnet': 
+    nextState = Simulations.runMagnetGeneration({ ...context, magnetRules }); 
+    boardState = nextState; 
+    break;
 
 case 'sandpile': 
     nextState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
@@ -1026,6 +1031,9 @@ case 'spiral':
                 boardState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
                 break;
 
+case 'magnet': 
+    boardState = Simulations.runMagnetGeneration({ ...context, magnetRules }); 
+    break;
 
 case 'sandpile': 
     boardState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
@@ -1235,8 +1243,10 @@ function armSimulation(simulationName) {
     turingState = null;
     gsMode = 'off'; // איפוס הגרביטציה
     spiralMode = 'off'; // איפוס הספירלה (התיקון לבאג)
+magnetMode = 'off';
+if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
-    const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     
@@ -1272,9 +1282,15 @@ function armSimulation(simulationName) {
         }
 
 if (simulationName === 'spiral') {
-            spiralMode = 'magnet';
-            if (typeof spiralRules !== 'undefined') spiralRules.method = 'magnet';
-        }
+    spiralMode = 'b';
+    if (typeof spiralRules !== 'undefined') spiralRules.method = 'b';
+}
+
+
+if (simulationName === 'magnet') {
+    magnetMode = 'magnet';
+    if (typeof magnetRules !== 'undefined') magnetRules.method = 'magnet';
+}
 
 
         // צביעת הכפתור הנבחר במסגרת פעילה (זהב)
@@ -1642,7 +1658,7 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
         dlaState = null;
 turingState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
@@ -1657,6 +1673,8 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     updateBreatheEvoButtonUI();
 spiralMode = 'off';
     updateSpiralButtonUI();
+magnetMode = 'off';
+    if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
 gsMode = 'off';
     updateGravitationalSortButtonUI();
@@ -2129,7 +2147,8 @@ function cycleBreatheEvoMode() {
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
 
-dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'simulation-active');
+dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'simulation-active');
+
 
 
 
@@ -2143,7 +2162,8 @@ dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mo
 
 function cycleSpiralMode() {
     const oldMode = spiralMode;
-const sequence = ['off', 'magnet', 'b', 'vortex', 'classic', 'expand', 'a'];
+const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
+
 
     const currentIndex = sequence.indexOf(spiralMode);
     const nextIndex = (currentIndex + 1) % sequence.length;
@@ -2164,6 +2184,42 @@ const sequence = ['off', 'magnet', 'b', 'vortex', 'classic', 'expand', 'a'];
     updateSpiralButtonUI();
 }
 // --- END: Spiral Functions ---
+
+// --- NEW: Magnet Button Functions ---
+function updateMagnetButtonUI() {
+    if (!dom.btnMagnetModes) return;
+    dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'simulation-active');
+    if (magnetMode !== 'off') {
+        dom.btnMagnetModes.classList.add('mode-' + magnetMode);
+        if (armedSimulation === 'magnet') {
+             dom.btnMagnetModes.classList.add('simulation-active');
+        }
+    }
+}
+
+function cycleMagnetMode() {
+    const oldMode = magnetMode;
+    const sequence = ['off', 'magnet', 'cosmic_magnet'];
+    const currentIndex = sequence.indexOf(magnetMode);
+    const nextIndex = (currentIndex + 1) % sequence.length;
+    magnetMode = sequence[nextIndex];
+
+    if (magnetMode !== 'off') {
+        magnetRules.method = magnetMode;
+    }
+
+    if (oldMode === 'off' && magnetMode !== 'off') {
+        armSimulation('magnet');
+    } else if (oldMode !== 'off' && magnetMode === 'off') {
+        if (armedSimulation === 'magnet') {
+            armSimulation(null);
+        }
+    }
+    
+    updateMagnetButtonUI();
+}
+// --- END: Magnet Button Functions ---
+
 
 
       function cycleSymmetryMode() {
@@ -2308,6 +2364,11 @@ dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 dom.btnContour.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('contour')));
 
 dom.btnSpiral.addEventListener('click', (e) => handleCtrlClick(e, cycleSpiralMode));
+if (dom.btnMagnetModes) {
+    dom.btnMagnetModes.addEventListener('click', (e) => handleCtrlClick(e, cycleMagnetMode));
+}
+
+
 
 dom.btnSandpile.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('sandpile')));
 

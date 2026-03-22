@@ -49,7 +49,7 @@
       <div id="controlsContainer" class="mt-11" aria-label="Control buttons">
  <div id="simModeBackground"></div>   
        
-<button id="btnShowBreatheMenu" class="ctrl">
+<button id="btnShowBreatheMenu" class="ctrl" style="display: none !important;">
     <svg id="iconBreatheSolo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 12 C3 6 9 6 12 12 S 15 18 21 12"></path>
     </svg>
@@ -181,17 +181,11 @@
           </button>
 
 
-
 <button id="btnSandpile" class="ctrl">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 19 V 12 
-             M12 12 Q 9 9 7.5 5.5 
-             M12 12 Q 15 9 16.5 5.5 
-             M9.5 8.5 Q 11 6 10 4 
-             M14.5 8.5 Q 13 6 14 4" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+    <path d="M3 12 C3 6 9 6 12 12 S 15 18 21 12"></path>
   </svg>
 </button>
-
 
 <button id="btnTuring" class="ctrl">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -259,7 +253,33 @@
                 <circle cx="15.5" cy="11" r="1.2" fill="currentColor" stroke="none"></circle>
                 <path stroke-width="1.0" d="M 8.5 7.5 Q 12 4.5 15.5 7.5"></path>
                 <path stroke-width="1.0" d="M 6.5 5 Q 12 1 17.5 5"></path>
+         
+</svg>
+
+<svg id="iconSpiralCosmicMagnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <path stroke-width="1.5" d="M4 20 L8 6 L12 16 L16 6 L20 20"></path>
             </svg>
+
+<svg id="iconSpiralTimeMagnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <circle cx="12" cy="12" r="9" stroke-width="1.2"></circle>
+                <polyline points="12 7 12 12 15 15" stroke-width="1.2"></polyline>
+            </svg>
+
+
+</button>
+
+
+<button id="btnMagnetModes" class="ctrl">
+    <svg id="iconModeMagnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke-width="1.8" d="M6 10v4a6 6 0 0 0 12 0v-4" />
+        <path stroke-width="1.8" d="M6 10V5h4v5" />
+        <path stroke-width="1.8" d="M18 10V5h-4v5" />
+    </svg>
+<svg id="iconModeCosmicMagnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+        <path stroke-width="1.8" d="M 6 5 L 6 20 L 18 20 L 18 5 L 14 5 L 14 16 L 10 16 L 10 5 Z" />
+        <line x1="6" y1="10" x2="10" y2="10" stroke-width="1.8" />
+        <line x1="14" y1="10" x2="18" y2="10" stroke-width="1.8" />
+    </svg>
 </button>
 
 
@@ -524,12 +544,16 @@
     <div class="flex flex-col gap-2">
       <h3 id="spiralMethodLabel" class="font-semibold text-gray-300 text-center">שיטת סיבוב</h3>
       <div class="flex items-center justify-center gap-4 mt-2">
-        <button class="gol-preset-btn spiral-method-btn active" data-method="classic">קלאסית</button>
+
+<button class="gol-preset-btn spiral-method-btn active" data-method="classic">קלאסית</button>
         <button class="gol-preset-btn spiral-method-btn" data-method="vortex">מערבולת</button>
         <button class="gol-preset-btn spiral-method-btn" data-method="expand">התרחבות</button>
-<button class="gol-preset-btn spiral-method-btn" data-method="a">ניסוי A</button>
+        <button class="gol-preset-btn spiral-method-btn" data-method="time_magnet">מגנט זמן</button>
+        <button class="gol-preset-btn spiral-method-btn" data-method="a">ניסוי A</button>
         <button class="gol-preset-btn spiral-method-btn" data-method="b">ניסוי B</button>
-<button class="gol-preset-btn spiral-method-btn" data-method="magnet">מגנט</button>
+        <button class="gol-preset-btn spiral-method-btn" data-method="magnet">מגנט</button>
+        <button class="gol-preset-btn spiral-method-btn" data-method="cosmic_magnet">מגנט קוסמי</button>
+
       </div>
     </div>
 

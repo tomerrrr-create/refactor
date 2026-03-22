@@ -458,8 +458,15 @@ export const defaultGravitationalSortRules = {
 
 // --- START: Added for Spiral Settings ---
 export const defaultSpiralRules = {
+    method: 'b'
+};
+
+
+// --- START: Magnet Settings ---
+export const defaultMagnetRules = {
     method: 'magnet'
-};// --- END: Added for Spiral Settings ---
+};
+// --- END: Magnet Settings ---
 
 
 export const defaultErosionRules = {

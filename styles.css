@@ -191,6 +191,7 @@ body {
 #btnSandpile,
 #btnTuring, 
 #btnSpiral,
+#btnMagnetModes,
 #btnNudgeBrighter,
 #btnNudgeDarker,
 #btnCycleSort {
@@ -253,7 +254,7 @@ body {
 }
 .sim-mode-active #simModeBackground {
   display: block;
-  grid-column: 3 / span 5; 
+  grid-column: 3 / 8; 
   grid-row: 2 / span 2;    
   background: linear-gradient(to bottom, #0f172a, #000000);
   border-radius: 12px;
@@ -269,11 +270,14 @@ body {
 .sim-mode-active #btnResetBoard,
 .sim-mode-active #btnTutorial,
 .sim-mode-active #btnSpecialReset,
-.sim-mode-active #btnDark {
+.sim-mode-active #btnDark,
+.sim-mode-active #btnResizeUp,
+.sim-mode-active #btnResizeDown {
   display: none;
 }
 
 .sim-mode-active #btnGameOfLife,
+.sim-mode-active #btnMagnetModes,
 .sim-mode-active #btnBrightnessEvo,
 .sim-mode-active #btnShowBreatheMenu,
 .sim-mode-active #btnGravitationalSort,
@@ -295,32 +299,36 @@ body {
 }
 
 
+
+
 /* Left Panel (Col 1) */
 .sim-mode-active #btnColorPicker   { grid-area: 1 / 1; }
-.sim-mode-active #btnNudgeBrighter { grid-area: 2 / 1; }
-.sim-mode-active #btnResizeDown    { grid-area: 3 / 1; }
 .sim-mode-active #btnRedo          { grid-area: 4 / 1; }
 
-/* Center Panel (Cols 3, 4, 5, 6, 7) */
+/* Center Panel (Cols 3, 4, 5, 6, 7) & Edges */
 
 /* שורה 1 - ניווט ושליטה */
 .sim-mode-active #btnStepForward   { display: inline-flex; grid-area: 1 / 4; } 
 .sim-mode-active #btnPalette       { grid-area: 1 / 5; }                      
 .sim-mode-active #btnPlayPauseLife { grid-area: 1 / 6; }                      
 
-/* שורה 2 - (בתוך הרקע הכחול) */
-.sim-mode-active #btnContour       { grid-area: 2 / 4; }
-.sim-mode-active #btnTuring        { grid-area: 2 / 3; } 
-.sim-mode-active #btnDla           { grid-area: 2 / 5; }
-.sim-mode-active #btnBrightnessEvo { grid-area: 2 / 6; }
-.sim-mode-active #btnSpiral        { grid-area: 2 / 7; }
+/* שורה 2 - (משמאל לימין) */
+/* המקום השמאלי (עמודה 1) ריק בכוונה */
+.sim-mode-active #btnContour           { grid-area: 2 / 3; }
+.sim-mode-active #btnDla               { grid-area: 2 / 4; }
+.sim-mode-active #btnGameOfLife        { grid-area: 2 / 5; }
+.sim-mode-active #btnTuring            { grid-area: 2 / 6; }
+.sim-mode-active #btnBrightnessEvo     { grid-area: 2 / 7; }
+.sim-mode-active #btnShowBreatheMenu   { grid-area: 2 / 9; }
 
-/* שורה 3 - (בתוך הרקע הכחול) */
-.sim-mode-active #btnSandpile      { grid-area: 3 / 3; } 
-.sim-mode-active #btnGravitationalSort { grid-area: 3 / 4; } 
-.sim-mode-active #btnGameOfLife    { grid-area: 3 / 5; } 
-.sim-mode-active #btnErosion       { grid-area: 3 / 6; }
-.sim-mode-active #btnShowBreatheMenu { grid-area: 3 / 7; }
+/* שורה 3 - (משמאל לימין) */
+.sim-mode-active #btnNudgeBrighter     { grid-area: 3 / 1; }
+.sim-mode-active #btnErosion           { grid-area: 3 / 3; }
+.sim-mode-active #btnGravitationalSort { grid-area: 3 / 4; }
+.sim-mode-active #btnMagnetModes       { grid-area: 3 / 5; }
+.sim-mode-active #btnSpiral            { grid-area: 3 / 6; }
+.sim-mode-active #btnSandpile          { grid-area: 3 / 7; }
+.sim-mode-active #btnNudgeDarker       { grid-area: 3 / 9; }
 
 /* שורה 4 - כפתורי מערכת (מתחת לרקע) */
 .sim-mode-active #btnSave          { display: inline-flex; grid-area: 4 / 3; }
@@ -329,14 +337,9 @@ body {
 .sim-mode-active #btnRandom        { display: inline-flex; grid-area: 4 / 6; }
 .sim-mode-active #btnCycleSort     { display: inline-flex; grid-area: 4 / 7; }
 
-
 /* Right Panel (Col 9) */
 .sim-mode-active #btnSymmetry      { grid-area: 1 / 9; }
-.sim-mode-active #btnNudgeDarker   { grid-area: 2 / 9; }
-.sim-mode-active #btnResizeUp      { grid-area: 3 / 9; }
 .sim-mode-active #btnUndo          { grid-area: 4 / 9; }
-
-
 
 #btnBrushMode svg path {
     transition: fill 0.2s ease-in-out;
@@ -660,6 +663,7 @@ body {
 }
 
 #btnGameOfLife.simulation-active svg,
+#btnMagnetModes.simulation-active svg,
 #btnBrightnessEvo.simulation-active svg,
 #btnShowBreatheMenu.simulation-active svg,
 #btnGravitationalSort.simulation-active svg,
@@ -784,6 +788,7 @@ body {
 
 /* --- Custom Simulation Button Color --- */
 #btnGameOfLife svg,
+#btnMagnetModes svg,
 #btnBrightnessEvo svg,
 #btnGravitationalSort svg,
 #btnErosion svg,
@@ -1059,6 +1064,11 @@ body {
 
 
 /* --- Spiral Button States --- */
+
+/* אייקון ברירת מחדל לספירלה (מצב כבוי) */
+#btnSpiral:not([class*="mode-"]) svg { display: none !important; }
+#btnSpiral:not([class*="mode-"]) #iconSpiralB { display: block !important; }
+
 #btnSpiral.mode-classic #iconSpiralClassic { display: block !important; }
 #btnSpiral.mode-classic svg:not(#iconSpiralClassic) { display: none !important; }
 
@@ -1074,4 +1084,24 @@ body {
 #btnSpiral.mode-b svg:not(#iconSpiralB) { display: none !important; }
 
 #btnSpiral.mode-magnet #iconSpiralMagnet { display: block !important; }
+
+
 #btnSpiral.mode-magnet svg:not(#iconSpiralMagnet) { display: none !important; }
+
+
+
+#btnSpiral.mode-cosmic_magnet #iconSpiralCosmicMagnet { display: block !important; }
+#btnSpiral.mode-cosmic_magnet svg:not(#iconSpiralCosmicMagnet) { display: none !important; }
+
+#btnSpiral.mode-time_magnet #iconSpiralTimeMagnet { display: block !important; }
+#btnSpiral.mode-time_magnet svg:not(#iconSpiralTimeMagnet) { display: none !important; }
+
+/* --- Magnet Modes Button States --- */
+#btnMagnetModes.mode-magnet #iconModeMagnet { display: block !important; }
+#btnMagnetModes.mode-magnet svg:not(#iconModeMagnet) { display: none !important; }
+
+#btnMagnetModes.mode-cosmic_magnet #iconModeCosmicMagnet { display: block !important; }
+#btnMagnetModes.mode-cosmic_magnet svg:not(#iconModeCosmicMagnet) { display: none !important; }
+
+
+
