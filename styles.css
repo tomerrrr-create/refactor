@@ -181,6 +181,7 @@ body {
     border-radius: 50%;
 }
 
+
 #btnGameOfLife,
 #btnBrightnessEvo,
 #btnShowBreatheMenu,
@@ -199,7 +200,9 @@ body {
     pointer-events: none;
     visibility: hidden;
     transform: scale(0.5);
+    display: none;
 }
+
 
 /* --- Default Layout --- */
 /* Left Panel */
@@ -276,6 +279,8 @@ body {
   display: none;
 }
 
+
+
 .sim-mode-active #btnGameOfLife,
 .sim-mode-active #btnMagnetModes,
 .sim-mode-active #btnBrightnessEvo,
@@ -289,13 +294,13 @@ body {
 .sim-mode-active #btnSpiral,
 .sim-mode-active #btnNudgeBrighter,
 .sim-mode-active #btnNudgeDarker,
-.sim-mode-active #btnSandpile,
 .sim-mode-active #btnRandom,
 .sim-mode-active #btnCycleSort {
     opacity: 1;
     pointer-events: auto;
     visibility: visible;
     transform: scale(1);
+    display: inline-flex;
 }
 
 

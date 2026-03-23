@@ -1068,7 +1068,7 @@ break;
         });
       }
       
-      function pauseLife() {
+function pauseLife() {
           if (!isLifePlaying) return;
           isLifePlaying = false;
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
@@ -1086,33 +1086,43 @@ break;
           dom.iconPlay.style.display = 'block';
           dom.iconPause.style.display = 'none';
           if (armedSimulation && armedSimulation !== 'breathe') dom.btnStepForward.disabled = false;
-          dom.btnGameOfLife.disabled = false;
-          dom.btnBrightnessEvo.disabled = false;
-          dom.btnShowBreatheMenu.disabled = false;
-          dom.btnGravitationalSort.disabled = false;
-          dom.btnErosion.disabled = false;
-          dom.btnDla.disabled = false;
-dom.btnContour.disabled = false;
- dom.btnSandpile.disabled = false;     
-}
+          
+          // מחזירים לפעולה את כל כפתורי הסימולציה
+          const simButtons = [
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, 
+              dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
+              dom.btnContour, dom.btnSandpile, dom.btnTuring, 
+              dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
+          ].filter(Boolean);
+          
+          simButtons.forEach(btn => btn.disabled = false);
+      }
+
+
 
       
-      function togglePlayPauseLife() {
+function togglePlayPauseLife() {
           if (isLifePlaying) {
               pauseLife();
               return;
           }
           if (!armedSimulation) return;
 
+          // רשימת כל כפתורי הסימולציה
+          const simButtons = [
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, 
+              dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
+              dom.btnContour, dom.btnSandpile, dom.btnTuring, 
+              dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
+          ].filter(Boolean);
+
           // --- Handle Breathe Simulation (uses animationLoop) ---
           if (armedSimulation === 'breathe') {
-
-
-const BREATHE_SPEED = 0.0015;
-            const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;            boardState.forEach(tile => {
-                tile.startDelay = Math.random() * cycleDuration; 
-            });
-
+              const BREATHE_SPEED = 0.0015;
+              const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;            
+              boardState.forEach(tile => {
+                  tile.startDelay = Math.random() * cycleDuration; 
+              });
 
               breatheStartTime = performance.now();
               isLifePlaying = true;
@@ -1120,15 +1130,15 @@ const BREATHE_SPEED = 0.0015;
               dom.iconPlay.style.display = 'none';
               dom.iconPause.style.display = 'block';
               dom.btnStepForward.disabled = true;
-              dom.btnGameOfLife.disabled = true;
-              dom.btnBrightnessEvo.disabled = true;
-              dom.btnShowBreatheMenu.disabled = true;
-              dom.btnGravitationalSort.disabled = true;
-              dom.btnErosion.disabled = true;
-              dom.btnDla.disabled = true;
-     dom.btnContour.disabled = true;         
-            dom.btnSandpile.disabled = true;
-  startAnimationLoop(); // Start the smooth animation loop
+              
+              // מכבים את כל הכפתורים למעט הכפתור של הנשימה
+              simButtons.forEach(btn => {
+                  if (btn.id !== 'btnShowBreatheMenu') {
+                      btn.disabled = true;
+                  }
+              });
+
+              startAnimationLoop(); // Start the smooth animation loop
               return; // Exit here, don't start gameLoop
           }
 
@@ -1143,16 +1153,17 @@ const BREATHE_SPEED = 0.0015;
           dom.iconPlay.style.display = 'none';
           dom.iconPause.style.display = 'block';
           dom.btnStepForward.disabled = true;
-dom.btnGameOfLife.disabled = true;
-          dom.btnBrightnessEvo.disabled = true;
-          dom.btnShowBreatheMenu.disabled = true;
-          dom.btnGravitationalSort.disabled = true;
-          dom.btnErosion.disabled = true;
-          dom.btnDla.disabled = true;
-          dom.btnContour.disabled = true;
-          dom.btnSandpile.disabled = true;
+          
+          // מכבים את כל הכפתורים למעט הכפתור של הסימולציה הפעילה!
+          simButtons.forEach(btn => {
+              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase())) {
+                  btn.disabled = true;
+              }
+          });
+
           gameLoop();
       }
+
       
       function getRandomGridPosition(n) {
         return { y: Math.floor(Math.random() * n), x: Math.floor(Math.random() * n) };
