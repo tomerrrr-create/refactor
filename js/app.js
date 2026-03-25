@@ -2084,7 +2084,16 @@ function updateGravitationalSortButtonUI() {
 
 function cycleGravitationalSortMode() {
     const oldMode = gsMode;
-    const sequence = ['off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'];
+    const sequence = ['off', 'up', 'right', 'center_x', 'radial', 'down', 'left',  'vortex'];
+
+
+
+ //   const sequence = ['off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'];
+
+
+
+
+
     const currentIndex = sequence.indexOf(gsMode);
     const nextIndex = (currentIndex + 1) % sequence.length;
     gsMode = sequence[nextIndex];
@@ -2173,7 +2182,13 @@ dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mo
 
 function cycleSpiralMode() {
     const oldMode = spiralMode;
-const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
+const sequence = ['off', 'b', 'vortex', 'a'];
+
+
+
+
+// original with all button
+// const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
 
 
     const currentIndex = sequence.indexOf(spiralMode);

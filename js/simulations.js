@@ -1973,25 +1973,30 @@ for (let col = 0; col < n; col++) {
 
 
 // --- START: Magnet Simulation (Independent Domain) ---
+// משתנים גלובליים ברמת המודול - ממוחזרים בכל פריים כדי לא להעמיס על ה-Garbage Collector במובייל
+const cachedAnchors = [];
+let cachedMovedThisFrame = new Uint8Array(0);
+
 export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
     const nextBoardState = currentBoardState.map(tile => ({ ...tile }));
     const method = magnetRules.method || 'magnet';
     const strength = 0.9; 
 
+    // מכיוון שהלוגיקה של שני המצבים זהה כרגע, איחדנו אותם כדי למנוע כפילות.
+    // תוכל לפצל אותם בעתיד אם תרצה ליצור תנועה שונה ל-cosmic_magnet.
     switch (method) {
-        case 'magnet': {
+        case 'magnet':
+        case 'cosmic_magnet': {
 
+            // 1. מיחזור מערך העוגנים: מאפסים את האורך במקום ליצור [] חדש
+            cachedAnchors.length = 0;
 
-
-// 1. איסוף "חורים שחורים" שהם *רק* בהיקף הציור (נוגעים בצבע)
-            let anchors = [];
             for (let i = 0; i < n * n; i++) {
                 if (nextBoardState[i].k === 0 && !nextBoardState[i].isGold) {
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
 
-                    // בדיקת 8 השכנים מסביב לפיקסל השחור
                     for (let dr = -1; dr <= 1; dr++) {
                         for (let dc = -1; dc <= 1; dc++) {
                             if (dr === 0 && dc === 0) continue;
@@ -1999,7 +2004,6 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                // אם אחד השכנים הוא צבעוני (אינדקס גדול מ-0), הפיקסל הזה הוא קצה!
                                 if (nextBoardState[nr * n + nc].k > 0) {
                                     isEdge = true;
                                     break;
@@ -2009,66 +2013,62 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
                         if (isEdge) break;
                     }
 
-                    // נוסיף אותו לרשימת המגנטים רק אם הוא קצה
                     if (isEdge) {
-                        anchors.push({ r, c });
+                        cachedAnchors.push({ r, c });
                     }
                 }
             }
 
-            // חוק אפס כבידה: אם אין עוגנים שחורים, המתנה
-            if (anchors.length === 0) break;
+            if (cachedAnchors.length === 0) break;
 
-            // העלינו את המגבלה מ-100 ל-300 כי עכשיו אנחנו חוסכים המון פיקסלים שחורים פנימיים!
-            if (anchors.length > 300) {
-                const step = Math.ceil(anchors.length / 300);
-                const sampledAnchors = [];
-                for (let i = 0; i < anchors.length; i += step) {
-                    sampledAnchors.push(anchors[i]);
+            // ביצוע Sampling על המערך הממוחזר עצמו (ללא יצירת מערכים חדשים)
+            if (cachedAnchors.length > 300) {
+                const step = Math.ceil(cachedAnchors.length / 300);
+                let writeIndex = 0;
+                for (let i = 0; i < cachedAnchors.length; i += step) {
+                    cachedAnchors[writeIndex++] = cachedAnchors[i];
                 }
-                anchors = sampledAnchors;
+                cachedAnchors.length = writeIndex; // חיתוך המערך לאורך החדש
             }
 
-            const movedThisFrame = new Set();
+            // 2. שימוש ב-Typed Array במקום Set: מהיר פי כמה ולא דורש Hashing.
+            // מתאים את הגודל ללוח רק אם הלוח השתנה, אחרת מנקה אותו ביעילות
+            if (cachedMovedThisFrame.length !== n * n) {
+                cachedMovedThisFrame = new Uint8Array(n * n);
+            } else {
+                cachedMovedThisFrame.fill(0);
+            }
 
-            // סריקת כל הלוח
             for (let row = 0; row < n; row++) {
                 for (let col = 0; col < n; col++) {
                     const i = row * n + col;
                     
-                    if (movedThisFrame.has(i)) continue;
+                    if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    
-                    // העוגנים עצמם קפואים במקום - הם רק מושכים, לא זזים
                     if (nextBoardState[i].k === 0) continue; 
 
-                    // 2. חיפוש העוגן הקרוב ביותר לפיקסל הנוכחי
                     let minDist = Infinity;
                     let targetR = row;
                     let targetC = col;
 
-                    for (let a = 0; a < anchors.length; a++) {
-                        const dr = anchors[a].r - row;
-                        const dc = anchors[a].c - col;
-                        const distSq = dr * dr + dc * dc; // משתמשים במרחק בריבוע כדי לחסוך פונקציית שורש יקרה למעבד
+                    for (let a = 0; a < cachedAnchors.length; a++) {
+                        // 3. החלפת Math.pow בכפל פשוט - הבדל תהומי במובייל
+                        const dr = cachedAnchors[a].r - row;
+                        const dc = cachedAnchors[a].c - col;
+                        const distSq = (dr * dr) + (dc * dc); 
                         
                         if (distSq < minDist) {
                             minDist = distSq;
-                            targetR = anchors[a].r;
-                            targetC = anchors[a].c;
+                            targetR = cachedAnchors[a].r;
+                            targetC = cachedAnchors[a].c;
                         }
                     }
 
-
-
-
-
-
-// 3. תנועה חכמה וסופר-מהירה: "עקיפת פקקים" ללא מערכים וללא מיון!
                     if (minDist > 0 && minDist !== Infinity) {
-                        const currentDistSq = Math.pow(targetR - row, 2) + Math.pow(targetC - col, 2); // המרחק הנוכחי שלי
+                        const tr_row = targetR - row;
+                        const tc_col = targetC - col;
+                        const currentDistSq = (tr_row * tr_row) + (tc_col * tc_col);
 
-                        // במקום לייצר מערך, שומרים 3 משתנים פשוטים ל-3 השכנים הטובים ביותר
                         let b1Dist = Infinity, b1Nr = -1, b1Nc = -1;
                         let b2Dist = Infinity, b2Nr = -1, b2Nc = -1;
                         let b3Dist = Infinity, b3Nr = -1, b3Nc = -1;
@@ -2078,32 +2078,32 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
                             {dr: -1, dc: -1}, {dr: -1, dc: 1}, {dr: 1, dc: -1}, {dr: 1, dc: 1}
                         ];
 
-                        // סורקים את השכנים ומעדכנים את המשתנים מיד (מיון "על המקום" ללא עומס זיכרון)
-                        for (const {dr, dc} of neighbors) {
-                            const nr = row + dr;
-                            const nc = col + dc;
+                        for (let idx = 0; idx < neighbors.length; idx++) {
+                            const n_dr = neighbors[idx].dr;
+                            const n_dc = neighbors[idx].dc;
+                            const nr = row + n_dr;
+                            const nc = col + n_dc;
+                            
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                const neighborDistSq = Math.pow(targetR - nr, 2) + Math.pow(targetC - nc, 2);
+                                const tr_nr = targetR - nr;
+                                const tc_nc = targetC - nc;
+                                const neighborDistSq = (tr_nr * tr_nr) + (tc_nc * tc_nc);
                                 
                                 if (neighborDistSq < currentDistSq) {
                                     if (neighborDistSq < b1Dist) {
-                                        // דוחפים את הקודמים למטה ומעדכנים את המקום הראשון
                                         b3Dist = b2Dist; b3Nr = b2Nr; b3Nc = b2Nc;
                                         b2Dist = b1Dist; b2Nr = b1Nr; b2Nc = b1Nc;
                                         b1Dist = neighborDistSq; b1Nr = nr; b1Nc = nc;
                                     } else if (neighborDistSq < b2Dist) {
-                                        // מעדכנים את המקום השני
                                         b3Dist = b2Dist; b3Nr = b2Nr; b3Nc = b2Nc;
                                         b2Dist = neighborDistSq; b2Nr = nr; b2Nc = nc;
                                     } else if (neighborDistSq < b3Dist) {
-                                        // מעדכנים את המקום השלישי
                                         b3Dist = neighborDistSq; b3Nr = nr; b3Nc = nc;
                                     }
                                 }
                             }
                         }
 
-                        // 4. תנועה: ננסה את 3 האופציות לפי הסדר, בהסתברות של 80%
                         if (b1Dist !== Infinity && Math.random() < 0.8) {
                             const options = [
                                 { nr: b1Nr, nc: b1Nc },
@@ -2113,165 +2113,32 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
 
                             for (let attempt = 0; attempt < 3; attempt++) {
                                 const opt = options[attempt];
-                                if (opt.nr === -1) continue; // לא מצאנו שכן במקום ה-2 או ה-3
+                                if (opt.nr === -1) continue; 
 
                                 const target_i = opt.nr * n + opt.nc;
                                 
-                                // בדיקת הפקק שלנו: האם פנוי ויכול לזוז?
                                 if (!nextBoardState[target_i].isGold &&
                                     nextBoardState[i].k < nextBoardState[target_i].k && 
-                                    !movedThisFrame.has(target_i)) {
+                                    cachedMovedThisFrame[target_i] === 0) {
                                     
-                                    // החלפה!
-                                    [nextBoardState[i], nextBoardState[target_i]] = [nextBoardState[target_i], nextBoardState[i]];
+                                    // 4. החלפה עם משתנה זמני במקום [a, b] = [b, a] המייצר מערך ונזרק לפח
+                                    const tempTile = nextBoardState[i];
+                                    nextBoardState[i] = nextBoardState[target_i];
+                                    nextBoardState[target_i] = tempTile;
                                     
-                                    movedThisFrame.add(i);
-                                    movedThisFrame.add(target_i);
+                                    cachedMovedThisFrame[i] = 1;
+                                    cachedMovedThisFrame[target_i] = 1;
                                     
-                                    break; // הצלחנו לעקוף! עוצרים חיפושים ויוצאים
-                                }
-                            }
-                        }
-                    }
-                }
-            }
- 
-            break;
-        }
-
-        case 'cosmic_magnet': {
-
-
-
-// 1. איסוף "חורים שחורים" שהם *רק* בהיקף הציור (נוגעים בצבע)
-            let anchors = [];
-            for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === 0 && !nextBoardState[i].isGold) {
-                    const r = Math.floor(i / n);
-                    const c = i % n;
-                    let isEdge = false;
-
-                    // בדיקת 8 השכנים מסביב לפיקסל השחור
-                    for (let dr = -1; dr <= 1; dr++) {
-                        for (let dc = -1; dc <= 1; dc++) {
-                            if (dr === 0 && dc === 0) continue;
-                            const nr = r + dr;
-                            const nc = c + dc;
-                            
-                            if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                // אם אחד השכנים הוא צבעוני (אינדקס גדול מ-0), הפיקסל הזה הוא קצה!
-                                if (nextBoardState[nr * n + nc].k > 0) {
-                                    isEdge = true;
                                     break;
                                 }
                             }
                         }
-                        if (isEdge) break;
-                    }
-
-                    // נוסיף אותו לרשימת המגנטים רק אם הוא קצה
-                    if (isEdge) {
-                        anchors.push({ r, c });
                     }
                 }
             }
-
-            // חוק אפס כבידה: אם אין עוגנים שחורים, המתנה
-            if (anchors.length === 0) break;
-
-            // העלינו את המגבלה מ-100 ל-300 כי עכשיו אנחנו חוסכים המון פיקסלים שחורים פנימיים!
-            if (anchors.length > 300) {
-                const step = Math.ceil(anchors.length / 300);
-                const sampledAnchors = [];
-                for (let i = 0; i < anchors.length; i += step) {
-                    sampledAnchors.push(anchors[i]);
-                }
-                anchors = sampledAnchors;
-            }
-
-            const movedThisFrame = new Set();
-
-            // סריקת כל הלוח
-            for (let row = 0; row < n; row++) {
-                for (let col = 0; col < n; col++) {
-                    const i = row * n + col;
-                    
-                    if (movedThisFrame.has(i)) continue;
-                    if (nextBoardState[i].isGold) continue;
-                    
-                    // העוגנים עצמם קפואים במקום - הם רק מושכים, לא זזים
-                    if (nextBoardState[i].k === 0) continue; 
-
-                    // 2. חיפוש העוגן הקרוב ביותר לפיקסל הנוכחי
-                    let minDist = Infinity;
-                    let targetR = row;
-                    let targetC = col;
-
-                    for (let a = 0; a < anchors.length; a++) {
-                        const dr = anchors[a].r - row;
-                        const dc = anchors[a].c - col;
-                        const distSq = dr * dr + dc * dc; // משתמשים במרחק בריבוע כדי לחסוך פונקציית שורש יקרה למעבד
-                        
-                        if (distSq < minDist) {
-                            minDist = distSq;
-                            targetR = anchors[a].r;
-                            targetC = anchors[a].c;
-                        }
-                    }
-
-// 3. תנועה קפדנית מבוססת מרחק (מונע ריצודים)
-                    if (minDist > 0 && minDist !== Infinity) {
-                        let bestDistSq = Math.pow(targetR - row, 2) + Math.pow(targetC - col, 2); // המרחק ההתחלתי שלי
-                        let bestNr = row;
-                        let bestNc = col;
-
-                        const neighbors = [
-                            {dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1},
-                            {dr: -1, dc: -1}, {dr: -1, dc: 1}, {dr: 1, dc: -1}, {dr: 1, dc: 1}
-                        ];
-
-                        // מוצאים איזה שכן מקרב אותנו באופן אבסולוטי למטרה
-                        for (const {dr, dc} of neighbors) {
-                            const nr = row + dr;
-                            const nc = col + dc;
-                            if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                const neighborDistSq = Math.pow(targetR - nr, 2) + Math.pow(targetC - nc, 2);
-                                
-                                // מתעדכן אך ורק אם השכן ממש קרוב יותר (מונע תנועות צד וריצודים)
-                                if (neighborDistSq < bestDistSq) {
-                                    bestDistSq = neighborDistSq;
-                                    bestNr = nr;
-                                    bestNc = nc;
-                                }
-                            }
-                        }
-
-                        // 4. תנועה: רק אם מצאנו משבצת טובה יותר + 20% פספוס ליצירת צמיגות
-                        if ((bestNr !== row || bestNc !== col) && Math.random() < 0.8) {
-                            const target_i = bestNr * n + bestNc;
-                            
-                            if (!nextBoardState[target_i].isGold &&
-                                nextBoardState[i].k < nextBoardState[target_i].k && 
-                                !movedThisFrame.has(target_i)) {
-                                
-                                [nextBoardState[i], nextBoardState[target_i]] = [nextBoardState[target_i], nextBoardState[i]];
-                                
-                                movedThisFrame.add(i);
-                                movedThisFrame.add(target_i);
-                            }
-                        }
-                    }
-
-                }
-            }
-
-
-            
             break;
         }
     }
 
     return nextBoardState;
 }
-// --- END: Magnet Simulation ---
-
