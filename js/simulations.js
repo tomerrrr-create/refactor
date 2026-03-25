@@ -1973,7 +1973,8 @@ for (let col = 0; col < n; col++) {
 
 
 // --- START: Magnet Simulation (Independent Domain) ---
-// משתנים גלובליים ברמת המודול - ממוחזרים בכל פריים כדי לא להעמיס על ה-Garbage Collector במובייל
+
+// משתנים גלובליים ברמת המודול - ממוחזרים בכל פריים
 const cachedAnchors = [];
 let cachedMovedThisFrame = new Uint8Array(0);
 
@@ -1982,15 +1983,20 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
     const method = magnetRules.method || 'magnet';
     const strength = 0.9; 
 
-    // מכיוון שהלוגיקה של שני המצבים זהה כרגע, איחדנו אותם כדי למנוע כפילות.
-    // תוכל לפצל אותם בעתיד אם תרצה ליצור תנועה שונה ל-cosmic_magnet.
+    // אתחול וניקוי מערך רציף מהיר למעקב אחרי תזוזות
+    if (cachedMovedThisFrame.length !== n * n) {
+        cachedMovedThisFrame = new Uint8Array(n * n);
+    } else {
+        cachedMovedThisFrame.fill(0);
+    }
+
     switch (method) {
-        case 'magnet':
-        case 'cosmic_magnet': {
+        case 'magnet': {
+            // --- מגנט רגיל: תנועה זורמת עם עקיפת פקקים ---
+            
+            cachedAnchors.length = 0; // איפוס מבלי לזרוק זיכרון
 
-            // 1. מיחזור מערך העוגנים: מאפסים את האורך במקום ליצור [] חדש
-            cachedAnchors.length = 0;
-
+            // איסוף חורים שחורים בקצוות
             for (let i = 0; i < n * n; i++) {
                 if (nextBoardState[i].k === 0 && !nextBoardState[i].isGold) {
                     const r = Math.floor(i / n);
@@ -2021,22 +2027,13 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
 
             if (cachedAnchors.length === 0) break;
 
-            // ביצוע Sampling על המערך הממוחזר עצמו (ללא יצירת מערכים חדשים)
             if (cachedAnchors.length > 300) {
                 const step = Math.ceil(cachedAnchors.length / 300);
                 let writeIndex = 0;
                 for (let i = 0; i < cachedAnchors.length; i += step) {
                     cachedAnchors[writeIndex++] = cachedAnchors[i];
                 }
-                cachedAnchors.length = writeIndex; // חיתוך המערך לאורך החדש
-            }
-
-            // 2. שימוש ב-Typed Array במקום Set: מהיר פי כמה ולא דורש Hashing.
-            // מתאים את הגודל ללוח רק אם הלוח השתנה, אחרת מנקה אותו ביעילות
-            if (cachedMovedThisFrame.length !== n * n) {
-                cachedMovedThisFrame = new Uint8Array(n * n);
-            } else {
-                cachedMovedThisFrame.fill(0);
+                cachedAnchors.length = writeIndex;
             }
 
             for (let row = 0; row < n; row++) {
@@ -2052,7 +2049,6 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
                     let targetC = col;
 
                     for (let a = 0; a < cachedAnchors.length; a++) {
-                        // 3. החלפת Math.pow בכפל פשוט - הבדל תהומי במובייל
                         const dr = cachedAnchors[a].r - row;
                         const dc = cachedAnchors[a].c - col;
                         const distSq = (dr * dr) + (dc * dc); 
@@ -2121,7 +2117,6 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
                                     nextBoardState[i].k < nextBoardState[target_i].k && 
                                     cachedMovedThisFrame[target_i] === 0) {
                                     
-                                    // 4. החלפה עם משתנה זמני במקום [a, b] = [b, a] המייצר מערך ונזרק לפח
                                     const tempTile = nextBoardState[i];
                                     nextBoardState[i] = nextBoardState[target_i];
                                     nextBoardState[target_i] = tempTile;
@@ -2138,7 +2133,133 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
             }
             break;
         }
+
+        case 'cosmic_magnet': {
+            // --- מגנט קוסמי: תנועה גיאומטרית מדויקת ונוקשה ---
+            
+            cachedAnchors.length = 0; 
+
+            for (let i = 0; i < n * n; i++) {
+                if (nextBoardState[i].k === 0 && !nextBoardState[i].isGold) {
+                    const r = Math.floor(i / n);
+                    const c = i % n;
+                    let isEdge = false;
+
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            const nr = r + dr;
+                            const nc = c + dc;
+                            
+                            if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
+                                if (nextBoardState[nr * n + nc].k > 0) {
+                                    isEdge = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isEdge) break;
+                    }
+
+                    if (isEdge) {
+                        cachedAnchors.push({ r, c });
+                    }
+                }
+            }
+
+            if (cachedAnchors.length === 0) break;
+
+            if (cachedAnchors.length > 300) {
+                const step = Math.ceil(cachedAnchors.length / 300);
+                let writeIndex = 0;
+                for (let i = 0; i < cachedAnchors.length; i += step) {
+                    cachedAnchors[writeIndex++] = cachedAnchors[i];
+                }
+                cachedAnchors.length = writeIndex;
+            }
+
+            for (let row = 0; row < n; row++) {
+                for (let col = 0; col < n; col++) {
+                    const i = row * n + col;
+                    
+                    if (cachedMovedThisFrame[i] === 1) continue;
+                    if (nextBoardState[i].isGold) continue;
+                    if (nextBoardState[i].k === 0) continue; 
+
+                    let minDist = Infinity;
+                    let targetR = row;
+                    let targetC = col;
+
+                    for (let a = 0; a < cachedAnchors.length; a++) {
+                        const dr = cachedAnchors[a].r - row;
+                        const dc = cachedAnchors[a].c - col;
+                        const distSq = (dr * dr) + (dc * dc); 
+                        
+                        if (distSq < minDist) {
+                            minDist = distSq;
+                            targetR = cachedAnchors[a].r;
+                            targetC = cachedAnchors[a].c;
+                        }
+                    }
+
+                    if (minDist > 0 && minDist !== Infinity) {
+                        const tr_row = targetR - row;
+                        const tc_col = targetC - col;
+                        let bestDistSq = (tr_row * tr_row) + (tc_col * tc_col);
+                        let bestNr = row;
+                        let bestNc = col;
+
+                        const neighbors = [
+                            {dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1},
+                            {dr: -1, dc: -1}, {dr: -1, dc: 1}, {dr: 1, dc: -1}, {dr: 1, dc: 1}
+                        ];
+
+                        for (let idx = 0; idx < neighbors.length; idx++) {
+                            const n_dr = neighbors[idx].dr;
+                            const n_dc = neighbors[idx].dc;
+                            const nr = row + n_dr;
+                            const nc = col + n_dc;
+                            
+                            if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
+                                const tr_nr = targetR - nr;
+                                const tc_nc = targetC - nc;
+                                const neighborDistSq = (tr_nr * tr_nr) + (tc_nc * tc_nc);
+                                
+                                // מתעדכן אך ורק אם השכן מקרב מוחלטת (בלי עקיפת פקקים)
+                                if (neighborDistSq < bestDistSq) {
+                                    bestDistSq = neighborDistSq;
+                                    bestNr = nr;
+                                    bestNc = nc;
+                                }
+                            }
+                        }
+
+                        // התנועה המדויקת של המגנט הקוסמי - יש רק שכן אחד אפשרי או כלום
+                        if ((bestNr !== row || bestNc !== col) && Math.random() < 0.8) {
+                            const target_i = bestNr * n + bestNc;
+                            
+                            if (!nextBoardState[target_i].isGold &&
+                                nextBoardState[i].k < nextBoardState[target_i].k && 
+                                cachedMovedThisFrame[target_i] === 0) {
+                                
+                                const tempTile = nextBoardState[i];
+                                nextBoardState[i] = nextBoardState[target_i];
+                                nextBoardState[target_i] = tempTile;
+                                
+                                cachedMovedThisFrame[i] = 1;
+                                cachedMovedThisFrame[target_i] = 1;
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+        }
     }
 
     return nextBoardState;
 }
+
+
+
+
