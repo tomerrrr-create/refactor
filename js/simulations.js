@@ -224,7 +224,8 @@ let cachedRadialN = null;
 
 
 export function runGravitationalSortGeneration({ n, currentBoardState, gravitationalSortRules }) {
-    const nextBoardState = currentBoardState.map(tile => ({...tile}));
+const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
+
     const strength = gravitationalSortRules.strength;
 
     switch (gravitationalSortRules.direction) {
@@ -1255,7 +1256,8 @@ export function runTuringGeneration({ n, currentBoardState, currentPalette, turi
 // --- START: Spiral Simulation (מבנה switch-case בדיוק כמו Gravitational Sort) ---
 export function runSpiralGeneration({ n, currentBoardState, currentPalette, spiralRules }) {
 
-    const nextBoardState = currentBoardState.map(tile => ({ ...tile }));
+const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
+
     const method = spiralRules.method || 'classic';
     const strength = 0.9;                     // אותו strength כמו בגרביטציה
 
@@ -1394,8 +1396,10 @@ case 'cosmic_magnet': {
         }
 
 
+
+
 case 'time_magnet': {
-            // --- מגנט צבעים (Chromatic Magnet) בביצועי מקסימום - לוח רגיל ---
+            // --- מגנט צבעים (Chromatic Magnet - בהירים מהירים) אולטרה-מהיר ---
             
             // 1. ניקוי והכנת זיכרון המטמון המהיר (Zero Allocation)
             if (cachedMovedThisFrame.length !== n * n) {
@@ -1438,7 +1442,7 @@ case 'time_magnet': {
 
             if (cachedAnchors.length === 0) break;
 
-            // דילול עוגנים ללא יצירת מערכים חדשים בזיכרון (Super Fast)
+            // דילול עוגנים
             if (cachedAnchors.length > 300) {
                 const step = Math.ceil(cachedAnchors.length / 300);
                 let writeIndex = 0;
@@ -1456,11 +1460,21 @@ case 'time_magnet': {
                     if (nextBoardState[i].isGold) continue;
                     if (nextBoardState[i].k === 0) continue; 
 
+                    // --- קסם הביצועים (Early Exit) + פרלקסה רגילה ---
+                    // משקל הצבע: 0.0 (הכי כהה) עד 1.0 (הכי בהיר)
+                    const colorWeight = nextBoardState[i].k / pLen; 
+                    
+                    // צבעים בהירים יזוזו 95% מהזמן. צבעים כהים יזוזו רק 15% מהזמן.
+                    const moveProbability = 0.15 + (colorWeight * 0.80);
+                    
+                    // אם הפיקסל (במיוחד הכהים) לא הוגרל לזוז, מדלגים עליו מיד!
+                    if (Math.random() >= moveProbability) continue;
+
                     let minDistSq = Infinity;
                     let targetR = row;
                     let targetC = col;
 
-                    // 3. מציאת העוגן הקרוב ביותר (מרחק אוקלידי רגיל)
+                    // 3. מציאת העוגן הקרוב ביותר (מחושב רק לפיקסלים שזכו בהגרלה)
                     for (let a = 0; a < cachedAnchors.length; a++) {
                         const dr = cachedAnchors[a].r - row;
                         const dc = cachedAnchors[a].c - col;
@@ -1493,7 +1507,6 @@ case 'time_magnet': {
                             const nr = row + n_dr;
                             const nc = col + n_dc;
                             
-                            // נוודא שאנחנו בתוך גבולות הלוח!
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
                                 const t_dr = targetR - nr;
                                 const t_dc = targetC - nc;
@@ -1515,41 +1528,31 @@ case 'time_magnet': {
                             }
                         }
 
-                        // --- קסם המגנטיות של הצבעים (Parallax) ---
-                        // משקל הצבע: 0.0 (הכי כהה) עד 1.0 (הכי בהיר)
-                        const colorWeight = nextBoardState[i].k / pLen; 
-                        
-                        // צבעים בהירים יזוזו 95% מהזמן. צבעים כהים יזוזו רק 15% מהזמן.
-                        const moveProbability = 0.15 + (colorWeight * 0.80);
+                        // 4. עקיפת פקקים סופר-מהירה
+                        const options = [
+                            { nr: b1Nr, nc: b1Nc },
+                            { nr: b2Nr, nc: b2Nc },
+                            { nr: b3Nr, nc: b3Nc }
+                        ];
 
-                        // 4. עקיפת פקקים סופר-מהירה + התחשבות בצבע
-                        if (b1Dist !== Infinity && Math.random() < moveProbability) {
-                            const options = [
-                                { nr: b1Nr, nc: b1Nc },
-                                { nr: b2Nr, nc: b2Nc },
-                                { nr: b3Nr, nc: b3Nc }
-                            ];
+                        for (let attempt = 0; attempt < 3; attempt++) {
+                            const opt = options[attempt];
+                            if (opt.nr === -1) continue; 
 
-                            for (let attempt = 0; attempt < 3; attempt++) {
-                                const opt = options[attempt];
-                                if (opt.nr === -1) continue; 
-
-                                const target_i = opt.nr * n + opt.nc;
+                            const target_i = opt.nr * n + opt.nc;
+                            
+                            if (!nextBoardState[target_i].isGold &&
+                                nextBoardState[i].k < nextBoardState[target_i].k && 
+                                cachedMovedThisFrame[target_i] === 0) {
                                 
-                                if (!nextBoardState[target_i].isGold &&
-                                    nextBoardState[i].k < nextBoardState[target_i].k && 
-                                    cachedMovedThisFrame[target_i] === 0) {
-                                    
-                                    // החלפה קלאסית ומהירה ללא יצירת מערכים זמניים
-                                    const tempTile = nextBoardState[i];
-                                    nextBoardState[i] = nextBoardState[target_i];
-                                    nextBoardState[target_i] = tempTile;
-                                    
-                                    cachedMovedThisFrame[i] = 1;
-                                    cachedMovedThisFrame[target_i] = 1;
-                                    
-                                    break; 
-                                }
+                                const tempTile = nextBoardState[i];
+                                nextBoardState[i] = nextBoardState[target_i];
+                                nextBoardState[target_i] = tempTile;
+                                
+                                cachedMovedThisFrame[i] = 1;
+                                cachedMovedThisFrame[target_i] = 1;
+                                
+                                break; 
                             }
                         }
                     }
@@ -2265,7 +2268,8 @@ const cachedAnchors = [];
 let cachedMovedThisFrame = new Uint8Array(0);
 
 export function runMagnetGeneration({ n, currentBoardState, magnetRules }) {
-    const nextBoardState = currentBoardState.map(tile => ({ ...tile }));
+const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
+
     const method = magnetRules.method || 'magnet';
     const strength = 0.9; 
 
