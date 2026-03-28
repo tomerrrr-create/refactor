@@ -184,7 +184,6 @@ body {
 
 #btnGameOfLife,
 #btnBrightnessEvo,
-#btnShowBreatheMenu,
 #btnGravitationalSort,
 #btnErosion,
 #btnDla,
@@ -221,7 +220,9 @@ body {
 #btnSymmetry       { grid-area: 2 / 4; }
 #btnBrushMode      { grid-area: 2 / 5; }
 
+
 #btnRedo           { grid-area: 3 / 3; }
+#btnShowBreatheMenu { grid-area: 3 / 4; }
 #btnUndo           { grid-area: 3 / 5; }
 
 #btnToggleSimMode  { grid-area: 4 / 4; }
@@ -270,21 +271,18 @@ body {
 
 .sim-mode-active #btnBrushMode,
 .sim-mode-active #btnGap,
+.sim-mode-active #btnShowBreatheMenu,
 .sim-mode-active #btnResetBoard,
 .sim-mode-active #btnTutorial,
 .sim-mode-active #btnSpecialReset,
-.sim-mode-active #btnDark,
-.sim-mode-active #btnResizeUp,
-.sim-mode-active #btnResizeDown {
+.sim-mode-active #btnDark {
   display: none;
 }
-
 
 
 .sim-mode-active #btnGameOfLife,
 .sim-mode-active #btnMagnetModes,
 .sim-mode-active #btnBrightnessEvo,
-.sim-mode-active #btnShowBreatheMenu,
 .sim-mode-active #btnGravitationalSort,
 .sim-mode-active #btnErosion,
 .sim-mode-active #btnDla,
@@ -324,16 +322,17 @@ body {
 .sim-mode-active #btnGameOfLife        { grid-area: 2 / 5; }
 .sim-mode-active #btnTuring            { grid-area: 2 / 6; }
 .sim-mode-active #btnBrightnessEvo     { grid-area: 2 / 7; }
-.sim-mode-active #btnShowBreatheMenu   { grid-area: 2 / 9; }
+.sim-mode-active #btnNudgeBrighter     { grid-area: 2 / 1; }
+.sim-mode-active #btnNudgeDarker       { grid-area: 2 / 9; }
 
 /* שורה 3 - (משמאל לימין) */
-.sim-mode-active #btnNudgeBrighter     { grid-area: 3 / 1; }
+.sim-mode-active #btnResizeDown        { grid-area: 3 / 1; }
+.sim-mode-active #btnResizeUp          { grid-area: 3 / 9; }
 .sim-mode-active #btnErosion           { grid-area: 3 / 3; }
 .sim-mode-active #btnGravitationalSort { grid-area: 3 / 4; }
 .sim-mode-active #btnMagnetModes       { grid-area: 3 / 5; }
 .sim-mode-active #btnSpiral            { grid-area: 3 / 6; }
 .sim-mode-active #btnSandpile          { grid-area: 3 / 7; }
-.sim-mode-active #btnNudgeDarker       { grid-area: 3 / 9; }
 
 /* שורה 4 - כפתורי מערכת (מתחת לרקע) */
 .sim-mode-active #btnSave          { display: inline-flex; grid-area: 4 / 3; }
