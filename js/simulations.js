@@ -300,6 +300,7 @@ case 'center_x': {
 
 
 
+
 case 'vortex': {
             // מחשבים את המרחק העגול המושלם רק פעם אחת כדי לחסוך ביצועים
             if (cachedRadialN !== n) {
@@ -311,7 +312,9 @@ case 'vortex': {
                     const rB = Math.floor(b / n), cB = b % n;
                     const distA = Math.pow(rA - centerR, 2) + Math.pow(cA - centerC, 2);
                     const distB = Math.pow(rB - centerR, 2) + Math.pow(cB - centerC, 2);
-                    return distA - distB; 
+                    
+                    // התיקון: שובר שוויון אקראי מונע את הפרדת הלוח לחצאים!
+                    return (distA - distB) || (Math.random() - 0.5); 
                 });
                 cachedRadialOrder = indices;
                 cachedRadialN = n;
@@ -320,7 +323,7 @@ case 'vortex': {
             // 1. מחזירים את מספר המעברים למינימום כדי לשמור על 60FPS חלק ונעים לעין!
             const passes = 6; 
             
-            // 2. ה"קפיצה" - ככל שהלוח גדול יותר, הפיקסלים "ידלגו" מעל יותר שכנים אל עבר המרכז
+            // 2. ה"קפיצה" נשארת קבועה כדי לשמור על הכאוטיות שאתה אוהב!
             const stride = Math.max(1, Math.floor(n / 4));
 
             for (let p = 0; p < passes; p++) {
@@ -334,7 +337,9 @@ case 'vortex': {
 
                     if (nextBoardState[idx1].k > nextBoardState[idx2].k) {
                         if (Math.random() < strength) {
-                            [nextBoardState[idx1], nextBoardState[idx2]] = [nextBoardState[idx2], nextBoardState[idx1]];
+let temp = nextBoardState[idx1];
+nextBoardState[idx1] = nextBoardState[idx2];
+nextBoardState[idx2] = temp;
                         }
                     }
                 }
@@ -348,13 +353,16 @@ case 'vortex': {
 
                     if (nextBoardState[idx1].k > nextBoardState[idx2].k) {
                         if (Math.random() < strength) {
-                            [nextBoardState[idx1], nextBoardState[idx2]] = [nextBoardState[idx2], nextBoardState[idx1]];
+let temp = nextBoardState[idx1];
+nextBoardState[idx1] = nextBoardState[idx2];
+nextBoardState[idx2] = temp;
                         }
                     }
                 }
             }
             break;
         }
+
 
 
     }
@@ -1022,7 +1030,12 @@ export function runSpiralGeneration({ n, currentBoardState, currentPalette, spir
 const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
 
     const method = spiralRules.method || 'classic';
-    const strength = 0.9;                     // אותו strength כמו בגרביטציה
+let strength = 0.9; // עוצמת ברירת המחדל המקורית של הספירלה
+    
+    // החזרת העוצמה המקורית (0.6) עבור המצבים שהגיעו ממיון גרביטציה
+    if (spiralRules.method === 'down' || spiralRules.method === 'left' || spiralRules.method === 'radial') {
+        strength = 0.6;
+    }
 
     switch (method) {
 
@@ -1359,78 +1372,84 @@ case 'left': {
         }
 
 
-
-
 // ────────────────────────────── EXPERIMENT A (מיון גיאומטרי טהור מהמרכז החוצה) ──────────────────────────────
         case 'a': {
             const centerR = (n - 1) / 2;
             const centerC = (n - 1) / 2;
-
-            // פרמטר שליטה: 0 ייתן לך מעגלים מושלמים לגמרי. 
-            // מספרים כמו 1.0, 2.0 או 3.0 יעקמו את המעגלים לזרועות של ספירלה מושלמת.
             const spin = 0; 
-            
-            // פרמטר שליטה: כמה מהר האנימציה זורמת (מספר המעברים בפריים)
-            const speed = 30;
 
-            // 1. בניית המסלול המתמטי (מבוצע פעם אחת בלבד ונשמר בזיכרון כדי לא להעמיס על המעבד)
+            // 1. בניית המסלול המתמטי (מבוצע פעם אחת בלבד ונשמר בזיכרון)
             if (!window.perfectRadialOrderA || window.perfectRadialOrderA_n !== n) {
                 let coords = [];
                 for (let r = 0; r < n; r++) {
                     for (let c = 0; c < n; c++) {
                         const dy = r - centerR;
                         const dx = c - centerC;
-                        
-                        // מרחק אוקלידי טהור ומושלם מהמרכז
                         const dist = Math.hypot(dx, dy);
-                        // זווית מדויקת
                         const angle = Math.atan2(dy, dx);
-                        
-                        // נוסחת המסלול: מרחק נקי + הסטה זוויתית (ספירלה)
                         const mathematicalValue = dist + (angle * spin);
                         
                         coords.push({ i: r * n + c, val: mathematicalValue });
                     }
                 }
                 
-                // ממיינים את כל הפיקסלים בלוח מהנמוך לגבוה לפי הנוסחה שלנו
                 coords.sort((a, b) => a.val - b.val);
-                
-                // שומרים רק את האינדקסים המסודרים
                 window.perfectRadialOrderA = coords.map(c => c.i);
                 window.perfectRadialOrderA_n = n;
             }
 
             const order = window.perfectRadialOrderA;
 
-            // 2. מיון זורם (Cocktail Shaker Sort) על גבי המסלול המושלם שלנו
-            for (let p = 0; p < speed; p++) {
-                
-                // א. תנועה פנימה: סורקים מהקצוות אל המרכז
+            // --- הפתרון: תקציב זמן (Time-Boxing) ---
+            // במקום speed מוגזם שתוקע הכל, אנחנו נותנים לקוד 4 מילישניות עבודה נטו
+            const timeBudgetMs = 12; 
+            const startTime = performance.now();
+            
+            // אנחנו מאפשרים לו לרוץ עד 50 פעמים, אבל הוא יחתוך הרבה לפני ברגע שהזמן ייגמר
+            let passes = 0;
+            while (passes < 50) {
+                let madeAnySwap = false;
+
+                // א. תנועה פנימה
                 for (let j = order.length - 1; j > 0; j--) {
-                    const idxInner = order[j - 1]; // הפיקסל שיותר קרוב למרכז
-                    const idxOuter = order[j];     // הפיקסל שיותר רחוק מהמרכז
+                    const idxInner = order[j - 1];
+                    const idxOuter = order[j];
                     
                     if (nextBoardState[idxInner].isGold || nextBoardState[idxOuter].isGold) continue;
 
-                    // אם החיצוני כהה יותר, הוא נשאב פנימה!
                     if (nextBoardState[idxInner].k > nextBoardState[idxOuter].k) {
-                        [nextBoardState[idxInner], nextBoardState[idxOuter]] = [nextBoardState[idxOuter], nextBoardState[idxInner]];
+                        let tempTile = nextBoardState[idxInner];
+                        nextBoardState[idxInner] = nextBoardState[idxOuter];
+                        nextBoardState[idxOuter] = tempTile;
+                        madeAnySwap = true;
                     }
                 }
 
-                // ב. תנועה החוצה: סורקים מהמרכז אל הקצוות
+                // ב. תנועה החוצה
                 for (let j = 0; j < order.length - 1; j++) {
                     const idxInner = order[j];
                     const idxOuter = order[j + 1];
                     
                     if (nextBoardState[idxInner].isGold || nextBoardState[idxOuter].isGold) continue;
 
-                    // החלקה נוספת כדי למנוע "פקקי תנועה"
                     if (nextBoardState[idxInner].k > nextBoardState[idxOuter].k) {
-                        [nextBoardState[idxInner], nextBoardState[idxOuter]] = [nextBoardState[idxOuter], nextBoardState[idxInner]];
+                        let tempTile = nextBoardState[idxInner];
+                        nextBoardState[idxInner] = nextBoardState[idxOuter];
+                        nextBoardState[idxOuter] = tempTile;
+                        madeAnySwap = true;
                     }
                 }
+
+                // אם אין החלפות, הלוח סודר לחלוטין!
+                if (!madeAnySwap) break; 
+                
+                // --- בדיקת מד הזמן! ---
+                // אם עברנו את התקציב (4ms), עוצרים מיד ומשחררים את הדפדפן לצייר
+                if (performance.now() - startTime > timeBudgetMs) {
+                    break;
+                }
+                
+                passes++;
             }
             break;
         }
