@@ -856,6 +856,8 @@ body {
 }
 
 
+
+
 /* --- Gravitational Sort Button States --- */
 #btnGravitationalSort.mode-up #iconGsUp { display: block !important; }
 #btnGravitationalSort.mode-up svg:not(#iconGsUp) { display: none !important; }
@@ -863,20 +865,13 @@ body {
 #btnGravitationalSort.mode-right #iconGsRight { display: block !important; }
 #btnGravitationalSort.mode-right svg:not(#iconGsRight) { display: none !important; }
 
-#btnGravitationalSort.mode-down #iconGsDown { display: block !important; }
-#btnGravitationalSort.mode-down svg:not(#iconGsDown) { display: none !important; }
-
-#btnGravitationalSort.mode-left #iconGsLeft { display: block !important; }
-#btnGravitationalSort.mode-left svg:not(#iconGsLeft) { display: none !important; }
-
 #btnGravitationalSort.mode-center_x #iconGsCenterX { display: block !important; }
 #btnGravitationalSort.mode-center_x svg:not(#iconGsCenterX) { display: none !important; }
 
-#btnGravitationalSort.mode-radial #iconGsRadial { display: block !important; }
-#btnGravitationalSort.mode-radial svg:not(#iconGsRadial) { display: none !important; }
-
 #btnGravitationalSort.mode-vortex #iconGsVortex { display: block !important; }
 #btnGravitationalSort.mode-vortex svg:not(#iconGsVortex) { display: none !important; }
+
+
 
 
 /* --- Breathe Button States --- */
@@ -1066,39 +1061,28 @@ body {
 
 
 
-
-/* --- Spiral Button States --- */
-
-/* אייקון ברירת מחדל לספירלה (מצב כבוי) */
+/* --- Spiral Modes Button States --- */
 #btnSpiral:not([class*="mode-"]) svg { display: none !important; }
 #btnSpiral:not([class*="mode-"]) #iconSpiralB { display: block !important; }
-
-#btnSpiral.mode-classic #iconSpiralClassic { display: block !important; }
-#btnSpiral.mode-classic svg:not(#iconSpiralClassic) { display: none !important; }
-
-#btnSpiral.mode-vortex #iconSpiralVortex { display: block !important; }
-#btnSpiral.mode-vortex svg:not(#iconSpiralVortex) { display: none !important; }
-
-#btnSpiral.mode-expand #iconSpiralExpand { display: block !important; }
-#btnSpiral.mode-expand svg:not(#iconSpiralExpand) { display: none !important; }
-#btnSpiral.mode-a #iconSpiralA { display: block !important; }
-#btnSpiral.mode-a svg:not(#iconSpiralA) { display: none !important; }
 
 #btnSpiral.mode-b #iconSpiralB { display: block !important; }
 #btnSpiral.mode-b svg:not(#iconSpiralB) { display: none !important; }
 
-#btnSpiral.mode-magnet #iconSpiralMagnet { display: block !important; }
+#btnSpiral.mode-vortex #iconSpiralVortex { display: block !important; }
+#btnSpiral.mode-vortex svg:not(#iconSpiralVortex) { display: none !important; }
 
+#btnSpiral.mode-radial #iconSpiralRadial { display: block !important; }
+#btnSpiral.mode-radial svg:not(#iconSpiralRadial) { display: none !important; }
 
-#btnSpiral.mode-magnet svg:not(#iconSpiralMagnet) { display: none !important; }
+#btnSpiral.mode-down #iconSpiralDown { display: block !important; }
+#btnSpiral.mode-down svg:not(#iconSpiralDown) { display: none !important; }
 
+#btnSpiral.mode-left #iconSpiralLeft { display: block !important; }
+#btnSpiral.mode-left svg:not(#iconSpiralLeft) { display: none !important; }
 
+#btnSpiral.mode-a #iconSpiralA { display: block !important; }
+#btnSpiral.mode-a svg:not(#iconSpiralA) { display: none !important; }
 
-#btnSpiral.mode-cosmic_magnet #iconSpiralCosmicMagnet { display: block !important; }
-#btnSpiral.mode-cosmic_magnet svg:not(#iconSpiralCosmicMagnet) { display: none !important; }
-
-#btnSpiral.mode-time_magnet #iconSpiralTimeMagnet { display: block !important; }
-#btnSpiral.mode-time_magnet svg:not(#iconSpiralTimeMagnet) { display: none !important; }
 
 /* --- Magnet Modes Button States --- */
 #btnMagnetModes.mode-magnet #iconModeMagnet { display: block !important; }
@@ -1107,5 +1091,36 @@ body {
 #btnMagnetModes.mode-cosmic_magnet #iconModeCosmicMagnet { display: block !important; }
 #btnMagnetModes.mode-cosmic_magnet svg:not(#iconModeCosmicMagnet) { display: none !important; }
 
+#btnMagnetModes.mode-time_magnet #iconModeTimeMagnet { display: block !important; }
+#btnMagnetModes.mode-time_magnet svg:not(#iconModeTimeMagnet) { display: none !important; }
+
+#btnMagnetModes.mode-expand #iconModeExpand { display: block !important; }
+#btnMagnetModes.mode-expand svg:not(#iconModeExpand) { display: none !important; }
 
 
+
+/* --- Simulation Settings Button Animations --- */
+#btnSimSettings {
+    grid-area: 1 / 7; /* מיקום יציב מימין ל-Play */
+    
+    /* התיזמון הנשימתי: 0.8 שניות Cubic Bezier מתאים ל'Faded' שלך */
+    transition: all 0.8s cubic-bezier(0.3, 0.0, 0.2, 1);
+    
+    background: rgba(255, 215, 0, 0.05); /* רקע זהב כמעט בלתי נראה, מרומז */
+    border-color: rgba(255, 215, 0, 0.15);
+    z-index: 10;
+    opacity: 0.7; /* שומר על ה'אפלה' של הממשק הקיים */
+}
+
+#btnSimSettings:hover {
+    opacity: 1; /* נדלק בנגיעה, כמו שאר הכפתורים */
+    background: rgba(255, 215, 0, 0.1);
+}
+
+/* מצב מוסתר */
+#btnSimSettings.hide-settings {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.6) translateY(5px); /* מתכווץ ויורד מטה, כמו 'שחיקה' */
+    border: none;
+}

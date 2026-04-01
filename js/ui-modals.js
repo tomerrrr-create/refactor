@@ -1044,13 +1044,14 @@ app.dom.btnTuringPresetBoiling.addEventListener('click', (e) => applyTuringPrese
     });
 
 
-    // שינוי עיצוב הכפתורים כשלוחצים עליהם (איזה מהם פעיל)
+// שינוי עיצוב הכפתורים כשלוחצים עליהם (איזה מהם פעיל)
     app.dom.spiralMethodButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             app.dom.spiralMethodButtons.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
+            e.currentTarget.classList.add('active');
         });
     });
+
 
     // סגירת החלון בלחיצה על הרקע השחור מסביב
     app.dom.spiralSettingsModal.addEventListener('click', (e) => { 

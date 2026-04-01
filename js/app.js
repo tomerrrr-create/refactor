@@ -1049,9 +1049,15 @@ case 'spiral':
                 boardState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
                 break;
 
-case 'magnet': 
-    boardState = Simulations.runMagnetGeneration({ ...context, magnetRules }); 
-    break;
+case 'magnet':
+                boardState = Simulations.runMagnetGeneration({
+                    n: gridSize,
+                    currentBoardState: boardState,
+                    magnetRules: app.magnetRules,
+                    currentPalette: currentPalette
+                });
+                break;
+
 
 case 'sandpile': 
     boardState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
@@ -1290,10 +1296,17 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     dom.btnStepForward.disabled = true;
     // --- END RESET ---
 
+
+if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
+
     // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
+
+
     if (!isTogglingOff) {
         armedSimulation = simulationName;
         
+
+
         // הגדרת דיפולט (ברירת מחדל) לכפתורים מחזוריים כשהם נדלקים
         if (simulationName === 'brightnessEvo') {
             brightnessEvoMode = 'brightness';
@@ -1338,10 +1351,18 @@ if (simulationName === 'magnet') {
         dom.btnPlayPauseLife.disabled = false;
         dom.btnStepForward.disabled = false;
 
-        // מניעת כפתור 'צעד קדימה' בנשימה (שעובדת על אנימציה רציפה)
+
+// מניעת כפתור 'צעד קדימה' בנשימה (שעובדת על אנימציה רציפה)
         if (simulationName === 'breathe') {
             dom.btnStepForward.disabled = true;
         }
+
+        // בדיקה: האם לסימולציה שנבחרה יש חלון הגדרות?
+        const simsWithSettings = ['gameOfLife', 'gravitationalSort', 'contour', 'spiral', 'sandpile', 'turing', 'brightnessEvo'];
+        if (dom.btnSimSettings && simsWithSettings.includes(simulationName)) {
+            dom.btnSimSettings.classList.remove('hide-settings');
+        }
+
     }
 }
 
@@ -1527,34 +1548,23 @@ const brushSizeSlider = document.getElementById('brushSizeSlider');
         });
       }
 
-      function handlePointerDownCtrl(e) {
+
+function handlePointerDownCtrl(e) {
         if (isBreathing) return;
         const btn = e.currentTarget;
         longPressTimer = setTimeout(() => {
             wasLongPress = true;
-            // Phase 1 Addition: Long press on Invert button
-            if (btn.id === 'btnInvert') {
-                modals.openAdvancedColorMappingModal();
-                return;
-            }
-if (btn.id === 'btnColorPicker') {
-                modals.openColorPickerModal();
-                return;
-            }
+
+            if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
+            if (btn.id === 'btnColorPicker') { modals.openColorPickerModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
-            if (btn.id === 'btnGameOfLife') { modals.openGolSettingsModal(); return; }
-            if (btn.id === 'btnGravitationalSort') { modals.openGravitationalSortSettingsModal(); return; }
-            if (btn.id === 'btnContour') { modals.openContourSettingsModal(); return; } // <-- ADDED HERE
-
-if (btn.id === 'btnSpiral') { modals.openSpiralSettingsModal(); return; }
-if (btn.id === 'btnSandpile') { modals.openChiFlowSettingsModal(); return; }
-if (btn.id === 'btnTuring') { modals.openTuringSettingsModal(); return; }
-if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); return; }
             if (btn.id === 'btnPalette') { modals.openPaletteModal(); return; }
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
         }, C.LONG_PRESS_SHOW_MS);
       }
+
+
       
       function handleCtrlClick(e, actionFn) {
         if (isBreathing && e.currentTarget.id !== 'btnPlayPauseLife') return;
@@ -1686,6 +1696,7 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
         armedSimulation = null;
         dlaState = null;
 turingState = null;
+if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
 
 const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
@@ -2102,7 +2113,7 @@ function updateGravitationalSortButtonUI() {
 
 function cycleGravitationalSortMode() {
     const oldMode = gsMode;
-    const sequence = ['off', 'up', 'right', 'center_x', 'radial', 'down', 'left',  'vortex'];
+    const sequence = ['off', 'up', 'right', 'center_x', 'vortex'];
 
 
 
@@ -2184,11 +2195,8 @@ function cycleBreatheEvoMode() {
 
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
-
-dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'simulation-active');
-
-
-
+    // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'simulation-active');
 
     if (spiralMode !== 'off') {
         dom.btnSpiral.classList.add('mode-' + spiralMode);
@@ -2198,9 +2206,10 @@ dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mo
     }
 }
 
+
 function cycleSpiralMode() {
     const oldMode = spiralMode;
-const sequence = ['off', 'b', 'expand', 'time_magnet', 'vortex', 'a'];
+const sequence = ['off', 'b', 'vortex', 'radial', 'down', 'left', 'a'];
 
 
 
@@ -2230,9 +2239,12 @@ const sequence = ['off', 'b', 'expand', 'time_magnet', 'vortex', 'a'];
 // --- END: Spiral Functions ---
 
 // --- NEW: Magnet Button Functions ---
+
 function updateMagnetButtonUI() {
     if (!dom.btnMagnetModes) return;
-    dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'simulation-active');
+    // הוספנו לניקוי את time_magnet ואת expand!
+    dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-expand', 'simulation-active');
+    
     if (magnetMode !== 'off') {
         dom.btnMagnetModes.classList.add('mode-' + magnetMode);
         if (armedSimulation === 'magnet') {
@@ -2241,9 +2253,10 @@ function updateMagnetButtonUI() {
     }
 }
 
+
 function cycleMagnetMode() {
     const oldMode = magnetMode;
-    const sequence = ['off', 'magnet', 'cosmic_magnet'];
+    const sequence = ['off', 'magnet', 'cosmic_magnet', 'time_magnet', 'expand'];
     const currentIndex = sequence.indexOf(magnetMode);
     const nextIndex = (currentIndex + 1) % sequence.length;
     magnetMode = sequence[nextIndex];
@@ -2290,6 +2303,18 @@ function cycleSortMethod() {
           });
       }
 
+// פונקציה חדשה: מנתבת את הלחיצה על גלגל השיניים למודל הנכון
+      function openCurrentSimSettings() {
+          switch(armedSimulation) {
+              case 'gameOfLife': modals.openGolSettingsModal(); break;
+              case 'gravitationalSort': modals.openGravitationalSortSettingsModal(); break;
+              case 'contour': modals.openContourSettingsModal(); break;
+              case 'spiral': modals.openSpiralSettingsModal(); break;
+              case 'sandpile': modals.openChiFlowSettingsModal(); break;
+              case 'turing': modals.openTuringSettingsModal(); break;
+              case 'brightnessEvo': modals.openBrightnessEvoSettingsModal(); break;
+          }
+      }
 
 
       async function initializeApp() {
@@ -2417,6 +2442,10 @@ if (dom.btnMagnetModes) {
 dom.btnSandpile.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('sandpile')));
 
 dom.btnTuring.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('turing')));
+if (dom.btnSimSettings) {
+            dom.btnSimSettings.addEventListener('click', (e) => handleCtrlClick(e, openCurrentSimSettings));
+        }
+
 
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
