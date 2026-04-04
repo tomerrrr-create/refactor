@@ -221,17 +221,17 @@ export function runBrightnessEvolution({ n, currentBoardState, currentPalette })
 let cachedRadialOrder = null;
 let cachedRadialN = null;
 
-// מערך שכנים ממוחזר (Zero Allocation) שהוצאנו מחוץ ללולאות!
-const gsNeighborsCoords = [
-    {dr: -1, dc: 0}, {dr: 1, dc: 0},
-    {dr: 0, dc: -1}, {dr: 0, dc: 1}
-];
+
 
 export function runGravitationalSortGeneration({ n, currentBoardState, gravitationalSortRules }) {
-    const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
+const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
+
     const strength = gravitationalSortRules.strength;
 
     switch (gravitationalSortRules.direction) {
+
+
+
 
         case 'up':
              for (let row = 1; row < n; row++) {
@@ -239,31 +239,25 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
                     const i = row * n + col;
                     const above_i = (row - 1) * n + col;
                     if (nextBoardState[i].k > nextBoardState[above_i].k && Math.random() < strength) {
-                        // התיקון: החלפה קלאסית (ללא Destructuring) - מהיר פי 100
-                        const temp = nextBoardState[i];
-                        nextBoardState[i] = nextBoardState[above_i];
-                        nextBoardState[above_i] = temp;
+                        [nextBoardState[i], nextBoardState[above_i]] = [nextBoardState[above_i], nextBoardState[i]];
                     }
                 }
             }
             break;
-            
         case 'right':
              for (let col = n - 2; col >= 0; col--) {
                 for (let row = 0; row < n; row++) {
                     const i = row * n + col;
                     const right_i = row * n + (col + 1);
                     if (nextBoardState[i].k < nextBoardState[right_i].k && Math.random() < strength) {
-                        // התיקון: החלפה קלאסית
-                        const temp = nextBoardState[i];
-                        nextBoardState[i] = nextBoardState[right_i];
-                        nextBoardState[right_i] = temp;
+                        [nextBoardState[i], nextBoardState[right_i]] = [nextBoardState[right_i], nextBoardState[i]];
                     }
                 }
             }
             break;
 
-        case 'center_x': {
+
+case 'center_x': {
             const centerR = (n - 1) / 2;
             const centerC = (n - 1) / 2;
             
@@ -273,24 +267,18 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
                     
                     let bestDr = 0;
                     let bestDc = 0;
+                    let minDist = Math.pow(row - centerR, 2) + Math.pow(col - centerC, 2);
                     
-                    // התיקון: x * x במקום Math.pow - מטוס סילון!
-                    const rDiff = row - centerR;
-                    const cDiff = col - centerC;
-                    let minDist = (rDiff * rDiff) + (cDiff * cDiff);
+                    const neighbors = [
+                        {dr: -1, dc: 0}, {dr: 1, dc: 0},
+                        {dr: 0, dc: -1}, {dr: 0, dc: 1}
+                    ];
                     
-                    // שימוש במערך השכנים הממוחזר שלנו מבחוץ
-                    for (let j = 0; j < gsNeighborsCoords.length; j++) {
-                        const dr = gsNeighborsCoords[j].dr;
-                        const dc = gsNeighborsCoords[j].dc;
+                    for (const {dr, dc} of neighbors) {
                         const nr = row + dr;
                         const nc = col + dc;
-                        
                         if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                            const nrDiff = nr - centerR;
-                            const ncDiff = nc - centerC;
-                            const dist = (nrDiff * nrDiff) + (ncDiff * ncDiff);
-                            
+                            const dist = Math.pow(nr - centerR, 2) + Math.pow(nc - centerC, 2);
                             if (dist < minDist) {
                                 minDist = dist;
                                 bestDr = dr;
@@ -302,10 +290,7 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
                     if (bestDr !== 0 || bestDc !== 0) {
                         const target_i = (row + bestDr) * n + (col + bestDc);
                         if (nextBoardState[i].k < nextBoardState[target_i].k && Math.random() < strength) {
-                            // התיקון: החלפה קלאסית
-                            const temp = nextBoardState[i];
-                            nextBoardState[i] = nextBoardState[target_i];
-                            nextBoardState[target_i] = temp;
+                            [nextBoardState[i], nextBoardState[target_i]] = [nextBoardState[target_i], nextBoardState[i]];
                         }
                     }
                 }
@@ -313,7 +298,11 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
             break;
         }
 
-        case 'vortex': {
+
+
+
+case 'vortex': {
+            // מחשבים את המרחק העגול המושלם רק פעם אחת כדי לחסוך ביצועים
             if (cachedRadialN !== n) {
                 const centerR = (n - 1) / 2;
                 const centerC = (n - 1) / 2;
@@ -321,24 +310,25 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
                 indices.sort((a, b) => {
                     const rA = Math.floor(a / n), cA = a % n;
                     const rB = Math.floor(b / n), cB = b % n;
+                    const distA = Math.pow(rA - centerR, 2) + Math.pow(cA - centerC, 2);
+                    const distB = Math.pow(rB - centerR, 2) + Math.pow(cB - centerC, 2);
                     
-                    // התיקון: הסרת Math.pow גם כאן
-                    const rAdiff = rA - centerR, cAdiff = cA - centerC;
-                    const rBdiff = rB - centerR, cBdiff = cB - centerC;
-                    const distA = (rAdiff * rAdiff) + (cAdiff * cAdiff);
-                    const distB = (rBdiff * rBdiff) + (cBdiff * cBdiff);
-                    
+                    // התיקון: שובר שוויון אקראי מונע את הפרדת הלוח לחצאים!
                     return (distA - distB) || (Math.random() - 0.5); 
                 });
                 cachedRadialOrder = indices;
                 cachedRadialN = n;
             }
 
+            // 1. מחזירים את מספר המעברים למינימום כדי לשמור על 60FPS חלק ונעים לעין!
             const passes = 6; 
+            
+            // 2. ה"קפיצה" נשארת קבועה כדי לשמור על הכאוטיות שאתה אוהב!
             const stride = Math.max(1, Math.floor(n / 4));
 
             for (let p = 0; p < passes; p++) {
                 
+                // כוח משיכה ששואב למרכז (בקפיצות)
                 for (let j = 0; j < cachedRadialOrder.length - stride; j++) {
                     const idx1 = cachedRadialOrder[j];          
                     const idx2 = cachedRadialOrder[j + stride]; 
@@ -347,13 +337,14 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
 
                     if (nextBoardState[idx1].k > nextBoardState[idx2].k) {
                         if (Math.random() < strength) {
-                            const temp = nextBoardState[idx1];
-                            nextBoardState[idx1] = nextBoardState[idx2];
-                            nextBoardState[idx2] = temp;
+let temp = nextBoardState[idx1];
+nextBoardState[idx1] = nextBoardState[idx2];
+nextBoardState[idx2] = temp;
                         }
                     }
                 }
                 
+                // כוח הדיפה שדוחף החוצה (בקפיצות, מהסוף להתחלה כדי לשחרר פקקים)
                 for (let j = cachedRadialOrder.length - 1; j >= stride; j--) {
                     const idx1 = cachedRadialOrder[j - stride];
                     const idx2 = cachedRadialOrder[j];
@@ -362,25 +353,26 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
 
                     if (nextBoardState[idx1].k > nextBoardState[idx2].k) {
                         if (Math.random() < strength) {
-                            const temp = nextBoardState[idx1];
-                            nextBoardState[idx1] = nextBoardState[idx2];
-                            nextBoardState[idx2] = temp;
+let temp = nextBoardState[idx1];
+nextBoardState[idx1] = nextBoardState[idx2];
+nextBoardState[idx2] = temp;
                         }
                     }
                 }
             }
             break;
         }
+
+
+
     }
 
-    // התיקון האחרון: forEach רגיל מייצר קריאה לפונקציה (Callback) עבור כל תא.
-    // לולאת for קלאסית לא מייצרת כלום ורצה במלוא המהירות!
-    for (let i = 0; i < n * n; i++) {
-        nextBoardState[i].v = nextBoardState[i].k;
-    }
+    // Update 'v' values to match 'k' after sorting
+    nextBoardState.forEach(tile => { tile.v = tile.k; });
     
     return nextBoardState;
 }
+
 
 
 
@@ -1662,25 +1654,24 @@ nextBoardState[idx2] = temp;
 
 
 // משתנים גלובליים ברמת המודול - ממוחזרים בכל פריים
-const magnetNeighborsCoords = [
-    {dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1},
-    {dr: -1, dc: -1}, {dr: -1, dc: 1}, {dr: 1, dc: -1}, {dr: 1, dc: 1}
-];
 const cachedAnchors = [];
 let cachedMovedThisFrame = new Uint8Array(0);
 
 export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette }) {
 
-    const nextBoardState = currentBoardState; // Zero Allocation!
+const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
+
     const method = magnetRules.method || 'magnet';
     const strength = 0.9; 
 
+    // אתחול וניקוי מערך רציף מהיר למעקב אחרי תזוזות
     if (cachedMovedThisFrame.length !== n * n) {
         cachedMovedThisFrame = new Uint8Array(n * n);
     } else {
         cachedMovedThisFrame.fill(0);
     }
 
+// --- תוספת: סריקה מקדימה למציאת העוגן (הצבע הכהה ביותר שקיים כרגע) ---
     let darkestPresentIndex = Infinity;
     for (let i = 0; i < n * n; i++) {
         if (nextBoardState[i].isGold) continue;
@@ -1688,18 +1679,26 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
         if (currentK < darkestPresentIndex) {
             darkestPresentIndex = currentK;
         }
-        if (darkestPresentIndex === 0) break; 
+        if (darkestPresentIndex === 0) break; // עצירה מוקדמת לאופטימיזציה
     }
     if (darkestPresentIndex === Infinity) darkestPresentIndex = 0;
     
-    const targetColorIndex = darkestPresentIndex; 
+    const targetColorIndex = darkestPresentIndex; // המשתנה בו נשתמש מעכשיו
+    // --------------------------------------------------------------------
+
+
+
 
     switch (method) {
         case 'magnet': {
-            cachedAnchors.length = 0; 
+            // --- מגנט רגיל: תנועה זורמת עם עקיפת פקקים ---
+            
+            cachedAnchors.length = 0; // איפוס מבלי לזרוק זיכרון
 
+            // איסוף חורים שחורים בקצוות
             for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
@@ -1711,8 +1710,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (nextBoardState[nr * n + nc].k > targetColorIndex) {                                    
-                                    isEdge = true;
+if (nextBoardState[nr * n + nc].k > targetColorIndex) {                                    isEdge = true;
                                     break;
                                 }
                             }
@@ -1743,7 +1741,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                     
                     if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    if (nextBoardState[i].k === targetColorIndex) continue;
+if (nextBoardState[i].k === targetColorIndex) continue;
 
                     let minDist = Infinity;
                     let targetR = row;
@@ -1770,10 +1768,14 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                         let b2Dist = Infinity, b2Nr = -1, b2Nc = -1;
                         let b3Dist = Infinity, b3Nr = -1, b3Nc = -1;
 
-                        // התיקון: שימוש במערך הגלובלי החיצוני
-                        for (let idx = 0; idx < magnetNeighborsCoords.length; idx++) {
-                            const n_dr = magnetNeighborsCoords[idx].dr;
-                            const n_dc = magnetNeighborsCoords[idx].dc;
+                        const neighbors = [
+                            {dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1},
+                            {dr: -1, dc: -1}, {dr: -1, dc: 1}, {dr: 1, dc: -1}, {dr: 1, dc: 1}
+                        ];
+
+                        for (let idx = 0; idx < neighbors.length; idx++) {
+                            const n_dr = neighbors[idx].dr;
+                            const n_dc = neighbors[idx].dc;
                             const nr = row + n_dr;
                             const nc = col + n_dc;
                             
@@ -1798,16 +1800,17 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                         }
 
                         if (b1Dist !== Infinity && Math.random() < 0.8) {
-                            // התיקון: ביטול מערך ה-options! שימוש ב-if/else במקום אובייקטים
+                            const options = [
+                                { nr: b1Nr, nc: b1Nc },
+                                { nr: b2Nr, nc: b2Nc },
+                                { nr: b3Nr, nc: b3Nc }
+                            ];
+
                             for (let attempt = 0; attempt < 3; attempt++) {
-                                let optNr = -1, optNc = -1;
-                                if (attempt === 0) { optNr = b1Nr; optNc = b1Nc; }
-                                else if (attempt === 1) { optNr = b2Nr; optNc = b2Nc; }
-                                else { optNr = b3Nr; optNc = b3Nc; }
+                                const opt = options[attempt];
+                                if (opt.nr === -1) continue; 
 
-                                if (optNr === -1) continue; 
-
-                                const target_i = optNr * n + optNc;
+                                const target_i = opt.nr * n + opt.nc;
                                 
                                 if (!nextBoardState[target_i].isGold &&
                                     nextBoardState[i].k < nextBoardState[target_i].k && 
@@ -1831,10 +1834,13 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
         }
 
         case 'cosmic_magnet': {
+            // --- מגנט קוסמי: תנועה גיאומטרית מדויקת ונוקשה ---
+            
             cachedAnchors.length = 0; 
 
             for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
@@ -1846,7 +1852,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (nextBoardState[nr * n + nc].k > targetColorIndex) {
+if (nextBoardState[nr * n + nc].k > targetColorIndex) {
                                     isEdge = true;
                                     break;
                                 }
@@ -1878,7 +1884,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                     
                     if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    if (nextBoardState[i].k === targetColorIndex) continue;
+if (nextBoardState[i].k === targetColorIndex) continue;
 
                     let minDist = Infinity;
                     let targetR = row;
@@ -1903,9 +1909,14 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                         let bestNr = row;
                         let bestNc = col;
 
-                        for (let idx = 0; idx < magnetNeighborsCoords.length; idx++) {
-                            const n_dr = magnetNeighborsCoords[idx].dr;
-                            const n_dc = magnetNeighborsCoords[idx].dc;
+                        const neighbors = [
+                            {dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1},
+                            {dr: -1, dc: -1}, {dr: -1, dc: 1}, {dr: 1, dc: -1}, {dr: 1, dc: 1}
+                        ];
+
+                        for (let idx = 0; idx < neighbors.length; idx++) {
+                            const n_dr = neighbors[idx].dr;
+                            const n_dc = neighbors[idx].dc;
                             const nr = row + n_dr;
                             const nc = col + n_dc;
                             
@@ -1914,6 +1925,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                                 const tc_nc = targetC - nc;
                                 const neighborDistSq = (tr_nr * tr_nr) + (tc_nc * tc_nc);
                                 
+                                // מתעדכן אך ורק אם השכן מקרב מוחלטת (בלי עקיפת פקקים)
                                 if (neighborDistSq < bestDistSq) {
                                     bestDistSq = neighborDistSq;
                                     bestNr = nr;
@@ -1922,6 +1934,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             }
                         }
 
+                        // התנועה המדויקת של המגנט הקוסמי - יש רק שכן אחד אפשרי או כלום
                         if ((bestNr !== row || bestNc !== col) && Math.random() < 0.8) {
                             const target_i = bestNr * n + bestNc;
                             
@@ -1943,7 +1956,10 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
             break;
         }
  
-        case 'time_magnet': {
+case 'time_magnet': {
+            // --- מגנט צבעים (Chromatic Magnet - בהירים מהירים) אולטרה-מהיר ---
+            
+            // 1. ניקוי והכנת זיכרון המטמון המהיר (Zero Allocation)
             if (cachedMovedThisFrame.length !== n * n) {
                 cachedMovedThisFrame = new Uint8Array(n * n);
             } else {
@@ -1953,8 +1969,10 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
             
             const pLen = currentPalette ? currentPalette.length : 256;
 
+            // 2. איסוף חורים שחורים בקצוות (ללא עטיפת מסך)
             for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
@@ -1966,7 +1984,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (nextBoardState[nr * n + nc].k > targetColorIndex) {
+if (nextBoardState[nr * n + nc].k > targetColorIndex) {
                                     isEdge = true;
                                     break;
                                 }
@@ -1983,6 +2001,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
             if (cachedAnchors.length === 0) break;
 
+            // דילול עוגנים
             if (cachedAnchors.length > 300) {
                 const step = Math.ceil(cachedAnchors.length / 300);
                 let writeIndex = 0;
@@ -1998,17 +2017,23 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                     
                     if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    if (nextBoardState[i].k === targetColorIndex) continue;
+if (nextBoardState[i].k === targetColorIndex) continue;
 
+                    // --- קסם הביצועים (Early Exit) + פרלקסה רגילה ---
+                    // משקל הצבע: 0.0 (הכי כהה) עד 1.0 (הכי בהיר)
                     const colorWeight = nextBoardState[i].k / pLen; 
+                    
+                    // צבעים בהירים יזוזו 95% מהזמן. צבעים כהים יזוזו רק 15% מהזמן.
                     const moveProbability = 0.15 + (colorWeight * 0.80);
                     
+                    // אם הפיקסל (במיוחד הכהים) לא הוגרל לזוז, מדלגים עליו מיד!
                     if (Math.random() >= moveProbability) continue;
 
                     let minDistSq = Infinity;
                     let targetR = row;
                     let targetC = col;
 
+                    // 3. מציאת העוגן הקרוב ביותר (מחושב רק לפיקסלים שזכו בהגרלה)
                     for (let a = 0; a < cachedAnchors.length; a++) {
                         const dr = cachedAnchors[a].r - row;
                         const dc = cachedAnchors[a].c - col;
@@ -2029,9 +2054,14 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                         let b2Dist = Infinity, b2Nr = -1, b2Nc = -1;
                         let b3Dist = Infinity, b3Nr = -1, b3Nc = -1;
 
-                        for (let idx = 0; idx < magnetNeighborsCoords.length; idx++) {
-                            const n_dr = magnetNeighborsCoords[idx].dr;
-                            const n_dc = magnetNeighborsCoords[idx].dc;
+                        const neighbors = [
+                            {dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1},
+                            {dr: -1, dc: -1}, {dr: -1, dc: 1}, {dr: 1, dc: -1}, {dr: 1, dc: 1}
+                        ];
+
+                        for (let idx = 0; idx < neighbors.length; idx++) {
+                            const n_dr = neighbors[idx].dr;
+                            const n_dc = neighbors[idx].dc;
                             
                             const nr = row + n_dr;
                             const nc = col + n_dc;
@@ -2057,15 +2087,18 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             }
                         }
 
+                        // 4. עקיפת פקקים סופר-מהירה
+                        const options = [
+                            { nr: b1Nr, nc: b1Nc },
+                            { nr: b2Nr, nc: b2Nc },
+                            { nr: b3Nr, nc: b3Nc }
+                        ];
+
                         for (let attempt = 0; attempt < 3; attempt++) {
-                            let optNr = -1, optNc = -1;
-                            if (attempt === 0) { optNr = b1Nr; optNc = b1Nc; }
-                            else if (attempt === 1) { optNr = b2Nr; optNc = b2Nc; }
-                            else { optNr = b3Nr; optNc = b3Nc; }
+                            const opt = options[attempt];
+                            if (opt.nr === -1) continue; 
 
-                            if (optNr === -1) continue; 
-
-                            const target_i = optNr * n + optNc;
+                            const target_i = opt.nr * n + opt.nc;
                             
                             if (!nextBoardState[target_i].isGold &&
                                 nextBoardState[i].k < nextBoardState[target_i].k && 
@@ -2087,7 +2120,14 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
             break;
         }
 
+
+
+
+
+// ────────────────────────────── EXPAND (מוגדר כעת כמגנט צבעים הפוך אולטרה-מהיר) ──────────────────────────────
         case 'expand': {
+            
+            // 1. ניקוי והכנת זיכרון המטמון המהיר (Zero Allocation)
             if (cachedMovedThisFrame.length !== n * n) {
                 cachedMovedThisFrame = new Uint8Array(n * n);
             } else {
@@ -2097,8 +2137,10 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
             
             const pLen = currentPalette ? currentPalette.length : 256;
 
+            // 2. איסוף חורים שחורים בקצוות 
             for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
@@ -2110,8 +2152,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (nextBoardState[nr * n + nc].k > targetColorIndex) {                                    
-                                    isEdge = true;
+if (nextBoardState[nr * n + nc].k > targetColorIndex) {                                    isEdge = true;
                                     break;
                                 }
                             }
@@ -2127,6 +2168,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
             if (cachedAnchors.length === 0) break;
 
+            // דילול עוגנים
             if (cachedAnchors.length > 300) {
                 const step = Math.ceil(cachedAnchors.length / 300);
                 let writeIndex = 0;
@@ -2142,17 +2184,20 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                     
                     if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    if (nextBoardState[i].k === targetColorIndex) continue;
+if (nextBoardState[i].k === targetColorIndex) continue;
 
+                    // --- קסם הביצועים (Early Exit): הגרלת התנועה מתבצעת *לפני* החישובים הכבדים! ---
                     const colorWeight = 1.0 - (nextBoardState[i].k / pLen); 
                     const moveProbability = 0.15 + (colorWeight * 0.80);
                     
+                    // אם הפיקסל לא הוגרל לזוז בפריים הזה, אנחנו מדלגים עליו מיד וחוסכים המון כוח מעבד!
                     if (Math.random() >= moveProbability) continue;
 
                     let minDistSq = Infinity;
                     let targetR = row;
                     let targetC = col;
 
+                    // 3. מציאת העוגן הקרוב ביותר (מחושב רק לפיקסלים שזכו בהגרלה)
                     for (let a = 0; a < cachedAnchors.length; a++) {
                         const dr = cachedAnchors[a].r - row;
                         const dc = cachedAnchors[a].c - col;
@@ -2173,9 +2218,14 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                         let b2Dist = Infinity, b2Nr = -1, b2Nc = -1;
                         let b3Dist = Infinity, b3Nr = -1, b3Nc = -1;
 
-                        for (let idx = 0; idx < magnetNeighborsCoords.length; idx++) {
-                            const n_dr = magnetNeighborsCoords[idx].dr;
-                            const n_dc = magnetNeighborsCoords[idx].dc;
+                        const neighbors = [
+                            {dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1},
+                            {dr: -1, dc: -1}, {dr: -1, dc: 1}, {dr: 1, dc: -1}, {dr: 1, dc: 1}
+                        ];
+
+                        for (let idx = 0; idx < neighbors.length; idx++) {
+                            const n_dr = neighbors[idx].dr;
+                            const n_dc = neighbors[idx].dc;
                             
                             const nr = row + n_dr;
                             const nc = col + n_dc;
@@ -2201,15 +2251,18 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             }
                         }
 
+                        // 4. עקיפת פקקים סופר-מהירה (ההסתברות כבר חושבה, אז כאן אנחנו פשוט מנסים לזוז)
+                        const options = [
+                            { nr: b1Nr, nc: b1Nc },
+                            { nr: b2Nr, nc: b2Nc },
+                            { nr: b3Nr, nc: b3Nc }
+                        ];
+
                         for (let attempt = 0; attempt < 3; attempt++) {
-                            let optNr = -1, optNc = -1;
-                            if (attempt === 0) { optNr = b1Nr; optNc = b1Nc; }
-                            else if (attempt === 1) { optNr = b2Nr; optNc = b2Nc; }
-                            else { optNr = b3Nr; optNc = b3Nc; }
+                            const opt = options[attempt];
+                            if (opt.nr === -1) continue; 
 
-                            if (optNr === -1) continue; 
-
-                            const target_i = optNr * n + optNc;
+                            const target_i = opt.nr * n + opt.nc;
                             
                             if (!nextBoardState[target_i].isGold &&
                                 nextBoardState[i].k < nextBoardState[target_i].k && 
@@ -2230,9 +2283,14 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
             }
             break;
         }
-    }
+
+
+   
+}
 
     return nextBoardState;
 }
+
+
 
 
