@@ -51,9 +51,11 @@ let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge הא�
           { method: 'dark-rainbow', icon: '<path d="M 4 19 V 11 A 8 8 0 0 1 20 11 V 19"/><path d="M 7 19 V 11 A 5 5 0 0 1 17 11 V 19" stroke="#aaa"/><path d="M 10 19 V 11 A 2 2 0 0 1 14 11 V 19" stroke="#666"/>' },
 
 // 3. מבפנים החוצה - אדוות מים (טיפה שמתרחבת)
-{ method: 'center-out', icon: '<circle cx="12" cy="12" r="1.5" fill="currentColor"/><path d="M 9 9 Q 5 12 9 15 M 15 9 Q 19 12 15 15 M 9 9 Q 12 5 15 9 M 9 15 Q 12 19 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' }
+{ method: 'center-out', icon: '<circle cx="12" cy="12" r="1.5" fill="currentColor"/><path d="M 9 9 Q 5 12 9 15 M 15 9 Q 19 12 15 15 M 9 9 Q 12 5 15 9 M 9 15 Q 12 19 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' },          
+
 
          
+{ method: 'biomes', icon: '<path d="M3 10 Q7 4 12 10 T21 10 M3 14 Q7 20 12 14 T21 14" fill="none" stroke="currentColor" stroke-width="1.5"/>'  }
  
       ];
 
@@ -2391,25 +2393,19 @@ function cycleMagnetMode() {
 
 
 function cycleSortMethod() {
-    // 1. עוצרים לולאות ציור כפולות כדי לשחרר את המעבד
-    if (animationLoopId) {
-        cancelAnimationFrame(animationLoopId);
-        animationLoopId = null;
-    }
+          performAction(() => { // עטפנו כדי שהשינוי יירשם בהיסטוריה
+              currentSortIndex = (currentSortIndex + 1) % SORT_MODES.length;
+              const nextMode = SORT_MODES[currentSortIndex];
+              
+              // עדכון ה-SVG בתוך הכפתור
+              if (dom.sortIconGroup) {
+                  dom.sortIconGroup.innerHTML = nextMode.icon;
+              }
+              
+              applySortMethod(nextMode.method);
+          });
+      }
 
-    // 2. הסרנו את העטיפה של performAction כדי למנוע דליפת זיכרון מפלצתית!
-    currentSortIndex = (currentSortIndex + 1) % SORT_MODES.length;
-    const nextMode = SORT_MODES[currentSortIndex];
-    
-    if (dom.sortIconGroup) {
-        dom.sortIconGroup.innerHTML = nextMode.icon;
-    }
-    
-    applySortMethod(nextMode.method);
-    
-    // 3. כופה על הלוח להתרנדר מיד מחדש עם הצבעים החדשים
-    renderToScreen(null);
-}
 // פונקציה חדשה: מנתבת את הלחיצה על גלגל השיניים למודל הנכון
       function openCurrentSimSettings() {
           switch(armedSimulation) {

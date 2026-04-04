@@ -259,24 +259,41 @@ updateActiveChiPresetButton();        app.dom.chiFlowSettingsModal.classList.rem
 
     // --- END: Chi Flow Modal Logic ---
 
+
+
 // --- START: Turing Patterns Modal Logic ---
 let tempTuringRules = { feed: 0.034, kill: 0.056, dA: 1.0, dB: 0.5, timeStep: 1.0 };
-
 
 const TURING_PRESETS = {
     'Coral': { feed: 0.054, kill: 0.062, dA: 1.0, dB: 0.5, timeStep: 1.0 },
     'Maze':  { feed: 0.029, kill: 0.057, dA: 1.0, dB: 0.5, timeStep: 1.0 },
-    'Spots': { feed: 0.0383, kill: 0.061, dA: 1.0, dB: 0.5, timeStep: 1.0 },
-    'Cells': { feed: 0.018, kill: 0.051, dA: 1.0, dB: 0.5, timeStep: 1.0 },
-    'Boiling': { feed: 0.0367, kill: 0.062, dA: 1.0, dB: 0.5, timeStep: 1.0 },
-    'USkate': { feed: 0.014, kill: 0.054, dA: 1.0, dB: 0.5, timeStep: 1.0 },
+
+//original
+    //  'Spots': { feed: 0.0383, kill: 0.061, dA: 1.0, dB: 0.5, timeStep: 1.0 },
+
+
+  'Spots': { feed: 0.055, kill: 0.064, dA: 1.0, dB: 0.5, timeStep: 1.0 },
+    'Cells': { feed: 0.034, kill: 0.058, dA: 1.0, dB: 0.5, timeStep: 1.0 },
+    'Boiling': { feed: 0.075, kill: 0.064, dA: 1.0, dB: 0.5, timeStep: 1.0 },
+    'USkate': { feed: 0.015, kill: 0.048, dA: 1.0, dB: 0.5, timeStep: 1.0 },
     'Chaos': { feed: 0.034, kill: 0.056, dA: 1.0, dB: 0.5, timeStep: 1.0 },
-'Waves': { feed: 0.025, kill: 0.052, dA: 1.0, dB: 0.5, timeStep: 1.0 }
+
+    'Waves': { feed: 0.030, kill: 0.054, dA: 1.0, dB: 0.5, timeStep: 1.0 }
 };
 
 function closeTuringSettingsModal() {
     app.dom.turingSettingsModal.classList.add('hidden');
     app.resetWasLongPress();
+}
+
+// 1. פונקציה חדשה: סנכרון תצוגת הסליידרים
+function updateTuringSlidersUI() {
+    if(app.dom.turingFeedSlider && app.dom.turingKillSlider) {
+        app.dom.turingFeedSlider.value = tempTuringRules.feed;
+        app.dom.turingFeedValue.textContent = tempTuringRules.feed.toFixed(3);
+        app.dom.turingKillSlider.value = tempTuringRules.kill;
+        app.dom.turingKillValue.textContent = tempTuringRules.kill.toFixed(3);
+    }
 }
 
 function updateTuringPresetButtons(activeId) {
@@ -287,17 +304,22 @@ function updateTuringPresetButtons(activeId) {
         app.dom.btnTuringPresetChaos, app.dom.btnTuringPresetWaves
     ];
     btns.forEach(b => {
-        if (b.id === activeId) b.classList.add('active');
-        else b.classList.remove('active');
+        if (b && b.id === activeId) b.classList.add('active');
+        else if (b) b.classList.remove('active');
     });
 }
-
 
 function applyTuringPreset(presetName, btnElement) {
     const p = TURING_PRESETS[presetName];
     if (!p) return;
     tempTuringRules = { ...p };
+    
+    // עדכון הסליידרים בעקבות בחירת פריסט
+    updateTuringSlidersUI();
     updateTuringPresetButtons(btnElement ? btnElement.id : '');
+    
+    // החלה חיה של השינוי על הלוח!
+    app.setTuringRules({ ...tempTuringRules });
 }
 
 function saveTuringSettings() {
@@ -308,17 +330,20 @@ function saveTuringSettings() {
 function openTuringSettingsModal() {
     tempTuringRules = { ...app.getTuringRules() };
     
-    app.dom.turingModalTitle.textContent = app.getText('turing_modal_title');
-    app.dom.btnTuringPresetCoral.textContent = app.getText('turing_preset_coral');
-    app.dom.btnTuringPresetMaze.textContent = app.getText('turing_preset_maze');
-    app.dom.btnTuringPresetSpots.textContent = app.getText('turing_preset_spots');
-    app.dom.btnTuringPresetCells.textContent = app.getText('turing_preset_cells');
-   app.dom.btnTuringPresetBoiling.textContent = app.getText('turing_preset_boiling');
-    app.dom.btnTuringPresetUSkate.textContent = app.getText('turing_preset_uskate');
-    app.dom.btnTuringPresetChaos.textContent = app.getText('turing_preset_chaos');
-    app.dom.btnTuringPresetWaves.textContent = app.getText('turing_preset_waves');
+    // משיכת טקסטים מקובץ השפות (אם קיימים)
+    if (app.dom.turingModalTitle) app.dom.turingModalTitle.textContent = app.getText('turing_modal_title') || 'Turing Patterns';
+    if (app.dom.btnTuringPresetCoral) app.dom.btnTuringPresetCoral.textContent = app.getText('turing_preset_coral') || 'Coral';
+    if (app.dom.btnTuringPresetMaze) app.dom.btnTuringPresetMaze.textContent = app.getText('turing_preset_maze') || 'Maze';
+    if (app.dom.btnTuringPresetSpots) app.dom.btnTuringPresetSpots.textContent = app.getText('turing_preset_spots') || 'Spots';
+    if (app.dom.btnTuringPresetCells) app.dom.btnTuringPresetCells.textContent = app.getText('turing_preset_cells') || 'Cells';
+    if (app.dom.btnTuringPresetBoiling) app.dom.btnTuringPresetBoiling.textContent = app.getText('turing_preset_boiling') || 'Boiling';
+    if (app.dom.btnTuringPresetUSkate) app.dom.btnTuringPresetUSkate.textContent = app.getText('turing_preset_uskate') || 'U-Skate';
+    if (app.dom.btnTuringPresetChaos) app.dom.btnTuringPresetChaos.textContent = app.getText('turing_preset_chaos') || 'Chaos';
+    if (app.dom.btnTuringPresetWaves) app.dom.btnTuringPresetWaves.textContent = app.getText('turing_preset_waves') || 'Waves';
 
- 
+    // עדכון הסליידרים למצב הנוכחי עם הפתיחה
+    updateTuringSlidersUI();
+
     let activeId = '';
     for (const [name, rules] of Object.entries(TURING_PRESETS)) {
         if (rules.feed === tempTuringRules.feed && rules.kill === tempTuringRules.kill) {
@@ -330,6 +355,9 @@ function openTuringSettingsModal() {
     app.dom.turingSettingsModal.classList.remove('hidden');
 }
 // --- END: Turing Patterns Modal Logic ---
+
+
+
 
 // --- Modal Management Functions ---
 
@@ -1016,11 +1044,32 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
     app.dom.btnTuringPresetMaze.addEventListener('click', (e) => applyTuringPreset('Maze', e.target));
     app.dom.btnTuringPresetSpots.addEventListener('click', (e) => applyTuringPreset('Spots', e.target));
     app.dom.btnTuringPresetCells.addEventListener('click', (e) => applyTuringPreset('Cells', e.target));
-app.dom.btnTuringPresetBoiling.addEventListener('click', (e) => applyTuringPreset('Boiling', e.target));
+    app.dom.btnTuringPresetBoiling.addEventListener('click', (e) => applyTuringPreset('Boiling', e.target));
     app.dom.btnTuringPresetUSkate.addEventListener('click', (e) => applyTuringPreset('USkate', e.target));
     app.dom.btnTuringPresetChaos.addEventListener('click', (e) => applyTuringPreset('Chaos', e.target));
     app.dom.btnTuringPresetWaves.addEventListener('click', (e) => applyTuringPreset('Waves', e.target));
+
+    // --- תוספת הסליידרים החדשים (Live Update) ---
+    if (app.dom.turingFeedSlider && app.dom.turingKillSlider) {
+        app.dom.turingFeedSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            tempTuringRules.feed = val;
+            app.dom.turingFeedValue.textContent = val.toFixed(3);
+            app.setTuringRules({ ...tempTuringRules }); // עדכון חי בזמן גרירה
+            updateTuringPresetButtons(''); // כיבוי כפתורי פריסט (כי כיוונו אישית)
+        });
+
+        app.dom.turingKillSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            tempTuringRules.kill = val;
+            app.dom.turingKillValue.textContent = val.toFixed(3);
+            app.setTuringRules({ ...tempTuringRules }); // עדכון חי בזמן גרירה
+            updateTuringPresetButtons(''); // כיבוי כפתורי פריסט
+        });
+    }
     // --- END: Added for Turing Settings ---
+
+
 
 
 // --- START: Added for Spiral Settings ---

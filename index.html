@@ -795,6 +795,32 @@
       </div>
     </div>
 
+
+
+
+<div class="flex flex-col gap-4 mt-6 border-t border-gray-700 pt-4">
+  <h3 class="font-semibold text-gray-300 text-center">כיוונון עדין (Advanced)</h3>
+  
+  <div class="flex flex-col gap-1">
+    <div class="flex justify-between text-sm text-gray-400">
+      <span>Feed (הזנה)</span>
+      <span id="turingFeedValue" class="font-mono" style="color: var(--gold);">0.034</span>
+    </div>
+    <input type="range" id="turingFeedSlider" min="0.010" max="0.100" step="0.001" value="0.034" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <div class="flex justify-between text-sm text-gray-400">
+      <span>Kill (תמותה)</span>
+      <span id="turingKillValue" class="font-mono" style="color: var(--gold);">0.056</span>
+    </div>
+    <input type="range" id="turingKillSlider" min="0.010" max="0.070" step="0.001" value="0.056" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+  </div>
+</div>
+
+
+
+
     <div class="flex justify-end items-center mt-6 border-t border-gray-700 pt-4">
       <div class="flex gap-4">
         <button id="btnTuringSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
