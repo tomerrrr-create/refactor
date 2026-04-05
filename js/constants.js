@@ -5,7 +5,6 @@ import { getText, translations } from './i18n.js';
 // --- Data ---
 export const PALETTES = [
 
-
 {
     originalName: "Golden Midnight Extended", 
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="none" stroke="#FFD700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10.5 15 C 9.5 15, 9 14, 9 13 C 9 11, 11 10.5, 12.5 10.5 C 15 10.5, 16.5 12.5, 16.5 15 C 16.5 18, 14 19.5, 11.5 19.5 C 8.5 19.5, 6 17.5, 6 14 C 6 10, 8.5 7, 11.5 7 L 11.5 3 C 11.5 1.5, 13.5 1.5, 13.5 3 C 13.5 5.5, 11.5 7.5, 11.5 10 L 11.5 21 C 11.5 22.5, 9.5 23, 8.5 22 C 7.5 21, 8 20, 8 20" /><circle cx="8" cy="20" r="1" fill="#FFD700" /></svg>', 
@@ -20,6 +19,72 @@ export const PALETTES = [
         "#ffde7d", "#ffe189", "#ffe598", "#ffe8a6", "#ffecb3", "#fff2ce", "#fff9e9", "#ffffff"
     ]
 },
+
+
+{
+    originalName: "Golden & Silver  blue", 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="goldHeartGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF9E9"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><path fill="url(#goldHeartGrad)" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" /></svg>', 
+    colors: [
+        // 64 גווני הזהב המקוריים (משחור אל לבן בוהק)
+        "#000000", "#030201", "#050401", "#080602", "#0a0802", "#0d0a02", "#0f0c03", "#120e03",
+        "#141105", "#171305", "#1a1506", "#1c1807", "#1f1a08", "#221c09", "#251f09", "#28210a",
+        "#2b240b", "#2e260c", "#31290d", "#352c0e", "#382f0f", "#3c3210", "#3f3511", "#433812",
+        "#463a13", "#4b3e14", "#4f4115", "#524416", "#554618", "#5a4a19", "#5f4e1b", "#62511c",
+        "#65531d", "#6a571f", "#6f5b21", "#725e22", "#766123", "#7c6625", "#826b27", "#856d28",
+        "#887029", "#8e752b", "#947a2c", "#987d2e", "#9b8030", "#a58834", "#af9038", "#b9993c",
+        "#c4a241", "#ceab46", "#d9b44b", "#e4bd50", "#efc756", "#f7cf5c", "#ffd763", "#ffdb70",
+        "#ffde7d", "#ffe189", "#ffe598", "#ffe8a6", "#ffecb3", "#fff2ce", "#fff9e9", "#ffffff",
+        
+        // 16 גווני הכסף (מלבן-אפרפר אל אפור-פלדה כהה)
+        "#f5f5f5", "#ebebeb", "#e0e0e0", "#d6d6d6", "#cccccc", "#c2c2c2", "#b8b8b8", "#adadad", 
+        "#a3a3a3", "#999999", "#8f8f8f", "#858585", "#7a7a7a", "#707070", "#666666", "#5c5c5c",
+
+        // 16 גווני כחול-סגול (מאפור מטאלי אל מעמקי החלל, לקראת חזרה לשחור)
+        "#555466", "#4e4b73", "#474280", "#3f398c", "#372f99", "#2f25a3", "#281ca8", "#2214a6",
+        "#1c0e9c", "#160a8c", "#12077a", "#0d0466", "#090252", "#06013d", "#030029", "#010014"
+    ]
+    },
+
+{
+    originalName: "Golden & Silver Midnight Extended", 
+iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="cloudGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#3f398c"/><stop offset="100%" stop-color="#06013d"/></linearGradient><linearGradient id="goldHeartGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF9E9"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><path fill="url(#cloudGrad)" d="M17.5,19 C19.98,19 22,16.98 22,14.5 C22,12.18 20.25,10.27 18,10.05 C17.38,6.63 14.39,4 10.8,4 C7.28,4 4.34,6.53 3.6,9.85 C1.57,10.25 0,12.06 0,14.2 C0,16.85 2.15,19 4.8,19 L17.5,19 Z"/><path fill="url(#goldHeartGrad)" transform="translate(3.5, 3.5) scale(0.7)" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/></svg>',
+    colors: (function() {
+        const stops = [
+            { pos: 0,   r: 0,   g: 0,   b: 0 },       // שחור מוחלט (התחלה)
+            { pos: 30,  r: 56,  g: 47,  b: 15 },      // זהב עמוק ואפל
+            { pos: 60,  r: 155, g: 128, b: 48 },      // זהב קלאסי
+            { pos: 90,  r: 255, g: 215, b: 99 },      // זהב בוהק
+            { pos: 115, r: 255, g: 255, b: 255 },     // לבן בוהק (שיא המעבר)
+            { pos: 140, r: 192, g: 192, b: 192 },     // כסף בהיר
+            { pos: 165, r: 90,  g: 90,  b: 95 },      // אפור פלדה כהה (מתחיל לקבל גוון קר)
+            { pos: 195, r: 35,  g: 20,  b: 55 },      // סגול עמוק, עשיר ומעומעם
+            { pos: 225, r: 10,  g: 15,  b: 30 },      // כחול חצות כמעט שחור (מעמקי החלל)
+            { pos: 255, r: 0,   g: 0,   b: 0 }        // סגירת מעגל לשחור מוחלט
+        ];
+        
+        const out = [];
+        for (let i = 0; i < 256; i++) {
+            let s = 0;
+            // מציאת המקטע הנוכחי
+            while (s < stops.length - 2 && i >= stops[s+1].pos) { s++; }
+            
+            const start = stops[s];
+            const end = stops[s+1];
+            const segmentLen = end.pos - start.pos;
+            const progress = segmentLen === 0 ? 0 : (i - start.pos) / segmentLen;
+            
+            // פונקציית החלקה (Smoothstep) למעברים אורגניים וזורמים
+            const ease = progress * progress * (3 - 2 * progress); 
+            
+            const r = Math.round(start.r + (end.r - start.r) * ease);
+            const g = Math.round(start.g + (end.g - start.g) * ease);
+            const b = Math.round(start.b + (end.b - start.b) * ease);
+            
+            out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+        }
+        return out;
+    })()
+    },
 
 
 {
