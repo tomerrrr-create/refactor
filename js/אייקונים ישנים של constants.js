@@ -22,7 +22,7 @@ export const PALETTES = [
 
 
 {
-    originalName: "Golden, Silver, Blue", 
+    originalName: "Golden & Silver  blue", 
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="goldHeartGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF9E9"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><path fill="url(#goldHeartGrad)" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" /></svg>', 
     colors: [
         // 64 גווני הזהב המקוריים (משחור אל לבן בוהק)
@@ -46,9 +46,8 @@ export const PALETTES = [
     },
 
 {
-    originalName: "Golden & Silver ENH", 
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="zenGS" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#999999"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFFFFF"/></linearGradient></defs><path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 15.5 4 18.5 7 20.5" fill="none" stroke="#5A5A5F" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/><ellipse cx="9.5" cy="17" rx="4" ry="2.8" transform="rotate(-20 9.5 17)" fill="url(#zenGS)"/><path d="M 13 16.5 Q 14 10 13 4" fill="none" stroke="url(#zenGS)" stroke-width="2.2" stroke-linecap="round"/><path d="M 13 4 Q 19 4 19 10 Q 19 12 17 14 Q 20 9 14.5 5" fill="url(#zenGS)"/></svg>',
-
+    originalName: "Golden & Silver Midnight Extended", 
+iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="cloudGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#3f398c"/><stop offset="100%" stop-color="#06013d"/></linearGradient><linearGradient id="goldHeartGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF9E9"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><path fill="url(#cloudGrad)" d="M17.5,19 C19.98,19 22,16.98 22,14.5 C22,12.18 20.25,10.27 18,10.05 C17.38,6.63 14.39,4 10.8,4 C7.28,4 4.34,6.53 3.6,9.85 C1.57,10.25 0,12.06 0,14.2 C0,16.85 2.15,19 4.8,19 L17.5,19 Z"/><path fill="url(#goldHeartGrad)" transform="translate(3.5, 3.5) scale(0.7)" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/></svg>',
     colors: (function() {
         const stops = [
             { pos: 0,   r: 0,   g: 0,   b: 0 },       // שחור מוחלט (התחלה)
@@ -89,7 +88,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 
 {
-  originalName: "Journey",
+  originalName: "Journey (23)",
   emoji: '🌓',
   colors: ["#000000","#424242","#7B1FA2","#5E35B1","#673AB7","#9C27B0","#C2185B","#E91E63","#FF1744","#C62828","#D32F2F","#3F51B5","#1976D2","#2196F3","#42A5F5","#0097A7","#00BCD4","#4CAF50","#66BB6A","#FF5722","#FFA726","#FFC107","#BDBDBD"]
     },
@@ -99,7 +98,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 
 {
-  originalName: "Behind Eyelids",
+  originalName: "Behind Eyelids 24",
 isArchived: true,
   emoji: '🌑',
   colors: [
@@ -207,9 +206,9 @@ isArchived: true,
 
 
 {
-    originalName: "Obsidian Soul",
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="none" stroke="#9C6CC7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7 4h10l-5 7 5 9H7l5-9z"/></svg>',
+        originalName: "Obsidian Soul",
 isArchived: true, 
+        emoji: '🌑', 
         colors: ["#050505", "#0D0B14", "#13111C", "#1A1626", "#221C31", "#2B223C", "#352848", "#3F2F55", "#4B3663", "#573E72", "#644682", "#714F92", "#7F58A3", "#8D62B5", "#9C6CC7", "#AB77DA", "#BB82ED", "#CC8EFF", "#D59FFF", "#DEB0FF", "#E7C1FF", "#F0D2FF", "#FFFFFF"]
  
 
@@ -219,7 +218,7 @@ isArchived: true,
 
 
 {
-  originalName: "The Classic",
+  originalName: "Classic Painter",
   emoji: "🎨",
 isArchived: true,
   colors: [
@@ -234,7 +233,7 @@ isArchived: true,
 
 {
   originalName: "Northern Lights",
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="11" fill="#030712"/><circle cx="7" cy="6" r="0.75" fill="#E5F3FF"/><circle cx="16" cy="8" r="0.5" fill="#C7D2FE"/><circle cx="12" cy="4" r="0.5" fill="#E5F3FF"/><path fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" d="M3 14 Q 9 8, 14 13 T 21 9"/><path fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" d="M3 17 Q 10 10, 15 15 T 21 12"/><path fill="none" stroke="#ECFE71" stroke-width="1.5" stroke-linecap="round" d="M4 19 Q 11 12, 16 17 T 20 15"/></svg>',
+  emoji: '🌈',
   colors: ["#020617","#030712","#040815","#05091A","#05101F","#061826","#052E3B","#044155","#036672","#059669","#22C55E","#A3E635","#ECFE71","#E5F3FF","#C7D2FE","#A5B4FC","#818CF8","#7C3AED","#6D28D9","#5B21B6","#4C1D95","#312E81","#020617"]
 },
 
@@ -255,7 +254,7 @@ isArchived: true,
 
 {
         originalName: "Monochrome",
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><rect x="4" y="4" width="7" height="7" fill="#333333" rx="1"/><rect x="13" y="4" width="7" height="7" fill="#888888" rx="1"/><rect x="4" y="13" width="7" height="7" fill="#CCCCCC" rx="1"/><rect x="13" y="13" width="7" height="7" fill="#FFFFFF" stroke="#999999" stroke-width="0.5" rx="1"/></svg>',
+        emoji: '☯️',
         colors: ["#FFFFFF", "#F9F9F9", "#F3F3F3", "#EDEDED", "#E7E7E7", "#E1E1E1", "#DBDBDB", "#D5D5D5", "#CFCFCF", "#C9C9C9", "#C3C3C3", "#BDBDBD", "#B7B7B7", "#B1B1B1", "#ABABAB", "#A5A5A5", "#9F9F9F", "#999999", "#939393", "#8D8D8D", "#878787", "#818181", "#7B7B7B", "#757575", "#6F6F6F", "#696969", "#636363", "#5D5D5D", "#575757", "#515151", "#4B4B4B", "#454545", "#3F3F3F", "#393939", "#333333", "#2D2D2D", "#272727", "#212121", "#1B1B1B", "#151515", "#0F0F0F", "#0C0C0C", "#090909", "#060606", "#040404", "#020202", "#000000"]
     },
 
@@ -283,7 +282,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
     {
         originalName: "Lilac Noir",
 isArchived: true, 
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#B888B3" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+        emoji: '🌒', 
         colors: ["#000000", "#0A0A0A", "#141414", "#1E1E1E", "#282828", "#323232", "#3D3D3D", "#474747", "#514E53", "#5C5360", "#67596D", "#725E7A", "#7E6387", "#896994", "#946EA1", "#A075AB", "#AD7FAF", "#BB88B3", "#C891B6", "#D69BBA", "#E4A4BE", "#F1AEC1", "#FFB7C5"]
     },
 
@@ -364,7 +363,7 @@ isArchived: true,
 
 {
   originalName: "Night Rainbow",
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><clipPath id="nrClip"><circle cx="12" cy="12" r="10.5"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="#000000"/><g clip-path="url(#nrClip)" transform="rotate(-45 12 12)"><rect x="-5" y="3.75" width="34" height="1.5" fill="#8c28dc"/><rect x="-5" y="6.75" width="34" height="1.5" fill="#00b4ff"/><rect x="-5" y="9.75" width="34" height="1.5" fill="#109664"/><rect x="-5" y="12.75" width="34" height="1.5" fill="#ffc800"/><rect x="-5" y="15.75" width="34" height="1.5" fill="#eb5a5a"/><rect x="-5" y="18.75" width="34" height="1.5" fill="#ff3296"/></g></svg>',
+  emoji: '🌌',
   colors: (function() {
     // הגדרת "תחנות" הצבע: מחושך, לשיא (שפיץ), וחוזר חלילה.
     const stops = [
@@ -453,7 +452,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 {
   originalName: "Optimism & Air",
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="optAirGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#59326b"/><stop offset="50%" stop-color="#d48385"/><stop offset="100%" stop-color="#fcd169"/></linearGradient></defs><circle cx="12" cy="12" r="10.5" fill="none" stroke="#87c9eb" stroke-width="1.5" stroke-dasharray="4 2.5"/><text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="16" fill="url(#optAirGrad)">א</text></svg>',
+  emoji: '🌅',
   colors: [
     "#2a1b4d", "#2c1c4e", "#2e1d50", "#301e51", "#331f52", "#352054", "#372155", "#392257", 
     "#3b2358", "#3d2459", "#3f255b", "#42275c", "#44285d", "#46295f", "#482a60", "#4a2b62", 
@@ -503,20 +502,22 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 // --- מחולל קבוצות פלטות דינמי ---
 export const PALETTE_GROUPS = [
-    { id: 'classic', title: 'Classic Palettes (Up to 25)', min: 0, max: 25, indexes: [] },
-    { id: 'extended', title: 'Extended Palettes (26 - 80)', min: 26, max: 80, indexes: [] },
-    { id: 'continuous', title: 'Continuous / Gradients (100+)', min: 81, max: Infinity, indexes: [] },
-    { id: 'archive', title: 'Archive', min: 0, max: Infinity, indexes: [] } 
+    { id: 'classic', title: 'Classic Palettes', min: 0, max: 25, indexes: [] },
+    { id: 'extended', title: 'Extended Palettes', min: 26, max: 80, indexes: [] },
+    { id: 'continuous', title: 'Continuous / Gradients', min: 81, max: Infinity, indexes: [] },
+    { id: 'archive', title: 'Archive', min: 0, max: Infinity, indexes: [] } // קבוצת הארכיון החדשה
 ];
 
 // שיוך אוטומטי של אינדקסים לקבוצות
 PALETTES.forEach((palette, index) => {
+    // אם הפלטה סומנה כמאורכבת, נשלח אותה ישירות לארכיון ונעצור
     if (palette.isArchived) {
         const archiveGroup = PALETTE_GROUPS.find(g => g.id === 'archive');
         if (archiveGroup) archiveGroup.indexes.push(index);
         return;
     }
 
+    // אחרת, נמיין אותה לפי כמות הצבעים (למעט קבוצת הארכיון)
     const count = palette.colors.length;
     const group = PALETTE_GROUPS.find(g => g.id !== 'archive' && count >= g.min && count <= g.max);
     if (group) {
@@ -524,12 +525,7 @@ PALETTES.forEach((palette, index) => {
     }
 });
 
-// מיון פנימי של הפלטות בתוך כל קבוצה לפי גודל (מהקטן לגדול)
-PALETTE_GROUPS.forEach(group => {
-    group.indexes.sort((a, b) => {
-        return PALETTES[a].colors.length - PALETTES[b].colors.length;
-    });
-});
+
 
 // --- App Settings & Magic Numbers ---
 export const GOLD = '#FFD700';
