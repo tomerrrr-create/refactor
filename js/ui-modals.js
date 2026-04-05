@@ -524,44 +524,84 @@ function openPaletteModal() {
     app.dom.paletteModal.classList.add('modal-visible');
 }
 
+
+
+
+
 function populatePaletteModal() {
     app.dom.paletteModalGrid.innerHTML = '';
     const frag = document.createDocumentFragment();
-    app.C.PALETTES.forEach((palette, index) => {
-        const preview = document.createElement('div');
-        preview.className = 'palette-preview';
-        preview.addEventListener('click', () => {
-            app.switchToPalette(index);
-            closePaletteModal();
-        });
 
-        const iconContainer = document.createElement('div');
-        iconContainer.className = 'palette-preview-icon';
+    // אנחנו משתמשים במערך הקבוצות הגלובלי שכבר מוין ב-constants.js
+    app.C.PALETTE_GROUPS.forEach(group => {
+        
+        // אם אין פלטות בקבוצה הזו (למשל אם הארכיון ריק), נדלג עליה
+        if (group.indexes.length === 0) return;
 
-        if (palette.iconHTML) {
-            iconContainer.innerHTML = palette.iconHTML;
-            const childElement = iconContainer.firstElementChild;
-            if (childElement) {
-                childElement.style.width = '40px';
-                childElement.style.height = '40px';
-                if (childElement.tagName.toLowerCase() === 'span') {
-                    childElement.style.fontSize = '36px';
-                }
+        // יצירת כותרת הקבוצה
+        const header = document.createElement('div');
+        header.style.gridColumn = '1 / -1'; 
+        header.style.color = 'var(--gold)';
+        header.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+        header.style.paddingBottom = '5px';
+        header.style.marginTop = '15px';
+        header.style.marginBottom = '5px';
+        header.style.fontSize = '1.1rem';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'flex-end';
+        
+        header.innerHTML = `<span>${group.title}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${group.indexes.length} items</span>`;
+        frag.appendChild(header);
+
+        // יצירת הכפתורים מתוך האינדקסים שהוכנו מראש לקבוצה
+        group.indexes.forEach(index => {
+            const palette = app.C.PALETTES[index];
+            const preview = document.createElement('div');
+            preview.className = 'palette-preview';
+            
+            if (index === app.getActivePaletteIndex()) {
+                preview.style.boxShadow = '0 0 0 2px var(--gold)';
+                preview.style.transform = 'scale(1.05)';
+                preview.style.transition = 'all 0.2s';
             }
-        } else {
-            iconContainer.textContent = palette.emoji;
-        }
 
-        const name = document.createElement('span');
-        name.className = 'palette-preview-name';
-        name.textContent = palette.name;
+            preview.addEventListener('click', () => {
+                app.switchToPalette(index);
+                closePaletteModal();
+            });
 
-        preview.appendChild(iconContainer);
-        preview.appendChild(name);
-        frag.appendChild(preview);
+            const iconContainer = document.createElement('div');
+            iconContainer.className = 'palette-preview-icon';
+
+            if (palette.iconHTML) {
+                iconContainer.innerHTML = palette.iconHTML;
+                const childElement = iconContainer.firstElementChild;
+                if (childElement) {
+                    childElement.style.width = '40px';
+                    childElement.style.height = '40px';
+                    if (childElement.tagName.toLowerCase() === 'span') {
+                        childElement.style.fontSize = '36px';
+                    }
+                }
+            } else {
+                iconContainer.textContent = palette.emoji;
+            }
+
+            const name = document.createElement('span');
+            name.className = 'palette-preview-name';
+            name.textContent = `${palette.name} (${palette.colors.length})`;
+
+            preview.appendChild(iconContainer);
+            preview.appendChild(name);
+            frag.appendChild(preview);
+        });
     });
+
     app.dom.paletteModalGrid.appendChild(frag);
 }
+
+
 
 function populateHelpModal() {
     const contentDiv = document.getElementById('helpModalContent');

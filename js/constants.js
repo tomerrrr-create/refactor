@@ -99,6 +99,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 {
   originalName: "Behind Eyelids 24",
+isArchived: true,
   emoji: '🌑',
   colors: [
     "#000000",     // 0  – שחור מוחלט (רקע בסיסי)
@@ -205,7 +206,8 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 
 {
-        originalName: "Obsidian Soul", 
+        originalName: "Obsidian Soul",
+isArchived: true, 
         emoji: '🌑', 
         colors: ["#050505", "#0D0B14", "#13111C", "#1A1626", "#221C31", "#2B223C", "#352848", "#3F2F55", "#4B3663", "#573E72", "#644682", "#714F92", "#7F58A3", "#8D62B5", "#9C6CC7", "#AB77DA", "#BB82ED", "#CC8EFF", "#D59FFF", "#DEB0FF", "#E7C1FF", "#F0D2FF", "#FFFFFF"]
  
@@ -218,6 +220,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 {
   originalName: "Classic Painter",
   emoji: "🎨",
+isArchived: true,
   colors: [
     "#1B1B1B", "#FFFFFF", "#F2E9DC", "#D4C4A8", "#8D6E63",
     "#A52A2A", "#C0392B", "#E74C3C", "#F39C12", "#F1C40F",
@@ -236,6 +239,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 {
     originalName: "Coffee House",
+isArchived: true,
     emoji: '☕',
     colors: ["#2b1b17", "#3b2f2f", "#4e3629", "#5d4037", "#6f4e37", "#795548", "#8d6e63", "#a1887f", "#bcaaa4", "#d7ccc8", "#efebe9", "#ffffff", "#d2b48c", "#f5f5dc", "#fff8e7", "#deb887", "#cd853f", "#8b4513", "#a0522d", "#fffdd0", "#f4a460"]
 },
@@ -276,7 +280,8 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
     },
 
     {
-        originalName: "Lilac Noir", 
+        originalName: "Lilac Noir",
+isArchived: true, 
         emoji: '🌒', 
         colors: ["#000000", "#0A0A0A", "#141414", "#1E1E1E", "#282828", "#323232", "#3D3D3D", "#474747", "#514E53", "#5C5360", "#67596D", "#725E7A", "#7E6387", "#896994", "#946EA1", "#A075AB", "#AD7FAF", "#BB88B3", "#C891B6", "#D69BBA", "#E4A4BE", "#F1AEC1", "#FFB7C5"]
     },
@@ -286,6 +291,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 {
     originalName: "Sin City",
+isArchived: true,
     emoji: '💋',
     colors: ["#000000", "#1a1a1a", "#333333", "#4d4d4d", "#666666", "#808080", "#999999", "#b3b3b3", "#cccccc", "#e6e6e6", "#ffffff", "#ff0000", "#d30000", "#a80000", "#7a0000", "#2b2b2b", "#f0f0f0", "#ff3333", "#0a0a0a", "#550000", "#111111"]
 },
@@ -310,7 +316,8 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
    
     
     { 
-        originalName: "Brown Noise", 
+        originalName: "Brown Noise",
+isArchived: true, 
         iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><polygon points="7,3 17,3 21,21 3,21" style="fill:#FFD700;" /></svg>', 
         colors: ["#3E2F00", "#523F00", "#665000", "#7A6000", "#8E7000", "#A28000", "#B69000", "#CAA000", "#DEB000", "#F2C000", "#F4C306", "#F6C70C", "#F8CA12", "#FACC18", "#FCD01E", "#FED324", "#FFD52A", "#FFD700", "#FFD730", "#FFD936", "#FFDB3C", "#FFDD42", "#FFDF48", "#FFE14E", "#FFE354"] 
     },
@@ -347,6 +354,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 {
     originalName: "Amethyst Dream",
+isArchived: true,
     emoji: '🔮',
     colors: ["#1a0b1e", "#220e29", "#2b1235", "#331541", "#3b184d", "#441b59", "#4c1e65", "#552171", "#5d247d", "#662789", "#6e2a95", "#772da1", "#7f30ad", "#813ec3", "#8b4ec8", "#955dcd", "#9f6dd2", "#a97cd7", "#b38cdc", "#bd9be1", "#c7aae6", "#d1baeb", "#dbc9f0", "#e5d8f5", "#efe8fa", "#f9f7ff", "#f5eeff", "#f0e2ff", "#ebd6ff", "#e6caff", "#e2bdff", "#deafff", "#d9a2ff", "#d494ff", "#cf85ff", "#ca76ff", "#c568ff", "#c059ff", "#bb4aff", "#b243f5", "#aa40e9", "#a13cdd", "#9939d1", "#9036c5", "#8833b9", "#772ebf"]
 },
@@ -487,6 +495,36 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
+
+
+
+
+
+// --- מחולל קבוצות פלטות דינמי ---
+export const PALETTE_GROUPS = [
+    { id: 'classic', title: 'Classic Palettes', min: 0, max: 25, indexes: [] },
+    { id: 'extended', title: 'Extended Palettes', min: 26, max: 80, indexes: [] },
+    { id: 'continuous', title: 'Continuous / Gradients', min: 81, max: Infinity, indexes: [] },
+    { id: 'archive', title: 'Archive', min: 0, max: Infinity, indexes: [] } // קבוצת הארכיון החדשה
+];
+
+// שיוך אוטומטי של אינדקסים לקבוצות
+PALETTES.forEach((palette, index) => {
+    // אם הפלטה סומנה כמאורכבת, נשלח אותה ישירות לארכיון ונעצור
+    if (palette.isArchived) {
+        const archiveGroup = PALETTE_GROUPS.find(g => g.id === 'archive');
+        if (archiveGroup) archiveGroup.indexes.push(index);
+        return;
+    }
+
+    // אחרת, נמיין אותה לפי כמות הצבעים (למעט קבוצת הארכיון)
+    const count = palette.colors.length;
+    const group = PALETTE_GROUPS.find(g => g.id !== 'archive' && count >= g.min && count <= g.max);
+    if (group) {
+        group.indexes.push(index);
+    }
+});
+
 
 
 // --- App Settings & Magic Numbers ---
