@@ -22,7 +22,8 @@ export const PALETTES = [
 
 
 {
-    originalName: "Golden, Silver, Blue", 
+    originalName: "Golden, Silver, Blue",
+isArchived: true, 
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="goldHeartGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF9E9"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><path fill="url(#goldHeartGrad)" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" /></svg>', 
     colors: [
         // 64 גווני הזהב המקוריים (משחור אל לבן בוהק)
@@ -45,47 +46,6 @@ export const PALETTES = [
     ]
     },
 
-{
-    originalName: "Golden & Silver ENH", 
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="zenGS" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#999999"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFFFFF"/></linearGradient></defs><path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 15.5 4 18.5 7 20.5" fill="none" stroke="#5A5A5F" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/><ellipse cx="9.5" cy="17" rx="4" ry="2.8" transform="rotate(-20 9.5 17)" fill="url(#zenGS)"/><path d="M 13 16.5 Q 14 10 13 4" fill="none" stroke="url(#zenGS)" stroke-width="2.2" stroke-linecap="round"/><path d="M 13 4 Q 19 4 19 10 Q 19 12 17 14 Q 20 9 14.5 5" fill="url(#zenGS)"/></svg>',
-
-    colors: (function() {
-        const stops = [
-            { pos: 0,   r: 0,   g: 0,   b: 0 },       // שחור מוחלט (התחלה)
-            { pos: 30,  r: 56,  g: 47,  b: 15 },      // זהב עמוק ואפל
-            { pos: 60,  r: 155, g: 128, b: 48 },      // זהב קלאסי
-            { pos: 90,  r: 255, g: 215, b: 99 },      // זהב בוהק
-            { pos: 115, r: 255, g: 255, b: 255 },     // לבן בוהק (שיא המעבר)
-            { pos: 140, r: 192, g: 192, b: 192 },     // כסף בהיר
-            { pos: 165, r: 90,  g: 90,  b: 95 },      // אפור פלדה כהה (מתחיל לקבל גוון קר)
-            { pos: 195, r: 35,  g: 20,  b: 55 },      // סגול עמוק, עשיר ומעומעם
-            { pos: 225, r: 10,  g: 15,  b: 30 },      // כחול חצות כמעט שחור (מעמקי החלל)
-            { pos: 255, r: 0,   g: 0,   b: 0 }        // סגירת מעגל לשחור מוחלט
-        ];
-        
-        const out = [];
-        for (let i = 0; i < 256; i++) {
-            let s = 0;
-            // מציאת המקטע הנוכחי
-            while (s < stops.length - 2 && i >= stops[s+1].pos) { s++; }
-            
-            const start = stops[s];
-            const end = stops[s+1];
-            const segmentLen = end.pos - start.pos;
-            const progress = segmentLen === 0 ? 0 : (i - start.pos) / segmentLen;
-            
-            // פונקציית החלקה (Smoothstep) למעברים אורגניים וזורמים
-            const ease = progress * progress * (3 - 2 * progress); 
-            
-            const r = Math.round(start.r + (end.r - start.r) * ease);
-            const g = Math.round(start.g + (end.g - start.g) * ease);
-            const b = Math.round(start.b + (end.b - start.b) * ease);
-            
-            out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
-        }
-        return out;
-    })()
-    },
 
 
 {
@@ -145,51 +105,18 @@ isArchived: true,
     },
 
 
+    { 
+        originalName: "Amazon Rainforest", 
+        emoji: '🌳', 
+        colors: ["#013220", "#0B5345", "#145A32", "#0E6655", "#196F3D", "#117864", "#117A65", "#1D8348", "#1E8449", "#138D75", "#229954", "#239B56", "#16A085", "#27AE60", "#28B463", "#45B39D", "#52BE80", "#2ECC71", "#48C9B0", "#73C6B6", "#58D68D", "#82E0AA", "#A9DFBF"] 
+    },
+ 
 {
   "originalName": "Argentine Spring",
   "emoji": "🇦🇷",
   "colors": ["#6A0DAD", "#B284BE", "#E6E6FA", "#87CEEB", "#75AADB", "#FFFFFF", "#FFC72C", "#E60000", "#E03C8A", "#FFAA00", "#FF6700", "#C71585", "#7CFC00", "#5A6E44", "#34A853", "#004000", "#9B0000", "#000000", "#C68E65", "#3B2B20", "#0078AE", "#FCD116", "#B26B3B"]
 },
 
-
-
-
-  { 
-        originalName: "Sky", 
-        emoji: '☁️', 
-        colors: ["#303F9F", "#0D47A1", "#304FFE", "#3F51B5", "#01579B", "#1565C0", "#3D5AFE", "#2962FF", "#1976D2", "#0277BD", "#2979FF", "#1E88E5", "#0288D1", "#0091EA", "#039BE5", "#03A9F4", "#00B0FF", "#29B6F6", "#4FC3F7", "#40C4FF", "#81D4FA", "#B3E5FC", "#E1F5FE"]
-    },
-
-{ 
-        originalName: "Cosmos", 
-        emoji: '🌌', 
-        colors: ["#000000", "#0B0C10", "#00008B", "#1F2833", "#191970", "#263238", "#4B0082", "#37474F", "#483D8B", "#8A2BE2", "#BA55D3", "#9370DB", "#1E90FF", "#FF00FF", "#DA70D6", "#FF69B4", "#00BFFF", "#40E0D0", "#B0E0E6", "#FFFACD", "#F8F8FF", "#E0FFFF", "#FFFFFF"] 
-    },
-
-
-
- { 
-        originalName: "Deep Sea", 
-        emoji: '🌊', 
-        colors: ["#000000", "#0B0C10", "#1C1C1C", "#000080", "#252525", "#00008B", "#191970", "#0000CD", "#36454F", "#483D8B", "#2F4F4F", "#0000FF", "#8A2BE2", "#9932CC", "#6A5ACD", "#008080", "#008B8B", "#BA55D3", "#9370DB", "#5F9EA0", "#20B2AA", "#66CDAA", "#40E0D0", "#00FFFF", "#7FFFD4"] 
-    },
-  
-
-
-{
-        originalName: "Magic Aurora (23)",
-        emoji: '🦄',
-        colors: ["#10002B", "#240046", "#3C096C", "#5A189A", "#7B2CBF", "#9D4EDD", "#C77DFF", "#E0AAFF", "#F8D7DA", "#FFC8DD", "#FF9EBB", "#FF6392", "#FF0A54", "#F72585", "#B5179E", "#7209B7", "#4CC9F0", "#4895EF", "#4361EE", "#3F37C9", "#3A0CA3", "#480CA8", "#32004F"]
-    },
-
-
-
-
-{
-        originalName: "Golden Midnight", 
-        emoji: '🔱', 
-        colors: ["#000000", "#0A0802", "#141105", "#1F1A08", "#2B240B", "#382F0F", "#463A13", "#554618", "#65531D", "#766123", "#887029", "#9B8030", "#AF9038", "#C4A241", "#D9B44B", "#EFC756", "#FFD763", "#FFDE7D", "#FFE598", "#FFECB3", "#FFF2CE", "#FFF9E9", "#FFFFFF"]
-    },
 
 
 {
@@ -201,8 +128,41 @@ isArchived: true,
 
 
 
+{ 
+        originalName: "Cosmos", 
+        emoji: '🌌', 
+        colors: ["#000000", "#0B0C10", "#00008B", "#1F2833", "#191970", "#263238", "#4B0082", "#37474F", "#483D8B", "#8A2BE2", "#BA55D3", "#9370DB", "#1E90FF", "#FF00FF", "#DA70D6", "#FF69B4", "#00BFFF", "#40E0D0", "#B0E0E6", "#FFFACD", "#F8F8FF", "#E0FFFF", "#FFFFFF"] 
+    },
 
 
+  { 
+        originalName: "Sky", 
+        emoji: '☁️', 
+        colors: ["#303F9F", "#0D47A1", "#304FFE", "#3F51B5", "#01579B", "#1565C0", "#3D5AFE", "#2962FF", "#1976D2", "#0277BD", "#2979FF", "#1E88E5", "#0288D1", "#0091EA", "#039BE5", "#03A9F4", "#00B0FF", "#29B6F6", "#4FC3F7", "#40C4FF", "#81D4FA", "#B3E5FC", "#E1F5FE"]
+    },
+
+
+{
+        originalName: "Golden Midnight", 
+        emoji: '🔱', 
+        colors: ["#000000", "#0A0802", "#141105", "#1F1A08", "#2B240B", "#382F0F", "#463A13", "#554618", "#65531D", "#766123", "#887029", "#9B8030", "#AF9038", "#C4A241", "#D9B44B", "#EFC756", "#FFD763", "#FFDE7D", "#FFE598", "#FFECB3", "#FFF2CE", "#FFF9E9", "#FFFFFF"]
+    },
+
+
+
+{
+        originalName: "Magic Aurora",
+        emoji: '🦄',
+        colors: ["#10002B", "#240046", "#3C096C", "#5A189A", "#7B2CBF", "#9D4EDD", "#C77DFF", "#E0AAFF", "#F8D7DA", "#FFC8DD", "#FF9EBB", "#FF6392", "#FF0A54", "#F72585", "#B5179E", "#7209B7", "#4CC9F0", "#4895EF", "#4361EE", "#3F37C9", "#3A0CA3", "#480CA8", "#32004F"]
+    },
+
+
+ { 
+        originalName: "Deep Sea", 
+        emoji: '🌊', 
+        colors: ["#000000", "#0B0C10", "#1C1C1C", "#000080", "#252525", "#00008B", "#191970", "#0000CD", "#36454F", "#483D8B", "#2F4F4F", "#0000FF", "#8A2BE2", "#9932CC", "#6A5ACD", "#008080", "#008B8B", "#BA55D3", "#9370DB", "#5F9EA0", "#20B2AA", "#66CDAA", "#40E0D0", "#00FFFF", "#7FFFD4"] 
+    },
+  
 
 
 
@@ -346,12 +306,6 @@ isArchived: true,
    },
   
  
-    { 
-        originalName: "Amazon Rainforest", 
-        emoji: '🌳', 
-        colors: ["#013220", "#0B5345", "#145A32", "#0E6655", "#196F3D", "#117864", "#117A65", "#1D8348", "#1E8449", "#138D75", "#229954", "#239B56", "#16A085", "#27AE60", "#28B463", "#45B39D", "#52BE80", "#2ECC71", "#48C9B0", "#73C6B6", "#58D68D", "#82E0AA", "#A9DFBF"] 
-    },
- 
 
 {
     originalName: "Amethyst Dream",
@@ -452,8 +406,8 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 },
 
 {
-  originalName: "Optimism & Air",
-iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="optAirGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#59326b"/><stop offset="50%" stop-color="#d48385"/><stop offset="100%" stop-color="#fcd169"/></linearGradient></defs><circle cx="12" cy="12" r="10.5" fill="none" stroke="#87c9eb" stroke-width="1.5" stroke-dasharray="4 2.5"/><text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="16" fill="url(#optAirGrad)">א</text></svg>',
+  originalName: "Air",
+iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="planeTop" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e19477"/><stop offset="100%" stop-color="#ffefb0"/></linearGradient><linearGradient id="planeBottom" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3b2358"/><stop offset="100%" stop-color="#d48385"/></linearGradient></defs><path d="M22 2 L3 10 L11 13 Z" fill="url(#planeTop)"/><path d="M22 2 L11 13 L14 21 Z" fill="url(#planeBottom)"/></svg>',
   colors: [
     "#2a1b4d", "#2c1c4e", "#2e1d50", "#301e51", "#331f52", "#352054", "#372155", "#392257", 
     "#3b2358", "#3d2459", "#3f255b", "#42275c", "#44285d", "#46295f", "#482a60", "#4a2b62", 
@@ -492,6 +446,47 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 },
 
   
+{
+    originalName: "Golden & Silver ENH", 
+iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="zenGS" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#999999"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFFFFF"/></linearGradient></defs><path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 15.5 4 18.5 7 20.5" fill="none" stroke="#5A5A5F" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/><ellipse cx="9.5" cy="17" rx="4" ry="2.8" transform="rotate(-20 9.5 17)" fill="url(#zenGS)"/><path d="M 13 16.5 Q 14 10 13 4" fill="none" stroke="url(#zenGS)" stroke-width="2.2" stroke-linecap="round"/><path d="M 13 4 Q 19 4 19 10 Q 19 12 17 14 Q 20 9 14.5 5" fill="url(#zenGS)"/></svg>',
+
+    colors: (function() {
+        const stops = [
+            { pos: 0,   r: 0,   g: 0,   b: 0 },       // שחור מוחלט (התחלה)
+            { pos: 30,  r: 56,  g: 47,  b: 15 },      // זהב עמוק ואפל
+            { pos: 60,  r: 155, g: 128, b: 48 },      // זהב קלאסי
+            { pos: 90,  r: 255, g: 215, b: 99 },      // זהב בוהק
+            { pos: 115, r: 255, g: 255, b: 255 },     // לבן בוהק (שיא המעבר)
+            { pos: 140, r: 192, g: 192, b: 192 },     // כסף בהיר
+            { pos: 165, r: 90,  g: 90,  b: 95 },      // אפור פלדה כהה (מתחיל לקבל גוון קר)
+            { pos: 195, r: 35,  g: 20,  b: 55 },      // סגול עמוק, עשיר ומעומעם
+            { pos: 225, r: 10,  g: 15,  b: 30 },      // כחול חצות כמעט שחור (מעמקי החלל)
+            { pos: 255, r: 0,   g: 0,   b: 0 }        // סגירת מעגל לשחור מוחלט
+        ];
+        
+        const out = [];
+        for (let i = 0; i < 256; i++) {
+            let s = 0;
+            // מציאת המקטע הנוכחי
+            while (s < stops.length - 2 && i >= stops[s+1].pos) { s++; }
+            
+            const start = stops[s];
+            const end = stops[s+1];
+            const segmentLen = end.pos - start.pos;
+            const progress = segmentLen === 0 ? 0 : (i - start.pos) / segmentLen;
+            
+            // פונקציית החלקה (Smoothstep) למעברים אורגניים וזורמים
+            const ease = progress * progress * (3 - 2 * progress); 
+            
+            const r = Math.round(start.r + (end.r - start.r) * ease);
+            const g = Math.round(start.g + (end.g - start.g) * ease);
+            const b = Math.round(start.b + (end.b - start.b) * ease);
+            
+            out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+        }
+        return out;
+    })()
+    },
 
 
 
