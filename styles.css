@@ -184,6 +184,7 @@ body {
 
 #btnGameOfLife,
 #btnBrightnessEvo,
+#btnShowBreatheMenu,
 #btnGravitationalSort,
 #btnErosion,
 #btnDla,
@@ -222,7 +223,6 @@ body {
 
 
 #btnRedo           { grid-area: 3 / 3; }
-#btnShowBreatheMenu { grid-area: 3 / 4; }
 #btnUndo           { grid-area: 3 / 5; }
 
 #btnToggleSimMode  { grid-area: 4 / 4; }
@@ -271,7 +271,6 @@ body {
 
 .sim-mode-active #btnBrushMode,
 .sim-mode-active #btnGap,
-.sim-mode-active #btnShowBreatheMenu,
 .sim-mode-active #btnResetBoard,
 .sim-mode-active #btnTutorial,
 .sim-mode-active #btnSpecialReset,
@@ -281,6 +280,7 @@ body {
 
 
 .sim-mode-active #btnGameOfLife,
+.sim-mode-active #btnShowBreatheMenu,
 .sim-mode-active #btnMagnetModes,
 .sim-mode-active #btnBrightnessEvo,
 .sim-mode-active #btnGravitationalSort,
@@ -311,6 +311,7 @@ body {
 /* Center Panel (Cols 3, 4, 5, 6, 7) & Edges */
 
 /* שורה 1 - ניווט ושליטה */
+.sim-mode-active #btnShowBreatheMenu { grid-area: 1 / 3; }
 .sim-mode-active #btnStepForward   { display: inline-flex; grid-area: 1 / 4; } 
 .sim-mode-active #btnPalette       { grid-area: 1 / 5; }                      
 .sim-mode-active #btnPlayPauseLife { grid-area: 1 / 6; }                      
