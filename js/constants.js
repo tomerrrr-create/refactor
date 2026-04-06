@@ -291,6 +291,21 @@ isArchived: true,
     },
 
 
+{ 
+        originalName: "Jasmine Stardust Aura", 
+        iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="auraGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3B0066"/><stop offset="50%" stop-color="#AB6BB7"/><stop offset="100%" stop-color="#FDF9EB"/></linearGradient></defs><circle cx="5" cy="5" r="0.6" fill="#FDF9EB"/><circle cx="19" cy="7" r="0.8" fill="#FDF9EB"/><circle cx="4" cy="18" r="0.5" fill="#FDF9EB"/><circle cx="20" cy="19" r="0.7" fill="#FDF9EB"/><circle cx="12" cy="12" r="1.5" fill="#FDF9EB"/><path d="M12 20C7.5 20 4 16.5 4 12C4 7.5 7.5 4 12 4" fill="none" stroke="url(#auraGrad)" stroke-width="2.8" stroke-linecap="round"/><path d="M12 4C16.5 4 20 7.5 20 12C20 16.5 16.5 20 12 20" fill="none" stroke="url(#auraGrad)" stroke-width="2.8" stroke-linecap="round" opacity="0.6"/><path d="M12 8 Q 12 12, 16 12 Q 12 12, 12 16 Q 12 12, 8 12 Q 12 12, 12 8" fill="url(#auraGrad)"/></svg>', 
+        colors: [
+            "#3B0066", "#420075", "#4B0082", "#510B89", "#5A189A", "#60218A", "#682A7A", "#692488",
+            "#6A1E97", "#721E90", "#7B1E8A", "#772B8E", "#743993", "#7A3C91", "#804090", "#824381",
+            "#854772", "#88477D", "#8C4888", "#8D508A", "#8F588C", "#935C8A", "#986089", "#995D96",
+            "#9B5AA3", "#9E5E86", "#A0636A", "#9E6F80", "#A46D9B", "#AB6BB7", "#AA709E", "#A97585",
+            "#A8769C", "#AB7A8F", "#AE7E82", "#B37E72", "#B97F62", "#B885B1", "#B39178", "#B59095",
+            "#BD9189", "#C4927E", "#C69A7B", "#CC9A6A", "#D29B5A", "#C59EAA", "#C2AA8E", "#C9AD70",
+            "#D3AD73", "#DEAE77", "#D2B7A3", "#E1B674", "#D0C187", "#E3BF68", "#E0CF9C", "#E5D680",
+            "#EBE08A", "#F0E595", "#F2E9A3", "#F4ECB1", "#F6EFC0", "#F8F3CE", "#FAF6DC", "#FDF9EB"
+        ]
+    },
+
 
     { 
         originalName: "Japanese Spring", 
@@ -447,7 +462,8 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
   
 {
-    originalName: "Golden & Silver ENH", 
+    originalName: "Golden & Silver ENH",
+isArchived: true, 
 iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="zenGS" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#999999"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFFFFF"/></linearGradient></defs><path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 15.5 4 18.5 7 20.5" fill="none" stroke="#5A5A5F" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/><ellipse cx="9.5" cy="17" rx="4" ry="2.8" transform="rotate(-20 9.5 17)" fill="url(#zenGS)"/><path d="M 13 16.5 Q 14 10 13 4" fill="none" stroke="url(#zenGS)" stroke-width="2.2" stroke-linecap="round"/><path d="M 13 4 Q 19 4 19 10 Q 19 12 17 14 Q 20 9 14.5 5" fill="url(#zenGS)"/></svg>',
 
     colors: (function() {
