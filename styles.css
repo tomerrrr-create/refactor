@@ -302,7 +302,11 @@ body {
 }
 
 
-
+/* --- Easter Egg: Hidden Breathe Button --- */
+/* מעלים את הכפתור לחלוטין כל עוד הוא לא פעיל, אבל שומר אותו לחיץ */
+.sim-mode-active #btnShowBreatheMenu:not(.simulation-active) {
+    opacity: 0;
+}
 
 /* Left Panel (Col 1) */
 .sim-mode-active #btnColorPicker   { grid-area: 1 / 1; }

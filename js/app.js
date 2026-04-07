@@ -93,9 +93,8 @@ const SORT_MODES = [
 // מבפנים החוצה (Center-Out) 
     { 
         method: 'center-out', 
-        icon: '<circle cx="12" cy="12" r="1.5" fill="currentColor"/><path d="M 12 5 L 18 15.5 L 6 15.5 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
+        icon: '<path d="M 4 12 Q 12 5 20 12 Q 12 19 4 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>' 
     },
-
  
  // טמפרטורה (Temperature) 
     { 

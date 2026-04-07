@@ -409,6 +409,21 @@ isArchived: true,
     },
    
 
+{ 
+    originalName: "Desert Sunrise 64", 
+iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="14" cy="10" r="4" fill="#FAD6A5"/><path d="M-4 24 Q6 8 18 24 Z" fill="#C94752"/><path d="M6 24 Q16 12 26 24 Z" fill="#69121C"/></svg>',
+    colors: [
+        "#4B0610", "#520913", "#5A0C16", "#620F19", "#69121C", "#70151F", "#781822", "#7F1B25", 
+        "#861E28", "#8E212B", "#95242E", "#9C2731", "#A42A34", "#AC3237", "#B33A3A", "#BA383D", 
+        "#C23640", "#C63E49", "#C94752", "#CD505B", "#D15864", "#D4606D", "#D86976", "#DC727F", 
+        "#E07A88", "#E48291", "#E78B9A", "#EA94A3", "#EE9CAC", "#EA9DB8", "#E69EC4", "#E19FD1", 
+        "#DDA0DD", "#D2A5D9", "#C8ABD4", "#BDB0D0", "#C0B0D8", "#C3B1E1", "#CCAFD6", "#D5ADCB", 
+        "#DFACC1", "#E8AAB6", "#F1A8AB", "#F2AEAA", "#F3B4A9", "#ECB7B5", "#E6BAC0", "#DFBCCC", 
+        "#D8BFD8", "#E0BFCC", "#E7BFC0", "#EEBFB4", "#F6BFA8", "#F7C5A7", "#F8CBA6", "#F9D0A6", 
+        "#FAD6A5", "#F7D8B1", "#F4DBBD", "#F1DDC9", "#EFDFD6", "#ECE1E2", "#E9E4EE", "#E6E6FA"
+    ] 
+    },
+
 
 
     { 
