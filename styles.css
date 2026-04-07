@@ -317,23 +317,23 @@ body {
 .sim-mode-active #btnPlayPauseLife { grid-area: 1 / 6; }                      
 
 /* שורה 2 - (משמאל לימין) */
-/* המקום השמאלי (עמודה 1) ריק בכוונה */
-.sim-mode-active #btnContour           { grid-area: 2 / 3; }
-.sim-mode-active #btnDla               { grid-area: 2 / 4; }
-.sim-mode-active #btnGameOfLife        { grid-area: 2 / 5; }
-.sim-mode-active #btnTuring            { grid-area: 2 / 6; }
-.sim-mode-active #btnBrightnessEvo     { grid-area: 2 / 7; }
-.sim-mode-active #btnNudgeBrighter     { grid-area: 2 / 1; }
 .sim-mode-active #btnNudgeDarker       { grid-area: 2 / 9; }
+.sim-mode-active #btnDla               { grid-area: 2 / 3; }
+.sim-mode-active #btnContour           { grid-area: 2 / 4; }
+.sim-mode-active #btnGameOfLife        { grid-area: 2 / 5; }
+.sim-mode-active #btnBrightnessEvo     { grid-area: 2 / 6; }
+.sim-mode-active #btnTuring            { grid-area: 2 / 7; }
+.sim-mode-active #btnNudgeBrighter     { grid-area: 2 / 1; }
 
 /* שורה 3 - (משמאל לימין) */
 .sim-mode-active #btnResizeDown        { grid-area: 3 / 1; }
+.sim-mode-active #btnSpiral            { grid-area: 3 / 3; }
+.sim-mode-active #btnMagnetModes       { grid-area: 3 / 4; }
+.sim-mode-active #btnGravitationalSort { grid-area: 3 / 5; }
+.sim-mode-active #btnSandpile          { grid-area: 3 / 6; }
+.sim-mode-active #btnErosion           { grid-area: 3 / 7; }
 .sim-mode-active #btnResizeUp          { grid-area: 3 / 9; }
-.sim-mode-active #btnErosion           { grid-area: 3 / 3; }
-.sim-mode-active #btnGravitationalSort { grid-area: 3 / 4; }
-.sim-mode-active #btnMagnetModes       { grid-area: 3 / 5; }
-.sim-mode-active #btnSpiral            { grid-area: 3 / 6; }
-.sim-mode-active #btnSandpile          { grid-area: 3 / 7; }
+
 
 /* שורה 4 - כפתורי מערכת (מתחת לרקע) */
 .sim-mode-active #btnSave          { display: inline-flex; grid-area: 4 / 3; }

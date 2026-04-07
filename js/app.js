@@ -1574,7 +1574,7 @@ if (simulationName === 'magnet') {
         }
 
         // בדיקה: האם לסימולציה שנבחרה יש חלון הגדרות?
-        const simsWithSettings = ['gameOfLife', 'gravitationalSort', 'contour', 'spiral', 'sandpile', 'turing', 'brightnessEvo'];
+        const simsWithSettings = ['gameOfLife', 'gravitationalSort', 'contour', 'spiral', 'sandpile', 'turing'];
         if (dom.btnSimSettings && simsWithSettings.includes(simulationName)) {
             dom.btnSimSettings.classList.remove('hide-settings');
         }
@@ -2534,7 +2534,6 @@ function cycleSortMethod() {
               case 'spiral': modals.openSpiralSettingsModal(); break;
               case 'sandpile': modals.openChiFlowSettingsModal(); break;
               case 'turing': modals.openTuringSettingsModal(); break;
-              case 'brightnessEvo': modals.openBrightnessEvoSettingsModal(); break;
           }
       }
 
