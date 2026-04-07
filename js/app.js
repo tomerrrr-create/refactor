@@ -21,6 +21,9 @@ let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge הא�
       let breatheEvoMode = 'off'; // 'off', 'solo' or 'group'
 
 
+
+
+/* 
 // --- הגדרות מיון פלטות ואייקוני SVG (עיצוב מינימליסטי ורוחני) ---
       const SORT_MODES = [
 
@@ -33,10 +36,11 @@ let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge הא�
 // 2. ריברס - שקיעה / שורשים (אור לחושך)
           { method: 'reversed', icon: '<path d="M4 8h16M7 8 A5 5 0 0 0 17 8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="17" r="1.5" fill="currentColor"/>' },
 
- 
-// 3. מבפנים החוצה - אדוות מים (טיפה שמתרחבת)
-{ method: 'center-out', icon: '<circle cx="12" cy="12" r="1.5" fill="currentColor"/><path d="M 9 9 Q 5 12 9 15 M 15 9 Q 19 12 15 15 M 9 9 Q 12 5 15 9 M 9 15 Q 12 19 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' },
-   
+// 3. מבפנים החוצה (Center-Out) - התפשטות אלכימית (נקודה -> משולש -> מעגל)
+{ 
+    method: 'center-out', 
+    icon: '<circle cx="12" cy="12" r="1.35" fill="currentColor"/><path d="M12 4.5 L17.5 15.5 L6.5 15.5 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="9.25" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
+},   
 
       
 // 6. זיג-זג - כהה, בהיר, כהה, בהיר...
@@ -58,7 +62,63 @@ let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge הא�
          
  
       ];
+ */
 
+
+// --- הגדרות מיון פלטות ואייקוני SVG (עיצוב מינימליסטי ורוחני) ---
+const SORT_MODES = [
+
+// 1. הבהרה (Luminance) - מאפור ללבן, עם חץ מוקטן ועדין
+    { 
+        method: 'luminance', 
+        icon: '<circle cx="5.5" cy="12" r="3" fill="gray" stroke="none"/><path d="M 10.5 10 L 13.5 12 L 10.5 14" fill="none" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18.5" cy="12" r="3" fill="white" stroke="none"/>' 
+    },
+
+
+
+// 4. קשת בענן (Hue) - טבעת מקווקות (ספקטרום) סביב ליבה
+    { 
+        method: 'hue', 
+        icon: '<circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3.5 4.5" stroke-linecap="round"/>' 
+    },
+
+    // 2. החשכה (Reversed) - מלבן לאפור, עם חץ מוקטן ועדין
+    { 
+        method: 'reversed', 
+        icon: '<circle cx="5.5" cy="12" r="3" fill="white" stroke="none"/><path d="M 10.5 10 L 13.5 12 L 10.5 14" fill="none" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18.5" cy="12" r="3" fill="gray" stroke="none"/>' 
+    },
+
+
+
+// 3. מבפנים החוצה (Center-Out) - התפשטות אלכימית (נקודה -> משולש -> מעגל)
+    { 
+        method: 'center-out', 
+        icon: '<circle cx="12" cy="12" r="1.5" fill="currentColor"/><path d="M 12 5 L 18 15.5 L 6 15.5 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
+    },
+
+
+    // 6. טמפרטורה (Temperature) - סמלי האלכימיה לאש ומים (שעון חול)
+    { 
+        method: 'temperature', 
+        icon: '<path d="M 7 6 L 17 6 L 12 12 Z M 7 18 L 17 18 L 12 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' 
+    },
+
+
+    // 7. הסטת פאזה / שבר (Zig-zag) - חצאי מעגל מפוצלים ומוסטים
+    { 
+        method: 'zig-zag', 
+        icon: '<path d="M 5 11 A 5 5 0 0 1 15 11 Z" fill="currentColor"/><path d="M 9 13 A 5 5 0 0 0 19 13 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
+    },
+
+
+
+    // 5. קשת כהה (Dark-Rainbow) - ליקוי חמה (דיאגרמת ון של חפיפה אטומה)
+    { 
+        method: 'dark-rainbow', 
+        icon: '<circle cx="9" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M 12 7.39 A 5.5 5.5 0 0 1 12 16.61 A 5.5 5.5 0 0 1 12 7.39 Z" fill="currentColor"/>' 
+    }
+
+];
 
 
 

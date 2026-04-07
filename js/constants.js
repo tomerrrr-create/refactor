@@ -5,6 +5,17 @@ import { getText, translations } from './i18n.js';
 // --- Data ---
 export const PALETTES = [
 
+
+
+
+
+{
+  originalName: "Journey",
+  emoji: '🌓',
+  colors: ["#000000","#424242","#7B1FA2","#5E35B1","#673AB7","#9C27B0","#C2185B","#E91E63","#FF1744","#C62828","#D32F2F","#3F51B5","#1976D2","#2196F3","#42A5F5","#0097A7","#00BCD4","#4CAF50","#66BB6A","#FF5722","#FFA726","#FFC107","#BDBDBD"]
+    },
+
+
 {
     originalName: "Golden Midnight Extended", 
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="none" stroke="#FFD700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10.5 15 C 9.5 15, 9 14, 9 13 C 9 11, 11 10.5, 12.5 10.5 C 15 10.5, 16.5 12.5, 16.5 15 C 16.5 18, 14 19.5, 11.5 19.5 C 8.5 19.5, 6 17.5, 6 14 C 6 10, 8.5 7, 11.5 7 L 11.5 3 C 11.5 1.5, 13.5 1.5, 13.5 3 C 13.5 5.5, 11.5 7.5, 11.5 10 L 11.5 21 C 11.5 22.5, 9.5 23, 8.5 22 C 7.5 21, 8 20, 8 20" /><circle cx="8" cy="20" r="1" fill="#FFD700" /></svg>', 
@@ -46,13 +57,6 @@ isArchived: true,
     ]
     },
 
-
-
-{
-  originalName: "Journey",
-  emoji: '🌓',
-  colors: ["#000000","#424242","#7B1FA2","#5E35B1","#673AB7","#9C27B0","#C2185B","#E91E63","#FF1744","#C62828","#D32F2F","#3F51B5","#1976D2","#2196F3","#42A5F5","#0097A7","#00BCD4","#4CAF50","#66BB6A","#FF5722","#FFA726","#FFC107","#BDBDBD"]
-    },
 
 
 
