@@ -22,18 +22,138 @@ let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge הא�
 
 
 
+
+/* 
 // --- הגדרות מיון פלטות ואייקוני SVG (עיצוב מינימליסטי ורוחני) ---
       const SORT_MODES = [
-          { method: 'luminance', icon: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>' }, // עין
-          { method: 'hue', icon: '<path d="M5 18v-5a7 7 0 0 1 14 0v5"/>' }, 
-{ method: 'dark-rainbow', icon: '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M7 18v-6a5 5 0 0 1 10 0v6"/>' }, 
-        
-{ method: 'temperature', icon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>' }, // חצי סהר (איסלאם)
 
-          { method: 'reversed', icon: '<path d="M12 4v16M7 9h10"/>' }, // צלב (נצרות)
-          { method: 'center-out', icon: '<polygon points="12 3 20 16.5 4 16.5"/><polygon points="12 21 4 7.5 20 7.5"/>' } // מגן דוד (יהדות)
+
+// 1. מצב רגיל (בהירות) - זריחה (חושך לאור)
+          { method: 'luminance', icon: '<path d="M4 16h16M7 16 A5 5 0 0 1 17 16" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="7" r="1.5" fill="currentColor"/>' },
+
+
+          
+// 2. ריברס - שקיעה / שורשים (אור לחושך)
+          { method: 'reversed', icon: '<path d="M4 8h16M7 8 A5 5 0 0 0 17 8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="17" r="1.5" fill="currentColor"/>' },
+
+// 3. מבפנים החוצה (Center-Out) - התפשטות אלכימית (נקודה -> משולש -> מעגל)
+{ 
+    method: 'center-out', 
+    icon: '<circle cx="12" cy="12" r="1.35" fill="currentColor"/><path d="M12 4.5 L17.5 15.5 L6.5 15.5 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="9.25" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
+},   
+
+      
+// 6. זיג-זג - כהה, בהיר, כהה, בהיר...
+{ method: 'zig-zag', icon: '<path d="M 4 18 L 9 6 L 15 18 L 20 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' },
+
+
+{ method: 'temperature', icon: '<circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 18 Q8 14 12 18 T20 18" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
+
+
+
+          // 4. מצב קשת - מינימליסטי (כמו האות 'ח')
+          { method: 'hue', icon: '<path d="M 6 19 V 10 A 6 6 0 0 1 18 10 V 19"/>' }, 
+          
+
+
+          // 5. קשת כהה - 'ח' מרכזית עם 2 קשתות פנימיות בגווני אפור
+          { method: 'dark-rainbow', icon: '<path d="M 4 19 V 11 A 8 8 0 0 1 20 11 V 19"/><path d="M 7 19 V 11 A 5 5 0 0 1 17 11 V 19" stroke="#aaa"/><path d="M 10 19 V 11 A 2 2 0 0 1 14 11 V 19" stroke="#666"/>' }
+
+         
+ 
       ];
+*/
+
+
+// --- הגדרות מיון עיצוס אלכימיה
+const SORT_MODES = [
+
+//הבהרה (Luminance) -
+    { 
+        method: 'luminance', 
+        icon: '<circle cx="5.5" cy="12" r="3" fill="gray" stroke="none"/><path d="M 10.5 10 L 13.5 12 L 10.5 14" fill="none" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18.5" cy="12" r="3" fill="white" stroke="none"/>' 
+    },
+
+
+
+//  קשת בענן (Hue) -
+    { 
+        method: 'hue', 
+        icon: '<circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3.5 4.5" stroke-linecap="round"/>' 
+    },
+
+ // החשכה (Reversed) - 
+    { 
+        method: 'reversed', 
+        icon: '<circle cx="5.5" cy="12" r="3" fill="white" stroke="none"/><path d="M 10.5 10 L 13.5 12 L 10.5 14" fill="none" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18.5" cy="12" r="3" fill="gray" stroke="none"/>' 
+    },
+
+
+
+// מבפנים החוצה (Center-Out) 
+    { 
+        method: 'center-out', 
+        icon: '<path d="M 4 12 Q 12 5 20 12 Q 12 19 4 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>' 
+    },
+ 
+ // טמפרטורה (Temperature) 
+    { 
+        method: 'temperature', 
+        icon: '<path d="M 7 6 L 17 6 L 12 12 Z M 7 18 L 17 18 L 12 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' 
+    },
+
+
+  //  הסטת פאזה / שבר (Zig-zag) -
+    { 
+        method: 'zig-zag', 
+        icon: '<path d="M 5 11 A 5 5 0 0 1 15 11 Z" fill="currentColor"/><path d="M 9 13 A 5 5 0 0 0 19 13 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
+    },
+
+
+  // קשת כהה (Dark-Rainbow) -
+    { 
+        method: 'dark-rainbow', 
+        icon: '<circle cx="9" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M 12 7.39 A 5.5 5.5 0 0 1 12 16.61 A 5.5 5.5 0 0 1 12 7.39 Z" fill="currentColor"/>' 
+    }
+
+];
+ 
+
+
+
       let currentSortIndex = 0;
+
+
+
+
+// --- לוגיקת ניווט חכמה לפלטות (לפי קבוצות) ---
+
+function getNextPaletteIndex(currentIndex) {
+    // מציאת הקבוצה שאליה שייכת הפלטה הנוכחית
+    const group = C.PALETTE_GROUPS.find(g => g.indexes.includes(currentIndex));
+    
+    // פולבאק למקרה שמשהו השתבש (התנהגות רגילה)
+    if (!group || group.indexes.length === 0) {
+        return (currentIndex + 1) % PALETTES.length; 
+    }
+
+    // מציאת המיקום שלנו בתוך הקבוצה ומעבר להבא (במעגל סגור)
+    const posInGroup = group.indexes.indexOf(currentIndex);
+    const nextPos = (posInGroup + 1) % group.indexes.length;
+    return group.indexes[nextPos];
+}
+
+function getPrevPaletteIndex(currentIndex) {
+    const group = C.PALETTE_GROUPS.find(g => g.indexes.includes(currentIndex));
+    
+    if (!group || group.indexes.length === 0) {
+        return (currentIndex - 1 + PALETTES.length) % PALETTES.length;
+    }
+
+    const posInGroup = group.indexes.indexOf(currentIndex);
+    const prevPos = (posInGroup - 1 + group.indexes.length) % group.indexes.length;
+    return group.indexes[prevPos];
+}
 
 
 
@@ -115,13 +235,104 @@ function getLuminance(hex) {
       let currentSortMethod = 'luminance'; // שיטת המיון הפעילה כברירת מחדל
 
 
-
 function sortColorsArray(colorsArray, method) {
           // קודם כל, ממיינים לפי בהירות כבסיס
           const sortedByLuminance = [...colorsArray].sort((a, b) => getLuminance(a) - getLuminance(b));
 
           switch (method) {
+
+
+case 'zen-void': {
+                  // חישוב ה"ריק" - הממוצע המדויק של כל צבעי הפלטה יחד
+                  let rSum = 0, gSum = 0, bSum = 0;
+                  colorsArray.forEach(c => {
+                      const rgb = hexToRgb(c) || { r: 0, g: 0, b: 0 };
+                      rSum += rgb.r; gSum += rgb.g; bSum += rgb.b;
+                  });
+                  const len = colorsArray.length;
+                  const avgR = rSum / len, avgG = gSum / len, avgB = bSum / len;
+
+                  // מיון: אלו שקרובים ל"ריק"/לממוצע יהיו בהתחלה, הקיצוניים יידחקו לסוף
+                  return [...colorsArray].sort((a, b) => {
+                      const rgbA = hexToRgb(a) || { r: 0, g: 0, b: 0 };
+                      const rgbB = hexToRgb(b) || { r: 0, g: 0, b: 0 };
+                      const distA = Math.hypot(rgbA.r - avgR, rgbA.g - avgG, rgbA.b - avgB);
+                      const distB = Math.hypot(rgbB.r - avgR, rgbB.g - avgG, rgbB.b - avgB);
+                      return distA - distB;
+                  });
+              }
+
+
+
+case 'zig-zag': {
+                  // קודם כל הופכים את הרשימה כדי שתהיה מסודרת מהבהיר ביותר לכהה ביותר
+                  const reversedLuminance = [...sortedByLuminance].reverse();
+                  
+                  // מציאת האינדקס האמצעי ברשימה ההפוכה
+                  const mid = Math.floor(reversedLuminance.length / 2);
+                  
+                  // 1. מהאמצע ועד לצבע הכהה ביותר (שנמצא עכשיו בסוף הרשימה)
+                  const darkHalf = reversedLuminance.slice(mid);
+                  
+                  // 2. מהצבע הבהיר ביותר (שנמצא בתחילת הרשימה) ועד לאמצע
+                  const lightHalf = reversedLuminance.slice(0, mid);
+                  
+                  // מחברים: קודם מהאמצע לכהה, ואז מהבהיר לאמצע
+                  return [...darkHalf, ...lightHalf];
+              }
+
+case 'waves': {
+                  // גל כפול: כהה -> בהיר -> כהה -> בהיר
+                  const sorted = [...sortedByLuminance];
+                  const quarter = Math.floor(sorted.length / 4);
+                  
+                  const q1 = sorted.slice(0, quarter); // עולה
+                  const q2 = sorted.slice(quarter, quarter * 2).reverse(); // יורד
+                  const q3 = sorted.slice(quarter * 2, quarter * 3); // עולה
+                  const q4 = sorted.slice(quarter * 3).reverse(); // יורד
+                  
+                  return [...q1, ...q2, ...q3, ...q4];
+              }
+
+
+
+case 'outside-in': {
+                  const outsideInArray = new Array(sortedByLuminance.length);
+                  let left = 0;
+                  let right = sortedByLuminance.length - 1;
+                  for (let i = 0; i < sortedByLuminance.length; i++) {
+                      if (i % 2 === 0) {
+                          outsideInArray[left] = sortedByLuminance[i];
+                          left++;
+                      } else {
+                          outsideInArray[right] = sortedByLuminance[i];
+                          right--;
+                      }
+                  }
+                  return outsideInArray;
+              }
+
+
+
+case 'biomes': {
+                  // חלוקה בכוח ל-4 "משפחות" צבע כדי לייצר גבולות חדים (יבשות)
+                  return [...colorsArray].sort((a, b) => {
+                      const bucketSize = 90; // 360 מעלות / 4 משפחות
+                      const bucketA = Math.floor(getHue(a) / bucketSize);
+                      const bucketB = Math.floor(getHue(b) / bucketSize);
+                      
+                      // אם הם מאותה משפחה, נסדר לפי בהירות כדי לייצר "טקסטורה" בתוך היבשת
+                      if (bucketA === bucketB) {
+                          return getLuminance(a) - getLuminance(b);
+                      }
+                      return bucketA - bucketB;
+                  });
+              }
+
               case 'center-out':
+
+
+
                   const centerOut = new Array(sortedByLuminance.length);
                   let center = Math.floor(sortedByLuminance.length / 2);
                   let left = center - 1; let right = center + 1;
@@ -291,7 +502,8 @@ tile.v = tile.k;
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
-
+let spiralRules = { ...C.defaultSpiralRules };
+let magnetRules = { ...C.defaultMagnetRules };
 let chiFlowRules = { ...C.defaultChiFlowRules };
       let turingRules = { ...C.defaultTuringRules };
       let dlaState = null;
@@ -320,7 +532,10 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
       let symmetryMode = 'off';
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
- 
+let spiralMode = 'off';
+let magnetMode = 'off';
+ let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
+
       // breatheEvoMode is defined at the top
       
       const isGold = (index) => boardState[index]?.isGold;
@@ -497,25 +712,104 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
       }
       
 
-
+// משתנים גלובליים לציור מהיר (מחוץ לפונקציה כדי למחזר אותם)
+let offscreenRenderCanvas = null;
+let offscreenRenderCtx = null;
+let cachedImgData = null; // משתנה למניעת דליפת זיכרון!
 
 function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
     if (!targetCtx) return;
-
-    if (separatorPx > 0) {
-        targetCtx.fillStyle = '#000000';
-        targetCtx.fillRect(0, 0, width, height);
-    } else {
-        targetCtx.clearRect(0, 0, width, height);
-    }
-
     if (boardState.length === 0) return;
-    
-    const totalGapSize = (n - 1) * separatorPx;
-    const tileSize = (width - totalGapSize) / n;
-    
+
     const currentPalette = palette();
     const paletteAsRgb = currentPalette.map(hexToRgb);
+
+    // ---------------------------------------------------------
+    // נתיב אולטרה-מהיר: מצב סימולציה (בלי מרווחים - separatorPx === 0)
+    // ---------------------------------------------------------
+    if (separatorPx === 0) {
+        if (!offscreenRenderCanvas) {
+            offscreenRenderCanvas = document.createElement('canvas');
+            offscreenRenderCtx = offscreenRenderCanvas.getContext('2d', { willReadFrequently: true });
+        }
+        
+        // יצירת חלל הזיכרון *רק פעם אחת* (או כשהלוח משנה גודל) - סוגר את דליפת הזיכרון
+        if (offscreenRenderCanvas.width !== n) {
+            offscreenRenderCanvas.width = n;
+            offscreenRenderCanvas.height = n;
+            cachedImgData = offscreenRenderCtx.createImageData(n, n);
+        } else if (!cachedImgData) {
+            cachedImgData = offscreenRenderCtx.createImageData(n, n);
+        }
+
+        const imgData = cachedImgData;
+        const data = imgData.data;
+        const goldRgb = [255, 215, 0]; // C.GOLD in RGB
+
+        for (let i = 0; i < n * n; i++) {
+            const tileData = boardState[i];
+            if (!tileData) continue;
+
+            let rgb;
+
+            if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
+                const BREATHE_SPEED = 0.0015;
+                const elapsed = timestamp - breatheStartTime;
+                let wave = (breatheEvoMode === 'solo') 
+                    ? Math.sin(((elapsed - tileData.startDelay + (2 * Math.PI) / BREATHE_SPEED) % ((2 * Math.PI) / BREATHE_SPEED)) * BREATHE_SPEED)
+                    : Math.sin(elapsed * BREATHE_SPEED + tileData.k * 0.8);
+                
+                const fadeInProgress = Math.min(elapsed / 2000, 1.0);
+                const brightnessFactor = (1.0 * (1 - fadeInProgress)) + ((0.7 + wave * 0.3) * fadeInProgress);
+
+                const baseRgb = paletteAsRgb[norm(tileData.k)];
+                rgb = [
+                    Math.round(baseRgb[0] * brightnessFactor),
+                    Math.round(baseRgb[1] * brightnessFactor),
+                    Math.round(baseRgb[2] * brightnessFactor)
+                ];
+            } else if (tileData.isGold) {
+                rgb = goldRgb;
+            } else if (tileData.prevK !== null && timestamp) {
+                const elapsed = timestamp - tileData.animStart;
+                const progress = Math.min(elapsed / ANIMATION_DURATION, 1.0);
+                const fromRgb = paletteAsRgb[norm(tileData.prevK)];
+                const toRgb = paletteAsRgb[norm(tileData.k)];
+                rgb = [
+                    Math.round(lerp(fromRgb[0], toRgb[0], progress)),
+                    Math.round(lerp(fromRgb[1], toRgb[1], progress)),
+                    Math.round(lerp(fromRgb[2], toRgb[2], progress))
+                ];
+            } else {
+                rgb = paletteAsRgb[norm(tileData.k)];
+            }
+
+            // כתיבה ישירה לזיכרון התמונה (4 תאים לכל פיקסל: R, G, B, Alpha)
+            const dataIndex = i * 4;
+            data[dataIndex] = rgb[0];     // Red
+            data[dataIndex + 1] = rgb[1]; // Green
+            data[dataIndex + 2] = rgb[2]; // Blue
+            data[dataIndex + 3] = 255;    // Alpha (אטימות מלאה)
+        }
+
+        // צייר את המערך לקנבס הווירטואלי הקטן
+        offscreenRenderCtx.putImageData(imgData, 0, 0);
+
+        // מתיחת הקנבס הווירטואלי על פני הקנבס האמיתי
+        targetCtx.imageSmoothingEnabled = false; 
+        targetCtx.drawImage(offscreenRenderCanvas, 0, 0, width, height);
+        
+        return; // סיימנו את הרינדור המהיר!
+    }
+
+    // ---------------------------------------------------------
+    // נתיב רגיל וקלאסי (כשיש מרווחים, separatorPx > 0)
+    // ---------------------------------------------------------
+    targetCtx.fillStyle = '#000000';
+    targetCtx.fillRect(0, 0, width, height);
+
+    const totalGapSize = (n - 1) * separatorPx;
+    const tileSize = (width - totalGapSize) / n;
 
     for (let i = 0; i < n * n; i++) {
         const tileData = boardState[i];
@@ -529,16 +823,14 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
             let wave;
 
             if (breatheEvoMode === 'solo') {
-const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;
-            const effectiveElapsed = (elapsed - tileData.startDelay + cycleDuration) % cycleDuration;
-            wave = Math.sin(effectiveElapsed * BREATHE_SPEED); // השתמש בזמן האפקטיבי, ללא צורך בהיסט פאזה
-
-            } else { // 'group' mode
+                const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;
+                const effectiveElapsed = (elapsed - tileData.startDelay + cycleDuration) % cycleDuration;
+                wave = Math.sin(effectiveElapsed * BREATHE_SPEED);
+            } else { 
                 wave = Math.sin(elapsed * BREATHE_SPEED + tileData.k * 0.8);
             }
             
-            const FADE_IN_DURATION = 2000;
-            const fadeInProgress = Math.min(elapsed / FADE_IN_DURATION, 1.0);
+            const fadeInProgress = Math.min(elapsed / 2000, 1.0);
             const animatedFactor = 0.7 + wave * 0.3; 
             const brightnessFactor = (1.0 * (1 - fadeInProgress)) + (animatedFactor * fadeInProgress);
 
@@ -546,7 +838,7 @@ const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;
             finalColor = adjustBrightness(originalColor, brightnessFactor);
 
         } else if (tileData.isGold) {
-            finalColor = C.GOLD;
+            finalColor = C.GOLD || '#FFD700'; 
         } else if (tileData.prevK !== null && timestamp) {
             const elapsed = timestamp - tileData.animStart;
             const progress = Math.min(elapsed / ANIMATION_DURATION, 1.0);
@@ -569,13 +861,11 @@ const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;
         const x = col * (tileSize + separatorPx);
         const y = row * (tileSize + separatorPx);
         
-        if (separatorPx === 0) {
-            targetCtx.fillRect(x - 0.5, y - 0.5, tileSize + 1, tileSize + 1);
-        } else {
-            targetCtx.fillRect(x, y, tileSize, tileSize);
-        }
+        targetCtx.fillRect(x, y, tileSize, tileSize);
     }
 }
+
+
 
       function renderToScreen(timestamp) {
         if (!ctx || !canvas) return;
@@ -694,7 +984,8 @@ const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;
 
 dlaState = null; // איפוס לפרקטלים
         turingState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
-
+spiralMode = 'off';
+    updateSpiralButtonUI();
         startAnimationLoop();
 
       }
@@ -816,10 +1107,16 @@ function applyNudgeLogic(direction) {
         hasPerformedInitialAutofill = true;
       }
       
-      function handlePaletteSwitch(backwards = false) {
-        const len = C.PALETTES.length;
-        switchToPalette((activePaletteIndex + (backwards ? -1 : 1) + len) % len);
+function handlePaletteSwitch(backwards = false) {
+        let nextIndex;
+        if (backwards) {
+            nextIndex = getPrevPaletteIndex(activePaletteIndex);
+        } else {
+            nextIndex = getNextPaletteIndex(activePaletteIndex);
+        }
+        switchToPalette(nextIndex);
       }
+
       
       function switchToPalette(index) {
         if (index === activePaletteIndex) return;
@@ -933,6 +1230,15 @@ case 'brightnessEvo':
                 boardState = nextState; 
                 break;
 
+case 'spiral': 
+                nextState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
+                boardState = nextState; 
+                break;
+case 'magnet': 
+    nextState = Simulations.runMagnetGeneration({ ...context, magnetRules }); 
+    boardState = nextState; 
+    break;
+
 case 'sandpile': 
     nextState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
     boardState = nextState; 
@@ -1011,6 +1317,20 @@ case 'contour':
                 boardState = Simulations.runContourGeneration(context); 
                 break;
 
+case 'spiral': 
+                boardState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
+                break;
+
+case 'magnet':
+                boardState = Simulations.runMagnetGeneration({
+                    n: gridSize,
+                    currentBoardState: boardState,
+                    magnetRules: app.magnetRules,
+                    currentPalette: currentPalette
+                });
+                break;
+
+
 case 'sandpile': 
     boardState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
     break;
@@ -1044,7 +1364,7 @@ break;
         });
       }
       
-      function pauseLife() {
+function pauseLife() {
           if (!isLifePlaying) return;
           isLifePlaying = false;
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
@@ -1062,33 +1382,43 @@ break;
           dom.iconPlay.style.display = 'block';
           dom.iconPause.style.display = 'none';
           if (armedSimulation && armedSimulation !== 'breathe') dom.btnStepForward.disabled = false;
-          dom.btnGameOfLife.disabled = false;
-          dom.btnBrightnessEvo.disabled = false;
-          dom.btnShowBreatheMenu.disabled = false;
-          dom.btnGravitationalSort.disabled = false;
-          dom.btnErosion.disabled = false;
-          dom.btnDla.disabled = false;
-dom.btnContour.disabled = false;
- dom.btnSandpile.disabled = false;     
-}
+          
+          // מחזירים לפעולה את כל כפתורי הסימולציה
+          const simButtons = [
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, 
+              dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
+              dom.btnContour, dom.btnSandpile, dom.btnTuring, 
+              dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
+          ].filter(Boolean);
+          
+          simButtons.forEach(btn => btn.disabled = false);
+      }
+
+
 
       
-      function togglePlayPauseLife() {
+function togglePlayPauseLife() {
           if (isLifePlaying) {
               pauseLife();
               return;
           }
           if (!armedSimulation) return;
 
+          // רשימת כל כפתורי הסימולציה
+          const simButtons = [
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, 
+              dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
+              dom.btnContour, dom.btnSandpile, dom.btnTuring, 
+              dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
+          ].filter(Boolean);
+
           // --- Handle Breathe Simulation (uses animationLoop) ---
           if (armedSimulation === 'breathe') {
-
-
-const BREATHE_SPEED = 0.0015;
-            const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;            boardState.forEach(tile => {
-                tile.startDelay = Math.random() * cycleDuration; 
-            });
-
+              const BREATHE_SPEED = 0.0015;
+              const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;            
+              boardState.forEach(tile => {
+                  tile.startDelay = Math.random() * cycleDuration; 
+              });
 
               breatheStartTime = performance.now();
               isLifePlaying = true;
@@ -1096,15 +1426,15 @@ const BREATHE_SPEED = 0.0015;
               dom.iconPlay.style.display = 'none';
               dom.iconPause.style.display = 'block';
               dom.btnStepForward.disabled = true;
-              dom.btnGameOfLife.disabled = true;
-              dom.btnBrightnessEvo.disabled = true;
-              dom.btnShowBreatheMenu.disabled = true;
-              dom.btnGravitationalSort.disabled = true;
-              dom.btnErosion.disabled = true;
-              dom.btnDla.disabled = true;
-     dom.btnContour.disabled = true;         
-            dom.btnSandpile.disabled = true;
-  startAnimationLoop(); // Start the smooth animation loop
+              
+              // מכבים את כל הכפתורים למעט הכפתור של הנשימה
+              simButtons.forEach(btn => {
+                  if (btn.id !== 'btnShowBreatheMenu') {
+                      btn.disabled = true;
+                  }
+              });
+
+              startAnimationLoop(); // Start the smooth animation loop
               return; // Exit here, don't start gameLoop
           }
 
@@ -1119,16 +1449,17 @@ const BREATHE_SPEED = 0.0015;
           dom.iconPlay.style.display = 'none';
           dom.iconPause.style.display = 'block';
           dom.btnStepForward.disabled = true;
-dom.btnGameOfLife.disabled = true;
-          dom.btnBrightnessEvo.disabled = true;
-          dom.btnShowBreatheMenu.disabled = true;
-          dom.btnGravitationalSort.disabled = true;
-          dom.btnErosion.disabled = true;
-          dom.btnDla.disabled = true;
-          dom.btnContour.disabled = true;
-          dom.btnSandpile.disabled = true;
+          
+          // מכבים את כל הכפתורים למעט הכפתור של הסימולציה הפעילה!
+          simButtons.forEach(btn => {
+              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase())) {
+                  btn.disabled = true;
+              }
+          });
+
           gameLoop();
       }
+
       
       function getRandomGridPosition(n) {
         return { y: Math.floor(Math.random() * n), x: Math.floor(Math.random() * n) };
@@ -1203,6 +1534,7 @@ function initializeDla() {
 
 
 
+
 function armSimulation(simulationName) {
     if (isLifePlaying) return;
 
@@ -1210,59 +1542,101 @@ function armSimulation(simulationName) {
     const isTogglingOff = currentlyArmed === simulationName;
 
     // --- RESET ALL STATES ---
-    // This is the core of the fix. We reset everything first.
+    // כאן אנחנו מאפסים את הזיכרון של כל הכפתורים המחזוריים לפני שנדליק משהו חדש
     armedSimulation = null;
     brightnessEvoMode = 'off';
     dlaMode = 'off';
     breatheEvoMode = 'off';
     turingState = null;
+    gsMode = 'off'; // איפוס הגרביטציה
+    spiralMode = 'off'; // איפוס הספירלה (התיקון לבאג)
+magnetMode = 'off';
+if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
-    updateBrightnessEvoButtonUI(); // Update UI to reflect the reset
-    updateDlaButtonUI();           // Update UI to reflect the reset
-    updateBreatheEvoButtonUI();    // Update UI to reflect the reset
+    
+    // כיבוי ויזואלי של כל הכפתורים
+    updateBrightnessEvoButtonUI();
+    updateDlaButtonUI();
+    updateBreatheEvoButtonUI();
+    if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
+    if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
     
     dom.btnPlayPauseLife.disabled = true;
     dom.btnStepForward.disabled = true;
     // --- END RESET ---
 
-    // If we weren't just toggling off, arm the new simulation.
+
+if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
+
+    // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
+
+
     if (!isTogglingOff) {
         armedSimulation = simulationName;
         
-        // Special handling for the cycling buttons
+
+
+        // הגדרת דיפולט (ברירת מחדל) לכפתורים מחזוריים כשהם נדלקים
         if (simulationName === 'brightnessEvo') {
-            brightnessEvoMode = 'brightness'; // Default to the first 'on' state
+            brightnessEvoMode = 'brightness';
         }
         if (simulationName === 'dla') {
-            dlaMode = 'genetics'; // Default to the first 'on' state
+            dlaMode = 'genetics';
             initializeDla();
         }
         if (simulationName === 'breathe') {
-            breatheEvoMode = 'solo'; // Default to the first 'on' state
+            breatheEvoMode = 'solo';
+        }
+        if (simulationName === 'gravitationalSort') {
+            gsMode = 'up';
+            if (typeof gravitationalSortRules !== 'undefined') gravitationalSortRules.direction = 'up';
         }
 
+if (simulationName === 'spiral') {
+    spiralMode = 'b';
+    if (typeof spiralRules !== 'undefined') spiralRules.method = 'b';
+}
+
+
+if (simulationName === 'magnet') {
+    magnetMode = 'magnet';
+    if (typeof magnetRules !== 'undefined') magnetRules.method = 'magnet';
+}
+
+
+        // צביעת הכפתור הנבחר במסגרת פעילה (זהב)
         const buttonToActivate = simButtons.find(btn => btn.id.toLowerCase().includes(simulationName.toLowerCase()));
         if (buttonToActivate) {
             buttonToActivate.classList.add('simulation-active');
         }
         
-        updateBrightnessEvoButtonUI(); // Update UI with the new state
-        updateDlaButtonUI();           // Update UI with the new state
-        updateBreatheEvoButtonUI();    // Update UI with the new state
+        // הדלקה ויזואלית של האייקונים בכפתורים המחזוריים
+        updateBrightnessEvoButtonUI();
+        updateDlaButtonUI();
+        updateBreatheEvoButtonUI();
+        if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
+        if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
 
         dom.btnPlayPauseLife.disabled = false;
         dom.btnStepForward.disabled = false;
 
-        // Disable step forward specifically for breathe
+
+// מניעת כפתור 'צעד קדימה' בנשימה (שעובדת על אנימציה רציפה)
         if (simulationName === 'breathe') {
             dom.btnStepForward.disabled = true;
         }
+
+        // בדיקה: האם לסימולציה שנבחרה יש חלון הגדרות?
+        const simsWithSettings = ['gameOfLife', 'gravitationalSort', 'contour', 'spiral', 'sandpile', 'turing'];
+        if (dom.btnSimSettings && simsWithSettings.includes(simulationName)) {
+            dom.btnSimSettings.classList.remove('hide-settings');
+        }
+
     }
 }
-
 
       
       function setBrushMode(isBrushOn) {
@@ -1446,32 +1820,23 @@ const brushSizeSlider = document.getElementById('brushSizeSlider');
         });
       }
 
-      function handlePointerDownCtrl(e) {
+
+function handlePointerDownCtrl(e) {
         if (isBreathing) return;
         const btn = e.currentTarget;
         longPressTimer = setTimeout(() => {
             wasLongPress = true;
-            // Phase 1 Addition: Long press on Invert button
-            if (btn.id === 'btnInvert') {
-                modals.openAdvancedColorMappingModal();
-                return;
-            }
-if (btn.id === 'btnColorPicker') {
-                modals.openColorPickerModal();
-                return;
-            }
+
+            if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
+            if (btn.id === 'btnColorPicker') { modals.openColorPickerModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
-            if (btn.id === 'btnGameOfLife') { modals.openGolSettingsModal(); return; }
-            if (btn.id === 'btnGravitationalSort') { modals.openGravitationalSortSettingsModal(); return; }
-            if (btn.id === 'btnContour') { modals.openContourSettingsModal(); return; } // <-- ADDED HERE
-if (btn.id === 'btnSandpile') { modals.openChiFlowSettingsModal(); return; }
-if (btn.id === 'btnTuring') { modals.openTuringSettingsModal(); return; }
-if (btn.id === 'btnBrightnessEvo') { modals.openBrightnessEvoSettingsModal(); return; }
             if (btn.id === 'btnPalette') { modals.openPaletteModal(); return; }
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
         }, C.LONG_PRESS_SHOW_MS);
       }
+
+
       
       function handleCtrlClick(e, actionFn) {
         if (isBreathing && e.currentTarget.id !== 'btnPlayPauseLife') return;
@@ -1533,6 +1898,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnErosion.title = getText('tooltip_erosion');
         dom.btnDla.title = getText('tooltip_dla'); 
         dom.btnContour.title = getText('tooltip_contour');
+dom.btnSpiral.title = getText('tooltip_spiral');
 dom.btnTuring.title = getText('tooltip_turing');
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         dom.btnBrushMode.title = isBrushModeOn ? getText('brushMode_paint') : getText('brushMode_copy');
@@ -1602,8 +1968,10 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
         armedSimulation = null;
         dlaState = null;
 turingState = null;
+if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
         dom.btnPlayPauseLife.disabled = true;
@@ -1615,7 +1983,13 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     updateDlaButtonUI();
     breatheEvoMode = 'off';
     updateBreatheEvoButtonUI();
+spiralMode = 'off';
+    updateSpiralButtonUI();
+magnetMode = 'off';
+    if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
+gsMode = 'off';
+    updateGravitationalSortButtonUI();
 
       }
 
@@ -1997,6 +2371,53 @@ function cycleDlaMode() {
 }
 
 
+// --- NEW: Gravitational Sort UI and Cycling ---
+function updateGravitationalSortButtonUI() {
+    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'simulation-active');
+
+    if (gsMode !== 'off') {
+        dom.btnGravitationalSort.classList.add('mode-' + gsMode);
+        if (armedSimulation === 'gravitationalSort') {
+             dom.btnGravitationalSort.classList.add('simulation-active');
+        }
+    }
+}
+
+function cycleGravitationalSortMode() {
+    const oldMode = gsMode;
+    const sequence = ['off', 'up', 'right', 'center_x' ];
+
+
+
+ //   const sequence = ['off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'];
+
+
+
+
+
+    const currentIndex = sequence.indexOf(gsMode);
+    const nextIndex = (currentIndex + 1) % sequence.length;
+    gsMode = sequence[nextIndex];
+
+    if (gsMode !== 'off') {
+        gravitationalSortRules.direction = gsMode; // מעדכן את חוקי הסימולציה בפועל
+    }
+
+    // הדלקה או כיבוי של הסימולציה בהתאם למצב
+    if (oldMode === 'off' && gsMode !== 'off') {
+        armSimulation('gravitationalSort');
+    } else if (oldMode !== 'off' && gsMode === 'off') {
+        if (armedSimulation === 'gravitationalSort') {
+            armSimulation(null);
+        }
+    }
+    
+    updateGravitationalSortButtonUI();
+}
+// --- END: Gravitational Sort Functions ---
+
+
+
 // --- NEW: Breathe Simulation UI and Cycling ---
 function updateBreatheEvoButtonUI() {
     dom.btnShowBreatheMenu.classList.remove('mode-solo', 'mode-group', 'simulation-active');
@@ -2044,6 +2465,91 @@ function cycleBreatheEvoMode() {
 }
 // --- END: New Breathe Functions ---
 
+// --- NEW: Spiral UI and Cycling ---
+function updateSpiralButtonUI() {
+    // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'simulation-active');
+
+    if (spiralMode !== 'off') {
+        dom.btnSpiral.classList.add('mode-' + spiralMode);
+        if (armedSimulation === 'spiral') {
+             dom.btnSpiral.classList.add('simulation-active');
+        }
+    }
+}
+
+
+function cycleSpiralMode() {
+    const oldMode = spiralMode;
+const sequence = ['off', 'b', 'vortex',  'left', 'a', 'radial', 'down', ];
+
+
+
+
+// original with all button
+// const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
+
+
+    const currentIndex = sequence.indexOf(spiralMode);
+    const nextIndex = (currentIndex + 1) % sequence.length;
+    spiralMode = sequence[nextIndex];
+
+    if (spiralMode !== 'off') {
+        spiralRules.method = spiralMode;
+    }
+
+    if (oldMode === 'off' && spiralMode !== 'off') {
+        armSimulation('spiral');
+    } else if (oldMode !== 'off' && spiralMode === 'off') {
+        if (armedSimulation === 'spiral') {
+            armSimulation(null);
+        }
+    }
+    
+    updateSpiralButtonUI();
+}
+// --- END: Spiral Functions ---
+
+// --- NEW: Magnet Button Functions ---
+
+function updateMagnetButtonUI() {
+    if (!dom.btnMagnetModes) return;
+    // הוספנו לניקוי את time_magnet ואת expand!
+    dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-expand', 'simulation-active');
+    
+    if (magnetMode !== 'off') {
+        dom.btnMagnetModes.classList.add('mode-' + magnetMode);
+        if (armedSimulation === 'magnet') {
+             dom.btnMagnetModes.classList.add('simulation-active');
+        }
+    }
+}
+
+
+function cycleMagnetMode() {
+    const oldMode = magnetMode;
+    const sequence = ['off', 'magnet', 'cosmic_magnet', 'time_magnet', 'expand'];
+    const currentIndex = sequence.indexOf(magnetMode);
+    const nextIndex = (currentIndex + 1) % sequence.length;
+    magnetMode = sequence[nextIndex];
+
+    if (magnetMode !== 'off') {
+        magnetRules.method = magnetMode;
+    }
+
+    if (oldMode === 'off' && magnetMode !== 'off') {
+        armSimulation('magnet');
+    } else if (oldMode !== 'off' && magnetMode === 'off') {
+        if (armedSimulation === 'magnet') {
+            armSimulation(null);
+        }
+    }
+    
+    updateMagnetButtonUI();
+}
+// --- END: Magnet Button Functions ---
+
+
 
       function cycleSymmetryMode() {
           performAction(() => {
@@ -2056,19 +2562,36 @@ function cycleBreatheEvoMode() {
 
 
 function cycleSortMethod() {
-          performAction(() => { // עטפנו כדי שהשינוי יירשם בהיסטוריה
-              currentSortIndex = (currentSortIndex + 1) % SORT_MODES.length;
-              const nextMode = SORT_MODES[currentSortIndex];
-              
-              // עדכון ה-SVG בתוך הכפתור
-              if (dom.sortIconGroup) {
-                  dom.sortIconGroup.innerHTML = nextMode.icon;
-              }
-              
-              applySortMethod(nextMode.method);
-          });
-      }
+    // 1. עוצרים לולאות ציור כפולות כדי לשחרר את המעבד
+    if (animationLoopId) {
+        cancelAnimationFrame(animationLoopId);
+        animationLoopId = null;
+    }
 
+    // 2. הסרנו את העטיפה של performAction כדי למנוע דליפת זיכרון מפלצתית!
+    currentSortIndex = (currentSortIndex + 1) % SORT_MODES.length;
+    const nextMode = SORT_MODES[currentSortIndex];
+    
+    if (dom.sortIconGroup) {
+        dom.sortIconGroup.innerHTML = nextMode.icon;
+    }
+    
+    applySortMethod(nextMode.method);
+    
+    // 3. כופה על הלוח להתרנדר מיד מחדש עם הצבעים החדשים
+    renderToScreen(null);
+}
+// פונקציה חדשה: מנתבת את הלחיצה על גלגל השיניים למודל הנכון
+      function openCurrentSimSettings() {
+          switch(armedSimulation) {
+              case 'gameOfLife': modals.openGolSettingsModal(); break;
+              case 'gravitationalSort': modals.openGravitationalSortSettingsModal(); break;
+              case 'contour': modals.openContourSettingsModal(); break;
+              case 'spiral': modals.openSpiralSettingsModal(); break;
+              case 'sandpile': modals.openChiFlowSettingsModal(); break;
+              case 'turing': modals.openTuringSettingsModal(); break;
+          }
+      }
 
 
       async function initializeApp() {
@@ -2093,8 +2616,28 @@ function cycleSortMethod() {
             switchToPalette,
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: (r) => { gameOfLifeRules = r; },
             getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; },
+syncGsModeFromModal: (direction) => {
+                if (armedSimulation !== 'gravitationalSort') {
+                    armSimulation('gravitationalSort'); // קודם מחמשים כדי לאפס מצבים אחרים בלוח
+                }
+                // מעדכנים למצב שנבחר במודל ומרעננים את האייקון
+                gsMode = direction;
+                gravitationalSortRules.direction = direction;
+                updateGravitationalSortButtonUI();
+            },
+
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
+
+spiralRules,
+syncSpiralModeFromModal: (method) => {
+    if (armedSimulation !== 'spiral') {
+        armSimulation('spiral');
+    }
+    spiralMode = method;
+    spiralRules.method = method;
+    updateSpiralButtonUI();
+},
 
 getChiFlowRules: () => chiFlowRules, setChiFlowRules: (r) => { chiFlowRules = r; },
 getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
@@ -2156,7 +2699,9 @@ dom.btnBrightnessEvo.addEventListener('click', (e) => handleCtrlClick(e, cycleBr
 
 dom.btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, cycleBreatheEvoMode));
 
-        dom.btnGravitationalSort.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('gravitationalSort')));
+
+dom.btnGravitationalSort.addEventListener('click', (e) => handleCtrlClick(e, cycleGravitationalSortMode));
+
         dom.btnErosion.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('erosion')));
 
 dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
@@ -2164,9 +2709,20 @@ dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 
 dom.btnContour.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('contour')));
 
+dom.btnSpiral.addEventListener('click', (e) => handleCtrlClick(e, cycleSpiralMode));
+if (dom.btnMagnetModes) {
+    dom.btnMagnetModes.addEventListener('click', (e) => handleCtrlClick(e, cycleMagnetMode));
+}
+
+
+
 dom.btnSandpile.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('sandpile')));
 
 dom.btnTuring.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('turing')));
+if (dom.btnSimSettings) {
+            dom.btnSimSettings.addEventListener('click', (e) => handleCtrlClick(e, openCurrentSimSettings));
+        }
+
 
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));

@@ -2236,3 +2236,25 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 }
 
 
+// === MINIMAL FIX: איפוס caches של מגנט (זה מה שגורם לאיטיות) ===
+export function resetMagnetCaches() {
+    if (typeof cachedMovedThisFrame !== 'undefined') {
+        cachedMovedThisFrame = new Uint8Array(0);
+    }
+    if (typeof cachedAnchors !== 'undefined') {
+        cachedAnchors.length = 0;
+    }
+}
+
+
+
+// === MINIMAL FIX: איפוס cache של Gravitational Sort בלבד ===
+export function resetGravitationalSortCaches() {
+    if (typeof cachedRadialOrder !== 'undefined') {
+        cachedRadialOrder = null;
+    }
+    if (typeof cachedRadialN !== 'undefined') {
+        cachedRadialN = null;
+    }
+}
+

@@ -1577,6 +1577,16 @@ if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
     if (!isTogglingOff) {
         armedSimulation = simulationName;
         
+        // === MINIMAL FIX: איפוס caches של מגנט אחרי כל החלפה של סימולציה ===
+        if (typeof Simulations.resetMagnetCaches === 'function') {
+            Simulations.resetMagnetCaches();
+        }
+
+    // === MINIMAL FIX: איפוס cache של Gravitational Sort בלבד ===
+    if (typeof Simulations !== 'undefined' && typeof Simulations.resetGravitationalSortCaches === 'function') {
+        Simulations.resetGravitationalSortCaches();
+    }
+
 
 
         // הגדרת דיפולט (ברירת מחדל) לכפתורים מחזוריים כשהם נדלקים
