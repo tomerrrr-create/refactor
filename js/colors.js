@@ -232,3 +232,71 @@ export function sortColorsArray(colorsArray, method) {
             return sortedByLuminance;
     }
 }
+
+
+// --- Genetics & Simulation Color Helpers ---
+export function getGeneticColor(parentHexColors, method = 'randomMix') {
+    if (parentHexColors.length === 0) return 'rgb(0,0,0)';
+    
+    // שימוש ב-hexToRgb הקיים ב-colors.js (מחזיר מערך [r, g, b])
+    const parentRgbColors = parentHexColors.map(hexToRgb).filter(Boolean);
+    if (parentRgbColors.length === 0) return 'rgb(0,0,0)';
+  
+    let r, g, b;
+  
+    switch (method) {
+        case 'average':
+            r = Math.round(parentRgbColors.reduce((sum, c) => sum + c[0], 0) / parentRgbColors.length);
+            g = Math.round(parentRgbColors.reduce((sum, c) => sum + c[1], 0) / parentRgbColors.length);
+            b = Math.round(parentRgbColors.reduce((sum, c) => sum + c[2], 0) / parentRgbColors.length);
+            break;
+        case 'dominant':
+            let dominantColor = parentRgbColors[0];
+            let maxLuminance = -1;
+            parentRgbColors.forEach((c, i) => {
+                const hex = parentHexColors[i];
+                const lum = getLuminance(hex);
+                if (lum > maxLuminance) {
+                    maxLuminance = lum;
+                    dominantColor = c;
+                }
+            });
+            r = dominantColor[0];
+            g = dominantColor[1];
+            b = dominantColor[2];
+            break;
+        case 'randomMix':
+        default:
+            const getRandomComponent = (index) => {
+                const randomIndex = Math.floor(Math.random() * parentRgbColors.length);
+                return parentRgbColors[randomIndex][index];
+            };
+            r = getRandomComponent(0);
+            g = getRandomComponent(1);
+            b = getRandomComponent(2);
+            break;
+    }
+  
+    return `rgb(${r}, ${g}, ${b})`;
+}
+  
+export function findClosestColorIndex(targetRgb, colorPalette) {
+    let closestIndex = 0;
+    let minDistance = Infinity;
+    const target = targetRgb.match(/\d+/g).map(Number);
+  
+    colorPalette.forEach((hex, index) => {
+        const rgb = hexToRgb(hex); // מחזיר מערך [r, g, b]
+        if (!rgb) return;
+        const dist = Math.sqrt(
+            Math.pow(target[0] - rgb[0], 2) +
+            Math.pow(target[1] - rgb[1], 2) +
+            Math.pow(target[2] - rgb[2], 2)
+        );
+        if (dist < minDistance) {
+            minDistance = dist;
+            closestIndex = index;
+        }
+    });
+    return closestIndex;
+}

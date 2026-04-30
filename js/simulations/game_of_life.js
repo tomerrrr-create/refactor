@@ -1,4 +1,4 @@
-import { getGeneticColor, findClosestColorIndex } from '../simulations.js';
+import { getGeneticColor, findClosestColorIndex } from '../colors.js';
 
 export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, gameOfLifeRules }) {
     const darkestIndex = 0;

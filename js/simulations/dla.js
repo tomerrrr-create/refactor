@@ -1,5 +1,4 @@
-import { getGeneticColor, findClosestColorIndex } from '../simulations.js';
-
+import { getGeneticColor, findClosestColorIndex } from '../colors.js';
 // --- DLA Helper functions, now adapted for boardState ---
 
 function getStickingNeighborColors({ walker, n, dlaState, currentBoardState, currentPalette }) {
