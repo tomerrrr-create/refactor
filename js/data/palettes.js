@@ -1,6 +1,7 @@
 
 import { getText, translations } from '../i18n.js';
 
+// --- Data ---
 export const PALETTES = [
   {
     originalName: "Journey",
@@ -16,12 +17,7 @@ export const PALETTES = [
     originalName: "Ancient Mythos 64",
     emoji: '🏺',
     colors: (function() {
-        const orig = [
-            "#0D0906", "#1A1512", "#2B221E", "#3E3029", "#564135", "#705442", 
-            "#8A6952", "#A68064", "#C39A77", "#DFB68F", "#FBE3B8", "#D4AF37", 
-            "#AA8222", "#8B0000", "#660000", "#4A0404", "#2E0E02", "#1E2A3A", 
-            "#2B3C53", "#3C516D", "#4F6889", "#504136", "#362A21", "#1E1610"
-        ];
+        const orig = ["#0D0906","#1A1512","#2B221E","#3E3029","#564135","#705442","#8A6952","#A68064","#C39A77","#DFB68F","#FBE3B8","#D4AF37","#AA8222","#8B0000","#660000","#4A0404","#2E0E02","#1E2A3A","#2B3C53","#3C516D","#4F6889","#504136","#362A21","#1E1610"];
         function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
         function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
         const rgbs = orig.map(hexToRgb);
@@ -55,5 +51,433 @@ export const PALETTES = [
         }
         return out;
     })()
-  }
+  },
+  {
+    originalName: "The First Seven Stars",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="1.5" fill="#FFFFFF"/><circle cx="6" cy="6" r="1" fill="#FFD700"/><circle cx="18" cy="5" r="1.2" fill="#00BFFF"/><circle cx="4" cy="16" r="1" fill="#FF4500"/><circle cx="20" cy="17" r="1.5" fill="#DDA0DD"/><circle cx="8" cy="20" r="1" fill="#FF8C00"/><circle cx="15" cy="19" r="1.2" fill="#B0E0E6"/><path d="M 4 16 Q 12 12 20 17" fill="none" stroke="#FFFFFF" stroke-width="0.3" opacity="0.4"/><path d="M 6 6 Q 12 12 18 5" fill="none" stroke="#FFFFFF" stroke-width="0.3" opacity="0.4"/></svg>',
+    colors: ["#010005","#05010F","#0A021A","#100426","#170836","#200D49","#2E1560","#401F7A","#FF4500","#FF8C00","#FFD700","#FFFACD","#FFFFFF","#F8F8FF","#B0E0E6","#00BFFF","#1E90FF","#DDA0DD","#BA55D3","#8A2BE2","#4B0082","#2F0B45","#1A0529","#0B0114"]
+  },
+  {
+    originalName: "Ancient Mythos",
+    emoji: '🏺',
+    colors: ["#0D0906","#1A1512","#2B221E","#3E3029","#564135","#705442","#8A6952","#A68064","#C39A77","#DFB68F","#FBE3B8","#D4AF37","#AA8222","#8B0000","#660000","#4A0404","#2E0E02","#1E2A3A","#2B3C53","#3C516D","#4F6889","#504136","#362A21","#1E1610"]
+  },
+  {
+    originalName: "Resonant Qi",
+    emoji: '🍃',
+    colors: ["#051810","#0A241A","#103225","#184131","#21523E","#2B634D","#37765D","#43896D","#519D7E","#60B290","#71C7A3","#83DDB6","#99F0CC","#B3F7DD","#CCFBEB","#E3FDF4","#F4FFFC","#E0F4F4","#C6E6E6","#A8D6D6","#87C3C3","#65AEAE","#449797","#247E7E"]
+  },
+  { 
+    originalName: "New-York Autumn", 
+    emoji: '🍂', 
+    colors: ["#190F0B","#4E342E","#8B0000","#37474F","#5D4037","#2F4F4F","#8B3A3A","#8B4513","#A52A2A","#B22222","#795548","#556B2F","#607D8B","#808000","#6B8E23","#D2691E","#B8860B","#CD853F","#FF7F50","#C2A14A","#FF8C00","#DAA520","#F4A460"] 
+  },
+  { 
+    originalName: "Icelandic Winter", 
+    emoji: '❄️', 
+    colors: ["#263238","#37474F","#455A64","#546E7A","#78909C","#9E9E9E","#03A9F4","#90A4AE","#29B6F6","#4FC3F7","#B0BEC5","#BDBDBD","#4DD0E1","#81D4FA","#80DEEA","#CFD8DC","#B3E5FC","#A7FFEB","#ECEFF1","#E1F5FE","#E6F7FF","#F5F5F5","#FFFFFF"] 
+  },
+  { 
+    originalName: "Amazon Rainforest", 
+    emoji: '🌳', 
+    colors: ["#013220","#0B5345","#145A32","#0E6655","#196F3D","#117864","#117A65","#1D8348","#1E8449","#138D75","#229954","#239B56","#16A085","#27AE60","#28B463","#45B39D","#52BE80","#2ECC71","#48C9B0","#73C6B6","#58D68D","#82E0AA","#A9DFBF"] 
+  },
+  {
+    "originalName": "Argentine Spring",
+    "emoji": "🇦🇷",
+    "colors": ["#6A0DAD","#B284BE","#E6E6FA","#87CEEB","#75AADB","#FFFFFF","#FFC72C","#E60000","#E03C8A","#FFAA00","#FF6700","#C71585","#7CFC00","#5A6E44","#34A853","#004000","#9B0000","#000000","#C68E65","#3B2B20","#0078AE","#FCD116","#B26B3B"]
+  },
+  {
+    originalName: "Magma Flow",
+    emoji: '🌋',
+    colors: ["#000000","#1a0505","#2b0505","#3d0505","#5c0808","#7a0a0a","#9e0e0e","#bd1111","#de1414","#ff0000","#ff3300","#ff4500","#ff5e00","#ff7300","#ff8c00","#ffa500","#ffb700","#ffcc00","#ffd700","#ffe100","#ffff00","#ffffbf","#ffffff"]
+  },
+  { 
+    originalName: "Cosmos", 
+    emoji: '🌌', 
+    colors: ["#000000","#0B0C10","#00008B","#1F2833","#191970","#263238","#4B0082","#37474F","#483D8B","#8A2BE2","#BA55D3","#9370DB","#1E90FF","#FF00FF","#DA70D6","#FF69B4","#00BFFF","#40E0D0","#B0E0E6","#FFFACD","#F8F8FF","#E0FFFF","#FFFFFF"] 
+  },
+  { 
+    originalName: "Sky", 
+    emoji: '☁️', 
+    colors: ["#303F9F","#0D47A1","#304FFE","#3F51B5","#01579B","#1565C0","#3D5AFE","#2962FF","#1976D2","#0277BD","#2979FF","#1E88E5","#0288D1","#0091EA","#039BE5","#03A9F4","#00B0FF","#29B6F6","#4FC3F7","#40C4FF","#81D4FA","#B3E5FC","#E1F5FE"]
+  },
+  {
+    originalName: "Golden Midnight", 
+    emoji: '🔱', 
+    colors: ["#000000","#0A0802","#141105","#1F1A08","#2B240B","#382F0F","#463A13","#554618","#65531D","#766123","#887029","#9B8030","#AF9038","#C4A241","#D9B44B","#EFC756","#FFD763","#FFDE7D","#FFE598","#FFECB3","#FFF2CE","#FFF9E9","#FFFFFF"]
+  },
+  {
+    originalName: "Magic Aurora",
+    emoji: '🦄',
+    colors: ["#10002B","#240046","#3C096C","#5A189A","#7B2CBF","#9D4EDD","#C77DFF","#E0AAFF","#F8D7DA","#FFC8DD","#FF9EBB","#FF6392","#FF0A54","#F72585","#B5179E","#7209B7","#4CC9F0","#4895EF","#4361EE","#3F37C9","#3A0CA3","#480CA8","#32004F"]
+  },
+  { 
+    originalName: "Deep Sea", 
+    emoji: '🌊', 
+    colors: ["#000000","#0B0C10","#1C1C1C","#000080","#252525","#00008B","#191970","#0000CD","#36454F","#483D8B","#2F4F4F","#0000FF","#8A2BE2","#9932CC","#6A5ACD","#008080","#008B8B","#BA55D3","#9370DB","#5F9EA0","#20B2AA","#66CDAA","#40E0D0","#00FFFF","#7FFFD4"] 
+  },
+  {
+    originalName: "The Classic",
+    emoji: "🎨",
+    isArchived: true,
+    colors: ["#1B1B1B","#FFFFFF","#F2E9DC","#D4C4A8","#8D6E63","#A52A2A","#C0392B","#E74C3C","#F39C12","#F1C40F","#F7E06F","#27AE60","#2ECC71","#16A085","#1ABC9C","#2471A3","#3498DB","#5DADE2","#7F8C8D","#95A5A6","#8E44AD","#9B59B6","#D35400"]
+  },
+  {
+    originalName: "Northern Lights",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="11" fill="#030712"/><circle cx="7" cy="6" r="0.75" fill="#E5F3FF"/><circle cx="16" cy="8" r="0.5" fill="#C7D2FE"/><circle cx="12" cy="4" r="0.5" fill="#E5F3FF"/><path fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" d="M3 14 Q 9 8, 14 13 T 21 9"/><path fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" d="M3 17 Q 10 10, 15 15 T 21 12"/><path fill="none" stroke="#ECFE71" stroke-width="1.5" stroke-linecap="round" d="M4 19 Q 11 12, 16 17 T 20 15"/></svg>',
+    colors: ["#020617","#030712","#040815","#05091A","#05101F","#061826","#052E3B","#044155","#036672","#059669","#22C55E","#A3E635","#ECFE71","#E5F3FF","#C7D2FE","#A5B4FC","#818CF8","#7C3AED","#6D28D9","#5B21B6","#4C1D95","#312E81","#020617"]
+  },
+  {
+    originalName: "Coffee House",
+    isArchived: true,
+    emoji: '☕',
+    colors: ["#2b1b17","#3b2f2f","#4e3629","#5d4037","#6f4e37","#795548","#8d6e63","#a1887f","#bcaaa4","#d7ccc8","#efebe9","#ffffff","#d2b48c","#f5f5dc","#fff8e7","#deb887","#cd853f","#8b4513","#a0522d","#fffdd0","#f4a460"]
+  },
+  {
+    originalName: "Focus",
+    isArchived: true,
+    emoji: '🧘',
+    colors: ["#000000","#1A0B2E","#0B172E","#333333","#7F7F7F","#CCCCCC","#4A0072","#8E24AA","#C2185B","#E91E63","#EC407A","#F8BBD0","#B71C1C","#D32F2F","#F4511E","#FB8C00","#FFA726","#FFECB3","#FBC02D","#FDD835","#FFEE58","#FFF176","#FFF9C4","#FFFFFF","#1B5E20","#388E3C","#4CAF50","#81C784","#A5D6A7","#E8F5E9","#0D47A1","#1976D2","#2196F3","#42A5F5","#90CAF9","#E3F2FD","#004D40","#00796B","#009688","#4DB6AC","#80CBC4","#B2DFDB","#1A237E","#303F9F","#3F51B5","#5C6BC0","#9FA8DA","#C5CAE9"]
+  },
+  {
+    originalName: "Monochrome",
+    isArchived: true,
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><rect x="4" y="4" width="7" height="7" fill="#333333" rx="1"/><rect x="13" y="4" width="7" height="7" fill="#888888" rx="1"/><rect x="4" y="13" width="7" height="7" fill="#CCCCCC" rx="1"/><rect x="13" y="13" width="7" height="7" fill="#FFFFFF" stroke="#999999" stroke-width="0.5" rx="1"/></svg>',
+    colors: ["#FFFFFF","#F9F9F9","#F3F3F3","#EDEDED","#E7E7E7","#E1E1E1","#DBDBDB","#D5D5D5","#CFCFCF","#C9C9C9","#C3C3C3","#BDBDBD","#B7B7B7","#B1B1B1","#ABABAB","#A5A5A5","#9F9F9F","#999999","#939393","#8D8D8D","#878787","#818181","#7B7B7B","#757575","#6F6F6F","#696969","#636363","#5D5D5D","#575757","#515151","#4B4B4B","#454545","#3F3F3F","#393939","#333333","#2D2D2D","#272727","#212121","#1B1B1B","#151515","#0F0F0F","#0C0C0C","#090909","#060606","#040404","#020202","#000000"]
+  },
+  {
+    originalName: "Serene Sky",
+    emoji: '🕊️',
+    isArchived: true,
+    colors: ["#FDFEFF","#F8FAFB","#F2F6F7","#ECF2F5","#E6EEF3","#E0EAF1","#DAE6EF","#D4E2ED","#CEDDEA","#C8D9E8","#C2D5E6","#BCD1E4","#B6CCE2","#B0C8E0","#AAC4DE","#A4C0DC","#9EBBD9","#98B7D7","#92B3D5","#8CAFD3","#86AAD1","#80A6CF","#7AA2CD","#749ECB","#6E99C8","#6895C6","#6291C4","#5C8DC2","#5688C0","#5084BE","#4A80BC","#447CBA","#3E77B7","#3873B5","#3270B0","#2D6CAB","#2868A6","#2363A1","#1E5F9C","#195B97","#145792","#0F528D","#0A4E88","#054983","#00457E","#003F73"]
+  },
+  {
+    originalName: "Elemental Gems",
+    emoji: '💎',
+    isArchived: true,
+    colors: ["#0F0F0F","#1C1C1C","#2A2A2A","#383838","#464646","#545454","#626262","#707070","#7E7E7E","#8C8C8C","#9A9A9A","#A8A8A8","#B6B6B6","#C4C4C4","#D2D2D2","#E0E0E0","#EEEDED","#F9F9F9","#FFFDFB","#B08D57","#C29D69","#D4AF7A","#E6C18B","#F8D39C","#4F7942","#3A6351","#2F5233","#5E8C61","#7BAE7F","#99D6A6","#135E82","#1C7A9B","#2799B9","#3AB3D0","#56CFE1","#72EFDD","#5A3E85","#6C4F96","#7E60A7","#9273B8","#A687C9","#BA9BDA","#D0B0EB","#E6C6FC","#F0DBFF","#FBF2FF"]
+  },
+  {
+    originalName: "Electric Dreams", 
+    emoji: '⚡', 
+    colors: ["#000000","#000306","#00060C","#000911","#000C17","#000F1D","#001429","#001D3A","#00264C","#002F5D","#00376F","#004080","#004C97","#0057AE","#0063C5","#006FDC","#007AF3","#008CFF","#00A3FF","#00BAFF","#00D1FF","#00E8FF","#00FFFF"]
+  },
+  {
+    originalName: "Sin City",
+    isArchived: true,
+    emoji: '💋',
+    colors: ["#000000","#1a1a1a","#333333","#4d4d4d","#666666","#808080","#999999","#b3b3b3","#cccccc","#e6e6e6","#ffffff","#ff0000","#d30000","#a80000","#7a0000","#2b2b2b","#f0f0f0","#ff3333","#0a0a0a","#550000","#111111"]
+  },
+  { 
+    originalName: "Desert Sunrise", 
+    emoji: '🐪', 
+    colors: ["#4B0610","#5A0C16","#69121C","#781822","#861E28","#95242E","#A42A34","#B33A3A","#C23640","#C94752","#D15864","#D86976","#E07A88","#E78B9A","#EE9CAC","#DDA0DD","#BDB0D0","#C3B1E1","#F1A8AB","#F3B4A9","#D8BFD8","#F6BFA8","#F8CBA6","#FAD6A5","#E6E6FA"] 
+  },
+  { 
+    originalName: "Cherry Blossom", 
+    emoji: '桜', 
+    iconHTML: '<span style="color: #FFB6C1;">桜</span>', 
+    colors: ["#69476E","#86688B","#8F6AAD","#A284C2","#A389A4","#BC8F8F","#B59ECB","#D4A3A3","#C0A9BD","#BDB0D0","#C3B1E1","#C9B7D4","#E1B5B5","#D8BFD8","#E0BBE4","#D6CADD","#FBC4AB","#EECBCB","#FFC4D0","#DCD0E2","#FFD1DC","#E6Dce5","#F4DEDE","#FFDDE1","#F8E9E9"] 
+  },
+  {
+    originalName: "Mono",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><rect x="4" y="4" width="7" height="7" fill="#333333" rx="1"/><rect x="13" y="4" width="7" height="7" fill="#888888" rx="1"/><rect x="4" y="13" width="7" height="7" fill="#CCCCCC" rx="1"/><rect x="13" y="13" width="7" height="7" fill="#FFFFFF" stroke="#999999" stroke-width="0.5" rx="1"/></svg>',
+    colors: ["#FFFFFF","#FCFCFC","#F9F9F9","#F3F3F3","#F0F0F0","#EDEDED","#E7E7E7","#E4E4E4","#E1E1E1","#DBDBDB","#D8D8D8","#D5D5D5","#CFCFCF","#CCCCCC","#C9C9C9","#C3C3C3","#C0C0C0","#BDBDBD","#B7B7B7","#B4B4B4","#B1B1B1","#ABABAB","#A8A8A8","#A5A5A5","#9F9F9F","#9C9C9C","#999999","#939393","#909090","#8D8D8D","#878787","#848484","#818181","#7B7B7B","#787878","#757575","#6F6F6F","#6C6C6C","#696969","#636363","#606060","#5D5D5D","#575757","#545454","#515151","#4B4B4B","#484848","#454545","#3F3F3F","#3C3C3C","#393939","#333333","#2D2D2D","#272727","#212121","#1B1B1B","#151515","#0F0F0F","#0C0C0C","#090909","#060606","#040404","#020202","#000000"]
+  },
+  {
+    originalName: "Serenety",
+    emoji: '🕊️',
+    colors: ["#FDFEFF","#F8FAFB","#F2F6F7","#EFF4F6","#ECF2F5","#E6EEF3","#E3ECF2","#E0EAF1","#DAE6EF","#D7E4EE","#D4E2ED","#CEDDEA","#CBDBE9","#C8D9E8","#C2D5E6","#BFD3E5","#BCD1E4","#B6CCE2","#B3CAE1","#B0C8E0","#AAC4DE","#A7C2DD","#A4C0DC","#9EBBD9","#9BB9D8","#98B7D7","#92B3D5","#8FB1D4","#8CAFD3","#86AAD1","#83A8D0","#80A6CF","#7AA2CD","#77A0CC","#749ECB","#6E99C8","#6B97C7","#6895C6","#6291C4","#5F8FC3","#5C8DC2","#5688C0","#5386BF","#5084BE","#4A80BC","#477EBB","#447CBA","#3E77B7","#3B75B6","#3873B5","#3270B0","#2F6EAD","#2D6CAB","#2868A6","#2565A3","#2363A1","#1E5F9C","#195B97","#145792","#0F528D","#0A4E88","#054983","#00457E","#003F73"]
+  },
+  {
+    originalName: "Golden Midnight Extended", 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="none" stroke="#FFD700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10.5 15 C 9.5 15, 9 14, 9 13 C 9 11, 11 10.5, 12.5 10.5 C 15 10.5, 16.5 12.5, 16.5 15 C 16.5 18, 14 19.5, 11.5 19.5 C 8.5 19.5, 6 17.5, 6 14 C 6 10, 8.5 7, 11.5 7 L 11.5 3 C 11.5 1.5, 13.5 1.5, 13.5 3 C 13.5 5.5, 11.5 7.5, 11.5 10 L 11.5 21 C 11.5 22.5, 9.5 23, 8.5 22 C 7.5 21, 8 20, 8 20" /><circle cx="8" cy="20" r="1" fill="#FFD700" /></svg>', 
+    colors: ["#000000","#030201","#050401","#080602","#0a0802","#0d0a02","#0f0c03","#120e03","#141105","#171305","#1a1506","#1c1807","#1f1a08","#221c09","#251f09","#28210a","#2b240b","#2e260c","#31290d","#352c0e","#382f0f","#3c3210","#3f3511","#433812","#463a13","#4b3e14","#4f4115","#524416","#554618","#5a4a19","#5f4e1b","#62511c","#65531d","#6a571f","#6f5b21","#725e22","#766123","#7c6625","#826b27","#856d28","#887029","#8e752b","#947a2c","#987d2e","#9b8030","#a58834","#af9038","#b9993c","#c4a241","#ceab46","#d9b44b","#e4bd50","#efc756","#f7cf5c","#ffd763","#ffdb70","#ffde7d","#ffe189","#ffe598","#ffe8a6","#ffecb3","#fff2ce","#fff9e9","#ffffff"]
+  },
+  { 
+    originalName: "Electric Dreams Extended", 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M13 2 L3 14 H12 L11 22 L21 10 H12 Z" fill="none" stroke="#00A3FF" stroke-width="1.5" stroke-linejoin="round"/><path d="M13 2 L3 14 H12 L11 22 L21 10 H12 Z" fill="#00376F" opacity="0.4"/></svg>',
+    colors: ["#000000","#000306","#00060C","#000911","#000C17","#000F1D","#001223","#001429","#00172F","#001A34","#001D3A","#002040","#002346","#00264C","#002952","#002C57","#002F5D","#003263","#003469","#00376F","#003A75","#003D7A","#004080","#004386","#00468C","#004991","#004C97","#004F9D","#0052A2","#0054A8","#0057AE","#005AB4","#005DBA","#0060BF","#0063C5","#0066CB","#0069D0","#006CD6","#006FDC","#0072E2","#0074E8","#0077ED","#007AF3","#0080F7","#0086FB","#008CFF","#0092FF","#0098FF","#009DFF","#00A3FF","#00A9FF","#00AEFF","#00B4FF","#00BAFF","#00C0FF","#00C6FF","#00CBFF","#00D1FF","#00D9FF","#00E0FF","#00E8FF","#00F0FF","#00F7FF","#00FFFF"] 
+  },
+  { 
+    originalName: "Jasmine Dream 64", 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="jasmineGradient" gradientTransform="rotate(90)"><stop offset="5%" stop-color="#AB6BB7" /><stop offset="95%" stop-color="#4B0082" /></linearGradient></defs><g transform="translate(12,12) rotate(18)"><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(0)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(72)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(144)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(216)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(288)" fill="url(#jasmineGradient)"/></g><circle cx="12" cy="12" r="2.5" fill="#FFD700"/></svg>', 
+    colors: ["#4B0082","#530C8E","#5A189A","#61218A","#682A7A","#692489","#6A1E97","#731E91","#7B1E8A","#743993","#7A3D92","#804090","#834481","#854772","#89487D","#8C4888","#8E508A","#8F588C","#986089","#9A5D96","#9B5AA3","#9E5F87","#A0636A","#9F6975","#9E6F80","#A56D9C","#AB6BB7","#A97585","#A97691","#A8769C","#AB7A8F","#AE7E82","#B47F72","#B97F62","#B9828A","#B885B1","#B39178","#B49187","#B59095","#BD918A","#C4927E","#C5967D","#C69A7B","#CC9B6B","#D29B5A","#C59EAA","#C4A49C","#C2AA8E","#C6AC7F","#C9AD70","#D4AE74","#DEAE77","#D8B38D","#D2B7A3","#E1B674","#D9BC7E","#D0C187","#DAC078","#E3BF68","#E2C782","#E0CF9C","#E3D38E","#E5D680","#F0E595"] 
+  },
+  {
+    originalName: "Ancient",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /></svg>',
+    colors: ["#FFD700","#FFC107","#FFEE58","#FDD835","#FBC02D","#FFE082","#FFCA28","#FFF176","#FF8C00","#FF9800","#FB8C00","#FFA726","#FF7043","#FF5722","#F4511E","#F57C00","#FF1744","#F44336","#E53935","#D32F2F","#C62828","#B71C1C","#FF5252","#EF5350","#E91E63","#F06292","#FF4081","#AD1457","#D81B60","#C2185B","#EC407A","#F48FB1","#9C27B0","#7B1FA2","#8E24AA","#AB47BC","#673AB7","#5E35B1","#3F51B5","#3949AB","#2196F3","#1976D2","#1E88E5","#42A5F5","#00BCD4","#26C6DA","#0097A7","#80DEEA","#4CAF50","#43A047","#2E7D32","#66BB6A","#8BC34A","#9CCC65","#CDDC39","#AFB42B","#FFFFFF","#F5F5F5","#E0E0E0","#BDBDBD","#9E9E9E","#757575","#424242","#000000"]
+  },
+  {
+    originalName: "Ancient 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /></svg>',
+    colors: (function() {
+        const orig = ["#FFD700","#FFC107","#FFEE58","#FDD835","#FBC02D","#FFE082","#FFCA28","#FFF176","#FF8C00","#FF9800","#FB8C00","#FFA726","#FF7043","#FF5722","#F4511E","#F57C00","#FF1744","#F44336","#E53935","#D32F2F","#C62828","#B71C1C","#FF5252","#EF5350","#E91E63","#F06292","#FF4081","#AD1457","#D81B60","#C2185B","#EC407A","#F48FB1","#9C27B0","#7B1FA2","#8E24AA","#AB47BC","#673AB7","#5E35B1","#3F51B5","#3949AB","#2196F3","#1976D2","#1E88E5","#42A5F5","#00BCD4","#26C6DA","#0097A7","#80DEEA","#4CAF50","#43A047","#2E7D32","#66BB6A","#8BC34A","#9CCC65","#CDDC39","#AFB42B","#FFFFFF","#F5F5F5","#E0E0E0","#BDBDBD","#9E9E9E","#757575","#424242","#000000"];
+        function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+        function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1;
+            dists.push(d);
+            totalDist += d;
+        }
+        const out = [];
+        for (let i = 0; i < 264; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+            let targetDist = (i / 263) * totalDist;
+            let accum = 0;
+            let s = 0;
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+  },
+  {
+    originalName: "Aires de Primavera",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><line x1="4" y1="22" x2="20" y2="22" stroke="#34A853" stroke-width="1.5" stroke-linecap="round"/><circle cx="16" cy="8" r="3.5" fill="#FFC72C"/><polygon points="9.5,22 11.5,5 12,3 12,22" fill="#FFFFFF"/><polygon points="14.5,22 12.5,5 12,3 12,22" fill="#75AADB"/><circle cx="8" cy="19" r="2.5" fill="#B284BE"/><circle cx="10" cy="20" r="3" fill="#6A0DAD"/><circle cx="16" cy="20" r="2.5" fill="#8E49B6"/><circle cx="13" cy="21" r="2" fill="#CCB5DC"/></svg>',
+    colors: ["#6A0DAD","#8E49B6","#B284BE","#CCB5DC","#E6E6FA","#B6D9F2","#87CEEB","#7EBCED","#75AADB","#B9D5EC","#FFFFFF","#FFE396","#FFC72C","#F26316","#E60000","#E31E45","#E03C8A","#EF7145","#FFAA00","#FF8800","#FF6700","#E33E42","#C71585","#A18942","#7CFC00","#6BB622","#5A6E44","#478B4B","#34A853","#1A7429","#004000","#4D2000","#9B0000","#4D0000","#000000","#634732","#C68E65","#805D42","#3B2B20","#1E5167","#0078AE","#7E9771","#FCD116","#D79E28","#B26B3B","#9A5D33","#824F2B","#6A4123","#52331B","#3A2513","#22170B","#1C1C1F","#2F2F3E","#42425D","#55557C","#68689B","#7B7BBA","#8E8ED9","#A1A1F8","#B4B4FF","#C7C7FF","#DADAFF","#EDEDFF","#FFFFFF"]
+  },
+  {
+    originalName: "Focus 64",
+    emoji: '🧘',
+    colors: ["#000000","#1A0B2E","#0B172E","#333333","#595959","#7F7F7F","#A5A5A5","#CCCCCC","#4A0072","#8E24AA","#A81E82","#C2185B","#E91E63","#EC407A","#F27DA5","#F8BBD0","#B71C1C","#D32F2F","#E34026","#F4511E","#FB8C00","#FFA726","#FFC96C","#FFECB3","#FBC02D","#FDD835","#FFEE58","#FFF176","#FFF9C4","#FFFFFF","#1B5E20","#29762E","#388E3C","#4CAF50","#66BB6A","#81C784","#A5D6A7","#C6E5C8","#E8F5E9","#0D47A1","#135EB9","#1976D2","#2196F3","#319DF4","#42A5F5","#90CAF9","#B9DEFB","#E3F2FD","#004D40","#006355","#00796B","#009688","#4DB6AC","#66C0B8","#80CBC4","#B2DFDB","#1A237E","#25318E","#303F9F","#3F51B5","#5C6BC0","#7D89CD","#9FA8DA","#C5CAE9"]
+  },
+  {
+    originalName: "Focus 264",
+    emoji: '🧘',
+    colors: (function() {
+        const orig = ["#000000","#1A0B2E","#0B172E","#333333","#595959","#7F7F7F","#A5A5A5","#CCCCCC","#4A0072","#8E24AA","#A81E82","#C2185B","#E91E63","#EC407A","#F27DA5","#F8BBD0","#B71C1C","#D32F2F","#E34026","#F4511E","#FB8C00","#FFA726","#FFC96C","#FFECB3","#FBC02D","#FDD835","#FFEE58","#FFF176","#FFF9C4","#FFFFFF","#1B5E20","#29762E","#388E3C","#4CAF50","#66BB6A","#81C784","#A5D6A7","#C6E5C8","#E8F5E9","#0D47A1","#135EB9","#1976D2","#2196F3","#319DF4","#42A5F5","#90CAF9","#B9DEFB","#E3F2FD","#004D40","#006355","#00796B","#009688","#4DB6AC","#66C0B8","#80CBC4","#B2DFDB","#1A237E","#25318E","#303F9F","#3F51B5","#5C6BC0","#7D89CD","#9FA8DA","#C5CAE9"];
+        function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+        function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1;
+            dists.push(d);
+            totalDist += d;
+        }
+        const out = [];
+        for (let i = 0; i < 264; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+            let targetDist = (i / 263) * totalDist;
+            let accum = 0;
+            let s = 0;
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+  },
+  {
+    originalName: "Gems",
+    emoji: '💎',
+    colors: ["#0F0F0F","#1C1C1C","#2A2A2A","#313131","#383838","#464646","#545454","#5B5B5B","#626262","#707070","#7E7E7E","#8C8C8C","#939393","#9A9A9A","#A8A8A8","#B6B6B6","#BDBDBD","#C4C4C4","#D2D2D2","#E0E0E0","#E7E6E6","#EEEDED","#F9F9F9","#FFFDFB","#B08D57","#B99560","#C29D69","#CBA671","#D4AF7A","#E6C18B","#EFCA93","#F8D39C","#4F7942","#3A6351","#2F5233","#476F4A","#5E8C61","#6C9D70","#7BAE7F","#8AC293","#99D6A6","#135E82","#1C7A9B","#228AAA","#2799B9","#31A6C5","#3AB3D0","#48C1D9","#56CFE1","#72EFDD","#5A3E85","#6C4F96","#75589F","#7E60A7","#9273B8","#9C7DC1","#A687C9","#BA9BDA","#C5A6E3","#D0B0EB","#DBBBF4","#E6C6FC","#F0DBFF","#FBF2FF"]
+  },
+  { 
+    isArchived: true,  
+    originalName: "Plasma Overload", 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="10" fill="none" stroke="#004C97" stroke-width="1.5"/><circle cx="12" cy="12" r="6" fill="#00D1FF" opacity="0.6"/><circle cx="12" cy="12" r="2.5" fill="#FFFFFF"/><path d="M12 2 L12 5 M12 19 L12 22 M2 12 L5 12 M19 12 L22 12 M5 5 L7 7 M17 17 L19 19 M19 5 L17 7 M5 19 L7 17" stroke="#00FFFF" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    colors: ["#000000","#000306","#00060C","#000911","#000C17","#000F1D","#001223","#001429","#00172F","#001A34","#001D3A","#002040","#002346","#00264C","#002952","#002C57","#002F5D","#003263","#003469","#00376F","#003A75","#003D7A","#004080","#004386","#00468C","#004991","#004C97","#004F9D","#0052A2","#0054A8","#0057AE","#005AB4","#005DBA","#0060BF","#0063C5","#0066CB","#0069D0","#006CD6","#006FDC","#0073E4","#0076EB","#007AF3","#0080F7","#0086FB","#008CFF","#0094FF","#009BFF","#00A3FF","#00ABFF","#00B2FF","#00BAFF","#00C2FF","#00C9FF","#00D1FF","#00D9FF","#00E0FF","#00E8FF","#00F0FF","#00F7FF","#00FFFF","#33FFFF","#66FFFF","#99FFFF","#CCFFFF"]
+  },
+  {
+    originalName: "Healing Aura",
+    isArchived: true,  
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 21 C 12 21 4 16 4 10 C 4 7 7 6 9 8 C 10 9 12 13 12 13 C 12 13 14 9 15 8 C 17 6 20 7 20 10 C 20 16 12 21 12 21 Z" fill="none" stroke="#F9C6C5" stroke-width="1.5"/><path d="M12 21 C 12 21 9 14 9 10 C 9 8 11 7 12 9 C 13 7 15 8 15 10 C 15 14 12 21 12 21 Z" fill="#80D0C7" opacity="0.6"/><path d="M12 2 L 12 4 M 12 6 L 12 7" stroke="#FFDEAD" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    colors: ["#1A3A3A","#405B5B","#667C7C","#8C9C9C","#B3BDBD","#D9DEDE","#FFFFFF","#FADADD","#F9C6C5","#F7A3A2","#E88282","#F4AE9E","#FFDAB9","#FFC3A0","#FFDEB6","#FFFACD","#FAFAD2","#FFDEAD","#F3D6A3","#DEB887","#D2B48C","#E1DABE","#F0FFF0","#D3F2D3","#B3E0B3","#98D8AA","#77C38B","#58A16F","#75BB99","#92D4C4","#AFEEEE","#A5E1E1","#80D0C7","#64BDB3","#48A9A6","#3E8E7E","#66AA9E","#8FC6BE","#B8E3DF","#E0FFFF","#CDEAF5","#B0E0E6","#87CEEB","#76BAD8","#64A6C4","#4682B4","#6E9BC6","#96B4D7","#BECDE8","#E6E6FA","#D8BFD8","#C3B1E1","#B19CD9","#9370DB","#7A68A6","#A397B8","#CCC6CA","#F5F5DC","#F5DEB3","#D3D3D3","#C0C0C0","#A9A9A9","#949494","#808080"]
+  },
+  { 
+    originalName: "Jasmine Stardust Aura",
+    isArchived: true,  
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="auraGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3B0066"/><stop offset="50%" stop-color="#AB6BB7"/><stop offset="100%" stop-color="#FDF9EB"/></linearGradient></defs><circle cx="5" cy="5" r="0.6" fill="#FDF9EB"/><circle cx="19" cy="7" r="0.8" fill="#FDF9EB"/><circle cx="4" cy="18" r="0.5" fill="#FDF9EB"/><circle cx="20" cy="19" r="0.7" fill="#FDF9EB"/><circle cx="12" cy="12" r="1.5" fill="#FDF9EB"/><path d="M12 20C7.5 20 4 16.5 4 12C4 7.5 7.5 4 12 4" fill="none" stroke="url(#auraGrad)" stroke-width="2.8" stroke-linecap="round"/><path d="M12 4C16.5 4 20 7.5 20 12C20 16.5 16.5 20 12 20" fill="none" stroke="url(#auraGrad)" stroke-width="2.8" stroke-linecap="round" opacity="0.6"/><path d="M12 8 Q 12 12, 16 12 Q 12 12, 12 16 Q 12 12, 8 12 Q 12 12, 12 8" fill="url(#auraGrad)"/></svg>', 
+    colors: ["#3B0066","#420075","#4B0082","#510B89","#5A189A","#60218A","#682A7A","#692488","#6A1E97","#721E90","#7B1E8A","#772B8E","#743993","#7A3C91","#804090","#824381","#854772","#88477D","#8C4888","#8D508A","#8F588C","#935C8A","#986089","#995D96","#9B5AA3","#9E5E86","#A0636A","#9E6F80","#A46D9B","#AB6BB7","#AA709E","#A97585","#A8769C","#AB7A8F","#AE7E82","#B37E72","#B97F62","#B885B1","#B39178","#B59095","#BD9189","#C4927E","#C69A7B","#CC9A6A","#D29B5A","#C59EAA","#C2AA8E","#C9AD70","#D3AD73","#DEAE77","#D2B7A3","#E1B674","#D0C187","#E3BF68","#E0CF9C","#E5D680","#EBE08A","#F0E595","#F2E9A3","#F4ECB1","#F6EFC0","#F8F3CE","#FAF6DC","#FDF9EB"]
+  },
+  { 
+    originalName: "Jasmine Dream",
+    isArchived: true,  
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="jasmineGradient" gradientTransform="rotate(90)"><stop offset="5%" stop-color="#AB6BB7" /><stop offset="95%" stop-color="#4B0082" /></linearGradient></defs><g transform="translate(12,12) rotate(18)"><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(0)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(72)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(144)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(216)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(288)" fill="url(#jasmineGradient)"/></g><circle cx="12" cy="12" r="2.5" fill="#FFD700"/></svg>', 
+    colors: ["#4B0082","#5A189A","#682A7A","#6A1E97","#7B1E8A","#743993","#804090","#854772","#8C4888","#8F588C","#986089","#9B5AA3","#A0636A","#9E6F80","#AB6BB7","#A97585","#A8769C","#AE7E82","#B97F62","#B885B1","#B39178","#B59095","#C4927E","#C69A7B","#D29B5A","#C59EAA","#C2AA8E","#C9AD70","#DEAE77","#D2B7A3","#E1B674","#D0C187","#E3BF68","#E0CF9C","#E5D680","#F0E595"] 
+  },
+  { 
+    originalName: "Japanese Spring", 
+    emoji: '🌸', 
+    colors: ["#4A148C","#B39DDB","#F48FB1","#64B5F6","#81C784","#90CAF9","#87CEFA","#81D4FA","#A5D6A7","#D1C4E9","#FFB7C5","#F8BBD0","#80DEEA","#FFC0CB","#C1E1C1","#FFD1DC","#B3E5FC","#DCEDC8","#E6E6FA","#FFECB3","#A7FFEB","#FFF59D","#FFF9C4","#FFF8DC"] 
+  },
+  { 
+    originalName: "Brazilian Summer", 
+    emoji: '☀️', 
+    colors: ["#000050","#2962FF","#F50057","#FF1493","#1E90FF","#FF5722","#00A86B","#FF69B4","#FF7F50","#00B0FF","#00C853","#00BFFF","#2ECC71","#00C4FF","#64DD17","#00E676","#40E0D0","#FFC107","#1DE9B6","#FFD700","#FDD835","#00FF7F","#18FFFF","#FFEB3B"] 
+  },
+  {
+    originalName: "Amethyst Dream",
+    isArchived: true,
+    emoji: '🔮',
+    colors: ["#1a0b1e","#220e29","#2b1235","#331541","#3b184d","#441b59","#4c1e65","#552171","#5d247d","#662789","#6e2a95","#772da1","#7f30ad","#813ec3","#8b4ec8","#955dcd","#9f6dd2","#a97cd7","#b38cdc","#bd9be1","#c7aae6","#d1baeb","#dbc9f0","#e5d8f5","#efe8fa","#f9f7ff","#f5eeff","#f0e2ff","#ebd6ff","#e6caff","#e2bdff","#deafff","#d9a2ff","#d494ff","#cf85ff","#ca76ff","#c568ff","#c059ff","#bb4aff","#b243f5","#aa40e9","#a13cdd","#9939d1","#9036c5","#8833b9","#772ebf"]
+  },
+  {
+    isArchived: true, 
+    originalName: "Night Rainbow",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><clipPath id="nrClip"><circle cx="12" cy="12" r="10.5"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="#000000"/><g clip-path="url(#nrClip)" transform="rotate(-45 12 12)"><rect x="-5" y="3.75" width="34" height="1.5" fill="#8c28dc"/><rect x="-5" y="6.75" width="34" height="1.5" fill="#00b4ff"/><rect x="-5" y="9.75" width="34" height="1.5" fill="#109664"/><rect x="-5" y="12.75" width="34" height="1.5" fill="#ffc800"/><rect x="-5" y="15.75" width="34" height="1.5" fill="#eb5a5a"/><rect x="-5" y="18.75" width="34" height="1.5" fill="#ff3296"/></g></svg>',
+    colors: (function() {
+      const stops = [{pos:0,r:0,g:0,b:0},{pos:15,r:15,g:0,b:30},{pos:32,r:140,g:40,b:220},{pos:50,r:0,g:15,b:40},{pos:68,r:0,g:180,b:255},{pos:85,r:0,g:25,b:15},{pos:104,r:16,g:150,b:100},{pos:122,r:25,g:20,b:0},{pos:140,r:255,g:200,b:0},{pos:158,r:35,g:5,b:10},{pos:176,r:235,g:90,b:90},{pos:194,r:25,g:0,b:20},{pos:214,r:255,g:50,b:150},{pos:236,r:15,g:0,b:10},{pos:255,r:0,g:0,b:0}];
+      const out = [];
+      for (let i = 0; i < 256; i++) {
+          let s = 0;
+          while (s < stops.length - 2 && i >= stops[s+1].pos) { s++; }
+          const start = stops[s];
+          const end = stops[s+1];
+          const segmentLen = end.pos - start.pos;
+          const progress = segmentLen === 0 ? 0 : (i - start.pos) / segmentLen;
+          const ease = progress * progress * (3 - 2 * progress); 
+          const r = Math.round(start.r + (end.r - start.r) * ease);
+          const g = Math.round(start.g + (end.g - start.g) * ease);
+          const b = Math.round(start.b + (end.b - start.b) * ease);
+          out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+      }
+      return out;
+    })()
+  },
+  {
+    originalName: "Night Rainbow 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><clipPath id="nrClip"><circle cx="12" cy="12" r="10.5"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="#000000"/><g clip-path="url(#nrClip)" transform="rotate(-45 12 12)"><rect x="-5" y="3.75" width="34" height="1.5" fill="#8c28dc"/><rect x="-5" y="6.75" width="34" height="1.5" fill="#00b4ff"/><rect x="-5" y="9.75" width="34" height="1.5" fill="#109664"/><rect x="-5" y="12.75" width="34" height="1.5" fill="#ffc800"/><rect x="-5" y="15.75" width="34" height="1.5" fill="#eb5a5a"/><rect x="-5" y="18.75" width="34" height="1.5" fill="#ff3296"/></g></svg>',
+    colors: (function() {
+      const stops = [{pos:0,r:0,g:0,b:0},{pos:15,r:15,g:0,b:30},{pos:33,r:140,g:40,b:220},{pos:52,r:0,g:15,b:40},{pos:70,r:0,g:180,b:255},{pos:88,r:0,g:25,b:15},{pos:107,r:16,g:150,b:100},{pos:126,r:25,g:20,b:0},{pos:144,r:255,g:200,b:0},{pos:163,r:35,g:5,b:10},{pos:182,r:235,g:90,b:90},{pos:200,r:25,g:0,b:20},{pos:221,r:255,g:50,b:150},{pos:243,r:15,g:0,b:10},{pos:263,r:0,g:0,b:0}];
+      const out = [];
+      for (let i = 0; i < 264; i++) {
+          let s = 0;
+          while (s < stops.length - 2 && i >= stops[s+1].pos) { s++; }
+          const start = stops[s];
+          const end = stops[s+1];
+          const segmentLen = end.pos - start.pos;
+          const progress = segmentLen === 0 ? 0 : (i - start.pos) / segmentLen;
+          const ease = progress * progress * (3 - 2 * progress); 
+          const r = Math.round(start.r + (end.r - start.r) * ease);
+          const g = Math.round(start.g + (end.g - start.g) * ease);
+          const b = Math.round(start.b + (end.b - start.b) * ease);
+          out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+      }
+      return out;
+    })()
+  },
+  {
+    originalName: "Primavera Porteña 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 21 C 12 18 10 17 10 13 C 10 9 13 8 15 7" fill="none" stroke="#004000" stroke-width="1.5" stroke-linecap="round"/><circle cx="15" cy="7" r="2.5" fill="#E03C8A"/><circle cx="10" cy="10" r="2.5" fill="#6A0DAD"/><circle cx="5" cy="13" r="2" fill="#87CEEB"/><circle cx="12" cy="11" r="3" fill="#FCD116"/><circle cx="18" cy="11" r="2" fill="#FFAA00"/><circle cx="12" cy="11" r="1.5" fill="#6A0DAD"/><circle cx="11.5" cy="10" r="0.5" fill="#FFFFFF"/><circle cx="12.5" cy="10" r="0.5" fill="#FFFFFF"/><path d="M11 12 C 11 13, 13 13, 13 12" fill="none" stroke="#6A0DAD" stroke-width="1.2" stroke-linecap="round"/></svg>',
+    colors: ["#6A0DAD","#731CAF","#7C2BB2","#853AB4","#8E49B6","#9758B8","#A066BA","#A975BC","#B284BE","#B890C6","#BF9CCD","#C6A9D4","#CCB5DC","#D2C1E4","#D9CEEB","#E0DAF2","#E6E6FA","#D6E2F7","#C6DDF5","#B6D9F2","#A6D5F0","#97D2ED","#87CEEB","#82C5EC","#7EBCED","#7AB3E4","#75AADB","#83B3DE","#90BBE2","#9EC4E5","#ABCCE9","#B9D5EC","#C7DDF0","#D5E6F4","#E3EEF7","#F1F7FB","#FFFFFF","#FFFAEE","#FFF6DC","#FFF1CA","#FFECB9","#FFE8A8","#FFE396","#FFDF87","#FFDB78","#FFD769","#FFD359","#FFCF4A","#FFCB3B","#FFC72C","#FDB628","#FBA625","#F89521","#F6841D","#F4741A","#F26316","#F05212","#EE420F","#EC320B","#EA2107","#E81004","#E60000","#E5060E","#E50C1C","#E41229","#E41837","#E31E45","#E22453","#E22A61","#E1306E","#E1367C","#E03C8A","#E3477C","#E6516E","#E95C61","#EC6653","#EF7145","#F27A3A","#F4842E","#F78E22","#FA9717","#FCA00C","#FFAA00","#FF9900","#FF8800","#FF7800","#FF6700","#F95F0D","#F4571A","#EE4E28","#E94635","#E33E42","#DD364F","#D82E5D","#D2256A","#CD1D78","#C71585","#C2247D","#BE3274","#B9406C","#B44F64","#AF5E5B","#AA6C53","#A67A4A","#A18942","#9C973A","#98A632","#93B429","#8EC221","#8AD119","#85DF10","#81EE08","#7CFC00","#79EE07","#75E00E","#72D214","#6EC41B","#6BB622","#68A829","#649930","#618B36","#5D7C3D","#5A6E44","#507C48","#478B4B","#3E9A4F","#34A853","#2E9B48","#278E3E","#208134","#1A7429","#14671F","#0D5A14","#064D0A","#004000","#0F3A00","#1F3300","#2E2D00","#3E2600","#4D2000","#5D1A00","#6C1300","#7C0D00","#8B0600","#9B0000","#8B0000","#7C0000","#6C0000","#5D0000","#4D0000","#3E0000","#2E0000","#1F0000","#0F0000","#000000","#0C0906","#19120C","#251B13","#322419","#3E2C1F","#4A3526","#573E2C","#634732","#6F5038","#7C593F","#886245","#946A4C","#A17352","#AD7C58","#BA855F","#C68E65","#BA865F","#AF7E59","#A37654","#976D4E","#8C6548","#805D42","#74553C","#694C37","#5E4431","#523C2B","#463326","#3B2B20","#35332E","#2F3A3C","#2A424B","#244959","#1E5167","#185975","#126183","#0C6892","#0670A0","#0078AE","#107CA6","#20809F","#2F8497","#3F8890","#4F8B88","#5E8F80","#6E9379","#7E9771","#8B9D68","#97A35F","#A4A856","#B0AE4D","#BDB444","#CABA3A","#D6C031","#E3C528","#EFCB1F","#FCD116","#F3C41A","#EAB81F","#E0AB24","#D79E28","#CE912D","#C48432","#BB7836","#B26B3B","#A66437","#9A5D33","#8E562F","#824F2B","#764827","#6A4123","#5E3A1F","#52331B","#462C17","#3A2513","#2E1E0F","#22170B","#1F1A15","#1C1C1F","#222229","#292934","#2F2F3E","#353548","#3C3C53","#42425D","#484867","#4F4F72","#55557C","#5B5B86","#626291","#68689B","#6E6EA5","#7575B0","#7B7BBA","#8181C4","#8888CF","#8E8ED9","#9494E3","#9B9BEE","#A1A1F8","#AAAAFC","#B4B4FF","#BEBEFF","#C7C7FF","#D0D0FF","#DADAFF","#E4E4FF","#EDEDFF","#F6F6FF","#FFFFFF"]
+  },
+  {
+    originalName: "Earth & Spirit",
+    emoji: '🌿',
+    colors: ["#05020a","#06030b","#06030c","#07040e","#07040f","#080510","#080511","#090612","#090613","#0a0715","#0a0716","#0b0817","#0c0818","#0c0919","#0d091b","#0d0a1c","#0e0a1d","#0e0b1e","#0f0b1f","#0f0c21","#100c22","#100d23","#110d24","#120e27","#121029","#13112b","#13132e","#141430","#141533","#151735","#151838","#16193a","#161b3c","#171c3f","#171e41","#181f44","#182046","#192248","#19234b","#1a244d","#1a2650","#1b2752","#1b2855","#1c2a57","#1c2b59","#1d2e5a","#1d305c","#1d325d","#1e345e","#1e375f","#1f3960","#1f3b62","#203d63","#203f64","#214265","#214466","#224667","#224869","#224b6a","#234d6b","#234f6c","#24516d","#24546f","#255670","#255871","#265a72","#265c73","#265d71","#275d6f","#275d6d","#285e6b","#285e69","#285f67","#295f65","#296063","#296061","#2a615f","#2a615d","#2a625c","#2b625a","#2b6358","#2c6356","#2c6354","#2c6452","#2d6450","#2d654e","#2d654c","#2e664a","#2f6649","#316748","#336747","#356846","#376845","#386844","#3a6944","#3c6943","#3e6a42","#406a41","#426b40","#446b3f","#466c3e","#486c3d","#4a6d3d","#4c6d3c","#4e6d3b","#506e3a","#526e39","#546f38","#566f37","#587037","#5a7136","#5e7236","#617437","#657537","#687737","#6b7937","#6f7a37","#727c38","#757d38","#797f38","#7c8138","#808239","#838439","#868539","#8a8739","#8d893a","#908a3a","#948c3a","#978d3a","#9b8f3a","#9e913b","#a1923b","#a4933b","#a6943b","#a8953b","#aa963b","#ac973b","#af983b","#b1983b","#b3993b","#b59a3b","#b79b3b","#b99c3b","#bb9c3a","#bd9d3a","#bf9e3a","#c19f3a","#c4a03a","#c6a13a","#c8a13a","#caa23a","#cca33a","#cea43a","#d0a53a","#d1a43a","#d0a139","#d09f38","#d09d37","#cf9b36","#cf9835","#cf9635","#ce9434","#ce9133","#ce8f32","#cd8d31","#cd8b30","#cc8830","#cc862f","#cc842e","#cb812d","#cb7f2c","#cb7d2c","#ca7b2b","#ca782a","#c97629","#c97428","#c87228","#c66f28","#c56d28","#c36b28","#c26928","#c06628","#be6428","#bd6228","#bb6028","#ba5d28","#b85b28","#b65928","#b55728","#b35428","#b25228","#b05028","#ae4e28","#ad4c28","#ab4928","#aa4728","#a84528","#a64328","#a44128","#a03f28","#9d3d27","#9a3c27","#963a27","#933927","#903727","#8d3527","#893426","#863226","#833026","#7f2f26","#7c2d26","#792b25","#762a25","#722825","#6f2625","#6c2525","#682325","#652224","#622024","#5f1e24","#5c1d23","#591c23","#571c22","#541b22","#521a21","#4f1920","#4d1820","#4a171f","#47161e","#45151e","#42151d","#40141c","#3d131c","#3b121b","#38111b","#36101a","#330f19","#300f19","#2e0e18","#2b0d17","#290c17","#260b16","#250b15","#230a15","#220a14","#200914","#1f0913","#1d0913","#1c0812","#1a0812","#190711","#170711","#160710","#14060f","#13060f","#11050e","#10050e","#0e040d","#0d040d","#0b040c","#0a030c","#08030b","#07020b","#05020a"]
+  },
+  {
+    originalName: "Air",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="planeTop" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e19477"/><stop offset="100%" stop-color="#ffefb0"/></linearGradient><linearGradient id="planeBottom" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3b2358"/><stop offset="100%" stop-color="#d48385"/></linearGradient></defs><path d="M22 2 L3 10 L11 13 Z" fill="url(#planeTop)"/><path d="M22 2 L11 13 L14 21 Z" fill="url(#planeBottom)"/></svg>',
+    colors: ["#2a1b4d","#2c1c4e","#2e1d50","#301e51","#331f52","#352054","#372155","#392257","#3b2358","#3d2459","#3f255b","#42275c","#44285d","#46295f","#482a60","#4a2b62","#4c2c63","#4e2d64","#512e66","#532f67","#553068","#57316a","#59326b","#5c346c","#5f356d","#61376e","#64386f","#67396f","#693b70","#6c3c71","#6f3e72","#713f73","#744174","#774275","#7a4475","#7c4576","#7f4777","#824878","#844979","#874b7a","#8a4c7b","#8c4e7c","#8f4f7c","#92517d","#95527e","#98557e","#9b577f","#9e597f","#a15c7f","#a45e80","#a76080","#aa6380","#ad6581","#b06781","#b36a81","#b66c82","#b96e82","#bc7182","#bf7383","#c27583","#c57883","#c87a83","#cb7c84","#ce7f84","#d18184","#d48385","#d68585","#d88783","#d98981","#da8b80","#db8d7e","#dd8f7c","#de907b","#df9279","#e19477","#e29676","#e39874","#e49a73","#e69b71","#e79d6f","#e89f6e","#e9a16c","#eba36a","#eca469","#eda667","#efa865","#f0aa64","#f1ac62","#f2ae61","#f3b062","#f3b262","#f4b463","#f5b663","#f5b863","#f6ba64","#f6bc64","#f7be65","#f8c065","#f8c266","#f9c466","#f9c667","#fac867","#fbca68","#fbcc68","#fccf68","#fcd169","#fdd369","#fdd56a","#fed76a","#ffd96b","#ffda6d","#ffdc70","#ffdd74","#ffde78","#ffdf7c","#ffe07f","#ffe183","#ffe287","#ffe48a","#ffe58e","#ffe692","#ffe796","#ffe899","#ffe99d","#ffeaa1","#ffeca5","#ffeda8","#ffeeac","#ffefb0","#fff0b4","#fff1b7","#fff2bb","#fff3bf","#fff4c2","#fff4c5","#fff5c8","#fff5cb","#fff6ce","#fff7d1","#fff7d4","#fff8d7","#fff8da","#fff9dd","#fff9e0","#fffae3","#fffae6","#fffbe9","#fffbec","#fffcef","#fffdf2","#fffdf5","#fffef8","#fffefb","#fffffe","#feffff","#fdfeff","#fcfefe","#fbfdfe","#fafdfe","#f9fcfe","#f7fcfd","#f6fbfd","#f5fbfd","#f4fafd","#f3fafd","#f2f9fc","#f1f9fc","#f0f8fc","#eef8fc","#edf7fb","#ecf7fb","#ebf6fb","#eaf6fb","#e9f5fb","#e8f5fa","#e6f4fa","#e4f3fa","#e1f2f9","#dff1f9","#dcf0f8","#d9eff8","#d6eef7","#d4edf7","#d1ecf7","#ceebf6","#cceaf6","#c9e9f5","#c6e8f5","#c3e7f4","#c1e6f4","#bee5f3","#bbe4f3","#b8e3f2","#b6e1f2","#b3e0f1","#b0dff1","#addef1","#abddf0","#a8dcf0","#a4daef","#a1d8ef","#9ed6ee","#9ad4ee","#97d3ed","#94d1ed","#91cfec","#8dcdec","#8acbeb","#87c9eb","#83c8ea","#80c6ea","#7dc4e9","#7ac2e9","#76c0e8","#73bee8","#70bde7","#6cbbe7","#69b9e6","#66b7e6","#63b5e5","#60b3e4","#5eb1e2","#5caee1","#5aacdf","#58aade","#56a7dc","#54a5db","#52a2d9","#4fa0d8","#4d9ed6","#4b9bd5","#4999d3","#4797d2","#4594d0","#4392cf","#418fcd","#3f8dcc","#3d8bca","#3a88c9","#3886c7","#3684c6","#3481c4","#337fc1","#327cbe","#317abb","#3077b8","#2e75b5","#2d72b2","#2c70af","#2b6dac","#2a6ba9","#2969a6","#2866a3","#2664a0","#25619d","#245f9a","#235c97","#225a94","#215791","#20558e","#1e528b","#1d5088","#1c4d85","#1b4b82"]
+  },
+  {
+    isArchived: true,
+    originalName: "Amethyst Dream 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 2 L2 10 L12 22 L22 10 Z" fill="#955DCD"/><path d="M12 2 L2 10 L12 13 Z" fill="#C7AAE6"/><path d="M12 2 L22 10 L12 13 Z" fill="#E5D8F5"/><path d="M2 10 L12 22 L12 13 Z" fill="#662789"/><path d="M22 10 L12 22 L12 13 Z" fill="#3B184D"/></svg>',
+    colors: ["#1A0B1E","#1C0C20","#1D0C22","#1E0C24","#1F0D25","#200D27","#220E29","#240F2B","#25102C","#26102E","#271030","#281032","#291133","#2B1235","#2D1337","#2E133A","#30143C","#31143F","#331541","#351643","#361646","#381748","#39174B","#3B184D","#3D194F","#3F1952","#401A54","#421A57","#441B59","#461C5B","#471C5E","#491D60","#4A1D63","#4C1E65","#4E1F67","#501F6A","#51206C","#53206F","#552171","#572273","#582276","#5A2378","#5B237B","#5D247D","#5F257F","#612582","#622684","#642687","#662789","#68288B","#69288E","#6B2990","#6C2993","#6E2A95","#702B97","#722B9A","#732C9C","#752C9F","#772DA1","#792EA3","#7A2EA6","#7C2FA8","#7D2FAB","#7F30AD","#7F32AF","#7F33B2","#8035B4","#8036B7","#8038B9","#8039BC","#813BBE","#813CC1","#813EC3","#8240C4","#8443C4","#8545C5","#8747C6","#8849C7","#8A4CC7","#8B4EC8","#8C50C9","#8E52C9","#8F54CA","#9056CA","#9157CB","#9259CC","#945BCC","#955DCD","#965FCE","#9862CE","#9964CF","#9B66D0","#9C68D1","#9E6BD1","#9F6DD2","#A06FD3","#A271D3","#A373D4","#A474D4","#A576D5","#A678D6","#A87AD6","#A97CD7","#AA7ED8","#AC81D8","#AD83D9","#AF85DA","#B087DB","#B28ADB","#B38CDC","#B48EDD","#B690DD","#B792DE","#B894DE","#B995DF","#BA97E0","#BC99E0","#BD9BE1","#BE9DE2","#C09FE2","#C1A1E3","#C2A2E4","#C3A4E4","#C4A6E5","#C6A8E5","#C7AAE6","#C8ACE7","#CAAFE7","#CBB1E8","#CDB3E9","#CEB5EA","#D0B8EA","#D1BAEB","#D2BCEC","#D4BEEC","#D5C0ED","#D6C2EE","#D7C3EE","#D8C5EF","#DAC7EF","#DBC9F0","#DDCCF1","#DECEF2","#E0D0F2","#E2D3F3","#E3D6F4","#E5D8F5","#E6DAF6","#E8DDF6","#E9DFF7","#EBE1F8","#ECE3F9","#EEE6F9","#EFE8FA","#F1EAFB","#F2EDFC","#F4F0FC","#F6F2FD","#F7F4FE","#F9F7FF","#F8F5FF","#F7F2FF","#F6F0FF","#F5EEFF","#F4ECFF","#F3E9FF","#F2E7FF","#F1E4FF","#F0E2FF","#EFE0FF","#EEDDFF","#EDDBFF","#ECD8FF","#EBD6FF","#EAD4FF","#E9D1FF","#E8CFFF","#E7CCFF","#E6CAFF","#E5C7FF","#E4C5FF","#E4C2FF","#E3C0FF","#E2BDFF","#E1BAFF","#E0B7FF","#E0B5FF","#DFB2FF","#DEAFFF","#DDACFF","#DCAAFF","#DBA7FF","#DAA5FF","#D9A2FF","#D89FFF","#D79CFF","#D69AFF","#D597FF","#D494FF","#D392FF","#D28FFF","#D28CFF","#D18AFF","#D088FF","#CF85FF","#CE82FF","#CD80FF","#CC7EFF","#CC7BFF","#CB78FF","#CA76FF","#C973FF","#C870FF","#C76EFF","#C66BFF","#C568FF","#C466FF","#C363FF","#C260FF","#C25EFF","#C15CFF","#C059FF","#BF56FF","#BE54FF","#BE52FF","#BD4FFF","#BC4CFF","#BB4AFF","#B949FD","#B747FB","#B646F9","#B444F7","#B243F5","#B042F3","#AF42F0","#AD41EE","#AC41EB","#AA40E9","#A83FE7","#A63EE4","#A53EE2","#A33DDF","#A13CDD","#9F3BDB","#9E3BD8","#9C3AD6","#9B3AD3","#9939D1","#9738CF","#9538CC","#9437CA","#9237C7","#9036C5","#8E35C3","#8D35C0","#8B34BE","#8A34BB","#8833B9","#8532BA","#8231BB","#8030BC","#7D30BD","#7A2FBE","#772EBF"]
+  },
+  {
+    originalName: "Lilac Noir",
+    isArchived: true, 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#B888B3" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+    colors: ["#000000","#0A0A0A","#141414","#1E1E1E","#282828","#323232","#3D3D3D","#474747","#514E53","#5C5360","#67596D","#725E7A","#7E6387","#896994","#946EA1","#A075AB","#AD7FAF","#BB88B3","#C891B6","#D69BBA","#E4A4BE","#F1AEC1","#FFB7C5"]
+  },
+  { 
+    originalName: "Brown Noise",
+    isArchived: true, 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><polygon points="7,3 17,3 21,21 3,21" style="fill:#FFD700;" /></svg>', 
+    colors: ["#3E2F00","#523F00","#665000","#7A6000","#8E7000","#A28000","#B69000","#CAA000","#DEB000","#F2C000","#F4C306","#F6C70C","#F8CA12","#FACC18","#FCD01E","#FED324","#FFD52A","#FFD700","#FFD730","#FFD936","#FFDB3C","#FFDD42","#FFDF48","#FFE14E","#FFE354"] 
+  },
+  {
+    originalName: "Healing",
+    isArchived: true,
+    emoji: '✨',
+    colors: ["#1A3A3A","#FFFFFF","#FADADD","#F9C6C5","#F7A3A2","#E88282","#FFDAB9","#FFC3A0","#FFFACD","#FAFAD2","#FFDEAD","#F3D6A3","#DEB887","#D2B48C","#F0FFF0","#D3F2D3","#B3E0B3","#98D8AA","#77C38B","#58A16F","#AFEEEE","#A5E1E1","#80D0C7","#64BDB3","#48A9A6","#3E8E7E","#E0FFFF","#CDEAF5","#B0E0E6","#87CEEB","#64A6C4","#4682B4","#E6E6FA","#D8BFD8","#C3B1E1","#B19CD9","#9370DB","#7A68A6","#F5F5DC","#F5DEB3","#D3D3D3","#C0C0C0","#A9A9A9","#808080"]
+  },
+  {
+    originalName: "Ice Palace",
+    isArchived: true,
+    emoji: '🏰',
+    colors: ["#F0FFFF","#E0FFFF","#AFEEEE","#7FFFD4","#40E0D0","#48D1CC","#00CED1","#5F9EA0","#20B2AA","#008B8B","#008080","#87CEEB","#87CEFA","#ADD8E6","#B0E0E6","#00BFFF","#1E90FF","#6495ED","#4682B4","#5F9EA0","#B0C4DE","#CAE1FF","#ACD6FF","#6CACFF","#4A708B"]
+  },
+  {
+    originalName: "Sahara",
+    isArchived: true,
+    emoji: '🏜️',
+    colors: ["#F4E1A1","#E2C275","#CDA434","#B68900","#E59866","#CA6F1E","#F5CBA7","#EDBB99","#E67E22","#D35400","#BA4A00","#A04000","#873600","#784212","#6E2C00","#935116","#B9770E","#9C640C","#7E5109","#5D6D7E","#34495E","#2C3E50","#212F3C"]
+  },
+  {
+    originalName: "Behind Eyelids",
+    isArchived: true,
+    emoji: '🌑',
+    colors: ["#000000","#0a000f","#11001a","#180024","#1f0033","#002233","#00334d","#004466","#005577","#1a664d","#33664d","#4d664d","#66334d","#804d66","#996680","#b28099","#cc99b2","#e6b2cc","#ffcc99","#ffddaa","#ffeedd","#e6e6ff","#d9e6ff","#cce6ff"]
+  },
+  {
+    originalName: "Golden, Silver, Blue",
+    isArchived: true, 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="goldHeartGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF9E9"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><path fill="url(#goldHeartGrad)" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" /></svg>', 
+    colors: ["#000000","#030201","#050401","#080602","#0a0802","#0d0a02","#0f0c03","#120e03","#141105","#171305","#1a1506","#1c1807","#1f1a08","#221c09","#251f09","#28210a","#2b240b","#2e260c","#31290d","#352c0e","#382f0f","#3c3210","#3f3511","#433812","#463a13","#4b3e14","#4f4115","#524416","#554618","#5a4a19","#5f4e1b","#62511c","#65531d","#6a571f","#6f5b21","#725e22","#766123","#7c6625","#826b27","#856d28","#887029","#8e752b","#947a2c","#987d2e","#9b8030","#a58834","#af9038","#b9993c","#c4a241","#ceab46","#d9b44b","#e4bd50","#efc756","#f7cf5c","#ffd763","#ffdb70","#ffde7d","#ffe189","#ffe598","#ffe8a6","#ffecb3","#fff2ce","#fff9e9","#ffffff","#f5f5f5","#ebebeb","#e0e0e0","#d6d6d6","#cccccc","#c2c2c2","#b8b8b8","#adadad","#a3a3a3","#999999","#8f8f8f","#858585","#7a7a7a","#707070","#666666","#5c5c5c","#555466","#4e4b73","#474280","#3f398c","#372f99","#2f25a3","#281ca8","#2214a6","#1c0e9c","#160a8c","#12077a","#0d0466","#090252","#06013d","#030029","#010014"]
+  },
+  {
+    originalName: "Obsidian Soul",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="none" stroke="#9C6CC7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7 4h10l-5 7 5 9H7l5-9z"/></svg>',
+    isArchived: true, 
+    colors: ["#050505","#0D0B14","#13111C","#1A1626","#221C31","#2B223C","#352848","#3F2F55","#4B3663","#573E72","#644682","#714F92","#7F58A3","#8D62B5","#9C6CC7","#AB77DA","#BB82ED","#CC8EFF","#D59FFF","#DEB0FF","#E7C1FF","#F0D2FF","#FFFFFF"]
+  },
+  {
+    originalName: "Golden & Silver ENH",
+    isArchived: true, 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="zenGS" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#999999"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFFFFF"/></linearGradient></defs><path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 15.5 4 18.5 7 20.5" fill="none" stroke="#5A5A5F" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/><ellipse cx="9.5" cy="17" rx="4" ry="2.8" transform="rotate(-20 9.5 17)" fill="url(#zenGS)"/><path d="M 13 16.5 Q 14 10 13 4" fill="none" stroke="url(#zenGS)" stroke-width="2.2" stroke-linecap="round"/><path d="M 13 4 Q 19 4 19 10 Q 19 12 17 14 Q 20 9 14.5 5" fill="url(#zenGS)"/></svg>',
+    colors: (function() {
+        const stops = [{pos:0,r:0,g:0,b:0},{pos:30,r:56,g:47,b:15},{pos:60,r:155,g:128,b:48},{pos:90,r:255,g:215,b:99},{pos:115,r:255,g:255,b:255},{pos:140,r:192,g:192,b:192},{pos:165,r:90,g:90,b:95},{pos:195,r:35,g:20,b:55},{pos:225,r:10,g:15,b:30},{pos:255,r:0,g:0,b:0}];
+        const out = [];
+        for (let i = 0; i < 256; i++) {
+            let s = 0;
+            while (s < stops.length - 2 && i >= stops[s+1].pos) { s++; }
+            const start = stops[s];
+            const end = stops[s+1];
+            const segmentLen = end.pos - start.pos;
+            const progress = segmentLen === 0 ? 0 : (i - start.pos) / segmentLen;
+            const ease = progress * progress * (3 - 2 * progress); 
+            const r = Math.round(start.r + (end.r - start.r) * ease);
+            const g = Math.round(start.g + (end.g - start.g) * ease);
+            const b = Math.round(start.b + (end.b - start.b) * ease);
+            out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+        }
+        return out;
+    })()
+  },
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
