@@ -14,68 +14,68 @@ export const PALETTES = [
     },
 
 
-    {
-        originalName: "Ancient Mythos 64",
-        emoji: '🏺',
-        colors: (function() {
-            const orig = [
-                "#0D0906", "#1A1512", "#2B221E", "#3E3029", "#564135", "#705442", 
-                "#8A6952", "#A68064", "#C39A77", "#DFB68F", "#FBE3B8", "#D4AF37", 
-                "#AA8222", "#8B0000", "#660000", "#4A0404", "#2E0E02", "#1E2A3A", 
-                "#2B3C53", "#3C516D", "#4F6889", "#504136", "#362A21", "#1E1610"
-            ];
+{
+    originalName: "Ancient Mythos 64",
+    emoji: '🏺',
+    colors: (function() {
+        const orig = [
+            "#0D0906", "#1A1512", "#2B221E", "#3E3029", "#564135", "#705442", 
+            "#8A6952", "#A68064", "#C39A77", "#DFB68F", "#FBE3B8", "#D4AF37", 
+            "#AA8222", "#8B0000", "#660000", "#4A0404", "#2E0E02", "#1E2A3A", 
+            "#2B3C53", "#3C516D", "#4F6889", "#504136", "#362A21", "#1E1610"
+        ];
+        
+        function hexToRgb(h) {
+            return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)];
+        }
+        
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join('');
+        }
+        
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + 
+                                Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + 
+                                Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1; 
+            dists.push(d);
+            totalDist += d;
+        }
+        
+        const out = [];
+        for (let i = 0; i < 64; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 63) { out.push(orig[orig.length - 1]); continue; }
             
-            function hexToRgb(h) {
-                return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)];
+            let targetDist = (i / 63) * totalDist;
+            let accum = 0;
+            let s = 0;
+            
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
             }
             
-            function rgbToHex(r, g, b) {
-                return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join('');
-            }
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
             
-            const rgbs = orig.map(hexToRgb);
-            const dists = [];
-            let totalDist = 0;
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
             
-            for (let i = 0; i < rgbs.length - 1; i++) {
-                let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + 
-                                  Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + 
-                                  Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
-                if (d === 0) d = 0.1; 
-                dists.push(d);
-                totalDist += d;
-            }
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
             
-            const out = [];
-            for (let i = 0; i < 64; i++) {
-                if (i === 0) { out.push(orig[0]); continue; }
-                if (i === 63) { out.push(orig[orig.length - 1]); continue; }
-                
-                let targetDist = (i / 63) * totalDist;
-                let accum = 0;
-                let s = 0;
-                
-                while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
-                    accum += dists[s];
-                    s++;
-                }
-                
-                let progress = (targetDist - accum) / dists[s];
-                progress = Math.max(0, Math.min(1, progress));
-                
-                let c1 = rgbs[s];
-                let c2 = rgbs[s+1];
-                
-                let r = c1[0] + (c2[0] - c1[0]) * progress;
-                let g = c1[1] + (c2[1] - c1[1]) * progress;
-                let b = c1[2] + (c2[2] - c1[2]) * progress;
-                
-                out.push(rgbToHex(r, g, b));
-            }
-            return out;
-        })()
-    },
-    
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+},
+
 {
     originalName: "The First Seven Stars",
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="1.5" fill="#FFFFFF"/><circle cx="6" cy="6" r="1" fill="#FFD700"/><circle cx="18" cy="5" r="1.2" fill="#00BFFF"/><circle cx="4" cy="16" r="1" fill="#FF4500"/><circle cx="20" cy="17" r="1.5" fill="#DDA0DD"/><circle cx="8" cy="20" r="1" fill="#FF8C00"/><circle cx="15" cy="19" r="1.2" fill="#B0E0E6"/><path d="M 4 16 Q 12 12 20 17" fill="none" stroke="#FFFFFF" stroke-width="0.3" opacity="0.4"/><path d="M 6 6 Q 12 12 18 5" fill="none" stroke="#FFFFFF" stroke-width="0.3" opacity="0.4"/></svg>',
