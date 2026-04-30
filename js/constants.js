@@ -14,7 +14,38 @@ export const PALETTES = [
     },
 
 
+{
+    originalName: "The First Seven Stars",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="1.5" fill="#FFFFFF"/><circle cx="6" cy="6" r="1" fill="#FFD700"/><circle cx="18" cy="5" r="1.2" fill="#00BFFF"/><circle cx="4" cy="16" r="1" fill="#FF4500"/><circle cx="20" cy="17" r="1.5" fill="#DDA0DD"/><circle cx="8" cy="20" r="1" fill="#FF8C00"/><circle cx="15" cy="19" r="1.2" fill="#B0E0E6"/><path d="M 4 16 Q 12 12 20 17" fill="none" stroke="#FFFFFF" stroke-width="0.3" opacity="0.4"/><path d="M 6 6 Q 12 12 18 5" fill="none" stroke="#FFFFFF" stroke-width="0.3" opacity="0.4"/></svg>',
+    colors: [
+        "#010005", "#05010F", "#0A021A", "#100426", "#170836", "#200D49", 
+        "#2E1560", "#401F7A", "#FF4500", "#FF8C00", "#FFD700", "#FFFACD", 
+        "#FFFFFF", "#F8F8FF", "#B0E0E6", "#00BFFF", "#1E90FF", "#DDA0DD", 
+        "#BA55D3", "#8A2BE2", "#4B0082", "#2F0B45", "#1A0529", "#0B0114"
+    ]
+},
 
+{
+    originalName: "Ancient Mythos",
+    emoji: '🏺',
+    colors: [
+        "#0D0906", "#1A1512", "#2B221E", "#3E3029", "#564135", "#705442", 
+        "#8A6952", "#A68064", "#C39A77", "#DFB68F", "#FBE3B8", "#D4AF37", 
+        "#AA8222", "#8B0000", "#660000", "#4A0404", "#2E0E02", "#1E2A3A", 
+        "#2B3C53", "#3C516D", "#4F6889", "#504136", "#362A21", "#1E1610"
+    ]
+},
+
+{
+    originalName: "Resonant Qi",
+    emoji: '🍃',
+    colors: [
+        "#051810", "#0A241A", "#103225", "#184131", "#21523E", "#2B634D", 
+        "#37765D", "#43896D", "#519D7E", "#60B290", "#71C7A3", "#83DDB6", 
+        "#99F0CC", "#B3F7DD", "#CCFBEB", "#E3FDF4", "#F4FFFC", "#E0F4F4", 
+        "#C6E6E6", "#A8D6D6", "#87C3C3", "#65AEAE", "#449797", "#247E7E"
+    ]
+},
 
 
   { 
@@ -42,7 +73,6 @@ export const PALETTES = [
   "emoji": "🇦🇷",
   "colors": ["#6A0DAD", "#B284BE", "#E6E6FA", "#87CEEB", "#75AADB", "#FFFFFF", "#FFC72C", "#E60000", "#E03C8A", "#FFAA00", "#FF6700", "#C71585", "#7CFC00", "#5A6E44", "#34A853", "#004000", "#9B0000", "#000000", "#C68E65", "#3B2B20", "#0078AE", "#FCD116", "#B26B3B"]
 },
-
 
 
 {
@@ -191,107 +221,7 @@ isArchived: true,
         colors: ["#69476E", "#86688B", "#8F6AAD", "#A284C2", "#A389A4", "#BC8F8F", "#B59ECB", "#D4A3A3", "#C0A9BD", "#BDB0D0", "#C3B1E1", "#C9B7D4", "#E1B5B5", "#D8BFD8", "#E0BBE4", "#D6CADD", "#FBC4AB", "#EECBCB", "#FFC4D0", "#DCD0E2", "#FFD1DC", "#E6Dce5", "#F4DEDE", "#FFDDE1", "#F8E9E9"] 
     },
 
-    
-
-{
-    originalName: "old 64",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /></svg>',
-    colors: [
-        "#FFD700", "#FFC107", "#FFEE58", "#FDD835", "#FBC02D", "#FFE082", "#FFCA28", "#FFF176",
-        "#FF8C00", "#FF9800", "#FB8C00", "#FFA726", "#FF7043", "#FF5722", "#F4511E", "#F57C00",
-        "#FF1744", "#F44336", "#E53935", "#D32F2F", "#C62828", "#B71C1C", "#FF5252", "#EF5350",
-        "#E91E63", "#F06292", "#FF4081", "#AD1457", "#D81B60", "#C2185B", "#EC407A", "#F48FB1",
-        "#9C27B0", "#7B1FA2", "#8E24AA", "#AB47BC", "#673AB7", "#5E35B1", "#3F51B5", "#3949AB",
-        "#2196F3", "#1976D2", "#1E88E5", "#42A5F5", "#00BCD4", "#26C6DA", "#0097A7", "#80DEEA",
-        "#4CAF50", "#43A047", "#2E7D32", "#66BB6A", "#8BC34A", "#9CCC65", "#CDDC39", "#AFB42B",
-        "#FFFFFF", "#F5F5F5", "#E0E0E0", "#BDBDBD", "#9E9E9E", "#757575", "#424242", "#000000"
-    ]
-},
-
-{
-    originalName: "Focus 64",
-    emoji: '🧘',
-    colors: [
-        // משפחת הכהים והאפורים (נוספו 2 צבעים)
-        "#000000", "#1A0B2E", "#0B172E", "#333333", "#595959", "#7F7F7F", "#A5A5A5", "#CCCCCC", 
-        
-        // משפחת הסגולים/ורודים (נוספו 2 צבעים)
-        "#4A0072", "#8E24AA", "#A81E82", "#C2185B", "#E91E63", "#EC407A", "#F27DA5", "#F8BBD0", 
-        
-        // משפחת האדומים, כתומים, צהובים (נוספו 2 צבעים)
-        "#B71C1C", "#D32F2F", "#E34026", "#F4511E", "#FB8C00", "#FFA726", "#FFC96C", "#FFECB3", 
-        "#FBC02D", "#FDD835", "#FFEE58", "#FFF176", "#FFF9C4", "#FFFFFF", 
-        
-        // משפחת הירוקים (נוספו 3 צבעים)
-        "#1B5E20", "#29762E", "#388E3C", "#4CAF50", "#66BB6A", "#81C784", "#A5D6A7", "#C6E5C8", 
-        "#E8F5E9", 
-        
-        // משפחת הכחולים (נוספו 3 צבעים)
-        "#0D47A1", "#135EB9", "#1976D2", "#2196F3", "#319DF4", "#42A5F5", "#90CAF9", "#B9DEFB", 
-        "#E3F2FD", 
-        
-        // משפחת הטורקיז/אקווה (נוספו 2 צבעים)
-        "#004D40", "#006355", "#00796B", "#009688", "#4DB6AC", "#66C0B8", "#80CBC4", "#B2DFDB", 
-        
-        // משפחת האינדיגו (נוספו 2 צבעים)
-        "#1A237E", "#25318E", "#303F9F", "#3F51B5", "#5C6BC0", "#7D89CD", "#9FA8DA", "#C5CAE9"
-    ]
-    },
-
-
-
-{
-    originalName: "Healing Aura",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 21 C 12 21 4 16 4 10 C 4 7 7 6 9 8 C 10 9 12 13 12 13 C 12 13 14 9 15 8 C 17 6 20 7 20 10 C 20 16 12 21 12 21 Z" fill="none" stroke="#F9C6C5" stroke-width="1.5"/><path d="M12 21 C 12 21 9 14 9 10 C 9 8 11 7 12 9 C 13 7 15 8 15 10 C 15 14 12 21 12 21 Z" fill="#80D0C7" opacity="0.6"/><path d="M12 2 L 12 4 M 12 6 L 12 7" stroke="#FFDEAD" stroke-width="1.5" stroke-linecap="round"/></svg>',
-    colors: [
-        "#1A3A3A", "#405B5B", "#667C7C", "#8C9C9C", "#B3BDBD", "#D9DEDE", "#FFFFFF", "#FADADD", 
-        "#F9C6C5", "#F7A3A2", "#E88282", "#F4AE9E", "#FFDAB9", "#FFC3A0", "#FFDEB6", "#FFFACD", 
-        "#FAFAD2", "#FFDEAD", "#F3D6A3", "#DEB887", "#D2B48C", "#E1DABE", "#F0FFF0", "#D3F2D3", 
-        "#B3E0B3", "#98D8AA", "#77C38B", "#58A16F", "#75BB99", "#92D4C4", "#AFEEEE", "#A5E1E1", 
-        "#80D0C7", "#64BDB3", "#48A9A6", "#3E8E7E", "#66AA9E", "#8FC6BE", "#B8E3DF", "#E0FFFF", 
-        "#CDEAF5", "#B0E0E6", "#87CEEB", "#76BAD8", "#64A6C4", "#4682B4", "#6E9BC6", "#96B4D7", 
-        "#BECDE8", "#E6E6FA", "#D8BFD8", "#C3B1E1", "#B19CD9", "#9370DB", "#7A68A6", "#A397B8", 
-        "#CCC6CA", "#F5F5DC", "#F5DEB3", "#D3D3D3", "#C0C0C0", "#A9A9A9", "#949494", "#808080"
-    ]
-        },
-
-
-
-{
-    originalName: "Gems",
-    emoji: '💎',
-    colors: [
-        "#0F0F0F", "#1C1C1C", "#2A2A2A", "#313131", "#383838", "#464646", "#545454", "#5B5B5B", 
-        "#626262", "#707070", "#7E7E7E", "#8C8C8C", "#939393", "#9A9A9A", "#A8A8A8", "#B6B6B6", 
-        "#BDBDBD", "#C4C4C4", "#D2D2D2", "#E0E0E0", "#E7E6E6", "#EEEDED", "#F9F9F9", "#FFFDFB", 
-        "#B08D57", "#B99560", "#C29D69", "#CBA671", "#D4AF7A", "#E6C18B", "#EFCA93", "#F8D39C", 
-        "#4F7942", "#3A6351", "#2F5233", "#476F4A", "#5E8C61", "#6C9D70", "#7BAE7F", "#8AC293", 
-        "#99D6A6", 
-        "#135E82", "#1C7A9B", "#228AAA", "#2799B9", "#31A6C5", "#3AB3D0", "#48C1D9", "#56CFE1", 
-        "#72EFDD", 
-        "#5A3E85", "#6C4F96", "#75589F", "#7E60A7", "#9273B8", "#9C7DC1", "#A687C9", "#BA9BDA", 
-        "#C5A6E3", "#D0B0EB", "#DBBBF4", "#E6C6FC", "#F0DBFF", "#FBF2FF"
-    ]
-    },
-
-
-
-
-{
-    originalName: "Golden Midnight Extended", 
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="none" stroke="#FFD700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10.5 15 C 9.5 15, 9 14, 9 13 C 9 11, 11 10.5, 12.5 10.5 C 15 10.5, 16.5 12.5, 16.5 15 C 16.5 18, 14 19.5, 11.5 19.5 C 8.5 19.5, 6 17.5, 6 14 C 6 10, 8.5 7, 11.5 7 L 11.5 3 C 11.5 1.5, 13.5 1.5, 13.5 3 C 13.5 5.5, 11.5 7.5, 11.5 10 L 11.5 21 C 11.5 22.5, 9.5 23, 8.5 22 C 7.5 21, 8 20, 8 20" /><circle cx="8" cy="20" r="1" fill="#FFD700" /></svg>', 
-    colors: [
-        "#000000", "#030201", "#050401", "#080602", "#0a0802", "#0d0a02", "#0f0c03", "#120e03",
-        "#141105", "#171305", "#1a1506", "#1c1807", "#1f1a08", "#221c09", "#251f09", "#28210a",
-        "#2b240b", "#2e260c", "#31290d", "#352c0e", "#382f0f", "#3c3210", "#3f3511", "#433812",
-        "#463a13", "#4b3e14", "#4f4115", "#524416", "#554618", "#5a4a19", "#5f4e1b", "#62511c",
-        "#65531d", "#6a571f", "#6f5b21", "#725e22", "#766123", "#7c6625", "#826b27", "#856d28",
-        "#887029", "#8e752b", "#947a2c", "#987d2e", "#9b8030", "#a58834", "#af9038", "#b9993c",
-        "#c4a241", "#ceab46", "#d9b44b", "#e4bd50", "#efc756", "#f7cf5c", "#ffd763", "#ffdb70",
-        "#ffde7d", "#ffe189", "#ffe598", "#ffe8a6", "#ffecb3", "#fff2ce", "#fff9e9", "#ffffff"
-    ]
-},
-
+  
 
 
 {
@@ -325,6 +255,25 @@ isArchived: true,
     ]
 },
 
+
+
+
+{
+    originalName: "Golden Midnight Extended", 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="none" stroke="#FFD700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10.5 15 C 9.5 15, 9 14, 9 13 C 9 11, 11 10.5, 12.5 10.5 C 15 10.5, 16.5 12.5, 16.5 15 C 16.5 18, 14 19.5, 11.5 19.5 C 8.5 19.5, 6 17.5, 6 14 C 6 10, 8.5 7, 11.5 7 L 11.5 3 C 11.5 1.5, 13.5 1.5, 13.5 3 C 13.5 5.5, 11.5 7.5, 11.5 10 L 11.5 21 C 11.5 22.5, 9.5 23, 8.5 22 C 7.5 21, 8 20, 8 20" /><circle cx="8" cy="20" r="1" fill="#FFD700" /></svg>', 
+    colors: [
+        "#000000", "#030201", "#050401", "#080602", "#0a0802", "#0d0a02", "#0f0c03", "#120e03",
+        "#141105", "#171305", "#1a1506", "#1c1807", "#1f1a08", "#221c09", "#251f09", "#28210a",
+        "#2b240b", "#2e260c", "#31290d", "#352c0e", "#382f0f", "#3c3210", "#3f3511", "#433812",
+        "#463a13", "#4b3e14", "#4f4115", "#524416", "#554618", "#5a4a19", "#5f4e1b", "#62511c",
+        "#65531d", "#6a571f", "#6f5b21", "#725e22", "#766123", "#7c6625", "#826b27", "#856d28",
+        "#887029", "#8e752b", "#947a2c", "#987d2e", "#9b8030", "#a58834", "#af9038", "#b9993c",
+        "#c4a241", "#ceab46", "#d9b44b", "#e4bd50", "#efc756", "#f7cf5c", "#ffd763", "#ffdb70",
+        "#ffde7d", "#ffe189", "#ffe598", "#ffe8a6", "#ffecb3", "#fff2ce", "#fff9e9", "#ffffff"
+    ]
+},
+
+
 { 
     originalName: "Electric Dreams Extended", 
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M13 2 L3 14 H12 L11 22 L21 10 H12 Z" fill="none" stroke="#00A3FF" stroke-width="1.5" stroke-linejoin="round"/><path d="M13 2 L3 14 H12 L11 22 L21 10 H12 Z" fill="#00376F" opacity="0.4"/></svg>',
@@ -339,6 +288,244 @@ isArchived: true,
         "#00CBFF", "#00D1FF", "#00D9FF", "#00E0FF", "#00E8FF", "#00F0FF", "#00F7FF", "#00FFFF"
     ] 
     },
+  
+
+{ 
+    originalName: "Jasmine Dream 64", 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="jasmineGradient" gradientTransform="rotate(90)"><stop offset="5%" stop-color="#AB6BB7" /><stop offset="95%" stop-color="#4B0082" /></linearGradient></defs><g transform="translate(12,12) rotate(18)"><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(0)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(72)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(144)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(216)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(288)" fill="url(#jasmineGradient)"/></g><circle cx="12" cy="12" r="2.5" fill="#FFD700"/></svg>', 
+    colors: [
+        "#4B0082", "#530C8E", "#5A189A", "#61218A", "#682A7A", "#692489", "#6A1E97", "#731E91", "#7B1E8A", 
+        "#743993", "#7A3D92", "#804090", "#834481", "#854772", "#89487D", "#8C4888", "#8E508A", "#8F588C", 
+        "#986089", "#9A5D96", "#9B5AA3", "#9E5F87", "#A0636A", "#9F6975", "#9E6F80", "#A56D9C", "#AB6BB7", 
+        "#A97585", "#A97691", "#A8769C", "#AB7A8F", "#AE7E82", "#B47F72", "#B97F62", "#B9828A", "#B885B1", 
+        "#B39178", "#B49187", "#B59095", "#BD918A", "#C4927E", "#C5967D", "#C69A7B", "#CC9B6B", "#D29B5A", 
+        "#C59EAA", "#C4A49C", "#C2AA8E", "#C6AC7F", "#C9AD70", "#D4AE74", "#DEAE77", "#D8B38D", "#D2B7A3", 
+        "#E1B674", "#D9BC7E", "#D0C187", "#DAC078", "#E3BF68", "#E2C782", "#E0CF9C", "#E3D38E", "#E5D680", 
+        "#F0E595"
+    ] 
+    },
+
+
+{
+    originalName: "Ancient",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /></svg>',
+    colors: [
+        "#FFD700", "#FFC107", "#FFEE58", "#FDD835", "#FBC02D", "#FFE082", "#FFCA28", "#FFF176",
+        "#FF8C00", "#FF9800", "#FB8C00", "#FFA726", "#FF7043", "#FF5722", "#F4511E", "#F57C00",
+        "#FF1744", "#F44336", "#E53935", "#D32F2F", "#C62828", "#B71C1C", "#FF5252", "#EF5350",
+        "#E91E63", "#F06292", "#FF4081", "#AD1457", "#D81B60", "#C2185B", "#EC407A", "#F48FB1",
+        "#9C27B0", "#7B1FA2", "#8E24AA", "#AB47BC", "#673AB7", "#5E35B1", "#3F51B5", "#3949AB",
+        "#2196F3", "#1976D2", "#1E88E5", "#42A5F5", "#00BCD4", "#26C6DA", "#0097A7", "#80DEEA",
+        "#4CAF50", "#43A047", "#2E7D32", "#66BB6A", "#8BC34A", "#9CCC65", "#CDDC39", "#AFB42B",
+        "#FFFFFF", "#F5F5F5", "#E0E0E0", "#BDBDBD", "#9E9E9E", "#757575", "#424242", "#000000"
+    ]
+},
+
+{
+    originalName: "Ancient 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /></svg>',
+    colors: (function() {
+        const orig = [
+            "#FFD700", "#FFC107", "#FFEE58", "#FDD835", "#FBC02D", "#FFE082", "#FFCA28", "#FFF176",
+            "#FF8C00", "#FF9800", "#FB8C00", "#FFA726", "#FF7043", "#FF5722", "#F4511E", "#F57C00",
+            "#FF1744", "#F44336", "#E53935", "#D32F2F", "#C62828", "#B71C1C", "#FF5252", "#EF5350",
+            "#E91E63", "#F06292", "#FF4081", "#AD1457", "#D81B60", "#C2185B", "#EC407A", "#F48FB1",
+            "#9C27B0", "#7B1FA2", "#8E24AA", "#AB47BC", "#673AB7", "#5E35B1", "#3F51B5", "#3949AB",
+            "#2196F3", "#1976D2", "#1E88E5", "#42A5F5", "#00BCD4", "#26C6DA", "#0097A7", "#80DEEA",
+            "#4CAF50", "#43A047", "#2E7D32", "#66BB6A", "#8BC34A", "#9CCC65", "#CDDC39", "#AFB42B",
+            "#FFFFFF", "#F5F5F5", "#E0E0E0", "#BDBDBD", "#9E9E9E", "#757575", "#424242", "#000000"
+        ];
+        
+        function hexToRgb(h) {
+            return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)];
+        }
+        
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join('');
+        }
+        
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        
+        // חישוב המרחקים בין 64 הצבעים המקוריים ליצירת מסלול רציף
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + 
+                              Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + 
+                              Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1; // מניעת חלוקה באפס
+            dists.push(d);
+            totalDist += d;
+        }
+        
+        const out = [];
+        // פריסה של 264 צבעים לאורך המסלול המחושב
+        for (let i = 0; i < 264; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+            
+            let targetDist = (i / 263) * totalDist;
+            let accum = 0;
+            let s = 0;
+            
+            // מציאת המקטע הנכון על בסיס המרחק
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+},
+
+
+{
+    originalName: "Aires de Primavera",
+iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><line x1="4" y1="22" x2="20" y2="22" stroke="#34A853" stroke-width="1.5" stroke-linecap="round"/><circle cx="16" cy="8" r="3.5" fill="#FFC72C"/><polygon points="9.5,22 11.5,5 12,3 12,22" fill="#FFFFFF"/><polygon points="14.5,22 12.5,5 12,3 12,22" fill="#75AADB"/><circle cx="8" cy="19" r="2.5" fill="#B284BE"/><circle cx="10" cy="20" r="3" fill="#6A0DAD"/><circle cx="16" cy="20" r="2.5" fill="#8E49B6"/><circle cx="13" cy="21" r="2" fill="#CCB5DC"/></svg>',
+    colors: [
+        "#6A0DAD", "#8E49B6", "#B284BE", "#CCB5DC", "#E6E6FA", "#B6D9F2", "#87CEEB", "#7EBCED", 
+        "#75AADB", "#B9D5EC", "#FFFFFF", "#FFE396", "#FFC72C", "#F26316", "#E60000", "#E31E45", 
+        "#E03C8A", "#EF7145", "#FFAA00", "#FF8800", "#FF6700", "#E33E42", "#C71585", "#A18942", 
+        "#7CFC00", "#6BB622", "#5A6E44", "#478B4B", "#34A853", "#1A7429", "#004000", "#4D2000", 
+        "#9B0000", "#4D0000", "#000000", "#634732", "#C68E65", "#805D42", "#3B2B20", "#1E5167", 
+        "#0078AE", "#7E9771", "#FCD116", "#D79E28", "#B26B3B", "#9A5D33", "#824F2B", "#6A4123", 
+        "#52331B", "#3A2513", "#22170B", "#1C1C1F", "#2F2F3E", "#42425D", "#55557C", "#68689B", 
+        "#7B7BBA", "#8E8ED9", "#A1A1F8", "#B4B4FF", "#C7C7FF", "#DADAFF", "#EDEDFF", "#FFFFFF"
+    ]
+},
+
+
+{
+    originalName: "Focus 64",
+    emoji: '🧘',
+    colors: [
+        // משפחת הכהים והאפורים (נוספו 2 צבעים)
+        "#000000", "#1A0B2E", "#0B172E", "#333333", "#595959", "#7F7F7F", "#A5A5A5", "#CCCCCC", 
+        
+        // משפחת הסגולים/ורודים (נוספו 2 צבעים)
+        "#4A0072", "#8E24AA", "#A81E82", "#C2185B", "#E91E63", "#EC407A", "#F27DA5", "#F8BBD0", 
+        
+        // משפחת האדומים, כתומים, צהובים (נוספו 2 צבעים)
+        "#B71C1C", "#D32F2F", "#E34026", "#F4511E", "#FB8C00", "#FFA726", "#FFC96C", "#FFECB3", 
+        "#FBC02D", "#FDD835", "#FFEE58", "#FFF176", "#FFF9C4", "#FFFFFF", 
+        
+        // משפחת הירוקים (נוספו 3 צבעים)
+        "#1B5E20", "#29762E", "#388E3C", "#4CAF50", "#66BB6A", "#81C784", "#A5D6A7", "#C6E5C8", 
+        "#E8F5E9", 
+        
+        // משפחת הכחולים (נוספו 3 צבעים)
+        "#0D47A1", "#135EB9", "#1976D2", "#2196F3", "#319DF4", "#42A5F5", "#90CAF9", "#B9DEFB", 
+        "#E3F2FD", 
+        
+        // משפחת הטורקיז/אקווה (נוספו 2 צבעים)
+        "#004D40", "#006355", "#00796B", "#009688", "#4DB6AC", "#66C0B8", "#80CBC4", "#B2DFDB", 
+        
+        // משפחת האינדיגו (נוספו 2 צבעים)
+        "#1A237E", "#25318E", "#303F9F", "#3F51B5", "#5C6BC0", "#7D89CD", "#9FA8DA", "#C5CAE9"
+    ]
+    },
+
+{
+    originalName: "Focus 264",
+    emoji: '🧘',
+    colors: (function() {
+        const orig = [
+            "#000000", "#1A0B2E", "#0B172E", "#333333", "#595959", "#7F7F7F", "#A5A5A5", "#CCCCCC", 
+            "#4A0072", "#8E24AA", "#A81E82", "#C2185B", "#E91E63", "#EC407A", "#F27DA5", "#F8BBD0", 
+            "#B71C1C", "#D32F2F", "#E34026", "#F4511E", "#FB8C00", "#FFA726", "#FFC96C", "#FFECB3", 
+            "#FBC02D", "#FDD835", "#FFEE58", "#FFF176", "#FFF9C4", "#FFFFFF", 
+            "#1B5E20", "#29762E", "#388E3C", "#4CAF50", "#66BB6A", "#81C784", "#A5D6A7", "#C6E5C8", 
+            "#E8F5E9", 
+            "#0D47A1", "#135EB9", "#1976D2", "#2196F3", "#319DF4", "#42A5F5", "#90CAF9", "#B9DEFB", 
+            "#E3F2FD", 
+            "#004D40", "#006355", "#00796B", "#009688", "#4DB6AC", "#66C0B8", "#80CBC4", "#B2DFDB", 
+            "#1A237E", "#25318E", "#303F9F", "#3F51B5", "#5C6BC0", "#7D89CD", "#9FA8DA", "#C5CAE9"
+        ];
+        
+        function hexToRgb(h) {
+            return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)];
+        }
+        
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join('');
+        }
+        
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        
+        // חישוב המרחקים בין 64 הצבעים המקוריים ליצירת מסלול רציף
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + 
+                              Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + 
+                              Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1; // מניעת חלוקה באפס
+            dists.push(d);
+            totalDist += d;
+        }
+        
+        const out = [];
+        // פריסה של 264 צבעים לאורך המסלול המחושב
+        for (let i = 0; i < 264; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+            
+            let targetDist = (i / 263) * totalDist;
+            let accum = 0;
+            let s = 0;
+            
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+    },
+
+
+{
+    originalName: "Gems",
+    emoji: '💎',
+    colors: [
+        "#0F0F0F", "#1C1C1C", "#2A2A2A", "#313131", "#383838", "#464646", "#545454", "#5B5B5B", 
+        "#626262", "#707070", "#7E7E7E", "#8C8C8C", "#939393", "#9A9A9A", "#A8A8A8", "#B6B6B6", 
+        "#BDBDBD", "#C4C4C4", "#D2D2D2", "#E0E0E0", "#E7E6E6", "#EEEDED", "#F9F9F9", "#FFFDFB", 
+        "#B08D57", "#B99560", "#C29D69", "#CBA671", "#D4AF7A", "#E6C18B", "#EFCA93", "#F8D39C", 
+        "#4F7942", "#3A6351", "#2F5233", "#476F4A", "#5E8C61", "#6C9D70", "#7BAE7F", "#8AC293", 
+        "#99D6A6", 
+        "#135E82", "#1C7A9B", "#228AAA", "#2799B9", "#31A6C5", "#3AB3D0", "#48C1D9", "#56CFE1", 
+        "#72EFDD", 
+        "#5A3E85", "#6C4F96", "#75589F", "#7E60A7", "#9273B8", "#9C7DC1", "#A687C9", "#BA9BDA", 
+        "#C5A6E3", "#D0B0EB", "#DBBBF4", "#E6C6FC", "#F0DBFF", "#FBF2FF"
+    ]
+    },
+
+
 
 
 
@@ -361,25 +548,27 @@ colors: [
 
 
 
-{ 
-    originalName: "Jasmine Dream 64", 
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="jasmineGradient" gradientTransform="rotate(90)"><stop offset="5%" stop-color="#AB6BB7" /><stop offset="95%" stop-color="#4B0082" /></linearGradient></defs><g transform="translate(12,12) rotate(18)"><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(0)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(72)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(144)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(216)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(288)" fill="url(#jasmineGradient)"/></g><circle cx="12" cy="12" r="2.5" fill="#FFD700"/></svg>', 
+{
+    originalName: "Healing Aura",
+isArchived: true,  
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 21 C 12 21 4 16 4 10 C 4 7 7 6 9 8 C 10 9 12 13 12 13 C 12 13 14 9 15 8 C 17 6 20 7 20 10 C 20 16 12 21 12 21 Z" fill="none" stroke="#F9C6C5" stroke-width="1.5"/><path d="M12 21 C 12 21 9 14 9 10 C 9 8 11 7 12 9 C 13 7 15 8 15 10 C 15 14 12 21 12 21 Z" fill="#80D0C7" opacity="0.6"/><path d="M12 2 L 12 4 M 12 6 L 12 7" stroke="#FFDEAD" stroke-width="1.5" stroke-linecap="round"/></svg>',
     colors: [
-        "#4B0082", "#530C8E", "#5A189A", "#61218A", "#682A7A", "#692489", "#6A1E97", "#731E91", "#7B1E8A", 
-        "#743993", "#7A3D92", "#804090", "#834481", "#854772", "#89487D", "#8C4888", "#8E508A", "#8F588C", 
-        "#986089", "#9A5D96", "#9B5AA3", "#9E5F87", "#A0636A", "#9F6975", "#9E6F80", "#A56D9C", "#AB6BB7", 
-        "#A97585", "#A97691", "#A8769C", "#AB7A8F", "#AE7E82", "#B47F72", "#B97F62", "#B9828A", "#B885B1", 
-        "#B39178", "#B49187", "#B59095", "#BD918A", "#C4927E", "#C5967D", "#C69A7B", "#CC9B6B", "#D29B5A", 
-        "#C59EAA", "#C4A49C", "#C2AA8E", "#C6AC7F", "#C9AD70", "#D4AE74", "#DEAE77", "#D8B38D", "#D2B7A3", 
-        "#E1B674", "#D9BC7E", "#D0C187", "#DAC078", "#E3BF68", "#E2C782", "#E0CF9C", "#E3D38E", "#E5D680", 
-        "#F0E595"
-    ] 
-    },
+        "#1A3A3A", "#405B5B", "#667C7C", "#8C9C9C", "#B3BDBD", "#D9DEDE", "#FFFFFF", "#FADADD", 
+        "#F9C6C5", "#F7A3A2", "#E88282", "#F4AE9E", "#FFDAB9", "#FFC3A0", "#FFDEB6", "#FFFACD", 
+        "#FAFAD2", "#FFDEAD", "#F3D6A3", "#DEB887", "#D2B48C", "#E1DABE", "#F0FFF0", "#D3F2D3", 
+        "#B3E0B3", "#98D8AA", "#77C38B", "#58A16F", "#75BB99", "#92D4C4", "#AFEEEE", "#A5E1E1", 
+        "#80D0C7", "#64BDB3", "#48A9A6", "#3E8E7E", "#66AA9E", "#8FC6BE", "#B8E3DF", "#E0FFFF", 
+        "#CDEAF5", "#B0E0E6", "#87CEEB", "#76BAD8", "#64A6C4", "#4682B4", "#6E9BC6", "#96B4D7", 
+        "#BECDE8", "#E6E6FA", "#D8BFD8", "#C3B1E1", "#B19CD9", "#9370DB", "#7A68A6", "#A397B8", 
+        "#CCC6CA", "#F5F5DC", "#F5DEB3", "#D3D3D3", "#C0C0C0", "#A9A9A9", "#949494", "#808080"
+    ]
+        },
+
 
 
 { 
         originalName: "Jasmine Stardust Aura",
-isArchived: true,   
+isArchived: true,  
         iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="auraGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3B0066"/><stop offset="50%" stop-color="#AB6BB7"/><stop offset="100%" stop-color="#FDF9EB"/></linearGradient></defs><circle cx="5" cy="5" r="0.6" fill="#FDF9EB"/><circle cx="19" cy="7" r="0.8" fill="#FDF9EB"/><circle cx="4" cy="18" r="0.5" fill="#FDF9EB"/><circle cx="20" cy="19" r="0.7" fill="#FDF9EB"/><circle cx="12" cy="12" r="1.5" fill="#FDF9EB"/><path d="M12 20C7.5 20 4 16.5 4 12C4 7.5 7.5 4 12 4" fill="none" stroke="url(#auraGrad)" stroke-width="2.8" stroke-linecap="round"/><path d="M12 4C16.5 4 20 7.5 20 12C20 16.5 16.5 20 12 20" fill="none" stroke="url(#auraGrad)" stroke-width="2.8" stroke-linecap="round" opacity="0.6"/><path d="M12 8 Q 12 12, 16 12 Q 12 12, 12 16 Q 12 12, 8 12 Q 12 12, 12 8" fill="url(#auraGrad)"/></svg>', 
         colors: [
             "#3B0066", "#420075", "#4B0082", "#510B89", "#5A189A", "#60218A", "#682A7A", "#692488",
@@ -407,7 +596,7 @@ isArchived: true,
         emoji: '🌸', 
         colors: ["#4A148C", "#B39DDB", "#F48FB1", "#64B5F6", "#81C784", "#90CAF9", "#87CEFA", "#81D4FA", "#A5D6A7", "#D1C4E9", "#FFB7C5", "#F8BBD0", "#80DEEA", "#FFC0CB", "#C1E1C1", "#FFD1DC", "#B3E5FC", "#DCEDC8", "#E6E6FA", "#FFECB3", "#A7FFEB", "#FFF59D", "#FFF9C4", "#FFF8DC"] 
     },
-  
+ 
 
   { 
         originalName: "Brazilian Summer", 
@@ -425,48 +614,9 @@ isArchived: true,
 },
 
 
-{
-    originalName: "Amethyst Dream 256",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 2 L2 10 L12 22 L22 10 Z" fill="#955DCD"/><path d="M12 2 L2 10 L12 13 Z" fill="#C7AAE6"/><path d="M12 2 L22 10 L12 13 Z" fill="#E5D8F5"/><path d="M2 10 L12 22 L12 13 Z" fill="#662789"/><path d="M22 10 L12 22 L12 13 Z" fill="#3B184D"/></svg>',
-    colors: [
-        "#1A0B1E", "#1C0C20", "#1D0C22", "#1F0D25", "#200D27", "#220E29", "#240F2B", "#26102E", 
-        "#271030", "#291133", "#2B1235", "#2D1337", "#2E133A", "#30143C", "#31143F", "#331541", 
-        "#351643", "#361646", "#381748", "#39174B", "#3B184D", "#3D194F", "#3F1952", "#401A54", 
-        "#421A57", "#441B59", "#461C5B", "#471C5E", "#491D60", "#4A1D63", "#4C1E65", "#4E1F67", 
-        "#501F6A", "#51206C", "#53206F", "#552171", "#572273", "#582276", "#5A2378", "#5B237B", 
-        "#5D247D", "#5F257F", "#612582", "#622684", "#642687", "#662789", "#68288B", "#69288E", 
-        "#6B2990", "#6C2993", "#6E2A95", "#702B97", "#722B9A", "#732C9C", "#752C9F", "#772DA1", 
-        "#792EA3", "#7A2EA6", "#7C2FA8", "#7D2FAB", "#7F30AD", "#7F32AF", "#7F33B2", "#8035B4", 
-        "#8036B7", "#8038B9", "#8039BC", "#813BBE", "#813CC1", "#813EC3", "#8240C4", "#8443C4", 
-        "#8545C5", "#8747C6", "#8849C7", "#8A4CC7", "#8B4EC8", "#8C50C9", "#8E52C9", "#8F54CA", 
-        "#9157CB", "#9259CC", "#945BCC", "#955DCD", "#965FCE", "#9862CE", "#9964CF", "#9B66D0", 
-        "#9C68D1", "#9E6BD1", "#9F6DD2", "#A06FD3", "#A271D3", "#A373D4", "#A576D5", "#A678D6", 
-        "#A87AD6", "#A97CD7", "#AA7ED8", "#AC81D8", "#AD83D9", "#AF85DA", "#B087DB", "#B28ADB", 
-        "#B38CDC", "#B48EDD", "#B690DD", "#B792DE", "#B995DF", "#BA97E0", "#BC99E0", "#BD9BE1", 
-        "#BE9DE2", "#C09FE2", "#C1A1E3", "#C3A4E4", "#C4A6E5", "#C6A8E5", "#C7AAE6", "#C8ACE7", 
-        "#CAAFE7", "#CBB1E8", "#CDB3E9", "#CEB5EA", "#D0B8EA", "#D1BAEB", "#D2BCEC", "#D4BEEC", 
-        "#D5C0ED", "#D7C3EE", "#D8C5EF", "#DAC7EF", "#DBC9F0", "#DDCCF1", "#DECEF2", "#E0D0F2", 
-        "#E2D3F3", "#E3D6F4", "#E5D8F5", "#E6DAF6", "#E8DDF6", "#E9DFF7", "#EBE1F8", "#ECE3F9", 
-        "#EEE6F9", "#EFE8FA", "#F1EAFB", "#F2EDFC", "#F4F0FC", "#F6F2FD", "#F7F4FE", "#F9F7FF", 
-        "#F8F5FF", "#F7F2FF", "#F6F0FF", "#F5EEFF", "#F4ECFF", "#F3E9FF", "#F2E7FF", "#F1E4FF", 
-        "#F0E2FF", "#EFE0FF", "#EEDDFF", "#EDDBFF", "#ECD8FF", "#EBD6FF", "#EAD4FF", "#E9D1FF", 
-        "#E8CFFF", "#E7CCFF", "#E6CAFF", "#E5C7FF", "#E4C5FF", "#E4C2FF", "#E3C0FF", "#E2BDFF", 
-        "#E1BAFF", "#E0B7FF", "#E0B5FF", "#DFB2FF", "#DEAFFF", "#DDACFF", "#DCAAFF", "#DBA7FF", 
-        "#DAA5FF", "#D9A2FF", "#D89FFF", "#D79CFF", "#D69AFF", "#D597FF", "#D494FF", "#D392FF", 
-        "#D28FFF", "#D28CFF", "#D18AFF", "#D088FF", "#CF85FF", "#CE82FF", "#CD80FF", "#CC7EFF", 
-        "#CC7BFF", "#CB78FF", "#CA76FF", "#C973FF", "#C870FF", "#C76EFF", "#C66BFF", "#C568FF", 
-        "#C466FF", "#C363FF", "#C260FF", "#C25EFF", "#C15CFF", "#C059FF", "#BF56FF", "#BE54FF", 
-        "#BE52FF", "#BD4FFF", "#BC4CFF", "#BB4AFF", "#B949FD", "#B747FB", "#B646F9", "#B444F7", 
-        "#B243F5", "#B042F3", "#AF42F0", "#AD41EE", "#AC41EB", "#AA40E9", "#A83FE7", "#A63EE4", 
-        "#A53EE2", "#A33DDF", "#A13CDD", "#9F3BDB", "#9E3BD8", "#9C3AD6", "#9B3AD3", "#9939D1", 
-        "#9738CF", "#9538CC", "#9437CA", "#9237C7", "#9036C5", "#8E35C3", "#8D35C0", "#8B34BE", 
-        "#8A34BB", "#8833B9", "#8532BA", "#8231BB", "#8030BC", "#7D30BD", "#7A2FBE", "#772EBF"
-    ]
-},
-
-
 
 {
+isArchived: true, 
   originalName: "Night Rainbow",
 iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><clipPath id="nrClip"><circle cx="12" cy="12" r="10.5"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="#000000"/><g clip-path="url(#nrClip)" transform="rotate(-45 12 12)"><rect x="-5" y="3.75" width="34" height="1.5" fill="#8c28dc"/><rect x="-5" y="6.75" width="34" height="1.5" fill="#00b4ff"/><rect x="-5" y="9.75" width="34" height="1.5" fill="#109664"/><rect x="-5" y="12.75" width="34" height="1.5" fill="#ffc800"/><rect x="-5" y="15.75" width="34" height="1.5" fill="#eb5a5a"/><rect x="-5" y="18.75" width="34" height="1.5" fill="#ff3296"/></g></svg>',
   colors: (function() {
@@ -514,6 +664,95 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 },
 
 
+{
+  originalName: "Night Rainbow 264",
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><clipPath id="nrClip"><circle cx="12" cy="12" r="10.5"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="#000000"/><g clip-path="url(#nrClip)" transform="rotate(-45 12 12)"><rect x="-5" y="3.75" width="34" height="1.5" fill="#8c28dc"/><rect x="-5" y="6.75" width="34" height="1.5" fill="#00b4ff"/><rect x="-5" y="9.75" width="34" height="1.5" fill="#109664"/><rect x="-5" y="12.75" width="34" height="1.5" fill="#ffc800"/><rect x="-5" y="15.75" width="34" height="1.5" fill="#eb5a5a"/><rect x="-5" y="18.75" width="34" height="1.5" fill="#ff3296"/></g></svg>',
+  colors: (function() {
+    // מותאם ל-264 צבעים (מ-0 עד 263)
+    const stops = [
+      { pos: 0,   r: 0,   g: 0,   b: 0 },      // שחור מוחלט
+      { pos: 15,  r: 15,  g: 0,   b: 30 },     // סגול עמוק (בסיס)
+      { pos: 33,  r: 140, g: 40,  b: 220 },    // שפיץ 1: סגול בוהק
+      { pos: 52,  r: 0,   g: 15,  b: 40 },     // כחול לילה
+      { pos: 70,  r: 0,   g: 180, b: 255 },    // שפיץ 2: תכלת זוהר
+      { pos: 88,  r: 0,   g: 25,  b: 15 },     // ירוק יער אפל
+      { pos: 107, r: 16,  g: 150, b: 100 },    // שפיץ 3: ירוק יער בקבוקי רך
+      { pos: 126, r: 25,  g: 20,  b: 0 },      // זית עמוק
+      { pos: 144, r: 255, g: 200, b: 0 },      // שפיץ 4: זהב בוהק
+      { pos: 163, r: 35,  g: 5,   b: 10 },     // בורדו אפל
+      { pos: 182, r: 235, g: 90,  b: 90 },     // שפיץ 5: אדום רך ונעים (Pastel/Coral)
+      { pos: 200, r: 25,  g: 0,   b: 20 },     // שזיף עמוק
+      { pos: 221, r: 255, g: 50,  b: 150 },    // שפיץ 6: ורוד מגנטה
+      { pos: 243, r: 15,  g: 0,   b: 10 },     // דעיכה חזרה
+      { pos: 263, r: 0,   g: 0,   b: 0 }       // שחור מוחלט
+    ];
+    
+    const out = [];
+    // רצים עד 264
+    for (let i = 0; i < 264; i++) {
+        let s = 0;
+        // מציאת המקטע הנוכחי
+        while (s < stops.length - 2 && i >= stops[s+1].pos) { s++; }
+        
+        const start = stops[s];
+        const end = stops[s+1];
+        const segmentLen = end.pos - start.pos;
+        const progress = segmentLen === 0 ? 0 : (i - start.pos) / segmentLen;
+        
+        // שימוש בפונקציית החלקה (Smoothstep) למעברים אורגניים וטבעיים
+        const ease = progress * progress * (3 - 2 * progress); 
+        
+        const r = Math.round(start.r + (end.r - start.r) * ease);
+        const g = Math.round(start.g + (end.g - start.g) * ease);
+        const b = Math.round(start.b + (end.b - start.b) * ease);
+        
+        out.push('#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''));
+    }
+    return out;
+  })()
+},
+
+
+{
+originalName: "Primavera Porteña 264",
+iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 21 C 12 18 10 17 10 13 C 10 9 13 8 15 7" fill="none" stroke="#004000" stroke-width="1.5" stroke-linecap="round"/><circle cx="15" cy="7" r="2.5" fill="#E03C8A"/><circle cx="10" cy="10" r="2.5" fill="#6A0DAD"/><circle cx="5" cy="13" r="2" fill="#87CEEB"/><circle cx="12" cy="11" r="3" fill="#FCD116"/><circle cx="18" cy="11" r="2" fill="#FFAA00"/><circle cx="12" cy="11" r="1.5" fill="#6A0DAD"/><circle cx="11.5" cy="10" r="0.5" fill="#FFFFFF"/><circle cx="12.5" cy="10" r="0.5" fill="#FFFFFF"/><path d="M11 12 C 11 13, 13 13, 13 12" fill="none" stroke="#6A0DAD" stroke-width="1.2" stroke-linecap="round"/></svg>',
+
+colors: [
+        "#6A0DAD", "#731CAF", "#7C2BB2", "#853AB4", "#8E49B6", "#9758B8", "#A066BA", "#A975BC",
+        "#B284BE", "#B890C6", "#BF9CCD", "#C6A9D4", "#CCB5DC", "#D2C1E4", "#D9CEEB", "#E0DAF2",
+        "#E6E6FA", "#D6E2F7", "#C6DDF5", "#B6D9F2", "#A6D5F0", "#97D2ED", "#87CEEB", "#82C5EC",
+        "#7EBCED", "#7AB3E4", "#75AADB", "#83B3DE", "#90BBE2", "#9EC4E5", "#ABCCE9", "#B9D5EC",
+        "#C7DDF0", "#D5E6F4", "#E3EEF7", "#F1F7FB", "#FFFFFF", "#FFFAEE", "#FFF6DC", "#FFF1CA",
+        "#FFECB9", "#FFE8A8", "#FFE396", "#FFDF87", "#FFDB78", "#FFD769", "#FFD359", "#FFCF4A",
+        "#FFCB3B", "#FFC72C", "#FDB628", "#FBA625", "#F89521", "#F6841D", "#F4741A", "#F26316",
+        "#F05212", "#EE420F", "#EC320B", "#EA2107", "#E81004", "#E60000", "#E5060E", "#E50C1C",
+        "#E41229", "#E41837", "#E31E45", "#E22453", "#E22A61", "#E1306E", "#E1367C", "#E03C8A",
+        "#E3477C", "#E6516E", "#E95C61", "#EC6653", "#EF7145", "#F27A3A", "#F4842E", "#F78E22",
+        "#FA9717", "#FCA00C", "#FFAA00", "#FF9900", "#FF8800", "#FF7800", "#FF6700", "#F95F0D",
+        "#F4571A", "#EE4E28", "#E94635", "#E33E42", "#DD364F", "#D82E5D", "#D2256A", "#CD1D78",
+        "#C71585", "#C2247D", "#BE3274", "#B9406C", "#B44F64", "#AF5E5B", "#AA6C53", "#A67A4A",
+        "#A18942", "#9C973A", "#98A632", "#93B429", "#8EC221", "#8AD119", "#85DF10", "#81EE08",
+        "#7CFC00", "#79EE07", "#75E00E", "#72D214", "#6EC41B", "#6BB622", "#68A829", "#649930",
+        "#618B36", "#5D7C3D", "#5A6E44", "#507C48", "#478B4B", "#3E9A4F", "#34A853", "#2E9B48",
+        "#278E3E", "#208134", "#1A7429", "#14671F", "#0D5A14", "#064D0A", "#004000", "#0F3A00",
+        "#1F3300", "#2E2D00", "#3E2600", "#4D2000", "#5D1A00", "#6C1300", "#7C0D00", "#8B0600",
+        "#9B0000", "#8B0000", "#7C0000", "#6C0000", "#5D0000", "#4D0000", "#3E0000", "#2E0000",
+        "#1F0000", "#0F0000", "#000000", "#0C0906", "#19120C", "#251B13", "#322419", "#3E2C1F",
+        "#4A3526", "#573E2C", "#634732", "#6F5038", "#7C593F", "#886245", "#946A4C", "#A17352",
+        "#AD7C58", "#BA855F", "#C68E65", "#BA865F", "#AF7E59", "#A37654", "#976D4E", "#8C6548",
+        "#805D42", "#74553C", "#694C37", "#5E4431", "#523C2B", "#463326", "#3B2B20", "#35332E",
+        "#2F3A3C", "#2A424B", "#244959", "#1E5167", "#185975", "#126183", "#0C6892", "#0670A0",
+        "#0078AE", "#107CA6", "#20809F", "#2F8497", "#3F8890", "#4F8B88", "#5E8F80", "#6E9379",
+        "#7E9771", "#8B9D68", "#97A35F", "#A4A856", "#B0AE4D", "#BDB444", "#CABA3A", "#D6C031",
+        "#E3C528", "#EFCB1F", "#FCD116", "#F3C41A", "#EAB81F", "#E0AB24", "#D79E28", "#CE912D",
+        "#C48432", "#BB7836", "#B26B3B", "#A66437", "#9A5D33", "#8E562F", "#824F2B", "#764827",
+        "#6A4123", "#5E3A1F", "#52331B", "#462C17", "#3A2513", "#2E1E0F", "#22170B", "#1F1A15",
+        "#1C1C1F", "#222229", "#292934", "#2F2F3E", "#353548", "#3C3C53", "#42425D", "#484867",
+        "#4F4F72", "#55557C", "#5B5B86", "#626291", "#68689B", "#6E6EA5", "#7575B0", "#7B7BBA",
+        "#8181C4", "#8888CF", "#8E8ED9", "#9494E3", "#9B9BEE", "#A1A1F8", "#AAAAFC", "#B4B4FF",
+        "#BEBEFF", "#C7C7FF", "#D0D0FF", "#DADAFF", "#E4E4FF", "#EDEDFF", "#F6F6FF", "#FFFFFF"
+    ]
+},
 
 {
   originalName: "Earth & Spirit",
@@ -596,6 +835,47 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 },
 
   
+{
+isArchived: true,
+
+    originalName: "Amethyst Dream 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 2 L2 10 L12 22 L22 10 Z" fill="#955DCD"/><path d="M12 2 L2 10 L12 13 Z" fill="#C7AAE6"/><path d="M12 2 L22 10 L12 13 Z" fill="#E5D8F5"/><path d="M2 10 L12 22 L12 13 Z" fill="#662789"/><path d="M22 10 L12 22 L12 13 Z" fill="#3B184D"/></svg>',
+    colors: [
+        "#1A0B1E", "#1C0C20", "#1D0C22", "#1E0C24", "#1F0D25", "#200D27", "#220E29", "#240F2B",
+        "#25102C", "#26102E", "#271030", "#281032", "#291133", "#2B1235", "#2D1337", "#2E133A",
+        "#30143C", "#31143F", "#331541", "#351643", "#361646", "#381748", "#39174B", "#3B184D",
+        "#3D194F", "#3F1952", "#401A54", "#421A57", "#441B59", "#461C5B", "#471C5E", "#491D60",
+        "#4A1D63", "#4C1E65", "#4E1F67", "#501F6A", "#51206C", "#53206F", "#552171", "#572273",
+        "#582276", "#5A2378", "#5B237B", "#5D247D", "#5F257F", "#612582", "#622684", "#642687",
+        "#662789", "#68288B", "#69288E", "#6B2990", "#6C2993", "#6E2A95", "#702B97", "#722B9A",
+        "#732C9C", "#752C9F", "#772DA1", "#792EA3", "#7A2EA6", "#7C2FA8", "#7D2FAB", "#7F30AD",
+        "#7F32AF", "#7F33B2", "#8035B4", "#8036B7", "#8038B9", "#8039BC", "#813BBE", "#813CC1",
+        "#813EC3", "#8240C4", "#8443C4", "#8545C5", "#8747C6", "#8849C7", "#8A4CC7", "#8B4EC8",
+        "#8C50C9", "#8E52C9", "#8F54CA", "#9056CA", "#9157CB", "#9259CC", "#945BCC", "#955DCD",
+        "#965FCE", "#9862CE", "#9964CF", "#9B66D0", "#9C68D1", "#9E6BD1", "#9F6DD2", "#A06FD3",
+        "#A271D3", "#A373D4", "#A474D4", "#A576D5", "#A678D6", "#A87AD6", "#A97CD7", "#AA7ED8",
+        "#AC81D8", "#AD83D9", "#AF85DA", "#B087DB", "#B28ADB", "#B38CDC", "#B48EDD", "#B690DD",
+        "#B792DE", "#B894DE", "#B995DF", "#BA97E0", "#BC99E0", "#BD9BE1", "#BE9DE2", "#C09FE2",
+        "#C1A1E3", "#C2A2E4", "#C3A4E4", "#C4A6E5", "#C6A8E5", "#C7AAE6", "#C8ACE7", "#CAAFE7",
+        "#CBB1E8", "#CDB3E9", "#CEB5EA", "#D0B8EA", "#D1BAEB", "#D2BCEC", "#D4BEEC", "#D5C0ED",
+        "#D6C2EE", "#D7C3EE", "#D8C5EF", "#DAC7EF", "#DBC9F0", "#DDCCF1", "#DECEF2", "#E0D0F2",
+        "#E2D3F3", "#E3D6F4", "#E5D8F5", "#E6DAF6", "#E8DDF6", "#E9DFF7", "#EBE1F8", "#ECE3F9",
+        "#EEE6F9", "#EFE8FA", "#F1EAFB", "#F2EDFC", "#F4F0FC", "#F6F2FD", "#F7F4FE", "#F9F7FF",
+        "#F8F5FF", "#F7F2FF", "#F6F0FF", "#F5EEFF", "#F4ECFF", "#F3E9FF", "#F2E7FF", "#F1E4FF",
+        "#F0E2FF", "#EFE0FF", "#EEDDFF", "#EDDBFF", "#ECD8FF", "#EBD6FF", "#EAD4FF", "#E9D1FF",
+        "#E8CFFF", "#E7CCFF", "#E6CAFF", "#E5C7FF", "#E4C5FF", "#E4C2FF", "#E3C0FF", "#E2BDFF",
+        "#E1BAFF", "#E0B7FF", "#E0B5FF", "#DFB2FF", "#DEAFFF", "#DDACFF", "#DCAAFF", "#DBA7FF",
+        "#DAA5FF", "#D9A2FF", "#D89FFF", "#D79CFF", "#D69AFF", "#D597FF", "#D494FF", "#D392FF",
+        "#D28FFF", "#D28CFF", "#D18AFF", "#D088FF", "#CF85FF", "#CE82FF", "#CD80FF", "#CC7EFF",
+        "#CC7BFF", "#CB78FF", "#CA76FF", "#C973FF", "#C870FF", "#C76EFF", "#C66BFF", "#C568FF",
+        "#C466FF", "#C363FF", "#C260FF", "#C25EFF", "#C15CFF", "#C059FF", "#BF56FF", "#BE54FF",
+        "#BE52FF", "#BD4FFF", "#BC4CFF", "#BB4AFF", "#B949FD", "#B747FB", "#B646F9", "#B444F7",
+        "#B243F5", "#B042F3", "#AF42F0", "#AD41EE", "#AC41EB", "#AA40E9", "#A83FE7", "#A63EE4",
+        "#A53EE2", "#A33DDF", "#A13CDD", "#9F3BDB", "#9E3BD8", "#9C3AD6", "#9B3AD3", "#9939D1",
+        "#9738CF", "#9538CC", "#9437CA", "#9237C7", "#9036C5", "#8E35C3", "#8D35C0", "#8B34BE",
+        "#8A34BB", "#8833B9", "#8532BA", "#8231BB", "#8030BC", "#7D30BD", "#7A2FBE", "#772EBF"
+    ]
+},
 
 
     {

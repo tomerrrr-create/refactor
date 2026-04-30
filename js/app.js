@@ -42,9 +42,14 @@ let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge הא�
     icon: '<circle cx="12" cy="12" r="1.35" fill="currentColor"/><path d="M12 4.5 L17.5 15.5 L6.5 15.5 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="9.25" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
 },   
 
-      
-// 6. זיג-זג - כהה, בהיר, כהה, בהיר...
-{ method: 'zig-zag', icon: '<path d="M 4 18 L 9 6 L 15 18 L 20 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' },
+
+  //  הסטת פאזה / שבר (Zig-zag) -
+    { 
+        method: 'zig-zag', 
+        icon: '<path d="M 5 11 A 5 5 0 0 1 15 11 Z" fill="currentColor"/><path d="M 9 13 A 5 5 0 0 0 19 13 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
+    },
+
+
 
 
 { method: 'temperature', icon: '<circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 18 Q8 14 12 18 T20 18" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
@@ -54,6 +59,12 @@ let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge הא�
           // 4. מצב קשת - מינימליסטי (כמו האות 'ח')
           { method: 'hue', icon: '<path d="M 6 19 V 10 A 6 6 0 0 1 18 10 V 19"/>' }, 
           
+//  קשת בענן (Hue) -
+    { 
+        method: 'hue', 
+        icon: '<circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3.5 4.5" stroke-linecap="round"/>' 
+    },
+
 
 
           // 5. קשת כהה - 'ח' מרכזית עם 2 קשתות פנימיות בגווני אפור
@@ -75,12 +86,11 @@ const SORT_MODES = [
     },
 
 
+  // קשת כהה (Dark-Rainbow) -
+         {  
+        method: 'dark-rainbow', icon: '<path d="M 6 19 V 10 A 6 6 0 0 1 18 10 V 19"/>' },
 
-//  קשת בענן (Hue) -
-    { 
-        method: 'hue', 
-        icon: '<circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3.5 4.5" stroke-linecap="round"/>' 
-    },
+
 
  // החשכה (Reversed) - 
     { 
@@ -96,25 +106,14 @@ const SORT_MODES = [
         icon: '<path d="M 4 12 Q 12 5 20 12 Q 12 19 4 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>' 
     },
  
- // טמפרטורה (Temperature) 
+
+
+// טמפרטורה (Temperature) - צלזיוס מינימליסטי
     { 
         method: 'temperature', 
-        icon: '<path d="M 7 6 L 17 6 L 12 12 Z M 7 18 L 17 18 L 12 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' 
-    },
-
-
-  //  הסטת פאזה / שבר (Zig-zag) -
-    { 
-        method: 'zig-zag', 
-        icon: '<path d="M 5 11 A 5 5 0 0 1 15 11 Z" fill="currentColor"/><path d="M 9 13 A 5 5 0 0 0 19 13 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
-    },
-
-
-  // קשת כהה (Dark-Rainbow) -
-    { 
-        method: 'dark-rainbow', 
-        icon: '<circle cx="9" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M 12 7.39 A 5.5 5.5 0 0 1 12 16.61 A 5.5 5.5 0 0 1 12 7.39 Z" fill="currentColor"/>' 
+        icon: '<path d="M 16 18 A 6 6 0 1 1 16 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="6" r="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
     }
+
 
 ];
  
@@ -615,10 +614,12 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
         }
 
         boardState = state.tiles.map(tileState => ({
-            ...tileState,
+k: tileState.k,
+            v: tileState.v !== undefined ? tileState.v : tileState.k,
             prevK: null,
             animStart: 0,
-            v: tileState.v !== undefined ? tileState.v : tileState.k
+            isGold: tileState.isGold,
+            startDelay: 0
         }));
         
         renderToScreen(null); 
@@ -675,7 +676,13 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
           ctx.scale(dpr, dpr);
           
           if (createEmptyState) {
-            boardState = new Array(n * n).fill(null).map(() => ({ k: 0, prevK: null, animStart: 0, isGold: false, v: 0 }));
+boardState = new Array(n * n).fill(null).map(() => ({
+                k: 0,
+                v: 0,
+                prevK: null,
+                animStart: 0,
+                isGold: false,
+                startDelay: 0}));
             hasPerformedInitialAutofill = false;
           }
           renderToScreen(null);
@@ -1838,10 +1845,21 @@ function handlePointerDownCtrl(e) {
             wasLongPress = true;
 
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
-            if (btn.id === 'btnColorPicker') { modals.openColorPickerModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
-            if (btn.id === 'btnPalette') { modals.openPaletteModal(); return; }
+if (btn.id === 'btnColorPicker') {
+            // בחירת הצבע באינדקס 0 (המייצג את הצבע הכהה/הבסיס בפלטות הממוינות)
+            selectedColorIndex = 0;
+            selectedColor = palette()[0];
+            isRainbowModeActive = false;
+            
+            // עדכון המסגרת הזוהרת והאייקון של הכפתור
+            updateGlowEffect();
+            updateColorPickerButtonUI();
+            
+            return;
+        }
+
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
         }, C.LONG_PRESS_SHOW_MS);
       }
@@ -2604,7 +2622,61 @@ function cycleSortMethod() {
       }
 
 
+// --- Palette Click Combo Logic ---
+      let paletteClickTimer = null;
+      const DOUBLE_CLICK_DELAY = 150;
+
+      function handlePaletteClickCombo() {
+          if (paletteClickTimer === null) {
+              paletteClickTimer = setTimeout(() => {
+                  switchPalette(); 
+                  paletteClickTimer = null; 
+              }, DOUBLE_CLICK_DELAY);
+          } else {
+              clearTimeout(paletteClickTimer);
+              paletteClickTimer = null;
+              modals.openPaletteModal(); 
+          }
+      }
+      // ---------------------------------
+
+
+// --- Color Picker Click Combo Logic ---
+      let colorClickTimer = null;
+
+      function handleColorPickerClickCombo() {
+          if (colorClickTimer === null) {
+              colorClickTimer = setTimeout(() => {
+                  handleColorPickerClick(); 
+                  colorClickTimer = null; 
+              }, 150); // 150 מילישניות כמו שבחרת
+          } else {
+              clearTimeout(colorClickTimer);
+              colorClickTimer = null;
+              modals.openColorPickerModal(); 
+          }
+      }
+      // ---------------------------------
+
+
+
       async function initializeApp() {
+
+
+
+// --- Safari Aggressive Zoom Protections ---        
+        // מניעת זום של ספארי בלחיצה כפולה ברמת המסמך כולו
+        document.addEventListener('dblclick', function(event) {
+            event.preventDefault();
+        }, { passive: false });
+
+        // מניעת זום של ספארי בצביטה (Pinch to zoom)
+        document.addEventListener('gesturestart', function(event) {
+            event.preventDefault();
+        });
+        
+        // ------------------------------------------
+
         const splashScreen = document.getElementById('splashScreen'), splashText = document.getElementById('splashText');
         initializeLanguage();
         onLanguageChange(updateAllUIText);
@@ -2686,7 +2758,7 @@ updateBrightnessEvoButtonUI();
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
-        dom.btnPalette.addEventListener('click', (e) => handleCtrlClick(e, () => switchPalette()));
+dom.btnPalette.addEventListener('click', (e) => handleCtrlClick(e, handlePaletteClickCombo));
         dom.btnResetBoard.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(resetToGoldAndDefaultPalette)));
         dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
         dom.btnResizeUp.addEventListener('click', (e) => handleCtrlClick(e, () => resizeGrid(true)));
@@ -2699,7 +2771,7 @@ updateBrightnessEvoButtonUI();
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         dom.btnSymmetry.addEventListener('click', (e) => handleCtrlClick(e, cycleSymmetryMode));
 dom.btnCycleSort.addEventListener('click', (e) => handleCtrlClick(e, cycleSortMethod));
-        dom.btnColorPicker.addEventListener('click', (e) => handleCtrlClick(e, handleColorPickerClick));
+dom.btnColorPicker.addEventListener('click', (e) => handleCtrlClick(e, handleColorPickerClickCombo));
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
         dom.btnToggleSimMode.addEventListener('click', (e) => handleCtrlClick(e, toggleSimMode));
         dom.btnGameOfLife.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('gameOfLife')));

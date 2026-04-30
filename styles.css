@@ -1129,3 +1129,11 @@ body {
     transform: scale(0.6) translateY(5px); /* מתכווץ ויורד מטה, כמו 'שחיקה' */
     border: none;
 }
+
+
+
+/* מניעת זום כפוי של ספארי בלחיצה כפולה על כפתורי השליטה */
+button, .ctrl {
+    touch-action: manipulation !important;
+    -webkit-touch-callout: none !important;
+}
