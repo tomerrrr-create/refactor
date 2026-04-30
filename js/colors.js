@@ -1,5 +1,20 @@
 // js/colors.js
 
+/**
+ * ==========================================
+ * COLORS.JS - Color Management & Sorting Utilities
+ * ==========================================
+ * This file centralizes all logic and mathematics related to color management in the application.
+ * 
+ * Responsibilities:
+ * 1. Color conversions (e.g., HEX to RGB).
+ * 2. Calculating color properties (luminance, temperature, hue).
+ * 3. Advanced algorithms for sorting color palettes (design modes, rainbow, reversed, etc.).
+ * 
+ * Note: The functions in this file are "pure" - 
+ * they only perform calculations and do not directly modify the user interface (UI) or the board state.
+ */
+
 // --- הגדרות מיון עיצוב אלכימיה ---
 export const SORT_MODES = [
     { method: 'luminance', icon: '<circle cx="5.5" cy="12" r="3" fill="gray" stroke="none"/><path d="M 10.5 10 L 13.5 12 L 10.5 14" fill="none" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18.5" cy="12" r="3" fill="white" stroke="none"/>' },

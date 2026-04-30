@@ -1,7 +1,6 @@
 // js/app.js
 
-import { SORT_MODES, adjustBrightness, hexToRgb, lerp, getLuminance, getHue, getHSV, sortColorsArray } from './colors.js';
-
+import { SORT_MODES, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
 import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailableLangs, translations, onLanguageChange } from './i18n.js';
 import * as C from './constants.js';
 import * as Simulations from './simulations.js';
