@@ -21,6 +21,18 @@
     extensions = [
       # "vscodevim.vim"
     ];
+
+    # Enable previews
+    previews = {
+      enable = true;
+      previews = {
+        web = {
+          command = ["python3" "-m" "http.server" "8080"];
+          manager = "web";
+        };
+      };
+    };
+
     # Workspace lifecycle hooks
     workspace = {
       # Runs when a workspace is first created
