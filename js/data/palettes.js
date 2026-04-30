@@ -14,58 +14,14 @@ export const PALETTES = [
     colors: ["#001F3F","#003087","#005EB8","#0077E6","#40A9FF","#A3D8FF","#E6F0FF","#F5F8FF","#FFFFFF","#FFD700","#FFCC00","#FFB300","#E67E22","#2E8B57","#3CB371","#66C76F","#98E0A0","#C8102E","#E31C3D","#8B0000","#2C2C2C","#5A5A5A","#B0B0B0"]
   },
   {
-    originalName: "Ancient Mythos 64",
-    emoji: '🏺',
-    colors: (function() {
-        const orig = ["#0D0906","#1A1512","#2B221E","#3E3029","#564135","#705442","#8A6952","#A68064","#C39A77","#DFB68F","#FBE3B8","#D4AF37","#AA8222","#8B0000","#660000","#4A0404","#2E0E02","#1E2A3A","#2B3C53","#3C516D","#4F6889","#504136","#362A21","#1E1610"];
-        function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
-        function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
-        const rgbs = orig.map(hexToRgb);
-        const dists = [];
-        let totalDist = 0;
-        for (let i = 0; i < rgbs.length - 1; i++) {
-            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
-            if (d === 0) d = 0.1; 
-            dists.push(d);
-            totalDist += d;
-        }
-        const out = [];
-        for (let i = 0; i < 64; i++) {
-            if (i === 0) { out.push(orig[0]); continue; }
-            if (i === 63) { out.push(orig[orig.length - 1]); continue; }
-            let targetDist = (i / 63) * totalDist;
-            let accum = 0;
-            let s = 0;
-            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
-                accum += dists[s];
-                s++;
-            }
-            let progress = (targetDist - accum) / dists[s];
-            progress = Math.max(0, Math.min(1, progress));
-            let c1 = rgbs[s];
-            let c2 = rgbs[s+1];
-            let r = c1[0] + (c2[0] - c1[0]) * progress;
-            let g = c1[1] + (c2[1] - c1[1]) * progress;
-            let b = c1[2] + (c2[2] - c1[2]) * progress;
-            out.push(rgbToHex(r, g, b));
-        }
-        return out;
-    })()
-  },
-  {
     originalName: "The First Seven Stars",
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="1.5" fill="#FFFFFF"/><circle cx="6" cy="6" r="1" fill="#FFD700"/><circle cx="18" cy="5" r="1.2" fill="#00BFFF"/><circle cx="4" cy="16" r="1" fill="#FF4500"/><circle cx="20" cy="17" r="1.5" fill="#DDA0DD"/><circle cx="8" cy="20" r="1" fill="#FF8C00"/><circle cx="15" cy="19" r="1.2" fill="#B0E0E6"/><path d="M 4 16 Q 12 12 20 17" fill="none" stroke="#FFFFFF" stroke-width="0.3" opacity="0.4"/><path d="M 6 6 Q 12 12 18 5" fill="none" stroke="#FFFFFF" stroke-width="0.3" opacity="0.4"/></svg>',
     colors: ["#010005","#05010F","#0A021A","#100426","#170836","#200D49","#2E1560","#401F7A","#FF4500","#FF8C00","#FFD700","#FFFACD","#FFFFFF","#F8F8FF","#B0E0E6","#00BFFF","#1E90FF","#DDA0DD","#BA55D3","#8A2BE2","#4B0082","#2F0B45","#1A0529","#0B0114"]
   },
   {
-    originalName: "Ancient Mythos",
+    originalName: "Mythos",
     emoji: '🏺',
     colors: ["#0D0906","#1A1512","#2B221E","#3E3029","#564135","#705442","#8A6952","#A68064","#C39A77","#DFB68F","#FBE3B8","#D4AF37","#AA8222","#8B0000","#660000","#4A0404","#2E0E02","#1E2A3A","#2B3C53","#3C516D","#4F6889","#504136","#362A21","#1E1610"]
-  },
-  {
-    originalName: "Resonant Qi",
-    emoji: '🍃',
-    colors: ["#051810","#0A241A","#103225","#184131","#21523E","#2B634D","#37765D","#43896D","#519D7E","#60B290","#71C7A3","#83DDB6","#99F0CC","#B3F7DD","#CCFBEB","#E3FDF4","#F4FFFC","#E0F4F4","#C6E6E6","#A8D6D6","#87C3C3","#65AEAE","#449797","#247E7E"]
   },
   { 
     originalName: "New-York Autumn", 
@@ -409,6 +365,47 @@ export const PALETTES = [
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M12 2 L2 10 L12 22 L22 10 Z" fill="#955DCD"/><path d="M12 2 L2 10 L12 13 Z" fill="#C7AAE6"/><path d="M12 2 L22 10 L12 13 Z" fill="#E5D8F5"/><path d="M2 10 L12 22 L12 13 Z" fill="#662789"/><path d="M22 10 L12 22 L12 13 Z" fill="#3B184D"/></svg>',
     colors: ["#1A0B1E","#1C0C20","#1D0C22","#1E0C24","#1F0D25","#200D27","#220E29","#240F2B","#25102C","#26102E","#271030","#281032","#291133","#2B1235","#2D1337","#2E133A","#30143C","#31143F","#331541","#351643","#361646","#381748","#39174B","#3B184D","#3D194F","#3F1952","#401A54","#421A57","#441B59","#461C5B","#471C5E","#491D60","#4A1D63","#4C1E65","#4E1F67","#501F6A","#51206C","#53206F","#552171","#572273","#582276","#5A2378","#5B237B","#5D247D","#5F257F","#612582","#622684","#642687","#662789","#68288B","#69288E","#6B2990","#6C2993","#6E2A95","#702B97","#722B9A","#732C9C","#752C9F","#772DA1","#792EA3","#7A2EA6","#7C2FA8","#7D2FAB","#7F30AD","#7F32AF","#7F33B2","#8035B4","#8036B7","#8038B9","#8039BC","#813BBE","#813CC1","#813EC3","#8240C4","#8443C4","#8545C5","#8747C6","#8849C7","#8A4CC7","#8B4EC8","#8C50C9","#8E52C9","#8F54CA","#9056CA","#9157CB","#9259CC","#945BCC","#955DCD","#965FCE","#9862CE","#9964CF","#9B66D0","#9C68D1","#9E6BD1","#9F6DD2","#A06FD3","#A271D3","#A373D4","#A474D4","#A576D5","#A678D6","#A87AD6","#A97CD7","#AA7ED8","#AC81D8","#AD83D9","#AF85DA","#B087DB","#B28ADB","#B38CDC","#B48EDD","#B690DD","#B792DE","#B894DE","#B995DF","#BA97E0","#BC99E0","#BD9BE1","#BE9DE2","#C09FE2","#C1A1E3","#C2A2E4","#C3A4E4","#C4A6E5","#C6A8E5","#C7AAE6","#C8ACE7","#CAAFE7","#CBB1E8","#CDB3E9","#CEB5EA","#D0B8EA","#D1BAEB","#D2BCEC","#D4BEEC","#D5C0ED","#D6C2EE","#D7C3EE","#D8C5EF","#DAC7EF","#DBC9F0","#DDCCF1","#DECEF2","#E0D0F2","#E2D3F3","#E3D6F4","#E5D8F5","#E6DAF6","#E8DDF6","#E9DFF7","#EBE1F8","#ECE3F9","#EEE6F9","#EFE8FA","#F1EAFB","#F2EDFC","#F4F0FC","#F6F2FD","#F7F4FE","#F9F7FF","#F8F5FF","#F7F2FF","#F6F0FF","#F5EEFF","#F4ECFF","#F3E9FF","#F2E7FF","#F1E4FF","#F0E2FF","#EFE0FF","#EEDDFF","#EDDBFF","#ECD8FF","#EBD6FF","#EAD4FF","#E9D1FF","#E8CFFF","#E7CCFF","#E6CAFF","#E5C7FF","#E4C5FF","#E4C2FF","#E3C0FF","#E2BDFF","#E1BAFF","#E0B7FF","#E0B5FF","#DFB2FF","#DEAFFF","#DDACFF","#DCAAFF","#DBA7FF","#DAA5FF","#D9A2FF","#D89FFF","#D79CFF","#D69AFF","#D597FF","#D494FF","#D392FF","#D28FFF","#D28CFF","#D18AFF","#D088FF","#CF85FF","#CE82FF","#CD80FF","#CC7EFF","#CC7BFF","#CB78FF","#CA76FF","#C973FF","#C870FF","#C76EFF","#C66BFF","#C568FF","#C466FF","#C363FF","#C260FF","#C25EFF","#C15CFF","#C059FF","#BF56FF","#BE54FF","#BE52FF","#BD4FFF","#BC4CFF","#BB4AFF","#B949FD","#B747FB","#B646F9","#B444F7","#B243F5","#B042F3","#AF42F0","#AD41EE","#AC41EB","#AA40E9","#A83FE7","#A63EE4","#A53EE2","#A33DDF","#A13CDD","#9F3BDB","#9E3BD8","#9C3AD6","#9B3AD3","#9939D1","#9738CF","#9538CC","#9437CA","#9237C7","#9036C5","#8E35C3","#8D35C0","#8B34BE","#8A34BB","#8833B9","#8532BA","#8231BB","#8030BC","#7D30BD","#7A2FBE","#772EBF"]
   },
+
+  {
+    originalName: "Ancient Mythos 64",
+    emoji: '🏺',
+    colors: (function() {
+        const orig = ["#0D0906","#1A1512","#2B221E","#3E3029","#564135","#705442","#8A6952","#A68064","#C39A77","#DFB68F","#FBE3B8","#D4AF37","#AA8222","#8B0000","#660000","#4A0404","#2E0E02","#1E2A3A","#2B3C53","#3C516D","#4F6889","#504136","#362A21","#1E1610"];
+        function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+        function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1; 
+            dists.push(d);
+            totalDist += d;
+        }
+        const out = [];
+        for (let i = 0; i < 64; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 63) { out.push(orig[orig.length - 1]); continue; }
+            let targetDist = (i / 63) * totalDist;
+            let accum = 0;
+            let s = 0;
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+  },
+
   {
     originalName: "Lilac Noir",
     isArchived: true, 
@@ -451,6 +448,67 @@ export const PALETTES = [
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="goldHeartGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF9E9"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><path fill="url(#goldHeartGrad)" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" /></svg>', 
     colors: ["#000000","#030201","#050401","#080602","#0a0802","#0d0a02","#0f0c03","#120e03","#141105","#171305","#1a1506","#1c1807","#1f1a08","#221c09","#251f09","#28210a","#2b240b","#2e260c","#31290d","#352c0e","#382f0f","#3c3210","#3f3511","#433812","#463a13","#4b3e14","#4f4115","#524416","#554618","#5a4a19","#5f4e1b","#62511c","#65531d","#6a571f","#6f5b21","#725e22","#766123","#7c6625","#826b27","#856d28","#887029","#8e752b","#947a2c","#987d2e","#9b8030","#a58834","#af9038","#b9993c","#c4a241","#ceab46","#d9b44b","#e4bd50","#efc756","#f7cf5c","#ffd763","#ffdb70","#ffde7d","#ffe189","#ffe598","#ffe8a6","#ffecb3","#fff2ce","#fff9e9","#ffffff","#f5f5f5","#ebebeb","#e0e0e0","#d6d6d6","#cccccc","#c2c2c2","#b8b8b8","#adadad","#a3a3a3","#999999","#8f8f8f","#858585","#7a7a7a","#707070","#666666","#5c5c5c","#555466","#4e4b73","#474280","#3f398c","#372f99","#2f25a3","#281ca8","#2214a6","#1c0e9c","#160a8c","#12077a","#0d0466","#090252","#06013d","#030029","#010014"]
   },
+  {
+    originalName: "Ancient Mythos 264",
+    emoji: '🏺',
+    colors: (function() {
+        const orig = [
+            "#0D0906", "#1A1512", "#2B221E", "#3E3029", "#564135", "#705442", 
+            "#8A6952", "#A68064", "#C39A77", "#DFB68F", "#FBE3B8", "#D4AF37", 
+            "#AA8222", "#8B0000", "#660000", "#4A0404", "#2E0E02", "#1E2A3A", 
+            "#2B3C53", "#3C516D", "#4F6889", "#504136", "#362A21", "#1E1610"
+        ];
+        
+        function hexToRgb(h) {
+            return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)];
+        }
+        
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join('');
+        }
+        
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + 
+                              Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + 
+                              Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1;
+            dists.push(d);
+            totalDist += d;
+        }
+        
+        const out = [];
+        for (let i = 0; i < 264; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+            
+            let targetDist = (i / 263) * totalDist;
+            let accum = 0;
+            let s = 0;
+            
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+},
   {
     originalName: "Obsidian Soul",
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="none" stroke="#9C6CC7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7 4h10l-5 7 5 9H7l5-9z"/></svg>',
