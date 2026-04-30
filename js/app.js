@@ -435,24 +435,17 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
             if (!tileData) continue;
 
             let rgb;
-
             if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
-                const BREATHE_SPEED = 0.0015;
-                const elapsed = timestamp - breatheStartTime;
-                let wave = (breatheEvoMode === 'solo') 
-                    ? Math.sin(((elapsed - tileData.startDelay + (2 * Math.PI) / BREATHE_SPEED) % ((2 * Math.PI) / BREATHE_SPEED)) * BREATHE_SPEED)
-                    : Math.sin(elapsed * BREATHE_SPEED + tileData.k * 0.8);
-                
-                const fadeInProgress = Math.min(elapsed / 2000, 1.0);
-                const brightnessFactor = (1.0 * (1 - fadeInProgress)) + ((0.7 + wave * 0.3) * fadeInProgress);
-
+                const brightnessFactor = Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode);
                 const baseRgb = paletteAsRgb[norm(tileData.k)];
                 rgb = [
                     Math.round(baseRgb[0] * brightnessFactor),
                     Math.round(baseRgb[1] * brightnessFactor),
                     Math.round(baseRgb[2] * brightnessFactor)
                 ];
-            } else if (tileData.isGold) {
+            }
+            
+         else if (tileData.isGold) {
                 rgb = goldRgb;
             } else if (tileData.prevK !== null && timestamp) {
                 const elapsed = timestamp - tileData.animStart;
@@ -502,26 +495,11 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
         let finalColor;
 
         if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
-            const BREATHE_SPEED = 0.0015;
-            const elapsed = timestamp - breatheStartTime;
-            let wave;
-
-            if (breatheEvoMode === 'solo') {
-                const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;
-                const effectiveElapsed = (elapsed - tileData.startDelay + cycleDuration) % cycleDuration;
-                wave = Math.sin(effectiveElapsed * BREATHE_SPEED);
-            } else { 
-                wave = Math.sin(elapsed * BREATHE_SPEED + tileData.k * 0.8);
-            }
-            
-            const fadeInProgress = Math.min(elapsed / 2000, 1.0);
-            const animatedFactor = 0.7 + wave * 0.3; 
-            const brightnessFactor = (1.0 * (1 - fadeInProgress)) + (animatedFactor * fadeInProgress);
-
+            const brightnessFactor = Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode);
             const originalColor = getPaletteColor(tileData.k);
             finalColor = adjustBrightness(originalColor, brightnessFactor);
-
-        } else if (tileData.isGold) {
+        }
+        else if (tileData.isGold) {
             finalColor = C.GOLD || '#FFD700'; 
         } else if (tileData.prevK !== null && timestamp) {
             const elapsed = timestamp - tileData.animStart;

@@ -15,7 +15,7 @@ export { runContourGeneration } from './simulations/contour.js';
 export { generateSandpile } from './simulations/chi_flow.js';
 export { runTuringGeneration } from './simulations/turing.js';
 export { runDlaGeneration } from './simulations/dla.js';
-
+export { getBreatheBrightnessFactor } from './simulations/breathe.js';
 
 
 
