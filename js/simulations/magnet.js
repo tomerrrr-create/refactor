@@ -52,6 +52,11 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
     const method = magnetRules.method || 'magnet';
     const strength = 0.9; 
 
+    // הגדרת מגבלה: 50 למובייל, 300 למחשב
+    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const anchorLimit = magnetRules.anchorLimit || (isMobile ? 50 : 300);
+
+
     if (cachedMovedThisFrame.length !== n * n) {
         cachedMovedThisFrame = new Uint8Array(n * n);
     } else {
@@ -105,8 +110,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
             if (cachedAnchors.length === 0) break;
 
-            if (cachedAnchors.length > 300) {
-                const step = Math.ceil(cachedAnchors.length / 300);
+            if (cachedAnchors.length > anchorLimit) {
+                const step = Math.ceil(cachedAnchors.length / anchorLimit);
                 let writeIndex = 0;
                 for (let i = 0; i < cachedAnchors.length; i += step) {
                     cachedAnchors[writeIndex++] = cachedAnchors[i];
@@ -240,8 +245,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
             if (cachedAnchors.length === 0) break;
 
-            if (cachedAnchors.length > 300) {
-                const step = Math.ceil(cachedAnchors.length / 300);
+            if (cachedAnchors.length > anchorLimit) {
+                const step = Math.ceil(cachedAnchors.length / anchorLimit);
                 let writeIndex = 0;
                 for (let i = 0; i < cachedAnchors.length; i += step) {
                     cachedAnchors[writeIndex++] = cachedAnchors[i];
@@ -360,8 +365,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
             if (cachedAnchors.length === 0) break;
 
-            if (cachedAnchors.length > 300) {
-                const step = Math.ceil(cachedAnchors.length / 300);
+            if (cachedAnchors.length > anchorLimit) {
+                const step = Math.ceil(cachedAnchors.length / anchorLimit);
                 let writeIndex = 0;
                 for (let i = 0; i < cachedAnchors.length; i += step) {
                     cachedAnchors[writeIndex++] = cachedAnchors[i];
@@ -504,8 +509,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
             if (cachedAnchors.length === 0) break;
 
-            if (cachedAnchors.length > 300) {
-                const step = Math.ceil(cachedAnchors.length / 300);
+            if (cachedAnchors.length > anchorLimit) {
+                const step = Math.ceil(cachedAnchors.length / anchorLimit);
                 let writeIndex = 0;
                 for (let i = 0; i < cachedAnchors.length; i += step) {
                     cachedAnchors[writeIndex++] = cachedAnchors[i];
