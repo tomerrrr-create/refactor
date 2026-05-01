@@ -158,18 +158,18 @@ export const PALETTES = [
   },
   { 
     originalName: "Jasmine Dream 64", 
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="jasmineGradient" gradientTransform="rotate(90)"><stop offset="5%" stop-color="#AB6BB7" /><stop offset="95%" stop-color="#4B0082" /></linearGradient></defs><g transform="translate(12,12) rotate(18)"><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(0)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(72)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(144)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(216)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(288)" fill="url(#jasmineGradient)"/></g><circle cx="12" cy="12" r="2.5" fill="#FFD700"/></svg>', 
-    colors: ["#4B0082","#530C8E","#5A189A","#61218A","#682A7A","#692489","#6A1E97","#731E91","#7B1E8A","#743993","#7A3D92","#804090","#834481","#854772","#89487D","#8C4888","#8E508A","#8F588C","#986089","#9A5D96","#9B5AA3","#9E5F87","#A0636A","#9F6975","#9E6F80","#A56D9C","#AB6BB7","#A97585","#A97691","#A8769C","#AB7A8F","#AE7E82","#B47F72","#B97F62","#B9828A","#B885B1","#B39178","#B49187","#B59095","#BD918A","#C4927E","#C5967D","#C69A7B","#CC9B6B","#D29B5A","#C59EAA","#C4A49C","#C2AA8E","#C6AC7F","#C9AD70","#D4AE74","#DEAE77","#D8B38D","#D2B7A3","#E1B674","#D9BC7E","#D0C187","#DAC078","#E3BF68","#E2C782","#E0CF9C","#E3D38E","#E5D680","#F0E595"] 
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="jasmineGradient" gradientTransform="rotate(90)"><stop offset="5%" stop-color="#AB6BB7" /><stop offset="95%" stop-color="#4B0082" /></linearGradient></defs><g transform="translate(12,12) rotate(18)"><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(0)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(72)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(144)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(216)" fill="url(#jasmineGradient)"/><path d="M0,-11 C 5,-6 5,5 0,1 C -5,5 -5,-6 0,-11 Z" transform="rotate(288)" fill="url(#jasmineGradient)"/></g><circle cx="12" cy="12" r="2.5" fill="#FFD700"/><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+            colors: ["#4B0082","#530C8E","#5A189A","#61218A","#682A7A","#692489","#6A1E97","#731E91","#7B1E8A","#743993","#7A3D92","#804090","#834481","#854772","#89487D","#8C4888","#8E508A","#8F588C","#986089","#9A5D96","#9B5AA3","#9E5F87","#A0636A","#9F6975","#9E6F80","#A56D9C","#AB6BB7","#A97585","#A97691","#A8769C","#AB7A8F","#AE7E82","#B47F72","#B97F62","#B9828A","#B885B1","#B39178","#B49187","#B59095","#BD918A","#C4927E","#C5967D","#C69A7B","#CC9B6B","#D29B5A","#C59EAA","#C4A49C","#C2AA8E","#C6AC7F","#C9AD70","#D4AE74","#DEAE77","#D8B38D","#D2B7A3","#E1B674","#D9BC7E","#D0C187","#DAC078","#E3BF68","#E2C782","#E0CF9C","#E3D38E","#E5D680","#F0E595"] 
   },
   {
     originalName: "Ancient",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /></svg>',
-    colors: ["#FFD700","#FFC107","#FFEE58","#FDD835","#FBC02D","#FFE082","#FFCA28","#FFF176","#FF8C00","#FF9800","#FB8C00","#FFA726","#FF7043","#FF5722","#F4511E","#F57C00","#FF1744","#F44336","#E53935","#D32F2F","#C62828","#B71C1C","#FF5252","#EF5350","#E91E63","#F06292","#FF4081","#AD1457","#D81B60","#C2185B","#EC407A","#F48FB1","#9C27B0","#7B1FA2","#8E24AA","#AB47BC","#673AB7","#5E35B1","#3F51B5","#3949AB","#2196F3","#1976D2","#1E88E5","#42A5F5","#00BCD4","#26C6DA","#0097A7","#80DEEA","#4CAF50","#43A047","#2E7D32","#66BB6A","#8BC34A","#9CCC65","#CDDC39","#AFB42B","#FFFFFF","#F5F5F5","#E0E0E0","#BDBDBD","#9E9E9E","#757575","#424242","#000000"]
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+            colors: ["#FFD700","#FFC107","#FFEE58","#FDD835","#FBC02D","#FFE082","#FFCA28","#FFF176","#FF8C00","#FF9800","#FB8C00","#FFA726","#FF7043","#FF5722","#F4511E","#F57C00","#FF1744","#F44336","#E53935","#D32F2F","#C62828","#B71C1C","#FF5252","#EF5350","#E91E63","#F06292","#FF4081","#AD1457","#D81B60","#C2185B","#EC407A","#F48FB1","#9C27B0","#7B1FA2","#8E24AA","#AB47BC","#673AB7","#5E35B1","#3F51B5","#3949AB","#2196F3","#1976D2","#1E88E5","#42A5F5","#00BCD4","#26C6DA","#0097A7","#80DEEA","#4CAF50","#43A047","#2E7D32","#66BB6A","#8BC34A","#9CCC65","#CDDC39","#AFB42B","#FFFFFF","#F5F5F5","#E0E0E0","#BDBDBD","#9E9E9E","#757575","#424242","#000000"]
   },
   {
     originalName: "Ancient 264",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /></svg>',
-    colors: (function() {
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path fill="#FFD700" d="M12 3 L22 20 L2 20 Z" /><path fill="#B8860B" d="M12 3 L22 20 L12 20 Z" /><circle cx="18.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+            colors: (function() {
         const orig = ["#FFD700","#FFC107","#FFEE58","#FDD835","#FBC02D","#FFE082","#FFCA28","#FFF176","#FF8C00","#FF9800","#FB8C00","#FFA726","#FF7043","#FF5722","#F4511E","#F57C00","#FF1744","#F44336","#E53935","#D32F2F","#C62828","#B71C1C","#FF5252","#EF5350","#E91E63","#F06292","#FF4081","#AD1457","#D81B60","#C2185B","#EC407A","#F48FB1","#9C27B0","#7B1FA2","#8E24AA","#AB47BC","#673AB7","#5E35B1","#3F51B5","#3949AB","#2196F3","#1976D2","#1E88E5","#42A5F5","#00BCD4","#26C6DA","#0097A7","#80DEEA","#4CAF50","#43A047","#2E7D32","#66BB6A","#8BC34A","#9CCC65","#CDDC39","#AFB42B","#FFFFFF","#F5F5F5","#E0E0E0","#BDBDBD","#9E9E9E","#757575","#424242","#000000"];
         function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
         function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
@@ -212,13 +212,13 @@ export const PALETTES = [
   },
   {
     originalName: "Focus 64",
-    emoji: '🧘',
-    colors: ["#000000","#1A0B2E","#0B172E","#333333","#595959","#7F7F7F","#A5A5A5","#CCCCCC","#4A0072","#8E24AA","#A81E82","#C2185B","#E91E63","#EC407A","#F27DA5","#F8BBD0","#B71C1C","#D32F2F","#E34026","#F4511E","#FB8C00","#FFA726","#FFC96C","#FFECB3","#FBC02D","#FDD835","#FFEE58","#FFF176","#FFF9C4","#FFFFFF","#1B5E20","#29762E","#388E3C","#4CAF50","#66BB6A","#81C784","#A5D6A7","#C6E5C8","#E8F5E9","#0D47A1","#135EB9","#1976D2","#2196F3","#319DF4","#42A5F5","#90CAF9","#B9DEFB","#E3F2FD","#004D40","#006355","#00796B","#009688","#4DB6AC","#66C0B8","#80CBC4","#B2DFDB","#1A237E","#25318E","#303F9F","#3F51B5","#5C6BC0","#7D89CD","#9FA8DA","#C5CAE9"]
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🧘</text><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+            colors: ["#000000","#1A0B2E","#0B172E","#333333","#595959","#7F7F7F","#A5A5A5","#CCCCCC","#4A0072","#8E24AA","#A81E82","#C2185B","#E91E63","#EC407A","#F27DA5","#F8BBD0","#B71C1C","#D32F2F","#E34026","#F4511E","#FB8C00","#FFA726","#FFC96C","#FFECB3","#FBC02D","#FDD835","#FFEE58","#FFF176","#FFF9C4","#FFFFFF","#1B5E20","#29762E","#388E3C","#4CAF50","#66BB6A","#81C784","#A5D6A7","#C6E5C8","#E8F5E9","#0D47A1","#135EB9","#1976D2","#2196F3","#319DF4","#42A5F5","#90CAF9","#B9DEFB","#E3F2FD","#004D40","#006355","#00796B","#009688","#4DB6AC","#66C0B8","#80CBC4","#B2DFDB","#1A237E","#25318E","#303F9F","#3F51B5","#5C6BC0","#7D89CD","#9FA8DA","#C5CAE9"]
   },
   {
     originalName: "Focus 264",
-    emoji: '🧘',
-    colors: (function() {
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🧘</text><circle cx="18.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+            colors: (function() {
         const orig = ["#000000","#1A0B2E","#0B172E","#333333","#595959","#7F7F7F","#A5A5A5","#CCCCCC","#4A0072","#8E24AA","#A81E82","#C2185B","#E91E63","#EC407A","#F27DA5","#F8BBD0","#B71C1C","#D32F2F","#E34026","#F4511E","#FB8C00","#FFA726","#FFC96C","#FFECB3","#FBC02D","#FDD835","#FFEE58","#FFF176","#FFF9C4","#FFFFFF","#1B5E20","#29762E","#388E3C","#4CAF50","#66BB6A","#81C784","#A5D6A7","#C6E5C8","#E8F5E9","#0D47A1","#135EB9","#1976D2","#2196F3","#319DF4","#42A5F5","#90CAF9","#B9DEFB","#E3F2FD","#004D40","#006355","#00796B","#009688","#4DB6AC","#66C0B8","#80CBC4","#B2DFDB","#1A237E","#25318E","#303F9F","#3F51B5","#5C6BC0","#7D89CD","#9FA8DA","#C5CAE9"];
         function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
         function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
@@ -303,7 +303,7 @@ export const PALETTES = [
     isArchived: true, 
     originalName: "Night Rainbow",
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><clipPath id="nrClip"><circle cx="12" cy="12" r="10.5"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="#000000"/><g clip-path="url(#nrClip)" transform="rotate(-45 12 12)"><rect x="-5" y="3.75" width="34" height="1.5" fill="#8c28dc"/><rect x="-5" y="6.75" width="34" height="1.5" fill="#00b4ff"/><rect x="-5" y="9.75" width="34" height="1.5" fill="#109664"/><rect x="-5" y="12.75" width="34" height="1.5" fill="#ffc800"/><rect x="-5" y="15.75" width="34" height="1.5" fill="#eb5a5a"/><rect x="-5" y="18.75" width="34" height="1.5" fill="#ff3296"/></g></svg>',
-    colors: (function() {
+        colors: (function() {
       const stops = [{pos:0,r:0,g:0,b:0},{pos:15,r:15,g:0,b:30},{pos:32,r:140,g:40,b:220},{pos:50,r:0,g:15,b:40},{pos:68,r:0,g:180,b:255},{pos:85,r:0,g:25,b:15},{pos:104,r:16,g:150,b:100},{pos:122,r:25,g:20,b:0},{pos:140,r:255,g:200,b:0},{pos:158,r:35,g:5,b:10},{pos:176,r:235,g:90,b:90},{pos:194,r:25,g:0,b:20},{pos:214,r:255,g:50,b:150},{pos:236,r:15,g:0,b:10},{pos:255,r:0,g:0,b:0}];
       const out = [];
       for (let i = 0; i < 256; i++) {
@@ -324,8 +324,8 @@ export const PALETTES = [
   },
   {
     originalName: "Night Rainbow 264",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><clipPath id="nrClip"><circle cx="12" cy="12" r="10.5"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="#000000"/><g clip-path="url(#nrClip)" transform="rotate(-45 12 12)"><rect x="-5" y="3.75" width="34" height="1.5" fill="#8c28dc"/><rect x="-5" y="6.75" width="34" height="1.5" fill="#00b4ff"/><rect x="-5" y="9.75" width="34" height="1.5" fill="#109664"/><rect x="-5" y="12.75" width="34" height="1.5" fill="#ffc800"/><rect x="-5" y="15.75" width="34" height="1.5" fill="#eb5a5a"/><rect x="-5" y="18.75" width="34" height="1.5" fill="#ff3296"/></g></svg>',
-    colors: (function() {
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><clipPath id="nrClip"><circle cx="12" cy="12" r="10.5"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="#000000"/><g clip-path="url(#nrClip)" transform="rotate(-45 12 12)"><rect x="-5" y="3.75" width="34" height="1.5" fill="#8c28dc"/><rect x="-5" y="6.75" width="34" height="1.5" fill="#00b4ff"/><rect x="-5" y="9.75" width="34" height="1.5" fill="#109664"/><rect x="-5" y="12.75" width="34" height="1.5" fill="#ffc800"/><rect x="-5" y="15.75" width="34" height="1.5" fill="#eb5a5a"/><rect x="-5" y="18.75" width="34" height="1.5" fill="#ff3296"/></g><circle cx="18.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+        colors: (function() {
       const stops = [{pos:0,r:0,g:0,b:0},{pos:15,r:15,g:0,b:30},{pos:33,r:140,g:40,b:220},{pos:52,r:0,g:15,b:40},{pos:70,r:0,g:180,b:255},{pos:88,r:0,g:25,b:15},{pos:107,r:16,g:150,b:100},{pos:126,r:25,g:20,b:0},{pos:144,r:255,g:200,b:0},{pos:163,r:35,g:5,b:10},{pos:182,r:235,g:90,b:90},{pos:200,r:25,g:0,b:20},{pos:221,r:255,g:50,b:150},{pos:243,r:15,g:0,b:10},{pos:263,r:0,g:0,b:0}];
       const out = [];
       for (let i = 0; i < 264; i++) {
@@ -368,8 +368,8 @@ export const PALETTES = [
 
   {
     originalName: "Ancient Mythos 64",
-    emoji: '🏺',
-    colors: (function() {
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🏺</text><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+                colors: (function() {
         const orig = ["#0D0906","#1A1512","#2B221E","#3E3029","#564135","#705442","#8A6952","#A68064","#C39A77","#DFB68F","#FBE3B8","#D4AF37","#AA8222","#8B0000","#660000","#4A0404","#2E0E02","#1E2A3A","#2B3C53","#3C516D","#4F6889","#504136","#362A21","#1E1610"];
         function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
         function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
@@ -450,8 +450,8 @@ export const PALETTES = [
   },
   {
     originalName: "Ancient Mythos 264",
-    emoji: '🏺',
-    colors: (function() {
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🏺</text><circle cx="18.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+            colors: (function() {
         const orig = [
             "#0D0906", "#1A1512", "#2B221E", "#3E3029", "#564135", "#705442", 
             "#8A6952", "#A68064", "#C39A77", "#DFB68F", "#FBE3B8", "#D4AF37", 
