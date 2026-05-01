@@ -983,17 +983,14 @@ case 'spiral':
                 boardState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
                 break;
 
-case 'magnet':
-                boardState = Simulations.runMagnetGeneration({
-                    n: gridSize,
-                    currentBoardState: boardState,
-                    magnetRules: app.magnetRules,
-                    currentPalette: currentPalette
-                });
-                break;
+
+case 'magnet': 
+    boardState = Simulations.runMagnetGeneration({ n, currentBoardState: boardState, currentPalette: palette(), magnetRules }); 
+    break;
 
 
-case 'sandpile': 
+
+                case 'sandpile': 
     boardState = Simulations.generateSandpile(boardState, palette(), chiFlowRules).nextBoardState; 
     break;
 
