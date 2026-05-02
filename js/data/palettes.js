@@ -215,6 +215,98 @@ export const PALETTES = [
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🧘</text><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
             colors: ["#000000","#1A0B2E","#0B172E","#333333","#595959","#7F7F7F","#A5A5A5","#CCCCCC","#4A0072","#8E24AA","#A81E82","#C2185B","#E91E63","#EC407A","#F27DA5","#F8BBD0","#B71C1C","#D32F2F","#E34026","#F4511E","#FB8C00","#FFA726","#FFC96C","#FFECB3","#FBC02D","#FDD835","#FFEE58","#FFF176","#FFF9C4","#FFFFFF","#1B5E20","#29762E","#388E3C","#4CAF50","#66BB6A","#81C784","#A5D6A7","#C6E5C8","#E8F5E9","#0D47A1","#135EB9","#1976D2","#2196F3","#319DF4","#42A5F5","#90CAF9","#B9DEFB","#E3F2FD","#004D40","#006355","#00796B","#009688","#4DB6AC","#66C0B8","#80CBC4","#B2DFDB","#1A237E","#25318E","#303F9F","#3F51B5","#5C6BC0","#7D89CD","#9FA8DA","#C5CAE9"]
   },
+
+  {
+    originalName: "Zionism 64",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🇮🇱</text><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+    colors: (function() {
+        const orig = [
+            "#001F3F", "#003087", "#005EB8", "#0077E6", "#0099CC", "#40A9FF", 
+            "#A3D8FF", "#F5F8FF", "#FFFFFF", "#F5DEB3", "#D2B48C", "#E67E22", 
+            "#FFB300", "#FFD700", "#FFF8DC", "#98E0A0", "#3CB371", "#2E8B57", 
+            "#4B5320", "#E37A8C", "#E31C3D", "#C8102E", "#8B0000", "#4A0404", 
+            "#2C2C2C", "#5A5A5A", "#B0B0B0"
+        ];
+        function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+        function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1;
+            dists.push(d);
+            totalDist += d;
+        }
+        const out = [];
+        for (let i = 0; i < 64; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 63) { out.push(orig[orig.length - 1]); continue; }
+            let targetDist = (i / 63) * totalDist;
+            let accum = 0;
+            let s = 0;
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+  },
+  {
+    originalName: "Zionism 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🇮🇱</text><circle cx="18.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
+    colors: (function() {
+        const orig = [
+            "#001F3F", "#003087", "#005EB8", "#0077E6", "#0099CC", "#40A9FF", 
+            "#A3D8FF", "#F5F8FF", "#FFFFFF", "#F5DEB3", "#D2B48C", "#E67E22", 
+            "#FFB300", "#FFD700", "#FFF8DC", "#98E0A0", "#3CB371", "#2E8B57", 
+            "#4B5320", "#E37A8C", "#E31C3D", "#C8102E", "#8B0000", "#4A0404", 
+            "#2C2C2C", "#5A5A5A", "#B0B0B0"
+        ];
+        function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+        function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1;
+            dists.push(d);
+            totalDist += d;
+        }
+        const out = [];
+        for (let i = 0; i < 264; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+            let targetDist = (i / 263) * totalDist;
+            let accum = 0;
+            let s = 0;
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+  },
+  
   {
     originalName: "Focus 264",
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🧘</text><circle cx="18.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/><circle cx="21.5" cy="3.5" r="1.2" fill="#FFD700" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/></svg>',
