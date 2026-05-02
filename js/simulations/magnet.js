@@ -52,9 +52,9 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
     const method = magnetRules.method || 'magnet';
     const strength = 0.9; 
 
-    // הגדרת מגבלה: 50 למובייל, 300 למחשב
+    // הגדרת מגבלה: 100 למובייל, 300 למחשב
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const anchorLimit = magnetRules.anchorLimit || (isMobile ? 50 : 300);
+    const anchorLimit = magnetRules.anchorLimit || (isMobile ? 100 : 300);
 
 
     if (cachedMovedThisFrame.length !== n * n) {
