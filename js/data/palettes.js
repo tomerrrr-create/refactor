@@ -10,6 +10,7 @@ export const PALETTES = [
   },
   {
     originalName: "Zionism",
+    isArchived: true,
     emoji: '🇮🇱',
     colors: ["#001F3F","#003087","#005EB8","#0077E6","#40A9FF","#A3D8FF","#E6F0FF","#F5F8FF","#FFFFFF","#FFD700","#FFCC00","#FFB300","#E67E22","#2E8B57","#3CB371","#66C76F","#98E0A0","#C8102E","#E31C3D","#8B0000","#2C2C2C","#5A5A5A","#B0B0B0"]
   },
@@ -219,6 +220,7 @@ export const PALETTES = [
 
   {
     originalName: "Zionism 64",
+    isArchived: true,
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18">🇮🇱</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5" stroke-linejoin="round">HQ</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end">HQ</text></svg>',
         colors: (function() {
         const orig = [
