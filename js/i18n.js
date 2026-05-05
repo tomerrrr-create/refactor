@@ -186,11 +186,12 @@ turing_preset_cells: { en: "Cells", he: "תאים", ru: "Клетки", nl: "Cel
   turing_preset_chaos: { en: "Chaos", he: "כאוס", ru: "Хаос", nl: "Chaos" },
 turing_preset_waves: { en: "Waves", he: "גלים", ru: "Волны", nl: "Golven" },
   
-  // --- START: Added for Spiral Settings ---
-  tooltip_spiral: { en: "Spiral Pattern", he: "ספירלה", ru: "Спираль", nl: "Spiraal" }
-  // --- END: Added for Spiral Settings ---
-
+  tooltip_spiral: { en: "Spiral Pattern", he: "ספירלה", ru: "Спираль", nl: "Spiraal" },
+  magnet_modal_title: { en: "Magnet Settings", he: "הגדרות מגנט", ru: "Настройки магнита", nl: "Magneetinstellingen" },
+  magnet_mode_label: { en: "Magnet Type", he: "סוג המגנט", ru: "Тип магнита", nl: "Type magneet" },
+  magnet_anchor_label: { en: "Anchor Color", he: "צבע Anchor", ru: "Цвет якоря", nl: "Anker kleur" },
 }; 
+
 
 
 

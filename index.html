@@ -838,5 +838,34 @@
 </div>
 
 
+<!-- === MAGNET SETTINGS MODAL === -->
+<div id="magnetSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
+  <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+    <button id="btnMagnetModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    
+    <h2 id="magnetSettingsTitle" class="text-xl font-bold text-center text-gray-200">הגדרות מגנט</h2>
+
+    <div class="flex flex-col gap-2">
+      <h3 id="magnetModeLabel" class="font-semibold text-gray-300 text-center">סוג המגנט</h3>
+      <div class="grid grid-cols-4 gap-2" id="magnetMethodContainer"></div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <h3 id="magnetAnchorLabel" class="font-semibold text-gray-300 text-center">צבע Anchor</h3>
+      <div id="magnetAnchorSwatches" class="flex flex-wrap gap-2 justify-center max-h-64 overflow-auto p-2 border border-gray-700 rounded-xl"></div>
+    </div>
+
+    <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
+      <div class="flex gap-4">
+        <button id="btnMagnetSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">ביטול</button>
+        <button id="btnMagnetSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">שמור וסגור</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script type="module" src="js/app.js"></script></body>
 </html>

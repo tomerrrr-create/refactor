@@ -1299,11 +1299,11 @@ if (simulationName === 'magnet') {
         }
 
         // בדיקה: האם לסימולציה שנבחרה יש חלון הגדרות?
-        const simsWithSettings = ['gameOfLife', 'gravitationalSort', 'contour', 'spiral', 'sandpile', 'turing'];
+        const simsWithSettings = ['gameOfLife', 'gravitationalSort', 'contour', 'spiral', 'sandpile', 'turing', 'magnet'];
         if (dom.btnSimSettings && simsWithSettings.includes(simulationName)) {
             dom.btnSimSettings.classList.remove('hide-settings');
         }
-
+    
     }
 }
 
@@ -2270,6 +2270,7 @@ function cycleSortMethod() {
               case 'spiral': modals.openSpiralSettingsModal(); break;
               case 'sandpile': modals.openChiFlowSettingsModal(); break;
               case 'turing': modals.openTuringSettingsModal(); break;
+              case 'magnet': modals.openMagnetSettingsModal(); break;
           }
       }
 
@@ -2373,8 +2374,18 @@ syncSpiralModeFromModal: (method) => {
     updateSpiralButtonUI();
 },
 
+syncMagnetFromModal: (method, anchorIndex) => {
+    if (armedSimulation !== 'magnet') armSimulation('magnet');
+    magnetMode = method;
+    magnetRules.method = method;
+    magnetRules.anchorColorIndex = anchorIndex;
+    updateMagnetButtonUI();
+},
+
 getChiFlowRules: () => chiFlowRules, setChiFlowRules: (r) => { chiFlowRules = r; },
 getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
+getMagnetRules: () => magnetRules, 
+setMagnetRules: (r) => { magnetRules = r; },
 
 
 

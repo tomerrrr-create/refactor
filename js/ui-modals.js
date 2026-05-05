@@ -1148,8 +1148,107 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
     });
     // --- END: Added for Spiral Settings ---
 
+    // --- MAGNET SETTINGS ---
+    app.dom.btnMagnetModalClose.addEventListener('click', closeMagnetSettingsModal);
+    app.dom.magnetSettingsModal.addEventListener('click', e => { 
+        if (e.target === app.dom.magnetSettingsModal) closeMagnetSettingsModal(); 
+    });
+    app.dom.btnMagnetSettingsCancel.addEventListener('click', closeMagnetSettingsModal);
+    app.dom.btnMagnetSettingsSave.addEventListener('click', saveMagnetSettings);
 
+// ====================== MAGNET SETTINGS MODAL ======================
+let tempMagnetRules = { method: 'magnet', anchorColorIndex: 0 };
 
+function closeMagnetSettingsModal() {
+    app.dom.magnetSettingsModal.style.display = 'none';
+    app.resetWasLongPress();
+}
+
+function renderMagnetMethodButtons() {
+    const container = app.dom.magnetMethodContainer;
+    container.innerHTML = '';
+
+    const modes = [
+        { method: 'magnet',        iconId: 'iconModeMagnet' },
+        { method: 'cosmic_magnet', iconId: 'iconModeCosmicMagnet' },
+        { method: 'time_magnet',   iconId: 'iconModeTimeMagnet' },
+        { method: 'expand',        iconId: 'iconModeExpand' }
+    ];
+
+    modes.forEach(m => {
+        const btn = document.createElement('button');
+        btn.className = `gs-direction-btn flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+            tempMagnetRules.method === m.method 
+            ? 'active border-gold-400 bg-gray-900 scale-105' 
+            : 'border-gray-600 hover:border-gray-400'
+        }`;
+        btn.dataset.method = m.method;
+        btn.style.minWidth = '76px';
+        btn.style.minHeight = '76px';
+
+        const originalIcon = document.getElementById(m.iconId);
+        if (originalIcon) {
+            const iconClone = originalIcon.cloneNode(true);
+            iconClone.style.display = 'block';
+            iconClone.style.width = '42px';
+            iconClone.style.height = '42px';
+            btn.appendChild(iconClone);
+        } else {
+            btn.innerHTML = `<span class="text-4xl">⬡</span>`;
+        }
+
+        btn.addEventListener('click', () => {
+            tempMagnetRules.method = m.method;
+            renderMagnetMethodButtons();
+        });
+
+        container.appendChild(btn);
+    });
+}
+
+function renderMagnetAnchorSwatches() {
+    const container = app.dom.magnetAnchorSwatches;
+    container.innerHTML = '';
+    const currentPalette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
+
+    currentPalette.forEach((color, index) => {
+        const swatch = document.createElement('div');
+        swatch.className = `w-9 h-9 rounded-2xl cursor-pointer border-2 transition-all ${
+            tempMagnetRules.anchorColorIndex === index 
+            ? 'border-gold-400 scale-110 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]' 
+            : 'border-transparent hover:border-gray-400'
+        }`;
+        swatch.style.backgroundColor = color;
+        swatch.addEventListener('click', () => {
+            tempMagnetRules.anchorColorIndex = index;
+            renderMagnetAnchorSwatches();
+        });
+        container.appendChild(swatch);
+    });
+}
+function openMagnetSettingsModal() {
+    tempMagnetRules = { ... (app.magnetRules || { method: 'magnet', anchorColorIndex: 0 }) };
+
+    app.dom.magnetSettingsTitle.textContent = app.getText('magnet_modal_title');
+    app.dom.magnetModeLabel.textContent = app.getText('magnet_mode_label');
+    app.dom.magnetAnchorLabel.textContent = app.getText('magnet_anchor_label');
+
+    renderMagnetMethodButtons();
+    renderMagnetAnchorSwatches();
+
+    app.dom.magnetSettingsModal.style.display = 'flex';
+    setTimeout(() => app.dom.magnetSettingsModal.classList.add('modal-visible'), 10);
+}
+
+function saveMagnetSettings() {
+    app.magnetRules = { ...tempMagnetRules };
+
+    if (typeof app.syncMagnetFromModal === 'function') {
+        app.syncMagnetFromModal(tempMagnetRules.method, tempMagnetRules.anchorColorIndex);
+    }
+
+    closeMagnetSettingsModal();
+}
 
     return {
         openResizeModal,
@@ -1166,6 +1265,7 @@ openTuringSettingsModal,
         renderColorPickerContent,
         populateHelpModal,
 openSpiralSettingsModal,
+openMagnetSettingsModal,
         populatePaletteModal
     };
 }

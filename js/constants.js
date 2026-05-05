@@ -62,7 +62,8 @@ export const defaultSpiralRules = {
 };
 
 export const defaultMagnetRules = {
-    method: 'magnet'
+    method: 'magnet',
+    anchorColorIndex: 0   // ברירת מחדל: הצבע הראשון בפלטה
 };
 
 export const defaultErosionRules = {

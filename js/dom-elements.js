@@ -199,4 +199,15 @@ turingFeedSlider: document.getElementById('turingFeedSlider'),
   btnSpiralSettingsSave: document.getElementById('btnSpiralSettingsSave'),
   // --- END: Spiral Settings Modal Elements ---
 
+  // === MAGNET SETTINGS MODAL ===
+  magnetSettingsModal: document.getElementById('magnetSettingsModal'),
+  btnMagnetModalClose: document.getElementById('btnMagnetModalClose'),
+  magnetSettingsTitle: document.getElementById('magnetSettingsTitle'),
+  magnetModeLabel: document.getElementById('magnetModeLabel'),
+  magnetMethodContainer: document.getElementById('magnetMethodContainer'),
+  magnetAnchorLabel: document.getElementById('magnetAnchorLabel'),
+  magnetAnchorSwatches: document.getElementById('magnetAnchorSwatches'),
+  btnMagnetSettingsCancel: document.getElementById('btnMagnetSettingsCancel'),
+  btnMagnetSettingsSave: document.getElementById('btnMagnetSettingsSave'),
+
 };
