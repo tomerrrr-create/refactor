@@ -1206,47 +1206,64 @@ function renderMagnetMethodButtons() {
     });
 }
 
+
+
 function renderMagnetAnchorSwatches() {
     const container = app.dom.magnetAnchorSwatches;
     container.innerHTML = '';
-    
-    // כפתור ברירת המחדל (DARKEST)
-    const darkestBtn = document.createElement('div');
-    darkestBtn.className = `w-full text-center py-2 mb-3 rounded-lg cursor-pointer border-2 transition-all font-bold ${
-        tempMagnetRules.anchorColorIndex === -1 
-        ? 'border-gold-400 bg-gray-800 text-gold-400' 
-        : 'border-gray-600 text-gray-400 hover:border-gray-400'
-    }`;
-    darkestBtn.textContent = 'DARKEST (ברירת מחדל)';
-    darkestBtn.addEventListener('click', () => {
-        tempMagnetRules.anchorColorIndex = -1; // הערך -1 מסמל עבורנו את מצב הדיפולט
-        renderMagnetAnchorSwatches();
-    });
-    container.appendChild(darkestBtn);
-
-    // אזור הצבעים הספציפיים
-    const swatchesGrid = document.createElement('div');
-    swatchesGrid.className = 'flex flex-wrap gap-2 justify-center w-full';
-
     const currentPalette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
-    currentPalette.forEach((color, index) => {
+
+    // 1. יצירת כפתור ה-DARKEST הסטטי מעל הרשימה (אם עדיין לא קיים)
+    let staticBtn = document.getElementById('btnMagnetDarkest');
+    if (!staticBtn) {
+        staticBtn = document.createElement('button');
+        staticBtn.id = 'btnMagnetDarkest';
+        // הזרקת הכפתור ישירות מעל הקונטיינר הנגלל של הצבעים
+        container.parentNode.insertBefore(staticBtn, container);
+    }
+
+    // איור ליקוי חמה (SVG) בעיצוב מינימליסטי ורוחני
+    const eclipseIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right: 12px;">
+        <!-- הילות השמש מסביב -->
+        <circle cx="12" cy="12" r="9" stroke="gold" stroke-dasharray="2 4" stroke-linecap="round"/>
+        <!-- הירח המסתיר (כהה) -->
+        <circle cx="12" cy="12" r="6" fill="#111" stroke="gold" stroke-width="0.5"/>
+    </svg>`;
+
+    // עדכון העיצוב של הכפתור הסטטי בהתאם למצב הלחיצה (אם אינדקס 0 נבחר)
+    staticBtn.className = `flex items-center justify-center w-full p-3 mb-4 rounded-2xl border-2 transition-all font-bold text-lg tracking-widest ${
+        tempMagnetRules.anchorColorIndex === -1 
+        ? 'border-gold-400 text-gold-400 bg-gray-900 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]' 
+        : 'border-gray-600 hover:border-gray-400 text-gray-400'
+    }`;
+
+    staticBtn.innerHTML = `${eclipseIcon} ROOT`;
+
+    // הגדרת פעולת הלחיצה על כפתור ה-DARKEST
+    staticBtn.onclick = () => {
+        tempMagnetRules.anchorColorIndex = -1;
+        renderMagnetAnchorSwatches();
+    };
+    
+    // 2. רינדור שאר הצבעים בתוך הקונטיינר הנגלל
+currentPalette.forEach((color, index) => {
+
         const swatch = document.createElement('div');
-        swatch.className = `w-9 h-9 rounded-2xl cursor-pointer border-2 transition-all ${
+        swatch.className = `w-9 h-9 rounded-2xl cursor-pointer border-2 transition-all flex-shrink-0 ${
             tempMagnetRules.anchorColorIndex === index 
             ? 'border-gold-400 scale-110 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]' 
             : 'border-transparent hover:border-gray-400'
         }`;
         swatch.style.backgroundColor = color;
+        
         swatch.addEventListener('click', () => {
             tempMagnetRules.anchorColorIndex = index;
             renderMagnetAnchorSwatches();
         });
-        swatchesGrid.appendChild(swatch);
+        
+        container.appendChild(swatch);
     });
-    
-    container.appendChild(swatchesGrid);
 }
-
 
 function openMagnetSettingsModal() {
     // התיקון שלנו: שימוש ב"טלפון" כדי למשוך את הנתונים העדכניים והאמיתיים מהמוח 

@@ -63,7 +63,7 @@ export const defaultSpiralRules = {
 
 export const defaultMagnetRules = {
     method: 'magnet',
-    anchorColorIndex: 0   // ברירת מחדל: הצבע הראשון בפלטה
+    anchorColorIndex: -1   // 1- מייצג את הכהה ביותר (DARKEST) תמיד
 };
 
 export const defaultErosionRules = {
