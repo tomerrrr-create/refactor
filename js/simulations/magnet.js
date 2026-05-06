@@ -45,7 +45,7 @@ const magnetNeighborsCoords = [
 ];
 const cachedAnchors = [];
 let cachedMovedThisFrame = new Uint8Array(0);
-
+let cachedAnchorFallback = null;
 
 export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette }) {
 
@@ -68,26 +68,37 @@ const anchorIndex = (magnetRules.anchorColorIndex === undefined || magnetRules.a
         cachedMovedThisFrame.fill(0);
     }
 
-    // === שינוי שלנו: זיהוי הצבע "הכהה ביותר" לפי ה-Phase Shift החדש ===
-    let darkestPresentShifted = Infinity;
-    let targetRealK = anchorIndex;
+    // === אופטימיזציה: חישוב ה-Fallback קורה רק פעם אחת ונשמר בזיכרון ===
+    if (!cachedAnchorFallback || cachedAnchorFallback.originalAnchorIndex !== anchorIndex) {
+        let darkestPresentShifted = Infinity;
+        let targetRealK = anchorIndex;
 
-    for (let i = 0; i < n * n; i++) {
-        if (nextBoardState[i].isGold) continue;
-        const currentK = nextBoardState[i].k;
-        // חישוב המיקום הווירטואלי (החדש) של הצבע
-        const shiftedK = (currentK - anchorIndex + pLen) % pLen;
-        
-        if (shiftedK < darkestPresentShifted) {
-            darkestPresentShifted = shiftedK;
-            targetRealK = currentK;
+        for (let i = 0; i < n * n; i++) {
+            if (nextBoardState[i].isGold) continue;
+            const currentK = nextBoardState[i].k;
+            // חישוב המיקום הווירטואלי (החדש) של הצבע
+            const shiftedK = (currentK - anchorIndex + pLen) % pLen;
+            
+            if (shiftedK < darkestPresentShifted) {
+                darkestPresentShifted = shiftedK;
+                targetRealK = currentK;
+            }
+            if (darkestPresentShifted === 0) break; // מצאנו את ה"כהה" המוחלט לפי הסדר החדש
         }
-        if (darkestPresentShifted === 0) break; // מצאנו את ה"כהה" המוחלט לפי הסדר החדש
+        if (darkestPresentShifted === Infinity) targetRealK = anchorIndex;
+        
+        // שמירת התוצאה במטמון כדי לא לחשב שוב בפריים הבא! 
+        // שומרים גם את ה-anchorIndex המקורי כדי לדעת אם היוזר שינה בחירה
+        cachedAnchorFallback = {
+            targetColorIndex: targetRealK,
+            targetShiftedK: darkestPresentShifted,
+            originalAnchorIndex: anchorIndex
+        };
     }
-    if (darkestPresentShifted === Infinity) targetRealK = anchorIndex;
-    
-    const targetColorIndex = targetRealK; 
-    const targetShiftedK = darkestPresentShifted; // לרוב יהיה 0, אלא אם ביצענו Fallback
+
+    // שליפה מיידית מהזיכרון במקום לרוץ על כל הלוח
+    const targetColorIndex = cachedAnchorFallback.targetColorIndex; 
+    const targetShiftedK = cachedAnchorFallback.targetShiftedK; 
     // ==============================================================
 
     switch (method) {
@@ -639,5 +650,5 @@ export function resetMagnetCaches() {
     if (typeof cachedAnchors !== 'undefined') {
         cachedAnchors.length = 0;
     }
+    cachedAnchorFallback = null; // מנקה את הזיכרון כשהמגנט עוצר או משנה מצב
 }
-
