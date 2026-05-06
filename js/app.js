@@ -139,6 +139,8 @@ function getPrevPaletteIndex(currentIndex) {
           
           // שומרים גם את הצבע הקודם (prevK) כדי לא לשבור אנימציות של מעברי צבע אם הן קורות עכשיו
           const currentPrevColors = boardState.map(tile => tile.prevK !== null ? currentPalette[tile.prevK] : null);
+        // === תוספת שלנו: שומרים את הצבע הספציפי של העוגן במגנט לפני הערבוב ===
+        const oldAnchorColor = magnetRules && currentPalette[magnetRules.anchorColorIndex] ? currentPalette[magnetRules.anchorColorIndex] : null;
 
           // 2. מעדכנים את השיטה הפעילה וממיינים את כל הפלטות מחדש
           currentSortMethod = newMethod;
@@ -148,6 +150,13 @@ function getPrevPaletteIndex(currentIndex) {
 
           // 3. ממפים מחדש את הלוח שלנו לאינדקסים החדשים
           const newPalette = C.PALETTES[activePaletteIndex].colors;
+          // === תוספת שלנו: מחפשים איפה הצבע מתחבא עכשיו, ומעדכנים את המגנט! ===
+          if (oldAnchorColor && magnetRules) {
+            const newAnchorIndex = newPalette.indexOf(oldAnchorColor);
+            if (newAnchorIndex !== -1) {
+                magnetRules.anchorColorIndex = newAnchorIndex;
+            }
+        }
           
           boardState.forEach((tile, index) => {
               // מעדכנים את הצבע הראשי של התא
