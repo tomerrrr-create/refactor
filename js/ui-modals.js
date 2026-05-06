@@ -1213,38 +1213,67 @@ function renderMagnetAnchorSwatches() {
     container.innerHTML = '';
     const currentPalette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
 
-    // 1. יצירת כפתור ה-DARKEST הסטטי מעל הרשימה (אם עדיין לא קיים)
-    let staticBtn = document.getElementById('btnMagnetDarkest');
-    if (!staticBtn) {
-        staticBtn = document.createElement('button');
-        staticBtn.id = 'btnMagnetDarkest';
-        // הזרקת הכפתור ישירות מעל הקונטיינר הנגלל של הצבעים
-        container.parentNode.insertBefore(staticBtn, container);
+    // 1. יצירת עטיפה (Wrapper) לכפתור ה-ROOT ולאינדיקטור הצבע
+    let rootWrapper = document.getElementById('magnetRootWrapper');
+    if (!rootWrapper) {
+        rootWrapper = document.createElement('div');
+        rootWrapper.id = 'magnetRootWrapper';
+        // Flex מחזיק את הכפתור והאינדיקטור זה לצד זה
+        rootWrapper.className = 'flex items-center gap-3 w-full mb-4';
+        container.parentNode.insertBefore(rootWrapper, container);
     }
 
-    // איור ליקוי חמה (SVG) בעיצוב מינימליסטי ורוחני
+    // מרוקנים את העטיפה כדי לעדכן אותה בכל לחיצה
+    rootWrapper.innerHTML = '';
+
+    // הגדרת משתנים לאינדיקטור - איזה צבע ואינדקס נציג?
+    let displayColor = '';
+    let displayIndex = '';
+    
+    if (tempMagnetRules.anchorColorIndex === -1) {
+        // מצב Root: מציגים את הצבע הכהה (אינדקס 0)
+        displayColor = currentPalette[0];
+        displayIndex = '0'; 
+    } else {
+        // נבחר עוגן: מציגים את הצבע והאינדקס שלו
+        displayColor = currentPalette[tempMagnetRules.anchorColorIndex];
+        displayIndex = tempMagnetRules.anchorColorIndex;
+    }
+
+    // איור ליקוי חמה (SVG)
     const eclipseIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right: 12px;">
-        <!-- הילות השמש מסביב -->
         <circle cx="12" cy="12" r="9" stroke="gold" stroke-dasharray="2 4" stroke-linecap="round"/>
-        <!-- הירח המסתיר (כהה) -->
         <circle cx="12" cy="12" r="6" fill="#111" stroke="gold" stroke-width="0.5"/>
     </svg>`;
 
-    // עדכון העיצוב של הכפתור הסטטי בהתאם למצב הלחיצה (אם אינדקס 0 נבחר)
-    staticBtn.className = `flex items-center justify-center w-full p-3 mb-4 rounded-2xl border-2 transition-all font-bold text-lg tracking-widest ${
+    // יצירת כפתור ה-Root 
+    const rootBtn = document.createElement('button');
+    rootBtn.className = `flex-1 flex items-center justify-center p-3 rounded-2xl border-2 transition-all font-bold text-lg tracking-widest ${
         tempMagnetRules.anchorColorIndex === -1 
         ? 'border-gold-400 text-gold-400 bg-gray-900 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]' 
         : 'border-gray-600 hover:border-gray-400 text-gray-400'
     }`;
-
-    staticBtn.innerHTML = `${eclipseIcon} ROOT`;
-
-    // הגדרת פעולת הלחיצה על כפתור ה-DARKEST
-    staticBtn.onclick = () => {
+    rootBtn.innerHTML = `${eclipseIcon} ROOT`;
+    rootBtn.onclick = () => {
         tempMagnetRules.anchorColorIndex = -1;
         renderMagnetAnchorSwatches();
     };
-    
+
+    // יצירת קוביית האינדיקטור שתשב מימין
+    const indicator = document.createElement('div');
+    indicator.className = `w-14 h-14 flex-shrink-0 rounded-2xl border-2 flex items-center justify-center font-bold text-lg text-white shadow-lg transition-all ${
+        tempMagnetRules.anchorColorIndex === -1 
+        ? 'border-gold-400 border-dashed opacity-80' 
+        : 'border-gold-400 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]'
+    }`;
+    indicator.style.backgroundColor = displayColor;
+    indicator.style.textShadow = '0px 1px 3px rgba(0,0,0,0.8)';
+    indicator.textContent = displayIndex;
+
+    // הוספת שניהם לתוך העטיפה
+    rootWrapper.appendChild(rootBtn);
+    rootWrapper.appendChild(indicator);
+
     // 2. רינדור שאר הצבעים בתוך הקונטיינר הנגלל
 currentPalette.forEach((color, index) => {
 
