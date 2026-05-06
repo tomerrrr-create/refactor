@@ -55,7 +55,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
     // === תוספת שלנו: שליפת משתני הפלטה והעוגן להתחלה ===
     const pLen = currentPalette ? currentPalette.length : 256;
-    const anchorIndex = magnetRules.anchorColorIndex || 0; 
+// אם המשתמש בחר ב-DARKEST (-1) או שעדיין לא נבחר כלום, נתייחס לזה כאינדקס 0
+const anchorIndex = (magnetRules.anchorColorIndex === undefined || magnetRules.anchorColorIndex === -1) ? 0 : magnetRules.anchorColorIndex;
 
     // הגדרת מגבלה: 100 למובייל, 300 למחשב
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);

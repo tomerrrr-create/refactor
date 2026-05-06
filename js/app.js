@@ -139,8 +139,9 @@ function getPrevPaletteIndex(currentIndex) {
           
           // שומרים גם את הצבע הקודם (prevK) כדי לא לשבור אנימציות של מעברי צבע אם הן קורות עכשיו
           const currentPrevColors = boardState.map(tile => tile.prevK !== null ? currentPalette[tile.prevK] : null);
-        // === תוספת שלנו: שומרים את הצבע הספציפי של העוגן במגנט לפני הערבוב ===
-        const oldAnchorColor = magnetRules && currentPalette[magnetRules.anchorColorIndex] ? currentPalette[magnetRules.anchorColorIndex] : null;
+        // === תוספת שלנו: שומרים את הצבע הספציפי. אם המצב הוא DARKEST (-1), אנחנו מתעלמים ולא עוקבים. ===
+        const oldAnchorColor = (magnetRules && magnetRules.anchorColorIndex !== -1 && currentPalette[magnetRules.anchorColorIndex]) ? currentPalette[magnetRules.anchorColorIndex] : null;
+
 
           // 2. מעדכנים את השיטה הפעילה וממיינים את כל הפלטות מחדש
           currentSortMethod = newMethod;

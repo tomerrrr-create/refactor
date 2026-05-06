@@ -1157,7 +1157,7 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
     app.dom.btnMagnetSettingsSave.addEventListener('click', saveMagnetSettings);
 
 // ====================== MAGNET SETTINGS MODAL ======================
-let tempMagnetRules = { method: 'magnet', anchorColorIndex: 0 };
+let tempMagnetRules = { method: 'magnet', anchorColorIndex: -1 };
 
 function closeMagnetSettingsModal() {
     app.dom.magnetSettingsModal.style.display = 'none';
@@ -1209,8 +1209,26 @@ function renderMagnetMethodButtons() {
 function renderMagnetAnchorSwatches() {
     const container = app.dom.magnetAnchorSwatches;
     container.innerHTML = '';
-    const currentPalette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
+    
+    // כפתור ברירת המחדל (DARKEST)
+    const darkestBtn = document.createElement('div');
+    darkestBtn.className = `w-full text-center py-2 mb-3 rounded-lg cursor-pointer border-2 transition-all font-bold ${
+        tempMagnetRules.anchorColorIndex === -1 
+        ? 'border-gold-400 bg-gray-800 text-gold-400' 
+        : 'border-gray-600 text-gray-400 hover:border-gray-400'
+    }`;
+    darkestBtn.textContent = 'DARKEST (ברירת מחדל)';
+    darkestBtn.addEventListener('click', () => {
+        tempMagnetRules.anchorColorIndex = -1; // הערך -1 מסמל עבורנו את מצב הדיפולט
+        renderMagnetAnchorSwatches();
+    });
+    container.appendChild(darkestBtn);
 
+    // אזור הצבעים הספציפיים
+    const swatchesGrid = document.createElement('div');
+    swatchesGrid.className = 'flex flex-wrap gap-2 justify-center w-full';
+
+    const currentPalette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
     currentPalette.forEach((color, index) => {
         const swatch = document.createElement('div');
         swatch.className = `w-9 h-9 rounded-2xl cursor-pointer border-2 transition-all ${
@@ -1223,9 +1241,12 @@ function renderMagnetAnchorSwatches() {
             tempMagnetRules.anchorColorIndex = index;
             renderMagnetAnchorSwatches();
         });
-        container.appendChild(swatch);
+        swatchesGrid.appendChild(swatch);
     });
+    
+    container.appendChild(swatchesGrid);
 }
+
 
 function openMagnetSettingsModal() {
     // התיקון שלנו: שימוש ב"טלפון" כדי למשוך את הנתונים העדכניים והאמיתיים מהמוח 
