@@ -1226,25 +1226,31 @@ function renderMagnetAnchorSwatches() {
     // מרוקנים את העטיפה כדי לעדכן אותה בכל לחיצה
     rootWrapper.innerHTML = '';
 
-    // הגדרת משתנים לאינדיקטור - איזה צבע ואינדקס נציג?
-    let displayColor = '';
-    let displayIndex = '';
-    
-    if (tempMagnetRules.anchorColorIndex === -1) {
-        // מצב Root: מציגים את הצבע הכהה (אינדקס 0)
-        displayColor = currentPalette[0];
-        displayIndex = '0'; 
-    } else {
-        // נבחר עוגן: מציגים את הצבע והאינדקס שלו
-        displayColor = currentPalette[tempMagnetRules.anchorColorIndex];
-        displayIndex = tempMagnetRules.anchorColorIndex;
-    }
-
-    // איור ליקוי חמה (SVG)
+    // איור ליקוי חמה (SVG) לכפתור הגדול (עם שוליים מימין)
     const eclipseIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right: 12px;">
         <circle cx="12" cy="12" r="9" stroke="gold" stroke-dasharray="2 4" stroke-linecap="round"/>
         <circle cx="12" cy="12" r="6" fill="#111" stroke="gold" stroke-width="0.5"/>
     </svg>`;
+
+    // איור ליקוי חמה (SVG) מרוכז לאינדיקטור הקטן (בלי שוליים, כדי שיישב בדיוק באמצע)
+    const indicatorEclipseIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="9" stroke="gold" stroke-dasharray="2 4" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="6" fill="#111" stroke="gold" stroke-width="0.5"/>
+    </svg>`;
+
+    // הגדרת משתנים לאינדיקטור - איזה צבע ותוכן נציג?
+    let displayColor = '';
+    let displayContent = '';
+    
+    if (tempMagnetRules.anchorColorIndex === -1) {
+        // מצב Root: מציגים את הצבע הכהה (אינדקס 0) ואת אייקון ליקוי החמה המרוכז
+        displayColor = currentPalette[0];
+        displayContent = indicatorEclipseIcon; 
+    } else {
+        // נבחר עוגן: מציגים את הצבע והאינדקס שלו
+        displayColor = currentPalette[tempMagnetRules.anchorColorIndex];
+        displayContent = tempMagnetRules.anchorColorIndex;
+    }
 
     // יצירת כפתור ה-Root 
     const rootBtn = document.createElement('button');
@@ -1259,20 +1265,30 @@ function renderMagnetAnchorSwatches() {
         renderMagnetAnchorSwatches();
     };
 
-    // יצירת קוביית האינדיקטור שתשב מימין
-    const indicator = document.createElement('div');
-    indicator.className = `w-14 h-14 flex-shrink-0 rounded-2xl border-2 flex items-center justify-center font-bold text-lg text-white shadow-lg transition-all ${
-        tempMagnetRules.anchorColorIndex === -1 
-        ? 'border-gold-400 border-dashed opacity-80' 
-        : 'border-gold-400 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]'
-    }`;
+// יצירת קוביית האינדיקטור שתשב מימין
+const indicator = document.createElement('div');
+indicator.className = `w-14 h-14 flex-shrink-0 rounded-2xl border-2 flex items-center justify-center font-bold text-lg text-white shadow-lg transition-all ${
+    tempMagnetRules.anchorColorIndex === -1 
+    ? 'border-gold-400 scale-105' 
+    : 'border-gold-400 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]'
+}`;
+
     indicator.style.backgroundColor = displayColor;
     indicator.style.textShadow = '0px 1px 3px rgba(0,0,0,0.8)';
-    indicator.textContent = displayIndex;
+    
+    if (tempMagnetRules.anchorColorIndex === -1) {
+        indicator.style.borderColor = 'var(--gold, #FFD700)';
+    }
+    
+
+
+    // שינינו כאן מ-textContent ל-innerHTML כדי שידע לרנדר את ה-SVG (האייקון)
+    indicator.innerHTML = displayContent;
 
     // הוספת שניהם לתוך העטיפה
     rootWrapper.appendChild(rootBtn);
     rootWrapper.appendChild(indicator);
+    
 
     // 2. רינדור שאר הצבעים בתוך הקונטיינר הנגלל
 currentPalette.forEach((color, index) => {
