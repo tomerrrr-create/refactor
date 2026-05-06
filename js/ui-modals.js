@@ -1226,8 +1226,11 @@ function renderMagnetAnchorSwatches() {
         container.appendChild(swatch);
     });
 }
+
 function openMagnetSettingsModal() {
-    tempMagnetRules = { ... (app.magnetRules || { method: 'magnet', anchorColorIndex: 0 }) };
+    // התיקון שלנו: שימוש ב"טלפון" כדי למשוך את הנתונים העדכניים והאמיתיים מהמוח 
+    const currentRules = app.getMagnetRules();
+    tempMagnetRules = { ...currentRules };
 
     app.dom.magnetSettingsTitle.textContent = app.getText('magnet_modal_title');
     app.dom.magnetModeLabel.textContent = app.getText('magnet_mode_label');
@@ -1241,7 +1244,8 @@ function openMagnetSettingsModal() {
 }
 
 function saveMagnetSettings() {
-    app.magnetRules = { ...tempMagnetRules };
+    // התיקון שלנו: שימוש ב"טלפון" כדי לשמור את הנתונים חזרה בצורה מסודרת
+    app.setMagnetRules({ ...tempMagnetRules });
 
     if (typeof app.syncMagnetFromModal === 'function') {
         app.syncMagnetFromModal(tempMagnetRules.method, tempMagnetRules.anchorColorIndex);
@@ -1250,7 +1254,8 @@ function saveMagnetSettings() {
     closeMagnetSettingsModal();
 }
 
-    return {
+
+return {
         openResizeModal,
         openColorPickerModal,
         openHelpModal,

@@ -46,16 +46,20 @@ const magnetNeighborsCoords = [
 const cachedAnchors = [];
 let cachedMovedThisFrame = new Uint8Array(0);
 
+
 export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette }) {
 
     const nextBoardState = currentBoardState; // Zero Allocation!
     const method = magnetRules.method || 'magnet';
     const strength = 0.9; 
 
+    // === תוספת שלנו: שליפת משתני הפלטה והעוגן להתחלה ===
+    const pLen = currentPalette ? currentPalette.length : 256;
+    const anchorIndex = magnetRules.anchorColorIndex || 0; 
+
     // הגדרת מגבלה: 100 למובייל, 300 למחשב
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const anchorLimit = magnetRules.anchorLimit || (isMobile ? 100 : 300);
-
 
     if (cachedMovedThisFrame.length !== n * n) {
         cachedMovedThisFrame = new Uint8Array(n * n);
@@ -63,18 +67,27 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
         cachedMovedThisFrame.fill(0);
     }
 
-    let darkestPresentIndex = Infinity;
+    // === שינוי שלנו: זיהוי הצבע "הכהה ביותר" לפי ה-Phase Shift החדש ===
+    let darkestPresentShifted = Infinity;
+    let targetRealK = anchorIndex;
+
     for (let i = 0; i < n * n; i++) {
         if (nextBoardState[i].isGold) continue;
         const currentK = nextBoardState[i].k;
-        if (currentK < darkestPresentIndex) {
-            darkestPresentIndex = currentK;
+        // חישוב המיקום הווירטואלי (החדש) של הצבע
+        const shiftedK = (currentK - anchorIndex + pLen) % pLen;
+        
+        if (shiftedK < darkestPresentShifted) {
+            darkestPresentShifted = shiftedK;
+            targetRealK = currentK;
         }
-        if (darkestPresentIndex === 0) break; 
+        if (darkestPresentShifted === 0) break; // מצאנו את ה"כהה" המוחלט לפי הסדר החדש
     }
-    if (darkestPresentIndex === Infinity) darkestPresentIndex = 0;
+    if (darkestPresentShifted === Infinity) targetRealK = anchorIndex;
     
-    const targetColorIndex = darkestPresentIndex; 
+    const targetColorIndex = targetRealK; 
+    const targetShiftedK = darkestPresentShifted; // לרוב יהיה 0, אלא אם ביצענו Fallback
+    // ==============================================================
 
     switch (method) {
         case 'magnet': {
@@ -93,7 +106,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (nextBoardState[nr * n + nc].k > targetColorIndex) {                                    
+                                // המרת השכן לערך הווירטואלי שלו לפני השוואה
+                                if (((nextBoardState[nr * n + nc].k - anchorIndex + pLen) % pLen) > targetShiftedK) {                                    
                                     isEdge = true;
                                     break;
                                 }
@@ -152,7 +166,6 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                         let b2Dist = Infinity, b2Nr = -1, b2Nc = -1;
                         let b3Dist = Infinity, b3Nr = -1, b3Nc = -1;
 
-                        // התיקון: שימוש במערך הגלובלי החיצוני
                         for (let idx = 0; idx < magnetNeighborsCoords.length; idx++) {
                             const n_dr = magnetNeighborsCoords[idx].dr;
                             const n_dc = magnetNeighborsCoords[idx].dc;
@@ -180,7 +193,6 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                         }
 
                         if (b1Dist !== Infinity && Math.random() < 0.8) {
-                            // התיקון: ביטול מערך ה-options! שימוש ב-if/else במקום אובייקטים
                             for (let attempt = 0; attempt < 3; attempt++) {
                                 let optNr = -1, optNc = -1;
                                 if (attempt === 0) { optNr = b1Nr; optNc = b1Nc; }
@@ -191,8 +203,9 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
                                 const target_i = optNr * n + optNc;
                                 
+                                // ממירים גם פה לערכים הווירטואליים לפני שמבצעים את תנאי ההחלפה
                                 if (!nextBoardState[target_i].isGold &&
-                                    nextBoardState[i].k < nextBoardState[target_i].k && 
+                                    ((nextBoardState[i].k - anchorIndex + pLen) % pLen) < ((nextBoardState[target_i].k - anchorIndex + pLen) % pLen) && 
                                     cachedMovedThisFrame[target_i] === 0) {
                                     
                                     const tempTile = nextBoardState[i];
@@ -228,7 +241,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (nextBoardState[nr * n + nc].k > targetColorIndex) {
+                                if (((nextBoardState[nr * n + nc].k - anchorIndex + pLen) % pLen) > targetShiftedK) {
                                     isEdge = true;
                                     break;
                                 }
@@ -308,7 +321,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const target_i = bestNr * n + bestNc;
                             
                             if (!nextBoardState[target_i].isGold &&
-                                nextBoardState[i].k < nextBoardState[target_i].k && 
+                                ((nextBoardState[i].k - anchorIndex + pLen) % pLen) < ((nextBoardState[target_i].k - anchorIndex + pLen) % pLen) && 
                                 cachedMovedThisFrame[target_i] === 0) {
                                 
                                 const tempTile = nextBoardState[i];
@@ -332,8 +345,6 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                 cachedMovedThisFrame.fill(0);
             }
             cachedAnchors.length = 0; 
-            
-            const pLen = currentPalette ? currentPalette.length : 256;
 
             for (let i = 0; i < n * n; i++) {
                 if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
@@ -348,7 +359,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (nextBoardState[nr * n + nc].k > targetColorIndex) {
+                                if (((nextBoardState[nr * n + nc].k - anchorIndex + pLen) % pLen) > targetShiftedK) {
                                     isEdge = true;
                                     break;
                                 }
@@ -382,7 +393,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                     if (nextBoardState[i].isGold) continue;
                     if (nextBoardState[i].k === targetColorIndex) continue;
 
-                    const colorWeight = nextBoardState[i].k / pLen; 
+                    // חישוב המשקל לפי הערך הווירטואלי החדש!
+                    const colorWeight = ((nextBoardState[i].k - anchorIndex + pLen) % pLen) / pLen; 
                     const moveProbability = 0.15 + (colorWeight * 0.80);
                     
                     if (Math.random() >= moveProbability) continue;
@@ -450,7 +462,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const target_i = optNr * n + optNc;
                             
                             if (!nextBoardState[target_i].isGold &&
-                                nextBoardState[i].k < nextBoardState[target_i].k && 
+                                ((nextBoardState[i].k - anchorIndex + pLen) % pLen) < ((nextBoardState[target_i].k - anchorIndex + pLen) % pLen) && 
                                 cachedMovedThisFrame[target_i] === 0) {
                                 
                                 const tempTile = nextBoardState[i];
@@ -477,8 +489,6 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
             }
             cachedAnchors.length = 0; 
             
-            const pLen = currentPalette ? currentPalette.length : 256;
-
             for (let i = 0; i < n * n; i++) {
                 if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
                     const r = Math.floor(i / n);
@@ -492,7 +502,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (nextBoardState[nr * n + nc].k > targetColorIndex) {                                    
+                                if (((nextBoardState[nr * n + nc].k - anchorIndex + pLen) % pLen) > targetShiftedK) {                                    
                                     isEdge = true;
                                     break;
                                 }
@@ -526,7 +536,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                     if (nextBoardState[i].isGold) continue;
                     if (nextBoardState[i].k === targetColorIndex) continue;
 
-                    const colorWeight = 1.0 - (nextBoardState[i].k / pLen); 
+                    // חישוב המשקל ההפוך (expand) לפי הערך הווירטואלי החדש
+                    const colorWeight = 1.0 - (((nextBoardState[i].k - anchorIndex + pLen) % pLen) / pLen); 
                     const moveProbability = 0.15 + (colorWeight * 0.80);
                     
                     if (Math.random() >= moveProbability) continue;
@@ -594,7 +605,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
                             const target_i = optNr * n + optNc;
                             
                             if (!nextBoardState[target_i].isGold &&
-                                nextBoardState[i].k < nextBoardState[target_i].k && 
+                                ((nextBoardState[i].k - anchorIndex + pLen) % pLen) < ((nextBoardState[target_i].k - anchorIndex + pLen) % pLen) && 
                                 cachedMovedThisFrame[target_i] === 0) {
                                 
                                 const tempTile = nextBoardState[i];
@@ -616,6 +627,7 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 
     return nextBoardState;
 }
+
 
 
 // === MINIMAL FIX: איפוס caches של מגנט (זה מה שגורם לאיטיות) ===
