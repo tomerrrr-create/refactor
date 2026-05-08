@@ -83,6 +83,7 @@ export const PALETTES = [
   },
   {
     originalName: "Northern Lights",
+    isArchived: true,
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="11" fill="#030712"/><circle cx="7" cy="6" r="0.75" fill="#E5F3FF"/><circle cx="16" cy="8" r="0.5" fill="#C7D2FE"/><circle cx="12" cy="4" r="0.5" fill="#E5F3FF"/><path fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" d="M3 14 Q 9 8, 14 13 T 21 9"/><path fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" d="M3 17 Q 10 10, 15 15 T 21 12"/><path fill="none" stroke="#ECFE71" stroke-width="1.5" stroke-linecap="round" d="M4 19 Q 11 12, 16 17 T 20 15"/></svg>',
     colors: ["#020617","#030712","#040815","#05091A","#05101F","#061826","#052E3B","#044155","#036672","#059669","#22C55E","#A3E635","#ECFE71","#E5F3FF","#C7D2FE","#A5B4FC","#818CF8","#7C3AED","#6D28D9","#5B21B6","#4C1D95","#312E81","#020617"]
   },

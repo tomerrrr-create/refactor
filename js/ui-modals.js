@@ -568,13 +568,11 @@ function populatePaletteModal() {
         // --- START: תוספת לכותרות דביקות ---
         header.style.position = 'sticky';
         header.style.top = '0px'; 
-        header.style.backgroundColor = '#1c1c1c'; // הרקע עכשיו מכסה גם את ה-paddingTop
+        header.style.backgroundColor = '#1c1c1c'; 
         header.style.zIndex = '20';
-        header.style.marginLeft = '-10px';
-        header.style.paddingLeft = '10px';
-        header.style.marginRight = '-10px';
-        header.style.paddingRight = '10px';
-                // --- END: תוספת לכותרות דביקות ---
+        header.style.width = '100%';
+        header.style.boxSizing = 'border-box';
+        // --- END: תוספת לכותרות דביקות ---
 
         header.innerHTML = `<span>${group.title}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${group.indexes.length} items</span>`;
         frag.appendChild(header);
