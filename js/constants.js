@@ -6,10 +6,10 @@ export const PALETTES = allPalettes;
 
 // --- מחולל קבוצות פלטות דינמי ---
 export const PALETTE_GROUPS = [
-    { id: 'classic', title: 'Classic Palettes (Up to 25)', min: 0, max: 25, indexes: [] },
-    { id: 'extended', title: 'Extended Palettes (26 - 80)', min: 26, max: 80, indexes: [] },
-    { id: 'continuous', title: 'Continuous / Gradients (100+)', min: 81, max: Infinity, indexes: [] },
-    { id: 'archive', title: 'Archive', min: 0, max: Infinity, indexes: [] } 
+    { id: 'classic', title: 'Origin ◈ ', min: 0, max: 25, indexes: [] },
+    { id: 'extended', title: 'Expansion ✦  ', min: 26, max: 80, indexes: [] },
+    { id: 'continuous', title: 'Resonance ♾️ ', min: 81, max: Infinity, indexes: [] },
+    { id: 'archive', title: 'Basement ▽', min: 0, max: Infinity, indexes: [] } 
 ];
 
 // שיוך אוטומטי של אינדקסים לקבוצות

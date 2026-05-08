@@ -1137,3 +1137,8 @@ button, .ctrl {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
 }
+
+/* --- Structural fix for Palette Modal Sticky Headers --- */
+#paletteModalGrid {
+  padding-top: 0 !important; 
+}

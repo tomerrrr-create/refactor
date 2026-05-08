@@ -522,6 +522,15 @@ function openPaletteModal() {
     if (app.isBreathing()) return;
     populatePaletteModal();
     app.dom.paletteModal.classList.add('modal-visible');
+
+    // --- START: גלילה אוטומטית לפלטה הפעילה ---
+    setTimeout(() => {
+        const activePreview = document.getElementById('active-palette-preview');
+        if (activePreview) {
+            activePreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 50);
+    // --- END: גלילה אוטומטית ---
 }
 
 
@@ -544,16 +553,33 @@ function populatePaletteModal() {
         header.style.color = 'var(--gold)';
         header.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
         header.style.paddingBottom = '5px';
-        header.style.marginTop = '15px';
-        header.style.marginBottom = '5px';
+
+        // הפתרון המבני: הריווח העליון עובר להיות חלק מהכותרת עצמה במקום מהקונטיינר
+        header.style.marginTop = '0px'; 
+        header.style.paddingTop = '15px'; 
+        header.style.marginBottom = '-8px';
+                
+        header.style.paddingBottom = '12px';
         header.style.fontSize = '1.1rem';
         header.style.display = 'flex';
         header.style.justifyContent = 'space-between';
         header.style.alignItems = 'flex-end';
         
+        // --- START: תוספת לכותרות דביקות ---
+        header.style.position = 'sticky';
+        header.style.top = '0px'; 
+        header.style.backgroundColor = '#1c1c1c'; // הרקע עכשיו מכסה גם את ה-paddingTop
+        header.style.zIndex = '20';
+        header.style.marginLeft = '-10px';
+        header.style.paddingLeft = '10px';
+        header.style.marginRight = '-10px';
+        header.style.paddingRight = '10px';
+                // --- END: תוספת לכותרות דביקות ---
+
         header.innerHTML = `<span>${group.title}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${group.indexes.length} items</span>`;
         frag.appendChild(header);
-
+        
+        
         // יצירת הכפתורים מתוך האינדקסים שהוכנו מראש לקבוצה
         group.indexes.forEach(index => {
             const palette = app.C.PALETTES[index];
@@ -564,6 +590,7 @@ function populatePaletteModal() {
                 preview.style.boxShadow = '0 0 0 2px var(--gold)';
                 preview.style.transform = 'scale(1.05)';
                 preview.style.transition = 'all 0.2s';
+                preview.id = 'active-palette-preview'; // <-- תוספת מזהה לגלילה האוטומטית
             }
 
             preview.addEventListener('click', () => {
