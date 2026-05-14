@@ -364,6 +364,7 @@ k: tileState.k,
 
       function undo() {
         if (history.length === 0) return;
+        window.logArtEvent('UNDO', '---'); // <-- תוספת: דיווח ליומן
         const lastAction = history.pop();
         future.push(lastAction);
         applyState(lastAction.before);
@@ -372,6 +373,7 @@ k: tileState.k,
 
       function redo() {
         if (future.length === 0) return;
+        window.logArtEvent('REDO', '---'); // <-- תוספת: דיווח ליומן
         const nextAction = future.pop();
         history.push(nextAction);
         applyState(nextAction.after);
@@ -2663,7 +2665,7 @@ function executeMacroAction(action) {
         applySortMethod(action.details);
         if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
     }
-    
+
     else if (action.eventName === 'PAUSE') {
         pauseLife();
     } 
@@ -2674,6 +2676,12 @@ function executeMacroAction(action) {
     else if (action.eventName === 'STEP FORWARD') {
         applyMacroRules(action.details);
         stepForward();
+    }
+    else if (action.eventName === 'UNDO') {
+        undo();
+    }
+    else if (action.eventName === 'REDO') {
+        redo();
     }
     else if (action.eventName === 'Gravitational Sort Mode') {
         if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
