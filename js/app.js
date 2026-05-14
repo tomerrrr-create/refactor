@@ -1634,6 +1634,13 @@ function handlePointerDownCtrl(e) {
         longPressTimer = setTimeout(() => {
             wasLongPress = true;
 
+            // מחיקת היסטוריית הלוגר בלחיצה ארוכה על כפתור השמירה
+                        if (btn.id === 'btnSave') {
+                                artRecipeLog = []; // איפוס המערך שמחזיק את פעולות הלוגר
+                                alert("לוגר אופס בהצלחה!"); // הודעה קופצת (פופ-אפ) למשתמש
+                                return; // עוצר את המשך הפונקציה כדי לא לפתוח חלונות אחרים
+                            }
+
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
