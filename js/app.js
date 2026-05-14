@@ -1012,8 +1012,8 @@ if (armedSimulation !== 'nudgeBrighter' && armedSimulation !== 'nudgeDarker') {
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
         
-        window.logArtEvent('STEP FORWARD', `Armed: ${armedSimulation} | Rules: ${simDetails}`);
-        // --------------------------------------------------------
+        window.logArtEvent('STEP FORWARD', `Armed: ${armedSimulation} | Sort: ${currentSortMethod} | Rules: ${simDetails}`);
+                // --------------------------------------------------------
 
         performAction(() => {
       if (armedSimulation === 'dla') {
@@ -1158,8 +1158,7 @@ function pauseLife() {
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
         else if (armedSimulation === 'breathe') simDetails = `Mode: ${breatheEvoMode}`;
         
-        window.logArtEvent('PLAY', `Armed: ${armedSimulation} | Rules: ${simDetails}`);
-        // ------------------------------------------------
+        window.logArtEvent('PLAY', `Armed: ${armedSimulation} | Sort: ${currentSortMethod} | Rules: ${simDetails}`);        // ------------------------------------------------
 
         // רשימת כל כפתורי הסימולציה
 
@@ -2566,14 +2565,27 @@ function scheduleNextMacroStep() {
     }, delay);
 }
 
-
 function applyMacroRules(details) {
-    // מחלצים מתוך הטקסט את שם הסימולציה ואת אובייקט ה-JSON של החוקים
-    const match = details.match(/Armed: (\w+)\s+\|\s+Rules:\s+(.*)/);
-    if (!match) return null;
-    
-    const sim = match[1];
-    const rulesStr = match[2];
+    // מחלצים מתוך הטקסט את שם הסימולציה, שיטת המיון ואת אובייקט ה-JSON של החוקים
+    let match = details.match(/Armed: (\w+)\s+\|\s+Sort:\s+([\w-]+)\s+\|\s+Rules:\s+(.*)/);
+    let sim, sortMethod, rulesStr;
+
+    if (match) {
+        sim = match[1];
+        sortMethod = match[2];
+        rulesStr = match[3];
+    } else {
+        // תאימות לאחור: לקבצי מאקרו ישנים שאין בהם את שיטת המיון
+        match = details.match(/Armed: (\w+)\s+\|\s+Rules:\s+(.*)/);
+        if (!match) return null;
+        sim = match[1];
+        rulesStr = match[2];
+    }
+
+    // כופה את שיטת המיון אם היא קיימת ואינה תואמת למה שמוגדר כרגע בקנבס
+    if (sortMethod && currentSortMethod !== sortMethod) {
+        applySortMethod(sortMethod);
+    }
 
     // מוודאים שהסימולציה הנכונה חמושה בממשק
     if (armedSimulation !== sim) armSimulation(sim);
@@ -2621,6 +2633,8 @@ function applyMacroRules(details) {
     }
     return sim;
 }
+
+
 
 function executeMacroAction(action) {
     console.log("Macro Execution:", action.eventName, "->", action.details);
