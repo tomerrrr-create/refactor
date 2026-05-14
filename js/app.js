@@ -621,7 +621,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
       }
 
       function randomizeAll() {
-        window.logArtEvent('Randomize', 'Palette Randomized'); // תיעוד רנדומיזציה
+        window.logArtEvent('--', 'Palette Randomized'); // תיעוד רנדומיזציה
         performAction(fillRandom);
         hasUsedRandomize = true;
       }
@@ -1053,7 +1053,7 @@ break;
 function pauseLife() {
           if (!isLifePlaying) return;
           isLifePlaying = false;
-          window.logArtEvent('PAUSE', armedSimulation || 'None');
+          window.logArtEvent('PAUSE', '---');
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
           animationFrameId = null;
           // animationLoop will stop itself on its next frame because isLifePlaying is false
