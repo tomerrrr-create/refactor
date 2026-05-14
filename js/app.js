@@ -17,6 +17,17 @@ import { initializeModals } from './ui-modals.js';
       let animationLoopId = null;
 let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge האוטומטית
 
+// --- Art Logger System (Session Recipe) ---
+let artRecipeLog = [];
+let artStepCounter = 1; // מונה צעדים סידורי
+
+window.logArtEvent = function(eventName, details) {
+    artRecipeLog.push(`${artStepCounter}. ${eventName} -> ${details}`);
+    artStepCounter++; // קידום המונה לקראת הצעד הבא
+};
+// ------------------------------------------
+
+
       // --- Breathe Animation State ---
       let isBreathing = false; // This variable is now effectively replaced by (isLifePlaying && armedSimulation === 'breathe')
       let breatheStartTime = 0;
@@ -130,8 +141,9 @@ function getPrevPaletteIndex(currentIndex) {
       // --------------------------------------------------------
 
 // --- שלב 2: לוגיקת המיפוי (Remapping) ---
-      function applySortMethod(newMethod) {
-          if (currentSortMethod === newMethod) return; // לא עושים כלום אם זו כבר השיטה הפעילה
+function applySortMethod(newMethod) {
+    if (currentSortMethod === newMethod) return; // לא עושים כלום אם זו כבר השיטה הפעילה
+    window.logArtEvent('Sort Method Change', newMethod); // תיעוד שינוי מיון
 
           // 1. שומרים את צבע ה-Hex המדויק של כל תא לפני השינוי
           const currentPalette = C.PALETTES[activePaletteIndex].colors;
@@ -609,6 +621,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
       }
 
       function randomizeAll() {
+        window.logArtEvent('Randomize', 'Palette Randomized'); // תיעוד רנדומיזציה
         performAction(fillRandom);
         hasUsedRandomize = true;
       }
@@ -666,8 +679,10 @@ spiralMode = 'off';
         animateBoardTransition(() => performAction(goDark));
       }
       
-      function invertGrid() {
+function invertGrid() {
+        window.logArtEvent('Invert Colors', 'Status: Toggled'); // תיעוד היפוך צבעים
         performAction(() => {
+            
             const len = paletteLen();
             const now = performance.now();
             boardState.forEach(tile => {
@@ -790,9 +805,11 @@ function handlePaletteSwitch(backwards = false) {
       }
 
       
-      function switchToPalette(index) {
+function switchToPalette(index) {
         if (index === activePaletteIndex) return;
+        window.logArtEvent('Palette Change', C.PALETTES[index].name); // תיעוד החלפת פלטה
         performAction(() => {
+            
             activePaletteIndex = index;
             resetSelectedColor();
             updatePaletteHeader();
@@ -1066,14 +1083,33 @@ function pauseLife() {
 
 
       
-function togglePlayPauseLife() {
-          if (isLifePlaying) {
-              pauseLife();
-              return;
-          }
-          if (!armedSimulation) return;
+      function togglePlayPauseLife() {
+        if (isLifePlaying) {
+            pauseLife();
+            return;
+        }
+        if (!armedSimulation) return;
 
-          // רשימת כל כפתורי הסימולציה
+        // --- Art Logger: Snapshoting Simulation State ---
+        let simDetails = "No specific rules mapping";
+        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(gameOfLifeRules);
+        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'erosion') simDetails = JSON.stringify(erosionRules);
+        else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
+        else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
+        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
+        else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
+        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(chiFlowRules);
+        else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
+        else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
+        else if (armedSimulation === 'breathe') simDetails = `Mode: ${breatheEvoMode}`;
+        
+        window.logArtEvent('Simulation Execution', `Armed: ${armedSimulation} | Rules: ${simDetails}`);
+        // ------------------------------------------------
+
+        // רשימת כל כפתורי הסימולציה
+
+       
           const simButtons = [
               dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, 
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
@@ -2321,6 +2357,25 @@ function cycleSortMethod() {
       }
       // ---------------------------------
 
+// --- Art Logger: Export Functionality ---
+      function exportArtRecipeLog() {
+          if (artRecipeLog.length === 0) {
+              alert("No actions logged yet. Perform some actions first!");
+              return;
+          }
+          const blob = new Blob([artRecipeLog.join('\n')], { type: 'text/plain' });
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const fileName = `Art_Recipe_${timestamp}.txt`;
+
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+      }
+      // ----------------------------------------
 
 
       async function initializeApp() {
@@ -2479,9 +2534,20 @@ if (dom.btnSimSettings) {
         }
 
 
+// Art Logger: Long Press specifically on Play button
+        let playLongPressTimer = null;
+        dom.btnPlayPauseLife.addEventListener('pointerdown', (e) => {
+            playLongPressTimer = setTimeout(() => {
+                wasLongPress = true; // מונע הפעלת Play/Pause רגיל מהקליק
+                exportArtRecipeLog();
+            }, 1000);
+        });
+        dom.btnPlayPauseLife.addEventListener('pointerup', () => clearTimeout(playLongPressTimer));
+        dom.btnPlayPauseLife.addEventListener('pointerleave', () => clearTimeout(playLongPressTimer));
+
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
-dom.btnNudgeBrighter.addEventListener('click', (e) => handleCtrlClick(e, handleNudgeBrighterClick));
+        dom.btnNudgeBrighter.addEventListener('click', (e) => handleCtrlClick(e, handleNudgeBrighterClick));
         dom.btnNudgeDarker.addEventListener('click', (e) => handleCtrlClick(e, handleNudgeDarkerClick));
 
         dom.btnLangToggle.addEventListener('click', toggleLanguage);
