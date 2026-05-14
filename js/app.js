@@ -17,14 +17,26 @@ import { initializeModals } from './ui-modals.js';
       let animationLoopId = null;
 let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge האוטומטית
 
-// --- Art Logger System (Session Recipe) ---
-let artRecipeLog = [];
-let artStepCounter = 1; // מונה צעדים סידורי
 
+// --- Art Logger System (Session Recipe) ---
+// --- TIMESTAMP ---
+
+let artRecipeLog = [];
 window.logArtEvent = function(eventName, details) {
-    artRecipeLog.push(`${artStepCounter}. ${eventName} -> ${details}`);
-    artStepCounter++; // קידום המונה לקראת הצעד הבא
+    const now = new Date();
+    const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+    artRecipeLog.push(`[${timestamp}] ${eventName} -> ${details}`);
 };
+// ------------------------------------------
+// --- NO TIMESTAMP ---
+// --- Art Logger System (Session Recipe) NO---
+// let artRecipeLog = [];
+// let artStepCounter = 1; // מונה צעדים סידורי
+
+// window.logArtEvent = function(eventName, details) {
+//     artRecipeLog.push(`${artStepCounter}. ${eventName} -> ${details}`);
+//     artStepCounter++; // קידום המונה לקראת הצעד הבא
+// };
 // ------------------------------------------
 
 
