@@ -2388,6 +2388,16 @@ function cycleMagnetMode() {
       }
 
 
+// --- NEW: Sort UI Updater ---
+function updateSortButtonUI() {
+    if (!dom.sortIconGroup) return;
+    const modeIndex = SORT_MODES.findIndex(m => m.method === currentSortMethod);
+    if (modeIndex !== -1) {
+        currentSortIndex = modeIndex;
+        dom.sortIconGroup.innerHTML = SORT_MODES[currentSortIndex].icon;
+    }
+}
+// -----------------------------
 
 function cycleSortMethod() {
     // 1. עוצרים לולאות ציור כפולות כדי לשחרר את המעבד
@@ -2582,10 +2592,12 @@ function applyMacroRules(details) {
         rulesStr = match[2];
     }
 
-    // כופה את שיטת המיון אם היא קיימת ואינה תואמת למה שמוגדר כרגע בקנבס
-    if (sortMethod && currentSortMethod !== sortMethod) {
-        applySortMethod(sortMethod);
-    }
+// כופה את שיטת המיון אם היא קיימת ואינה תואמת למה שמוגדר כרגע בקנבס
+if (sortMethod && currentSortMethod !== sortMethod) {
+    applySortMethod(sortMethod);
+    if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
+}
+
 
     // מוודאים שהסימולציה הנכונה חמושה בממשק
     if (armedSimulation !== sim) armSimulation(sim);
@@ -2649,7 +2661,9 @@ function executeMacroAction(action) {
     } 
     else if (action.eventName === 'Sort by') {
         applySortMethod(action.details);
-    } 
+        if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
+    }
+    
     else if (action.eventName === 'PAUSE') {
         pauseLife();
     } 
