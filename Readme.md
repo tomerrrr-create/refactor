@@ -316,22 +316,33 @@ The app utilizes Tailwind CSS for utility classes, heavily customized with vanil
 
 ---
 
-## 8. 📝 Art Logger (Session Recipe) System
+## 8. 📝 Art Logger & Macro Replay System
 
-The **Art Logger** is a real-time tracking system designed to record the technical "recipe" behind every creation. It allows for the reconstruction of specific visual states by documenting every influential action taken during a session.
+The **Art Logger** and **Macro Engine** form a complete system to record and replay the technical "recipe" behind every creation. It allows for the exact reconstruction of specific visual states by documenting and executing every influential action taken during a session.
 
-### Technical Architecture
+### Part 1: The Logger (Recording)
 *   **Event-Driven Dispatcher:** The system utilizes a global `window.logArtEvent(eventName, details)` function. This ensures that logging is decoupled from the heavy `animationLoop` or `gameLoop`, preserving a constant **60FPS** with zero performance overhead.
-*   **State Serialization:** For complex simulation rules (e.g., Turing Patterns or Game of Life), the system captures a "Snapshot" of all active parameters at the moment the simulation begins (`Play` button execution)[cite: 1].
+*   **Precise Timestamps:** Every action is recorded with a strict timestamp down to the millisecond (e.g., `[20:22:17.751]`). This allows the playback engine to calculate precise *Deltas* (time gaps) between actions.
+*   **State Serialization:** For complex simulation rules, the system captures a "Snapshot" of all active parameters (formatted as JSON) at the moment a simulation begins (`PLAY` command) or advances (`STEP FORWARD` command).
 
-### Tracked Metadata
-The logger generates a human-readable numbered list containing:
-1.  **Palette & Color Management:** Transitions between palettes, color randomization, and inversion[cite: 1].
-2.  **Sorting Logic:** Real-time updates when the color sorting method (Luminance, Temperature, etc.) is changed[cite: 1].
-3.  **Simulation Snapshots:** Full rule-set dumps (Survival/Birth arrays, Growth factors, Magnetic strength) captured upon execution[cite: 1].
-4.  **Runtime Interventions:** Logging manual pauses, manual steps forward, and parameter tweaks made while simulations are running[cite: 1].
+#### Tracked Metadata
+The logger generates a sequence containing:
+1.  **Palette & Color Management:** Transitions between palettes, color randomization, and inversion.
+2.  **Sorting Logic:** Real-time updates when the color sorting method is changed.
+3.  **Simulation Snapshots:** Full rule-set dumps captured upon execution.
+4.  **Runtime Interventions:** Logging manual pauses, manual steps forward, and parameter tweaks.
 
-### Interaction & Export
-*   **Trigger:** To preserve the minimalist UI, the export functionality is hidden behind a **Long Press (1000ms)** on the Play/Pause button (`dom.btnPlayPauseLife`)[cite: 1].
-*   **Output:** The system generates a `.txt` file named `Art_Recipe_[ISO_Timestamp].txt`.
-*   **Format:** A clean, numbered sequential log (e.g., `1. Palette Change -> Golden Hour`, `2. PAUSE`).
+#### Interaction & Export
+*   **Trigger:** Hidden behind a **Long Press (1000ms)** on the Play/Pause button (`dom.btnPlayPauseLife`).
+*   **Output:** Generates a `.txt` file named `Art_Recipe_[ISO_Timestamp].txt`.
+
+### Part 2: The Macro Engine (Playback)
+*   **Smart Routing:** The standard upload button (`projectFileInput`) acts as a smart router. If a `.json` file is loaded, it applies a static state. If a `.txt` file is loaded, it routes the file to the `parseMacroText` engine.
+*   **Timer Queue:** The parsed text is converted into an array of actionable objects. The `scheduleNextMacroStep` function uses native `setTimeout` to trigger the next event based on the exact recorded time *Deltas*.
+*   **Rules Injection:** When the macro encounters a `PLAY` or `STEP FORWARD` command containing a rules JSON, it dynamically reconstructs the `simulationRules` objects (e.g., `gravitationalSortRules`, `dlaRules`) in the background via `applyMacroRules()` before execution, ensuring 100% accurate reproduction.
+
+### Part 3: Safety & Interruption (Kill Switches)
+To maintain stability while a macro is loaded or playing, strict interceptors are in place:
+*   **Pause/Resume:** The macro can be paused via the main Play/Pause button. Manual drawing is allowed *only* while the macro is paused.
+*   **Input Blocking:** Manual canvas interactions (`onPointerDown`) are strictly blocked while the macro is actively running to prevent state conflicts.
+*   **Critical Kill Switch:** If the user manually clicks any simulation button (e.g., Game of Life, Erosion) while a macro is loaded, the `isExecutingMacroCommand` flag recognizes the external interference and instantly terminates the macro queue (`stopMacro()`) to hand control back to the user.
