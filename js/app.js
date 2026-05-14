@@ -1634,6 +1634,13 @@ function handlePointerDownCtrl(e) {
         longPressTimer = setTimeout(() => {
             wasLongPress = true;
 
+            // מחיקת היסטוריית הלוגר בלחיצה ארוכה על כפתור השמירה
+                        if (btn.id === 'btnSave') {
+                                artRecipeLog = []; // איפוס המערך שמחזיק את פעולות הלוגר
+                                alert("לוגר אופס בהצלחה!"); // הודעה קופצת (פופ-אפ) למשתמש
+                                return; // עוצר את המשך הפונקציה כדי לא לפתוח חלונות אחרים
+                            }
+
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
@@ -2684,15 +2691,56 @@ function executeMacroAction(action) {
         redo();
     }
     else if (action.eventName === 'Gravitational Sort Mode') {
-        if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
-        gsMode = action.details;
-        gravitationalSortRules.direction = action.details;
-        if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
-    }
-    
-    isExecutingMacroCommand = false; // מכבים את הדגל
-}
-      
+                if (action.details === 'off') {
+                    if (armedSimulation === 'gravitationalSort') armSimulation(null);
+                } else {
+                    if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
+                    gravitationalSortRules.direction = action.details;
+                }
+                gsMode = action.details;
+                if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
+            }
+            else if (action.eventName === 'Spiral Mode Changed') {
+                if (action.details === 'off') {
+                    if (armedSimulation === 'spiral') armSimulation(null);
+                } else {
+                    if (armedSimulation !== 'spiral') armSimulation('spiral');
+                    spiralRules.method = action.details;
+                }
+                spiralMode = action.details;
+                if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
+            }
+            else if (action.eventName === 'Magnet Mode Changed') {
+                if (action.details === 'off') {
+                    if (armedSimulation === 'magnet') armSimulation(null);
+                } else {
+                    if (armedSimulation !== 'magnet') armSimulation('magnet');
+                    magnetRules.method = action.details;
+                }
+                magnetMode = action.details;
+                if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
+            }
+            else if (action.eventName === 'Brightness Evo Mode Changed') {
+                if (action.details === 'off') {
+                    if (armedSimulation === 'brightnessEvo') armSimulation(null);
+                } else {
+                    if (armedSimulation !== 'brightnessEvo') armSimulation('brightnessEvo');
+                }
+                brightnessEvoMode = action.details;
+                if (typeof updateBrightnessEvoButtonUI === 'function') updateBrightnessEvoButtonUI();
+            }
+            else if (action.eventName === 'DLA Mode Changed') {
+                if (action.details === 'off') {
+                    if (armedSimulation === 'dla') armSimulation(null);
+                } else {
+                    if (armedSimulation !== 'dla') armSimulation('dla');
+                }
+                dlaMode = action.details;
+                if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
+            }
+            
+            isExecutingMacroCommand = false; // מכבים את הדגל
+        }      
       async function initializeApp() {
         // --- Safari Aggressive Zoom Protections ---        
         // מניעת זום של ספארי בלחיצה כפולה ברמת המסמך כולו
