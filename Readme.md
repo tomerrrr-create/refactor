@@ -13,6 +13,7 @@ This application is built using **Vanilla JavaScript (ES6 Modules)** without ext
 5. [Simulation Engine: Getting Started](#5-%EF%B8%8F-simulation-engine-getting-started)
 6. [Advanced Simulations Architecture](#6--advanced-simulations-architecture)
 7. [Additional Systems & Extension Guides](#7--additional-systems--extension-guides)
+8. [Art Logger (Session Recipe) System](#8--art-logger-session-recipe-system)
 ---
 
 ## 1. 📁 Project Structure
@@ -312,3 +313,26 @@ The app utilizes Tailwind CSS for utility classes, heavily customized with vanil
 * **Custom Animations:** Keyframes like `fadeInText`, `fadeOutText`, and `spin` are explicitly defined for splash screens and loading states, ensuring smooth 60FPS UI transitions.
 
 ---
+
+
+---
+
+## 8. 📝 Art Logger (Session Recipe) System
+
+The **Art Logger** is a real-time tracking system designed to record the technical "recipe" behind every creation. It allows for the reconstruction of specific visual states by documenting every influential action taken during a session.
+
+### Technical Architecture
+*   **Event-Driven Dispatcher:** The system utilizes a global `window.logArtEvent(eventName, details)` function. This ensures that logging is decoupled from the heavy `animationLoop` or `gameLoop`, preserving a constant **60FPS** with zero performance overhead.
+*   **State Serialization:** For complex simulation rules (e.g., Turing Patterns or Game of Life), the system captures a "Snapshot" of all active parameters at the moment the simulation begins (`Play` button execution)[cite: 1].
+
+### Tracked Metadata
+The logger generates a human-readable numbered list containing:
+1.  **Palette & Color Management:** Transitions between palettes, color randomization, and inversion[cite: 1].
+2.  **Sorting Logic:** Real-time updates when the color sorting method (Luminance, Temperature, etc.) is changed[cite: 1].
+3.  **Simulation Snapshots:** Full rule-set dumps (Survival/Birth arrays, Growth factors, Magnetic strength) captured upon execution[cite: 1].
+4.  **Runtime Interventions:** Logging manual pauses, manual steps forward, and parameter tweaks made while simulations are running[cite: 1].
+
+### Interaction & Export
+*   **Trigger:** To preserve the minimalist UI, the export functionality is hidden behind a **Long Press (1000ms)** on the Play/Pause button (`dom.btnPlayPauseLife`)[cite: 1].
+*   **Output:** The system generates a `.txt` file named `Art_Recipe_[ISO_Timestamp].txt`.
+*   **Format:** A clean, numbered sequential log (e.g., `1. Palette Change -> Golden Hour`, `2. PAUSE`).
