@@ -16,6 +16,15 @@ import { initializeModals } from './ui-modals.js';
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
 let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge האוטומטית
+// --- Macro Replay System Variables ---
+let macroQueue = [];
+let isMacroLoaded = false;
+let isMacroPlaying = false;
+let macroTimerId = null;
+let currentMacroStep = 0;
+let macroStartTime = 0;
+let isExecutingMacroCommand = false; // דגל שמונע מה-Kill Switch להרוג את עצמו
+
 
 
 // --- Art Logger System (Session Recipe) ---
@@ -985,11 +994,29 @@ if (armedSimulation !== 'nudgeBrighter' && armedSimulation !== 'nudgeDarker') {
         animationFrameId = requestAnimationFrame(gameLoop);
       }
 
+
+
       function stepForward() {
         if (isLifePlaying || armedSimulation === 'breathe') return;
         
+        // --- תוספת: תיעוד מורחב ב-Art Logger כולל מצב וחוקים ---
+        let simDetails = "No specific rules mapping";
+        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(gameOfLifeRules);
+        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'erosion') simDetails = JSON.stringify(erosionRules);
+        else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
+        else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
+        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
+        else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
+        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(chiFlowRules);
+        else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
+        else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
+        
+        window.logArtEvent('STEP FORWARD', `Armed: ${armedSimulation} | Rules: ${simDetails}`);
+        // --------------------------------------------------------
+
         performAction(() => {
-            if (armedSimulation === 'dla') {
+      if (armedSimulation === 'dla') {
                 syncDlaCrystalState();
             }
       
@@ -1097,6 +1124,20 @@ function pauseLife() {
 
       
       function togglePlayPauseLife() {
+
+        // --- MACRO INTERCEPTOR ---
+// --- MACRO INTERCEPTOR ---
+        // התוספת החשובה: השומר יפעל רק אם זו *לא* פקודה אוטומטית של המאקרו
+        if (isMacroLoaded && !isExecutingMacroCommand) {
+            if (isMacroPlaying) {
+                pauseMacro();
+            } else {
+                playMacro();
+            }
+            return; // עוצרים כאן ולא ממשיכים ללוגיקת הסימולציה הרגילה
+        }
+        // -------------------------
+
         if (isLifePlaying) {
             pauseLife();
             return;
@@ -1255,6 +1296,13 @@ function initializeDla() {
 
 function armSimulation(simulationName) {
     if (isLifePlaying) return;
+
+    // --- MACRO KILL SWITCH ---
+    // אם לחצו על כפתור סימולציה באופן ידני (ולא מתוך פקודת מאקרו), אנחנו משמידים את המאקרו הטעון
+    if (isMacroLoaded && !isExecutingMacroCommand) {
+        stopMacro();
+    }
+    // -------------------------
 
     const currentlyArmed = armedSimulation;
     const isTogglingOff = currentlyArmed === simulationName;
@@ -1500,6 +1548,36 @@ if (simulationName === 'magnet') {
       
       function onProjectFileSelected(event) {
         const file = event.target.files[0]; if (!file) return;
+
+
+        // -- ניתוב חכם: טיפול בקבצי מאקרו (.txt) --
+    if (file.name.endsWith('.txt')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            macroQueue = parseMacroText(text);
+            
+            if (macroQueue.length > 0) {
+                isMacroLoaded = true;
+                currentMacroStep = 0;
+                
+                // הבהוב כפתור ה-Play לאותת למשתמש שהמאקרו מוכן
+                dom.btnPlayPauseLife.disabled = false;
+                dom.btnPlayPauseLife.classList.add('glow-animation');
+                // אם היינו בסימולציה, נעצור אותה
+                if (isLifePlaying) pauseLife();
+                alert(getText('saveModal_loadIdea') + " (Macro Ready!)");
+            } else {
+                alert("Invalid macro file format.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = null;
+        return;
+    }
+
+
+    // -- טיפול בקבצי מצב רגילים (.json) --
         const reader = new FileReader();
         reader.onload = function(e) {
           try {
@@ -1816,7 +1894,7 @@ function handleDragPaint(targetIndex) {
 const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null };
 
 function onPointerDown(e) {
-    if (isLifePlaying || isBreathing) return;
+if (isLifePlaying || isBreathing || isMacroPlaying) return;
     const index = getTileIndexFromCoords(e.clientX, e.clientY);
     if (index === -1) return;
     e.target.setPointerCapture(e.pointerId);
@@ -2403,11 +2481,184 @@ function cycleSortMethod() {
       // ----------------------------------------
 
 
+      
+      // ==========================================
+// ====== MACRO REPLAY ENGINE (POC) =========
+// ==========================================
+
+function parseMacroText(text) {
+    const lines = text.split('\n').filter(l => l.trim() !== '');
+    const parsed = [];
+    let firstTimestamp = null;
+
+    lines.forEach(line => {
+        // מחפשים תבנית של: [20:22:17.751] EventName -> Details
+        const match = line.match(/\[(\d{2}:\d{2}:\d{2}\.\d{3})\] (.*?) -> (.*)/);
+        if (match) {
+            const [_, timeStr, eventName, details] = match;
+            // הופכים את חותמת הזמן למילי-שניות (לצורך חישוב הפרשים)
+            const dateObj = new Date(`1970-01-01T${timeStr}Z`); 
+            const timeMs = dateObj.getTime();
+
+            if (firstTimestamp === null) firstTimestamp = timeMs;
+            const delta = timeMs - firstTimestamp;
+
+            parsed.push({ delta, eventName, details });
+        }
+    });
+    return parsed;
+}
+
+function stopMacro() {
+    clearTimeout(macroTimerId);
+    macroQueue = [];
+    isMacroLoaded = false;
+    isMacroPlaying = false;
+    currentMacroStep = 0;
+    
+    // UI Reset
+    dom.btnPlayPauseLife.classList.remove('glow-animation');
+    if (!isLifePlaying) {
+        dom.iconPlay.style.display = 'block';
+        dom.iconPause.style.display = 'none';
+    }
+}
+
+function playMacro() {
+    if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
+    
+    isMacroPlaying = true;
+    dom.iconPlay.style.display = 'none';
+    dom.iconPause.style.display = 'block';
+    dom.btnPlayPauseLife.classList.remove('glow-animation');
+
+    // מחשבים את נקודת ההתחלה כדי שאם עשינו פאוז - נמשיך מאותו רגע
+    macroStartTime = performance.now() - (currentMacroStep > 0 ? macroQueue[currentMacroStep - 1].delta : 0);
+    scheduleNextMacroStep();
+}
+
+function pauseMacro() {
+    isMacroPlaying = false;
+    clearTimeout(macroTimerId);
+    dom.iconPlay.style.display = 'block';
+    dom.iconPause.style.display = 'none';
+}
+
+function scheduleNextMacroStep() {
+    if (!isMacroPlaying || currentMacroStep >= macroQueue.length) return;
+
+    const nextAction = macroQueue[currentMacroStep];
+    const targetTime = macroStartTime + nextAction.delta;
+    const delay = Math.max(0, targetTime - performance.now());
+
+    macroTimerId = setTimeout(() => {
+        if (!isMacroPlaying) return;
+        
+        executeMacroAction(nextAction);
+        currentMacroStep++;
+
+        if (currentMacroStep >= macroQueue.length) {
+            stopMacro(); // סיום מבוקר של המאקרו
+            if (isLifePlaying) pauseLife(); // אם נשארה סימולציה רצה, נעצור אותה
+        } else {
+            scheduleNextMacroStep(); // מכין את הפקודה הבאה בתור
+        }
+    }, delay);
+}
+
+
+function applyMacroRules(details) {
+    // מחלצים מתוך הטקסט את שם הסימולציה ואת אובייקט ה-JSON של החוקים
+    const match = details.match(/Armed: (\w+)\s+\|\s+Rules:\s+(.*)/);
+    if (!match) return null;
+    
+    const sim = match[1];
+    const rulesStr = match[2];
+
+    // מוודאים שהסימולציה הנכונה חמושה בממשק
+    if (armedSimulation !== sim) armSimulation(sim);
+
+    // הטמעת החוקים (Rules Injection)
+    if (rulesStr !== "No specific rules mapping") {
+        try {
+            if (sim === 'brightnessEvo') {
+                brightnessEvoMode = rulesStr.replace('Mode: ', '');
+                if (typeof updateBrightnessEvoButtonUI === 'function') updateBrightnessEvoButtonUI();
+            } else if (sim === 'breathe') {
+                breatheEvoMode = rulesStr.replace('Mode: ', '');
+                if (typeof updateBreatheEvoButtonUI === 'function') updateBreatheEvoButtonUI();
+            } else {
+                const parsedRules = JSON.parse(rulesStr);
+                if (sim === 'gameOfLife') Object.assign(gameOfLifeRules, parsedRules);
+                else if (sim === 'gravitationalSort') {
+                    Object.assign(gravitationalSortRules, parsedRules);
+                    gsMode = parsedRules.direction || gsMode;
+                    if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
+                }
+                else if (sim === 'erosion') Object.assign(erosionRules, parsedRules);
+                else if (sim === 'dla') {
+                    if (parsedRules.mode) dlaMode = parsedRules.mode;
+                    Object.assign(dlaRules, parsedRules);
+                    if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
+                }
+                else if (sim === 'contour') Object.assign(contourRules, parsedRules);
+                else if (sim === 'spiral') {
+                    Object.assign(spiralRules, parsedRules);
+                    spiralMode = parsedRules.method || spiralMode;
+                    if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
+                }
+                else if (sim === 'magnet') {
+                    Object.assign(magnetRules, parsedRules);
+                    magnetMode = parsedRules.method || magnetMode;
+                    if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
+                }
+                else if (sim === 'sandpile') Object.assign(chiFlowRules, parsedRules);
+                else if (sim === 'turing') Object.assign(turingRules, parsedRules);
+            }
+        } catch (e) {
+            console.error("Failed to parse macro rules:", e);
+        }
+    }
+    return sim;
+}
+
+function executeMacroAction(action) {
+    console.log("Macro Execution:", action.eventName, "->", action.details);
+    isExecutingMacroCommand = true; // מדליקים דגל כדי לא להפעיל את ה-Kill Switch
+
+    if (action.eventName === 'Palette Change') {
+        const pIndex = C.PALETTES.findIndex(p => p.name === action.details || p.originalName === action.details);
+        if(pIndex !== -1) switchToPalette(pIndex);
+    } 
+    else if (action.eventName === '--' && action.details === 'Palette Randomized') {
+        randomizeAll();
+    } 
+    else if (action.eventName === 'Sort by') {
+        applySortMethod(action.details);
+    } 
+    else if (action.eventName === 'PAUSE') {
+        pauseLife();
+    } 
+    else if (action.eventName === 'PLAY') {
+        const sim = applyMacroRules(action.details);
+        if (sim && !isLifePlaying) togglePlayPauseLife();
+    } 
+    else if (action.eventName === 'STEP FORWARD') {
+        applyMacroRules(action.details);
+        stepForward();
+    }
+    else if (action.eventName === 'Gravitational Sort Mode') {
+        if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
+        gsMode = action.details;
+        gravitationalSortRules.direction = action.details;
+        if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
+    }
+    
+    isExecutingMacroCommand = false; // מכבים את הדגל
+}
+      
       async function initializeApp() {
-
-
-
-// --- Safari Aggressive Zoom Protections ---        
+        // --- Safari Aggressive Zoom Protections ---        
         // מניעת זום של ספארי בלחיצה כפולה ברמת המסמך כולו
         document.addEventListener('dblclick', function(event) {
             event.preventDefault();
