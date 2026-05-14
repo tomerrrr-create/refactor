@@ -143,7 +143,7 @@ function getPrevPaletteIndex(currentIndex) {
 // --- שלב 2: לוגיקת המיפוי (Remapping) ---
 function applySortMethod(newMethod) {
     if (currentSortMethod === newMethod) return; // לא עושים כלום אם זו כבר השיטה הפעילה
-    window.logArtEvent('Sort Method Change', newMethod); // תיעוד שינוי מיון
+    window.logArtEvent('Sort by', newMethod); // תיעוד שינוי מיון
 
           // 1. שומרים את צבע ה-Hex המדויק של כל תא לפני השינוי
           const currentPalette = C.PALETTES[activePaletteIndex].colors;
@@ -1053,6 +1053,7 @@ break;
 function pauseLife() {
           if (!isLifePlaying) return;
           isLifePlaying = false;
+          window.logArtEvent('PAUSE', armedSimulation || 'None');
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
           animationFrameId = null;
           // animationLoop will stop itself on its next frame because isLifePlaying is false
@@ -1104,7 +1105,7 @@ function pauseLife() {
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
         else if (armedSimulation === 'breathe') simDetails = `Mode: ${breatheEvoMode}`;
         
-        window.logArtEvent('Simulation Execution', `Armed: ${armedSimulation} | Rules: ${simDetails}`);
+        window.logArtEvent('PLAY', `Armed: ${armedSimulation} | Rules: ${simDetails}`);
         // ------------------------------------------------
 
         // רשימת כל כפתורי הסימולציה
@@ -2049,6 +2050,8 @@ function cycleBrightnessEvoMode() {
     const currentIndex = sequence.indexOf(brightnessEvoMode);
     const nextIndex = (currentIndex + 1) % sequence.length;
     brightnessEvoMode = sequence[nextIndex];
+    
+    window.logArtEvent('Brightness Evo Mode Changed', brightnessEvoMode);
 
     // תנאי 1: אם עברנו ממצב "כבוי" למצב "דלוק" (בהירות)
     // זו הפעם היחידה שאנחנו צריכים לחמש את הסימולציה
@@ -2084,6 +2087,8 @@ function cycleDlaMode() {
     const currentIndex = sequence.indexOf(dlaMode);
     const nextIndex = (currentIndex + 1) % sequence.length;
     dlaMode = sequence[nextIndex];
+    
+    window.logArtEvent('DLA Mode Changed', dlaMode);
 
     if (oldMode === 'off' && dlaMode !== 'off') {
         armSimulation('dla');
@@ -2128,7 +2133,9 @@ function cycleGravitationalSortMode() {
     if (gsMode !== 'off') {
         gravitationalSortRules.direction = gsMode; // מעדכן את חוקי הסימולציה בפועל
     }
-
+    
+    window.logArtEvent('Gravitational Sort Mode', gsMode);
+    
     // הדלקה או כיבוי של הסימולציה בהתאם למצב
     if (oldMode === 'off' && gsMode !== 'off') {
         armSimulation('gravitationalSort');
@@ -2223,6 +2230,8 @@ const sequence = ['off', 'b', 'vortex',  'left', 'a', 'radial', 'down', ];
     if (spiralMode !== 'off') {
         spiralRules.method = spiralMode;
     }
+    
+    window.logArtEvent('Spiral Mode Changed', spiralMode);
 
     if (oldMode === 'off' && spiralMode !== 'off') {
         armSimulation('spiral');
@@ -2262,6 +2271,10 @@ function cycleMagnetMode() {
     if (magnetMode !== 'off') {
         magnetRules.method = magnetMode;
     }
+    
+    window.logArtEvent('Magnet Mode Changed', magnetMode);
+
+
 
     if (oldMode === 'off' && magnetMode !== 'off') {
         armSimulation('magnet');
