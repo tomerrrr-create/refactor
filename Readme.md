@@ -11,9 +11,8 @@ This application is built using **Vanilla JavaScript (ES6 Modules)** without ext
 3. [The Color Engine & Palettes](#3--the-color-engine--palettes)
 4. [UI, Localization & Modals](#4--ui-localization--modals)
 5. [Simulation Engine: Getting Started](#5-%EF%B8%8F-simulation-engine-getting-started)
-6. [Advanced Simulations Architecture](#6--advanced-simulations-architecture)
 7. [Additional Systems & Extension Guides](#7--additional-systems--extension-guides)
-8. [Art Logger (Session Recipe) System](#8--art-logger-session-recipe-system)
+8. [Art Logger & Macro Replay System](#8--art-logger--macro-replay-system)
 ---
 
 ## 1. 📁 Project Structure
