@@ -341,6 +341,7 @@ The logger generates a sequence containing:
 ### Part 2: The Macro Engine (Playback)
 *   **Smart Routing:** The standard upload button (`projectFileInput`) acts as a smart router. If a `.json` file is loaded, it applies a static state. If a `.txt` file is loaded, it routes the file to the `parseMacroText` engine.
 *   **Timer Queue:** The parsed text is converted into an array of actionable objects. The `scheduleNextMacroStep` function uses native `setTimeout` to trigger the next event based on the exact recorded time *Deltas*.
+* **Smart Undo/Redo Engine (Two-Pass Parsing):** To ensure a flawless playback experience, the parser scans the file in two passes. It automatically identifies and annihilates `UNDO` and `REDO` command pairs, effectively erasing user drafting and hesitation. Only the final, committed actions are processed, providing a seamless and "perfect" visual replay without delays.
 *   **Rules Injection:** When the macro encounters a `PLAY` or `STEP FORWARD` command containing a rules JSON, it dynamically reconstructs the `simulationRules` objects (e.g., `gravitationalSortRules`, `dlaRules`) in the background via `applyMacroRules()` before execution, ensuring 100% accurate reproduction.
 * **Stroke Reconstruction:** When the engine encounters a `DRAW_STROKE` command, it bypasses the simulation logic and directly updates the `boardState` array using the recorded indices. [cite_start]It automatically resets the `isGold` flag for these tiles to ensure that manual drawing in a macro correctly overrides protected areas.
 
