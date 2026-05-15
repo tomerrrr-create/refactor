@@ -1992,6 +1992,26 @@ function onPointerUp(e) {
          pushHistory({ before: pointerState.beforeState, after: afterState }); 
          hasPerformedInitialAutofill = true;
     }
+    // יצירת Diff של השינויים שקרו במשיחת המברשת הזו
+    const diff = [];
+    for (let i = 0; i < afterState.tiles.length; i++) {
+        const beforeTile = pointerState.beforeState.tiles[i];
+        const afterTile = afterState.tiles[i];
+        
+        // בודקים אך ורק אם הצבע (k) השתנה
+        if (beforeTile.k !== afterTile.k) {
+            diff.push({
+                i: i, // אינדקס התא
+                k: afterTile.k // האינדקס של הצבע החדש
+            });
+        }
+    }
+    
+    // אם היו שינויים, שולחים ללוגר
+    if (diff.length > 0) {
+        window.logArtEvent('DRAW_STROKE', JSON.stringify(diff));
+    }
+
     Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null });
 }
 
@@ -2779,9 +2799,53 @@ function executeMacroAction(action) {
                 if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
             }
             
-            isExecutingMacroCommand = false; // מכבים את הדגל
-        }      
-      async function initializeApp() {
+
+
+
+
+        else if (action.eventName === 'DLA Mode Changed') {
+            if (action.details === 'off') {
+                if (armedSimulation === 'dla') armSimulation(null);
+            } else {
+                if (armedSimulation !== 'dla') armSimulation('dla');
+            }
+            dlaMode = action.details;
+            if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
+        }
+        // === הדבק את הקוד הבא ממש כאן ===
+        else if (action.eventName === 'DRAW_STROKE') {
+            try {
+                const diff = JSON.parse(action.details);
+                const now = performance.now();
+                let changed = false;
+                
+                diff.forEach(change => {
+                    const tile = boardState[change.i];
+                    if (tile) {
+                        tile.prevK = tile.k;
+                        tile.animStart = now;
+                        tile.k = change.k;
+                        tile.v = change.k; // סנכרון הערך הפנימי כדי לא לשבור סימולציות
+                        tile.isGold = false; // ציור תמיד מבטל את מצב הזהב
+                        changed = true;
+                    }
+                });
+                
+                if (changed) {
+                    renderToScreen(now);
+                    startAnimationLoop(); // מפעיל את האנימציה החלקה של המעבר
+                }
+            } catch(e) { 
+                console.error("Macro Draw Playback Error:", e); 
+            }
+        }
+        // === סוף הקוד להדבקה ===
+        
+        isExecutingMacroCommand = false; // מכבים את הדגל
+    }
+    
+
+        async function initializeApp() {
         // --- Safari Aggressive Zoom Protections ---        
         // מניעת זום של ספארי בלחיצה כפולה ברמת המסמך כולו
         document.addEventListener('dblclick', function(event) {
