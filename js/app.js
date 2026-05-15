@@ -2587,6 +2587,14 @@ function parseMacroText(text) {
         'Spiral Mode Changed', 'Magnet Mode Changed', 
         'Brightness Evo Mode Changed', 'DLA Mode Changed'
     ];
+
+    // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
+    const simulationEvents = [
+        'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
+        'Brightness Evo Mode Changed', 'DLA Mode Changed'
+    ];
+
+
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
     const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors'];
 
@@ -2677,19 +2685,26 @@ if (eventName === 'UNDO') {
     return; // מדלגים ולא דוחפים את ה-UNDO עצמו לתור
 }
 
-            // --- 2. מנגנון סינון ה"כפתורים בדרך" (Squashing) ---
+// --- 2. מנגנון סינון ה"כפתורים בדרך" (Squashing) ---
             if (!isSimulationRunning && uiEvents.includes(eventName)) {
+                
+                // התיקון שלנו: אם המשתמש לחץ על סימולציה, מוחקים מהתור סימולציות אחרות שהוא התלבט לגביהן
+                if (simulationEvents.includes(eventName)) {
+                    pendingUIState = pendingUIState.filter(a => !simulationEvents.includes(a.eventName));
+                }
+
                 const existingIndex = pendingUIState.findIndex(a => a.eventName === eventName);
                 if (existingIndex !== -1) {
-                    pendingUIState[existingIndex].details = details; // דורסים את הקליק הישן
+                    pendingUIState[existingIndex].details = details; // דורסים את הקליק הישן (למשל החלפת פלטה)
                 } else {
                     pendingUIState.push({ eventName, details }); // מוסיפים קליק חדש
                 }
+                
                 // מקזזים את הזמן של הלחיצה הזו מציר הזמן, כדי שלא תייצר עיכוב שווא
                 cumulativeDelta = timeBeforeThisAction;
                 return; 
             }
-
+            
             // הגענו לכאן? מדובר בפעולה רגילה או פעולת ביצוע מהותית.
             // קודם נשחרר את כל שינויי הממשק שהמתינו (אם היו כאלו) אל התור.
             flushPendingUI();
