@@ -270,6 +270,26 @@ let magnetMode = 'off';
 
       function palette() { return C.PALETTES[activePaletteIndex].colors; }
 
+// === פונקציה לדחיסת מצב הלוח עבור המאקרו ===
+function compressBoardState() {
+    if (boardState.length === 0) return "";
+    let compressed = [];
+    let currentK = boardState[0].k;
+    let count = 1;
+
+    for (let i = 1; i < boardState.length; i++) {
+        if (boardState[i].k === currentK) {
+            count++;
+        } else {
+            compressed.push(`${count}x${currentK}`);
+            currentK = boardState[i].k;
+            count = 1;
+        }
+    }
+    compressed.push(`${count}x${currentK}`);
+    return compressed.join(',');
+}
+
       function getCurrentState() {
           return { 
             n, 
@@ -1633,12 +1653,28 @@ function handlePointerDownCtrl(e) {
             wasLongPress = true;
 
             // מחיקת היסטוריית הלוגר בלחיצה ארוכה על כפתור השמירה
-                        if (btn.id === 'btnSave') {
-                                artRecipeLog = []; // איפוס המערך שמחזיק את פעולות הלוגר
-                                alert("לוגר אופס בהצלחה!"); // הודעה קופצת (פופ-אפ) למשתמש
-                                return; // עוצר את המשך הפונקציה כדי לא לפתוח חלונות אחרים
-                            }
 
+            // מחיקת היסטוריית הלוגר בלחיצה ארוכה על כפתור השמירה
+            if (btn.id === 'btnSave') {
+                artRecipeLog = []; // איפוס המערך שמחזיק את פעולות הלוגר
+                
+                // === תוספת: שמירת תמונת המצב ההתחלתית ===
+                const initState = {
+                    n: n,
+                    pal: activePaletteIndex,
+                    sort: currentSortMethod,
+                    sep: separatorPx,
+                    board: compressBoardState()
+                };
+                window.logArtEvent('INIT_STATE', JSON.stringify(initState));
+                // =========================================
+                
+                alert("לוגר אופס בהצלחה! מצב התחלתי נשמר."); 
+                return;
+            }
+
+
+            
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
@@ -2718,6 +2754,53 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 function executeMacroAction(action) {
     //console.log("Macro Execution:", action.eventName, "->", action.details);
     isExecutingMacroCommand = true; // מדליקים דגל כדי לא להפעיל את ה-Kill Switch
+    // === פיענוח ופריסת המצב ההתחלתי ===
+    if (action.eventName === 'INIT_STATE') {
+        try {
+            const initState = JSON.parse(action.details);
+            
+            // 1. הגדרת משתני הסביבה ההתחלתיים
+            n = initState.n;
+            activePaletteIndex = initState.pal;
+            separatorPx = initState.sep;
+            
+            if (currentSortMethod !== initState.sort) {
+                applySortMethod(initState.sort);
+            }
+
+            // 2. יצירת לוח ריק בגודל הנכון ושחזור הצבעים מהמחרוזת הדחוסה
+            initializeBoardAndCanvas(true); 
+            const boardParts = initState.board.split(',');
+            let tileIndex = 0;
+            
+            boardParts.forEach(part => {
+                const [countStr, kStr] = part.split('x');
+                const count = parseInt(countStr, 10);
+                const kVal = parseInt(kStr, 10);
+                
+                for (let i = 0; i < count; i++) {
+                    if (boardState[tileIndex]) {
+                        boardState[tileIndex].k = kVal;
+                        boardState[tileIndex].v = kVal;
+                        boardState[tileIndex].isGold = false; // ויתרנו על הזהב במאקרו
+                    }
+                    tileIndex++;
+                }
+            });
+
+            // 3. עדכון הממשק (UI)
+            updatePaletteHeader();
+            applySeparator();
+            if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
+            renderToScreen(null);
+
+        } catch(e) {
+            console.error("Failed to parse INIT_STATE:", e);
+        }
+        return; // סיימנו עם הפעולה הזו, אפשר לצאת
+    }
+    // ==================================
+    
 
     if (action.eventName === 'Palette Change') {
         const pIndex = C.PALETTES.findIndex(p => p.name === action.details || p.originalName === action.details);
