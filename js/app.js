@@ -2507,7 +2507,16 @@ function cycleSortMethod() {
 function parseMacroText(text) {
     const lines = text.split('\n').filter(l => l.trim() !== '');
     const parsed = [];
-    let firstTimestamp = null;
+    
+    // --- משתני עזר למנגנון דחיסת הזמן ---
+    let lastTimestampMs = null; 
+    let cumulativeDelta = 0; // מונה הזמן המצטבר לציר הזמן המהודק
+    let isSimulationRunning = false; // מעקב אחר מצב הלוח
+    
+    // --- גבולות זמן (במילי-שניות) ---
+    const MAX_STATIC_WAIT = 1000;
+    const MAX_ACTIVE_WAIT = 20000;
+    const MAX_STEP_WAIT = 1000;
 
     lines.forEach(line => {
         // מחפשים תבנית של: [20:22:17.751] EventName -> Details
@@ -2515,17 +2524,48 @@ function parseMacroText(text) {
         if (match) {
             const [_, timeStr, eventName, details] = match;
             // הופכים את חותמת הזמן למילי-שניות (לצורך חישוב הפרשים)
-            const dateObj = new Date(`1970-01-01T${timeStr}Z`); 
+            const dateObj = new Date(`1970-01-01T${timeStr}Z`);
             const timeMs = dateObj.getTime();
 
-            if (firstTimestamp === null) firstTimestamp = timeMs;
-            const delta = timeMs - firstTimestamp;
+            if (lastTimestampMs === null) {
+                // פעולה ראשונה - מתחילה תמיד בזמן 0
+                lastTimestampMs = timeMs;
+                parsed.push({ delta: 0, eventName, details });
+                
+                // עדכון מצב ראשוני אם הפעולה הראשונה היא PLAY או PAUSE
+                if (eventName === 'PLAY') isSimulationRunning = true;
+                if (eventName === 'PAUSE') isSimulationRunning = false;
+                return;
+            }
 
-            parsed.push({ delta, eventName, details });
+            // 1. חישוב הפער המקורי מהפעולה הקודמת
+            const originalGap = timeMs - lastTimestampMs;
+
+            // 2. בחירת החסם (Cap) בהתאם למצב ולפקודה
+            let currentCap = isSimulationRunning ? MAX_ACTIVE_WAIT : MAX_STATIC_WAIT;
+            if (eventName === 'STEP FORWARD') {
+                currentCap = MAX_STEP_WAIT;
+            }
+
+            // 3. דחיסה (Compression)
+            const compressedGap = Math.min(originalGap, currentCap);
+
+            // 4. עדכון ציר הזמן - הוספת הפער הדחוס לזמן המצטבר
+            cumulativeDelta += compressedGap;
+            parsed.push({ delta: cumulativeDelta, eventName, details });
+
+            // עדכון חותמת הזמן לקראת השורה הבאה
+            lastTimestampMs = timeMs;
+
+            // 5. עדכון מצב הריצה לקראת השורה הבאה
+            if (eventName === 'PLAY') isSimulationRunning = true;
+            if (eventName === 'PAUSE') isSimulationRunning = false;
         }
     });
+    
     return parsed;
 }
+
 
 function stopMacro() {
     clearTimeout(macroTimerId);
