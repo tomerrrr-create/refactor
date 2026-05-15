@@ -34,6 +34,10 @@ export function adjustBrightness(hex, factor) {
 }
 
 export function hexToRgb(hex) {
+
+    // הגנה קריטית: אם אין צבע או שזה לא טקסט (למשל undefined), נחזיר שחור במקום לקרוס
+    if (!hex || typeof hex !== 'string') return [0, 0, 0];
+    
     // מניחים שהפורמט הוא תמיד #RRGGBB
     const rgb = parseInt(hex.substring(1), 16);
     return [
