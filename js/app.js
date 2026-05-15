@@ -2904,35 +2904,44 @@ function executeMacroAction(action) {
             dlaMode = action.details;
             if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
         }
-        // === הדבק את הקוד הבא ממש כאן ===
+
         else if (action.eventName === 'DRAW_STROKE') {
             try {
                 const diff = JSON.parse(action.details);
                 const now = performance.now();
                 let changed = false;
                 
+                // === תיקון באג ה-Undo: שמירת מצב *לפני* שהמאקרו מצייר ===
+                const beforeState = getCurrentState();
+
                 diff.forEach(change => {
                     const tile = boardState[change.i];
                     if (tile) {
                         tile.prevK = tile.k;
                         tile.animStart = now;
                         tile.k = change.k;
-                        tile.v = change.k; // סנכרון הערך הפנימי כדי לא לשבור סימולציות
-                        tile.isGold = false; // ציור תמיד מבטל את מצב הזהב
+                        tile.v = change.k; 
+                        tile.isGold = false; 
                         changed = true;
                     }
                 });
                 
                 if (changed) {
                     renderToScreen(now);
-                    startAnimationLoop(); // מפעיל את האנימציה החלקה של המעבר
+                    startAnimationLoop(); 
+                    
+                    // === תיקון באג ה-Undo: דחיפת המצבים להיסטוריה *אחרי* שהמאקרו צייר ===
+                    const afterState = getCurrentState();
+                    pushHistory({ before: beforeState, after: afterState });
+                    hasPerformedInitialAutofill = true;
                 }
             } catch(e) { 
                 console.error("Macro Draw Playback Error:", e); 
             }
         }
-        // === סוף הקוד להדבקה ===
         
+
+
         isExecutingMacroCommand = false; // מכבים את הדגל
     }
 
