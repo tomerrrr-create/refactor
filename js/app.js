@@ -1643,6 +1643,7 @@ const brushSizeSlider = document.getElementById('brushSizeSlider');
                 updateGlowEffect();
 
                 // === תוספת שלנו: יצירת תמונת מצב מעודכנת למאקרו לאחר הכניסה לסימולציה ===
+                artRecipeLog = [];
                 const simState = {
                     n: n,
                     pal: activePaletteIndex,
@@ -2575,61 +2576,130 @@ function parseMacroText(text) {
     
     // --- משתני עזר למנגנון דחיסת הזמן ---
     let lastTimestampMs = null; 
-    let cumulativeDelta = 0; // מונה הזמן המצטבר לציר הזמן המהודק
-    let isSimulationRunning = false; // מעקב אחר מצב הלוח
+    let cumulativeDelta = 0; 
+    let isSimulationRunning = false; 
     
+    // --- משתני המנגנון החכם (Squashing & Undo) ---
+    let pendingUIState = []; // ישמור פעולות הגדרה זמניות
+    // רשימת הפעולות שמוגדרות כ"כפתורים בדרך" (הגדרות ממשק)
+    const uiEvents = [
+        'Palette Change', 'Sort by', 'Gravitational Sort Mode', 
+        'Spiral Mode Changed', 'Magnet Mode Changed', 
+        'Brightness Evo Mode Changed', 'DLA Mode Changed'
+    ];
+    // פעולות המשנות את הלוח וניתנות לביטול (Undo)
+    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors'];
+
     // --- גבולות זמן (במילי-שניות) ---
     const MAX_STATIC_WAIT = 1000;
     const MAX_ACTIVE_WAIT = 20000;
     const MAX_STEP_WAIT = 1000;
 
+    // פונקציית עזר לשחרור פעולות ממתינות (מכניסה לתור את ההחלטות הסופיות)
+    const flushPendingUI = () => {
+        pendingUIState.forEach(action => {
+            parsed.push({ 
+                delta: cumulativeDelta, 
+                eventName: action.eventName, 
+                details: action.details, 
+                isUndoable: false 
+            });
+        });
+        pendingUIState = []; // איפוס הרשימה לאחר השחרור
+    };
+
     lines.forEach(line => {
-        // מחפשים תבנית של: [20:22:17.751] EventName -> Details
         const match = line.match(/\[(\d{2}:\d{2}:\d{2}\.\d{3})\] (.*?) -> (.*)/);
         if (match) {
             const [_, timeStr, eventName, details] = match;
-            // הופכים את חותמת הזמן למילי-שניות (לצורך חישוב הפרשים)
             const dateObj = new Date(`1970-01-01T${timeStr}Z`);
             const timeMs = dateObj.getTime();
 
             if (lastTimestampMs === null) {
-                // פעולה ראשונה - מתחילה תמיד בזמן 0
                 lastTimestampMs = timeMs;
-                parsed.push({ delta: 0, eventName, details });
-                
-                // עדכון מצב ראשוני אם הפעולה הראשונה היא PLAY או PAUSE
+                parsed.push({ delta: 0, eventName, details, isUndoable: false });
                 if (eventName === 'PLAY') isSimulationRunning = true;
                 if (eventName === 'PAUSE') isSimulationRunning = false;
                 return;
             }
 
-            // 1. חישוב הפער המקורי מהפעולה הקודמת
             const originalGap = timeMs - lastTimestampMs;
-
-            // 2. בחירת החסם (Cap) בהתאם למצב ולפקודה
             let currentCap = isSimulationRunning ? MAX_ACTIVE_WAIT : MAX_STATIC_WAIT;
-            if (eventName === 'STEP FORWARD') {
-                currentCap = MAX_STEP_WAIT;
-            }
+            if (eventName === 'STEP FORWARD') currentCap = MAX_STEP_WAIT;
 
-            // 3. דחיסה (Compression)
             const compressedGap = Math.min(originalGap, currentCap);
-
-            // 4. עדכון ציר הזמן - הוספת הפער הדחוס לזמן המצטבר
+            
+            // שומרים את הזמן הנוכחי לפני שנוסיף לו את הפער החדש
+            const timeBeforeThisAction = cumulativeDelta;
             cumulativeDelta += compressedGap;
-            parsed.push({ delta: cumulativeDelta, eventName, details });
-
-            // עדכון חותמת הזמן לקראת השורה הבאה
             lastTimestampMs = timeMs;
 
-            // 5. עדכון מצב הריצה לקראת השורה הבאה
+            // --- 1. מנגנון ה-Undo החכם (מחיקת ההיסטוריה וקיזוז הזמן) ---
+            if (eventName === 'UNDO') {
+                for (let i = parsed.length - 1; i >= 0; i--) {
+                    
+                    // מקרה א': ביטול של ריצת סימולציה (מוצאים PAUSE והולכים אחורה עד ל-PLAY)
+                    if (parsed[i].eventName === 'PAUSE') {
+                        parsed.splice(i, 1); // מוחקים את ה-PAUSE מהתור
+                        
+                        // מחפשים את ה-PLAY התואם שהתחיל את הריצה הזו
+                        for (let j = i - 1; j >= 0; j--) {
+                            if (parsed[j].eventName === 'PLAY') {
+                                const timeBeforePlay = parsed[j].delta;
+                                parsed.splice(j, 1); // מוחקים את ה-PLAY מהתור
+                                cumulativeDelta = timeBeforePlay; // מחזירים את הזמן אחורה לנקודה שלפני ההפעלה
+                                break;
+                            }
+                        }
+                        break; // סיימנו לטפל בלחיצת ה-Undo הזו
+                    } 
+                    
+                    // מקרה ב': ביטול של פעולת לוח רגילה (ציור, רנדומיזציה וכו')
+                    else if (parsed[i].isUndoable) {
+                        const timeOfMistake = parsed[i].delta;
+                        parsed.splice(i, 1); // מחיקת פעולת הלוח מהתור
+                        cumulativeDelta = timeOfMistake; // מחזירים את שעון הזמן לאחור
+                        break;
+                    }
+                }
+                return; // מדלגים ולא דוחפים את ה-UNDO עצמו לתור
+            }
+
+            // --- 2. מנגנון סינון ה"כפתורים בדרך" (Squashing) ---
+            if (!isSimulationRunning && uiEvents.includes(eventName)) {
+                const existingIndex = pendingUIState.findIndex(a => a.eventName === eventName);
+                if (existingIndex !== -1) {
+                    pendingUIState[existingIndex].details = details; // דורסים את הקליק הישן
+                } else {
+                    pendingUIState.push({ eventName, details }); // מוסיפים קליק חדש
+                }
+                // מקזזים את הזמן של הלחיצה הזו מציר הזמן, כדי שלא תייצר עיכוב שווא
+                cumulativeDelta = timeBeforeThisAction;
+                return; 
+            }
+
+            // הגענו לכאן? מדובר בפעולה רגילה או פעולת ביצוע מהותית.
+            // קודם נשחרר את כל שינויי הממשק שהמתינו (אם היו כאלו) אל התור.
+            flushPendingUI();
+
             if (eventName === 'PLAY') isSimulationRunning = true;
             if (eventName === 'PAUSE') isSimulationRunning = false;
+
+            // בודקים אם זו פעולה שניתן לעשות לה Undo בעתיד
+            const isUndoable = boardChangingEvents.includes(eventName) || 
+                               (eventName === '--' && details === 'Palette Randomized');
+
+            // דחיפת הפעולה לתור המאקרו להפעלה
+            parsed.push({ delta: cumulativeDelta, eventName, details, isUndoable });
         }
     });
+
+    // דחיפה אחרונה למקרה שהקובץ הסתיים עם שינויי ממשק שטרם שוחררו
+    flushPendingUI();
     
     return parsed;
 }
+
 
 
 function stopMacro() {
