@@ -1338,12 +1338,10 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
 
 if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
 
-    // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
+// אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
+if (!isTogglingOff && simulationName !== null) {
+    armedSimulation = simulationName;
 
-
-    if (!isTogglingOff) {
-        armedSimulation = simulationName;
-        
         // === MINIMAL FIX: איפוס caches של מגנט אחרי כל החלפה של סימולציה ===
         if (typeof Simulations.resetMagnetCaches === 'function') {
             Simulations.resetMagnetCaches();
@@ -2718,7 +2716,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
 
 function executeMacroAction(action) {
-    console.log("Macro Execution:", action.eventName, "->", action.details);
+    //console.log("Macro Execution:", action.eventName, "->", action.details);
     isExecutingMacroCommand = true; // מדליקים דגל כדי לא להפעיל את ה-Kill Switch
 
     if (action.eventName === 'Palette Change') {
@@ -2843,7 +2841,7 @@ function executeMacroAction(action) {
         
         isExecutingMacroCommand = false; // מכבים את הדגל
     }
-    
+
 
         async function initializeApp() {
         // --- Safari Aggressive Zoom Protections ---        

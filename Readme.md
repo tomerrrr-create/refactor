@@ -331,6 +331,8 @@ The logger generates a sequence containing:
 2.  **Sorting Logic:** Real-time updates when the color sorting method is changed.
 3.  **Simulation Snapshots:** Full rule-set dumps captured upon execution.
 4.  **Runtime Interventions:** Logging manual pauses, manual steps forward, and parameter tweaks.
+5.  **Manual Brush Strokes:** Tracks direct user canvas interactions (drawing/painting) using a highly efficient "Stroke Diff" calculation recorded upon `onPointerUp`, preserving the exact sequential order of altered pixels.
+
 
 #### Interaction & Export
 *   **Trigger:** Hidden behind a **Long Press (1000ms)** on the Play/Pause button (`dom.btnPlayPauseLife`).
@@ -340,6 +342,8 @@ The logger generates a sequence containing:
 *   **Smart Routing:** The standard upload button (`projectFileInput`) acts as a smart router. If a `.json` file is loaded, it applies a static state. If a `.txt` file is loaded, it routes the file to the `parseMacroText` engine.
 *   **Timer Queue:** The parsed text is converted into an array of actionable objects. The `scheduleNextMacroStep` function uses native `setTimeout` to trigger the next event based on the exact recorded time *Deltas*.
 *   **Rules Injection:** When the macro encounters a `PLAY` or `STEP FORWARD` command containing a rules JSON, it dynamically reconstructs the `simulationRules` objects (e.g., `gravitationalSortRules`, `dlaRules`) in the background via `applyMacroRules()` before execution, ensuring 100% accurate reproduction.
+* **Stroke Reconstruction:** When the engine encounters a `DRAW_STROKE` command, it bypasses the simulation logic and directly updates the `boardState` array using the recorded indices. [cite_start]It automatically resets the `isGold` flag for these tiles to ensure that manual drawing in a macro correctly overrides protected areas.
+
 
 ### Part 3: Safety & Interruption (Kill Switches)
 To maintain stability while a macro is loaded or playing, strict interceptors are in place:
