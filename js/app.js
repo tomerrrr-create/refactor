@@ -2573,6 +2573,25 @@ function cycleSortMethod() {
 function parseMacroText(text) {
     const lines = text.split('\n').filter(l => l.trim() !== '');
     const parsed = [];
+    // --- מעבר ראשון (Pass 1): השמדה הדדית של UNDO ו-REDO ---
+    const cleanLines = [];
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.includes('] REDO ->')) {
+            // מצאנו REDO. נחפש אחורה את ה-UNDO האחרון ברשימה הנקייה ונמחק אותו
+            for (let j = cleanLines.length - 1; j >= 0; j--) {
+                if (cleanLines[j].includes('] UNDO ->')) {
+                    cleanLines.splice(j, 1);
+                    break; // מצאנו ומחקנו, אפשר לעצור את החיפוש הפנימי
+                }
+            }
+            // לא מוסיפים את שורת ה-REDO למערך הנקי
+        } else {
+            cleanLines.push(line);
+        }
+    }
+    // --------------------------------------------------------
+
     
     // --- משתני עזר למנגנון דחיסת הזמן ---
     let lastTimestampMs = null; 
@@ -2626,9 +2645,10 @@ const flushPendingUI = () => {
 };
 
 
-    lines.forEach(line => {
-        const match = line.match(/\[(\d{2}:\d{2}:\d{2}\.\d{3})\] (.*?) -> (.*)/);
-        if (match) {
+cleanLines.forEach(line => {
+          const match = line.match(/\[(\d{2}:\d{2}:\d{2}\.\d{3})\] (.*?) -> (.*)/);
+          
+          if (match) {
             const [_, timeStr, eventName, details] = match;
             const dateObj = new Date(`1970-01-01T${timeStr}Z`);
             const timeMs = dateObj.getTime();
