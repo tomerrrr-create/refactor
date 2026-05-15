@@ -1641,6 +1641,17 @@ const brushSizeSlider = document.getElementById('brushSizeSlider');
                 updateSymmetryUI();
                 updateColorPickerButtonUI();
                 updateGlowEffect();
+
+                // === תוספת שלנו: יצירת תמונת מצב מעודכנת למאקרו לאחר הכניסה לסימולציה ===
+                const simState = {
+                    n: n,
+                    pal: activePaletteIndex,
+                    sort: currentSortMethod,
+                    sep: separatorPx,
+                    board: compressBoardState()
+                };
+                window.logArtEvent('INIT_STATE', JSON.stringify(simState));
+                // =========================================================================
             });
         });
       }
