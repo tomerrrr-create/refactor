@@ -2595,18 +2595,28 @@ function parseMacroText(text) {
     const MAX_ACTIVE_WAIT = 20000;
     const MAX_STEP_WAIT = 1000;
 
-    // פונקציית עזר לשחרור פעולות ממתינות (מכניסה לתור את ההחלטות הסופיות)
-    const flushPendingUI = () => {
-        pendingUIState.forEach(action => {
-            parsed.push({ 
-                delta: cumulativeDelta, 
-                eventName: action.eventName, 
-                details: action.details, 
-                isUndoable: false 
-            });
+// פונקציית עזר לשחרור פעולות ממתינות (מכניסה לתור את ההחלטות הסופיות)
+const flushPendingUI = () => {
+    if (pendingUIState.length === 0) return;
+
+    // מרווח זמן בטוח לעיבוד (50 מילישניות)
+    const UI_DELAY = 50;
+
+    pendingUIState.forEach((action, index) => {
+        parsed.push({ 
+            // כל פעולה מקבלת את הזמן פלוס מרווח מדורג
+            delta: cumulativeDelta + (index * UI_DELAY), 
+            eventName: action.eventName, 
+            details: action.details, 
+            isUndoable: false 
         });
-        pendingUIState = []; // איפוס הרשימה לאחר השחרור
-    };
+    });
+    
+    // מקדמים את הזמן הכללי כדי שהציור או ה-Play ימתינו לסיום ההכנות
+    cumulativeDelta += pendingUIState.length * UI_DELAY;
+    pendingUIState = []; // איפוס הרשימה לאחר השחרור
+};
+
 
     lines.forEach(line => {
         const match = line.match(/\[(\d{2}:\d{2}:\d{2}\.\d{3})\] (.*?) -> (.*)/);
@@ -2634,36 +2644,38 @@ function parseMacroText(text) {
             cumulativeDelta += compressedGap;
             lastTimestampMs = timeMs;
 
-            // --- 1. מנגנון ה-Undo החכם (מחיקת ההיסטוריה וקיזוז הזמן) ---
-            if (eventName === 'UNDO') {
-                for (let i = parsed.length - 1; i >= 0; i--) {
+// --- 1. מנגנון ה-Undo החכם (מחיקת ההיסטוריה וקיזוז הזמן) ---
+if (eventName === 'UNDO') {
+    for (let i = parsed.length - 1; i >= 0; i--) {
+        
+        // מקרה א': ביטול של ריצת סימולציה (מוחקים את כל הבלוק מ-PLAY ועד PAUSE)
+        if (parsed[i].eventName === 'PAUSE') {
+            // מחפשים את ה-PLAY התואם שהתחיל את הריצה הזו
+            for (let j = i - 1; j >= 0; j--) {
+                if (parsed[j].eventName === 'PLAY') {
+                    const timeBeforePlay = parsed[j].delta;
                     
-                    // מקרה א': ביטול של ריצת סימולציה (מוצאים PAUSE והולכים אחורה עד ל-PLAY)
-                    if (parsed[i].eventName === 'PAUSE') {
-                        parsed.splice(i, 1); // מוחקים את ה-PAUSE מהתור
-                        
-                        // מחפשים את ה-PLAY התואם שהתחיל את הריצה הזו
-                        for (let j = i - 1; j >= 0; j--) {
-                            if (parsed[j].eventName === 'PLAY') {
-                                const timeBeforePlay = parsed[j].delta;
-                                parsed.splice(j, 1); // מוחקים את ה-PLAY מהתור
-                                cumulativeDelta = timeBeforePlay; // מחזירים את הזמן אחורה לנקודה שלפני ההפעלה
-                                break;
-                            }
-                        }
-                        break; // סיימנו לטפל בלחיצת ה-Undo הזו
-                    } 
+                    // חיתוך כירורגי: מוחקים את ה-PLAY, ה-PAUSE, *וכל* הפעולות שקרו ביניהם!
+                    const deleteCount = i - j + 1;
+                    parsed.splice(j, deleteCount); 
                     
-                    // מקרה ב': ביטול של פעולת לוח רגילה (ציור, רנדומיזציה וכו')
-                    else if (parsed[i].isUndoable) {
-                        const timeOfMistake = parsed[i].delta;
-                        parsed.splice(i, 1); // מחיקת פעולת הלוח מהתור
-                        cumulativeDelta = timeOfMistake; // מחזירים את שעון הזמן לאחור
-                        break;
-                    }
+                    cumulativeDelta = timeBeforePlay; // מחזירים את הזמן אחורה לנקודה שלפני ההפעלה
+                    break;
                 }
-                return; // מדלגים ולא דוחפים את ה-UNDO עצמו לתור
             }
+            break; // סיימנו לטפל בלחיצת ה-Undo הזו
+        } 
+        
+        // מקרה ב': ביטול של פעולת לוח רגילה (ציור, רנדומיזציה וכו')
+        else if (parsed[i].isUndoable) {
+            const timeOfMistake = parsed[i].delta;
+            parsed.splice(i, 1); // מחיקת פעולת הלוח מהתור
+            cumulativeDelta = timeOfMistake; // מחזירים את שעון הזמן לאחור
+            break;
+        }
+    }
+    return; // מדלגים ולא דוחפים את ה-UNDO עצמו לתור
+}
 
             // --- 2. מנגנון סינון ה"כפתורים בדרך" (Squashing) ---
             if (!isSimulationRunning && uiEvents.includes(eventName)) {
