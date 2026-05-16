@@ -2619,7 +2619,7 @@ function parseMacroText(text) {
 
     // --- גבולות זמן (במילי-שניות) ---
     const MAX_STATIC_WAIT = 1000;
-    const MAX_ACTIVE_WAIT = 20000;
+    const MAX_ACTIVE_WAIT = 60000;
     const MAX_STEP_WAIT = 1000;
 
 // פונקציית עזר לשחרור פעולות ממתינות (מכניסה לתור את ההחלטות הסופיות)
