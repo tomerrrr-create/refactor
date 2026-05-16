@@ -788,11 +788,13 @@ function applyNudgeLogic(direction) {
       }
 
       function handleNudgeBrighterClick() {
+        window.logArtEvent('NUDGE', 'Brighter'); 
           nudgeColors(1);
           armSimulation('nudgeBrighter');
       }
 
       function handleNudgeDarkerClick() {
+        window.logArtEvent('NUDGE', 'Darker'); 
           nudgeColors(-1);
           armSimulation('nudgeDarker');
       }
@@ -2615,7 +2617,8 @@ function parseMacroText(text) {
 
 
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
-    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors'];
+    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE'];
+
 
     // --- גבולות זמן (במילי-שניות) ---
     const MAX_STATIC_WAIT = 1000;
@@ -3027,7 +3030,15 @@ function executeMacroAction(action) {
             }
             
 
-
+        else if (action.eventName === 'NUDGE') {
+            if (action.details === 'Brighter') {
+                nudgeColors(1);
+                armSimulation('nudgeBrighter');
+            } else if (action.details === 'Darker') {
+                nudgeColors(-1);
+                armSimulation('nudgeDarker');
+            }
+        }
 
 
         else if (action.eventName === 'DLA Mode Changed') {
