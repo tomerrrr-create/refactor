@@ -3054,6 +3054,11 @@ function executeMacroAction(action) {
             if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
         }
 
+        else if (action.eventName === 'Invert Colors') {
+            invertGrid();
+        }
+
+        
         else if (action.eventName === 'DRAW_STROKE') {
             try {
                 const diff = JSON.parse(action.details);
