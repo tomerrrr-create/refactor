@@ -3199,8 +3199,8 @@ updateBrightnessEvoButtonUI();
         boardCanvas.addEventListener('pointercancel', onPointerUp);
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));
-        dom.macroOverlay.addEventListener('click', (e) => handleCtrlClick(e, pauseMacro));
-
+        dom.macroOverlay.addEventListener('click', (e) => handleCtrlClick(e, stopMacro));
+        
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
 
 dom.btnPalette.addEventListener('click', (e) => handleCtrlClick(e, handlePaletteClickCombo));
