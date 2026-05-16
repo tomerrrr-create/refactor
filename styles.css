@@ -1145,14 +1145,15 @@ button, .ctrl {
 
 /* --- Macro Overlay Styles --- */
 .macro-overlay {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
   position: absolute;
-  /* נמתח מעט החוצה כדי לכסות גם את השוליים וההצללות של הכפתורים הקיצוניים */
   top: -10px;
   bottom: -10px;
   left: -10px;
   right: -10px;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 40; /* גבוה מספיק כדי לכסות את הכפתורים אבל מתחת למודאלים */
+  background-color: rgba(0, 0, 0, 0.70);
+  z-index: 40;
   border-radius: 16px;
   opacity: 0;
   pointer-events: none;
@@ -1161,5 +1162,6 @@ button, .ctrl {
 
 .macro-overlay.active {
   opacity: 1;
-  pointer-events: auto; /* חוסם פיזית לחיצות על הכפתורים שמתחתיו */
+  pointer-events: auto;
+  cursor: pointer;
 }

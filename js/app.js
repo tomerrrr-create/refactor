@@ -3199,8 +3199,12 @@ updateBrightnessEvoButtonUI();
         boardCanvas.addEventListener('pointercancel', onPointerUp);
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));
+        dom.macroOverlay.addEventListener('click', (e) => handleCtrlClick(e, pauseMacro));
+
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
+
 dom.btnPalette.addEventListener('click', (e) => handleCtrlClick(e, handlePaletteClickCombo));
+
         dom.btnResetBoard.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(resetToGoldAndDefaultPalette)));
         dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
         dom.btnResizeUp.addEventListener('click', (e) => handleCtrlClick(e, () => resizeGrid(true)));
