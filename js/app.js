@@ -2683,11 +2683,19 @@ if (eventName === 'UNDO') {
                 if (parsed[j].eventName === 'PLAY') {
                     const timeBeforePlay = parsed[j].delta;
                     
-                    // חיתוך כירורגי: מוחקים את ה-PLAY, ה-PAUSE, *וכל* הפעולות שקרו ביניהם!
+                    // חישוב הזמן "המת" שצריך לקזז מציר הזמן
+                    const shift = cumulativeDelta - timeBeforePlay;
+                    
+                    // חיתוך כירורגי: מוחקים את ה-PLAY, ה-PAUSE, *וכל* הפעולות שקרו ביניהם
                     const deleteCount = i - j + 1;
                     parsed.splice(j, deleteCount); 
                     
-                    cumulativeDelta = timeBeforePlay; // מחזירים את הזמן אחורה לנקודה שלפני ההפעלה
+                    // עדכון חותמות הזמן של פעולות הממשק ששרדו לאחר נקודת החיתוך
+                    for (let k = j; k < parsed.length; k++) {
+                        parsed[k].delta = Math.max(0, parsed[k].delta - shift);
+                    }
+                    
+                    cumulativeDelta -= shift; // עדכון השעון הכללי
                     break;
                 }
             }
@@ -2697,8 +2705,18 @@ if (eventName === 'UNDO') {
         // מקרה ב': ביטול של פעולת לוח רגילה (ציור, רנדומיזציה וכו')
         else if (parsed[i].isUndoable) {
             const timeOfMistake = parsed[i].delta;
+            
+            // חישוב הזמן "המת" שצריך לקזז מציר הזמן
+            const shift = cumulativeDelta - timeOfMistake;
+            
             parsed.splice(i, 1); // מחיקת פעולת הלוח מהתור
-            cumulativeDelta = timeOfMistake; // מחזירים את שעון הזמן לאחור
+            
+            // עדכון חותמות הזמן של פעולות הממשק ששרדו לאחר מחיקת הטעות
+            for (let k = i; k < parsed.length; k++) {
+                parsed[k].delta = Math.max(0, parsed[k].delta - shift);
+            }
+            
+            cumulativeDelta -= shift; // עדכון השעון הכללי
             break;
         }
     }
