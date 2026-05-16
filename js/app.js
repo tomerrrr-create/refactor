@@ -2779,6 +2779,7 @@ function stopMacro() {
     
     // UI Reset
     dom.btnPlayPauseLife.classList.remove('glow-animation');
+    dom.macroOverlay.classList.remove('active');
     if (!isLifePlaying) {
         dom.iconPlay.style.display = 'block';
         dom.iconPause.style.display = 'none';
@@ -2789,6 +2790,7 @@ function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
     
     isMacroPlaying = true;
+    dom.macroOverlay.classList.add('active');
     dom.iconPlay.style.display = 'none';
     dom.iconPause.style.display = 'block';
     dom.btnPlayPauseLife.classList.remove('glow-animation');
@@ -2801,6 +2803,7 @@ function playMacro() {
 function pauseMacro() {
     isMacroPlaying = false;
     clearTimeout(macroTimerId);
+    dom.macroOverlay.classList.remove('active');
     dom.iconPlay.style.display = 'block';
     dom.iconPause.style.display = 'none';
 }

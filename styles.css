@@ -1142,3 +1142,24 @@ button, .ctrl {
 #paletteModalGrid {
   padding-top: 0 !important; 
 }
+
+/* --- Macro Overlay Styles --- */
+.macro-overlay {
+  position: absolute;
+  /* נמתח מעט החוצה כדי לכסות גם את השוליים וההצללות של הכפתורים הקיצוניים */
+  top: -10px;
+  bottom: -10px;
+  left: -10px;
+  right: -10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 40; /* גבוה מספיק כדי לכסות את הכפתורים אבל מתחת למודאלים */
+  border-radius: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.macro-overlay.active {
+  opacity: 1;
+  pointer-events: auto; /* חוסם פיזית לחיצות על הכפתורים שמתחתיו */
+}

@@ -4,6 +4,7 @@ export const dom = {
   appContainer: document.getElementById('appContainer'),
   appShell: document.querySelector('.app-shell'),
   controlsContainer: document.getElementById('controlsContainer'),
+  macroOverlay: document.getElementById('macroOverlay'),
   board: document.getElementById('board'), // This now correctly refers to the container div
   boardCanvas: document.getElementById('boardCanvas'), // Added a specific reference to the canvas
   boardOverlay: document.getElementById('boardOverlay'),
