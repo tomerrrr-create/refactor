@@ -2604,7 +2604,7 @@ function parseMacroText(text) {
     let pendingUIState = []; // ישמור פעולות הגדרה זמניות
     // רשימת הפעולות שמוגדרות כ"כפתורים בדרך" (הגדרות ממשק)
     const uiEvents = [
-        'Palette Change', 'Sort by', 'Gravitational Sort Mode', 
+        'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
         'Brightness Evo Mode Changed', 'DLA Mode Changed'
     ];
@@ -2617,7 +2617,7 @@ function parseMacroText(text) {
 
 
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
-    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE'];
+    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change'];
 
 
     // --- גבולות זמן (במילי-שניות) ---
@@ -3058,7 +3058,7 @@ function executeMacroAction(action) {
             invertGrid();
         }
 
-        
+
         else if (action.eventName === 'DRAW_STROKE') {
             try {
                 const diff = JSON.parse(action.details);
