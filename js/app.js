@@ -18,6 +18,7 @@ import { initializeModals } from './ui-modals.js';
 let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge האוטומטית
 // --- Macro Replay System Variables ---
 let macroQueue = [];
+let currentGenerationCount = 0; // מונה דורות לסימולציה
 let isMacroLoaded = false;
 let isMacroPlaying = false;
 let macroTimerId = null;
@@ -31,16 +32,25 @@ let isExecutingMacroCommand = false; // דגל שמונע מה-Kill Switch לה�
 // --- TIMESTAMP ---
 
 let artRecipeLog = [];
+
 window.logArtEvent = function(eventName, details) {
-    // מניעת כפילויות: עצירת ההקלטה אם הפעולה מבוצעת על ידי המאקרו האוטומטי
-   // if (isMacroPlaying || isExecutingMacroCommand) return;
-   // תיקון רשות. רק אם יבוא לי לשיפורון. ביצועים. 
+
+// מניעת כפילויות: עצירת ההקלטה אם הפעולה מבוצעת על ידי המאקרו האוטומטי
+   // if (isMacroPlaying || isExecutingMacroCommand) return;
+   // תיקון רשות. רק אם יבוא לי לשיפורון. ביצועים.
+
+        const now = new Date();
+        const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
     
-    const now = new Date();
+        // מערכת היברידית: אם אנחנו בסימולציה רצה (ולא Breathe), נוסיף חותמת דור
+        let genTag = "";
+        if (isLifePlaying && armedSimulation && armedSimulation !== 'breathe') {
+            genTag = ` [GEN:${currentGenerationCount}]`;
+        }
     
-    const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
-    artRecipeLog.push(`[${timestamp}] ${eventName} -> ${details}`);
-};
+        artRecipeLog.push(`[${timestamp}]${genTag} ${eventName} -> ${details}`);
+    };
+
 // ------------------------------------------
 // --- NO TIMESTAMP ---
 // --- Art Logger System (Session Recipe) NO---
@@ -1016,13 +1026,37 @@ break;
             case 'breathe': break; // This loop only handles discrete simulations. Breathe uses animationLoop.
 
         }
-if (armedSimulation !== 'nudgeBrighter' && armedSimulation !== 'nudgeDarker') {
-            renderToScreen(null);
-        }
-
-        animationFrameId = requestAnimationFrame(gameLoop);
-      }
-
+        if (armedSimulation !== 'nudgeBrighter' && armedSimulation !== 'nudgeDarker') {
+                        renderToScreen(null);
+                    }
+            
+                    currentGenerationCount++; // קידום מונה הדורות
+            
+                    // --- MACRO INTERCEPTOR: בדיקה אם המאקרו ממתין לדור הזה ---
+                    if (isMacroPlaying && currentMacroStep < macroQueue.length) {
+                        let nextAction = macroQueue[currentMacroStep];
+                        while (nextAction && nextAction.isGenBased && currentGenerationCount >= nextAction.targetGen) {
+                            executeMacroAction(nextAction);
+                            currentMacroStep++;
+                            if (currentMacroStep >= macroQueue.length) {
+                                stopMacro();
+                                if (isLifePlaying) pauseLife();
+                                break;
+                            }
+                            nextAction = macroQueue[currentMacroStep];
+                            // אם הפעולה הבאה מבוססת זמן (כמו שרטוט מברשת לאחר עצירה), נחזיר את השליטה לטיימר!
+                            if (nextAction && !nextAction.isGenBased) {
+                                macroStartTime = performance.now() - nextAction.delta;
+                                scheduleNextMacroStep();
+                            }
+                        }
+                    }
+                    // -----------------------------------------------------------
+            
+                    if (isLifePlaying) {
+                        animationFrameId = requestAnimationFrame(gameLoop);
+                    }
+                  }
 
 
       function stepForward() {
@@ -1120,8 +1154,8 @@ break;
       
 function pauseLife() {
           if (!isLifePlaying) return;
-          isLifePlaying = false;
           window.logArtEvent('PAUSE', '---');
+          isLifePlaying = false;
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
           animationFrameId = null;
           // animationLoop will stop itself on its next frame because isLifePlaying is false
@@ -1226,6 +1260,7 @@ function pauseLife() {
           }
 
           // --- Handle Discrete Simulations (uses gameLoop) ---
+          currentGenerationCount = 0; // איפוס מונה הדורות בכל פעם שלוחצים Play
           if (armedSimulation === 'dla') {
               syncDlaCrystalState();
           }
@@ -2638,15 +2673,16 @@ const flushPendingUI = () => {
     const UI_DELAY = 50;
 
     pendingUIState.forEach((action, index) => {
-        parsed.push({ 
-            // כל פעולה מקבלת את הזמן פלוס מרווח מדורג
-            delta: cumulativeDelta + (index * UI_DELAY), 
-            eventName: action.eventName, 
-            details: action.details, 
-            isUndoable: false 
-        });
-    });
-    
+                parsed.push({ 
+                    delta: cumulativeDelta + (index * UI_DELAY), 
+                    eventName: action.eventName, 
+                    details: action.details, 
+                    isUndoable: false,
+                    isGenBased: false,
+                    targetGen: null
+                });
+            });
+
     // מקדמים את הזמן הכללי כדי שהציור או ה-Play ימתינו לסיום ההכנות
     cumulativeDelta += pendingUIState.length * UI_DELAY;
     pendingUIState = []; // איפוס הרשימה לאחר השחרור
@@ -2654,16 +2690,20 @@ const flushPendingUI = () => {
 
 
 cleanLines.forEach(line => {
-          const match = line.match(/\[(\d{2}:\d{2}:\d{2}\.\d{3})\] (.*?) -> (.*)/);
-          
-          if (match) {
-            const [_, timeStr, eventName, details] = match;
-            const dateObj = new Date(`1970-01-01T${timeStr}Z`);
+              // תמיכה גם בחותמת הזמן הרגילה וגם בחותמת הדור החדשה [GEN:XX]
+              const match = line.match(/\[(\d{2}:\d{2}:\d{2}\.\d{3})\](?: \[GEN:(\d+)\])? (.*?) -> (.*)/);
+              
+              if (match) {
+                const [_, timeStr, genStr, eventName, details] = match;
+                const targetGen = genStr ? parseInt(genStr, 10) : null;
+                const isGenBased = targetGen !== null;
+                const dateObj = new Date(`1970-01-01T${timeStr}Z`);
             const timeMs = dateObj.getTime();
 
             if (lastTimestampMs === null) {
-                lastTimestampMs = timeMs;
-                parsed.push({ delta: 0, eventName, details, isUndoable: false });
+                                lastTimestampMs = timeMs;
+                                parsed.push({ delta: 0, eventName, details, isUndoable: false, isGenBased, targetGen });
+                
                 if (eventName === 'PLAY') isSimulationRunning = true;
                 if (eventName === 'PAUSE') isSimulationRunning = false;
                 return;
@@ -2763,7 +2803,7 @@ if (eventName === 'UNDO') {
                                (eventName === '--' && details === 'Palette Randomized');
 
             // דחיפת הפעולה לתור המאקרו להפעלה
-            parsed.push({ delta: cumulativeDelta, eventName, details, isUndoable });
+            parsed.push({ delta: cumulativeDelta, eventName, details, isUndoable, isGenBased, targetGen });
         }
     });
 
@@ -2814,13 +2854,19 @@ function pauseMacro() {
 }
 
 function scheduleNextMacroStep() {
-    if (!isMacroPlaying || currentMacroStep >= macroQueue.length) return;
-
-    const nextAction = macroQueue[currentMacroStep];
-    const targetTime = macroStartTime + nextAction.delta;
-    const delay = Math.max(0, targetTime - performance.now());
-
-    macroTimerId = setTimeout(() => {
+        if (!isMacroPlaying || currentMacroStep >= macroQueue.length) return;
+    
+        const nextAction = macroQueue[currentMacroStep];
+    
+        // אם הפעולה הבאה מבוססת על מספר דורות בסימולציה שרצה כרגע,
+        // אנחנו לא מתזמנים טיימר! gameLoop יקרא לפעולה הזו באופן טבעי.
+        if (nextAction.isGenBased) return;
+    
+        const targetTime = macroStartTime + nextAction.delta;
+        const delay = Math.max(0, targetTime - performance.now());
+    
+        macroTimerId = setTimeout(() => {
+        
         if (!isMacroPlaying) return;
         
         executeMacroAction(nextAction);
