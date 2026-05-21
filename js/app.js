@@ -931,8 +931,12 @@ function switchToPalette(index) {
             if (newSize === undefined) newSize = seq[seq.length - 1];
         }
         if (newSize === n) return;
-        animateBoardTransition(() => performAction(() => _performResize(newSize)));
-      }
+        animateBoardTransition(() => performAction(() => {
+            window.logArtEvent('GRID_RESIZE', newSize); // השורה שהוספנו
+            _performResize(newSize);
+        }));
+    
+    }
       
 
 
@@ -2660,7 +2664,7 @@ function parseMacroText(text) {
 
 
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
-    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change'];
+    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'GRID_RESIZE'];
 
 
     // --- גבולות זמן (במילי-שניות) ---
@@ -3040,6 +3044,9 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'REDO') {
         redo();
+    }
+    else if (action.eventName === 'GRID_RESIZE') {
+        _performResize(parseInt(action.details, 10));
     }
     else if (action.eventName === 'Gravitational Sort Mode') {
                 if (action.details === 'off') {
