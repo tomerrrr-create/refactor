@@ -68,38 +68,71 @@ const anchorIndex = (magnetRules.anchorColorIndex === undefined || magnetRules.a
         cachedMovedThisFrame.fill(0);
     }
 
-    // === אופטימיזציה: חישוב ה-Fallback קורה רק פעם אחת ונשמר בזיכרון ===
-    if (!cachedAnchorFallback || cachedAnchorFallback.originalAnchorIndex !== anchorIndex) {
-        let darkestPresentShifted = Infinity;
-        let targetRealK = anchorIndex;
+  // === 1. בדיקה חכמה: האם היעד חסר, או שהופיע יעד טוב יותר? ===
+  let shouldRecalculate = false;
 
-        for (let i = 0; i < n * n; i++) {
-            if (nextBoardState[i].isGold) continue;
-            const currentK = nextBoardState[i].k;
-            // חישוב המיקום הווירטואלי (החדש) של הצבע
-            const shiftedK = (currentK - anchorIndex + pLen) % pLen;
-            
-            if (shiftedK < darkestPresentShifted) {
-                darkestPresentShifted = shiftedK;
-                targetRealK = currentK;
-            }
-            if (darkestPresentShifted === 0) break; // מצאנו את ה"כהה" המוחלט לפי הסדר החדש
-        }
-        if (darkestPresentShifted === Infinity) targetRealK = anchorIndex;
-        
-        // שמירת התוצאה במטמון כדי לא לחשב שוב בפריים הבא! 
-        // שומרים גם את ה-anchorIndex המקורי כדי לדעת אם היוזר שינה בחירה
-        cachedAnchorFallback = {
-            targetColorIndex: targetRealK,
-            targetShiftedK: darkestPresentShifted,
-            originalAnchorIndex: anchorIndex
-        };
-    }
+  if (!cachedAnchorFallback || cachedAnchorFallback.originalAnchorIndex !== anchorIndex) {
+      shouldRecalculate = true; // אין מטמון או שהמשתמש שינה בחירה בממשק
+  } else {
+      let targetFound = false;
+      
+      for (let i = 0; i < n * n; i++) {
+          if (nextBoardState[i].isGold) continue;
+          
+          const currentK = nextBoardState[i].k;
+          
+          // בדיקה א': האם היעד הנוכחי שלנו עדיין קיים?
+          if (currentK === cachedAnchorFallback.targetColorIndex) {
+              targetFound = true;
+          }
+          
+          // בדיקה ב': אם אנחנו כרגע מתפשרים על יעד, האם פתאום הופיע צבע קרוב יותר לאידיאל?
+          if (cachedAnchorFallback.targetShiftedK > 0) {
+              const shiftedK = (currentK - anchorIndex + pLen) % pLen;
+              if (shiftedK < cachedAnchorFallback.targetShiftedK) {
+                  shouldRecalculate = true; // הופיע צבע עדיף! חייבים לחשב מחדש
+                  break; 
+              }
+          }
+      }
+      
+      // אם סיימנו לסרוק והיעד שלנו לא נמצא - צריך לחשב מחדש
+      if (!targetFound) {
+          shouldRecalculate = true; 
+      }
+  }
 
-    // שליפה מיידית מהזיכרון במקום לרוץ על כל הלוח
-    const targetColorIndex = cachedAnchorFallback.targetColorIndex; 
-    const targetShiftedK = cachedAnchorFallback.targetShiftedK; 
-    // ==============================================================
+  // === 2. חישוב מחדש (רק אם צריך) ===
+  if (shouldRecalculate) {
+      let darkestPresentShifted = Infinity;
+      let targetRealK = anchorIndex;
+
+      for (let i = 0; i < n * n; i++) {
+          if (nextBoardState[i].isGold) continue;
+          const currentK = nextBoardState[i].k;
+          
+          const shiftedK = (currentK - anchorIndex + pLen) % pLen;
+          
+          if (shiftedK < darkestPresentShifted) {
+              darkestPresentShifted = shiftedK;
+              targetRealK = currentK;
+          }
+          if (darkestPresentShifted === 0) break; // מצאנו התאמה מושלמת
+      }
+      
+      if (darkestPresentShifted === Infinity) targetRealK = anchorIndex;
+      
+      cachedAnchorFallback = {
+          targetColorIndex: targetRealK,
+          targetShiftedK: darkestPresentShifted,
+          originalAnchorIndex: anchorIndex
+      };
+  }
+
+  // שליפה מיידית מהזיכרון
+  const targetColorIndex = cachedAnchorFallback.targetColorIndex; 
+  const targetShiftedK = cachedAnchorFallback.targetShiftedK; 
+  // ==============================================================
 
     switch (method) {
         case 'magnet': {
