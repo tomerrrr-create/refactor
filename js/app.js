@@ -661,6 +661,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
             let idx = seq.indexOf(separatorPx);
             if (idx === -1) { idx = seq.indexOf(seq.reduce((p, c) => (Math.abs(c - separatorPx) < Math.abs(p - separatorPx) ? c : p))); }
             separatorPx = seq[(idx + 1) % seq.length];
+            window.logArtEvent('SEPARATOR_CHANGE', separatorPx);
             applySeparator();
           });
       }
@@ -2664,8 +2665,8 @@ function parseMacroText(text) {
 
 
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
-    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'GRID_RESIZE'];
-
+    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'SEPARATOR_CHANGE', 'GRID_RESIZE'];
+    
 
     // --- גבולות זמן (במילי-שניות) ---
     const MAX_STATIC_WAIT = 1000;
@@ -3044,6 +3045,10 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'REDO') {
         redo();
+    }
+    else if (action.eventName === 'SEPARATOR_CHANGE') {
+        separatorPx = parseInt(action.details, 10);
+        applySeparator();
     }
     else if (action.eventName === 'GRID_RESIZE') {
         _performResize(parseInt(action.details, 10));
