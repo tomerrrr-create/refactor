@@ -167,6 +167,8 @@ btnChiPresetRipples: document.getElementById('btnChiPresetRipples'),
   btnChiPresetElectric: document.getElementById('btnChiPresetElectric'),
   btnChiPresetFluent: document.getElementById('btnChiPresetFluent'),
   btnChiPresetHarmony: document.getElementById('btnChiPresetHarmony'),
+  btnChiPresetNova: document.getElementById('btnChiPresetNova'), 
+
   btnChiSettingsReset: document.getElementById('btnChiSettingsReset'),
   btnChiSettingsCancel: document.getElementById('btnChiSettingsCancel'),
   btnChiSettingsSave: document.getElementById('btnChiSettingsSave'),

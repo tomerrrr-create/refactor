@@ -137,7 +137,8 @@ const CHI_PRESETS = {
         'Ripples': { awakening: [3,4,5,6,7,8], flow: [2,4,5,6], reach: 0 },
         'Electric': { awakening: [3,4,5,6,7,8], flow: [1], reach: 0 },
         'Fluent': { awakening: [3,4,5,6], flow: [1,2,3,4,5], reach: 0 },
-        'Harmony': { awakening: [3,4,5,6,7,8], flow: [3,5,7], reach: 0 }
+        'Harmony': { awakening: [3,4,5,6,7,8], flow: [3,5,7], reach: 0 },
+        'Nova': { awakening: [3,4,5,6,7,8], flow: [1,2], reach: 0 } 
     };
 
 
@@ -177,7 +178,7 @@ const btns = [
             app.dom.btnChiPresetTopography, app.dom.btnChiPresetWildfire, 
             app.dom.btnChiPresetCrystals, app.dom.btnChiPresetRipples,
             app.dom.btnChiPresetElectric, app.dom.btnChiPresetFluent, 
-            app.dom.btnChiPresetHarmony
+            app.dom.btnChiPresetHarmony, app.dom.btnChiPresetNova
         ];
         btns.forEach(b => {
             if (b.id === activeId) b.classList.add('active');
@@ -253,6 +254,7 @@ app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
 app.dom.btnChiPresetElectric.textContent = app.getText('chi_preset_electric');
         app.dom.btnChiPresetFluent.textContent = app.getText('chi_preset_fluent');
         app.dom.btnChiPresetHarmony.textContent = app.getText('chi_preset_harmony');
+        app.dom.btnChiPresetNova.textContent = app.getText('chi_preset_nova'); 
 
 updateActiveChiPresetButton();        app.dom.chiFlowSettingsModal.classList.remove('hidden');
     }
@@ -1087,7 +1089,7 @@ app.dom.chiReachSlider.addEventListener('input', (e) => {
 });
 
 
-    app.dom.btnChiSettingsReset.addEventListener('click', () => applyChiPreset('Topography', app.dom.btnChiPresetTopography));
+app.dom.btnChiSettingsReset.addEventListener('click', () => applyChiPreset('Nova', app.dom.btnChiPresetNova));
     app.dom.btnChiPresetTopography.addEventListener('click', (e) => applyChiPreset('Topography', e.target));
     app.dom.btnChiPresetWildfire.addEventListener('click', (e) => applyChiPreset('Wildfire', e.target));
     app.dom.btnChiPresetCrystals.addEventListener('click', (e) => applyChiPreset('Crystals', e.target));
@@ -1095,6 +1097,7 @@ app.dom.chiReachSlider.addEventListener('input', (e) => {
 app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('Electric', e.target));
     app.dom.btnChiPresetFluent.addEventListener('click', (e) => applyChiPreset('Fluent', e.target));
     app.dom.btnChiPresetHarmony.addEventListener('click', (e) => applyChiPreset('Harmony', e.target));
+    app.dom.btnChiPresetNova.addEventListener('click', (e) => applyChiPreset('Nova', e.target)); 
 
 
 // --- END: Added for Chi Flow Settings ---

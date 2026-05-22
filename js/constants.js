@@ -83,7 +83,7 @@ export const defaultContourRules = {
 
 export const defaultChiFlowRules = {
     awakening: [3, 4, 5, 6, 7, 8],
-    flow: [2, 3],
+    flow: [1, 2],
     reach: 0
 };
 
