@@ -319,6 +319,18 @@ currentSortMethod,
           };
       }
 
+      function logCurrentStateAsInit() {
+        const stateSnapshot = {
+            n: n,
+            pal: activePaletteIndex,
+            sort: currentSortMethod,
+            sep: separatorPx,
+            board: compressBoardState()
+        };
+        window.logArtEvent('INIT_STATE', JSON.stringify(stateSnapshot));
+    }
+
+
       function areStatesEqual(stateA, stateB) {
         if (!stateA || !stateB) return false;
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
@@ -852,6 +864,7 @@ function applyNudgeLogic(direction) {
         fillRandom(); 
         applySeparator();
         hasPerformedInitialAutofill = true;
+        logCurrentStateAsInit();
       }
       
 function handlePaletteSwitch(backwards = false) {
@@ -3012,12 +3025,12 @@ function executeMacroAction(action) {
         } catch(e) {
             console.error("Failed to parse INIT_STATE:", e);
         }
-        return; // סיימנו עם הפעולה הזו, אפשר לצאת
     }
     // ==================================
     
 
-    if (action.eventName === 'Palette Change') {
+    else if (action.eventName === 'Palette Change') {
+        
         const pIndex = C.PALETTES.findIndex(p => p.name === action.details || p.originalName === action.details);
         if(pIndex !== -1) switchToPalette(pIndex);
     } 
@@ -3266,6 +3279,8 @@ updateBrightnessEvoButtonUI();
         updateGlowEffect();
         updateLayout();
         updateAllUIText();
+        logCurrentStateAsInit();
+
         
         const boardCanvas = dom.boardCanvas;
         boardCanvas.addEventListener('pointerdown', onPointerDown);
