@@ -2441,12 +2441,12 @@ function updateSpiralButtonUI() {
 
 function cycleSpiralMode() {
     const oldMode = spiralMode;
-const sequence = ['off', 'b', 'vortex',  'left', 'a', 'radial', 'down', ];
-
-
+const sequence = ['off', 'b', 'vortex',  'left', 'a'];
 
 
 // original with all button
+//const sequence = ['off', 'b', 'vortex',  'left', 'a', 'radial', 'down', ];
+
 // const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
 
 
