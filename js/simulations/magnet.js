@@ -58,9 +58,12 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 // אם המשתמש בחר ב-DARKEST (-1) או שעדיין לא נבחר כלום, נתייחס לזה כאינדקס 0
 const anchorIndex = (magnetRules.anchorColorIndex === undefined || magnetRules.anchorColorIndex === -1) ? 0 : magnetRules.anchorColorIndex;
 
-    // הגדרת מגבלה: 100 למובייל, 300 למחשב
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const anchorLimit = magnetRules.anchorLimit || (isMobile ? 100 : 300);
+    const anchorLimit = magnetRules.anchorLimit || (isMobile ? 300 : 300);
+        // הגדרת מגבלה: 100 למובייל, 300 למחשב
+
+    //const anchorLimit = magnetRules.anchorLimit || (isMobile ? 150 : 300);
+
 
     if (cachedMovedThisFrame.length !== n * n) {
         cachedMovedThisFrame = new Uint8Array(n * n);
