@@ -132,11 +132,11 @@ function closeContourSettingsModal() {
 
 const CHI_PRESETS = {
         'Topography': { awakening: [3,4,5,6,7,8], flow: [2,3], reach: 0 },
-        'Wildfire': { awakening: [1,2,3,4,5,6,7,8], flow: [2,3,4], reach: 0 },
+        'Fluent': { awakening: [1,2,3,4,5,6,7,8], flow: [1,2,3,4,5,6,7,8], reach: 0 },
         'Crystals': { awakening: [3,4,5,6,7,8], flow: [3,4,5,6,7,8], reach: 0 },
         'Ripples': { awakening: [3,4,5,6,7,8], flow: [2,4,5,6], reach: 0 },
         'Electric': { awakening: [3,4,5,6,7,8], flow: [1], reach: 0 },
-        'Fluent': { awakening: [3,4,5,6], flow: [1,2,3,4,5], reach: 0 },
+        'Wildfire': { awakening: [1,2,3,6,7,8], flow: [1,2,3,6,7,8], reach: 0 },
         'Harmony': { awakening: [3,4,5,6,7,8], flow: [3,5,7], reach: 0 },
         'Nova': { awakening: [3,4,5,6,7,8], flow: [1,2], reach: 0 } 
     };
