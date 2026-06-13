@@ -136,7 +136,7 @@ const CHI_PRESETS = {
         'Crystals': { awakening: [3,4,5,6,7,8], flow: [3,4,5,6,7,8], reach: 0 },
         'Ripples': { awakening: [3,4,5,6,7,8], flow: [2,4,5,6], reach: 0 },
         'Electric': { awakening: [3,4,5,6,7,8], flow: [1], reach: 0 },
-        'Wildfire': { awakening: [1,2,3,6,7,8], flow: [1,2,3,6,7,8], reach: 0 },
+        'Wildfire': { awakening: [1,3,5,7], flow: [2,4,6,8], reach: 0 },
         'Harmony': { awakening: [3,4,5,6,7,8], flow: [3,5,7], reach: 0 },
         'Nova': { awakening: [3,4,5,6,7,8], flow: [1,2], reach: 0 } 
     };
