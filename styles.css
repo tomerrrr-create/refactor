@@ -1212,5 +1212,5 @@ button, .ctrl {
 }
 /* בעת ניגון המאקרו - הרקע הופך לכהה חלקית כדי שיהיה אפשר לראות את הלוח */
 .macro-overlay.running {
-  background-color: rgba(0, 0, 0, 0.70);
+  background-color: rgba(0, 0, 0, 0.80);
 }
