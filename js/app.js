@@ -1636,7 +1636,6 @@ if (simulationName === 'magnet') {
                 dom.macroOverlay.classList.add('active'); // מציג את הרקע הכהה ואת הכפתור
                 dom.macroOverlay.classList.remove('running'); // מוודא שהכפתור שלנו גלוי
                 
-                alert(getText('saveModal_loadIdea') + " (Macro Ready!)");
             } else {
                 
                 alert("Invalid macro file format.");
