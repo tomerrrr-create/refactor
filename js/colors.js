@@ -21,7 +21,9 @@ export const SORT_MODES = [
     { method: 'dark-rainbow', icon: '<path d="M 6 19 V 10 A 6 6 0 0 1 18 10 V 19"/>' },
     { method: 'reversed', icon: '<circle cx="5.5" cy="12" r="3" fill="white" stroke="none"/><path d="M 10.5 10 L 13.5 12 L 10.5 14" fill="none" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18.5" cy="12" r="3" fill="gray" stroke="none"/>' },
     { method: 'center-out', icon: '<path d="M 4 12 Q 12 5 20 12 Q 12 19 4 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>' },
-    { method: 'temperature', icon: '<path d="M 15 7 A 6 6 0 1 0 15 17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' }
+    { method: 'temperature', icon: '<path d="M 15 7 A 6 6 0 1 0 15 17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' },
+    { method: 'outside-in', icon: '<path d="M 20 12 L 15 12 M 4 12 L 9 12 M 16 9 L 13 12 L 16 15 M 8 9 L 11 12 L 8 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' }
+    
 ];
 
 export function adjustBrightness(hex, factor) {
