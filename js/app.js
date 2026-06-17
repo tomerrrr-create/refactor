@@ -1614,8 +1614,10 @@ if (simulationName === 'magnet') {
           modals.closeModal();
       }
 
-      function handleLoadProject() { dom.projectFileInput.click(); modals.closeModal(); }
-      
+      function handleLoadProject() { 
+        modals.closeModal(); 
+        setTimeout(() => { dom.projectFileInput.click(); }, 50); 
+    }            
       function onProjectFileSelected(event) {
         const file = event.target.files[0]; if (!file) return;
 
@@ -1635,7 +1637,8 @@ if (simulationName === 'magnet') {
                 if (isLifePlaying) pauseLife();
                 dom.macroOverlay.classList.add('active'); // מציג את הרקע הכהה ואת הכפתור
                 dom.macroOverlay.classList.remove('running'); // מוודא שהכפתור שלנו גלוי
-                
+                dom.boardOverlay.style.opacity = '0.9'; // מחשיך את הגריד ל-90%
+
             } else {
                 
                 alert("Invalid macro file format.");
@@ -2832,6 +2835,8 @@ function stopMacro() {
     
     // מעלים את הכל בלחיצה
     dom.macroOverlay.classList.remove('active', 'running');
+    dom.boardOverlay.style.opacity = '0'; // מבטיח שהגריד יחזור להיות מואר
+
 }
 
 function playMacro() {
@@ -2841,6 +2846,7 @@ function playMacro() {
     
     // מפעיל את ה"ריצה" שמסתירה את הכפתור אבל משאירה את הרקע הכהה
     dom.macroOverlay.classList.add('running');
+    dom.boardOverlay.style.opacity = '0'; // מעלים את ההחשכה מהגריד בפייד-אאוט
 
     macroStartTime = performance.now() - (currentMacroStep > 0 ? macroQueue[currentMacroStep - 1].delta : 0);
     scheduleNextMacroStep();

@@ -360,7 +360,7 @@ body {
   width: min(85vmin, 720px);
 }
 #boardOverlay {
-    transition: opacity 350ms ease-in-out;
+    transition: opacity 800ms ease-in-out;
 }
 @keyframes glow-effect {
   0%, 100% {
