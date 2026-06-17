@@ -1165,3 +1165,48 @@ button, .ctrl {
   pointer-events: auto;
   cursor: pointer;
 }
+
+/* --- Macro Play Button (Alien Design) --- */
+.macro-play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  color: var(--gold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease-in-out;
+  z-index: 41; /* מציב את הכפתור מעל הרקע הכהה */
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+.macro-play-btn:hover {
+  background: rgba(255, 215, 0, 0.1);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.macro-play-btn svg {
+  width: 32px;
+  height: 32px;
+  animation: macro-pulse 2s infinite alternate;
+}
+
+@keyframes macro-pulse {
+  0% { opacity: 0.6; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+
+/* מצב ריצה - הכפתור נעלם אבל הרקע נשאר */
+.macro-overlay.running .macro-play-btn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.5);
+}

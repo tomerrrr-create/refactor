@@ -1208,19 +1208,7 @@ function pauseLife() {
 
       
       function togglePlayPauseLife() {
-
-        // --- MACRO INTERCEPTOR ---
-// --- MACRO INTERCEPTOR ---
-        // התוספת החשובה: השומר יפעל רק אם זו *לא* פקודה אוטומטית של המאקרו
-        if (isMacroLoaded && !isExecutingMacroCommand) {
-            if (isMacroPlaying) {
-                pauseMacro();
-            } else {
-                playMacro();
-            }
-            return; // עוצרים כאן ולא ממשיכים ללוגיקת הסימולציה הרגילה
-        }
-        // -------------------------
+//        if (isMacroPlaying) return; // לא מאפשרים לגעת בסימולציות כשהמאקרו רץ
 
         if (isLifePlaying) {
             pauseLife();
@@ -1643,13 +1631,14 @@ if (simulationName === 'magnet') {
                 isMacroLoaded = true;
                 currentMacroStep = 0;
                 
-                // הבהוב כפתור ה-Play לאותת למשתמש שהמאקרו מוכן
-                dom.btnPlayPauseLife.disabled = false;
-                dom.btnPlayPauseLife.classList.add('glow-animation');
-                // אם היינו בסימולציה, נעצור אותה
+                // עצירת סימולציה קיימת והדלקת המאקרו מיד
                 if (isLifePlaying) pauseLife();
+                dom.macroOverlay.classList.add('active'); // מציג את הרקע הכהה ואת הכפתור
+                dom.macroOverlay.classList.remove('running'); // מוודא שהכפתור שלנו גלוי
+                
                 alert(getText('saveModal_loadIdea') + " (Macro Ready!)");
             } else {
+                
                 alert("Invalid macro file format.");
             }
         };
@@ -2835,7 +2824,6 @@ if (eventName === 'UNDO') {
 }
 
 
-
 function stopMacro() {
     clearTimeout(macroTimerId);
     macroQueue = [];
@@ -2843,28 +2831,22 @@ function stopMacro() {
     isMacroPlaying = false;
     currentMacroStep = 0;
     
-    // UI Reset
-    dom.btnPlayPauseLife.classList.remove('glow-animation');
-    dom.macroOverlay.classList.remove('active');
-    if (!isLifePlaying) {
-        dom.iconPlay.style.display = 'block';
-        dom.iconPause.style.display = 'none';
-    }
+    // מעלים את הכל בלחיצה
+    dom.macroOverlay.classList.remove('active', 'running');
 }
 
 function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
     
     isMacroPlaying = true;
-    dom.macroOverlay.classList.add('active');
-    dom.iconPlay.style.display = 'none';
-    dom.iconPause.style.display = 'block';
-    dom.btnPlayPauseLife.classList.remove('glow-animation');
+    
+    // מפעיל את ה"ריצה" שמסתירה את הכפתור אבל משאירה את הרקע הכהה
+    dom.macroOverlay.classList.add('running');
 
-    // מחשבים את נקודת ההתחלה כדי שאם עשינו פאוז - נמשיך מאותו רגע
     macroStartTime = performance.now() - (currentMacroStep > 0 ? macroQueue[currentMacroStep - 1].delta : 0);
     scheduleNextMacroStep();
 }
+
 
 function pauseMacro() {
     isMacroPlaying = false;
@@ -3290,6 +3272,12 @@ updateBrightnessEvoButtonUI();
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));
         dom.macroOverlay.addEventListener('click', (e) => handleCtrlClick(e, stopMacro));
+        if (dom.btnMacroPlay) {
+            dom.btnMacroPlay.addEventListener('click', (e) => {
+                e.stopPropagation(); // קריטי! מונע מהלחיצה לעבור לאוברליי ולכבות את המאקרו בטעות
+                handleCtrlClick(e, playMacro);
+            });
+        }
         
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
 
