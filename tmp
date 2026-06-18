@@ -1,84 +1,52 @@
-[20:20:59.116] INIT_STATE -> {"n":249,"pal":60,"sort":"luminance","sep":0,"board":"62001x0"}
-[20:21:05.731] PLAY -> Armed: turing | Sort: luminance | Rules: {"feed":0.034,"kill":0.056,"dA":1,"dB":0.5,"timeStep":1}
-[20:21:14.536] [GEN:189] PAUSE -> ---
-[20:21:15.913] Sort by -> dark-rainbow
-[20:21:21.289] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,2,3,4,5,6,7,8],"flow":[1,2,3,4,5,6,7,8],"reach":0}
-[20:21:26.184] [GEN:164] PAUSE -> ---
-[20:21:27.198] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,2,3,4,5,6,7,8],"flow":[1,2,3,4,5,6,7,8],"reach":0}
-[20:21:28.240] [GEN:35] PAUSE -> ---
-[20:21:28.593] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,2,3,4,5,6,7,8],"flow":[1,2,3,4,5,6,7,8],"reach":0}
-[20:21:29.956] [GEN:46] PAUSE -> ---
-[20:21:30.861] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,2,3,4,5,6,7,8],"flow":[1,2,3,4,5,6,7,8],"reach":0}
-[20:21:31.139] [GEN:9] PAUSE -> ---
-[20:21:35.808] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[3,4,5,6,7,8],"flow":[1,2],"reach":0}
-[20:21:55.731] [GEN:639] PAUSE -> ---
-[20:21:57.141] Spiral Mode Changed -> b
-[20:21:57.320] Spiral Mode Changed -> vortex
-[20:21:57.472] Spiral Mode Changed -> left
-[20:21:58.272] Spiral Mode Changed -> a
-[20:22:00.248] Spiral Mode Changed -> off
-[20:22:00.459] Spiral Mode Changed -> b
-[20:22:00.663] Spiral Mode Changed -> vortex
-[20:22:03.364] Spiral Mode Changed -> left
-[20:22:04.139] Sort by -> reversed
-[20:22:04.394] Sort by -> center-out
-[20:22:05.921] PLAY -> Armed: spiral | Sort: center-out | Rules: {"method":"left"}
-[20:22:17.027] [GEN:212] PAUSE -> ---
-[20:22:18.172] UNDO -> ---
-[20:22:20.058] Sort by -> temperature
-[20:22:20.253] Sort by -> luminance
-[20:22:20.790] Sort by -> dark-rainbow
-[20:22:27.958] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,3,5,7],"flow":[2,4,6,8],"reach":0}
-[20:22:40.979] [GEN:414] PAUSE -> ---
-[20:22:42.422] GRID_RESIZE -> 299
-[20:22:43.486] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,3,5,7],"flow":[2,4,6,8],"reach":0}
-[20:22:58.812] [GEN:347] PAUSE -> ---
-[20:23:00.776] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,3,5,7],"flow":[2,4,6,8],"reach":0}
-[20:23:03.801] [GEN:67] PAUSE -> ---
-[20:23:08.324] STEP FORWARD -> Armed: contour | Sort: dark-rainbow | Rules: {"sensitivity":75,"lineColor":"darkest"}
-[20:23:10.754] PLAY -> Armed: gameOfLife | Sort: dark-rainbow | Rules: {"survival":[0,1,2,3,4,5,6,7,8],"birth":[4,5,6,7,8]}
-[20:23:21.109] [GEN:150] PAUSE -> ---
-[20:23:23.418] Magnet Mode Changed -> magnet
-[20:23:23.666] Magnet Mode Changed -> cosmic_magnet
-[20:23:24.322] PLAY -> Armed: magnet | Sort: dark-rainbow | Rules: {"method":"cosmic_magnet","anchorColorIndex":-1}
-[20:23:27.008] [GEN:100] PAUSE -> ---
-[20:23:27.865] UNDO -> ---
-[20:23:31.032] UNDO -> ---
-[20:23:32.468] REDO -> ---
-[20:23:35.438] PLAY -> Armed: magnet | Sort: dark-rainbow | Rules: {"method":"cosmic_magnet","anchorColorIndex":-1}
-[20:23:42.220] [GEN:287] PAUSE -> ---
-[20:23:43.886] Gravitational Sort Mode -> up
-[20:23:44.492] PLAY -> Armed: gravitationalSort | Sort: dark-rainbow | Rules: {"direction":"up","strength":0.6}
-[20:23:53.985] [GEN:570] PAUSE -> ---
-[20:23:54.906] Brightness Evo Mode Changed -> brightness
-[20:23:55.359] PLAY -> Armed: brightnessEvo | Sort: dark-rainbow | Rules: Mode: brightness
-[20:23:59.632] [GEN:93] PAUSE -> ---
-[20:24:00.702] Sort by -> reversed
-[20:24:00.876] Sort by -> center-out
-[20:24:05.795] PLAY -> Armed: sandpile | Sort: center-out | Rules: {"awakening":[3,4,5,6,7,8],"flow":[1,2],"reach":0}
-[20:24:33.945] [GEN:594] PAUSE -> ---
-[20:24:36.948] Brightness Evo Mode Changed -> brightness
-[20:24:37.609] PLAY -> Armed: brightnessEvo | Sort: center-out | Rules: Mode: brightness
-[20:24:39.303] [GEN:37] PAUSE -> ---
-[20:24:41.345] Brightness Evo Mode Changed -> contrast
-[20:24:42.220] PLAY -> Armed: brightnessEvo | Sort: center-out | Rules: Mode: contrast
-[20:24:52.222] [GEN:220] PAUSE -> ---
-[20:24:54.104] PLAY -> Armed: sandpile | Sort: center-out | Rules: {"awakening":[3,4,5,6,7,8],"flow":[1,2],"reach":0}
-[20:24:57.372] [GEN:76] PAUSE -> ---
-[20:25:00.664] Sort by -> temperature
-[20:25:00.833] Sort by -> luminance
-[20:25:01.026] Sort by -> dark-rainbow
-[20:25:02.183] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,2,3,4,5,6,7,8],"flow":[1,2,3,4,5,6,7,8],"reach":0}
-[20:25:29.988] [GEN:608] PAUSE -> ---
-[20:25:32.689] STEP FORWARD -> Armed: contour | Sort: dark-rainbow | Rules: {"sensitivity":75,"lineColor":"darkest"}
-[20:25:34.777] PLAY -> Armed: gameOfLife | Sort: dark-rainbow | Rules: {"survival":[0,1,2,3,4,5,6,7,8],"birth":[4,5,6,7,8]}
-[20:25:38.234] [GEN:54] PAUSE -> ---
-[20:25:39.458] STEP FORWARD -> Armed: contour | Sort: dark-rainbow | Rules: {"sensitivity":75,"lineColor":"darkest"}
-[20:25:40.773] Magnet Mode Changed -> magnet
-[20:25:43.911] PLAY -> Armed: magnet | Sort: dark-rainbow | Rules: {"method":"magnet","anchorColorIndex":-1}
-[20:25:50.966] [GEN:72] PAUSE -> ---
-[20:25:52.922] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[1,2,3,4,5,6,7,8],"flow":[1,2,3,4,5,6,7,8],"reach":0}
-[20:25:56.177] [GEN:70] PAUSE -> ---
-[20:25:57.035] UNDO -> ---
-[20:26:00.318] PLAY -> Armed: sandpile | Sort: dark-rainbow | Rules: {"awakening":[3,4,5,6,7,8],"flow":[3,4,5,6,7,8],"reach":0}
-[20:26:05.723] [GEN:123] PAUSE -> ---
+[08:55:41.846] INIT_STATE -> {"n":299,"pal":16,"sort":"luminance","sep":0,"board":"62001x0"}
+[08:56:47.784] -- -> Palette Randomized
+[08:56:49.090] Gravitational Sort Mode -> up
+[08:56:49.948] PLAY -> Armed: gravitationalSort | Sort: outside-in | Rules: {"direction":"up","strength":0.6}
+[08:56:59.808] [GEN:593] Gravitational Sort Mode -> right
+[08:57:08.521] [GEN:1116] PAUSE -> ---
+[08:57:14.476] PLAY -> Armed: sandpile | Sort: outside-in | Rules: {"awakening":[3,4,5,6,7,8],"flow":[1,2],"reach":0}
+[08:57:22.435] [GEN:262] PAUSE -> ---
+[08:57:23.217] UNDO -> ---
+[08:57:24.233] GRID_RESIZE -> 499
+[08:57:25.905] PLAY -> Armed: sandpile | Sort: outside-in | Rules: {"awakening":[3,4,5,6,7,8],"flow":[1,2],"reach":0}
+[08:57:37.160] [GEN:261] PAUSE -> ---
+[08:57:38.062] UNDO -> ---
+[08:57:39.117] Sort by -> luminance
+[08:57:39.286] Sort by -> dark-rainbow
+[08:57:39.868] Sort by -> reversed
+[08:57:40.352] Sort by -> center-out
+[08:57:41.344] PLAY -> Armed: sandpile | Sort: center-out | Rules: {"awakening":[3,4,5,6,7,8],"flow":[1,2],"reach":0}
+[08:57:51.069] [GEN:229] PAUSE -> ---
+[08:57:51.912] UNDO -> ---
+[08:57:53.674] UNDO -> ---
+[08:57:55.430] Gravitational Sort Mode -> up
+[08:57:55.574] Gravitational Sort Mode -> right
+[08:57:56.192] Gravitational Sort Mode -> center_x
+[08:57:57.250] Sort by -> luminance
+[08:57:57.472] Sort by -> dark-rainbow
+[08:57:58.082] Sort by -> reversed
+[08:57:58.402] Sort by -> center-out
+[08:57:59.456] PLAY -> Armed: gravitationalSort | Sort: center-out | Rules: {"direction":"center_x","strength":0.6}
+[08:58:04.629] [GEN:311] PAUSE -> ---
+[08:58:10.892] UNDO -> ---
+[08:58:15.649] PLAY -> Armed: erosion | Sort: center-out | Rules: {"erosionStrength":0.1}
+[08:58:39.320] [GEN:715] PAUSE -> ---
+[08:58:40.612] Brightness Evo Mode Changed -> brightness
+[08:58:41.366] STEP FORWARD -> Armed: brightnessEvo | Sort: center-out | Rules: Mode: brightness
+[08:58:43.292] Sort by -> temperature
+[08:58:43.452] Sort by -> outside-in
+[08:58:43.634] Sort by -> luminance
+[08:58:44.332] Sort by -> dark-rainbow
+[08:58:44.500] Sort by -> reversed
+[08:58:44.681] Sort by -> center-out
+[08:58:45.284] Sort by -> temperature
+[08:58:45.808] Sort by -> outside-in
+[08:58:47.593] STEP FORWARD -> Armed: brightnessEvo | Sort: outside-in | Rules: Mode: brightness
+[08:58:48.494] STEP FORWARD -> Armed: brightnessEvo | Sort: outside-in | Rules: Mode: brightness
+[08:58:49.314] STEP FORWARD -> Armed: brightnessEvo | Sort: outside-in | Rules: Mode: brightness
+[08:59:15.166] GRID_RESIZE -> 299
+[08:59:18.872] DLA Mode Changed -> genetics
+[08:59:19.982] PLAY -> Armed: dla | Sort: outside-in | Rules: {"colorGenetics":true,"injectFromEdges":false,"fastMode":false,"mode":"genetics"}
+[08:59:27.018] [GEN:265] PAUSE -> ---
+[08:59:27.909] UNDO -> ---
+[09:00:17.933] UNDO -> ---

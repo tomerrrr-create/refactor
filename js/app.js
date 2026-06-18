@@ -2144,30 +2144,40 @@ function onPointerUp(e) {
     Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null });
 }
 
-      
-      function updateLayout() {
-        const shell = dom.appShell;
-        if (window.innerWidth < 768) { 
-            shell.style.width = ''; 
-        } else {
-          const controlsHeight = dom.controlsContainer.offsetHeight;
-          const viewportHeight = window.innerHeight;
-          const topMargin = parseInt(window.getComputedStyle(shell.parentElement).paddingTop, 10);
-          const availableHeight = viewportHeight - controlsHeight - (topMargin * 2);
-          const newWidth = Math.min(720, window.innerWidth * 0.85, availableHeight);
-          shell.style.width = `${newWidth}px`;
-        }
-        if (!canvas) return;
-        setTimeout(() => {
-            const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-            renderToScreen(null);
-        }, 50);
-      }
-      
+function updateLayout() {
+    const shell = dom.appShell;
+    
+    // --- תוספת: חישוב מיוחד למסך מלא ---
+    if (typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen) {
+        // לוקחים את המקסימום האפשרי בלי לחרוג מגבולות המסך (הקטן מבין הרוחב והגובה)
+        const newWidth = Math.min(window.innerWidth, window.innerHeight);
+        shell.style.width = `${newWidth}px`;
+    } 
+    // --- מצב רגיל ---
+    else if (window.innerWidth < 768) { 
+        shell.style.width = ''; 
+    } else {
+      const controlsHeight = dom.controlsContainer.offsetHeight;
+      const viewportHeight = window.innerHeight;
+      // מונעים קריסה אם ה-parentElement לא החזיר ערך
+      const topMargin = parseInt(window.getComputedStyle(shell.parentElement).paddingTop, 10) || 0; 
+      const availableHeight = viewportHeight - controlsHeight - (topMargin * 2);
+      const newWidth = Math.min(720, window.innerWidth * 0.85, availableHeight);
+      shell.style.width = `${newWidth}px`;
+    }
+
+    if (!canvas) return;
+    setTimeout(() => {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        renderToScreen(null);
+    }, 50);
+  }      
+
+
        function createRainbowIconSVG(currentPalette) {
         const p = currentPalette || palette();
         const c1 = p[0] || '#FFD700'; const c2 = p[Math.floor(p.length / 4)] || '#42A5F5';
@@ -2856,13 +2866,35 @@ if (eventName === 'UNDO') {
 
 function toggleMacroFullScreen() {
     isMacroFullscreen = !isMacroFullscreen;
+    const isDesktop = window.innerWidth > 768; // זיהוי פשוט של דסקטופ לפי רוחב המסך
+
     if (isMacroFullscreen) {
-        dom.appContainer.classList.add('macro-fullscreen');
+        dom.appContainer.classList.add('macro-fullscreen'); // הסתרת הממשק שלנו
+        
+        // מעבר למסך מלא של הדפדפן (רק בדסקטופ)
+        if (isDesktop && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => console.log("Fullscreen API blocked", err));
+        }
     } else {
-        dom.appContainer.classList.remove('macro-fullscreen');
+        dom.appContainer.classList.remove('macro-fullscreen'); // החזרת הממשק
+        
+        // יציאה ממסך מלא של הדפדפן
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        }
     }
-    updateLayout(); // קורא למנוע הקיים למתוח את הקנבס מחדש
+    updateLayout(); // קורא למנוע למתוח את הקנבס
 }
+
+// מאזין ליציאה ממסך מלא (למשל לחיצה על Esc) כדי להחזיר את לוח הבקרה למקום
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && isMacroFullscreen) {
+        isMacroFullscreen = false;
+        dom.appContainer.classList.remove('macro-fullscreen');
+        updateLayout();
+    }
+});
+
 
 function stopMacro() {
     clearTimeout(macroTimerId);

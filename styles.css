@@ -1246,12 +1246,24 @@ button, .ctrl {
 }
 
 /* --- Macro Fullscreen Mode --- */
-/* מעלים את לוח הבקרה כאשר המחלקה מופעלת */
+#appContainer.macro-fullscreen {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background-color: #000; /* רקע שחור מלא וחלק */
+  height: 100vh; /* תופס את כל גובה המסך */
+}
+
 #appContainer.macro-fullscreen #controlsContainer {
   display: none !important;
 }
 
-/* שחרור חסימת הלחיצה של שכבת המאקרו בזמן ניגון, כדי שהקנבס יוכל "לתפוס" את הקליק */
+#appContainer.macro-fullscreen .app-shell {
+  margin: 0; /* מבטל שוליים עליונים מציקים */
+  padding: 0;
+  max-width: none; /* שובר את תקרת הזכוכית של העיצוב הקיים */
+}
+
 .macro-overlay.running {
   pointer-events: none !important;
   background-color: rgba(0, 0, 0, 0.80);
