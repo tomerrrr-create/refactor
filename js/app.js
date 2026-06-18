@@ -2154,7 +2154,8 @@ function updateLayout() {
     // --- תוספת: חישוב מיוחד למסך מלא ---
     if (typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen) {
         // לוקחים את המקסימום האפשרי בלי לחרוג מגבולות המסך (הקטן מבין הרוחב והגובה)
-        const newWidth = Math.min(window.innerWidth, window.innerHeight);
+        const maxSize = Math.min(window.innerWidth, window.innerHeight);
+        const newWidth = maxSize * 0.92;
         shell.style.width = `${newWidth}px`;
     } 
     // --- מצב רגיל ---
