@@ -889,7 +889,14 @@ function handlePaletteSwitch(backwards = false) {
         if (isSelectingMacroPalette && !isMacroPlaying) {
             pendingMacroPalette = index;
             isSelectingMacroPalette = false;
-            if (modals && typeof modals.closeModal === 'function') modals.closeModal();
+
+        // --- תוספת: עדכון כפתור המאקרו שיציג את הפלטה החדשה שנבחרה ---
+        if (typeof updateMacroPaletteButtonUI === 'function') {
+            updateMacroPaletteButtonUI(index);
+        }
+        // -------------------------------------------------------------
+
+        if (modals && typeof modals.closeModal === 'function') modals.closeModal();
             return;
         }
         // -------------------------------------------------------------
@@ -1633,7 +1640,32 @@ if (simulationName === 'magnet') {
       function handleLoadProject() { 
         modals.closeModal(); 
         setTimeout(() => { dom.projectFileInput.click(); }, 50); 
-    }            
+    }  
+    
+    // --- פונקציה לעדכון התצוגה של כפתור הפלטה למאקרו ---
+function updateMacroPaletteButtonUI(paletteIndex) {
+    if (!dom.btnChangeInitPalette) return;
+    
+    const pal = C.PALETTES[paletteIndex];
+    if (!pal) return;
+
+    let iconHtml = pal.iconHTML ? pal.iconHTML : pal.emoji;
+    
+    // מוודאים שהאייקון (במידה וזה SVG) יותאם לגודל קטן של כפתור
+    const styleFix = `<style>.macro-palette-btn svg { width: 14px !important; height: 14px !important; }</style>`;
+    
+    dom.btnChangeInitPalette.innerHTML = `
+        ${styleFix}
+        <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span style="display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                ${iconHtml}
+            </span>
+            <span>${pal.name}</span>
+        </div>
+    `;
+}
+
+
       function onProjectFileSelected(event) {
         const file = event.target.files[0]; if (!file) return;
 
@@ -1653,9 +1685,18 @@ if (simulationName === 'magnet') {
                 pendingMacroPalette = null; // איפוס בחירה קודמת בטעינת קובץ חדש
                 isSelectingMacroPalette = false;
                 
-                // עצירת סימולציה קיימת והדלקת המאקרו מיד
 
-                
+                // --- תוספת: איתור הפלטה הראשונית של המאקרו ועדכון הכפתור ---
+                const initAction = macroQueue.find(a => a.eventName === 'INIT_STATE');
+                if (initAction) {
+                    try {
+                        const initState = JSON.parse(initAction.details);
+                        updateMacroPaletteButtonUI(initState.pal);
+                    } catch(e) { console.error("Could not parse INIT_STATE for palette button", e); }
+                }
+                // -------------------------------------------------------------
+
+                // עצירת סימולציה קיימת והדלקת המאקרו מיד
                 if (isLifePlaying) pauseLife();
                 dom.macroOverlay.classList.add('active'); // מציג את הרקע הכהה ואת הכפתור
                 dom.macroOverlay.classList.remove('running'); // מוודא שהכפתור שלנו גלוי

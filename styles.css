@@ -1222,22 +1222,22 @@ button, .ctrl {
   left: 50%;
   transform: translateX(-50%);
   background: rgba(28, 28, 28, 0.9);
-  border: 1px solid var(--gold);
-  color: var(--gold);
+  border: 1px solid #555; /* מסגרת אפורה עדינה במקום זהב */
+  color: #eaeaea; /* טקסט בהיר וניטרלי במקום זהב */
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 11px;
-  font-weight: bold;
+  font-weight: normal; /* ביטול ההדגשה (Bold) */
   letter-spacing: 0.5px;
   cursor: pointer;
   z-index: 41;
   transition: all 0.3s ease-in-out;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* צל כהה עדין במקום הילה מוזהבת */
 }
 
 .macro-palette-btn:hover {
-  background: rgba(255, 215, 0, 0.15);
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+  background: rgba(255, 255, 255, 0.1); /* הבהרה אפורה עדינה בריחוף */
+  border-color: #888;
 }
 
 .macro-overlay.running .macro-palette-btn {
