@@ -25,6 +25,8 @@ let macroTimerId = null;
 let currentMacroStep = 0;
 let macroStartTime = 0;
 let isExecutingMacroCommand = false; // דגל שמונע מה-Kill Switch להרוג את עצמו
+let pendingMacroPalette = null; // שומר את הפלטה הזמנית למאקרו
+let isSelectingMacroPalette = false; // דגל האם אנחנו בוחרים כעת פלטה למאקרו
 
 
 
@@ -878,9 +880,21 @@ function handlePaletteSwitch(backwards = false) {
       }
 
       
-function switchToPalette(index) {
+
+      function switchToPalette(index) {
+        // --- תוספת: תפיסת הבחירה אם אנחנו במצב החלפת פלטה למאקרו ---
+        // נוודא שזה קורה רק כאשר המאקרו *לא* מנגן
+        if (isSelectingMacroPalette && !isMacroPlaying) {
+            pendingMacroPalette = index;
+            isSelectingMacroPalette = false;
+            if (modals && typeof modals.closeModal === 'function') modals.closeModal();
+            return;
+        }
+        // -------------------------------------------------------------
+
         if (index === activePaletteIndex) return;
         window.logArtEvent('Palette Change', C.PALETTES[index].name); // תיעוד החלפת פלטה
+
         performAction(() => {
             
             activePaletteIndex = index;
@@ -1629,11 +1643,17 @@ if (simulationName === 'magnet') {
             const text = e.target.result;
             macroQueue = parseMacroText(text);
             
+     
+
             if (macroQueue.length > 0) {
                 isMacroLoaded = true;
                 currentMacroStep = 0;
+                pendingMacroPalette = null; // איפוס בחירה קודמת בטעינת קובץ חדש
+                isSelectingMacroPalette = false;
                 
                 // עצירת סימולציה קיימת והדלקת המאקרו מיד
+
+                
                 if (isLifePlaying) pauseLife();
                 dom.macroOverlay.classList.add('active'); // מציג את הרקע הכהה ואת הכפתור
                 dom.macroOverlay.classList.remove('running'); // מוודא שהכפתור שלנו גלוי
@@ -2826,14 +2846,18 @@ if (eventName === 'UNDO') {
 }
 
 
+
 function stopMacro() {
     clearTimeout(macroTimerId);
     macroQueue = [];
     isMacroLoaded = false;
     isMacroPlaying = false;
     currentMacroStep = 0;
+    pendingMacroPalette = null; // איפוס
+    isSelectingMacroPalette = false; // איפוס
     
     // מעלים את הכל בלחיצה
+
     dom.macroOverlay.classList.remove('active', 'running');
     dom.boardOverlay.style.opacity = '0'; // מבטיח שהגריד יחזור להיות מואר
 
@@ -2843,6 +2867,7 @@ function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
     
     isMacroPlaying = true;
+    isSelectingMacroPalette = false; // איפוס בטיחות למקרה שהמודל נסגר ידנית
     
     // מפעיל את ה"ריצה" שמסתירה את הכפתור אבל משאירה את הרקע הכהה
     dom.macroOverlay.classList.add('running');
@@ -2974,11 +2999,14 @@ function executeMacroAction(action) {
         try {
             const initState = JSON.parse(action.details);
             
+
             // 1. הגדרת משתני הסביבה ההתחלתיים
             n = initState.n;
-            activePaletteIndex = initState.pal;
+            // אם המשתמש בחר פלטה חלופית (pendingMacroPalette), נדרוס את המקורית
+            activePaletteIndex = pendingMacroPalette !== null ? pendingMacroPalette : initState.pal;
             separatorPx = initState.sep;
             
+
             if (currentSortMethod !== initState.sort) {
                 applySortMethod(initState.sort);
             }
@@ -3277,6 +3305,7 @@ updateBrightnessEvoButtonUI();
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));
         dom.macroOverlay.addEventListener('click', (e) => handleCtrlClick(e, stopMacro));
+
         if (dom.btnMacroPlay) {
             dom.btnMacroPlay.addEventListener('click', (e) => {
                 e.stopPropagation(); // קריטי! מונע מהלחיצה לעבור לאוברליי ולכבות את המאקרו בטעות
@@ -3284,6 +3313,17 @@ updateBrightnessEvoButtonUI();
             });
         }
         
+        // --- האזנה לכפתור החלפת פלטה למאקרו ---
+        if (dom.btnChangeInitPalette) {
+            dom.btnChangeInitPalette.addEventListener('click', (e) => {
+                e.stopPropagation(); // מונע כיבוי של המאקרו בגלל לחיצה על האוברליי
+                isSelectingMacroPalette = true;
+                if (modals && typeof modals.openPaletteModal === 'function') {
+                    modals.openPaletteModal();
+                }
+            });
+        }
+
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
 
 dom.btnPalette.addEventListener('click', (e) => handleCtrlClick(e, handlePaletteClickCombo));

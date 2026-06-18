@@ -1214,3 +1214,33 @@ button, .ctrl {
 .macro-overlay.running {
   background-color: rgba(0, 0, 0, 0.80);
 }
+
+/* --- Macro Change Init Palette Button --- */
+.macro-palette-btn {
+  position: absolute;
+  top: calc(50% + 45px); /* Positioned just below the alien button */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(28, 28, 28, 0.9);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  z-index: 41;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+.macro-palette-btn:hover {
+  background: rgba(255, 215, 0, 0.15);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.macro-overlay.running .macro-palette-btn {
+  opacity: 0;
+  pointer-events: none;
+}

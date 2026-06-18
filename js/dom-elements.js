@@ -6,6 +6,8 @@ export const dom = {
   controlsContainer: document.getElementById('controlsContainer'),
   macroOverlay: document.getElementById('macroOverlay'),
   btnMacroPlay: document.getElementById('btnMacroPlay'),
+  btnChangeInitPalette: document.getElementById('btnChangeInitPalette'),
+  
   board: document.getElementById('board'),
   boardCanvas: document.getElementById('boardCanvas'), // Added a specific reference to the canvas
   boardOverlay: document.getElementById('boardOverlay'),
