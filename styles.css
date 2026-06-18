@@ -1265,6 +1265,5 @@ button, .ctrl {
 }
 
 .macro-overlay.running {
-  pointer-events: none !important;
   background-color: rgba(0, 0, 0, 0.80);
 }
