@@ -2026,12 +2026,16 @@ const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTim
 function onPointerDown(e) {
 
     if (isMacroPlaying) {
-        toggleMacroFullScreen();
+        animateBoardTransition(() => {
+            toggleMacroFullScreen();
+        });
         return;
     }
     // -----------------------------------------------------------
     
     if (isLifePlaying || isBreathing) return;
+
+    
     const index = getTileIndexFromCoords(e.clientX, e.clientY);
     if (index === -1) return;
     e.target.setPointerCapture(e.pointerId);
@@ -2902,18 +2906,22 @@ function stopMacro() {
     isMacroLoaded = false;
     isMacroPlaying = false;
     currentMacroStep = 0;
-    pendingMacroPalette = null; // איפוס
-    isSelectingMacroPalette = false; // איפוס
-    if (isMacroFullscreen) {
-        toggleMacroFullScreen();
-    }
+    pendingMacroPalette = null; 
+    isSelectingMacroPalette = false; 
     
-    // מעלים את הכל בלחיצה
-
-    dom.macroOverlay.classList.remove('active', 'running');
-    dom.boardOverlay.style.opacity = '0'; // מבטיח שהגריד יחזור להיות מואר
-
+    // --- תוספת: יציאה ממסך מלא אוטומטית עם אנימציה חלקה ---
+    if (typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen) {
+        animateBoardTransition(() => {
+            toggleMacroFullScreen();
+            dom.macroOverlay.classList.remove('active', 'running');
+        });
+    } else {
+        // מעלים את הכל בלחיצה (במידה ולא היינו במסך מלא)
+        dom.macroOverlay.classList.remove('active', 'running');
+        dom.boardOverlay.style.opacity = '0';
+    }
 }
+
 
 function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
