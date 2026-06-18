@@ -27,6 +27,8 @@ let macroStartTime = 0;
 let isExecutingMacroCommand = false; // דגל שמונע מה-Kill Switch להרוג את עצמו
 let pendingMacroPalette = null; // שומר את הפלטה הזמנית למאקרו
 let isSelectingMacroPalette = false; // דגל האם אנחנו בוחרים כעת פלטה למאקרו
+let isMacroFullscreen = false; // דגל למצב מסך מלא של המאקרו
+
 
 
 
@@ -2022,7 +2024,14 @@ function handleDragPaint(targetIndex) {
 const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null };
 
 function onPointerDown(e) {
-if (isLifePlaying || isBreathing || isMacroPlaying) return;
+
+    if (isMacroPlaying) {
+        toggleMacroFullScreen();
+        return;
+    }
+    // -----------------------------------------------------------
+    
+    if (isLifePlaying || isBreathing) return;
     const index = getTileIndexFromCoords(e.clientX, e.clientY);
     if (index === -1) return;
     e.target.setPointerCapture(e.pointerId);
@@ -2845,7 +2854,15 @@ if (eventName === 'UNDO') {
     return parsed;
 }
 
-
+function toggleMacroFullScreen() {
+    isMacroFullscreen = !isMacroFullscreen;
+    if (isMacroFullscreen) {
+        dom.appContainer.classList.add('macro-fullscreen');
+    } else {
+        dom.appContainer.classList.remove('macro-fullscreen');
+    }
+    updateLayout(); // קורא למנוע הקיים למתוח את הקנבס מחדש
+}
 
 function stopMacro() {
     clearTimeout(macroTimerId);
@@ -2855,6 +2872,9 @@ function stopMacro() {
     currentMacroStep = 0;
     pendingMacroPalette = null; // איפוס
     isSelectingMacroPalette = false; // איפוס
+    if (isMacroFullscreen) {
+        toggleMacroFullScreen();
+    }
     
     // מעלים את הכל בלחיצה
 

@@ -1244,3 +1244,15 @@ button, .ctrl {
   opacity: 0;
   pointer-events: none;
 }
+
+/* --- Macro Fullscreen Mode --- */
+/* מעלים את לוח הבקרה כאשר המחלקה מופעלת */
+#appContainer.macro-fullscreen #controlsContainer {
+  display: none !important;
+}
+
+/* שחרור חסימת הלחיצה של שכבת המאקרו בזמן ניגון, כדי שהקנבס יוכל "לתפוס" את הקליק */
+.macro-overlay.running {
+  pointer-events: none !important;
+  background-color: rgba(0, 0, 0, 0.80);
+}
