@@ -474,6 +474,25 @@ function renderColorPickerContent() {
         const swatchInner = document.createElement('div');
         swatchInner.className = 'color-swatch-inner';
         swatchInner.style.backgroundColor = color;
+        
+        // --- START: תיקון מסגרת לצבעים כהים ---
+        // נמיר את צבע ה-HEX לערכי RGB כדי לבדוק כמה הוא כהה
+        const hex = color.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        
+        // חישוב בהירות (Luminance) - הערך נע בין 0 (שחור מוחלט) ל-255 (לבן)
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+        
+        // אם הצבע כהה (מתחת לערך 40), נוסיף לו קו מתאר לבן עדין ושקוף
+        if (luminance < 10) {
+            swatchInner.style.border = '1px solid rgba(255, 255, 255, 0.25)';
+            // שינוי קטן כדי להבטיח שהמסגרת לא תשנה את גודל הקובייה הפנימית
+            swatchInner.style.boxSizing = 'border-box'; 
+        }
+        // --- END: תיקון מסגרת לצבעים כהים ---
+
         swatch.appendChild(swatchInner);
         swatch.dataset.color = color;
         swatch.setAttribute('aria-label', `${app.getText('colorPicker_select')} ${color}`);
