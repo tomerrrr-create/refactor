@@ -2224,16 +2224,46 @@ function updateLayout() {
   }      
 
 
-       function createRainbowIconSVG(currentPalette) {
-        const p = currentPalette || palette();
-        const c1 = p[0] || '#FFD700'; const c2 = p[Math.floor(p.length / 4)] || '#42A5F5';
-        const c3 = p[Math.floor(p.length / 2)] || '#F44336'; const c4 = p[Math.floor(p.length * 3 / 4)] || '#66BB6A';
-        return `<svg viewBox="0 0 24 24" fill="none" stroke="none" style="width: var(--icon-size); height: var(--icon-size);">
-            <rect x="4" y="4" width="8" height="8" fill="${c1}" rx="1"/><rect x="12" y="4" width="8" height="8" fill="${c2}" rx="1"/>
-            <rect x="4" y="12" width="8" height="8" fill="${c3}" rx="1"/><rect x="12" y="12" width="8" height="8" fill="${c4}" rx="1"/>
-        </svg>`;
+
+  function createRainbowIconSVG(currentPalette, isForButton = false) {
+    const p = currentPalette || palette();
+    let rectsHTML = '';
+    
+    const gridSize = 3;
+    // הקטנו מעט את הריבועים והוספנו רווח כדי ליצור פסיפס עדין ולא גוש צבע
+    const rectSize = 6; 
+    const gap = 2;  
+    const offset = 2; // שוליים פנימיים שנותנים לאייקון "לנשום"
+    
+    for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+            const colorIndex = Math.floor((row * gridSize + col) * (p.length / (gridSize * gridSize)));
+            const color = p[colorIndex] || '#FFD700';
+            
+            // חישוב מיקום עם התחשבות ברווח בין הריבועים
+            const x = offset + (col * (rectSize + gap));
+            const y = offset + (row * (rectSize + gap));
+            
+            rectsHTML += `<rect x="${x}" y="${y}" width="${rectSize}" height="${rectSize}" fill="${color}" rx="1.5"/>`;
+        }
     }
     
+    const styling = isForButton 
+        ? 'width: var(--icon-size); height: var(--icon-size);' 
+        : 'width: 100%; height: 100%;';
+
+    // התיקון: אם זה נועד לכפתור בלוח הבקרה, נחתוך את הפסיפס לצורה של עיגול!
+    const innerContent = isForButton
+        ? `<defs><clipPath id="circle-clip"><circle cx="12" cy="12" r="11"/></clipPath></defs>
+           <g clip-path="url(#circle-clip)">${rectsHTML}</g>`
+        : rectsHTML;
+
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="none" style="${styling}">
+        ${innerContent}
+    </svg>`;
+}
+
+
     function updateGlowEffect() {
         if (!dom.board) return;
         if (isRainbowModeActive) { dom.board.classList.add('glowing-border-rainbow'); dom.board.classList.remove('glowing-border'); } 
@@ -2242,13 +2272,34 @@ function updateLayout() {
     }
 
     function updateColorPickerButtonUI() {
-        if (!dom.btnColorPicker.querySelector('circle') && !isRainbowModeActive) dom.btnColorPicker.innerHTML = originalColorPickerIconHTML;
-        const circle = dom.btnColorPicker.querySelector('svg circle');
-        if (isRainbowModeActive) dom.btnColorPicker.innerHTML = createRainbowIconSVG();
-        else if (selectedColor) { if(circle) { circle.style.fill = selectedColor; circle.style.stroke = selectedColor === '#000000' ? '#424242' : selectedColor; }} 
-        else { if(circle) { circle.style.fill = '#000'; circle.style.stroke = '#fff'; } }
+        // 1. האם אנחנו במצב קשת?
+        if (isRainbowModeActive) {
+            // מציירים את אייקון הפסיפס החתוך שלנו
+            dom.btnColorPicker.innerHTML = createRainbowIconSVG(null, true);
+        } 
+        // 2. אם אנחנו לא במצב קשת (צבע רגיל או מברשת ריקה)
+        else {
+            // קודם כל, דורסים הכל ומחזירים את ה-HTML של האייקון המקורי והנקי
+            dom.btnColorPicker.innerHTML = originalColorPickerIconHTML;
+            
+            // עכשיו אפשר למצוא את העיגול בבטחה ולצבוע אותו
+            const circle = dom.btnColorPicker.querySelector('svg circle');
+            
+            if (circle) {
+                if (selectedColor) {
+                    // יש צבע ספציפי שנבחר - צובעים את העיגול
+                    circle.style.fill = selectedColor;
+                    circle.style.stroke = selectedColor === '#000000' ? '#424242' : selectedColor;
+                } else {
+                    // שום צבע לא נבחר (מצב דגימה/גרירה מהלוח) - צובעים בשחור עם מסגרת לבנה
+                    circle.style.fill = '#000';
+                    circle.style.stroke = '#fff';
+                }
+            }
+        }
     }
-      
+    
+
     function navigateColorPages(isNext) {
         const totalPages = Math.ceil(C.PALETTES[activePaletteIndex].colors.length / C.COLORS_PER_PAGE);
         if (totalPages <= 1) return;
