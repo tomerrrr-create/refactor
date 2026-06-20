@@ -2735,25 +2735,50 @@ function cycleSortMethod() {
       // ---------------------------------
 
 // --- Art Logger: Export Functionality ---
-      function exportArtRecipeLog() {
-          if (artRecipeLog.length === 0) {
-              alert("No actions logged yet. Perform some actions first!");
-              return;
-          }
-          const blob = new Blob([artRecipeLog.join('\n')], { type: 'text/plain' });
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-          const fileName = `Art_Recipe_${timestamp}.txt`;
 
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = fileName;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
-      }
-      // ----------------------------------------
 
+function exportArtRecipeLog() {
+    if (artRecipeLog.length === 0) {
+        alert("No actions logged yet. Perform some actions first!");
+        return;
+    }
+
+    // 1. חיפוש הפלטה ההתחלתית
+    let paletteName = "Unknown";
+    try {
+        // לוקחים את השורה הראשונה (שמכילה את ה-INIT_STATE)
+        const firstLog = artRecipeLog[0];
+        const match = firstLog.match(/INIT_STATE -> (.*)/);
+        if (match) {
+            const initState = JSON.parse(match[1]);
+            const palIndex = initState.pal;
+            // שולפים את השם של הפלטה מהמאגר
+            if (C.PALETTES[palIndex]) {
+                paletteName = C.PALETTES[palIndex].name;
+            }
+        }
+    } catch (e) {
+        console.error("Could not extract palette name for file:", e);
+    }
+
+    // 2. ניקוי השם מרווחים ותווים לא חוקיים כדי שמערכת ההפעלה לא תעשה בעיות
+    const cleanPaletteName = paletteName.replace(/\s+/g, '_').replace(/[<>:"/\\|?*]/g, '');
+
+    // 3. ספירת מספר השורות/פקודות
+    const linesCount = artRecipeLog.length;
+
+    // 4. הרכבת השם החדש בדיוק בתבנית שביקשת!
+    const fileName = `Intuition_Path_${cleanPaletteName}_${linesCount}.txt`;
+
+    const blob = new Blob([artRecipeLog.join('\n')], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+}
 
       
       // ==========================================
