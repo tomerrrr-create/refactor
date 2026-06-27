@@ -1270,11 +1270,25 @@ button, .ctrl {
 
 /* --- מסגרת גלריה עבה למצב מסך מלא של המאקרו --- */
 /* --- מסגרת גלריה למסך מלא (אופציה 2: קצה זכוכית) --- */
-#appContainer.macro-fullscreen #board {
 
-  box-shadow: 0 0 0 60px #020202 !important;
+/* --- מסגרת גלריה למסך מלא - מופעלת רק מדסקטופ ומעלה (רוחב מסך 768 פיקסלים ומעלה) --- */
+@media (min-width: 768px) {
+  #appContainer.macro-fullscreen #board {
+
+
+  box-shadow: 0 0 0 50px #020202 !important;
   
   /*0 0 0 61px rgba(255, 255, 255, 0.04) !important; /* קו לבן דקיק של פיקסל 1 בשקיפות של 4% */
   
-  border-radius: 0 !important; /* שומר על פינות חדות של 90 מעלות */
+
+  border-radius: 0 !important; /* פינות חדות של 90 מעלות בגלריה */
+  }
+}
+
+/* במובייל (מסכים קטנים מ-768 פיקסלים) נשמור על פינות ישרות עבור ה-95% של התצוגה */
+@media (max-width: 767px) {
+  #appContainer.macro-fullscreen #board {
+    border-radius: 0 !important;
+    box-shadow: none !important; /* ביטול מוחלט של המסגרת */
+  }
 }

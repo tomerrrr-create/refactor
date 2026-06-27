@@ -2194,11 +2194,14 @@ function updateLayout() {
     
     // --- תוספת: חישוב מיוחד למסך מלא ---
     if (typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen) {
-        // לוקחים את המקסימום האפשרי בלי לחרוג מגבולות המסך (הקטן מבין הרוחב והגובה)
         const maxSize = Math.min(window.innerWidth, window.innerHeight);
-        const newWidth = maxSize * 0.65;
+        const isMobile = window.innerWidth < 768; // זיהוי מובייל לפי רוחב מסך
+        const scaleFactor = isMobile ? 0.95 : 0.65; // 95% למובייל, 65% לדסקטופ
+        const newWidth = maxSize * scaleFactor;
         shell.style.width = `${newWidth}px`;
-    } 
+    }
+
+
     // --- מצב רגיל ---
     else if (window.innerWidth < 768) { 
         shell.style.width = ''; 
