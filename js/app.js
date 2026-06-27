@@ -2996,10 +2996,10 @@ function toggleMacroFullScreen() {
     if (isMacroFullscreen) {
         dom.appContainer.classList.add('macro-fullscreen'); // הסתרת הממשק שלנו
         
-        // מעבר למסך מלא של הדפדפן (רק בדסקטופ)
-        if (isDesktop && document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(err => console.log("Fullscreen API blocked", err));
-        }
+    // בקשת מסך מלא אמיתי מהדפדפן - פועל כעת גם בדסקטופ וגם במובייל!
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(err => console.log("Fullscreen API blocked", err));
+    }
     } else {
         dom.appContainer.classList.remove('macro-fullscreen'); // החזרת הממשק
         
