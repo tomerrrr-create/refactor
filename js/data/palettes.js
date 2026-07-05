@@ -668,4 +668,71 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
         return out;
     })()
   },
+
+  {
+    originalName: "Ice & Fire 64",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="fireGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#FF4500"/><stop offset="100%" stop-color="#FFD700"/></linearGradient><linearGradient id="iceGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E0FFFF"/><stop offset="100%" stop-color="#1E90FF"/></linearGradient></defs><polygon points="12,2 21,16 3,16" fill="none" stroke="url(#fireGrad)" stroke-width="1.2" opacity="0.8"/><polygon points="3,8 21,8 12,22" fill="none" stroke="url(#iceGrad)" stroke-width="1.2" opacity="0.8"/><path d="M7,16 L12,9 L17,16 Z" fill="url(#iceGrad)"/><path d="M12,3 C12,3 9.5,7 9.5,10 A2.5,2.5 0 0,0 14.5,10 C14.5,7 12,3 12,3 Z" fill="url(#fireGrad)"/><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5">64</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end">64</text></svg>',
+    
+    colors: (function() {
+        // צבעי העוגן: ממעמקי הקרח (כחול כהה) אל שיא החום (לבן) וממשיך אל מעמקי האש (אדום-שחור)
+        const orig = [
+            "#020813", // חושך קפוא / Night's Watch
+            "#082554", // כחול עמוק
+            "#124E8F", // כחול קרח
+            "#2A82C9", // תכלת עז
+            "#6EBFED", // תכלת בהיר
+            "#D1F4FF", // שלג בוהק
+            "#FFFFFF", // נקודת המפגש - אש לבנה
+            "#FFEA00", // זהב / צהוב אש
+            "#FF8800", // כתום בוער
+            "#E62E00", // אדום להבה
+            "#8A0A03", // דם ואש
+            "#240101"  // גחלים לוחשות / חושך
+        ];
+        
+        function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+        function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+        
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1;
+            dists.push(d);
+            totalDist += d;
+        }
+        
+        const out = [];
+        for (let i = 0; i < 64; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 63) { out.push(orig[orig.length - 1]); continue; }
+            
+            let targetDist = (i / 63) * totalDist;
+            let accum = 0;
+            let s = 0;
+            
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+  },
+
+
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
