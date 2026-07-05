@@ -668,4 +668,84 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
         return out;
     })()
   },
+
+  {
+    originalName: "Ice & Fire 64",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="12">🧊🔥</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5" stroke-linejoin="round">64</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end">64</text></svg>',
+    colors: (function() {
+        // צבעי העוגן: ממעמקי הקרח (כחול כהה) אל שיא החום (לבן) וממשיך אל מעמקי האש (אדום-שחור)
+        const orig = [
+            "#020813", // חושך קפוא / Night's Watch
+            "#082554", // כחול עמוק
+            "#124E8F", // כחול קרח
+            "#2A82C9", // תכלת עז
+            "#6EBFED", // תכלת בהיר
+            "#D1F4FF", // שלג בוהק
+            "#FFFFFF", // נקודת המפגש - אש לבנה
+            "#FFEA00", // זהב / צהוב אש
+            "#FF8800", // כתום בוער
+            "#E62E00", // אדום להבה
+            "#8A0A03", // דם ואש
+            "#240101"  // גחלים לוחשות / חושך
+        ];
+        
+        function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+        function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+        
+        const rgbs = orig.map(hexToRgb);
+        const dists = [];
+        let totalDist = 0;
+        
+        for (let i = 0; i < rgbs.length - 1; i++) {
+            let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+            if (d === 0) d = 0.1;
+            dists.push(d);
+            totalDist += d;
+        }
+        
+        const out = [];
+        for (let i = 0; i < 64; i++) {
+            if (i === 0) { out.push(orig[0]); continue; }
+            if (i === 63) { out.push(orig[orig.length - 1]); continue; }
+            
+            let targetDist = (i / 63) * totalDist;
+            let accum = 0;
+            let s = 0;
+            
+            while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+                accum += dists[s];
+                s++;
+            }
+            
+            let progress = (targetDist - accum) / dists[s];
+            progress = Math.max(0, Math.min(1, progress));
+            
+            let c1 = rgbs[s];
+            let c2 = rgbs[s+1];
+            
+            let r = c1[0] + (c2[0] - c1[0]) * progress;
+            let g = c1[1] + (c2[1] - c1[1]) * progress;
+            let b = c1[2] + (c2[2] - c1[2]) * progress;
+            
+            out.push(rgbToHex(r, g, b));
+        }
+        return out;
+    })()
+  },
+
+  {
+    originalName: "Ice & Fire 64",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="12">🧊🔥</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5" stroke-linejoin="round">64</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end">64</text></svg>',
+    colors: [
+        "#020813", "#041223", "#071C34", "#092644", "#0C3055", "#0E3A65", "#114476", "#134E86",
+        "#165897", "#1862A7", "#1B6CB8", "#1E76C8", "#2280D8", "#2A89DF", "#3393E5", "#3D9DEB",
+        "#47A7F1", "#52B1F7", "#5DBBFD", "#69C4FF", "#75CDFF", "#82D5FF", "#8EDDFF", "#9AE5FF",
+        "#A7EDFF", "#B3F4FF", "#C0FBFF", "#CCFFFF", "#D9FFFF", "#E5FFFF", "#F2FFFF", "#FFFFFF",
+        "#FFF9D9", "#FFF4B2", "#FFEE8C", "#FFE966", "#FFE340", "#FFDE1A", "#FFEA00", "#FFD400",
+        "#FFBE00", "#FFA800", "#FF9200", "#FF8800", "#FA7600", "#F46400", "#EF5200", "#EA4000",
+        "#E62E00", "#D82700", "#C92000", "#BB1900", "#AC1200", "#9E0B00", "#8A0A03", "#7A0803",
+        "#6A0702", "#5A0602", "#4A0501", "#3A0401", "#2A0301", "#240101", "#1A0101", "#100000"
+    ]
+  },
+
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
