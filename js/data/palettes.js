@@ -671,12 +671,8 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
   {
     originalName: "Ice & Fire 64",
-<<<<<<< HEAD
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="fireGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#FF4500"/><stop offset="100%" stop-color="#FFD700"/></linearGradient><linearGradient id="iceGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E0FFFF"/><stop offset="100%" stop-color="#1E90FF"/></linearGradient></defs><polygon points="12,2 21,16 3,16" fill="none" stroke="url(#fireGrad)" stroke-width="1.2" opacity="0.8"/><polygon points="3,8 21,8 12,22" fill="none" stroke="url(#iceGrad)" stroke-width="1.2" opacity="0.8"/><path d="M7,16 L12,9 L17,16 Z" fill="url(#iceGrad)"/><path d="M12,3 C12,3 9.5,7 9.5,10 A2.5,2.5 0 0,0 14.5,10 C14.5,7 12,3 12,3 Z" fill="url(#fireGrad)"/><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5">64</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end">64</text></svg>',
     
-=======
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="12">🧊🔥</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5" stroke-linejoin="round">64</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end">64</text></svg>',
->>>>>>> 9bf2f5bdea068275e2a42b8359de72c124d8b24f
     colors: (function() {
         // צבעי העוגן: ממעמקי הקרח (כחול כהה) אל שיא החום (לבן) וממשיך אל מעמקי האש (אדום-שחור)
         const orig = [
@@ -738,22 +734,5 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
     })()
   },
 
-<<<<<<< HEAD
-=======
-  {
-    originalName: "Ice & Fire 64",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="12">🧊🔥</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5" stroke-linejoin="round">64</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end">64</text></svg>',
-    colors: [
-        "#020813", "#041223", "#071C34", "#092644", "#0C3055", "#0E3A65", "#114476", "#134E86",
-        "#165897", "#1862A7", "#1B6CB8", "#1E76C8", "#2280D8", "#2A89DF", "#3393E5", "#3D9DEB",
-        "#47A7F1", "#52B1F7", "#5DBBFD", "#69C4FF", "#75CDFF", "#82D5FF", "#8EDDFF", "#9AE5FF",
-        "#A7EDFF", "#B3F4FF", "#C0FBFF", "#CCFFFF", "#D9FFFF", "#E5FFFF", "#F2FFFF", "#FFFFFF",
-        "#FFF9D9", "#FFF4B2", "#FFEE8C", "#FFE966", "#FFE340", "#FFDE1A", "#FFEA00", "#FFD400",
-        "#FFBE00", "#FFA800", "#FF9200", "#FF8800", "#FA7600", "#F46400", "#EF5200", "#EA4000",
-        "#E62E00", "#D82700", "#C92000", "#BB1900", "#AC1200", "#9E0B00", "#8A0A03", "#7A0803",
-        "#6A0702", "#5A0602", "#4A0501", "#3A0401", "#2A0301", "#240101", "#1A0101", "#100000"
-    ]
-  },
->>>>>>> 9bf2f5bdea068275e2a42b8359de72c124d8b24f
 
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
