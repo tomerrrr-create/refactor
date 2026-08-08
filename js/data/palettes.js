@@ -734,5 +734,472 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
     })()
   },
 
+  
+  {
+    originalName: "Opaline Trance 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="8" style="fill:#8A4FFF;" /><circle cx="9" cy="9" r="4.5" style="fill:#FF78C8;" /><circle cx="14.5" cy="14" r="4" style="fill:#55E6DE;" /><circle cx="10.5" cy="8" r="2" style="fill:#FFF1C7;" /></svg>',
+
+    colors: (function() {
+
+        // Hue intentionally goes beyond 360.
+        // This forces the gradient to travel in the desired direction
+        // around the color wheel instead of taking shortcuts.
+        const stops = [
+            { pos:   0, h: 248, s: 70, l:  4 }, // Deep cosmic black
+            { pos:  20, h: 262, s: 82, l: 10 }, // Midnight indigo
+            { pos:  42, h: 282, s: 88, l: 22 }, // Deep violet
+            { pos:  64, h: 310, s: 88, l: 38 }, // Orchid
+            { pos:  86, h: 338, s: 94, l: 56 }, // Hypnotic pink
+            { pos: 108, h: 378, s: 96, l: 64 }, // Coral glow
+            { pos: 128, h: 414, s: 92, l: 72 }, // Golden nectar
+            { pos: 148, h: 432, s: 72, l: 90 }, // Opal light
+            { pos: 168, h: 525, s: 70, l: 82 }, // Mint pearl
+            { pos: 188, h: 548, s: 90, l: 62 }, // Aqua
+            { pos: 210, h: 580, s: 92, l: 48 }, // Electric blue
+            { pos: 232, h: 610, s: 86, l: 24 }, // Sapphire
+            { pos: 250, h: 628, s: 78, l: 10 }, // Indigo dusk
+            { pos: 263, h: 608, s: 70, l:  4 }  // Back into darkness
+        ];
+
+        function hslToRgb(h, s, l) {
+            h = ((h % 360) + 360) % 360;
+            s /= 100;
+            l /= 100;
+
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+
+            let r = 0, g = 0, b = 0;
+
+            if (h < 60)       [r, g, b] = [c, x, 0];
+            else if (h < 120) [r, g, b] = [x, c, 0];
+            else if (h < 180) [r, g, b] = [0, c, x];
+            else if (h < 240) [r, g, b] = [0, x, c];
+            else if (h < 300) [r, g, b] = [x, 0, c];
+            else              [r, g, b] = [c, 0, x];
+
+            return [
+                Math.round((r + m) * 255),
+                Math.round((g + m) * 255),
+                Math.round((b + m) * 255)
+            ];
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b]
+                .map(v => Math.max(0, Math.min(255, v))
+                .toString(16)
+                .padStart(2, "0"))
+                .join("")
+                .toUpperCase();
+        }
+
+        const out = [];
+
+        for (let i = 0; i < 264; i++) {
+
+            let s = 0;
+
+            while (
+                s < stops.length - 2 &&
+                i >= stops[s + 1].pos
+            ) {
+                s++;
+            }
+
+            const start = stops[s];
+            const end = stops[s + 1];
+
+            const segmentLength = end.pos - start.pos;
+
+            let progress = segmentLength === 0
+                ? 0
+                : (i - start.pos) / segmentLength;
+
+            progress = Math.max(0, Math.min(1, progress));
+
+            // Smoothstep = softer, almost liquid movement
+            const ease = progress * progress * (3 - 2 * progress);
+
+            const h = start.h + (end.h - start.h) * ease;
+            const sat = start.s + (end.s - start.s) * ease;
+            const light = start.l + (end.l - start.l) * ease;
+
+            const [r, g, b] = hslToRgb(h, sat, light);
+
+            out.push(rgbToHex(r, g, b));
+        }
+
+        return out;
+    })()
+},
+
+
+{
+  originalName: "Bioluminescent Abyss 264",
+iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M5 12C5 7.6 8.1 4 12 4s7 3.6 7 8H5Z" style="fill:#00DDEB;" /><path d="M7 12v5c0 2 2 2 2 0v-3M12 12v7M17 12v5c0 2-2 2-2 0v-3" style="fill:none;stroke:#36FF9B;stroke-width:1.5;stroke-linecap:round;" /><circle cx="9" cy="9" r="1" style="fill:#DFFFFF;" /><circle cx="14.5" cy="8" r="0.8" style="fill:#8A70FF;" /></svg>',
+
+colors: (function() {
+
+      const stops = [
+          { pos:   0, h: 220, s: 68, l:  3 }, // Abyss
+          { pos:  18, h: 207, s: 84, l:  9 }, // Deep ocean
+          { pos:  40, h: 193, s: 94, l: 20 }, // Bioluminescent blue
+          { pos:  62, h: 180, s: 96, l: 34 }, // Cyan
+          { pos:  84, h: 160, s: 86, l: 42 }, // Emerald sea
+          { pos: 106, h: 132, s: 82, l: 48 }, // Living green
+          { pos: 126, h:  92, s: 88, l: 56 }, // Electric lime
+          { pos: 145, h:  62, s: 96, l: 68 }, // Acid sunlight
+          { pos: 163, h:  48, s: 72, l: 88 }, // Lunar gold
+          { pos: 181, h:  25, s: 94, l: 64 }, // Amber
+          { pos: 201, h:  -8, s: 88, l: 50 }, // Crimson
+          { pos: 220, h: -38, s: 86, l: 44 }, // Hot magenta
+          { pos: 238, h: -66, s: 82, l: 28 }, // Deep violet
+          { pos: 252, h:-103, s: 76, l: 10 }, // Midnight indigo
+          { pos: 263, h:-140, s: 68, l:  3 }  // Abyss again
+      ];
+
+      function hslToRgb(h, s, l) {
+          h = ((h % 360) + 360) % 360;
+          s /= 100;
+          l /= 100;
+
+          const c = (1 - Math.abs(2 * l - 1)) * s;
+          const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+          const m = l - c / 2;
+
+          let r = 0, g = 0, b = 0;
+
+          if (h < 60)       [r, g, b] = [c, x, 0];
+          else if (h < 120) [r, g, b] = [x, c, 0];
+          else if (h < 180) [r, g, b] = [0, c, x];
+          else if (h < 240) [r, g, b] = [0, x, c];
+          else if (h < 300) [r, g, b] = [x, 0, c];
+          else              [r, g, b] = [c, 0, x];
+
+          return [
+              Math.round((r + m) * 255),
+              Math.round((g + m) * 255),
+              Math.round((b + m) * 255)
+          ];
+      }
+
+      function rgbToHex(r, g, b) {
+          return "#" + [r, g, b]
+              .map(v => Math.max(0, Math.min(255, v))
+              .toString(16)
+              .padStart(2, "0"))
+              .join("")
+              .toUpperCase();
+      }
+
+      const out = [];
+
+      for (let i = 0; i < 264; i++) {
+
+          let s = 0;
+
+          while (
+              s < stops.length - 2 &&
+              i >= stops[s + 1].pos
+          ) {
+              s++;
+          }
+
+          const start = stops[s];
+          const end = stops[s + 1];
+
+          const segmentLength = end.pos - start.pos;
+
+          let progress = segmentLength === 0
+              ? 0
+              : (i - start.pos) / segmentLength;
+
+          progress = Math.max(0, Math.min(1, progress));
+
+          const ease = progress * progress * (3 - 2 * progress);
+
+          const h = start.h + (end.h - start.h) * ease;
+          const sat = start.s + (end.s - start.s) * ease;
+          const light = start.l + (end.l - start.l) * ease;
+
+          const [r, g, b] = hslToRgb(h, sat, light);
+
+          out.push(rgbToHex(r, g, b));
+      }
+
+      return out;
+  })()
+},
+
+{
+  originalName: "Blue Hypnosis 264",
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="9" style="fill:#071C4D;" /><circle cx="12" cy="12" r="6.5" style="fill:#075CE5;" /><circle cx="12" cy="12" r="4" style="fill:#42A5FF;" /><circle cx="12" cy="12" r="1.8" style="fill:#DDF4FF;" /></svg>',
+  
+  colors: (function() {
+
+      const stops = [
+          { pos:   0, h: 222, s: 78, l:  3 }, // כמעט שחור
+          { pos:  20, h: 224, s: 82, l:  7 }, // Abyss blue
+          { pos:  42, h: 226, s: 86, l: 13 }, // Midnight blue
+          { pos:  64, h: 228, s: 90, l: 21 }, // Navy
+          { pos:  86, h: 226, s: 94, l: 31 }, // Deep royal
+          { pos: 108, h: 222, s: 96, l: 43 }, // Royal blue
+          { pos: 130, h: 216, s: 98, l: 53 }, // Electric blue
+          { pos: 150, h: 211, s: 96, l: 62 }, // Azure blue
+          { pos: 170, h: 207, s: 92, l: 72 }, // Sky blue
+          { pos: 190, h: 205, s: 86, l: 82 }, // Ice blue
+          { pos: 208, h: 207, s: 74, l: 91 }, // Pale blue
+          { pos: 222, h: 210, s: 68, l: 97 }, // כמעט לבן
+          { pos: 238, h: 215, s: 88, l: 72 }, // חזרה לכחול
+          { pos: 251, h: 222, s: 92, l: 32 }, // Deep cobalt
+          { pos: 263, h: 225, s: 80, l:  4 }  // חזרה לתהום
+      ];
+
+      function hslToRgb(h, s, l) {
+          h = ((h % 360) + 360) % 360;
+          s /= 100;
+          l /= 100;
+
+          const c = (1 - Math.abs(2 * l - 1)) * s;
+          const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+          const m = l - c / 2;
+
+          let r = 0, g = 0, b = 0;
+
+          if (h < 60)       [r, g, b] = [c, x, 0];
+          else if (h < 120) [r, g, b] = [x, c, 0];
+          else if (h < 180) [r, g, b] = [0, c, x];
+          else if (h < 240) [r, g, b] = [0, x, c];
+          else if (h < 300) [r, g, b] = [x, 0, c];
+          else              [r, g, b] = [c, 0, x];
+
+          return [
+              Math.round((r + m) * 255),
+              Math.round((g + m) * 255),
+              Math.round((b + m) * 255)
+          ];
+      }
+
+      function rgbToHex(r, g, b) {
+          return "#" + [r, g, b]
+              .map(v => v.toString(16).padStart(2, "0"))
+              .join("")
+              .toUpperCase();
+      }
+
+      const out = [];
+
+      for (let i = 0; i < 264; i++) {
+          let s = 0;
+
+          while (
+              s < stops.length - 2 &&
+              i >= stops[s + 1].pos
+          ) {
+              s++;
+          }
+
+          const start = stops[s];
+          const end = stops[s + 1];
+
+          let t = (i - start.pos) / (end.pos - start.pos);
+          t = Math.max(0, Math.min(1, t));
+
+          // Smoothstep
+          const ease = t * t * (3 - 2 * t);
+
+          const h = start.h + (end.h - start.h) * ease;
+          const sat = start.s + (end.s - start.s) * ease;
+          const light = start.l + (end.l - start.l) * ease;
+
+          const [r, g, b] = hslToRgb(h, sat, light);
+
+          out.push(rgbToHex(r, g, b));
+      }
+
+      return out;
+  })()
+},
+
+{
+  originalName: "Glacier Pulse 264",
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="9" style="fill:#041A22;" /><circle cx="12" cy="12" r="6.5" style="fill:#0A7FA0;" /><circle cx="12" cy="12" r="4" style="fill:#4FE3F2;" /><circle cx="12" cy="12" r="1.8" style="fill:#E8FDFF;" /></svg>',
+  colors: (function() {
+
+      const stops = [
+          { pos:   0, h: 198, s: 70, l:  4 }, // almost black cyan
+          { pos:  18, h: 196, s: 76, l:  8 }, // abyss teal
+          { pos:  40, h: 194, s: 82, l: 14 }, // deep sea
+          { pos:  62, h: 192, s: 88, l: 22 }, // dark cyan
+          { pos:  84, h: 190, s: 92, l: 32 }, // teal blue
+          { pos: 106, h: 188, s: 96, l: 42 }, // vivid cyan
+          { pos: 128, h: 186, s: 98, l: 52 }, // electric aqua
+          { pos: 148, h: 184, s: 92, l: 62 }, // bright aqua
+          { pos: 168, h: 186, s: 82, l: 72 }, // soft glacier
+          { pos: 188, h: 190, s: 70, l: 82 }, // ice mist
+          { pos: 206, h: 194, s: 58, l: 90 }, // pale frost
+          { pos: 220, h: 196, s: 52, l: 97 }, // near white
+          { pos: 236, h: 190, s: 82, l: 74 }, // return to aqua
+          { pos: 250, h: 193, s: 90, l: 34 }, // deep cyan
+          { pos: 263, h: 198, s: 72, l:  5 }  // back to darkness
+      ];
+
+      function hslToRgb(h, s, l) {
+          h = ((h % 360) + 360) % 360;
+          s /= 100;
+          l /= 100;
+
+          const c = (1 - Math.abs(2 * l - 1)) * s;
+          const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+          const m = l - c / 2;
+
+          let r = 0, g = 0, b = 0;
+
+          if (h < 60)       [r, g, b] = [c, x, 0];
+          else if (h < 120) [r, g, b] = [x, c, 0];
+          else if (h < 180) [r, g, b] = [0, c, x];
+          else if (h < 240) [r, g, b] = [0, x, c];
+          else if (h < 300) [r, g, b] = [x, 0, c];
+          else              [r, g, b] = [c, 0, x];
+
+          return [
+              Math.round((r + m) * 255),
+              Math.round((g + m) * 255),
+              Math.round((b + m) * 255)
+          ];
+      }
+
+      function rgbToHex(r, g, b) {
+          return "#" + [r, g, b]
+              .map(v => v.toString(16).padStart(2, "0"))
+              .join("")
+              .toUpperCase();
+      }
+
+      const out = [];
+
+      for (let i = 0; i < 264; i++) {
+          let s = 0;
+
+          while (
+              s < stops.length - 2 &&
+              i >= stops[s + 1].pos
+          ) {
+              s++;
+          }
+
+          const start = stops[s];
+          const end = stops[s + 1];
+
+          let t = (i - start.pos) / (end.pos - start.pos);
+          t = Math.max(0, Math.min(1, t));
+
+          const ease = t * t * (3 - 2 * t);
+
+          const h = start.h + (end.h - start.h) * ease;
+          const sat = start.s + (end.s - start.s) * ease;
+          const light = start.l + (end.l - start.l) * ease;
+
+          const [r, g, b] = hslToRgb(h, sat, light);
+
+          out.push(rgbToHex(r, g, b));
+      }
+
+      return out;
+  })()
+},
+
+
+  {
+    originalName: "Mystic Void 264",
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="9" style="fill:#08040D;" /><circle cx="12" cy="12" r="6.5" style="fill:#2A103F;" /><circle cx="12" cy="12" r="4" style="fill:#6C2FA3;" /><circle cx="12" cy="12" r="1.8" style="fill:#C59BEA;" /></svg>',
+    colors: (function() {
+
+        const stops = [
+            { pos:   0, h: 275, s: 48, l:  2 },
+            { pos:  18, h: 278, s: 54, l:  4 },
+            { pos:  38, h: 280, s: 60, l:  7 },
+            { pos:  58, h: 276, s: 66, l: 10 },
+            { pos:  78, h: 272, s: 70, l: 14 },
+            { pos:  98, h: 268, s: 74, l: 19 },
+            { pos: 118, h: 272, s: 78, l: 25 },
+            { pos: 138, h: 278, s: 76, l: 31 },
+            { pos: 156, h: 284, s: 70, l: 37 },
+            { pos: 174, h: 290, s: 62, l: 43 },
+            { pos: 190, h: 286, s: 48, l: 50 },
+            { pos: 204, h: 280, s: 38, l: 58 },
+            { pos: 216, h: 276, s: 30, l: 66 },
+            { pos: 228, h: 282, s: 44, l: 52 },
+            { pos: 240, h: 278, s: 68, l: 34 },
+            { pos: 252, h: 272, s: 72, l: 17 },
+            { pos: 263, h: 276, s: 52, l:  3 }
+        ];
+
+        function hslToRgb(h, s, l) {
+            h = ((h % 360) + 360) % 360;
+            s /= 100;
+            l /= 100;
+
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+
+            let r = 0, g = 0, b = 0;
+
+            if (h < 60)       [r, g, b] = [c, x, 0];
+            else if (h < 120) [r, g, b] = [x, c, 0];
+            else if (h < 180) [r, g, b] = [0, c, x];
+            else if (h < 240) [r, g, b] = [0, x, c];
+            else if (h < 300) [r, g, b] = [x, 0, c];
+            else              [r, g, b] = [c, 0, x];
+
+            return [
+                Math.round((r + m) * 255),
+                Math.round((g + m) * 255),
+                Math.round((b + m) * 255)
+            ];
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b]
+                .map(v => v.toString(16).padStart(2, "0"))
+                .join("")
+                .toUpperCase();
+        }
+
+        const out = [];
+
+        for (let i = 0; i < 264; i++) {
+            let s = 0;
+
+            while (
+                s < stops.length - 2 &&
+                i >= stops[s + 1].pos
+            ) {
+                s++;
+            }
+
+            const start = stops[s];
+            const end = stops[s + 1];
+
+            let t = (i - start.pos) / (end.pos - start.pos);
+            t = Math.max(0, Math.min(1, t));
+
+            const ease = t * t * (3 - 2 * t);
+
+            const h = start.h + (end.h - start.h) * ease;
+            const sat = start.s + (end.s - start.s) * ease;
+            const light = start.l + (end.l - start.l) * ease;
+
+            const [r, g, b] = hslToRgb(h, sat, light);
+
+            out.push(rgbToHex(r, g, b));
+        }
+
+        return out;
+    })()
+}
 
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
