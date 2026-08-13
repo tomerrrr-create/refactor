@@ -820,16 +820,17 @@ function applyNudgeLogic(direction) {
       }
 
       function handleNudgeBrighterClick() {
-        window.logArtEvent('NUDGE', 'Brighter'); 
+        window.logArtEvent('NUDGE', `Brighter | Sort: ${currentSortMethod}`); 
           nudgeColors(1);
           armSimulation('nudgeBrighter');
       }
 
       function handleNudgeDarkerClick() {
-        window.logArtEvent('NUDGE', 'Darker'); 
+        window.logArtEvent('NUDGE', `Darker | Sort: ${currentSortMethod}`); 
           nudgeColors(-1);
           armSimulation('nudgeDarker');
       }
+
 
 
 
@@ -3325,14 +3326,26 @@ function executeMacroAction(action) {
             
 
         else if (action.eventName === 'NUDGE') {
-            if (action.details === 'Brighter') {
+            // מפרידים בין כיוון ההזזה לשיטת המיון (אם קיימת, לטובת תאימות לאחור)
+            const parts = action.details.split(' | Sort: ');
+            const direction = parts[0];
+            const sortMethod = parts[1];
+
+            // מעדכנים את שיטת המיון קודם, אם היא סופקה ולא תואמת לנוכחית
+            if (sortMethod && currentSortMethod !== sortMethod) {
+                applySortMethod(sortMethod);
+                if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
+            }
+
+            if (direction === 'Brighter') {
                 nudgeColors(1);
                 armSimulation('nudgeBrighter');
-            } else if (action.details === 'Darker') {
+            } else if (direction === 'Darker') {
                 nudgeColors(-1);
                 armSimulation('nudgeDarker');
             }
         }
+        
 
 
         else if (action.eventName === 'DLA Mode Changed') {
@@ -3358,7 +3371,7 @@ else if (action.eventName === 'Invert Colors') {
 
             invertGrid();
         }
-        
+
 
         else if (action.eventName === 'DRAW_STROKE') {
             try {
