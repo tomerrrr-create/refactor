@@ -754,7 +754,8 @@ spiralMode = 'off';
       }
       
 function invertGrid() {
-        window.logArtEvent('Invert Colors', 'Status: Toggled'); // תיעוד היפוך צבעים
+        window.logArtEvent('Invert Colors', `Sort: ${currentSortMethod}`); // תיעוד היפוך צבעים כולל שיטת המיון
+
         performAction(() => {
             
             const len = paletteLen();
@@ -900,9 +901,8 @@ function handlePaletteSwitch(backwards = false) {
             return;
         }
         // -------------------------------------------------------------
-
         if (index === activePaletteIndex) return;
-        window.logArtEvent('Palette Change', C.PALETTES[index].name); // תיעוד החלפת פלטה
+        window.logArtEvent('Palette Change', `${C.PALETTES[index].name} | Sort: ${currentSortMethod}`); // תיעוד החלפת פלטה כולל שיטת מיון
 
         performAction(() => {
             
@@ -3226,10 +3226,22 @@ function executeMacroAction(action) {
     
 
     else if (action.eventName === 'Palette Change') {
-        
-        const pIndex = C.PALETTES.findIndex(p => p.name === action.details || p.originalName === action.details);
+        // מפרידים בין שם הפלטה לשיטת המיון (אם קיימת)
+        const parts = action.details.split(' | Sort: ');
+        const paletteName = parts[0];
+        const sortMethod = parts[1];
+
+        // מעדכנים את שיטת המיון קודם, אם היא סופקה ולא תואמת לנוכחית
+        if (sortMethod && currentSortMethod !== sortMethod) {
+            applySortMethod(sortMethod);
+            if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
+        }
+
+        const pIndex = C.PALETTES.findIndex(p => p.name === paletteName || p.originalName === paletteName);
         if(pIndex !== -1) switchToPalette(pIndex);
-    } 
+    }
+
+
     else if (action.eventName === '--' && action.details === 'Palette Randomized') {
         randomizeAll();
     } 
@@ -3333,10 +3345,20 @@ function executeMacroAction(action) {
             if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
         }
 
-        else if (action.eventName === 'Invert Colors') {
+else if (action.eventName === 'Invert Colors') {
+            // מפרידים את שיטת המיון מתוך פרטי הפעולה
+            const parts = action.details.split('Sort: ');
+            const sortMethod = parts[1];
+
+            // מעדכנים את שיטת המיון קודם, אם היא סופקה ולא תואמת לנוכחית
+            if (sortMethod && currentSortMethod !== sortMethod) {
+                applySortMethod(sortMethod);
+                if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
+            }
+
             invertGrid();
         }
-
+        
 
         else if (action.eventName === 'DRAW_STROKE') {
             try {
