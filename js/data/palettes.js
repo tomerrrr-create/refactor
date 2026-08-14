@@ -1200,6 +1200,27 @@ colors: (function() {
 
         return out;
     })()
-}
+},
+
+{
+  originalName: "Heartglow",
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="52%" dominant-baseline="central" text-anchor="middle" font-size="18">🏡</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#FFD6A5" text-anchor="end" stroke="rgba(0,0,0,0.45)" stroke-width="0.5" stroke-linejoin="round">HOME</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#FFD6A5" text-anchor="end">HOME</text></svg>',
+    colors: [
+    "#3B1620","#54202A","#6D2933","#87333B","#A13E43","#BA4A4C","#D25755","#E9655F",
+    "#F5766D","#FC897C","#FF9D8D","#FFB19E","#FFC4B0","#FFD5C2","#FFE4D5","#FFF1E8",
+
+    "#4A211B","#633025","#7D402E","#985138","#B36342","#CC774D","#E48C59","#F5A066",
+    "#FFB374","#FFC384","#FFD095","#FFDCA8","#FFE6BB","#FFEFD0","#FFF6E2","#FFFBF2",
+
+    "#593718","#70491D","#885C22","#A06F27","#B8832D","#CF9735","#E3AC40","#F3C04D",
+    "#FBCB5C","#FFD66D","#FFDF80","#FFE894","#FFEEA9","#FFF3BF","#FFF7D3","#FFFBE7",
+
+    "#40251F","#583029","#713C33","#8A493D","#A45748","#BD6654","#D67661","#EB8870",
+    "#F69B82","#FCAe95","#FFC0A9","#FFD1BE","#FFDFD0","#FFEAE0","#FFF3EC","#FFFAF6"
+  ]
+},
+
+
+
 
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
