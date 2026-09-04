@@ -1204,6 +1204,7 @@ colors: (function() {
 
 {
   originalName: "Heartglow",
+  isArchived: true,
   iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><text x="50%" y="52%" dominant-baseline="central" text-anchor="middle" font-size="18">🏡</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#FFD6A5" text-anchor="end" stroke="rgba(0,0,0,0.45)" stroke-width="0.5" stroke-linejoin="round">HOME</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#FFD6A5" text-anchor="end">HOME</text></svg>',
     colors: [
     "#3B1620","#54202A","#6D2933","#87333B","#A13E43","#BA4A4C","#D25755","#E9655F",
@@ -1221,6 +1222,108 @@ colors: (function() {
 },
 
 
+{
+  originalName: "Northern Lights HD",
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="11" fill="#030712"/><circle cx="7" cy="6" r="0.75" fill="#E5F3FF"/><circle cx="16" cy="8" r="0.5" fill="#C7D2FE"/><circle cx="12" cy="4" r="0.5" fill="#E5F3FF"/><path fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" d="M3 14 Q 9 8, 14 13 T 21 9"/><path fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" d="M3 17 Q 10 10, 15 15 T 21 12"/><path fill="none" stroke="#ECFE71" stroke-width="1.5" stroke-linecap="round" d="M4 19 Q 11 12, 16 17 T 20 15"/><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#ECFE71" text-anchor="end" stroke="rgba(0,0,0,0.4)" stroke-width="0.5" stroke-linejoin="round">HD</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#ECFE71" text-anchor="end">HD</text></svg>',
+  colors: (function() {
+      const orig = ["#020617","#030712","#040815","#05091A","#05101F","#061826","#052E3B","#044155","#036672","#059669","#22C55E","#A3E635","#ECFE71","#E5F3FF","#C7D2FE","#A5B4FC","#818CF8","#7C3AED","#6D28D9","#5B21B6","#4C1D95","#312E81","#020617"];
+      function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+      function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+      const rgbs = orig.map(hexToRgb);
+      const dists = [];
+      let totalDist = 0;
+      for (let i = 0; i < rgbs.length - 1; i++) {
+          let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+          if (d === 0) d = 0.1;
+          dists.push(d);
+          totalDist += d;
+      }
+      const out = [];
+      for (let i = 0; i < 264; i++) {
+          if (i === 0) { out.push(orig[0]); continue; }
+          if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+          let targetDist = (i / 263) * totalDist;
+          let accum = 0;
+          let s = 0;
+          while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+              accum += dists[s];
+              s++;
+          }
+          let progress = (targetDist - accum) / dists[s];
+          progress = Math.max(0, Math.min(1, progress));
+          let c1 = rgbs[s];
+          let c2 = rgbs[s+1];
+          let r = c1[0] + (c2[0] - c1[0]) * progress;
+          let g = c1[1] + (c2[1] - c1[1]) * progress;
+          let b = c1[2] + (c2[2] - c1[2]) * progress;
+          out.push(rgbToHex(r, g, b));
+      }
+      return out;
+  })()
+},
 
+{
+  originalName: "Baby First Gaze",
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="11" fill="#FFFAED"/><circle cx="8" cy="10" r="2.5" fill="#42A5F5"/><circle cx="16" cy="10" r="2.5" fill="#42A5F5"/><path d="M 8 16 Q 12 19 16 16" fill="none" stroke="#FF8A80" stroke-width="2.5" stroke-linecap="round"/><circle cx="8.5" cy="9.5" r="0.8" fill="#FFFFFF"/><circle cx="16.5" cy="9.5" r="0.8" fill="#FFFFFF"/><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#FFB74D" text-anchor="end" stroke="rgba(0,0,0,0.4)" stroke-width="0.5" stroke-linejoin="round">HD</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#FFB74D" text-anchor="end">HD</text></svg>',
+  colors: (function() {
+      const orig = [
+          "#050510", // חושך רחם / לילה עמוק
+          "#1A1A2E", // כחול עמוק מאוד
+          "#2E1534", // סגול כהה עשיר
+          "#4A235A", // סגול שזיף
+          "#7D3C98", // סגול עז
+          "#BA68C8", // סגול רך יותר
+          "#F48FB1", // ורוד תמים
+          "#FF8A80", // אדמדם-קורל של לחיים
+          "#FFAB91", // אפרסק עדין
+          "#FFCC80", // כתום חמים
+          "#FFE082", // צהוב של קרן שמש
+          "#FFF59D", // צהוב בהיר ושמח
+          "#FFF9C4", // צהוב פסטל
+          "#DCEDC8", // ירוק רך וראשוני
+          "#B2DFDB", // טורקיז עדין
+          "#81D4FA", // תכלת עז
+          "#42A5F5", // כחול עיניים סקרניות
+          "#90CAF9", // תכלת שמיים
+          "#BBDEFB", // שמיים בהירים מאוד
+          "#E1BEE7", // חזרה ללילך עדין
+          "#F3E5F5", // סגול-ורוד חיוור מאוד
+          "#FFF3E0", // שמנת עוטפת וחמימה
+          "#FFFFFF"  // לבן טהור
+      ];
+      function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+      function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+      const rgbs = orig.map(hexToRgb);
+      const dists = [];
+      let totalDist = 0;
+      for (let i = 0; i < rgbs.length - 1; i++) {
+          let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+          if (d === 0) d = 0.1;
+          dists.push(d);
+          totalDist += d;
+      }
+      const out = [];
+      for (let i = 0; i < 264; i++) {
+          if (i === 0) { out.push(orig[0]); continue; }
+          if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+          let targetDist = (i / 263) * totalDist;
+          let accum = 0;
+          let s = 0;
+          while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+              accum += dists[s];
+              s++;
+          }
+          let progress = (targetDist - accum) / dists[s];
+          progress = Math.max(0, Math.min(1, progress));
+          let c1 = rgbs[s];
+          let c2 = rgbs[s+1];
+          let r = c1[0] + (c2[0] - c1[0]) * progress;
+          let g = c1[1] + (c2[1] - c1[1]) * progress;
+          let b = c1[2] + (c2[2] - c1[2]) * progress;
+          out.push(rgbToHex(r, g, b));
+      }
+      return out;
+  })()
+},
 
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
