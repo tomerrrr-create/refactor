@@ -1326,4 +1326,53 @@ colors: (function() {
   })()
 },
 
+{
+  originalName: "Silent Enigma",
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="10" fill="none" stroke="#4A657A" stroke-width="0.5"/><circle cx="12" cy="12" r="6" fill="none" stroke="#8FBBDC" stroke-width="1" opacity="0.6"/><circle cx="12" cy="12" r="2" fill="#A9DBFF"/><line x1="12" y1="0" x2="12" y2="4" stroke="#4A657A" stroke-width="0.5"/><line x1="12" y1="20" x2="12" y2="24" stroke="#4A657A" stroke-width="0.5"/><line x1="0" y1="12" x2="4" y2="12" stroke="#4A657A" stroke-width="0.5"/><line x1="20" y1="12" x2="24" y2="12" stroke="#4A657A" stroke-width="0.5"/><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#A9DBFF" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5" stroke-linejoin="round">HD</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#A9DBFF" text-anchor="end">HD</text></svg>',
+  colors: (function() {
+      // 23 עוגנים מסתוריים: ממעמקי החושך, דרך כחול פלדה ואור בוהק, ובחזרה אל החושך
+      const orig = [
+          "#000000", "#030405", "#06080A", "#0B1014", "#11181E", 
+          "#172129", "#1E2A34", "#263541", "#2E404E", "#374C5C", 
+          "#40586B", "#4A657A", "#547389", "#5F8199", "#6A8FA9", 
+          "#769DBA", "#82ACCA", "#8FBBDC", "#9CCBED", "#A9DBFF", 
+          "#F2F3F4", "#FFFFFF", "#000000"
+      ];
+      function hexToRgb(h) { return [parseInt(h.slice(1,3), 16), parseInt(h.slice(3,5), 16), parseInt(h.slice(5,7), 16)]; }
+      function rgbToHex(r, g, b) { return "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0').toUpperCase()).join(''); }
+      const rgbs = orig.map(hexToRgb);
+      const dists = [];
+      let totalDist = 0;
+      
+      for (let i = 0; i < rgbs.length - 1; i++) {
+          let d = Math.sqrt(Math.pow(rgbs[i+1][0] - rgbs[i][0], 2) + Math.pow(rgbs[i+1][1] - rgbs[i][1], 2) + Math.pow(rgbs[i+1][2] - rgbs[i][2], 2));
+          if (d === 0) d = 0.1;
+          dists.push(d);
+          totalDist += d;
+      }
+      
+      const out = [];
+      for (let i = 0; i < 264; i++) {
+          if (i === 0) { out.push(orig[0]); continue; }
+          if (i === 263) { out.push(orig[orig.length - 1]); continue; }
+          let targetDist = (i / 263) * totalDist;
+          let accum = 0;
+          let s = 0;
+          while (s < dists.length - 1 && accum + dists[s] <= targetDist) {
+              accum += dists[s];
+              s++;
+          }
+          let progress = (targetDist - accum) / dists[s];
+          progress = Math.max(0, Math.min(1, progress));
+          let c1 = rgbs[s];
+          let c2 = rgbs[s+1];
+          let r = c1[0] + (c2[0] - c1[0]) * progress;
+          let g = c1[1] + (c2[1] - c1[1]) * progress;
+          let b = c1[2] + (c2[2] - c1[2]) * progress;
+          out.push(rgbToHex(r, g, b));
+      }
+      return out;
+  })()
+},
+
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
