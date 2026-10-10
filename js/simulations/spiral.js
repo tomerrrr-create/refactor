@@ -5,6 +5,235 @@ let cachedRadialN = null;
 let blackHoleGeometry = null;
 const blackHoleProgress = new WeakMap();
 
+let whiteHoleGeometry = null;
+const whiteHoleProgress = new WeakMap();
+
+function getWhiteHoleGeometry(n) {
+    if (whiteHoleGeometry?.n === n) return whiteHoleGeometry;
+    const count = n * n, center = (n - 1) / 2;
+    const rows = new Int32Array(count), cols = new Int32Array(count);
+    const radii = new Float64Array(count), angles = new Float64Array(count);
+    const order = Array.from({ length: count }, (_, i) => i);
+    for (let i = 0; i < count; i++) {
+        rows[i] = Math.floor(i / n);
+        cols[i] = i % n;
+        radii[i] = (rows[i] - center) ** 2 + (cols[i] - center) ** 2;
+        angles[i] = Math.atan2(rows[i] - center, cols[i] - center);
+    }
+    order.sort((a, b) => radii[a] - radii[b] || angles[a] - angles[b]);
+    return whiteHoleGeometry = { n, count, rows, cols, radii, angles, order };
+}
+
+function createWhiteHoleProgress(board, geometry) {
+    const { n, count, order, angles, radii } = geometry;
+    const tiles = Array.from({ length: count }, (_, i) => i);
+    tiles.sort((a, b) => board[a].k - board[b].k || angles[a] - angles[b]);
+    const targetColors = new Int32Array(count), destinations = new Int32Array(count);
+    for (let start = 0; start < count;) {
+        let end = start + 1;
+        while (end < count && board[tiles[end]].k === board[tiles[start]].k) end++;
+        const colorDestinations = order.slice(start, end).sort((a, b) => angles[a] - angles[b]);
+        // Match equal colors by angle, with a small clockwise offset. This
+        // gives inward/outward motion a swirl without random color reshuffling.
+        const offset = Math.floor((end - start) * 0.035);
+        for (let j = start; j < end; j++) {
+            const tile = board[tiles[j]];
+            const target = colorDestinations[(j - start + offset) % colorDestinations.length];
+            destinations[tiles[j]] = target;
+            targetColors[target] = tile.k;
+        }
+        start = end;
+    }
+    const mixedShells = [];
+    for (let start = 0; start < count;) {
+        let end = start + 1;
+        while (end < count && radii[order[end]] === radii[order[start]]) end++;
+        if (order.slice(start, end).some(i => targetColors[i] !== targetColors[order[start]])) {
+            mixedShells.push(order.slice(start, end));
+        }
+        start = end;
+    }
+    return {
+        n, targetColors, destinations, expectedTiles: [...board], expectedColors: Int32Array.from(board, tile => tile.k),
+        used: new Uint8Array(count), reserved: new Uint8Array(count),
+        routes: [], cursor: 0, frames: 0, repairFrames: 0, mixedShells, phase: 'flow', settled: false
+    };
+}
+
+function alignWhiteHoleShellTargets(board, state) {
+    // Equal-radius cells are interchangeable. Keep colors already on their
+    // correct circle instead of routing them around it to an arbitrary angle.
+    // Preserve both each shell's color counts and active routes' destinations.
+    for (const shell of state.mixedShells) {
+        const counts = new Map(), unmatched = [];
+        for (const i of shell) {
+            if (!state.reserved[i]) counts.set(state.targetColors[i], (counts.get(state.targetColors[i]) || 0) + 1);
+        }
+        for (const i of shell) {
+            if (state.reserved[i]) continue;
+            const color = board[i].k;
+            if (counts.get(color) > 0) {
+                state.targetColors[i] = color;
+                counts.set(color, counts.get(color) - 1);
+            } else unmatched.push(i);
+        }
+        let j = 0;
+        for (const [color, remaining] of counts) {
+            for (let k = 0; k < remaining; k++) state.targetColors[unmatched[j++]] = color;
+        }
+    }
+}
+
+function whiteHolePath(from, to, geometry, reserved, variant) {
+    const { n, rows, cols } = geometry;
+    let row = rows[from], col = cols[from];
+    const path = [from];
+    while (row !== rows[to] || col !== cols[to]) {
+        const dr = Math.sign(rows[to] - row), dc = Math.sign(cols[to] - col);
+        // Try a diagonal route and two alternatives before waiting for space.
+        if (variant === 1 && dr) row += dr;
+        else if (variant === 2 && dc) col += dc;
+        else { row += dr; col += dc; }
+        const next = row * n + col;
+        if (reserved[next]) return null;
+        path.push(next);
+    }
+    return path;
+}
+
+function runWhiteHoleGeneration(n, board) {
+    const geometry = getWhiteHoleGeometry(n);
+    const { count, rows, cols, order } = geometry;
+    let state = whiteHoleProgress.get(board);
+    // Painting, loading, changing a palette or switching modes can change the
+    // input during a run. Replan from the actual tiles, including mid-route.
+    if (state?.n === n) {
+        for (let i = 0; i < count; i++) {
+            const tile = board[i];
+            if (state.expectedTiles[i] !== tile || state.expectedColors[i] !== tile.k) { state = null; break; }
+        }
+    }
+    if (!state || state.n !== n) {
+        state = createWhiteHoleProgress(board, geometry);
+        whiteHoleProgress.set(board, state);
+    }
+    const { targetColors, destinations, used, reserved } = state;
+    if (state.phase === 'repair' && state.repairFrames++ % 16 === 0) alignWhiteHoleShellTargets(board, state);
+    let matches = true;
+    for (let i = 0; i < count; i++) {
+        if (board[i].k !== targetColors[i]) matches = false;
+    }
+    if (state.routes.length === 0 && matches) {
+        state.settled = true;
+        return board;
+    }
+    if (state.settled) {
+        state = createWhiteHoleProgress(board, geometry);
+        whiteHoleProgress.set(board, state);
+        return runWhiteHoleGeneration(n, board);
+    }
+    // At most one quarter of the cells can change in one generation (except
+    // tiny boards). Every swap is adjacent, and each cell moves at most once.
+    const budget = Math.max(1, Math.floor(count / 8));
+    let swaps = 0;
+    used.fill(0);
+    if (state.phase === 'flow') {
+        const offset = (state.frames * (n + 1)) % count;
+        for (let step = 0; step < count && swaps < budget; step++) {
+            const i = (offset + (state.frames % 2 ? count - 1 - step : step)) % count;
+            if (used[i]) continue;
+            const target = destinations[i];
+            let bestGain = 0, best = -1;
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (!dr && !dc) continue;
+                    const row = rows[i] + dr, col = cols[i] + dc;
+                    if (row < 0 || row >= n || col < 0 || col >= n) continue;
+                    const j = row * n + col;
+                    if (used[j] || board[i].k === board[j].k) continue;
+                    const other = destinations[j];
+                    // Exact decrease in the two tiles' squared travel distance.
+                    const gain = dr * (rows[target] - rows[other]) + dc * (cols[target] - cols[other]);
+                    if (gain > bestGain) { bestGain = gain; best = j; }
+                }
+            }
+            if (best < 0) continue;
+            const tile = board[i]; board[i] = board[best]; board[best] = tile;
+            state.expectedTiles[i] = board[i]; state.expectedTiles[best] = board[best];
+            state.expectedColors[i] = board[i].k; state.expectedColors[best] = board[best].k;
+            const destination = destinations[i]; destinations[i] = destinations[best]; destinations[best] = destination;
+            used[i] = used[best] = 1;
+            swaps++;
+        }
+        state.frames++;
+        if (swaps === 0 || state.frames >= n * 4) state.phase = 'repair';
+        return board;
+    }
+
+    // Local flow can stall. Resolve remaining color mismatches by routing an
+    // endpoint exchange through a reserved path, never by a distant swap.
+    // Both endpoints are wrong before a route; completing it fixes at least
+    // one and restores all intermediate tiles. Thus the repairs must finish.
+    const sources = new Map();
+    for (let i = 0; i < count; i++) {
+        if (reserved[i] || board[i].k === targetColors[i]) continue;
+        if (!sources.has(board[i].k)) sources.set(board[i].k, []);
+        sources.get(board[i].k).push(i);
+    }
+    const routeLimit = Math.min(256, Math.max(1, Math.floor(budget / 4)));
+    let attempts = 0;
+    for (let scanned = 0; scanned < count && attempts < 64 && state.routes.length < routeLimit; scanned++) {
+        const to = order[state.cursor];
+        state.cursor = (state.cursor + 1) % count;
+        if (reserved[to] || board[to].k === targetColors[to]) continue;
+        attempts++;
+        const candidates = sources.get(targetColors[to]) || [];
+        let from = -1, distance = Infinity;
+        const stride = Math.max(1, Math.floor(candidates.length / 32));
+        for (let j = 0; j < candidates.length; j += stride) {
+            const candidate = candidates[j];
+            if (reserved[candidate]) continue;
+            const d = Math.max(Math.abs(rows[to] - rows[candidate]), Math.abs(cols[to] - cols[candidate]));
+            if (d < distance) { distance = d; from = candidate; }
+        }
+        if (from < 0) continue;
+        let path = null;
+        for (let variant = 0; variant < 3 && !path; variant++) path = whiteHolePath(from, to, geometry, reserved, variant);
+        if (!path) continue;
+        for (const i of path) reserved[i] = 1;
+        const ranks = Int32Array.from(path, (_, i) => i);
+        ranks[0] = path.length - 1; ranks[path.length - 1] = 0;
+        state.routes.push({ path, ranks, parity: 0, pair: 0, passSwaps: 0, quietPasses: 0 });
+    }
+    for (const route of state.routes) {
+        const { path, ranks } = route;
+        for (; route.pair + 1 < path.length; route.pair += 2) {
+            if (swaps >= budget) break;
+            const j = route.pair;
+            if (ranks[j] <= ranks[j + 1]) continue;
+            const a = path[j], b = path[j + 1];
+            const tile = board[a]; board[a] = board[b]; board[b] = tile;
+            state.expectedTiles[a] = board[a]; state.expectedTiles[b] = board[b];
+            state.expectedColors[a] = board[a].k; state.expectedColors[b] = board[b].k;
+            const rank = ranks[j]; ranks[j] = ranks[j + 1]; ranks[j + 1] = rank;
+            used[a] = used[b] = 1;
+            swaps++; route.passSwaps++;
+        }
+        if (route.pair + 1 >= path.length) {
+            route.quietPasses = route.passSwaps === 0 ? route.quietPasses + 1 : 0;
+            route.parity = 1 - route.parity;
+            route.pair = route.parity;
+            route.passSwaps = 0;
+        }
+    }
+    state.routes = state.routes.filter(route => {
+        if (route.quietPasses < 2) return true;
+        for (const i of route.path) reserved[i] = 0;
+        return false;
+    });
+    return board;
+}
+
 function runBlackHoleGeneration(n, board) {
     if (!blackHoleGeometry || blackHoleGeometry.n !== n) {
         const center = (n - 1) / 2;
@@ -122,6 +351,9 @@ let strength = 0.9; // עוצמת ברירת המחדל המקורית של הס
 
         case 'black_hole':
             return runBlackHoleGeneration(n, nextBoardState);
+
+        case 'white_hole':
+            return runWhiteHoleGeneration(n, nextBoardState);
 
 
 
