@@ -1746,8 +1746,8 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 selectedColor = currentPalette[lightestIndex];
                 selectedColorIndex = lightestIndex;
 
-brushSize = 1;
-const brushSizeSlider = document.getElementById('brushSizeSlider');
+                brushSize = 7;
+                const brushSizeSlider = document.getElementById('brushSizeSlider');
                 const brushSizeValue = document.getElementById('brushSizeValue');
                 if (brushSizeSlider) brushSizeSlider.value = brushSize;
                 if (brushSizeValue) brushSizeValue.textContent = brushSize;
