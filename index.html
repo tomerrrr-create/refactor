@@ -459,6 +459,19 @@
     </div>
   </div>
 
+  <div id="paletteResizeModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="paletteResizeTitle" aria-describedby="paletteResizePrompt">
+    <div class="relative bg-[#1c1c1c] rounded-lg p-6 max-w-xs w-full text-center">
+      <button id="btnPaletteResizeClose" type="button" class="absolute top-2 right-3 text-gray-400 hover:text-white">✕</button>
+      <h2 id="paletteResizeTitle" class="text-lg font-semibold mb-4"></h2>
+      <p id="paletteResizePrompt" class="text-sm text-gray-400 mb-4"></p>
+      <div id="paletteResizeOptions" class="flex justify-center gap-3"></div>
+    </div>
+  </div>
+  <div id="paletteResizeToast" hidden role="status" aria-live="polite">
+    <span class="palette-resize-eclipse" aria-hidden="true"></span>
+    <span id="paletteResizeToastText"></span>
+  </div>
+
   <div id="paletteModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
     <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-lg max-h-[80vh] flex flex-col">
        <button id="btnPaletteModalClose" class="absolute top-2 right-2 text-gray-400 hover:text-white">

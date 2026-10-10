@@ -5,6 +5,7 @@ import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailab
 import * as C from './constants.js';
 import * as Simulations from './simulations.js';
 import { dom } from './dom-elements.js';
+import { expandPalette, createPaletteResizeState, PALETTE_RESIZE_SIZES, PALETTE_RESIZE_VERSION } from './palette-resize.js';
 import { initializeModals } from './ui-modals.js';
 
 
@@ -177,6 +178,7 @@ function getPrevPaletteIndex(currentIndex) {
           }
           palette.colors = sortColorsArray(palette.originalColors, currentSortMethod);
       });
+      const paletteResizeState = createPaletteResizeState(C.PALETTES);
       // --------------------------------------------------------
 
 // --- שלב 2: לוגיקת המיפוי (Remapping) ---
@@ -225,10 +227,10 @@ tile.v = tile.k;
               }
           });
 
-          // 4. מרנדרים מחדש את תפריט הצבעים כדי שהמשתמש יראה את הסדר החדש
-          if (typeof renderColorPickerContent === 'function') {
-              renderColorPickerContent();
-          }
+          // Keep the brush index aligned with its selected color after sorting,
+          // so a subsequent expansion maps the intended anchor.
+          if (selectedColor && selectedColorIndex >= 0) selectedColorIndex = newPalette.indexOf(selectedColor);
+          modals?.renderColorPickerContent();
       }
       // ------------------------------------------
 
@@ -315,12 +317,17 @@ function compressBoardState() {
             activePaletteIndex, 
             paletteName: C.PALETTES[activePaletteIndex].originalName, 
             separatorPx,
+            paletteOverrides: paletteResizeState.snapshot(),
+            selectedColor, selectedColorIndex, isRainbowModeActive,
+            magnetAnchorColorIndex: magnetRules.anchorColorIndex,
+            dlaLastColorIndex: dlaState?.lastSuccessfulColorIndex,
 currentSortMethod, 
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
                 isGold: tile.isGold,
-                v: tile.v
+                v: tile.v,
+                prevK: tile.prevK, animStart: tile.animStart, startDelay: tile.startDelay
             }))
           };
       }
@@ -331,7 +338,13 @@ currentSortMethod,
             pal: activePaletteIndex,
             sort: currentSortMethod,
             sep: separatorPx,
-            board: compressBoardState()
+            board: compressBoardState(),
+            paletteOverrides: paletteResizeState.snapshot(),
+            paletteName: C.PALETTES[activePaletteIndex].originalName,
+            selectedColor, selectedColorIndex, isRainbowModeActive,
+            magnetAnchorColorIndex: magnetRules.anchorColorIndex,
+            goldIndices: boardState.flatMap((tile, i) => tile.isGold ? [i] : []),
+            values: boardState.flatMap((tile, i) => tile.v !== tile.k ? [[i, tile.v]] : [])
         };
         window.logArtEvent('INIT_STATE', JSON.stringify(stateSnapshot));
     }
@@ -340,13 +353,25 @@ currentSortMethod,
       function areStatesEqual(stateA, stateB) {
         if (!stateA || !stateB) return false;
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
+        if (stateA.currentSortMethod !== stateB.currentSortMethod ||
+            stateA.magnetAnchorColorIndex !== stateB.magnetAnchorColorIndex ||
+            JSON.stringify(stateA.paletteOverrides) !== JSON.stringify(stateB.paletteOverrides)) return false;
         for (let i = 0; i < stateA.tiles.length; i++) {
-          if (stateA.tiles[i].k !== stateB.k || stateA.tiles[i].isGold !== stateB.isGold) return false;
+          if (stateA.tiles[i].k !== stateB.tiles[i].k || stateA.tiles[i].isGold !== stateB.tiles[i].isGold || stateA.tiles[i].v !== stateB.tiles[i].v) return false;
         }
         return true;
       }
 
       function applyState(state) {
+        // Validate and restore palettes before resolving any board indices.
+        paletteResizeState.restore(state.paletteOverrides, state.currentSortMethod || currentSortMethod);
+        if (Object.hasOwn(state, 'selectedColor')) {
+            selectedColor = state.selectedColor;
+            selectedColorIndex = state.selectedColorIndex;
+            isRainbowModeActive = state.isRainbowModeActive;
+        }
+        if (Object.hasOwn(state, 'magnetAnchorColorIndex')) magnetRules.anchorColorIndex = state.magnetAnchorColorIndex;
+        if (dlaState && Object.hasOwn(state, 'dlaLastColorIndex')) dlaState.lastSuccessfulColorIndex = state.dlaLastColorIndex;
         let paletteIdx = C.PALETTES.findIndex(p => p.originalName === state.paletteName);
         if (paletteIdx === -1) {
             paletteIdx = state.activePaletteIndex;
@@ -357,9 +382,7 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
 
         if (state.currentSortMethod && state.currentSortMethod !== currentSortMethod) {
             currentSortMethod = state.currentSortMethod;
-            C.PALETTES.forEach(palette => {
-                palette.colors = sortColorsArray(palette.originalColors, currentSortMethod);
-            });
+            // Palette arrays were already restored with their exact saved order.
             // עדכון האייקון של הכפתור
             const modeIndex = SORT_MODES.findIndex(m => m.method === currentSortMethod);
             if (modeIndex !== -1) {
@@ -388,11 +411,17 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
         boardState = state.tiles.map(tileState => ({
 k: tileState.k,
             v: tileState.v !== undefined ? tileState.v : tileState.k,
-            prevK: null,
-            animStart: 0,
+            prevK: tileState.prevK ?? null,
+            animStart: tileState.animStart || 0,
             isGold: tileState.isGold,
-            startDelay: 0
+            startDelay: tileState.startDelay || 0
         }));
+
+        if (turingState?.lastBoardK?.length === boardState.length) {
+            boardState.forEach((tile, i) => { turingState.lastBoardK[i] = tile.k; });
+        }
+        colorPickerPage = 0;
+        modals?.renderColorPickerContent();
 
         // Older project files have no spiralMethod and keep their old behavior.
         if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'radial', 'down'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
@@ -424,8 +453,9 @@ k: tileState.k,
 
       function undo() {
         if (history.length === 0) return;
-        window.logArtEvent('UNDO', '---'); // <-- תוספת: דיווח ליומן
         const lastAction = history.pop();
+        const paletteChanged = JSON.stringify(lastAction.before.paletteOverrides) !== JSON.stringify(lastAction.after.paletteOverrides);
+        window.logArtEvent('UNDO', paletteChanged ? JSON.stringify({ paletteState: lastAction.before }) : '---');
         future.push(lastAction);
         applyState(lastAction.before);
         updateUndoRedoButtons();
@@ -433,8 +463,9 @@ k: tileState.k,
 
       function redo() {
         if (future.length === 0) return;
-        window.logArtEvent('REDO', '---'); // <-- תוספת: דיווח ליומן
         const nextAction = future.pop();
+        const paletteChanged = JSON.stringify(nextAction.before.paletteOverrides) !== JSON.stringify(nextAction.after.paletteOverrides);
+        window.logArtEvent('REDO', paletteChanged ? JSON.stringify({ paletteState: nextAction.after }) : '---');
         history.push(nextAction);
         applyState(nextAction.after);
         updateUndoRedoButtons();
@@ -647,7 +678,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
         if (pal.iconHTML) { dom.btnPalette.innerHTML = pal.iconHTML; } 
         else { dom.btnPalette.innerHTML = ''; dom.btnPalette.textContent = pal.emoji; }
         const label = `${getText('tooltip_palette')}: ${pal.name} (${activePaletteIndex + 1}/${C.PALETTES.length})`;
-        dom.btnPalette.title = getText('tooltip_palette');
+        dom.btnPalette.title = `${getText('tooltip_palette')} · ${pal.colors.length} · ${getText('paletteResize_title')}`;
         dom.btnPalette.setAttribute('aria-label', label);
       }
       
@@ -783,6 +814,62 @@ function invertGrid() {
             });
             startAnimationLoop();
         });
+      }
+
+      let paletteToastTimer;
+      function resizeActivePalette(targetSize, showToast = true) {
+        const oldColors = [...palette()];
+        if (!PALETTE_RESIZE_SIZES.includes(targetSize) || targetSize <= oldColors.length || isBreathing) return false;
+        const result = expandPalette(oldColors, targetSize, currentSortMethod);
+        if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
+        if (isLifePlaying) pauseLife();
+        const oldNorm = k => ((k % oldColors.length) + oldColors.length) % oldColors.length;
+        const mapIndex = k => result.indexMap[oldNorm(k)];
+        const mapValue = v => {
+            const value = oldNorm(v);
+            const lower = Math.floor(value), upper = Math.min(lower + 1, oldColors.length - 1);
+            return lerp(result.indexMap[lower], result.indexMap[upper], value - lower);
+        };
+        performAction(() => {
+            paletteResizeState.set(activePaletteIndex, result);
+            boardState.forEach(tile => {
+                // Gold stays visually protected, but its underlying indices remain valid.
+                tile.k = mapIndex(tile.k);
+                if (tile.prevK != null) tile.prevK = mapIndex(tile.prevK);
+                // All current simulations store v in palette coordinates.
+                if (Number.isFinite(tile.v)) tile.v = mapValue(tile.v);
+            });
+            if (selectedColorIndex >= 0) {
+                selectedColorIndex = mapIndex(selectedColorIndex);
+                selectedColor = palette()[selectedColorIndex];
+            }
+            if (magnetRules.anchorColorIndex >= 0) magnetRules.anchorColorIndex = mapIndex(magnetRules.anchorColorIndex);
+            if (dlaState && Number.isInteger(dlaState.lastSuccessfulColorIndex)) {
+                dlaState.lastSuccessfulColorIndex = mapIndex(dlaState.lastSuccessfulColorIndex);
+            }
+            if (turingState?.lastBoardK?.length === boardState.length) {
+                boardState.forEach((tile, i) => { turingState.lastBoardK[i] = tile.k; });
+            }
+            colorPickerPage = 0;
+            updatePaletteHeader();
+            updateColorPickerButtonUI();
+            updateGlowEffect();
+            modals.renderColorPickerContent();
+            renderToScreen(null);
+        });
+        window.logArtEvent('PALETTE_RESIZE', JSON.stringify({
+            version: PALETTE_RESIZE_VERSION,
+            paletteName: C.PALETTES[activePaletteIndex].originalName,
+            fromSize: oldColors.length, targetSize, sort: currentSortMethod,
+            sourceColors: oldColors
+        }));
+        if (showToast) {
+            clearTimeout(paletteToastTimer);
+            dom.paletteResizeToastText.textContent = `${getText('paletteResize_success')} ${targetSize}`;
+            dom.paletteResizeToast.hidden = false;
+            paletteToastTimer = setTimeout(() => { dom.paletteResizeToast.hidden = true; }, 1000);
+        }
+        return true;
       }
 
       // Phase 1 Addition: New function to adapt colors
@@ -1693,6 +1780,9 @@ function updateMacroPaletteButtonUI(paletteIndex) {
             if (macroQueue.length > 0) {
                 isMacroLoaded = true;
                 currentMacroStep = 0;
+                dom.btnChangeInitPalette.disabled = macroQueue.some(a => a.eventName === 'PALETTE_RESIZE' || a.eventName === 'PALETTE_STATE_RESTORE' ||
+                    (a.eventName === 'INIT_STATE' && (() => { try { return JSON.parse(a.details).paletteOverrides?.length; } catch { return false; } })()));
+                dom.btnChangeInitPalette.title = dom.btnChangeInitPalette.disabled ? getText('paletteResize_macroSource') : '';
                 pendingMacroPalette = null; // איפוס בחירה קודמת בטעינת קובץ חדש
                 isSelectingMacroPalette = false;
                 
@@ -1772,14 +1862,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
                 // === תוספת שלנו: יצירת תמונת מצב מעודכנת למאקרו לאחר הכניסה לסימולציה ===
                 artRecipeLog = [];
-                const simState = {
-                    n: n,
-                    pal: activePaletteIndex,
-                    sort: currentSortMethod,
-                    sep: separatorPx,
-                    board: compressBoardState()
-                };
-                window.logArtEvent('INIT_STATE', JSON.stringify(simState));
+                logCurrentStateAsInit();
                 // =========================================================================
             });
         });
@@ -1789,6 +1872,8 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 function handlePointerDownCtrl(e) {
         if (isBreathing) return;
         const btn = e.currentTarget;
+        clearTimeout(longPressTimer);
+        wasLongPress = false;
         longPressTimer = setTimeout(() => {
             wasLongPress = true;
 
@@ -1799,14 +1884,7 @@ function handlePointerDownCtrl(e) {
                 artRecipeLog = []; // איפוס המערך שמחזיק את פעולות הלוגר
                 
                 // === תוספת: שמירת תמונת המצב ההתחלתית ===
-                const initState = {
-                    n: n,
-                    pal: activePaletteIndex,
-                    sort: currentSortMethod,
-                    sep: separatorPx,
-                    board: compressBoardState()
-                };
-                window.logArtEvent('INIT_STATE', JSON.stringify(initState));
+                logCurrentStateAsInit();
                 // =========================================
                 
                 alert("לוגר אופס בהצלחה! מצב התחלתי נשמר."); 
@@ -1815,6 +1893,7 @@ function handlePointerDownCtrl(e) {
 
 
             
+            if (btn.id === 'btnPalette') { clearTimeout(paletteClickTimer); paletteClickTimer = null; modals.openPaletteResizeModal(); return; }
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
@@ -2820,6 +2899,11 @@ function parseMacroText(text) {
                     break; // מצאנו ומחקנו, אפשר לעצור את החיפוש הפנימי
                 }
             }
+            // Palette redo snapshots also restore any intervening sort changes.
+            try {
+                const details = JSON.parse(line.slice(line.indexOf(' -> ') + 4));
+                if (details.paletteState) cleanLines.push(line.replace('] REDO ->', '] PALETTE_STATE_RESTORE ->'));
+            } catch { /* Legacy redo has no state payload. */ }
             // לא מוסיפים את שורת ה-REDO למערך הנקי
         } else {
             cleanLines.push(line);
@@ -2850,7 +2934,7 @@ function parseMacroText(text) {
 
 
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
-    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'SEPARATOR_CHANGE', 'GRID_RESIZE'];
+    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'SEPARATOR_CHANGE', 'GRID_RESIZE', 'PALETTE_RESIZE'];
     
 
     // --- גבולות זמן (במילי-שניות) ---
@@ -2961,6 +3045,16 @@ if (eventName === 'UNDO') {
             break;
         }
     }
+    // Resizing can be undone after a logger reset or a later sort. Restore the
+    // saved palette state explicitly rather than relying on a missing log action.
+    try {
+        const state = JSON.parse(details).paletteState;
+        if (state) {
+            pendingUIState = pendingUIState.filter(a => a.eventName !== 'Sort by');
+            parsed.push({ delta: cumulativeDelta, eventName: 'PALETTE_STATE_RESTORE',
+                details: JSON.stringify({ paletteState: state }), isUndoable: false, isGenBased, targetGen });
+        }
+    } catch { /* Legacy undo has no state payload. */ }
     return; // מדלגים ולא דוחפים את ה-UNDO עצמו לתור
 }
 
@@ -3209,6 +3303,19 @@ function executeMacroAction(action) {
                 applySortMethod(initState.sort);
             }
 
+            const overrides = pendingMacroPalette === null ? initState.paletteOverrides : undefined;
+            paletteResizeState.restore(overrides, currentSortMethod);
+            if (pendingMacroPalette === null && initState.paletteName) {
+                const index = C.PALETTES.findIndex(p => p.originalName === initState.paletteName);
+                if (index >= 0) activePaletteIndex = index;
+            }
+            if (Object.hasOwn(initState, 'magnetAnchorColorIndex')) magnetRules.anchorColorIndex = initState.magnetAnchorColorIndex;
+            if (Object.hasOwn(initState, 'selectedColor')) {
+                selectedColor = initState.selectedColor;
+                selectedColorIndex = initState.selectedColorIndex;
+                isRainbowModeActive = initState.isRainbowModeActive;
+            }
+
             // 2. יצירת לוח ריק בגודל הנכון ושחזור הצבעים מהמחרוזת הדחוסה
             initializeBoardAndCanvas(true); 
             const boardParts = initState.board.split(',');
@@ -3229,6 +3336,12 @@ function executeMacroAction(action) {
                 }
             });
 
+            (initState.goldIndices || []).forEach(i => { if (boardState[i]) boardState[i].isGold = true; });
+            (initState.values || []).forEach(([i, v]) => { if (boardState[i]) boardState[i].v = v; });
+            colorPickerPage = 0;
+            updateColorPickerButtonUI();
+            updateGlowEffect();
+            modals.renderColorPickerContent();
             // 3. עדכון הממשק (UI)
             updatePaletteHeader();
             applySeparator();
@@ -3242,6 +3355,22 @@ function executeMacroAction(action) {
     // ==================================
     
 
+    else if (action.eventName === 'PALETTE_STATE_RESTORE') {
+        try { applyState(JSON.parse(action.details).paletteState); }
+        catch (error) { console.error('Failed to restore macro palette state:', error); stopMacro(); }
+    }
+    else if (action.eventName === 'PALETTE_RESIZE') {
+        try {
+            const resize = JSON.parse(action.details);
+            if (resize.version !== PALETTE_RESIZE_VERSION || resize.paletteName !== C.PALETTES[activePaletteIndex].originalName ||
+                resize.sort !== currentSortMethod || resize.fromSize !== paletteLen() ||
+                JSON.stringify(resize.sourceColors) !== JSON.stringify(palette()) ||
+                !resizeActivePalette(resize.targetSize)) throw new Error('Palette resize source does not match macro state');
+        } catch (error) {
+            console.error('Failed to replay palette resize:', error);
+            stopMacro();
+        }
+    }
     else if (action.eventName === 'Palette Change') {
         // מפרידים בין שם הפלטה לשיטת המיון (אם קיימת)
         const parts = action.details.split(' | Sort: ');
@@ -3462,7 +3591,7 @@ else if (action.eventName === 'Invert Colors') {
             setIsRainbowModeActive: (b) => { isRainbowModeActive = b; },
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
-            switchToPalette,
+            switchToPalette, resizeActivePalette,
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: (r) => { gameOfLifeRules = r; },
             getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; },
 syncGsModeFromModal: (direction) => {
@@ -3629,7 +3758,8 @@ if (dom.btnSimSettings) {
         document.querySelectorAll('.ctrl').forEach(btn => { 
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
-            btn.addEventListener('pointerleave', hideLongPressDisplay); 
+            btn.addEventListener('pointerleave', hideLongPressDisplay);
+            btn.addEventListener('pointercancel', hideLongPressDisplay);
         });
 // Brush Size Slider Logic
 const brushSizeSlider = document.getElementById('brushSizeSlider');

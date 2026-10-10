@@ -380,13 +380,13 @@ body {
 }
 
 
-#saveModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal, #advancedColorMappingModal, #contourSettingsModal, #spiralSettingsModal {
+#paletteResizeModal, #saveModal, #colorPickerModal, #helpModal, #resizeModal, #paletteModal, #gameOfLifeSettingsModal, #gravitationalSortSettingsModal, #dlaSettingsModal, #advancedColorMappingModal, #contourSettingsModal, #spiralSettingsModal {
   transition: opacity 300ms ease-in-out, visibility 300ms ease-in-out;
   visibility: hidden;
   opacity: 0;
 }
 
-#saveModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible, #advancedColorMappingModal.modal-visible, #contourSettingsModal.modal-visible, #spiralSettingsModal.modal-visible {
+#paletteResizeModal.modal-visible, #saveModal.modal-visible, #colorPickerModal.modal-visible, #helpModal.modal-visible, #resizeModal.modal-visible, #paletteModal.modal-visible, #gameOfLifeSettingsModal.modal-visible, #gravitationalSortSettingsModal.modal-visible, #dlaSettingsModal.modal-visible, #advancedColorMappingModal.modal-visible, #contourSettingsModal.modal-visible, #spiralSettingsModal.modal-visible {
   visibility: visible;
   opacity: 1;
 }
@@ -1295,4 +1295,49 @@ button, .ctrl {
     border-radius: 0 !important;
     box-shadow: none !important; /* ביטול מוחלט של המסגרת */
   }
+}
+
+/* Palette expansion: a non-blocking one-second eclipse confirmation. */
+.palette-resize-option {
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--gold);
+  border-radius: 0.5rem;
+  color: var(--gold);
+  background: transparent;
+  cursor: pointer;
+}
+.palette-resize-option:hover, .palette-resize-option:focus-visible {
+  background: var(--gold);
+  color: #111;
+}
+#paletteResizeToast {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--gold);
+  animation: paletteResizeFade 1s ease both;
+}
+#paletteResizeToast[hidden] { display: none; }
+.palette-resize-eclipse {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #080808;
+  box-shadow: 0 0 0 2px var(--gold), 0 0 18px 5px rgba(255, 215, 0, 0.65);
+}
+@keyframes paletteResizeFade {
+  0%, 100% { opacity: 0; }
+  15%, 80% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #paletteResizeToast { animation: none; }
 }

@@ -351,3 +351,46 @@ To maintain stability while a macro is loaded or playing, strict interceptors ar
 *   **Pause/Resume:** The macro can be paused via the main Play/Pause button. Manual drawing is allowed *only* while the macro is paused.
 *   **Input Blocking:** Manual canvas interactions (`onPointerDown`) are strictly blocked while the macro is actively running to prevent state conflicts.
 *   **Critical Kill Switch:** If the user manually clicks any simulation button (e.g., Game of Life, Erosion) while a macro is loaded, the `isExecutingMacroCommand` flag recognizes the external interference and instantly terminates the macro queue (`stopMacro()`) to hand control back to the user.
+## 9. Palette Expansion
+
+Long-press the Palette button (600ms) to expand the active palette to **64, 264,
+or 512 colors**. Only larger sizes are offered. A single click still cycles
+palettes; a double click opens the gallery. An eclipse confirmation appears for
+one second after a successful expansion.
+
+`js/palette-resize.js` contains the pure RGB interpolation algorithm and the
+session palette snapshot manager. Every current color is an anchor, including
+duplicates. Intermediate colors are allocated by RGB distance using deterministic
+largest-remainder allocation. The resulting palette is sorted with the current
+sort method, and an explicit index map preserves every original anchor color on
+the canvas. Repeated expansions use the entire current palette as their source.
+
+Expansions stay attached to their base palette during the session. Static palette
+catalog groups remain unchanged. Expansion pauses an active simulation before
+committing one history action. Board indices, floating palette values, animation
+indices, brush selection, magnet anchors and relevant cached indices are remapped.
+Undo/Redo and JSON project files include `paletteOverrides` with both interpolation
+source order and exact active order. Legacy files without this field restore the
+base palettes.
+
+The logger records `PALETTE_RESIZE` with algorithm version, stable palette name,
+source/target sizes, sorting method and exact source colors. All logger resets use
+one `INIT_STATE` builder that captures the session palette overrides before board
+indices are decoded. Palette-related Undo/Redo payloads include a state snapshot;
+the parser uses `PALETTE_STATE_RESTORE` to handle logger resets and intervening sort
+changes. Expansion recipes disable alternate initial-palette selection because
+recorded indices require the original palette. Existing recipes remain supported.
+Exact stochastic simulation replay is outside the scope of palette expansion.
+
+Validation:
+
+- `node --test tests/*.test.mjs` runs palette expansion and existing spiral tests.
+- `tests/palette-resize-browser.cjs` exercises the actual UI, both state restoration
+  and macro playback, logger resets, sort/Undo/Redo combinations, canvas color
+  preservation, Hebrew UI, simulation pause and simulation steps with 512 colors.
+  It requires Playwright and Chromium, with the application served locally at
+  `http://127.0.0.1:8087/` (for example, `python -m http.server 8087`). Run with
+  `node tests/palette-resize-browser.cjs`. Override `PALETTE_TEST_PLAYWRIGHT`,
+  `PALETTE_TEST_CHROMIUM` or `PALETTE_TEST_URL` for other installations. Test-only
+  access to internal state is injected into the served module; production code
+  contains no test hooks.

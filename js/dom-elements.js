@@ -1,5 +1,12 @@
 // js/dom-elements.js
 export const dom = {
+  paletteResizeModal: document.getElementById('paletteResizeModal'),
+  paletteResizeTitle: document.getElementById('paletteResizeTitle'),
+  paletteResizePrompt: document.getElementById('paletteResizePrompt'),
+  paletteResizeOptions: document.getElementById('paletteResizeOptions'),
+  btnPaletteResizeClose: document.getElementById('btnPaletteResizeClose'),
+  paletteResizeToast: document.getElementById('paletteResizeToast'),
+  paletteResizeToastText: document.getElementById('paletteResizeToastText'),
   // Main Layout & Board
   appContainer: document.getElementById('appContainer'),
   appShell: document.querySelector('.app-shell'),

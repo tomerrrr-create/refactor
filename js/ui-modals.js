@@ -1,3 +1,4 @@
+import { PALETTE_RESIZE_SIZES } from './palette-resize.js';
 // js/ui-modals.js
 
 let lastWheelTime = 0;
@@ -83,6 +84,35 @@ function closeColorPickerModal() {
 function closeHelpModal() {
     app.dom.helpModal.classList.remove('modal-visible');
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
+}
+
+function closePaletteResizeModal() {
+    app.dom.paletteResizeModal.classList.remove('modal-visible');
+    app.resetWasLongPress();
+    app.dom.btnPalette.focus();
+}
+
+function openPaletteResizeModal() {
+    const { paletteResizeModal, paletteResizeTitle, paletteResizePrompt, paletteResizeOptions, btnPaletteResizeClose } = app.dom;
+    paletteResizeTitle.textContent = app.getText('paletteResize_title');
+    btnPaletteResizeClose.setAttribute('aria-label', app.getText('saveModal_close'));
+    const size = app.paletteLen();
+    const targets = PALETTE_RESIZE_SIZES.filter(target => target > size);
+    paletteResizePrompt.textContent = targets.length ?
+        `${app.getText('paletteResize_current')} ${size}` : app.getText('paletteResize_max');
+    paletteResizeOptions.replaceChildren();
+    targets.forEach(target => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'palette-resize-option';
+        button.textContent = target;
+        button.addEventListener('click', () => {
+            if (app.resizeActivePalette(target)) closePaletteResizeModal();
+        });
+        paletteResizeOptions.appendChild(button);
+    });
+    paletteResizeModal.classList.add('modal-visible');
+    (paletteResizeOptions.firstElementChild || btnPaletteResizeClose).focus();
 }
 
 function closePaletteModal() {
@@ -1016,6 +1046,21 @@ export function initializeModals(appContext) {
     app.dom.btnHelpModalClose.addEventListener('click', closeHelpModal);
     app.dom.helpModal.addEventListener('click', (e) => { if (e.target === app.dom.helpModal) { closeHelpModal(); } });
 
+    app.dom.btnPaletteResizeClose.addEventListener('click', closePaletteResizeModal);
+    app.dom.paletteResizeModal.addEventListener('click', e => {
+        if (e.target === app.dom.paletteResizeModal) closePaletteResizeModal();
+    });
+    document.addEventListener('keydown', e => {
+        if (!app.dom.paletteResizeModal.classList.contains('modal-visible')) return;
+        if (e.key === 'Escape') { e.preventDefault(); closePaletteResizeModal(); }
+        if (e.key === 'Tab') {
+            const buttons = [...app.dom.paletteResizeModal.querySelectorAll('button')];
+            const first = buttons[0], last = buttons[buttons.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+    });
+
     // Palette Modal
     app.dom.btnPaletteModalClose.addEventListener('click', closePaletteModal);
     app.dom.paletteModal.addEventListener('click', (e) => { if (e.target === app.dom.paletteModal) { closePaletteModal(); } });
@@ -1391,7 +1436,7 @@ return {
         openResizeModal,
         openColorPickerModal,
         openHelpModal,
-        openPaletteModal,
+        openPaletteModal, openPaletteResizeModal,
         openGolSettingsModal,
         openGravitationalSortSettingsModal,
         openAdvancedColorMappingModal, // Phase 1 Addition
