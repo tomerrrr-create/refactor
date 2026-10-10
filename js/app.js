@@ -270,6 +270,7 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'vortex', 'left', 'black_hole', 'a'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -315,6 +316,7 @@ function compressBoardState() {
             paletteName: C.PALETTES[activePaletteIndex].originalName, 
             separatorPx,
 currentSortMethod, 
+            spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
                 isGold: tile.isGold,
@@ -391,6 +393,14 @@ k: tileState.k,
             isGold: tileState.isGold,
             startDelay: 0
         }));
+
+        // Older project files have no spiralMethod and keep their old behavior.
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'radial', 'down'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+            if (armedSimulation !== 'spiral') armSimulation('spiral');
+            spiralMode = state.spiralMethod;
+            spiralRules.method = state.spiralMethod;
+            updateSpiralButtonUI();
+        }
         
         renderToScreen(null); 
       }
@@ -1895,6 +1905,8 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         document.querySelectorAll('.ctrl').forEach(btn => { 
             if (btn.title) btn.setAttribute('aria-label', btn.title);
         });
+        document.querySelector('[data-method="black_hole"] span').textContent = getText('spiral_black_hole');
+        updateSpiralButtonUI();
       }
 
       function updateAllUIText() {
@@ -2559,7 +2571,11 @@ function cycleBreatheEvoMode() {
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'simulation-active');
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = spiralMode === 'black_hole'
+        ? `${getText('tooltip_spiral')}: ${getText(`spiral_${spiralMode}`)}`
+        : getText('tooltip_spiral');
+    dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);
 
     if (spiralMode !== 'off') {
         dom.btnSpiral.classList.add('mode-' + spiralMode);
@@ -2572,7 +2588,7 @@ function updateSpiralButtonUI() {
 
 function cycleSpiralMode() {
     const oldMode = spiralMode;
-const sequence = ['off', 'b', 'vortex',  'left', 'a'];
+const sequence = SPIRAL_MODE_SEQUENCE;
 
 
 // original with all button
