@@ -270,7 +270,7 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'vortex', 'left', 'black_hole', 'white_hole', 'a'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'vortex', 'left', 'black_hole', 'a'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -1906,7 +1906,6 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
             if (btn.title) btn.setAttribute('aria-label', btn.title);
         });
         document.querySelector('[data-method="black_hole"] span').textContent = getText('spiral_black_hole');
-        document.querySelector('[data-method="white_hole"] span').textContent = getText('spiral_white_hole');
         updateSpiralButtonUI();
       }
 
@@ -2572,8 +2571,8 @@ function cycleBreatheEvoMode() {
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-black_hole', 'mode-white_hole', 'simulation-active');
-    dom.btnSpiral.title = spiralMode === 'black_hole' || spiralMode === 'white_hole'
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = spiralMode === 'black_hole'
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${spiralMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);

@@ -1088,8 +1088,6 @@ body {
 #btnSpiral.mode-black_hole #iconSpiralBlackHole { display: block !important; }
 #btnSpiral.mode-black_hole svg:not(#iconSpiralBlackHole) { display: none !important; }
 
-#btnSpiral.mode-white_hole #iconSpiralWhiteHole { display: block !important; }
-#btnSpiral.mode-white_hole svg:not(#iconSpiralWhiteHole) { display: none !important; }
 
 #btnSpiral.mode-a #iconSpiralA { display: block !important; }
 #btnSpiral.mode-a svg:not(#iconSpiralA) { display: none !important; }

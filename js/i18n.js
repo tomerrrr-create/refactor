@@ -10,7 +10,6 @@ export function onLanguageChange(callback) {
 
 export const translations = {
   spiral_black_hole: { en: "Black Hole", he: "חור שחור", ru: "Чёрная дыра", nl: "Zwart gat" },
-  spiral_white_hole: { en: "White Hole", he: "חור לבן", ru: "Белая дыра", nl: "Wit gat" },
   help_category_evolution: { en: "Evolution", he: "אבולוציה", ru: "Эволюция", nl: "Evolutie" },
   help_category_tips: { en: "Tips & Tricks", he: "טיפים וטריקים", ru: "Советы и хитрости", nl: "Tips & Trucs" },
   help_tip1: { en: "Long-press Sim Mode to prep the board: max size, dark background, and lightest brush.", he: "לחיצה ארוכה על מצב סימולציה מכינה את הלוח ליצירה: גודל מקסימלי, רקע כהה ומכחול בהיר.", ru: "Длительное нажатие на режим симуляции готовит холст: макс. размер, тёмный фон и светлая кисть.", nl: "Druk lang op Sim Modus om het bord voor te bereiden: max. grootte, donkere achtergrond en lichtste penseel." },
