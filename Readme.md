@@ -351,3 +351,19 @@ To maintain stability while a macro is loaded or playing, strict interceptors ar
 *   **Pause/Resume:** The macro can be paused via the main Play/Pause button. Manual drawing is allowed *only* while the macro is paused.
 *   **Input Blocking:** Manual canvas interactions (`onPointerDown`) are strictly blocked while the macro is actively running to prevent state conflicts.
 *   **Critical Kill Switch:** If the user manually clicks any simulation button (e.g., Game of Life, Erosion) while a macro is loaded, the `isExecutingMacroCommand` flag recognizes the external interference and instantly terminates the macro queue (`stopMacro()`) to hand control back to the user.
+### Black Hole (Circular Spiral)
+
+The `black_hole` spiral mode combines inward clockwise swaps with progressive
+sorting along exact Euclidean distance from the board center. The final state
+has lower palette indices inside and higher indices outside, forming circular
+color bands. A dark center therefore assumes a dark-to-light palette order.
+Colors and tile counts are conserved; this mode does not protect gold tiles.
+Once sorted, the board stays still until its colors change.
+
+Select **Black Hole / חור שחור** in the spiral settings, or cycle the spiral
+button from Left to Black Hole to Experiment A. Saved JSON projects retain the
+selected spiral method; older JSON projects remain supported. Macro PLAY and
+STEP events use the existing spiral rules mechanism.
+
+Run the convergence and conservation tests with:
+`node --test tests/spiral-black-hole.test.mjs`
