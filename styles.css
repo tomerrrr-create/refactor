@@ -1341,3 +1341,27 @@ button, .ctrl {
 @media (prefers-reduced-motion: reduce) {
   #paletteResizeToast { animation: none; }
 }
+
+
+/* Temporary palette variants reuse the base glyph with the native HQ/HD badge. */
+.temporary-palette-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  font-size: var(--icon-size);
+  line-height: 1;
+}
+.temporary-palette-icon > svg { width: 100%; height: 100%; }
+.temporary-palette-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font: bold 0.25em/1 sans-serif;
+  text-shadow: -1px 0 #111, 0 1px #111, 1px 0 #111, 0 -1px #111;
+}
+.badge-hq { color: #C0C0C0; }
+.badge-hd { color: #FFD700; }
+.macro-palette-btn .temporary-palette-icon { font-size: 18px; }

@@ -12,27 +12,21 @@ export const PALETTE_GROUPS = [
     { id: 'archive', title: 'Basement ▽', min: 0, max: Infinity, indexes: [] } 
 ];
 
-// שיוך אוטומטי של אינדקסים לקבוצות
-PALETTES.forEach((palette, index) => {
-    if (palette.isArchived) {
-        const archiveGroup = PALETTE_GROUPS.find(g => g.id === 'archive');
-        if (archiveGroup) archiveGroup.indexes.push(index);
-        return;
-    }
-
-    const count = palette.colors.length;
-    const group = PALETTE_GROUPS.find(g => g.id !== 'archive' && count >= g.min && count <= g.max);
-    if (group) {
-        group.indexes.push(index);
-    }
-});
-
-// מיון פנימי של הפלטות בתוך כל קבוצה לפי גודל (מהקטן לגדול)
-PALETTE_GROUPS.forEach(group => {
-    group.indexes.sort((a, b) => {
-        return PALETTES[a].colors.length - PALETTES[b].colors.length;
+// Rebuild after creating, removing or restoring temporary palettes. Ties keep
+// catalog order, so navigating a group stays stable across refreshes.
+export function rebuildPaletteGroups() {
+    PALETTE_GROUPS.forEach(group => { group.indexes.length = 0; });
+    PALETTES.forEach((palette, index) => {
+        const group = palette.isArchived && !palette.isTemporary ?
+            PALETTE_GROUPS.find(g => g.id === 'archive') :
+            PALETTE_GROUPS.find(g => g.id !== 'archive' && palette.colors.length >= g.min && palette.colors.length <= g.max);
+        if (group) group.indexes.push(index);
     });
-});
+    PALETTE_GROUPS.forEach(group => {
+        group.indexes.sort((a, b) => PALETTES[a].colors.length - PALETTES[b].colors.length || a - b);
+    });
+}
+rebuildPaletteGroups();
 
 // --- App Settings & Magic Numbers ---
 export const GOLD = '#FFD700';

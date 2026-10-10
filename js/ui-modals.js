@@ -634,6 +634,9 @@ function populatePaletteModal() {
             const palette = app.C.PALETTES[index];
             const preview = document.createElement('div');
             preview.className = 'palette-preview';
+            preview.dataset.paletteId = palette.id;
+            preview.dataset.group = group.id;
+            if (palette.isTemporary) preview.classList.add('temporary-palette-preview');
             
             if (index === app.getActivePaletteIndex()) {
                 preview.style.boxShadow = '0 0 0 2px var(--gold)';
@@ -666,7 +669,7 @@ function populatePaletteModal() {
 
             const name = document.createElement('span');
             name.className = 'palette-preview-name';
-            name.textContent = `${palette.name} (${palette.colors.length})`;
+            name.textContent = palette.isTemporary ? palette.name : `${palette.name} (${palette.colors.length})`;
 
             preview.appendChild(iconContainer);
             preview.appendChild(name);

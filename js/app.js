@@ -5,7 +5,7 @@ import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailab
 import * as C from './constants.js';
 import * as Simulations from './simulations.js';
 import { dom } from './dom-elements.js';
-import { expandPalette, createPaletteResizeState, PALETTE_RESIZE_SIZES, PALETTE_RESIZE_VERSION } from './palette-resize.js';
+import { createPaletteResizeState, PALETTE_RESIZE_SIZES, PALETTE_RESIZE_VERSION } from './palette-resize.js';
 import { initializeModals } from './ui-modals.js';
 
 
@@ -144,7 +144,7 @@ function getNextPaletteIndex(currentIndex) {
     
     // פולבאק למקרה שמשהו השתבש (התנהגות רגילה)
     if (!group || group.indexes.length === 0) {
-        return (currentIndex + 1) % PALETTES.length; 
+        return (currentIndex + 1) % C.PALETTES.length;
     }
 
     // מציאת המיקום שלנו בתוך הקבוצה ומעבר להבא (במעגל סגור)
@@ -157,7 +157,7 @@ function getPrevPaletteIndex(currentIndex) {
     const group = C.PALETTE_GROUPS.find(g => g.indexes.includes(currentIndex));
     
     if (!group || group.indexes.length === 0) {
-        return (currentIndex - 1 + PALETTES.length) % PALETTES.length;
+        return (currentIndex - 1 + C.PALETTES.length) % C.PALETTES.length;
     }
 
     const posInGroup = group.indexes.indexOf(currentIndex);
@@ -317,7 +317,8 @@ function compressBoardState() {
             activePaletteIndex, 
             paletteName: C.PALETTES[activePaletteIndex].originalName, 
             separatorPx,
-            paletteOverrides: paletteResizeState.snapshot(),
+            temporaryPalettes: paletteResizeState.snapshot(),
+            paletteId: C.PALETTES[activePaletteIndex].id,
             selectedColor, selectedColorIndex, isRainbowModeActive,
             magnetAnchorColorIndex: magnetRules.anchorColorIndex,
             dlaLastColorIndex: dlaState?.lastSuccessfulColorIndex,
@@ -339,7 +340,8 @@ currentSortMethod,
             sort: currentSortMethod,
             sep: separatorPx,
             board: compressBoardState(),
-            paletteOverrides: paletteResizeState.snapshot(),
+            temporaryPalettes: paletteResizeState.snapshot(),
+            paletteId: C.PALETTES[activePaletteIndex].id,
             paletteName: C.PALETTES[activePaletteIndex].originalName,
             selectedColor, selectedColorIndex, isRainbowModeActive,
             magnetAnchorColorIndex: magnetRules.anchorColorIndex,
@@ -355,16 +357,55 @@ currentSortMethod,
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
         if (stateA.currentSortMethod !== stateB.currentSortMethod ||
             stateA.magnetAnchorColorIndex !== stateB.magnetAnchorColorIndex ||
-            JSON.stringify(stateA.paletteOverrides) !== JSON.stringify(stateB.paletteOverrides)) return false;
+            stateA.paletteId !== stateB.paletteId ||
+            JSON.stringify(stateA.temporaryPalettes) !== JSON.stringify(stateB.temporaryPalettes)) return false;
         for (let i = 0; i < stateA.tiles.length; i++) {
           if (stateA.tiles[i].k !== stateB.tiles[i].k || stateA.tiles[i].isGold !== stateB.tiles[i].isGold || stateA.tiles[i].v !== stateB.tiles[i].v) return false;
         }
         return true;
       }
 
+      function refreshPaletteCatalog() {
+        C.PALETTES.filter(p => !p.isTemporary).forEach(p => {
+            const key = Object.keys(translations).find(k => translations[k].en === p.originalName);
+            p.name = key ? getText(key) : p.originalName;
+        });
+        C.PALETTES.filter(p => p.isTemporary).forEach(p => {
+            const root = C.PALETTES.find(base => base.id === p.basePaletteId);
+            p.name = `${root.name} · ${p.colors.length}`;
+        });
+        C.rebuildPaletteGroups();
+        if (modals && dom.paletteModal.classList.contains('modal-visible')) modals.populatePaletteModal();
+      }
+
+      function legacyPaletteIndex(name) {
+        const translation = Object.values(translations).find(row => Object.values(row).includes(name));
+        return paletteResizeState.legacyIndex(translation?.en || name);
+      }
+
+      function restorePaletteSession(state) {
+        const sort = state.currentSortMethod || state.sort || currentSortMethod;
+        paletteResizeState.restore(state.temporaryPalettes, sort,
+            state.temporaryPalettes ? undefined : state.paletteOverrides, state.paletteId);
+        let index = state.paletteId ? paletteResizeState.indexOf(state.paletteId) : -1;
+        if (state.paletteId && index < 0) throw new Error('Active palette is missing from the saved collection');
+        if (index < 0 && state.paletteName) index = legacyPaletteIndex(state.paletteName);
+        if (index < 0) {
+            index = state.activePaletteIndex ?? state.pal ?? 0;
+            if (state.paletteOverrides?.length && C.PALETTES[index]) index = legacyPaletteIndex(C.PALETTES[index].originalName);
+        }
+        activePaletteIndex = index >= 0 && index < C.PALETTES.length ? index : 0;
+        currentSortMethod = sort;
+        const sortIndex = SORT_MODES.findIndex(mode => mode.method === sort);
+        if (sortIndex >= 0) {
+            currentSortIndex = sortIndex;
+            if (dom.sortIconGroup) dom.sortIconGroup.innerHTML = SORT_MODES[sortIndex].icon;
+        }
+        refreshPaletteCatalog();
+      }
+
       function applyState(state) {
-        // Validate and restore palettes before resolving any board indices.
-        paletteResizeState.restore(state.paletteOverrides, state.currentSortMethod || currentSortMethod);
+        restorePaletteSession(state);
         if (Object.hasOwn(state, 'selectedColor')) {
             selectedColor = state.selectedColor;
             selectedColorIndex = state.selectedColorIndex;
@@ -372,28 +413,7 @@ currentSortMethod,
         }
         if (Object.hasOwn(state, 'magnetAnchorColorIndex')) magnetRules.anchorColorIndex = state.magnetAnchorColorIndex;
         if (dlaState && Object.hasOwn(state, 'dlaLastColorIndex')) dlaState.lastSuccessfulColorIndex = state.dlaLastColorIndex;
-        let paletteIdx = C.PALETTES.findIndex(p => p.originalName === state.paletteName);
-        if (paletteIdx === -1) {
-            paletteIdx = state.activePaletteIndex;
-        }
-
-activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? paletteIdx : 0;
         separatorPx = state.separatorPx;
-
-        if (state.currentSortMethod && state.currentSortMethod !== currentSortMethod) {
-            currentSortMethod = state.currentSortMethod;
-            // Palette arrays were already restored with their exact saved order.
-            // עדכון האייקון של הכפתור
-            const modeIndex = SORT_MODES.findIndex(m => m.method === currentSortMethod);
-            if (modeIndex !== -1) {
-                currentSortIndex = modeIndex;
-                if (dom.sortIconGroup) dom.sortIconGroup.innerHTML = SORT_MODES[currentSortIndex].icon;
-            }
-            // רענון חלונית בחירת הצבעים
-            if (modals && typeof modals.renderColorPickerContent === 'function') {
-                modals.renderColorPickerContent();
-            }
-        }
 
         updateGlowEffect();
 
@@ -454,7 +474,7 @@ k: tileState.k,
       function undo() {
         if (history.length === 0) return;
         const lastAction = history.pop();
-        const paletteChanged = JSON.stringify(lastAction.before.paletteOverrides) !== JSON.stringify(lastAction.after.paletteOverrides);
+        const paletteChanged = JSON.stringify(lastAction.before.temporaryPalettes) !== JSON.stringify(lastAction.after.temporaryPalettes);
         window.logArtEvent('UNDO', paletteChanged ? JSON.stringify({ paletteState: lastAction.before }) : '---');
         future.push(lastAction);
         applyState(lastAction.before);
@@ -464,7 +484,7 @@ k: tileState.k,
       function redo() {
         if (future.length === 0) return;
         const nextAction = future.pop();
-        const paletteChanged = JSON.stringify(nextAction.before.paletteOverrides) !== JSON.stringify(nextAction.after.paletteOverrides);
+        const paletteChanged = JSON.stringify(nextAction.before.temporaryPalettes) !== JSON.stringify(nextAction.after.temporaryPalettes);
         window.logArtEvent('REDO', paletteChanged ? JSON.stringify({ paletteState: nextAction.after }) : '---');
         history.push(nextAction);
         applyState(nextAction.after);
@@ -680,6 +700,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
         const label = `${getText('tooltip_palette')}: ${pal.name} (${activePaletteIndex + 1}/${C.PALETTES.length})`;
         dom.btnPalette.title = `${getText('tooltip_palette')} · ${pal.colors.length} · ${getText('paletteResize_title')}`;
         dom.btnPalette.setAttribute('aria-label', label);
+        dom.btnPalette.dataset.paletteId = pal.id;
       }
       
       function applySeparator() {
@@ -817,10 +838,16 @@ function invertGrid() {
       }
 
       let paletteToastTimer;
-      function resizeActivePalette(targetSize, showToast = true) {
+      function resizeActivePalette(targetSize, showToast = true, recordedRecipe = null, legacyReplay = false) {
         const oldColors = [...palette()];
         if (!PALETTE_RESIZE_SIZES.includes(targetSize) || targetSize <= oldColors.length || isBreathing) return false;
-        const result = expandPalette(oldColors, targetSize, currentSortMethod);
+        const source = C.PALETTES[activePaletteIndex];
+        const prepared = paletteResizeState.prepare(source.id, targetSize, currentSortMethod, recordedRecipe);
+        if (legacyReplay) {
+            prepared.recipe.legacySourceId = source.basePaletteId || source.id;
+            prepared.palette.legacySourceId = prepared.recipe.legacySourceId;
+        }
+        const result = prepared.result;
         if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
         if (isLifePlaying) pauseLife();
         const oldNorm = k => ((k % oldColors.length) + oldColors.length) % oldColors.length;
@@ -831,7 +858,8 @@ function invertGrid() {
             return lerp(result.indexMap[lower], result.indexMap[upper], value - lower);
         };
         performAction(() => {
-            paletteResizeState.set(activePaletteIndex, result);
+            activePaletteIndex = paletteResizeState.add(prepared);
+            refreshPaletteCatalog();
             boardState.forEach(tile => {
                 // Gold stays visually protected, but its underlying indices remain valid.
                 tile.k = mapIndex(tile.k);
@@ -859,9 +887,9 @@ function invertGrid() {
         });
         window.logArtEvent('PALETTE_RESIZE', JSON.stringify({
             version: PALETTE_RESIZE_VERSION,
-            paletteName: C.PALETTES[activePaletteIndex].originalName,
+            sourcePaletteId: source.id, paletteId: prepared.recipe.id,
             fromSize: oldColors.length, targetSize, sort: currentSortMethod,
-            sourceColors: oldColors
+            recipe: prepared.recipe
         }));
         if (showToast) {
             clearTimeout(paletteToastTimer);
@@ -986,7 +1014,7 @@ function handlePaletteSwitch(backwards = false) {
         // --- תוספת: תפיסת הבחירה אם אנחנו במצב החלפת פלטה למאקרו ---
         // נוודא שזה קורה רק כאשר המאקרו *לא* מנגן
         if (isSelectingMacroPalette && !isMacroPlaying) {
-            pendingMacroPalette = index;
+            pendingMacroPalette = { paletteId: C.PALETTES[index].id, temporaryPalettes: paletteResizeState.snapshot() };
             isSelectingMacroPalette = false;
 
         // --- תוספת: עדכון כפתור המאקרו שיציג את הפלטה החדשה שנבחרה ---
@@ -1000,7 +1028,7 @@ function handlePaletteSwitch(backwards = false) {
         }
         // -------------------------------------------------------------
         if (index === activePaletteIndex) return;
-        window.logArtEvent('Palette Change', `${C.PALETTES[index].name} | Sort: ${currentSortMethod}`); // תיעוד החלפת פלטה כולל שיטת מיון
+        window.logArtEvent('Palette Change', JSON.stringify({ paletteId: C.PALETTES[index].id, paletteName: C.PALETTES[index].originalName, sort: currentSortMethod })); // תיעוד החלפת פלטה כולל שיטת מיון
 
         performAction(() => {
             
@@ -1781,7 +1809,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 isMacroLoaded = true;
                 currentMacroStep = 0;
                 dom.btnChangeInitPalette.disabled = macroQueue.some(a => a.eventName === 'PALETTE_RESIZE' || a.eventName === 'PALETTE_STATE_RESTORE' ||
-                    (a.eventName === 'INIT_STATE' && (() => { try { return JSON.parse(a.details).paletteOverrides?.length; } catch { return false; } })()));
+                    (a.eventName === 'INIT_STATE' && (() => { try { const init = JSON.parse(a.details); return init.temporaryPalettes?.length || init.paletteOverrides?.length; } catch { return false; } })()));
                 dom.btnChangeInitPalette.title = dom.btnChangeInitPalette.disabled ? getText('paletteResize_macroSource') : '';
                 pendingMacroPalette = null; // איפוס בחירה קודמת בטעינת קובץ חדש
                 isSelectingMacroPalette = false;
@@ -1792,7 +1820,9 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 if (initAction) {
                     try {
                         const initState = JSON.parse(initAction.details);
-                        updateMacroPaletteButtonUI(initState.pal);
+                        const index = initState.paletteId ? paletteResizeState.indexOf(initState.paletteId) : initState.pal;
+                        if (index >= 0 && C.PALETTES[index]) updateMacroPaletteButtonUI(index);
+                        else dom.btnChangeInitPalette.textContent = initState.paletteName || getText('tooltip_palette');
                     } catch(e) { console.error("Could not parse INIT_STATE for palette button", e); }
                 }
                 // -------------------------------------------------------------
@@ -1989,11 +2019,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
       }
 
       function updateAllUIText() {
-        C.PALETTES.forEach(p => {
-            if (!p.originalName) p.originalName = p.name; 
-            const key = Object.keys(translations).find(k => translations[k].en === p.originalName);
-            p.name = key ? getText(key) : p.originalName;
-        });
+        refreshPaletteCatalog();
         const helpModalInnerContainer = document.getElementById('helpModalInnerContainer');
         if (helpModalInnerContainer) {
             if (getCurrentLang() === 'he') {
@@ -2852,9 +2878,7 @@ function exportArtRecipeLog() {
             const initState = JSON.parse(match[1]);
             const palIndex = initState.pal;
             // שולפים את השם של הפלטה מהמאגר
-            if (C.PALETTES[palIndex]) {
-                paletteName = C.PALETTES[palIndex].name;
-            }
+            paletteName = initState.paletteName || C.PALETTES[palIndex]?.name || 'Unknown';
         }
     } catch (e) {
         console.error("Could not extract palette name for file:", e);
@@ -3279,12 +3303,24 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
 
 
+function macroInitialPaletteState(initState) {
+    if (pendingMacroPalette === null) return initState;
+    const index = paletteResizeState.indexOf(pendingMacroPalette.paletteId);
+    return { ...initState, ...pendingMacroPalette, paletteOverrides: undefined,
+        pal: index, paletteName: C.PALETTES[index]?.originalName || initState.paletteName };
+}
+
 function executeMacroAction(action) {
     //console.log("Macro Execution:", action.eventName, "->", action.details);
     isExecutingMacroCommand = true; // מדליקים דגל כדי לא להפעיל את ה-Kill Switch
 
     // הזרקה אקטיבית: המאקרו מדווח באופן יזום ומוחלט על כל פעולה שהוא מנגן, ומונע כפילויות!
-        window.logArtEvent(action.eventName, action.details, true);
+    let logDetails = action.details;
+    if (action.eventName === 'INIT_STATE' && pendingMacroPalette !== null) {
+        try { logDetails = JSON.stringify(macroInitialPaletteState(JSON.parse(action.details))); }
+        catch { /* The INIT_STATE handler below reports invalid data. */ }
+    }
+    window.logArtEvent(action.eventName, logDetails, true);
 
     // === פיענוח ופריסת המצב ההתחלתי ===
     if (action.eventName === 'INIT_STATE') {
@@ -3292,23 +3328,10 @@ function executeMacroAction(action) {
             const initState = JSON.parse(action.details);
             
 
-            // 1. הגדרת משתני הסביבה ההתחלתיים
+            const paletteState = macroInitialPaletteState(initState);
+            restorePaletteSession(paletteState);
             n = initState.n;
-            // אם המשתמש בחר פלטה חלופית (pendingMacroPalette), נדרוס את המקורית
-            activePaletteIndex = pendingMacroPalette !== null ? pendingMacroPalette : initState.pal;
             separatorPx = initState.sep;
-            
-
-            if (currentSortMethod !== initState.sort) {
-                applySortMethod(initState.sort);
-            }
-
-            const overrides = pendingMacroPalette === null ? initState.paletteOverrides : undefined;
-            paletteResizeState.restore(overrides, currentSortMethod);
-            if (pendingMacroPalette === null && initState.paletteName) {
-                const index = C.PALETTES.findIndex(p => p.originalName === initState.paletteName);
-                if (index >= 0) activePaletteIndex = index;
-            }
             if (Object.hasOwn(initState, 'magnetAnchorColorIndex')) magnetRules.anchorColorIndex = initState.magnetAnchorColorIndex;
             if (Object.hasOwn(initState, 'selectedColor')) {
                 selectedColor = initState.selectedColor;
@@ -3350,6 +3373,7 @@ function executeMacroAction(action) {
 
         } catch(e) {
             console.error("Failed to parse INIT_STATE:", e);
+            stopMacro();
         }
     }
     // ==================================
@@ -3362,31 +3386,36 @@ function executeMacroAction(action) {
     else if (action.eventName === 'PALETTE_RESIZE') {
         try {
             const resize = JSON.parse(action.details);
-            if (resize.version !== PALETTE_RESIZE_VERSION || resize.paletteName !== C.PALETTES[activePaletteIndex].originalName ||
+            const current = C.PALETTES[activePaletteIndex];
+            const root = C.PALETTES.find(p => p.id === (current.basePaletteId || current.id));
+            const sourceMatches = resize.recipe ? resize.sourcePaletteId === current.id && resize.paletteId === resize.recipe.id :
+                (resize.paletteName === current.originalName || resize.paletteName === root.originalName) &&
+                JSON.stringify(resize.sourceColors) === JSON.stringify(palette());
+            if (resize.version !== PALETTE_RESIZE_VERSION || !sourceMatches ||
                 resize.sort !== currentSortMethod || resize.fromSize !== paletteLen() ||
-                JSON.stringify(resize.sourceColors) !== JSON.stringify(palette()) ||
-                !resizeActivePalette(resize.targetSize)) throw new Error('Palette resize source does not match macro state');
+                !resizeActivePalette(resize.targetSize, true, resize.recipe, !resize.recipe)) {
+                throw new Error('Palette resize source does not match macro state');
+            }
         } catch (error) {
             console.error('Failed to replay palette resize:', error);
             stopMacro();
         }
     }
     else if (action.eventName === 'Palette Change') {
-        // מפרידים בין שם הפלטה לשיטת המיון (אם קיימת)
-        const parts = action.details.split(' | Sort: ');
-        const paletteName = parts[0];
-        const sortMethod = parts[1];
-
-        // מעדכנים את שיטת המיון קודם, אם היא סופקה ולא תואמת לנוכחית
-        if (sortMethod && currentSortMethod !== sortMethod) {
-            applySortMethod(sortMethod);
-            if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
-        }
-
-        const pIndex = C.PALETTES.findIndex(p => p.name === paletteName || p.originalName === paletteName);
-        if(pIndex !== -1) switchToPalette(pIndex);
+        try {
+            // New logs use stable IDs; existing text/name-based logs still load.
+            let change;
+            if (action.details.trim().startsWith('{')) change = JSON.parse(action.details);
+            else {
+                const [paletteName, sort] = action.details.split(' | Sort: ');
+                change = { paletteName, sort };
+            }
+            if (change.sort && currentSortMethod !== change.sort) applySortMethod(change.sort);
+            const index = change.paletteId ? paletteResizeState.indexOf(change.paletteId) : legacyPaletteIndex(change.paletteName);
+            if (index < 0) throw new Error('Macro palette does not exist');
+            switchToPalette(index);
+        } catch (error) { console.error('Failed to replay palette change:', error); stopMacro(); }
     }
-
 
     else if (action.eventName === '--' && action.details === 'Palette Randomized') {
         randomizeAll();

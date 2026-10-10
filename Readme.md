@@ -365,29 +365,76 @@ largest-remainder allocation. The resulting palette is sorted with the current
 sort method, and an explicit index map preserves every original anchor color on
 the canvas. Repeated expansions use the entire current palette as their source.
 
-Expansions stay attached to their base palette during the session. Static palette
-catalog groups remain unchanged. Expansion pauses an active simulation before
-committing one history action. Board indices, floating palette values, animation
-indices, brush selection, magnet anchors and relevant cached indices are remapped.
-Undo/Redo and JSON project files include `paletteOverrides` with both interpolation
-source order and exact active order. Legacy files without this field restore the
-base palettes.
+Each expansion now creates a **separate temporary palette** and activates it. The
+base palette and previous temporary versions remain available. Variants use the
+base glyph with a silver `HQ` badge for 64, gold `HD` for 264, or gold `512`.
+Temporary names include their size. They are not persisted automatically and
+vanish when the app restarts; project files and macro initial states can restore
+those that were explicitly saved. Repeated creation is allowed without deduplication.
 
-The logger records `PALETTE_RESIZE` with algorithm version, stable palette name,
-source/target sizes, sorting method and exact source colors. All logger resets use
-one `INIT_STATE` builder that captures the session palette overrides before board
-indices are decoded. Palette-related Undo/Redo payloads include a state snapshot;
-the parser uses `PALETTE_STATE_RESTORE` to handle logger resets and intervening sort
-changes. Expansion recipes disable alternate initial-palette selection because
-recorded indices require the original palette. Existing recipes remain supported.
-Exact stochastic simulation replay is outside the scope of palette expansion.
+`rebuildPaletteGroups()` in `constants.js` updates the gallery and navigation:
+64 belongs to Expansion; 264 and 512 belong to Resonance. Sorting is by color
+count, then stable catalog order. Temporary variants of archived base palettes
+also enter their size group; their base remains in Basement. The next/previous
+palette buttons stay inside the active palette's group and wrap within it.
+
+Each base has a stable `base:<originalName>` identity. Temporary palettes receive
+unique `temp:<number>` identities that are restored unchanged by Undo/Redo, project
+loading and macro playback. Array positions remain a runtime implementation detail.
+Creation and canvas remapping form one history action. Undo removes the created
+variant and restores the previous active palette; Redo recreates the same identity
+and colors. Group lists and translated variant names refresh after restoration.
+Expansion pauses an active simulation before committing the action. Canvas color
+indices, floating palette values, animation indices, brush selection, magnet
+anchors and relevant cached indices are remapped as before.
+
+### Recipe-based serialization
+
+New JSON project files and `INIT_STATE` logger entries store `paletteId` plus
+`temporaryPalettes`, an ordered list of recipes. They do **not** serialize each new
+palette's full color arrays. Each recipe contains:
+
+- `id`, `sourceId`, `targetSize`: stable result identity, source identity and size.
+- `sort`: the source ordering used for this expansion.
+- `algorithmVersion` (`rgb-anchors-v1`) and `sortVersion` (`color-sort-v1`).
+- `baseFingerprint`, `sourceFingerprint`, `resultFingerprint`: deterministic
+  checks of the base data, source color order and interpolation result.
+
+A chained expansion references its parent temporary palette. The loader builds
+recipes in dependency order, then applies the saved global sort. It reconstructs
+the palette collection **before** decoding the canvas indices. Unsupported
+versions, changed base data, broken dependencies, duplicate IDs or fingerprint
+mismatches are rejected before replacing the live catalog. When changing palette
+or sort algorithms in future, preserve their recorded version behavior; a recipe
+cannot reconstruct a historical base palette that has been removed or altered.
+
+`PALETTE_RESIZE` records `version`, `sourcePaletteId`, `paletteId`, `fromSize`,
+`targetSize`, `sort` and the result `recipe`. `Palette Change` now records JSON
+with `paletteId`, `paletteName` and `sort`. All logger resets share one `INIT_STATE`
+builder and preserve every available temporary recipe, including earlier sizes.
+Palette-related Undo/Redo payloads carry a state snapshot; the macro parser uses
+`PALETTE_STATE_RESTORE` to handle logger resets and intervening sort changes.
+Expansion recipes disable alternate initial-palette selection because recorded
+indices require the original recipe sources. Exact stochastic simulation replay
+remains outside the scope of palette expansion.
+
+### Backward compatibility
+
+Existing JSON and INIT_STATE records with `paletteOverrides` are imported as
+separate temporary variants, with aliases preserving old name-based palette
+selection, including translated palette names. Existing PALETTE_RESIZE records containing `sourceColors`, old text
+Palette Change events, and palette Undo/Redo snapshots still replay. Legacy files
+already contain full colors; imported legacy snapshots retain those colors for
+compatibility. This exception does not add color arrays to newly created recipes.
+Files without temporary data load only the native catalog.
 
 Validation:
 
 - `node --test tests/*.test.mjs` runs palette expansion and existing spiral tests.
 - `tests/palette-resize-browser.cjs` exercises the actual UI, both state restoration
   and macro playback, logger resets, sort/Undo/Redo combinations, canvas color
-  preservation, Hebrew UI, simulation pause and simulation steps with 512 colors.
+  preservation, group navigation, badge display, separate base/variant identities,
+  recipe chains, legacy files, Hebrew UI, simulation pause and 512-color simulations.
   It requires Playwright and Chromium, with the application served locally at
   `http://127.0.0.1:8087/` (for example, `python -m http.server 8087`). Run with
   `node tests/palette-resize-browser.cjs`. Override `PALETTE_TEST_PLAYWRIGHT`,
