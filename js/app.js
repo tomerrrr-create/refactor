@@ -7,6 +7,7 @@ import * as Simulations from './simulations.js';
 import { dom } from './dom-elements.js';
 import { initializeModals } from './ui-modals.js';
 import { loadSimInit, persistSimInit } from './sim-init-settings.js';
+import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } from './startup-settings.js';
 
 
 (function() {
@@ -266,6 +267,7 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
       let colorPickerPage = 0;
       let longPressTimer = null;
       let wasLongPress = false;
+      let startupSettings = loadStartup();
       let simulationInitSettings = loadSimInit();
       let brushSize = 1; 
       let isLifePlaying = false;
@@ -3673,6 +3675,22 @@ else if (action.eventName === 'Invert Colors') {
         // Phase 1 Addition: Add adaptColors to the context for modals
         const contextForModals = {
             dom, C, getText, performAction, getSymmetricIndices, applyActionToTiles,
+            getStartupSettings: () => ({ ...startupSettings }),
+            saveStartupSettings: (settings) => {
+                const normalized = normalizeStartup(settings);
+                const persisted = persistStartup(normalized);
+                startupSettings = normalized;
+                return persisted;
+            },
+            getCurrentStartupSettings: () => ({
+                paletteName: C.PALETTES[activePaletteIndex].originalName,
+                boardSize: n, separatorPx, sortMethod: currentSortMethod,
+                fill: startupSettings.fill, brushSize,
+                brushMode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy',
+                brushColor: isRainbowModeActive ? 'rainbow' : selectedColor === sortColorsArray(palette(), 'luminance')[0] ? 'darkest' :
+                    selectedColor === sortColorsArray(palette(), 'luminance').at(-1) ? 'lightest' : 'none',
+                symmetry: symmetryMode, interfaceMode: isSimModeActive ? 'simulation' : 'creative'
+            }),
             getSimulationInit: () => ({ ...simulationInitSettings }),
             saveSimulationInit: (settings) => {
                 const persisted = persistSimInit(settings);
@@ -3741,12 +3759,38 @@ applySortMethod,
         };
         modals = initializeModals(contextForModals);
         
+        activePaletteIndex = C.PALETTES.findIndex(p => p.originalName === startupSettings.paletteName);
+        n = startupSettings.boardSize;
+        updateLayout();
+        separatorPx = fitStartupSeparator(n, startupSettings.separatorPx, dom.boardCanvas.clientWidth);
+        currentSortMethod = startupSettings.sortMethod;
+        C.PALETTES.forEach(p => { p.colors = sortColorsArray(p.originalColors, currentSortMethod); });
+        updateSortButtonUI();
+        brushSize = startupSettings.brushSize;
+        document.getElementById('brushSizeSlider').value = brushSize;
+        document.getElementById('brushSizeValue').textContent = brushSize;
+        symmetryMode = startupSettings.symmetry;
+        isRainbowModeActive = startupSettings.brushColor === 'rainbow';
+        const brightnessOrder = sortColorsArray(palette(), 'luminance');
+        const darkestIndex = palette().indexOf(brightnessOrder[0]);
+        const lightestIndex = palette().indexOf(brightnessOrder.at(-1));
+        selectedColorIndex = startupSettings.brushColor === 'darkest' ? darkestIndex :
+            startupSettings.brushColor === 'lightest' ? lightestIndex : -1;
+        selectedColor = selectedColorIndex >= 0 ? palette()[selectedColorIndex] : null;
         initializeBoardAndCanvas(true);
-        fillRandom();
+        if (startupSettings.fill === 'random') fillRandom();
+        else {
+            if (startupSettings.fill === 'seed') applyInitialPattern();
+            const initialIndex = startupSettings.fill === 'light' ? lightestIndex : darkestIndex;
+            boardState.forEach(tile => {
+                if (!tile.isGold) { tile.k = initialIndex; tile.v = initialIndex; }
+            });
+        }
         hasPerformedInitialAutofill = true;
         applySeparator();
         updateUndoRedoButtons();
-        setBrushMode(true);
+        setBrushMode(startupSettings.brushMode !== 'copy', startupSettings.brushMode === 'continuous');
+        if (startupSettings.interfaceMode === 'simulation') toggleSimMode();
         updateSymmetryUI();
 updateBrightnessEvoButtonUI();
         updateBreatheEvoButtonUI(); // Add this
