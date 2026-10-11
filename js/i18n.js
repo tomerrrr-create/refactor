@@ -73,6 +73,7 @@ export const translations = {
   help_category_shortcuts: { en: "Keyboard Shortcuts", he: "קיצורי מקלדת", ru: "Горячие клавиши", nl: "Sneltoetsen" },
   brushMode_paint: { en: "Paint", he: "ציור", ru: "Рисовать", nl: "Verf" },
   brushMode_copy: { en: "Copy", he: "העתקה", ru: "Копировать", nl: "Kopieer" },
+  brushMode_continuous: { en: "Paint with line completion", he: "ציור עם השלמת קווים", ru: "Рисование с соединением точек", nl: "Tekenen met lijnaanvulling" },
   symmetry_off: { en: "Symmetry Off", he: "סימטריה: כבוי", ru: "Симметрия выключена", nl: "Symmetrie uit" },
   symmetry_vertical: { en: "Vertical Symmetry", he: "סימטריה אנכית", ru: "Вертикальная симметрия", nl: "Verticale symmetrie" },
   symmetry_horizontal: { en: "Horizontal Symmetry", he: "סימטריה אופקית", ru: "Горизонтальная симметрия", nl: "Horizontale symmetrie" },

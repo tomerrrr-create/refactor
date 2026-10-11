@@ -356,6 +356,10 @@ body {
 #btnBrushMode.brush-on svg path {
     fill: #fff;
 }
+#btnBrushMode.brush-continuous svg path {
+    fill: var(--gold);
+    stroke: var(--gold);
+}
 .app-shell {
   width: min(85vmin, 720px);
 }

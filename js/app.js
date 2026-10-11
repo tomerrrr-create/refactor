@@ -252,6 +252,7 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
       let n = 7;
       let separatorPx = 2;
       let isBrushModeOn = true; 
+      let isContinuousBrushOn = false;
       let hasPerformedInitialAutofill = false; 
       let hasTriggeredFirstNudge = false;
       let hasUsedRandomize = false;
@@ -1538,17 +1539,27 @@ if (simulationName === 'magnet') {
 }
 
       
-      function setBrushMode(isBrushOn) {
+      function setBrushMode(isBrushOn, continuous = false) {
           isBrushModeOn = isBrushOn;
-          dom.btnBrushMode.classList.toggle('brush-on', isBrushOn);
-          const newTitle = isBrushOn ? getText('brushMode_paint') : getText('brushMode_copy');
+          isContinuousBrushOn = isBrushOn && continuous;
+          dom.btnBrushMode.classList.toggle('brush-on', isBrushOn && !isContinuousBrushOn);
+          dom.btnBrushMode.classList.toggle('brush-continuous', isContinuousBrushOn);
+          const newTitle = getBrushModeTitle();
           dom.btnBrushMode.title = newTitle;
           dom.btnBrushMode.setAttribute('aria-label', newTitle);
           if (pointerState.dragSourceIndex !== null) pointerState.dragSourceIndex = null;
+          pointerState.lineAnchorIndex = -1;
+          pointerState.lineRestartPending = pointerState.id !== null;
+      }
+
+      function getBrushModeTitle() {
+          return getText(isContinuousBrushOn ? 'brushMode_continuous' : isBrushModeOn ? 'brushMode_paint' : 'brushMode_copy');
       }
       
       function toggleBrushMode() {
-          setBrushMode(!isBrushModeOn);
+          if (!isBrushModeOn) setBrushMode(true);
+          else if (!isContinuousBrushOn) setBrushMode(true, true);
+          else setBrushMode(false);
       }
 
       function openSaveModalWithPreview() {
@@ -1929,7 +1940,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
 dom.btnSpiral.title = getText('tooltip_spiral');
 dom.btnTuring.title = getText('tooltip_turing');
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
-        dom.btnBrushMode.title = isBrushModeOn ? getText('brushMode_paint') : getText('brushMode_copy');
+        dom.btnBrushMode.title = getBrushModeTitle();
 
         document.querySelectorAll('.ctrl').forEach(btn => { 
             if (btn.title) btn.setAttribute('aria-label', btn.title);
@@ -2104,7 +2115,45 @@ function handleDragPaint(targetIndex) {
     }
 }
 
-const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null };
+// Stream a Bresenham segment to the existing brush; the shared endpoint is skipped.
+function paintBrushLine(fromIndex, toIndex) {
+    let x = fromIndex % n;
+    let y = Math.floor(fromIndex / n);
+    const targetX = toIndex % n;
+    const targetY = Math.floor(toIndex / n);
+    const dx = Math.abs(targetX - x);
+    const dy = -Math.abs(targetY - y);
+    const stepX = x < targetX ? 1 : -1;
+    const stepY = y < targetY ? 1 : -1;
+    let error = dx + dy;
+    while (x !== targetX || y !== targetY) {
+        const twiceError = 2 * error;
+        if (twiceError >= dy) { error += dy; x += stepX; }
+        if (twiceError <= dx) { error += dx; y += stepY; }
+        handleDragPaint(y * n + x);
+    }
+}
+
+function handleContinuousDrag(targetIndex, e) {
+    if (targetIndex === -1) {
+        const rect = canvas.getBoundingClientRect();
+        // Separators inside the canvas do not break a line; leaving the canvas does.
+        if (e.clientX < rect.left || e.clientX >= rect.right || e.clientY < rect.top || e.clientY >= rect.bottom) {
+            pointerState.lineAnchorIndex = -1;
+        }
+        return;
+    }
+    if (pointerState.lineAnchorIndex === -1) {
+        if (selectedColorIndex === -1 && pointerState.dragSourceIndex === null) pointerState.dragSourceIndex = targetIndex;
+        handleDragPaint(targetIndex);
+    } else {
+        paintBrushLine(pointerState.lineAnchorIndex, targetIndex);
+    }
+    pointerState.lineAnchorIndex = targetIndex;
+    pointerState.lineRestartPending = false;
+}
+
+const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null };
 
 function onPointerDown(e) {
 
@@ -2122,7 +2171,7 @@ function onPointerDown(e) {
     const index = getTileIndexFromCoords(e.clientX, e.clientY);
     if (index === -1) return;
     e.target.setPointerCapture(e.pointerId);
-    Object.assign(pointerState, { id: e.pointerId, downIndex: index, downX: e.clientX, downY: e.clientY, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: getCurrentState() });
+    Object.assign(pointerState, { id: e.pointerId, downIndex: index, downX: e.clientX, downY: e.clientY, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: getCurrentState() });
     pointerState.longPressTimer = setTimeout(() => {
         if (pointerState.isDragging) return;
         pointerState.suppressClick = true;
@@ -2145,14 +2194,16 @@ function onPointerMove(e) {
             pointerState.longPressTimer = null;
             pointerState.isDragging = true;
             pointerState.suppressClick = true;
-            if (isBrushModeOn) {
+            if (isBrushModeOn && !(isContinuousBrushOn && pointerState.lineRestartPending)) {
                 if (selectedColorIndex === -1) { pointerState.dragSourceIndex = pointerState.downIndex; }
                 handleDragPaint(pointerState.downIndex);
+                if (isContinuousBrushOn) pointerState.lineAnchorIndex = pointerState.downIndex;
             }
         }
     }
     if (pointerState.isDragging && isBrushModeOn) {
-        handleDragPaint(currentIndex); 
+        if (isContinuousBrushOn) handleContinuousDrag(currentIndex, e);
+        else handleDragPaint(currentIndex);
     }
 }
 
@@ -2160,8 +2211,15 @@ function onPointerUp(e) {
     if (pointerState.id !== e.pointerId) return;
     clearTimeout(pointerState.longPressTimer);
     const upIndex = getTileIndexFromCoords(e.clientX, e.clientY);
+    const isCancelled = e.type === 'pointercancel' || e.type === 'lostpointercapture';
+    if (isContinuousBrushOn && isCancelled) pointerState.suppressClick = true;
+    if (isContinuousBrushOn && !isCancelled && !pointerState.isDragging && !pointerState.suppressClick) {
+        // A fast gesture may deliver its first displaced position only at pointerup.
+        onPointerMove(e);
+    }
 
     if (pointerState.isDragging) {
+        if (isContinuousBrushOn && !isCancelled) handleContinuousDrag(upIndex, e);
         if (!isBrushModeOn && pointerState.dragSourceIndex !== null && upIndex !== -1) {
             const sourceData = { ...boardState[pointerState.dragSourceIndex] };
             const baseTiles = getTilesInRadius(upIndex, brushSize);
@@ -2229,7 +2287,7 @@ function onPointerUp(e) {
          hasPerformedInitialAutofill = true;
     }
 
-    Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null });
+    Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null });
 }
 
 function updateLayout() {
@@ -3692,6 +3750,9 @@ updateBrightnessEvoButtonUI();
         boardCanvas.addEventListener('pointermove', onPointerMove);
         boardCanvas.addEventListener('pointerup', onPointerUp);
         boardCanvas.addEventListener('pointercancel', onPointerUp);
+        boardCanvas.addEventListener('lostpointercapture', e => {
+            if (isContinuousBrushOn) onPointerUp(e);
+        });
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));
         dom.macroOverlay.addEventListener('click', (e) => handleCtrlClick(e, stopMacro));
