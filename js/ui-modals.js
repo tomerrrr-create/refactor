@@ -1,3 +1,4 @@
+import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
 // js/ui-modals.js
 
 let lastWheelTime = 0;
@@ -1012,16 +1013,63 @@ export function initializeModals(appContext) {
     app.dom.colorPickerModal.addEventListener('touchstart', handleTouchStart, { passive: true });
     app.dom.colorPickerModal.addEventListener('touchend', handleTouchEnd, { passive: true });
 
-    // Technician menu is a UI shell; init configuration is intentionally inactive.
+    // Simulation initialization preferences are separate from the current board.
+    const initForm = document.getElementById('initSettingsForm');
+    const initToggle = document.getElementById('btnConfigureInit');
+    const initBoard = document.getElementById('initBoardSize');
+    const initBrush = document.getElementById('initBrushSize');
+    const initBrushValue = document.getElementById('initBrushValue');
+    const initStatus = document.getElementById('initSettingsStatus');
+    app.C.SIZES.slice().sort((a, b) => a - b).forEach(size => {
+        const option = document.createElement('option');
+        option.value = size;
+        option.textContent = `${size} × ${size}`;
+        initBoard.appendChild(option);
+    });
+    function fillInitForm(settings) {
+        initBoard.value = settings.boardSize;
+        initBrush.value = settings.brushSize;
+        initBrushValue.value = settings.brushSize;
+        initStatus.textContent = '';
+    }
     app.dom.btnOpenDebug.addEventListener('click', () => {
+        fillInitForm(app.getSimulationInit());
+        initForm.hidden = true;
+        initToggle.setAttribute('aria-expanded', 'false');
         app.dom.technicianDialog.showModal();
+    });
+    initToggle.addEventListener('click', () => {
+        initForm.hidden = !initForm.hidden;
+        initToggle.setAttribute('aria-expanded', String(!initForm.hidden));
+        if (!initForm.hidden) initBoard.focus();
+    });
+    initBrush.addEventListener('input', () => {
+        initBrushValue.value = initBrush.value;
+        initStatus.textContent = '';
+    });
+    initBoard.addEventListener('change', () => { initStatus.textContent = ''; });
+    document.getElementById('btnResetInit').addEventListener('click', () => {
+        fillInitForm(DEFAULT_SIM_INIT);
+        initStatus.textContent = app.getText('init_defaults_pending');
+    });
+    initForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const persisted = app.saveSimulationInit({
+            boardSize: Number(initBoard.value), brushSize: Number(initBrush.value)
+        });
+        initStatus.textContent = app.getText(persisted ? 'init_saved' : 'init_saved_session');
     });
     app.dom.btnCloseDebug.addEventListener('click', () => app.dom.technicianDialog.close());
     app.dom.technicianDialog.addEventListener('keydown', (event) => {
         if (event.key !== 'Tab') return;
-        // Only the back button is enabled in this initial menu.
-        event.preventDefault();
-        app.dom.btnCloseDebug.focus();
+        const controls = [...app.dom.technicianDialog.querySelectorAll('button:not([disabled]), select, input')]
+            .filter(element => element.getClientRects().length);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault(); last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault(); first.focus();
+        }
     });
     app.dom.technicianDialog.addEventListener('click', (event) => {
         if (event.target !== app.dom.technicianDialog) return;
