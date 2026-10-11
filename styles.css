@@ -1354,3 +1354,6 @@ button, .ctrl {
 .init-save { background: #d5aa48; color: #221807; border: 1px solid #d5aa48; }
 .init-reset { background: transparent; color: #d5aa48; border: 1px solid #b28b3659; }
 #initSettingsStatus { color: #c3b99e; font-size: 13px; line-height: 1.5; margin: 0; }
+
+.startup-entry { margin-top: 18px; }
+#startupSettingsStatus { color: #c3b99e; font-size: 13px; line-height: 1.5; margin: 0; }

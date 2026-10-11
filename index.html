@@ -475,6 +475,40 @@
         </div>
         <p id="initSettingsStatus" role="status" aria-live="polite"></p>
       </form>
+      <button id="btnConfigureStartup" type="button" class="technician-option startup-entry" aria-describedby="startupDescription" aria-expanded="false" aria-controls="startupSettingsForm">
+        <span class="technician-option-heading"><bdi>startup /</bdi><span class="technician-badge" aria-hidden="true">◇</span></span>
+        <span class="technician-option-title" data-debug-text="startup_title"></span>
+        <span id="startupDescription" class="init-settings-note" data-debug-text="startup_description"></span>
+      </button>
+      <form id="startupSettingsForm" class="init-settings" hidden>
+        <p class="init-settings-note" data-debug-text="startup_note"></p>
+        <label for="startupPalette" data-debug-text="startup_palette"></label>
+        <select id="startupPalette"></select>
+        <label for="startupBoardSize" data-debug-text="init_board_size"></label>
+        <select id="startupBoardSize"></select>
+        <label for="startupSeparator" data-debug-text="startup_separator"></label>
+        <select id="startupSeparator"></select>
+        <label for="startupSort" data-debug-text="startup_sort"></label>
+        <select id="startupSort"></select>
+        <label for="startupFill" data-debug-text="startup_fill"></label>
+        <select id="startupFill"></select>
+        <label for="startupBrushMode" data-debug-text="startup_brush_mode"></label>
+        <select id="startupBrushMode"></select>
+        <label for="startupBrushColor" data-debug-text="startup_brush_color"></label>
+        <select id="startupBrushColor"></select>
+        <label for="startupSymmetry" data-debug-text="startup_symmetry"></label>
+        <select id="startupSymmetry"></select>
+        <label for="startupInterface" data-debug-text="startup_interface"></label>
+        <select id="startupInterface"></select>
+        <label for="startupBrushSize"><span data-debug-text="init_brush_size"></span> <output id="startupBrushValue" for="startupBrushSize">1</output></label>
+        <input id="startupBrushSize" type="range" min="1" max="15" step="2" value="1">
+        <div class="init-settings-actions">
+          <button type="submit" class="init-save" data-debug-text="init_save"></button>
+          <button id="btnUseCurrentStartup" type="button" class="init-reset" data-debug-text="startup_use_current"></button>
+          <button id="btnResetStartup" type="button" class="init-reset" data-debug-text="init_reset"></button>
+        </div>
+        <p id="startupSettingsStatus" role="status" aria-live="polite"></p>
+      </form>
       <button id="btnCloseDebug" type="button" class="technician-back" data-debug-text="debug_back" autofocus></button>
     </div>
   </dialog>

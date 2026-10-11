@@ -1,3 +1,4 @@
+import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
 // js/ui-modals.js
 
@@ -1034,11 +1035,16 @@ export function initializeModals(appContext) {
     }
     app.dom.btnOpenDebug.addEventListener('click', () => {
         fillInitForm(app.getSimulationInit());
+        fillStartupForm(app.getStartupSettings());
+        startupForm.hidden = true;
+        startupToggle.setAttribute('aria-expanded', 'false');
         initForm.hidden = true;
         initToggle.setAttribute('aria-expanded', 'false');
         app.dom.technicianDialog.showModal();
     });
     initToggle.addEventListener('click', () => {
+        startupForm.hidden = true;
+        startupToggle.setAttribute('aria-expanded', 'false');
         initForm.hidden = !initForm.hidden;
         initToggle.setAttribute('aria-expanded', String(!initForm.hidden));
         if (!initForm.hidden) initBoard.focus();
@@ -1058,6 +1064,69 @@ export function initializeModals(appContext) {
             boardSize: Number(initBoard.value), brushSize: Number(initBrush.value)
         });
         initStatus.textContent = app.getText(persisted ? 'init_saved' : 'init_saved_session');
+    });
+    const startupForm = document.getElementById('startupSettingsForm');
+    const startupToggle = document.getElementById('btnConfigureStartup');
+    const startupStatus = document.getElementById('startupSettingsStatus');
+    const startupFields = {
+        paletteName: 'startupPalette', boardSize: 'startupBoardSize', separatorPx: 'startupSeparator',
+        sortMethod: 'startupSort', fill: 'startupFill', brushMode: 'startupBrushMode',
+        brushColor: 'startupBrushColor', symmetry: 'startupSymmetry', interfaceMode: 'startupInterface',
+        brushSize: 'startupBrushSize'
+    };
+    function addStartupOptions(id, entries) {
+        const select = document.getElementById(id);
+        entries.forEach(([value, label, key]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            if (key) option.dataset.debugText = key;
+            option.textContent = key ? app.getText(key) : label;
+            select.appendChild(option);
+        });
+    }
+    addStartupOptions('startupPalette', app.C.PALETTES.filter(p => !p.isArchived)
+        .map(p => [p.originalName, p.originalName]));
+    addStartupOptions('startupBoardSize', app.C.SIZES.slice().sort((a, b) => a - b).map(n => [n, `${n} × ${n}`]));
+    addStartupOptions('startupSeparator', app.C.SEPARATORS.slice().reverse().map(gap => [gap, `${gap} px`]));
+    addStartupOptions('startupSort', ['luminance', 'dark-rainbow', 'reversed', 'center-out', 'temperature', 'outside-in']
+        .map(value => [value, '', 'startup_sort_' + value]));
+    addStartupOptions('startupFill', ['random', 'dark', 'light', 'seed'].map(value => [value, '', 'startup_fill_' + value]));
+    addStartupOptions('startupBrushMode', ['paint', 'continuous', 'copy'].map(value => [value, '', 'brushMode_' + value]));
+    addStartupOptions('startupBrushColor', ['none', 'darkest', 'lightest', 'rainbow'].map(value => [value, '', 'startup_color_' + value]));
+    addStartupOptions('startupSymmetry', app.C.SYMMETRY_MODES.map(value => [value, '', 'symmetry_' + value]));
+    addStartupOptions('startupInterface', ['creative', 'simulation'].map(value => [value, '', 'startup_mode_' + value]));
+    function fillStartupForm(settings) {
+        Object.entries(startupFields).forEach(([key, id]) => { document.getElementById(id).value = settings[key]; });
+        document.getElementById('startupBrushValue').value = settings.brushSize;
+        startupStatus.textContent = '';
+    }
+    startupToggle.addEventListener('click', () => {
+        initForm.hidden = true;
+        initToggle.setAttribute('aria-expanded', 'false');
+        startupForm.hidden = !startupForm.hidden;
+        startupToggle.setAttribute('aria-expanded', String(!startupForm.hidden));
+        if (!startupForm.hidden) document.getElementById('startupPalette').focus();
+    });
+    startupForm.addEventListener('input', () => {
+        document.getElementById('startupBrushValue').value = document.getElementById('startupBrushSize').value;
+        startupStatus.textContent = '';
+    });
+    document.getElementById('btnResetStartup').addEventListener('click', () => {
+        fillStartupForm(DEFAULT_STARTUP);
+        startupStatus.textContent = app.getText('init_defaults_pending');
+    });
+    document.getElementById('btnUseCurrentStartup').addEventListener('click', () => {
+        fillStartupForm({ ...app.getCurrentStartupSettings(), fill: document.getElementById('startupFill').value });
+        startupStatus.textContent = app.getText('startup_current_pending');
+    });
+    startupForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const settings = Object.fromEntries(Object.entries(startupFields).map(([key, id]) => {
+            const value = document.getElementById(id).value;
+            return [key, ['boardSize', 'separatorPx', 'brushSize'].includes(key) ? Number(value) : value];
+        }));
+        const persisted = app.saveStartupSettings(settings);
+        startupStatus.textContent = app.getText(persisted ? 'startup_saved' : 'startup_saved_session');
     });
     app.dom.btnCloseDebug.addEventListener('click', () => app.dom.technicianDialog.close());
     app.dom.technicianDialog.addEventListener('keydown', (event) => {
