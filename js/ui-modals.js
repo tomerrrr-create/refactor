@@ -392,7 +392,10 @@ function handleConfirmResize() {
     }
     closeResizeModal();
     if (newSize !== app.getN()) {
-         app.animateBoardTransition(() => app.performAction(() => app._performResize(newSize)));
+         app.animateBoardTransition(() => app.performAction(() => {
+             window.logArtEvent('GRID_RESIZE', newSize);
+             app._performResize(newSize);
+         }));
     }
 }
 
