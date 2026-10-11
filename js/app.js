@@ -17,6 +17,48 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
       
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
+// Preferences are independent of macro playback; replay never overwrites them.
+let nudgeIntervalMs = 0;
+let replayNudgeTiming = null;
+let lastNudgeTime = -Infinity;
+try {
+    const saved = JSON.parse(localStorage.getItem('colorGridNudge'));
+    if (Number.isInteger(saved?.intervalMs) && saved.intervalMs >= 0 && saved.intervalMs <= 200) nudgeIntervalMs = saved.intervalMs;
+} catch { /* Use defaults when storage is unavailable. */ }
+
+const liveNudgeTiming = { nudgeTimingVersion: 1, intervalMs: nudgeIntervalMs };
+
+function persistNudgeSettings() {
+    try {
+        localStorage.setItem('colorGridNudge', JSON.stringify({ intervalMs: nudgeIntervalMs }));
+    } catch { /* Settings still apply for this session. */ }
+}
+
+function setNudgeInterval(intervalMs, persist = true) {
+    if (!Number.isInteger(intervalMs) || intervalMs < 0 || intervalMs > 200) throw new Error('Invalid Nudge interval');
+    if (nudgeIntervalMs === intervalMs) return;
+    nudgeIntervalMs = intervalMs;
+    liveNudgeTiming.intervalMs = intervalMs;
+    if (persist) persistNudgeSettings();
+    window.logArtEvent('NUDGE_SPEED', JSON.stringify({ nudgeTimingVersion: 1, intervalMs }));
+}
+
+function getNudgeTiming() {
+    return replayNudgeTiming || liveNudgeTiming;
+}
+
+function applyNudgeTiming(rulesStr) {
+    if (rulesStr === 'No specific rules mapping') {
+        // All unmarked recordings predate the fast experiment and use original frame counting.
+        replayNudgeTiming = { intervalMs: 200, legacyFrames: true };
+        return;
+    }
+    const timing = JSON.parse(rulesStr);
+    if (!timing || timing.nudgeTimingVersion !== 1 || !Number.isInteger(timing.intervalMs) || timing.intervalMs < 0 || timing.intervalMs > 200) {
+        throw new Error('Invalid Nudge timing');
+    }
+    replayNudgeTiming = { nudgeTimingVersion: 1, intervalMs: timing.intervalMs };
+}
 // --- Macro Replay System Variables ---
 let macroQueue = [];
 let currentGenerationCount = 0; // מונה דורות לסימולציה
@@ -1035,6 +1077,7 @@ dlaState.emptyIndices.push(index);
         if (!isLifePlaying) return;
         const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, gravitationalSortRules, erosionRules, dlaState, dlaRules, contourRules };
         let nextState;
+        let didAdvance = true;
         switch(armedSimulation) {
             case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration(context); boardState = nextState; break;
 case 'brightnessEvo':
@@ -1075,12 +1118,18 @@ case 'turing':
                 break;
 
 case 'nudgeBrighter':
-    applyNudgeLogic(1);
+case 'nudgeDarker': {
+    const timing = getNudgeTiming();
+    const now = performance.now();
+    const due = timing.intervalMs === 0 || now - lastNudgeTime >= timing.intervalMs;
+    if (due) {
+        applyNudgeLogic(armedSimulation === 'nudgeBrighter' ? 1 : -1);
+        lastNudgeTime = now;
+    }
+    // New logs count shifts. Original unmarked logs counted every animation frame.
+    didAdvance = due || timing.legacyFrames === true;
     break;
-
-case 'nudgeDarker':
-    applyNudgeLogic(-1);
-    break;
+}
 
 
 
@@ -1098,7 +1147,7 @@ break;
                         renderToScreen(null);
                     }
             
-                    currentGenerationCount++; // קידום מונה הדורות
+                    if (didAdvance) currentGenerationCount++; // Count actual Nudge shifts; other simulations are unchanged.
             
                     // --- MACRO INTERCEPTOR: בדיקה אם המאקרו ממתין לדור הזה ---
                     if (isMacroPlaying && currentMacroStep < macroQueue.length) {
@@ -1145,6 +1194,7 @@ break;
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(chiFlowRules);
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
+        else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
         
         window.logArtEvent('STEP FORWARD', `Armed: ${armedSimulation} | Sort: ${currentSortMethod} | Rules: ${simDetails}`);
@@ -1278,6 +1328,7 @@ function pauseLife() {
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(chiFlowRules);
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
+        else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
         else if (armedSimulation === 'breathe') simDetails = `Mode: ${breatheEvoMode}`;
         
@@ -1321,6 +1372,9 @@ function pauseLife() {
 
           // --- Handle Discrete Simulations (uses gameLoop) ---
           currentGenerationCount = 0; // איפוס מונה הדורות בכל פעם שלוחצים Play
+          if ((armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') && !getNudgeTiming().legacyFrames) {
+              lastNudgeTime = -Infinity; // The first shift is immediate on each new run.
+          }
           if (armedSimulation === 'dla') {
               syncDlaCrystalState();
           }
@@ -3248,6 +3302,7 @@ function stopMacro() {
     macroQueue = [];
     isMacroLoaded = false;
     isMacroPlaying = false;
+    replayNudgeTiming = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
     isSelectingMacroPalette = false; 
@@ -3343,6 +3398,12 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
     // מוודאים שהסימולציה הנכונה חמושה בממשק
     if (armedSimulation !== sim) armSimulation(sim);
+
+    if (sim === 'nudgeBrighter' || sim === 'nudgeDarker') {
+        applyNudgeTiming(rulesStr);
+        return sim;
+    }
+    replayNudgeTiming = null;
 
     // הטמעת החוקים (Rules Injection)
     if (rulesStr !== "No specific rules mapping") {
@@ -3484,6 +3545,9 @@ function executeMacroAction(action) {
         if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
     }
 
+    else if (action.eventName === 'NUDGE_SPEED') {
+        applyNudgeTiming(action.details);
+    }
     else if (action.eventName === 'PAUSE') {
         pauseLife();
     } 
@@ -3668,6 +3732,9 @@ else if (action.eventName === 'Invert Colors') {
         // Phase 1 Addition: Add adaptColors to the context for modals
         const contextForModals = {
             dom, C, getText, performAction, getSymmetricIndices, applyActionToTiles,
+            getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
+            isNudgeReplayActive: () => isMacroLoaded,
+            setNudgeInterval, persistNudgeSettings,
             getStartupSettings: () => ({ ...startupSettings }),
             saveStartupSettings: (settings) => {
                 const normalized = normalizeStartup(settings);

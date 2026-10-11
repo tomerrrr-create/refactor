@@ -9,6 +9,10 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  "nudge_speed": { en: "Automatic Nudge speed", he: "מהירות Nudge אוטומטי", ru: "Скорость автоматического Nudge", nl: "Automatische Nudge-snelheid" },
+  "nudge_fast": { en: "Fastest", he: "הכי מהיר", ru: "Быстрее всего", nl: "Snelst" },
+  "nudge_interval": { en: "{ms} ms between shifts", he: "{ms} מילישניות בין הזזות", ru: "{ms} мс между сдвигами", nl: "{ms} ms tussen stappen" },
+  "nudge_note": { en: "Adjust speed while running. Your choice is saved on this device, and recordings preserve their speed. Locked while a macro is loaded.", he: "אפשר לשנות מהירות בזמן הריצה. הבחירה נשמרת במכשיר זה, והקלטות שומרות את המהירות שלהן. נעול כשמאקרו טעון.", ru: "Скорость можно менять во время работы. Выбор сохраняется на устройстве, а записи сохраняют свою скорость. Заблокировано при загруженном макросе.", nl: "Pas de snelheid tijdens het draaien aan. Je keuze wordt op dit apparaat opgeslagen en opnames bewaren hun snelheid. Vergrendeld als een macro is geladen." },
   "startup_title": { en: "App opening", he: "פתיחת האפליקציה", ru: "Открытие приложения", nl: "App openen" },
   "startup_description": { en: "Choose your starting point.", he: "בחירת נקודת ההתחלה שלך.", ru: "Выберите начальную точку.", nl: "Kies je beginpunt." },
   "startup_note": { en: "Applies on your next visit. A fresh board is generated; gaps shrink if needed to fit the screen.", he: "יחול בפתיחה הבאה. ייווצר לוח חדש; המפרידים יוקטנו במידת הצורך כדי להתאים למסך.", ru: "Применится при следующем открытии. Создаётся новое поле; промежутки уменьшаются по размеру экрана.", nl: "Geldt bij je volgende bezoek. Een nieuw bord wordt gemaakt; tussenruimtes passen zich aan het scherm aan." },
