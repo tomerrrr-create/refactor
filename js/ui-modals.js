@@ -1036,7 +1036,24 @@ export function initializeModals(appContext) {
         initBrushValue.value = settings.brushSize;
         initStatus.textContent = '';
     }
+    const nudgeSpeed = document.getElementById('nudgeSpeed');
+    const nudgeSpeedValue = document.getElementById('nudgeSpeedValue');
+    function updateNudgeSpeedValue() {
+        const interval = 200 - Number(nudgeSpeed.value);
+        const text = interval === 0 ? app.getText('nudge_fast') : app.getText('nudge_interval').replace('{ms}', interval);
+        nudgeSpeedValue.value = text;
+        nudgeSpeed.setAttribute('aria-valuetext', text);
+    }
+    nudgeSpeed.addEventListener('input', () => {
+        app.setNudgeInterval(200 - Number(nudgeSpeed.value), false);
+        updateNudgeSpeedValue();
+    });
+    // Store once on release, rather than synchronously writing storage for every drag event.
+    nudgeSpeed.addEventListener('change', () => app.persistNudgeSettings());
     app.dom.btnOpenDebug.addEventListener('click', () => {
+        nudgeSpeed.value = String(200 - app.getNudgeSettings().intervalMs);
+        updateNudgeSpeedValue();
+        nudgeSpeed.disabled = app.isNudgeReplayActive();
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
         startupForm.hidden = true;
