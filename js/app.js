@@ -17,7 +17,6 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
       
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
-let lastNudgeTime = 0; // מווסת את מהירות תנועת ה-Nudge האוטומטית
 // --- Macro Replay System Variables ---
 let macroQueue = [];
 let currentGenerationCount = 0; // מונה דורות לסימולציה
@@ -1076,17 +1075,11 @@ case 'turing':
                 break;
 
 case 'nudgeBrighter':
-    if (performance.now() - lastNudgeTime >= ANIMATION_DURATION) {
-        applyNudgeLogic(1);
-        lastNudgeTime = performance.now();
-    }
+    applyNudgeLogic(1);
     break;
 
 case 'nudgeDarker':
-    if (performance.now() - lastNudgeTime >= ANIMATION_DURATION) {
-        applyNudgeLogic(-1);
-        lastNudgeTime = performance.now();
-    }
+    applyNudgeLogic(-1);
     break;
 
 
