@@ -9,17 +9,11 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  paletteResize_title: { en: "Expand palette", he: "הגדלת פלטה", ru: "Расширить палитру", nl: "Palet uitbreiden" },
-  paletteResize_current: { en: "Current colors:", he: "מספר הצבעים הנוכחי:", ru: "Текущее число цветов:", nl: "Huidig aantal kleuren:" },
-  paletteResize_max: { en: "No larger palette sizes available.", he: "אין גדלי פלטה גדולים יותר זמינים.", ru: "Нет доступных размеров больше текущего.", nl: "Geen grotere paletgroottes beschikbaar." },
-  paletteResize_success: { en: "Palette expanded to", he: "הפלטה הוגדלה ל־", ru: "Палитра расширена до", nl: "Palet uitgebreid naar" },
-  paletteResize_macroSource: { en: "This macro requires its recorded palette to replay expansions accurately.", he: "המאקרו הזה דורש את הפלטה המוקלטת לשחזור מדויק של ההגדלות.", ru: "Для точного воспроизведения расширений нужна записанная палитра.", nl: "Deze macro vereist het opgenomen palet om uitbreidingen nauwkeurig af te spelen." },
-
   spiral_black_hole: { en: "Black Hole", he: "חור שחור", ru: "Чёрная дыра", nl: "Zwart gat" },
   help_category_evolution: { en: "Evolution", he: "אבולוציה", ru: "Эволюция", nl: "Evolutie" },
   help_category_tips: { en: "Tips & Tricks", he: "טיפים וטריקים", ru: "Советы и хитрости", nl: "Tips & Trucs" },
   help_tip1: { en: "Long-press Sim Mode to prep the board: max size, dark background, and lightest brush.", he: "לחיצה ארוכה על מצב סימולציה מכינה את הלוח ליצירה: גודל מקסימלי, רקע כהה ומכחול בהיר.", ru: "Длительное нажатие на режим симуляции готовит холст: макс. размер, тёмный фон и светлая кисть.", nl: "Druk lang op Sim Modus om het bord voor te bereiden: max. grootte, donkere achtergrond en lichtste penseel." },
-  help_tip2: { en: "Double-click the Palette button for the gallery. Long-press to expand its colors.", he: "לחיצה כפולה על כפתור הפלטות פותחת גלריה. לחיצה ארוכה מאפשרת להגדיל את הפלטה.", ru: "Двойное нажатие открывает галерею палитр. Долгое нажатие расширяет палитру.", nl: "Dubbelklik op de paletknop voor de galerij. Houd ingedrukt om het palet uit te breiden." },
+  help_tip2: { en: "Long-press the Palette button to open a gallery for quick selection.", he: "לחיצה ארוכה על כפתור הפלטות פותחת גלריה לבחירה מהירה של פלטה.", ru: "Длительное нажатие на кнопку палитры открывает галерею для быстрого выбора.", nl: "Druk lang op de Paletknop om een galerij te openen voor een snelle keuze." },
   help_tip3: { en: "Long-press a tile to open the color picker.", he: "לחיצה ארוכה על אריח בלוח פותחת את תפריט בחירת הצבע.", ru: "Длительное нажатие на плитку открывает палитру цветов.", nl: "Druk lang op een tegel om de kleurenkiezer te openen." },
   help_tip4: { en: "With a color selected, long-press a tile to deselect it.", he: "כשיש צבע נבחר, לחיצה ארוכה על אריח מבטלת את הבחירה.", ru: "Если цвет выбран, длительное нажатие на плитку отменит выбор.", nl: "Als een kleur is geselecteerd, druk lang op een tegel om de selectie op te heffen." },
   help_tip5: { en: "Long-press the resize buttons (+/-) to set a custom grid size.", he: "לחיצה ארוכה על כפתורי הגדלה/הקטנה מאפשרת לבחור גודל מותאם אישית.", ru: "Длительное нажатие на кнопки размера (+/-) позволяет задать свой размер сетки.", nl: "Druk lang op de formaatknoppen (+/-) om een aangepaste rastergrootte in te stellen." },
