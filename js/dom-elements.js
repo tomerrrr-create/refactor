@@ -89,6 +89,11 @@ spiralSettingsModal: document.getElementById('spiralSettingsModal'),
   btnNextPalette: document.getElementById('btnNextPalette'),
   colorPickerPagination: document.getElementById('colorPickerPagination'),
 
+  // Technician menu
+  btnOpenDebug: document.getElementById('btnOpenDebug'),
+  technicianDialog: document.getElementById('technicianDialog'),
+  btnCloseDebug: document.getElementById('btnCloseDebug'),
+
   // Help Modal Elements
   btnHelpModalClose: document.getElementById('btnHelpModalClose'),
   helpModalTitle: document.getElementById('helpModalTitle'),

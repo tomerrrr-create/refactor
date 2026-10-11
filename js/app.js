@@ -1912,6 +1912,10 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.resizeModalPrompt.textContent = getText('resizeModal_prompt');
         dom.btnConfirmResize.textContent = getText('resizeModal_confirm');
         dom.helpModalTitle.textContent = getText('help_title');
+        document.querySelectorAll('[data-debug-text]').forEach(element => {
+            element.textContent = getText(element.dataset.debugText);
+        });
+        dom.technicianDialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         dom.paletteModalTitle.textContent = getText('paletteModal_title');
         dom.helpIntroText.textContent = getText('help_intro');
         dom.gsSettingsTitle.textContent = getText('gs_modal_title');
