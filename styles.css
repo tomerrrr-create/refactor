@@ -1357,3 +1357,6 @@ button, .ctrl {
 
 .startup-entry { margin-top: 18px; }
 #startupSettingsStatus { color: #c3b99e; font-size: 13px; line-height: 1.5; margin: 0; }
+
+#btnSpiral.mode-black_hole_2 #iconSpiralBlackHole2 { display: block !important; }
+#btnSpiral.mode-black_hole_2 svg:not(#iconSpiralBlackHole2) { display: none !important; }

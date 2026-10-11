@@ -9,6 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  spiral_black_hole_2: { en: "Black Hole 2", he: "חור שחור 2", ru: "Чёрная дыра 2", nl: "Zwart gat 2" },
   "startup_title": { en: "App opening", he: "פתיחת האפליקציה", ru: "Открытие приложения", nl: "App openen" },
   "startup_description": { en: "Choose your starting point.", he: "בחירת נקודת ההתחלה שלך.", ru: "Выберите начальную точку.", nl: "Kies je beginpunt." },
   "startup_note": { en: "Applies on your next visit. A fresh board is generated; gaps shrink if needed to fit the screen.", he: "יחול בפתיחה הבאה. ייווצר לוח חדש; המפרידים יוקטנו במידת הצורך כדי להתאים למסך.", ru: "Применится при следующем открытии. Создаётся новое поле; промежутки уменьшаются по размеру экрана.", nl: "Geldt bij je volgende bezoek. Een nieuw bord wordt gemaakt; tussenruimtes passen zich aan het scherm aan." },
