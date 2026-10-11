@@ -725,6 +725,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
               [existingColors[i], existingColors[j]] = [existingColors[j], existingColors[i]];
           }
           const now = performance.now();
+          const diff = [];
           nonGoldIndices.forEach((boardIndex, arrayIndex) => {
               const oldK = boardState[boardIndex].k;
               const newK = existingColors[arrayIndex];
@@ -733,8 +734,10 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
                   boardState[boardIndex].animStart = now;
                   boardState[boardIndex].k = newK;
                   boardState[boardIndex].v = newK;
+                  diff.push({ i: boardIndex, k: newK });
               }
           });
+          window.logArtEvent('SHUFFLE_COLORS', JSON.stringify(diff));
           startAnimationLoop();
       }
 
@@ -760,7 +763,10 @@ spiralMode = 'off';
       }
 
       function goDarkAction() {
-        animateBoardTransition(() => performAction(goDark));
+        animateBoardTransition(() => {
+            window.logArtEvent('GO_DARK', '---');
+            performAction(goDark);
+        });
       }
       
 function invertGrid() {
@@ -2665,11 +2671,9 @@ function cycleMagnetMode() {
 
 
       function cycleSymmetryMode() {
-          performAction(() => {
-              const currentIndex = C.SYMMETRY_MODES.indexOf(symmetryMode);
-              symmetryMode = C.SYMMETRY_MODES[(currentIndex + 1) % C.SYMMETRY_MODES.length];
-              updateSymmetryUI();
-          });
+          const currentIndex = C.SYMMETRY_MODES.indexOf(symmetryMode);
+          symmetryMode = C.SYMMETRY_MODES[(currentIndex + 1) % C.SYMMETRY_MODES.length];
+          updateSymmetryUI();
       }
 
 
@@ -2850,7 +2854,7 @@ function parseMacroText(text) {
 
 
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
-    const boardChangingEvents = ['DRAW_STROKE', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'SEPARATOR_CHANGE', 'GRID_RESIZE'];
+    const boardChangingEvents = ['DRAW_STROKE', 'GO_DARK', 'SHUFFLE_COLORS', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'SEPARATOR_CHANGE', 'GRID_RESIZE'];
     
 
     // --- גבולות זמן (במילי-שניות) ---
@@ -3262,6 +3266,9 @@ function executeMacroAction(action) {
     else if (action.eventName === '--' && action.details === 'Palette Randomized') {
         randomizeAll();
     } 
+    else if (action.eventName === 'GO_DARK') {
+        performAction(goDark);
+    }
     else if (action.eventName === 'Sort by') {
         applySortMethod(action.details);
         if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
@@ -3389,11 +3396,11 @@ else if (action.eventName === 'Invert Colors') {
         }
 
 
-        else if (action.eventName === 'DRAW_STROKE') {
+        else if (action.eventName === 'DRAW_STROKE' || action.eventName === 'SHUFFLE_COLORS') {
             try {
                 const diff = JSON.parse(action.details);
                 const now = performance.now();
-                let changed = false;
+                let changed = action.eventName === 'SHUFFLE_COLORS';
                 
                 // === תיקון באג ה-Undo: שמירת מצב *לפני* שהמאקרו מצייר ===
                 const beforeState = getCurrentState();
