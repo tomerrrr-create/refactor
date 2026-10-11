@@ -1012,6 +1012,30 @@ export function initializeModals(appContext) {
     app.dom.colorPickerModal.addEventListener('touchstart', handleTouchStart, { passive: true });
     app.dom.colorPickerModal.addEventListener('touchend', handleTouchEnd, { passive: true });
 
+    // Technician menu is a UI shell; init configuration is intentionally inactive.
+    app.dom.btnOpenDebug.addEventListener('click', () => {
+        app.dom.technicianDialog.showModal();
+    });
+    app.dom.btnCloseDebug.addEventListener('click', () => app.dom.technicianDialog.close());
+    app.dom.technicianDialog.addEventListener('keydown', (event) => {
+        if (event.key !== 'Tab') return;
+        // Only the back button is enabled in this initial menu.
+        event.preventDefault();
+        app.dom.btnCloseDebug.focus();
+    });
+    app.dom.technicianDialog.addEventListener('click', (event) => {
+        if (event.target !== app.dom.technicianDialog) return;
+        const bounds = app.dom.technicianDialog.getBoundingClientRect();
+        if (event.clientX < bounds.left || event.clientX > bounds.right ||
+            event.clientY < bounds.top || event.clientY > bounds.bottom) {
+            app.dom.technicianDialog.close();
+        }
+    });
+    app.dom.technicianDialog.addEventListener('close', () => {
+        app.resetWasLongPress();
+        app.dom.btnOpenDebug.focus();
+    });
+
     // Help Modal
     app.dom.btnHelpModalClose.addEventListener('click', closeHelpModal);
     app.dom.helpModal.addEventListener('click', (e) => { if (e.target === app.dom.helpModal) { closeHelpModal(); } });

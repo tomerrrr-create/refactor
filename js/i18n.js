@@ -9,6 +9,15 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  // Technician menu
+  debug_button: { en: "Debug · Technician Menu", he: "דיבאג · תפריט טכנאים", ru: "Отладка · Меню техников", nl: "Debug · Technicusmenu" },
+  debug_title: { en: "Behind the veil", he: "מאחורי הקלעים", ru: "За завесой", nl: "Achter de sluier" },
+  debug_subtitle: { en: "Technician Menu", he: "תפריט טכנאים", ru: "Меню техников", nl: "Technicusmenu" },
+  debug_soon: { en: "Coming soon", he: "בקרוב", ru: "Скоро", nl: "Binnenkort" },
+  debug_init: { en: "Configure initialization", he: "הגדרת האתחול", ru: "Настройка инициализации", nl: "Initialisatie instellen" },
+  debug_init_description: { en: "What happens when you long-press the simulation entry button.", he: "מה קורה בלחיצה ארוכה על כפתור הכניסה לסימולציה.", ru: "Что происходит при долгом нажатии кнопки входа в симуляцию.", nl: "Wat er gebeurt wanneer je de knop voor de simulatiemodus lang indrukt." },
+  debug_back: { en: "Back to help", he: "חזרה לעזרה", ru: "Назад к справке", nl: "Terug naar hulp" },
+
   spiral_black_hole: { en: "Black Hole", he: "חור שחור", ru: "Чёрная дыра", nl: "Zwart gat" },
   help_category_evolution: { en: "Evolution", he: "אבולוציה", ru: "Эволюция", nl: "Evolutie" },
   help_category_tips: { en: "Tips & Tricks", he: "טיפים וטריקים", ru: "Советы и хитрости", nl: "Tips & Trucs" },
