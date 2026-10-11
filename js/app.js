@@ -2733,7 +2733,7 @@ function updateMagnetButtonUI() {
 
 function cycleMagnetMode() {
     const oldMode = magnetMode;
-    const sequence = ['off', 'magnet', 'cosmic_magnet', 'time_magnet', 'expand'];
+    const sequence = ['off', 'cosmic_magnet', 'magnet', 'time_magnet'];
     const currentIndex = sequence.indexOf(magnetMode);
     const nextIndex = (currentIndex + 1) % sequence.length;
     magnetMode = sequence[nextIndex];
