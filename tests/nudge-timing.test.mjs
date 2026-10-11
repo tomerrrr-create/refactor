@@ -62,11 +62,11 @@ test('changing speed while running does not manufacture a generation or shift',(
     h.context.setNudgeInterval(0);assert.equal(h.logs.length,2);
 });
 test('preferences survive reload; malformed or blocked storage uses defaults',()=>{
-    const h=harness();h.context.setNudgeInterval(200);h.context.setUnmarkedNudgeMode('fast');
+    const h=harness();h.context.setNudgeInterval(123);
     const loaded=harness({stored:h.storage.get('colorGridNudge')});
-    assert.equal(loaded.timing().intervalMs,200);
-    loaded.context.applyNudgeTiming('No specific rules mapping');assert.equal(loaded.timing().legacyFrames,false);
-    for(const stored of ['{broken', 'null', '{"intervalMs":123,"unmarkedMode":"unknown"}']){
+    assert.equal(loaded.timing().intervalMs,123);
+    loaded.context.applyNudgeTiming('No specific rules mapping');assert.equal(loaded.timing().legacyFrames,true);
+    for(const stored of ['{broken', 'null', '{"intervalMs":201,"unmarkedMode":"fast"}']){
         assert.equal(harness({stored}).timing().intervalMs,0);
     }
     const blocked=harness({blockedStorage:true});blocked.context.setNudgeInterval(200);
@@ -81,16 +81,14 @@ test('versioned PLAY overrides local speed without changing stored preferences',
     vm.runInContext('replayNudgeTiming = null',h.context);
     assert.equal(h.timing().intervalMs,0);
 });
-test('unmarked recordings default to old frame counting; fast experiment can be selected',()=>{
+test('unmarked recordings always use original slow frame counting',()=>{
     const old=harness();old.context.applyNudgeTiming('No specific rules mapping');
     for(let i=0;i<10;i++)old.frame(i*16);
     assert.equal(old.context.currentGenerationCount,10);assert.equal(old.context.boardState[0].k,3);
-    const fast=harness();fast.context.setUnmarkedNudgeMode('fast');fast.context.applyNudgeTiming('No specific rules mapping');
-    for(let i=0;i<10;i++)fast.frame(i*16);
-    assert.equal(fast.context.currentGenerationCount,10);assert.equal(fast.context.boardState[0].k,12);
+
 });
 test('generation-timed replay reaches identical boards at different frame rates and speeds',()=>{
-    for(const ms of [0,200]) for(const frameMs of [8,16,33,80]){
+    for(const ms of [0,1,25,75,123,199,200]) for(const frameMs of [8,16,33,80]){
         const h=harness();h.context.applyNudgeTiming(rules(ms));h.context.isMacroPlaying=true;
         h.context.macroQueue=[{eventName:'PAUSE',isGenBased:true,targetGen:7}];
         for(let t=0;h.context.isLifePlaying&&t<10000;t+=frameMs)h.frame(t);
@@ -108,15 +106,23 @@ test('replay can switch speed at a recorded generation and still stop at the rig
         assert.equal(h.context.currentGenerationCount,7);assert.equal(h.context.boardState[0].k,9);
     }
 });
-test('invalid timing and compatibility choices are rejected',()=>{
+test('invalid timing is rejected',()=>{
     const h=harness();
-    for(const value of [null,10,-1,NaN])assert.throws(()=>h.context.setNudgeInterval(value));
-    assert.throws(()=>h.context.setUnmarkedNudgeMode('unknown'));
-    for(const value of ['{}','{"nudgeTimingVersion":2,"intervalMs":0}','{"nudgeTimingVersion":1,"intervalMs":10}'])assert.throws(()=>h.context.applyNudgeTiming(value));
+    for(const value of [null,201,-1,1.5,NaN])assert.throws(()=>h.context.setNudgeInterval(value));
+    for(const value of ['{}','{"nudgeTimingVersion":2,"intervalMs":0}','{"nudgeTimingVersion":1,"intervalMs":201}'])assert.throws(()=>h.context.applyNudgeTiming(value));
 });
 
 test('other simulations still count every generated state',()=>{
     const h=harness({direction:'gameOfLife'});h.context.setNudgeInterval(200);
     for(let i=0;i<10;i++)h.frame(i*16);
     assert.equal(h.context.currentGenerationCount,10);
+});
+
+test('slider updates apply and log immediately but persist only when requested',()=>{
+    const h=harness();h.context.setNudgeInterval(75,false);
+    assert.equal(h.timing().intervalMs,75);
+    assert.equal(h.logs.length,1);
+    assert.equal(h.storage.get('colorGridNudge'),null);
+    h.context.persistNudgeSettings();
+    assert.deepEqual(JSON.parse(h.storage.get('colorGridNudge')),{intervalMs:75});
 });

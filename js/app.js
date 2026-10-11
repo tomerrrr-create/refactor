@@ -19,36 +19,28 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
       let animationLoopId = null;
 // Preferences are independent of macro playback; replay never overwrites them.
 let nudgeIntervalMs = 0;
-let unmarkedNudgeMode = 'legacy';
 let replayNudgeTiming = null;
 let lastNudgeTime = -Infinity;
 try {
     const saved = JSON.parse(localStorage.getItem('colorGridNudge'));
-    if (saved?.intervalMs === 200) nudgeIntervalMs = 200;
-    if (saved?.unmarkedMode === 'fast') unmarkedNudgeMode = 'fast';
+    if (Number.isInteger(saved?.intervalMs) && saved.intervalMs >= 0 && saved.intervalMs <= 200) nudgeIntervalMs = saved.intervalMs;
 } catch { /* Use defaults when storage is unavailable. */ }
 
 const liveNudgeTiming = { nudgeTimingVersion: 1, intervalMs: nudgeIntervalMs };
 
 function persistNudgeSettings() {
     try {
-        localStorage.setItem('colorGridNudge', JSON.stringify({ intervalMs: nudgeIntervalMs, unmarkedMode: unmarkedNudgeMode }));
+        localStorage.setItem('colorGridNudge', JSON.stringify({ intervalMs: nudgeIntervalMs }));
     } catch { /* Settings still apply for this session. */ }
 }
 
-function setNudgeInterval(intervalMs) {
-    if (intervalMs !== 0 && intervalMs !== 200) throw new Error('Invalid Nudge interval');
+function setNudgeInterval(intervalMs, persist = true) {
+    if (!Number.isInteger(intervalMs) || intervalMs < 0 || intervalMs > 200) throw new Error('Invalid Nudge interval');
     if (nudgeIntervalMs === intervalMs) return;
     nudgeIntervalMs = intervalMs;
     liveNudgeTiming.intervalMs = intervalMs;
-    persistNudgeSettings();
+    if (persist) persistNudgeSettings();
     window.logArtEvent('NUDGE_SPEED', JSON.stringify({ nudgeTimingVersion: 1, intervalMs }));
-}
-
-function setUnmarkedNudgeMode(mode) {
-    if (mode !== 'legacy' && mode !== 'fast') throw new Error('Invalid Nudge playback mode');
-    unmarkedNudgeMode = mode;
-    persistNudgeSettings();
 }
 
 function getNudgeTiming() {
@@ -57,13 +49,12 @@ function getNudgeTiming() {
 
 function applyNudgeTiming(rulesStr) {
     if (rulesStr === 'No specific rules mapping') {
-        // Pre-versioned recordings can be either the original slow mode or the fast experiment.
-        replayNudgeTiming = { intervalMs: unmarkedNudgeMode === 'fast' ? 0 : 200,
-            legacyFrames: unmarkedNudgeMode !== 'fast' };
+        // All unmarked recordings predate the fast experiment and use original frame counting.
+        replayNudgeTiming = { intervalMs: 200, legacyFrames: true };
         return;
     }
     const timing = JSON.parse(rulesStr);
-    if (timing.nudgeTimingVersion !== 1 || (timing.intervalMs !== 0 && timing.intervalMs !== 200)) {
+    if (!timing || timing.nudgeTimingVersion !== 1 || !Number.isInteger(timing.intervalMs) || timing.intervalMs < 0 || timing.intervalMs > 200) {
         throw new Error('Invalid Nudge timing');
     }
     replayNudgeTiming = { nudgeTimingVersion: 1, intervalMs: timing.intervalMs };
@@ -3741,9 +3732,9 @@ else if (action.eventName === 'Invert Colors') {
         // Phase 1 Addition: Add adaptColors to the context for modals
         const contextForModals = {
             dom, C, getText, performAction, getSymmetricIndices, applyActionToTiles,
-            getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs, unmarkedMode: unmarkedNudgeMode }),
+            getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
             isNudgeReplayActive: () => isMacroLoaded,
-            setNudgeInterval, setUnmarkedNudgeMode,
+            setNudgeInterval, persistNudgeSettings,
             getStartupSettings: () => ({ ...startupSettings }),
             saveStartupSettings: (settings) => {
                 const normalized = normalizeStartup(settings);

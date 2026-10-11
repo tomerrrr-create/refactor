@@ -510,16 +510,8 @@
         <p id="startupSettingsStatus" role="status" aria-live="polite"></p>
       </form>
       <div class="init-settings">
-        <label for="nudgeSpeed" data-debug-text="nudge_speed"></label>
-        <select id="nudgeSpeed">
-          <option value="0" data-debug-text="nudge_fast"></option>
-          <option value="200" data-debug-text="nudge_slow"></option>
-        </select>
-        <label for="unmarkedNudgeMode" data-debug-text="nudge_unmarked"></label>
-        <select id="unmarkedNudgeMode">
-          <option value="legacy" data-debug-text="nudge_unmarked_legacy"></option>
-          <option value="fast" data-debug-text="nudge_unmarked_fast"></option>
-        </select>
+        <label for="nudgeSpeed"><span data-debug-text="nudge_speed"></span> <output id="nudgeSpeedValue" for="nudgeSpeed"></output></label>
+        <input id="nudgeSpeed" type="range" min="0" max="200" step="1" value="200">
         <p class="init-settings-note" data-debug-text="nudge_note"></p>
       </div>
       <button id="btnCloseDebug" type="button" class="technician-back" data-debug-text="debug_back" autofocus></button>
