@@ -4,7 +4,7 @@ import { SORT_MODES } from './colors.js';
 export const STARTUP_STORAGE_KEY = 'colorGridStartup';
 export const DEFAULT_STARTUP = Object.freeze({
     paletteName: 'Journey', boardSize: 7, separatorPx: 2, sortMethod: 'luminance',
-    fill: 'random', brushSize: 1, brushMode: 'paint', brushColor: 'none',
+    fill: 'random', brushSize: 1, brushMode: 'continuous', brushColor: 'none',
     symmetry: 'off', interfaceMode: 'creative'
 });
 
