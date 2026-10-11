@@ -1,4 +1,3 @@
-import { renderBlackHole2Frame } from './black-hole-2-renderer.js';
 // js/app.js
 
 import { SORT_MODES, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
@@ -278,7 +277,7 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'vortex', 'left', 'black_hole', 'black_hole_2', 'a'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'vortex', 'left', 'black_hole', 'a'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -504,8 +503,6 @@ boardState = new Array(n * n).fill(null).map(() => ({
               }
           });
 
-          if (armedSimulation === 'spiral' && spiralRules.method === 'black_hole_2' &&
-              Simulations.getBlackHole2Transition(boardState, now)) isStillAnimating = true;
           renderToScreen(now);
 
           if (isStillAnimating || (isLifePlaying && armedSimulation === 'breathe')) {
@@ -532,12 +529,6 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
     if (boardState.length === 0) return;
 
     const currentPalette = palette();
-    const transition = timestamp != null && armedSimulation === 'spiral' && spiralRules.method === 'black_hole_2'
-        ? Simulations.getBlackHole2Transition(boardState, timestamp) : null;
-    if (transition) {
-        renderBlackHole2Frame(targetCtx, width, height, boardState, currentPalette, separatorPx, transition, timestamp);
-        return;
-    }
     const paletteAsRgb = currentPalette.map(hexToRgb);
 
     // ---------------------------------------------------------
@@ -663,7 +654,6 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
 
       function renderToScreen(timestamp) {
         if (!ctx || !canvas) return;
-        if (timestamp == null) Simulations.finishBlackHole2Transition(boardState);
         renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp);
       }
 
@@ -1044,12 +1034,6 @@ dlaState.emptyIndices.push(index);
 
       function gameLoop() {
         if (!isLifePlaying) return;
-        const journey = armedSimulation === 'spiral' && spiralRules.method === 'black_hole_2';
-        if (journey && Simulations.getBlackHole2Transition(boardState)) {
-            renderToScreen(performance.now());
-            animationFrameId = requestAnimationFrame(gameLoop);
-            return;
-        }
         const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, gravitationalSortRules, erosionRules, dlaState, dlaRules, contourRules };
         let nextState;
         switch(armedSimulation) {
@@ -1118,7 +1102,7 @@ break;
 
         }
         if (armedSimulation !== 'nudgeBrighter' && armedSimulation !== 'nudgeDarker') {
-                        renderToScreen(journey ? performance.now() : null);
+                        renderToScreen(null);
                     }
             
                     currentGenerationCount++; // קידום מונה הדורות
@@ -1156,8 +1140,6 @@ break;
 
       function stepForward() {
         if (isLifePlaying || armedSimulation === 'breathe') return;
-        if (armedSimulation === 'spiral' && spiralRules.method === 'black_hole_2' &&
-            Simulations.getBlackHole2Transition(boardState)) return;
         
         // --- תוספת: תיעוד מורחב ב-Art Logger כולל מצב וחוקים ---
         let simDetails = "No specific rules mapping";
@@ -1245,20 +1227,13 @@ dlaState = nextDlaState;
 break;
                 // No case for 'breathe' as it has no steps
             }
-            if (armedSimulation === 'spiral' && spiralRules.method === 'black_hole_2') {
-                renderToScreen(performance.now());
-                startAnimationLoop();
-            } else renderToScreen(null);
+            renderToScreen(null);
         });
       }
       
 function pauseLife() {
           if (!isLifePlaying) return;
           window.logArtEvent('PAUSE', '---');
-          if (armedSimulation === 'spiral' && spiralRules.method === 'black_hole_2') {
-              Simulations.finishBlackHole2Transition(boardState);
-              renderToScreen(null);
-          }
           isLifePlaying = false;
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
           animationFrameId = null;
@@ -2691,10 +2666,9 @@ function cycleBreatheEvoMode() {
 
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
-    if (spiralMode !== 'black_hole_2') Simulations.finishBlackHole2Transition(boardState);
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-black_hole', 'mode-black_hole_2', 'simulation-active');
-    dom.btnSpiral.title = ['black_hole', 'black_hole_2'].includes(spiralMode)
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = spiralMode === 'black_hole'
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${spiralMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);

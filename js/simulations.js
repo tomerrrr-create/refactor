@@ -25,5 +25,3 @@ export { getBreatheBrightnessFactor } from './simulations/breathe.js';
 
 
 
-
-export { getBlackHole2Transition, finishBlackHole2Transition } from './simulations/black-hole-2.js';

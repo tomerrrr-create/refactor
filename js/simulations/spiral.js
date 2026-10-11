@@ -1,4 +1,3 @@
-import { runBlackHole2Generation } from './black-hole-2.js';
 
 let cachedRadialOrder = null;
 let cachedRadialN = null;
@@ -120,9 +119,6 @@ let strength = 0.9; // עוצמת ברירת המחדל המקורית של הס
     }
 
     switch (method) {
-
-        case 'black_hole_2':
-            return runBlackHole2Generation(n, nextBoardState);
 
         case 'black_hole':
             return runBlackHoleGeneration(n, nextBoardState);
