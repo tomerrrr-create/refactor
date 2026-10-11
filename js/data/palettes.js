@@ -671,7 +671,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
   {
     originalName: "Ice & Fire 64",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><defs><linearGradient id="fireGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#FF4500"/><stop offset="100%" stop-color="#FFD700"/></linearGradient><linearGradient id="iceGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E0FFFF"/><stop offset="100%" stop-color="#1E90FF"/></linearGradient></defs><polygon points="12,2 21,16 3,16" fill="none" stroke="url(#fireGrad)" stroke-width="1.2" opacity="0.8"/><polygon points="3,8 21,8 12,22" fill="none" stroke="url(#iceGrad)" stroke-width="1.2" opacity="0.8"/><path d="M7,16 L12,9 L17,16 Z" fill="url(#iceGrad)"/><path d="M12,3 C12,3 9.5,7 9.5,10 A2.5,2.5 0 0,0 14.5,10 C14.5,7 12,3 12,3 Z" fill="url(#fireGrad)"/><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5">64</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#C0C0C0" text-anchor="end">64</text></svg>',
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10a8.25 8.25 0 0 1 16 0" stroke="#FF8800" stroke-width="1.7"/><path d="M4 14a8.25 8.25 0 0 0 16 0" stroke="#6EBFED" stroke-width="1.7"/><path d="M7.5 8.5Q12 12 16.5 8.5" stroke="#FFEA00" stroke-width="1.25"/><path d="M7.5 15.5Q12 12 16.5 15.5" stroke="#D1F4FF" stroke-width="1.25"/><path d="M12 9.5l2.5 2.5-2.5 2.5-2.5-2.5Z" fill="#FFFFFF" stroke="none"/></svg>',
     
     colors: (function() {
         // צבעי העוגן: ממעמקי הקרח (כחול כהה) אל שיא החום (לבן) וממשיך אל מעמקי האש (אדום-שחור)
@@ -737,7 +737,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
   
   {
     originalName: "Opaline Trance 264",
-    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="8" style="fill:#8A4FFF;" /><circle cx="9" cy="9" r="4.5" style="fill:#FF78C8;" /><circle cx="14.5" cy="14" r="4" style="fill:#55E6DE;" /><circle cx="10.5" cy="8" r="2" style="fill:#FFF1C7;" /></svg>',
+    iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5Q23 12 12 21.5Q1 12 12 2.5Z" stroke="#B68CFF" stroke-width="1.5"/><ellipse cx="12" cy="12" rx="9" ry="3.5" transform="rotate(-30 12 12)" stroke="#55E6DE" stroke-width="1.25"/><path d="M5 5.5Q12 2 19 18.5" stroke="#FF78C8" stroke-width="1.25"/><circle cx="12" cy="12" r="1.6" fill="#FFF1C7" stroke="none"/></svg>',
 
     colors: (function() {
 
@@ -1264,7 +1264,7 @@ colors: (function() {
 
 {
   originalName: "Baby First Gaze",
-  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="11" fill="#FFFAED"/><circle cx="8" cy="10" r="2.5" fill="#42A5F5"/><circle cx="16" cy="10" r="2.5" fill="#42A5F5"/><path d="M 8 16 Q 12 19 16 16" fill="none" stroke="#FF8A80" stroke-width="2.5" stroke-linecap="round"/><circle cx="8.5" cy="9.5" r="0.8" fill="#FFFFFF"/><circle cx="16.5" cy="9.5" r="0.8" fill="#FFFFFF"/><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#FFB74D" text-anchor="end" stroke="rgba(0,0,0,0.4)" stroke-width="0.5" stroke-linejoin="round">HD</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#FFB74D" text-anchor="end">HD</text></svg>',
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12Q12 1.5 21.5 12Q12 22.5 2.5 12Z" stroke="#FFF3E0" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" stroke="#81D4FA" stroke-width="1.5"/><circle cx="12" cy="12" r="1.25" fill="#FFFFFF" stroke="none"/><path d="M8 3.5Q12 1.5 16 3.5" stroke="#F48FB1" stroke-width="1.25"/></svg>',
   colors: (function() {
       const orig = [
           "#050510", // חושך רחם / לילה עמוק
