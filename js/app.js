@@ -277,7 +277,7 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'vortex', 'left', 'black_hole', 'a'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'black_hole'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -403,7 +403,7 @@ k: tileState.k,
         }));
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'radial', 'down'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'radial', 'down'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
