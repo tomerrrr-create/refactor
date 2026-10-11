@@ -1506,8 +1506,8 @@ if (simulationName === 'spiral') {
 
 
 if (simulationName === 'magnet') {
-    magnetMode = 'magnet';
-    if (typeof magnetRules !== 'undefined') magnetRules.method = 'magnet';
+    magnetMode = 'cosmic_magnet';
+    if (typeof magnetRules !== 'undefined') magnetRules.method = 'cosmic_magnet';
 }
 
 
