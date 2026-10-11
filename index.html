@@ -509,12 +509,19 @@
         </div>
         <p id="startupSettingsStatus" role="status" aria-live="polite"></p>
       </form>
+      <button id="btnCloseDebug" type="button" class="technician-back" data-debug-text="debug_back" autofocus></button>
+    </div>
+  </dialog>
+
+  <dialog id="nudgeSettingsDialog" class="technician-dialog" aria-labelledby="nudgeSettingsTitle">
+    <div class="technician-panel">
+      <h2 id="nudgeSettingsTitle" data-debug-text="nudge_speed"></h2>
       <div class="init-settings">
         <label for="nudgeSpeed"><span data-debug-text="nudge_speed"></span> <output id="nudgeSpeedValue" for="nudgeSpeed"></output></label>
         <input id="nudgeSpeed" type="range" min="0" max="200" step="1" value="200">
         <p class="init-settings-note" data-debug-text="nudge_note"></p>
       </div>
-      <button id="btnCloseDebug" type="button" class="technician-back" data-debug-text="debug_back" autofocus></button>
+      <button id="btnCloseNudgeSettings" type="button" class="technician-back" data-debug-text="saveModal_close"></button>
     </div>
   </dialog>
 

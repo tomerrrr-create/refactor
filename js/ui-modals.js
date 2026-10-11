@@ -1050,10 +1050,27 @@ export function initializeModals(appContext) {
     });
     // Store once on release, rather than synchronously writing storage for every drag event.
     nudgeSpeed.addEventListener('change', () => app.persistNudgeSettings());
-    app.dom.btnOpenDebug.addEventListener('click', () => {
+    const nudgeDialog = document.getElementById('nudgeSettingsDialog');
+    function openNudgeSettingsModal() {
         nudgeSpeed.value = String(200 - app.getNudgeSettings().intervalMs);
         updateNudgeSpeedValue();
         nudgeSpeed.disabled = app.isNudgeReplayActive();
+        nudgeDialog.showModal();
+        if (!nudgeSpeed.disabled) nudgeSpeed.focus();
+    }
+    document.getElementById('btnCloseNudgeSettings').addEventListener('click', () => nudgeDialog.close());
+    nudgeDialog.addEventListener('close', () => {
+        app.persistNudgeSettings();
+        app.resetWasLongPress();
+    });
+    nudgeDialog.addEventListener('click', event => {
+        if (event.target !== nudgeDialog) return;
+        const bounds = nudgeDialog.getBoundingClientRect();
+        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) {
+            nudgeDialog.close();
+        }
+    });
+    app.dom.btnOpenDebug.addEventListener('click', () => {
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
         startupForm.hidden = true;
@@ -1550,6 +1567,7 @@ function saveMagnetSettings() {
 
 return {
         openResizeModal,
+        openNudgeSettingsModal,
         openColorPickerModal,
         openHelpModal,
         openPaletteModal,
