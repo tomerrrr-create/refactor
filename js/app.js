@@ -36,6 +36,8 @@ let isMacroFullscreen = false; // דגל למצב מסך מלא של המאקר�
 // --- TIMESTAMP ---
 
 let artRecipeLog = [];
+let nextHistoryActionId = 1;
+let historyRecipeCursor = 0;
 
 window.logArtEvent = function(eventName, details, forceLog = false) {
         // חוסמים כפילויות של פונקציות פנימיות בזמן שניגון המאקרו עובד, אלא אם זה דיווח יזום מהמאקרו עצמו
@@ -327,6 +329,7 @@ currentSortMethod,
 
       function logCurrentStateAsInit() {
         const stateSnapshot = {
+            recipeVersion: 2,
             n: n,
             pal: activePaletteIndex,
             sort: currentSortMethod,
@@ -406,6 +409,14 @@ k: tileState.k,
       }
 
       function pushHistory(state) {
+        state.id = nextHistoryActionId++;
+        window.logArtEvent('HISTORY_ACTION', JSON.stringify({
+            recipeVersion: 2,
+            id: state.id,
+            from: historyRecipeCursor,
+            to: artRecipeLog.length
+        }), isExecutingMacroCommand);
+        historyRecipeCursor = artRecipeLog.length;
         history.push(state);
         if (history.length > C.HISTORY_LIMIT) { history.shift(); }
         future = [];
@@ -424,19 +435,21 @@ k: tileState.k,
 
       function undo() {
         if (history.length === 0) return;
-        window.logArtEvent('UNDO', '---'); // <-- תוספת: דיווח ליומן
         const lastAction = history.pop();
         future.push(lastAction);
         applyState(lastAction.before);
+        window.logArtEvent('UNDO', JSON.stringify({ recipeVersion: 2, id: lastAction.id, settings: getHistorySettings(lastAction.before) }), isExecutingMacroCommand);
+        historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
       }
 
       function redo() {
         if (future.length === 0) return;
-        window.logArtEvent('REDO', '---'); // <-- תוספת: דיווח ליומן
         const nextAction = future.pop();
         history.push(nextAction);
         applyState(nextAction.after);
+        window.logArtEvent('REDO', JSON.stringify({ recipeVersion: 2, id: nextAction.id, settings: getHistorySettings(nextAction.after) }), isExecutingMacroCommand);
+        historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
       }
 
@@ -1692,7 +1705,13 @@ function updateMacroPaletteButtonUI(paletteIndex) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const text = e.target.result;
-            macroQueue = parseMacroText(text);
+            try {
+                macroQueue = parseMacroText(text);
+            } catch (error) {
+                console.error('Failed to parse macro history:', error);
+                alert('Invalid macro file format.');
+                return;
+            }
             
      
 
@@ -1778,7 +1797,9 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
                 // === תוספת שלנו: יצירת תמונת מצב מעודכנת למאקרו לאחר הכניסה לסימולציה ===
                 artRecipeLog = [];
+                historyRecipeCursor = 0;
                 const simState = {
+                    recipeVersion: 2,
                     n: n,
                     pal: activePaletteIndex,
                     sort: currentSortMethod,
@@ -1803,9 +1824,11 @@ function handlePointerDownCtrl(e) {
             // מחיקת היסטוריית הלוגר בלחיצה ארוכה על כפתור השמירה
             if (btn.id === 'btnSave') {
                 artRecipeLog = []; // איפוס המערך שמחזיק את פעולות הלוגר
+                historyRecipeCursor = 0;
                 
                 // === תוספת: שמירת תמונת המצב ההתחלתית ===
                 const initState = {
+                    recipeVersion: 2,
                     n: n,
                     pal: activePaletteIndex,
                     sort: currentSortMethod,
@@ -2181,10 +2204,6 @@ function onPointerUp(e) {
         }
     }
     const afterState = getCurrentState();
-    if (pointerState.beforeState && !areStatesEqual(pointerState.beforeState, afterState)) {
-         pushHistory({ before: pointerState.beforeState, after: afterState }); 
-         hasPerformedInitialAutofill = true;
-    }
     // יצירת Diff של השינויים שקרו במשיחת המברשת הזו
     const diff = [];
     for (let i = 0; i < afterState.tiles.length; i++) {
@@ -2203,6 +2222,11 @@ function onPointerUp(e) {
     // אם היו שינויים, שולחים ללוגר
     if (diff.length > 0) {
         window.logArtEvent('DRAW_STROKE', JSON.stringify(diff));
+    }
+    // Commit after logging the stroke so its history ID covers the complete action.
+    if (pointerState.beforeState && !areStatesEqual(pointerState.beforeState, afterState)) {
+         pushHistory({ before: pointerState.beforeState, after: afterState });
+         hasPerformedInitialAutofill = true;
     }
 
     Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, beforeState: null });
@@ -2809,7 +2833,125 @@ function exportArtRecipeLog() {
 // ====== MACRO REPLAY ENGINE (POC) =========
 // ==========================================
 
+// History logging reads only fixed-size settings; it never serializes board tiles.
+function getHistorySettings(state) {
+    return { n: state.n, activePaletteIndex: state.activePaletteIndex,
+        separatorPx: state.separatorPx, currentSortMethod: state.currentSortMethod };
+}
+
+function validateHistorySettings(settings) {
+    if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 300 ||
+        !Number.isInteger(settings.activePaletteIndex) || settings.activePaletteIndex < 0 ||
+        !Number.isFinite(settings.separatorPx) || settings.separatorPx < 0 ||
+        typeof settings.currentSortMethod !== 'string') {
+        throw new Error('Invalid history settings');
+    }
+}
+
+function applyHistorySettings(settings) {
+    validateHistorySettings(settings);
+    let changed = false;
+    if (currentSortMethod !== settings.currentSortMethod) {
+        applySortMethod(settings.currentSortMethod);
+        updateSortButtonUI();
+        changed = true;
+    }
+    if (activePaletteIndex !== settings.activePaletteIndex && C.PALETTES[settings.activePaletteIndex]) {
+        activePaletteIndex = settings.activePaletteIndex;
+        updatePaletteHeader();
+        changed = true;
+    }
+    if (n !== settings.n) {
+        _performResize(settings.n);
+        changed = true;
+    }
+    if (separatorPx !== settings.separatorPx) {
+        separatorPx = settings.separatorPx;
+        dom.btnGap.title = getText('tooltip_gap');
+        dom.btnGap.setAttribute('aria-label', getText('tooltip_gap'));
+        changed = true;
+    }
+    if (changed) renderToScreen(null);
+}
+
+function parseHistoryMacro(lines) {
+    const pattern = /\[(\d{2}:\d{2}:\d{2}\.\d{3})\](?: \[GEN:(\d+)\])? (.*?) -> (.*)/;
+    const events = lines.map(line => {
+        const match = line.match(pattern);
+        if (!match) return null;
+        return { time: Date.parse(`1970-01-01T${match[1]}Z`), eventName: match[3], details: match[4],
+            isGenBased: match[2] !== undefined, targetGen: match[2] === undefined ? null : Number(match[2]) };
+    });
+    // Metadata refers to raw log positions, not positions in the filtered playback.
+    events.forEach((event, position) => {
+        if (!event || event.eventName !== 'HISTORY_ACTION') return;
+        const metadata = JSON.parse(event.details);
+        if (metadata.recipeVersion !== 2 || !Number.isInteger(metadata.id) ||
+            !Number.isInteger(metadata.from) || metadata.from < 0 || metadata.to !== position || metadata.from > position) {
+            throw new Error('Invalid history action metadata');
+        }
+        event.historyId = metadata.id;
+        for (let i = metadata.from; i < position; i++) {
+            if (events[i] && !(i === 0 && events[i].eventName === 'INIT_STATE')) events[i].historyId = metadata.id;
+        }
+    });
+
+    const visible = [];
+    const cancelledActions = new Map();
+    for (const event of events) {
+        if (!event) continue;
+        if (event.eventName === 'UNDO' || event.eventName === 'REDO') {
+            const target = JSON.parse(event.details);
+            if (target.recipeVersion !== 2 || !Number.isInteger(target.id)) throw new Error('Invalid history target');
+            validateHistorySettings(target.settings);
+            if (event.eventName === 'UNDO') {
+                const start = visible.findIndex(item => item.historyId === target.id);
+                if (start !== -1) {
+                    const removed = visible.splice(start);
+                    cancelledActions.set(target.id, removed.filter(item => item.historyId === target.id));
+                }
+            } else {
+                // Redo reuses the recorded commands, not a fresh random result or a board snapshot.
+                const restored = cancelledActions.get(target.id) || [];
+                visible.push(...restored.map(item => ({ ...item, time: event.time })));
+            }
+            visible.push({ ...event, eventName: 'HISTORY_SETTINGS', details: JSON.stringify(target.settings),
+                historyId: event.eventName === 'REDO' ? target.id : null,
+                isGenBased: false, targetGen: null });
+        } else {
+            visible.push(event);
+        }
+    }
+
+    let delta = 0;
+    let previousTime = null;
+    let simulationRunning = false;
+    return visible.filter(event => event.eventName !== 'HISTORY_ACTION').map(event => {
+        if (previousTime !== null) {
+            let gap = event.time - previousTime;
+            if (gap < 0) gap += 86400000;
+            const cap = simulationRunning && event.eventName !== 'STEP FORWARD' ? 600000 : 1000;
+            delta += Math.min(gap, cap);
+        }
+        previousTime = event.time;
+        if (event.eventName === 'PLAY') simulationRunning = true;
+        if (event.eventName === 'PAUSE' || event.eventName === 'HISTORY_SETTINGS') simulationRunning = false;
+        return { ...event, delta };
+    });
+}
+
 function parseMacroText(text) {
+    const recipeLines = text.split('\n').filter(line => line.trim() !== '');
+    const isHistoryRecipe = recipeLines.some(line => {
+        const match = line.match(/ (INIT_STATE|HISTORY_ACTION|UNDO|REDO) -> (.*)/);
+        if (!match) return false;
+        try { return JSON.parse(match[2]).recipeVersion === 2; } catch { return false; }
+    });
+    if (isHistoryRecipe) return parseHistoryMacro(recipeLines);
+    return parseLegacyMacroText(text);
+}
+
+function parseLegacyMacroText(text) {
     const lines = text.split('\n').filter(l => l.trim() !== '');
     const parsed = [];
     // --- מעבר ראשון (Pass 1): השמדה הדדית של UNDO ו-REDO ---
@@ -3194,7 +3336,10 @@ function executeMacroAction(action) {
     isExecutingMacroCommand = true; // מדליקים דגל כדי לא להפעיל את ה-Kill Switch
 
     // הזרקה אקטיבית: המאקרו מדווח באופן יזום ומוחלט על כל פעולה שהוא מנגן, ומונע כפילויות!
-        window.logArtEvent(action.eventName, action.details, true);
+        // Undo/redo log their resolved target below, including when replaying an old recipe.
+        if (action.eventName !== 'UNDO' && action.eventName !== 'REDO') {
+            window.logArtEvent(action.eventName, action.details, true);
+        }
 
     // === פיענוח ופריסת המצב ההתחלתי ===
     if (action.eventName === 'INIT_STATE') {
@@ -3238,6 +3383,7 @@ function executeMacroAction(action) {
             applySeparator();
             if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
             renderToScreen(null);
+            historyRecipeCursor = artRecipeLog.length;
 
         } catch(e) {
             console.error("Failed to parse INIT_STATE:", e);
@@ -3246,6 +3392,11 @@ function executeMacroAction(action) {
     // ==================================
     
 
+    else if (action.eventName === 'HISTORY_SETTINGS') {
+        if (isLifePlaying) pauseLife();
+        applyHistorySettings(JSON.parse(action.details));
+        historyRecipeCursor = artRecipeLog.length;
+    }
     else if (action.eventName === 'Palette Change') {
         // מפרידים בין שם הפלטה לשיטת המיון (אם קיימת)
         const parts = action.details.split(' | Sort: ');
