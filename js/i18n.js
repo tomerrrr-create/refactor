@@ -9,6 +9,13 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  "nudge_speed": { en: "Automatic Nudge speed", he: "מהירות Nudge אוטומטי", ru: "Скорость автоматического Nudge", nl: "Automatische Nudge-snelheid" },
+  "nudge_fast": { en: "Fast — every frame", he: "מהיר — בכל פריים", ru: "Быстро — каждый кадр", nl: "Snel — elk frame" },
+  "nudge_slow": { en: "Slow — 200 ms between shifts", he: "איטי — 200 מילישניות בין הזזות", ru: "Медленно — 200 мс между сдвигами", nl: "Langzaam — 200 ms tussen stappen" },
+  "nudge_unmarked": { en: "Nudge recordings without a speed marker", he: "הקלטות Nudge ללא סימון מהירות", ru: "Записи Nudge без отметки скорости", nl: "Nudge-opnames zonder snelheidsmarkering" },
+  "nudge_unmarked_legacy": { en: "Original slow version", he: "הגרסה האיטית המקורית", ru: "Исходная медленная версия", nl: "Oorspronkelijke langzame versie" },
+  "nudge_unmarked_fast": { en: "Fast experiment version", he: "גרסת הניסוי המהירה", ru: "Быстрая экспериментальная версия", nl: "Snelle experimentele versie" },
+  "nudge_note": { en: "Changes apply immediately and are saved on this device. New recordings preserve their speed. For unmarked recordings, choose the version used to record them. Settings are locked while a macro is loaded.", he: "השינויים חלים מיד ונשמרים במכשיר זה. הקלטות חדשות שומרות את המהירות שלהן. בהקלטות ללא סימון, בחרו את הגרסה שבה הוקלטו. ההגדרות נעולות כשמאקרו טעון.", ru: "Изменения применяются сразу и сохраняются на устройстве. Новые записи сохраняют свою скорость. Для записей без отметки выберите версию, в которой они были сделаны. Настройки заблокированы при загруженном макросе.", nl: "Wijzigingen gelden direct en worden op dit apparaat opgeslagen. Nieuwe opnames bewaren hun snelheid. Kies voor ongemarkeerde opnames de versie waarmee ze zijn gemaakt. Instellingen zijn vergrendeld als een macro is geladen." },
   "startup_title": { en: "App opening", he: "פתיחת האפליקציה", ru: "Открытие приложения", nl: "App openen" },
   "startup_description": { en: "Choose your starting point.", he: "בחירת נקודת ההתחלה שלך.", ru: "Выберите начальную точку.", nl: "Kies je beginpunt." },
   "startup_note": { en: "Applies on your next visit. A fresh board is generated; gaps shrink if needed to fit the screen.", he: "יחול בפתיחה הבאה. ייווצר לוח חדש; המפרידים יוקטנו במידת הצורך כדי להתאים למסך.", ru: "Применится при следующем открытии. Создаётся новое поле; промежутки уменьшаются по размеру экрана.", nl: "Geldt bij je volgende bezoek. Een nieuw bord wordt gemaakt; tussenruimtes passen zich aan het scherm aan." },

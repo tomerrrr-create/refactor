@@ -1036,7 +1036,15 @@ export function initializeModals(appContext) {
         initBrushValue.value = settings.brushSize;
         initStatus.textContent = '';
     }
+    const nudgeSpeed = document.getElementById('nudgeSpeed');
+    const unmarkedNudge = document.getElementById('unmarkedNudgeMode');
+    nudgeSpeed.addEventListener('change', () => app.setNudgeInterval(Number(nudgeSpeed.value)));
+    unmarkedNudge.addEventListener('change', () => app.setUnmarkedNudgeMode(unmarkedNudge.value));
     app.dom.btnOpenDebug.addEventListener('click', () => {
+        const nudgeSettings = app.getNudgeSettings();
+        nudgeSpeed.value = String(nudgeSettings.intervalMs);
+        unmarkedNudge.value = nudgeSettings.unmarkedMode;
+        nudgeSpeed.disabled = unmarkedNudge.disabled = app.isNudgeReplayActive();
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
         startupForm.hidden = true;
