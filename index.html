@@ -458,11 +458,23 @@
       <p class="technician-eyebrow">DEBUG / 001</p>
       <h2 id="technicianTitle" data-debug-text="debug_title"></h2>
       <p id="technicianSubtitle" data-debug-text="debug_subtitle"></p>
-      <button id="btnConfigureInit" type="button" class="technician-option" disabled aria-describedby="initDescription">
-        <span class="technician-option-heading"><bdi>init /</bdi><span class="technician-badge" data-debug-text="debug_soon"></span></span>
+      <button id="btnConfigureInit" type="button" class="technician-option" aria-describedby="initDescription" aria-expanded="false" aria-controls="initSettingsForm">
+        <span class="technician-option-heading"><bdi>init /</bdi><span class="technician-badge" aria-hidden="true">⚙</span></span>
         <span class="technician-option-title" data-debug-text="debug_init"></span>
         <span id="initDescription" data-debug-text="debug_init_description"></span>
       </button>
+      <form id="initSettingsForm" class="init-settings" hidden>
+        <p class="init-settings-note" data-debug-text="init_note"></p>
+        <label for="initBoardSize" data-debug-text="init_board_size"></label>
+        <select id="initBoardSize" name="boardSize"></select>
+        <label for="initBrushSize"><span data-debug-text="init_brush_size"></span> <output id="initBrushValue" for="initBrushSize">7</output></label>
+        <input id="initBrushSize" name="brushSize" type="range" min="1" max="15" step="2" value="7">
+        <div class="init-settings-actions">
+          <button type="submit" class="init-save" data-debug-text="init_save"></button>
+          <button id="btnResetInit" type="button" class="init-reset" data-debug-text="init_reset"></button>
+        </div>
+        <p id="initSettingsStatus" role="status" aria-live="polite"></p>
+      </form>
       <button id="btnCloseDebug" type="button" class="technician-back" data-debug-text="debug_back" autofocus></button>
     </div>
   </dialog>

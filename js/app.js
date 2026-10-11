@@ -6,6 +6,7 @@ import * as C from './constants.js';
 import * as Simulations from './simulations.js';
 import { dom } from './dom-elements.js';
 import { initializeModals } from './ui-modals.js';
+import { loadSimInit, persistSimInit } from './sim-init-settings.js';
 
 
 (function() {
@@ -265,6 +266,7 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
       let colorPickerPage = 0;
       let longPressTimer = null;
       let wasLongPress = false;
+      let simulationInitSettings = loadSimInit();
       let brushSize = 1; 
       let isLifePlaying = false;
       let animationFrameId = null;
@@ -1783,7 +1785,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
       function prepareBoardForSimMode() {
         animateBoardTransition(() => {
             performAction(() => {
-                if (n !== 249) _performResize(249);
+                if (n !== simulationInitSettings.boardSize) _performResize(simulationInitSettings.boardSize);
                 separatorPx = 0; 
                 applySeparator();
                 goDark();
@@ -1792,7 +1794,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 selectedColor = currentPalette[lightestIndex];
                 selectedColorIndex = lightestIndex;
 
-                brushSize = 7;
+                brushSize = simulationInitSettings.brushSize;
                 const brushSizeSlider = document.getElementById('brushSizeSlider');
                 const brushSizeValue = document.getElementById('brushSizeValue');
                 if (brushSizeSlider) brushSizeSlider.value = brushSize;
@@ -3671,6 +3673,12 @@ else if (action.eventName === 'Invert Colors') {
         // Phase 1 Addition: Add adaptColors to the context for modals
         const contextForModals = {
             dom, C, getText, performAction, getSymmetricIndices, applyActionToTiles,
+            getSimulationInit: () => ({ ...simulationInitSettings }),
+            saveSimulationInit: (settings) => {
+                const persisted = persistSimInit(settings);
+                simulationInitSettings = { ...settings };
+                return persisted;
+            },
             getN: () => n, isBreathing: () => isBreathing, isLifePlaying: () => isLifePlaying,
             _performResize, animateBoardTransition,
             setColorPickerPage: (p) => { colorPickerPage = p; }, getColorPickerPage: () => colorPickerPage,

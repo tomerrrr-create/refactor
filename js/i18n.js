@@ -9,6 +9,14 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  init_note: { en: "Applies on the next long-press of the simulation entry button.", he: "יחול בלחיצה הארוכה הבאה על כפתור הכניסה לסימולציה.", ru: "Применяется при следующем долгом нажатии кнопки входа в симуляцию.", nl: "Wordt toegepast bij de volgende lange druk op de simulatieknop." },
+  init_board_size: { en: "Board size", he: "גודל הלוח", ru: "Размер поля", nl: "Bordgrootte" },
+  init_brush_size: { en: "Brush size", he: "גודל המברשת", ru: "Размер кисти", nl: "Penseelgrootte" },
+  init_save: { en: "Save", he: "שמירה", ru: "Сохранить", nl: "Opslaan" },
+  init_reset: { en: "Reset to defaults", he: "איפוס לברירות המחדל", ru: "По умолчанию", nl: "Standaardwaarden" },
+  init_defaults_pending: { en: "Defaults restored. Save to apply.", he: "ברירות המחדל שוחזרו. יש לשמור כדי להחיל.", ru: "Значения по умолчанию восстановлены. Сохраните для применения.", nl: "Standaardwaarden hersteld. Sla op om toe te passen." },
+  init_saved: { en: "Saved. Applies on your next initialization.", he: "נשמר. יחול באתחול הבא.", ru: "Сохранено. Применится при следующей инициализации.", nl: "Opgeslagen. Geldt bij de volgende initialisatie." },
+  init_saved_session: { en: "Saved for this visit. Browser storage is unavailable.", he: "נשמר לביקור הנוכחי. אחסון הדפדפן אינו זמין.", ru: "Сохранено для этого сеанса. Хранилище браузера недоступно.", nl: "Opgeslagen voor dit bezoek. Browseropslag is niet beschikbaar." },
   // Technician menu
   debug_button: { en: "Debug · Technician Menu", he: "דיבאג · תפריט טכנאים", ru: "Отладка · Меню техников", nl: "Debug · Technicusmenu" },
   debug_title: { en: "Behind the veil", he: "מאחורי הקלעים", ru: "За завесой", nl: "Achter de sluier" },
@@ -21,7 +29,7 @@ export const translations = {
   spiral_black_hole: { en: "Black Hole", he: "חור שחור", ru: "Чёрная дыра", nl: "Zwart gat" },
   help_category_evolution: { en: "Evolution", he: "אבולוציה", ru: "Эволюция", nl: "Evolutie" },
   help_category_tips: { en: "Tips & Tricks", he: "טיפים וטריקים", ru: "Советы и хитрости", nl: "Tips & Trucs" },
-  help_tip1: { en: "Long-press Sim Mode to prep the board: max size, dark background, and lightest brush.", he: "לחיצה ארוכה על מצב סימולציה מכינה את הלוח ליצירה: גודל מקסימלי, רקע כהה ומכחול בהיר.", ru: "Длительное нажатие на режим симуляции готовит холст: макс. размер, тёмный фон и светлая кисть.", nl: "Druk lang op Sim Modus om het bord voor te bereiden: max. grootte, donkere achtergrond en lichtste penseel." },
+  help_tip1: { en: "Long-press Sim Mode to prep the board: your chosen board and brush sizes, dark background, and lightest color.", he: "לחיצה ארוכה על מצב סימולציה מכינה את הלוח ליצירה: גודל לוח ומברשת לפי ההגדרות שלך, רקע כהה וצבע בהיר.", ru: "Длительное нажатие на режим симуляции готовит холст: выбранные размеры поля и кисти, тёмный фон и светлый цвет.", nl: "Druk lang op Sim Modus om het bord voor te bereiden: je gekozen bord- en penseelgrootte, donkere achtergrond en lichtste kleur." },
   help_tip2: { en: "Long-press the Palette button to open a gallery for quick selection.", he: "לחיצה ארוכה על כפתור הפלטות פותחת גלריה לבחירה מהירה של פלטה.", ru: "Длительное нажатие на кнопку палитры открывает галерею для быстрого выбора.", nl: "Druk lang op de Paletknop om een galerij te openen voor een snelle keuze." },
   help_tip3: { en: "Long-press a tile to open the color picker.", he: "לחיצה ארוכה על אריח בלוח פותחת את תפריט בחירת הצבע.", ru: "Длительное нажатие на плитку открывает палитру цветов.", nl: "Druk lang op een tegel om de kleurenkiezer te openen." },
   help_tip4: { en: "With a color selected, long-press a tile to deselect it.", he: "כשיש צבע נבחר, לחיצה ארוכה על אריח מבטלת את הבחירה.", ru: "Если цвет выбран, длительное нажатие на плитку отменит выбор.", nl: "Als een kleur is geselecteerd, druk lang op een tegel om de selectie op te heffen." },
