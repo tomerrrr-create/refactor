@@ -13,6 +13,7 @@ for (const n of [1, 2, 31, 249]) {
             assert.equal(runBlackHole2Generation(n, board, now), board);
             const state = getBlackHole2Transition(board, now);
             if (state) {
+                assert(state.count <= Math.max(1, Math.ceil(board.length / 12)), 'only a sparse current moves in each batch');
                 const moved = new Set();
                 for (let j = 0; j < state.count * 2; j += 2) {
                     const a = state.pairs[j], b = state.pairs[j + 1];
@@ -64,5 +65,14 @@ test('the actual renderer preserves endpoints and draws a distinct intermediate 
         renderBlackHole2Frame(ctx, 10, 10, board, colors, 0, state, BLACK_HOLE_2_DURATION / 2);
         assert.notDeepEqual(pixels, start); assert.notDeepEqual(pixels, end);
         assert.deepEqual([...pixels.slice((3 * 10 + 5) * 4, (3 * 10 + 5) * 4 + 3)], [255, 215, 0]);
+        // Equally bright red/blue inputs must not create black voids during
+        // exchanges, including the start/end boundaries between generations.
+        for (const fraction of [0, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1]) {
+            renderBlackHole2Frame(ctx, 10, 10, board, colors, 0, state, BLACK_HOLE_2_DURATION * fraction);
+            for (let p = 0; p < pixels.length; p += 4) {
+                assert(pixels[p] + pixels[p + 1] + pixels[p + 2] >= 254, `no dark holes at ${fraction}`);
+                assert.equal(pixels[p + 3], 255);
+            }
+        }
     } finally { globalThis.document = previousDocument; }
 });

@@ -1,5 +1,5 @@
 // Local radial sorting with a visible journey between matched grid cells.
-export const BLACK_HOLE_2_DURATION = 120;
+export const BLACK_HOLE_2_DURATION = 180;
 const transitions = new WeakMap();
 let geometry;
 const OFFSETS = [];
@@ -67,7 +67,10 @@ export function runBlackHole2Generation(n, board, now = performance.now()) {
     state.startedAt = now;
     // A random origin plus alternating traversal avoids a persistent row bias.
     const origin = Math.floor(Math.random() * board.length);
+    // Quiet, sparse currents rather than a whole-board pulse of exchanges.
+    const budget = Math.max(1, Math.ceil(board.length / 12));
     for (let step = 0; step < board.length; step++) {
+        if (state.count >= budget) break;
         const i = (origin + (state.reverse ? board.length - 1 - step : step)) % board.length;
         if (state.moving[i] || board[i].isGold) continue;
         let chosen = -1, totalWeight = 0;
