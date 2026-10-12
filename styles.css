@@ -1326,6 +1326,8 @@ button, .ctrl {
 .sort-cycle-option:has(input:checked) { border-color: #d5aa4880; background: #d5aa4810; }
 .sort-cycle-option input { accent-color: #d5aa48; width: 18px; height: 18px; flex-shrink: 0; }
 .sort-cycle-option svg { width: 24px; height: 24px; color: #d5aa48; flex-shrink: 0; }
+.sort-cycle-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sort-cycle-text small { color: #a6a69b; font-size: 12px; line-height: 1.5; }
 .sort-cycle-option:focus-within { outline: 2px solid #ffe7a0; outline-offset: 2px; }
 #sortCycleTitle { font-size: 21px; margin: 0 0 12px; }
 #sortCycleStatus { color: #e3c677; font-size: 13px; }

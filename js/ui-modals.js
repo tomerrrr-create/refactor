@@ -1,5 +1,6 @@
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
+import { DEFAULT_SORT_CYCLE } from './sort-cycle-settings.js';
 // js/ui-modals.js
 
 let lastWheelTime = 0;
@@ -1013,13 +1014,28 @@ export function initializeModals(appContext) {
             const name = document.createElement('span');
             name.dataset.debugText = 'startup_sort_' + mode.method;
             name.textContent = app.getText(name.dataset.debugText);
-            row.append(input, svg, name); sortOptions.appendChild(row);
+            const description = document.createElement('small');
+            description.id = 'sort-description-' + mode.method;
+            description.dataset.debugText = 'sort_description_' + mode.method;
+            description.textContent = app.getText(description.dataset.debugText);
+            input.setAttribute('aria-describedby', description.id);
+            const text = document.createElement('span');
+            text.className = 'sort-cycle-text';
+            text.append(name, description);
+            row.append(input, svg, text); sortOptions.appendChild(row);
         });
         sortDialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         updateSortSelection();
         sortDialog.showModal();
     }
     sortOptions.addEventListener('change', updateSortSelection);
+    document.getElementById('btnResetSortCycle').addEventListener('click', () => {
+        sortOptions.querySelectorAll('input').forEach(input => {
+            input.checked = DEFAULT_SORT_CYCLE.includes(input.value);
+        });
+        updateSortSelection();
+        sortStatus.textContent = app.getText('sort_cycle_reset_note');
+    });
     document.getElementById('sortCycleForm').addEventListener('submit', event => {
         event.preventDefault();
         const methods = [...sortOptions.querySelectorAll('input:checked')].map(input => input.value);
