@@ -4,7 +4,8 @@ export const DEFAULT_SORT_CYCLE = Object.freeze(['luminance', 'dark-rainbow', 'r
 const STORAGE_KEY = 'colorGridSortCycle';
 
 export function normalizeSortCycle(value) {
-    const selected = Array.isArray(value) ? SORT_MODES.filter(mode => value.includes(mode.method)).map(mode => mode.method) : [];
+    const available = new Set(SORT_MODES.map(mode => mode.method));
+    const selected = Array.isArray(value) ? [...new Set(value.filter(method => available.has(method)))] : [];
     return selected.length ? selected : [...DEFAULT_SORT_CYCLE];
 }
 
@@ -20,11 +21,14 @@ export function persistSortCycle(value, storage = localStorage) {
 
 export function nextSortMethod(current, selected) {
     const methods = normalizeSortCycle(selected);
-    // An excluded method may still be active after a project load or settings
-    // change. Continue in catalog order instead of silently changing that state.
-    const currentIndex = SORT_MODES.findIndex(mode => mode.method === current);
-    for (let step = 1; step <= SORT_MODES.length; step++) {
-        const method = SORT_MODES[(currentIndex + step) % SORT_MODES.length].method;
-        if (methods.includes(method)) return method;
-    }
+    // A loaded or excluded mode enters the user's cycle at its first method.
+    return methods[(methods.indexOf(current) + 1) % methods.length];
+}
+
+export function moveSortMethod(selected, method, delta) {
+    const methods = normalizeSortCycle(selected);
+    const index = methods.indexOf(method), target = index + delta;
+    if (![-1, 1].includes(delta) || index < 0 || target < 0 || target >= methods.length) return methods;
+    [methods[index], methods[target]] = [methods[target], methods[index]];
+    return methods;
 }

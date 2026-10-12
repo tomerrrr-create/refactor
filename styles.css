@@ -1313,6 +1313,15 @@ button, .ctrl {
 .debug-entry svg { width: 22px; height: 22px; }
 .debug-entry:hover { filter: brightness(1.08); box-shadow: 0 3px 22px #d5aa4840; }
 .debug-entry:focus-visible, .technician-back:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 4px; }
+@keyframes technician-hold-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 #d5aa4800; }
+  50% { box-shadow: 0 0 14px 2px #d5aa4860; }
+}
+#btnToggleSimMode.technician-hold { animation: technician-hold-pulse .8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  #btnToggleSimMode.technician-hold { animation: none; box-shadow: 0 0 8px #d5aa4840; }
+}
+
 .technician-dialog {
   position: fixed; inset: 0; margin: auto; padding: 0;
   width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px);
@@ -1328,6 +1337,13 @@ button, .ctrl {
 .sort-cycle-option svg { width: 28px; height: 28px; color: #d5aa48; flex-shrink: 0; }
 .sort-cycle-option > span { font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
 .sort-cycle-option:has(input:focus-visible) { outline: 2px solid #ffe7a0; outline-offset: 2px; }
+.sort-cycle-option.is-reordering { aspect-ratio: auto; min-height: 180px; gap: 8px; cursor: default; border-color: #d5aa4880; background: #d5aa4810; }
+.sort-order-number { color: #e3c677; font-variant-numeric: tabular-nums; }
+.sort-order-controls { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.sort-order-controls button { min-height: 32px; padding: 4px; background: #090a09; color: #d5aa48; border: 1px solid #b28b3645; border-radius: 6px; font: inherit; font-size: 11px; cursor: pointer; }
+.sort-order-controls button:disabled { opacity: .3; cursor: default; }
+.sort-order-controls button:focus-visible, #btnSortOrder:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 2px; }
+#btnSortOrder { margin: 12px 0 0; min-height: 36px; border: 1px solid #b28b3645; }
 #sortCycleTitle { font-size: 21px; margin: 0 0 12px; }
 #sortCycleStatus { color: #e3c677; font-size: 13px; }
 #sortCycleForm .init-settings-actions { justify-content: center; }

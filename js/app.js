@@ -260,6 +260,8 @@ let chiFlowRules = { ...C.defaultChiFlowRules };
       let selectedColorIndex = -1;
       let colorPickerPage = 0;
       let longPressTimer = null;
+      let technicianHoldTimer = null;
+      let simulationHoldBounds = null;
       let wasLongPress = false;
       let startupSettings = loadStartup();
       let simulationInitSettings = loadSimInit();
@@ -1779,6 +1781,9 @@ function updateMacroPaletteButtonUI(paletteIndex) {
       
       function hideLongPressDisplay() {
           clearTimeout(longPressTimer);
+          clearTimeout(technicianHoldTimer);
+          simulationHoldBounds = null;
+          dom.btnToggleSimMode.classList.remove('technician-hold');
           dom.longPressOverlay.classList.remove('visible');
           dom.longPressDisplay.classList.remove('visible');
           setTimeout(() => { dom.longPressDisplay.innerHTML = ''; }, 250);
@@ -1830,7 +1835,16 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
 function handlePointerDownCtrl(e) {
         if (isBreathing) return;
+        clearTimeout(longPressTimer);
+        clearTimeout(technicianHoldTimer);
+        dom.btnToggleSimMode.classList.remove('technician-hold');
         const btn = e.currentTarget;
+        if (btn.id === 'btnToggleSimMode') {
+            // The button moves when simulation controls appear. Keep the hold
+            // tied to its original hit area until release or a deliberate drag.
+            simulationHoldBounds = btn.getBoundingClientRect();
+            btn.setPointerCapture(e.pointerId);
+        }
         longPressTimer = setTimeout(() => {
             wasLongPress = true;
 
@@ -1862,7 +1876,16 @@ function handlePointerDownCtrl(e) {
             if (btn.id === 'btnCycleSort') { modals.openSortCycleModal(); return; }
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
-            if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
+            if (btn.id === 'btnToggleSimMode') {
+                if (!isSimModeActive) toggleSimMode();
+                prepareBoardForSimMode();
+                btn.classList.add('technician-hold');
+                technicianHoldTimer = setTimeout(() => {
+                    btn.classList.remove('technician-hold');
+                    modals.openTechnicianMenu(btn);
+                }, C.LONG_PRESS_SHOW_MS * 2);
+                return;
+            }
 if (btn.id === 'btnColorPicker') {
             // בחירת הצבע באינדקס 0 (המייצג את הצבע הכהה/הבסיס בפלטות הממוינות)
             selectedColorIndex = 0;
@@ -1956,6 +1979,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         document.querySelectorAll('.ctrl').forEach(btn => { 
             if (btn.title) btn.setAttribute('aria-label', btn.title);
         });
+
         document.querySelector('[data-method="black_hole"] span').textContent = getText('spiral_black_hole');
         updateSpiralButtonUI();
       }
@@ -3878,7 +3902,6 @@ dom.btnCycleSort.addEventListener('keydown', e => {
         e.preventDefault(); modals.openSortCycleModal();
     }
 });
-dom.btnCycleSort.addEventListener('pointercancel', hideLongPressDisplay);
 dom.btnColorPicker.addEventListener('click', (e) => handleCtrlClick(e, handleColorPickerClickCombo));
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
         dom.btnToggleSimMode.addEventListener('click', (e) => handleCtrlClick(e, toggleSimMode));
@@ -3937,6 +3960,13 @@ if (dom.btnSimSettings) {
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
+            btn.addEventListener('pointercancel', hideLongPressDisplay);
+        });
+        dom.btnToggleSimMode.addEventListener('pointermove', e => {
+            const box = simulationHoldBounds;
+            if (box && (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom)) {
+                hideLongPressDisplay();
+            }
         });
 // Brush Size Slider Logic
 const brushSizeSlider = document.getElementById('brushSizeSlider');
