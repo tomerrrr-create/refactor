@@ -17,12 +17,12 @@
 
 // --- הגדרות מיון עיצוב אלכימיה ---
 export const SORT_MODES = [
-    { method: 'luminance', icon: '<circle cx="5" cy="12" r="2.6" fill="#555" stroke="none"/><circle cx="12" cy="12" r="2.6" fill="#aaa" stroke="none"/><circle cx="19" cy="12" r="2.6" fill="currentColor" stroke="none"/>' },
-    { method: 'dark-rainbow', icon: '<path d="M4 19v-7a8 8 0 0 1 16 0v7 M8 19v-7a4 4 0 0 1 8 0v7" stroke-width="1.5"/>' },
-    { method: 'reversed', icon: '<circle cx="5" cy="12" r="2.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="2.6" fill="#aaa" stroke="none"/><circle cx="19" cy="12" r="2.6" fill="#555" stroke="none"/>' },
-    { method: 'center-out', icon: '<circle cx="5" cy="12" r="2.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="2.6" fill="#555" stroke="none"/><circle cx="19" cy="12" r="2.6" fill="currentColor" stroke="none"/>' },
-    { method: 'temperature', icon: '<circle cx="6.5" cy="12" r="2.5" stroke-width="1.5"/><path d="M6.5 6v1 M6.5 17v1 M.5 12h1 M11.5 12h1 M2.3 7.8l.7.7 M10 15.5l.7.7 M2.3 16.2l.7-.7 M10 8.5l.7-.7 M22 7a5.5 5.5 0 1 0 0 10 6 6 0 0 1 0-10Z" stroke-width="1.5"/>' },
-    { method: 'outside-in', icon: '<circle cx="5" cy="12" r="2.6" fill="#555" stroke="none"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="2.6" fill="#555" stroke="none"/>' }
+    { method: 'luminance', icon: '<path d="M6 19v-5 M12 19V9 M18 19V4" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'dark-rainbow', icon: '<path d="M8 17l4-10 4 10Z M2 13h7.6 M14.4 13L22 9 M14.4 13H22 M14.4 13l7.6 4" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'reversed', icon: '<path d="M6 19V4 M12 19V9 M18 19v-5" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'center-out', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2.7"/><path d="M7 12H2 M4.5 9.5L2 12l2.5 2.5 M17 12h5 M19.5 9.5L22 12l-2.5 2.5"/></g>' },
+    { method: 'temperature', icon: '<path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0Z M12 8v8" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'outside-in', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2.7"/><path d="M2 12h5 M4.5 9.5L7 12l-2.5 2.5 M22 12h-5 M19.5 9.5L17 12l2.5 2.5"/></g>' }
 ];
 
 export function adjustBrightness(hex, factor) {
