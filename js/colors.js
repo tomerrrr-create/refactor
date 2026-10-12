@@ -17,9 +17,9 @@
 
 // --- הגדרות מיון עיצוב אלכימיה ---
 export const SORT_MODES = [
-    { method: 'luminance', icon: '<path d="M6 19v-5 M12 19V9 M18 19V4" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'luminance', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="8"/><path d="M12 4C5 7 5 17 12 20"/></g>' },
     { method: 'dark-rainbow', icon: '<path d="M8 17l4-10 4 10Z M2 13h7.6 M14.4 13L22 9 M14.4 13H22 M14.4 13l7.6 4" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
-    { method: 'reversed', icon: '<path d="M6 19V4 M12 19V9 M18 19v-5" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'reversed', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="8"/><path d="M12 4C19 7 19 17 12 20"/></g>' },
     { method: 'center-out', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2.7"/><path d="M7 12H2 M4.5 9.5L2 12l2.5 2.5 M17 12h5 M19.5 9.5L22 12l-2.5 2.5"/></g>' },
     { method: 'temperature', icon: '<path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0Z M12 8v8" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'outside-in', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2.7"/><path d="M2 12h5 M4.5 9.5L7 12l-2.5 2.5 M22 12h-5 M19.5 9.5L17 12l2.5 2.5"/></g>' },
