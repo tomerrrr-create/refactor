@@ -1,12 +1,13 @@
 // js/app.js
 
-import { SORT_MODES, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
+import { SORT_MODES, normalizeSortMethod, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
 import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailableLangs, translations, onLanguageChange } from './i18n.js';
 import * as C from './constants.js';
 import * as Simulations from './simulations.js';
 import { dom } from './dom-elements.js';
 import { initializeModals } from './ui-modals.js';
 import { loadSimInit, persistSimInit } from './sim-init-settings.js';
+import { loadSortCycle, persistSortCycle, normalizeSortCycle, nextSortMethod } from './sort-cycle-settings.js';
 import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } from './startup-settings.js';
 
 
@@ -120,62 +121,13 @@ window.logArtEvent = function(eventName, details, forceLog = false) {
 
 
 
-/* 
-// --- הגדרות מיון פלטות ואייקוני SVG (עיצוב מינימליסטי ורוחני) ---
-      const SORT_MODES = [
 
-
-// 1. מצב רגיל (בהירות) - זריחה (חושך לאור)
-          { method: 'luminance', icon: '<path d="M4 16h16M7 16 A5 5 0 0 1 17 16" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="7" r="1.5" fill="currentColor"/>' },
-
-
-          
-// 2. ריברס - שקיעה / שורשים (אור לחושך)
-          { method: 'reversed', icon: '<path d="M4 8h16M7 8 A5 5 0 0 0 17 8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="17" r="1.5" fill="currentColor"/>' },
-
-// 3. מבפנים החוצה (Center-Out) - התפשטות אלכימית (נקודה -> משולש -> מעגל)
-{ 
-    method: 'center-out', 
-    icon: '<circle cx="12" cy="12" r="1.35" fill="currentColor"/><path d="M12 4.5 L17.5 15.5 L6.5 15.5 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="9.25" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
-},   
-
-
-  //  הסטת פאזה / שבר (Zig-zag) -
-    { 
-        method: 'zig-zag', 
-        icon: '<path d="M 5 11 A 5 5 0 0 1 15 11 Z" fill="currentColor"/><path d="M 9 13 A 5 5 0 0 0 19 13 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>' 
-    },
-
-
-
-
-{ method: 'temperature', icon: '<circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 18 Q8 14 12 18 T20 18" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
-
-
-
-          // 4. מצב קשת - מינימליסטי (כמו האות 'ח')
-          { method: 'hue', icon: '<path d="M 6 19 V 10 A 6 6 0 0 1 18 10 V 19"/>' }, 
-          
-//  קשת בענן (Hue) -
-    { 
-        method: 'hue', 
-        icon: '<circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3.5 4.5" stroke-linecap="round"/>' 
-    },
-
-
-
-          // 5. קשת כהה - 'ח' מרכזית עם 2 קשתות פנימיות בגווני אפור
-          { method: 'dark-rainbow', icon: '<path d="M 4 19 V 11 A 8 8 0 0 1 20 11 V 19"/><path d="M 7 19 V 11 A 5 5 0 0 1 17 11 V 19" stroke="#aaa"/><path d="M 10 19 V 11 A 2 2 0 0 1 14 11 V 19" stroke="#666"/>' }
-
-         
- 
-      ];
-*/
 
 
 
 
       let currentSortIndex = 0;
+      let sortCycleMethods = loadSortCycle();
 
 
 
@@ -226,6 +178,7 @@ function getPrevPaletteIndex(currentIndex) {
 
 // --- שלב 2: לוגיקת המיפוי (Remapping) ---
 function applySortMethod(newMethod) {
+    newMethod = normalizeSortMethod(newMethod);
     if (currentSortMethod === newMethod) return; // לא עושים כלום אם זו כבר השיטה הפעילה
     window.logArtEvent('Sort by', newMethod); // תיעוד שינוי מיון
 
@@ -405,7 +358,7 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
         separatorPx = state.separatorPx;
 
         if (state.currentSortMethod && state.currentSortMethod !== currentSortMethod) {
-            currentSortMethod = state.currentSortMethod;
+            currentSortMethod = normalizeSortMethod(state.currentSortMethod);
             C.PALETTES.forEach(palette => {
                 palette.colors = sortColorsArray(palette.originalColors, currentSortMethod);
             });
@@ -1906,6 +1859,7 @@ function handlePointerDownCtrl(e) {
 
 
             
+            if (btn.id === 'btnCycleSort') { modals.openSortCycleModal(); return; }
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') { if (!isSimModeActive) toggleSimMode(); prepareBoardForSimMode(); return; }
@@ -1967,6 +1921,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
             element.textContent = getText(element.dataset.debugText);
         });
         dom.technicianDialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
+        document.getElementById('sortCycleDialog').dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         dom.paletteModalTitle.textContent = getText('paletteModal_title');
         dom.helpIntroText.textContent = getText('help_intro');
         dom.gsSettingsTitle.textContent = getText('gs_modal_title');
@@ -1975,6 +1930,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnInvert.title = getText('tooltip_invert'); 
         dom.btnRandom.title = getText('tooltip_random');
         dom.btnColorPicker.title = getText('tooltip_colorPicker'); 
+        dom.btnCycleSort.title = getText('tooltip_sort_cycle');
         dom.btnSymmetry.title = getText('tooltip_symmetry');
         dom.btnRedo.title = getText('tooltip_redo'); 
         dom.btnUndo.title = getText('tooltip_undo');
@@ -2826,6 +2782,8 @@ function updateSortButtonUI() {
 // -----------------------------
 
 function cycleSortMethod() {
+    const nextMethod = nextSortMethod(currentSortMethod, sortCycleMethods);
+    if (nextMethod === currentSortMethod) return;
     // 1. עוצרים לולאות ציור כפולות כדי לשחרר את המעבד
     if (animationLoopId) {
         cancelAnimationFrame(animationLoopId);
@@ -2833,7 +2791,7 @@ function cycleSortMethod() {
     }
 
     // 2. הסרנו את העטיפה של performAction כדי למנוע דליפת זיכרון מפלצתית!
-    currentSortIndex = (currentSortIndex + 1) % SORT_MODES.length;
+    currentSortIndex = SORT_MODES.findIndex(mode => mode.method === nextMethod);
     const nextMode = SORT_MODES[currentSortIndex];
     
     if (dom.sortIconGroup) {
@@ -3733,7 +3691,13 @@ else if (action.eventName === 'Invert Colors') {
         
         // Phase 1 Addition: Add adaptColors to the context for modals
         const contextForModals = {
-            dom, C, getText, performAction, getSymmetricIndices, applyActionToTiles,
+            SORT_MODES,
+            getSortCycleMethods: () => [...sortCycleMethods],
+            saveSortCycleMethods: methods => {
+                sortCycleMethods = normalizeSortCycle(methods);
+                return persistSortCycle(sortCycleMethods);
+            },
+            dom, C, getText, getCurrentLang, performAction, getSymmetricIndices, applyActionToTiles,
             getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
             isNudgeReplayActive: () => isMacroLoaded,
             setNudgeInterval, persistNudgeSettings,
@@ -3909,6 +3873,12 @@ dom.btnPalette.addEventListener('click', (e) => handleCtrlClick(e, handlePalette
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         dom.btnSymmetry.addEventListener('click', (e) => handleCtrlClick(e, cycleSymmetryMode));
 dom.btnCycleSort.addEventListener('click', (e) => handleCtrlClick(e, cycleSortMethod));
+dom.btnCycleSort.addEventListener('keydown', e => {
+    if (e.altKey && e.key === 'ArrowDown') {
+        e.preventDefault(); modals.openSortCycleModal();
+    }
+});
+dom.btnCycleSort.addEventListener('pointercancel', hideLongPressDisplay);
 dom.btnColorPicker.addEventListener('click', (e) => handleCtrlClick(e, handleColorPickerClickCombo));
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
         dom.btnToggleSimMode.addEventListener('click', (e) => handleCtrlClick(e, toggleSimMode));
