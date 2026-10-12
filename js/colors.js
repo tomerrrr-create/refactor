@@ -22,7 +22,7 @@ export const SORT_MODES = [
     { method: 'reversed', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="8"/><path d="M12 4C19 7 19 17 12 20"/></g>' },
     { method: 'center-out', icon: '<path d="M12 20V4 M10 20L5 12Q3.5 10 2 10 M14 20l5-8q1.5-2 3-2" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'temperature', icon: '<path d="M7 4C8 8 3 10 3 14c0 8 8 8 8 0l-.2-3.5Q8.5 12 8.5 8 8 5.5 7 4Z M18 4l3 8-3 8-3-8Z" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
-    { method: 'outside-in', icon: '<path d="M4 5l7 7-7 7 M20 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'outside-in', icon: '<path d="M3.6 7l5 5-5 5 M20.4 7l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'hue', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3.3"/></g>' },
     { method: 'zig-zag', icon: '<path d="M3 16l5-8 8 8 5-8" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'zen-void', icon: '<path d="M5 8Q3 4 8 5C12 6 16 6 19 5L5 19C8 18 12 18 16 19Q21 20 19 16" fill="none" stroke="currentColor" stroke-width="1.2"/>' }
