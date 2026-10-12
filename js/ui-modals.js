@@ -1126,7 +1126,9 @@ export function initializeModals(appContext) {
             nudgeDialog.close();
         }
     });
-    app.dom.btnOpenDebug.addEventListener('click', () => {
+    let technicianReturnFocus = app.dom.btnOpenDebug;
+    function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
+        technicianReturnFocus = trigger;
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
         startupForm.hidden = true;
@@ -1134,7 +1136,8 @@ export function initializeModals(appContext) {
         initForm.hidden = true;
         initToggle.setAttribute('aria-expanded', 'false');
         app.dom.technicianDialog.showModal();
-    });
+    }
+    app.dom.btnOpenDebug.addEventListener('click', () => openTechnicianMenu());
     initToggle.addEventListener('click', () => {
         startupForm.hidden = true;
         startupToggle.setAttribute('aria-expanded', 'false');
@@ -1242,7 +1245,7 @@ export function initializeModals(appContext) {
     });
     app.dom.technicianDialog.addEventListener('close', () => {
         app.resetWasLongPress();
-        app.dom.btnOpenDebug.focus();
+        technicianReturnFocus.focus();
     });
 
     // Help Modal
@@ -1621,6 +1624,7 @@ function saveMagnetSettings() {
 
 
 return {
+        openTechnicianMenu,
         openSortCycleModal,
         openResizeModal,
         openNudgeSettingsModal,
