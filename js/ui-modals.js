@@ -1,6 +1,6 @@
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
-import { DEFAULT_SORT_CYCLE } from './sort-cycle-settings.js';
+import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
 // js/ui-modals.js
 
 let lastWheelTime = 0;
@@ -991,48 +991,98 @@ export function initializeModals(appContext) {
     const sortDialog = document.getElementById('sortCycleDialog');
     const sortOptions = document.getElementById('sortCycleOptions');
     const sortStatus = document.getElementById('sortCycleStatus');
+    const sortOrderToggle = document.getElementById('btnSortOrder');
+    let draftSortMethods = [], isOrderingSort = false;
     function updateSortSelection() {
         const inputs = [...sortOptions.querySelectorAll('input')];
         const count = inputs.filter(input => input.checked).length;
         inputs.forEach(input => { input.disabled = input.checked && count === 1; });
     }
-    function openSortCycleModal() {
-        if (app.isBreathing()) return;
-        sortStatus.textContent = '';
-        const selected = app.getSortCycleMethods();
+    function renderSortOptions() {
         sortOptions.replaceChildren();
-        app.SORT_MODES.forEach(mode => {
-            const row = document.createElement('label');
-            row.className = 'sort-cycle-option';
-            const input = document.createElement('input');
-            input.type = 'checkbox'; input.value = mode.method;
-            input.checked = selected.includes(mode.method);
+        sortOrderToggle.dataset.debugText = isOrderingSort ? 'sort_choose_methods' : 'sort_order';
+        sortOrderToggle.textContent = app.getText(sortOrderToggle.dataset.debugText);
+        sortOrderToggle.setAttribute('aria-pressed', String(isOrderingSort));
+        const modes = isOrderingSort ? draftSortMethods.map(method => app.SORT_MODES.find(mode => mode.method === method)) : app.SORT_MODES;
+        modes.forEach((mode, index) => {
+            const row = document.createElement(isOrderingSort ? 'div' : 'label');
+            row.className = 'sort-cycle-option' + (isOrderingSort ? ' is-reordering' : '');
+            row.dataset.method = mode.method;
+            if (!isOrderingSort) {
+                const input = document.createElement('input');
+                input.type = 'checkbox'; input.value = mode.method;
+                input.checked = draftSortMethods.includes(mode.method);
+                row.appendChild(input);
+            } else {
+                const number = document.createElement('span');
+                number.className = 'sort-order-number'; number.textContent = String(index + 1);
+                row.appendChild(number);
+            }
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('viewBox', '0 0 24 24');
             svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
             svg.setAttribute('aria-hidden', 'true'); svg.innerHTML = mode.icon;
             const name = document.createElement('span');
+            name.id = 'sort-name-' + mode.method;
             name.dataset.debugText = 'startup_sort_' + mode.method;
             name.textContent = app.getText(name.dataset.debugText);
-            row.append(input, svg, name); sortOptions.appendChild(row);
+            row.append(svg, name);
+            if (isOrderingSort) {
+                const controls = document.createElement('div');
+                controls.className = 'sort-order-controls';
+                for (const [delta, key] of [[-1, 'sort_earlier'], [1, 'sort_later']]) {
+                    const button = document.createElement('button');
+                    button.type = 'button'; button.dataset.delta = String(delta);
+                    button.dataset.debugText = key; button.textContent = app.getText(key);
+                    button.id = `sort-move-${mode.method}-${delta}`;
+                    button.setAttribute('aria-labelledby', `${button.id} ${name.id}`);
+                    button.disabled = index + delta < 0 || index + delta >= modes.length;
+                    button.addEventListener('click', () => {
+                        draftSortMethods = moveSortMethod(draftSortMethods, mode.method, delta);
+                        renderSortOptions();
+                        const movedRow = [...sortOptions.children].find(tile => tile.dataset.method === mode.method);
+                        const matching = movedRow.querySelector(`button[data-delta="${delta}"]`);
+                        (matching.disabled ? movedRow.querySelector('button:not(:disabled)') : matching)?.focus();
+                        sortStatus.textContent = `${name.textContent}: ${draftSortMethods.indexOf(mode.method) + 1} / ${draftSortMethods.length}`;
+                    });
+                    controls.appendChild(button);
+                }
+                row.appendChild(controls);
+            }
+            sortOptions.appendChild(row);
         });
-        sortDialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         updateSortSelection();
+    }
+    function openSortCycleModal() {
+        if (app.isBreathing()) return;
+        sortStatus.textContent = '';
+        draftSortMethods = app.getSortCycleMethods();
+        isOrderingSort = false;
+        renderSortOptions();
+        sortDialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         sortDialog.showModal();
     }
-    sortOptions.addEventListener('change', updateSortSelection);
-    document.getElementById('btnResetSortCycle').addEventListener('click', () => {
-        sortOptions.querySelectorAll('input').forEach(input => {
-            input.checked = DEFAULT_SORT_CYCLE.includes(input.value);
-        });
+    sortOptions.addEventListener('change', event => {
+        const input = event.target;
+        if (!input.matches('input[type=checkbox]')) return;
+        draftSortMethods = input.checked ? [...new Set([...draftSortMethods, input.value])] : draftSortMethods.filter(method => method !== input.value);
+        sortStatus.textContent = '';
         updateSortSelection();
+    });
+    sortOrderToggle.addEventListener('click', () => {
+        isOrderingSort = !isOrderingSort;
+        sortStatus.textContent = '';
+        renderSortOptions();
+    });
+    document.getElementById('btnResetSortCycle').addEventListener('click', () => {
+        draftSortMethods = [...DEFAULT_SORT_CYCLE];
+        renderSortOptions();
         sortStatus.textContent = app.getText('sort_cycle_reset_note');
     });
     document.getElementById('sortCycleForm').addEventListener('submit', event => {
         event.preventDefault();
-        const methods = [...sortOptions.querySelectorAll('input:checked')].map(input => input.value);
-        if (!methods.length) { sortStatus.textContent = app.getText('sort_cycle_at_least_one'); return; }
-        if (app.saveSortCycleMethods(methods)) sortDialog.close();
+        if (!draftSortMethods.length) { sortStatus.textContent = app.getText('sort_cycle_at_least_one'); return; }
+        if (app.saveSortCycleMethods(draftSortMethods)) sortDialog.close();
         else sortStatus.textContent = app.getText('sort_cycle_session');
     });
     document.getElementById('btnCancelSortCycle').addEventListener('click', () => sortDialog.close());

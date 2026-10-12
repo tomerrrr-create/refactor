@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SORT_MODES, normalizeSortMethod, sortColorsArray } from '../js/colors.js';
-import { DEFAULT_SORT_CYCLE, normalizeSortCycle, loadSortCycle, persistSortCycle, nextSortMethod } from '../js/sort-cycle-settings.js';
+import { DEFAULT_SORT_CYCLE, normalizeSortCycle, loadSortCycle, persistSortCycle, nextSortMethod, moveSortMethod } from '../js/sort-cycle-settings.js';
 
 test('existing six-mode cycle is retained without preferences and with invalid storage', () => {
     for (const value of [null, 'null', '{}', '[]', '{broken', '["deleted"]']) {
@@ -19,7 +19,7 @@ test('selected methods wrap, skip excluded modes and resume after loaded exclude
     assert.equal(nextSortMethod('luminance', selected), 'hue');
     assert.equal(nextSortMethod('hue', selected), 'zen-void');
     assert.equal(nextSortMethod('zen-void', selected), 'luminance');
-    assert.equal(nextSortMethod('temperature', selected), 'hue');
+    assert.equal(nextSortMethod('temperature', selected), 'luminance');
     assert.equal(nextSortMethod('unknown', selected), 'luminance');
     assert.equal(nextSortMethod('hue', ['hue']), 'hue');
 });
@@ -27,9 +27,32 @@ test('selected methods wrap, skip excluded modes and resume after loaded exclude
 test('saved selections round-trip, deduplicate and recover from unavailable methods', () => {
     let text; const storage = { setItem: (_, value) => { text = value; }, getItem: () => text };
     assert(persistSortCycle(['zen-void', 'hue', 'zen-void', 'deleted'], storage));
-    assert.deepEqual(loadSortCycle(storage), ['hue', 'zen-void']);
+    assert.deepEqual(loadSortCycle(storage), ['zen-void', 'hue']);
     assert.deepEqual(normalizeSortCycle([]), DEFAULT_SORT_CYCLE);
     assert.equal(persistSortCycle(['hue'], { setItem() { throw Error('Quota'); } }), false);
+});
+
+test('custom order survives saves and drives every step of the cycle', () => {
+    let text; const storage = { setItem: (_, value) => { text = value; }, getItem: () => text };
+    const selected = ['temperature', 'hue', 'luminance'];
+    assert(persistSortCycle(selected, storage));
+    const restored = loadSortCycle(storage);
+    assert.deepEqual(restored, selected);
+    assert.equal(nextSortMethod('temperature', restored), 'hue');
+    assert.equal(nextSortMethod('hue', restored), 'luminance');
+    assert.equal(nextSortMethod('luminance', restored), 'temperature');
+    assert.equal(nextSortMethod('outside-in', restored), 'temperature');
+});
+
+test('earlier/later moves preserve selection and do not wrap at the ends or mutate the draft', () => {
+    const selected = ['temperature', 'hue', 'luminance'];
+    assert.deepEqual(moveSortMethod(selected, 'hue', -1), ['hue', 'temperature', 'luminance']);
+    assert.deepEqual(moveSortMethod(selected, 'hue', 1), ['temperature', 'luminance', 'hue']);
+    for (const [method, delta] of [['temperature', -1], ['luminance', 1], ['unknown', -1], ['hue', 2]]) {
+        assert.deepEqual(moveSortMethod(selected, method, delta), selected);
+    }
+    assert.deepEqual(selected, ['temperature', 'hue', 'luminance']);
+    assert.deepEqual(moveSortMethod(['hue'], 'hue', 1), ['hue']);
 });
 
 test('newly exposed algorithms preserve all palette colors and do not mutate the input', () => {
