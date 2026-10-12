@@ -1014,15 +1014,7 @@ export function initializeModals(appContext) {
             const name = document.createElement('span');
             name.dataset.debugText = 'startup_sort_' + mode.method;
             name.textContent = app.getText(name.dataset.debugText);
-            const description = document.createElement('small');
-            description.id = 'sort-description-' + mode.method;
-            description.dataset.debugText = 'sort_description_' + mode.method;
-            description.textContent = app.getText(description.dataset.debugText);
-            input.setAttribute('aria-describedby', description.id);
-            const text = document.createElement('span');
-            text.className = 'sort-cycle-text';
-            text.append(name, description);
-            row.append(input, svg, text); sortOptions.appendChild(row);
+            row.append(input, svg, name); sortOptions.appendChild(row);
         });
         sortDialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         updateSortSelection();
