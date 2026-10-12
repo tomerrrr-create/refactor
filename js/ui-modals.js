@@ -987,6 +987,54 @@ let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית
 export function initializeModals(appContext) {
     app = appContext;
 
+    const sortDialog = document.getElementById('sortCycleDialog');
+    const sortOptions = document.getElementById('sortCycleOptions');
+    const sortStatus = document.getElementById('sortCycleStatus');
+    function updateSortSelection() {
+        const inputs = [...sortOptions.querySelectorAll('input')];
+        const count = inputs.filter(input => input.checked).length;
+        inputs.forEach(input => { input.disabled = input.checked && count === 1; });
+    }
+    function openSortCycleModal() {
+        if (app.isBreathing()) return;
+        sortStatus.textContent = '';
+        const selected = app.getSortCycleMethods();
+        sortOptions.replaceChildren();
+        app.SORT_MODES.forEach(mode => {
+            const row = document.createElement('label');
+            row.className = 'sort-cycle-option';
+            const input = document.createElement('input');
+            input.type = 'checkbox'; input.value = mode.method;
+            input.checked = selected.includes(mode.method);
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+            svg.setAttribute('aria-hidden', 'true'); svg.innerHTML = mode.icon;
+            const name = document.createElement('span');
+            name.dataset.debugText = 'startup_sort_' + mode.method;
+            name.textContent = app.getText(name.dataset.debugText);
+            row.append(input, svg, name); sortOptions.appendChild(row);
+        });
+        sortDialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
+        updateSortSelection();
+        sortDialog.showModal();
+    }
+    sortOptions.addEventListener('change', updateSortSelection);
+    document.getElementById('sortCycleForm').addEventListener('submit', event => {
+        event.preventDefault();
+        const methods = [...sortOptions.querySelectorAll('input:checked')].map(input => input.value);
+        if (!methods.length) { sortStatus.textContent = app.getText('sort_cycle_at_least_one'); return; }
+        if (app.saveSortCycleMethods(methods)) sortDialog.close();
+        else sortStatus.textContent = app.getText('sort_cycle_session');
+    });
+    document.getElementById('btnCancelSortCycle').addEventListener('click', () => sortDialog.close());
+    sortDialog.addEventListener('close', () => app.resetWasLongPress());
+    sortDialog.addEventListener('click', event => {
+        if (event.target !== sortDialog) return;
+        const box = sortDialog.getBoundingClientRect();
+        if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) sortDialog.close();
+    });
+
     // Save Modal
     app.dom.btnModalClose.addEventListener('click', closeModal);
     app.dom.saveModal.addEventListener('click', (e) => { if (e.target === app.dom.saveModal) { closeModal(); } });
@@ -1125,8 +1173,7 @@ export function initializeModals(appContext) {
         .map(p => [p.originalName, p.originalName]));
     addStartupOptions('startupBoardSize', app.C.SIZES.slice().sort((a, b) => a - b).map(n => [n, `${n} × ${n}`]));
     addStartupOptions('startupSeparator', app.C.SEPARATORS.slice().reverse().map(gap => [gap, `${gap} px`]));
-    addStartupOptions('startupSort', ['luminance', 'dark-rainbow', 'reversed', 'center-out', 'temperature', 'outside-in']
-        .map(value => [value, '', 'startup_sort_' + value]));
+    addStartupOptions('startupSort', app.SORT_MODES.map(mode => [mode.method, '', 'startup_sort_' + mode.method]));
     addStartupOptions('startupFill', ['random', 'dark', 'light', 'seed'].map(value => [value, '', 'startup_fill_' + value]));
     addStartupOptions('startupBrushMode', ['paint', 'continuous', 'copy'].map(value => [value, '', 'brushMode_' + value]));
     addStartupOptions('startupBrushColor', ['none', 'darkest', 'lightest', 'rainbow'].map(value => [value, '', 'startup_color_' + value]));
@@ -1566,6 +1613,7 @@ function saveMagnetSettings() {
 
 
 return {
+        openSortCycleModal,
         openResizeModal,
         openNudgeSettingsModal,
         openColorPickerModal,

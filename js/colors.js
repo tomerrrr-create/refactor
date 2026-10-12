@@ -22,7 +22,12 @@ export const SORT_MODES = [
     { method: 'reversed', icon: '<path d="M6 19V4 M12 19V9 M18 19v-5" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'center-out', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2.7"/><path d="M7 12H2 M4.5 9.5L2 12l2.5 2.5 M17 12h5 M19.5 9.5L22 12l-2.5 2.5"/></g>' },
     { method: 'temperature', icon: '<path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0Z M12 8v8" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
-    { method: 'outside-in', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2.7"/><path d="M2 12h5 M4.5 9.5L7 12l-2.5 2.5 M22 12h-5 M19.5 9.5L17 12l2.5 2.5"/></g>' }
+    { method: 'outside-in', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2.7"/><path d="M2 12h5 M4.5 9.5L7 12l-2.5 2.5 M22 12h-5 M19.5 9.5L17 12l2.5 2.5"/></g>' },
+    { method: 'hue', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3.3"/></g>' },
+    { method: 'zig-zag', icon: '<path d="M3 16l5-8 8 8 5-8" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'waves', icon: '<path d="M2 9q5-6 10 0t10 0 M2 15q5-6 10 0t10 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'biomes', icon: '<path d="M3 18V9l6-4v13 M9 9l6-4v13 M15 9l6-4v13" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'zen-void', icon: '<path d="M18 5a9 9 0 1 0 1 13 M15 8a5 5 0 1 0 1 8" fill="none" stroke="currentColor" stroke-width="1.2"/>' }
 ];
 
 export function adjustBrightness(hex, factor) {
