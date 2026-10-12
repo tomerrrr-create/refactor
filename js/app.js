@@ -1,6 +1,6 @@
 // js/app.js
 
-import { SORT_MODES, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
+import { SORT_MODES, normalizeSortMethod, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
 import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailableLangs, translations, onLanguageChange } from './i18n.js';
 import * as C from './constants.js';
 import * as Simulations from './simulations.js';
@@ -178,6 +178,7 @@ function getPrevPaletteIndex(currentIndex) {
 
 // --- שלב 2: לוגיקת המיפוי (Remapping) ---
 function applySortMethod(newMethod) {
+    newMethod = normalizeSortMethod(newMethod);
     if (currentSortMethod === newMethod) return; // לא עושים כלום אם זו כבר השיטה הפעילה
     window.logArtEvent('Sort by', newMethod); // תיעוד שינוי מיון
 
@@ -357,7 +358,7 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
         separatorPx = state.separatorPx;
 
         if (state.currentSortMethod && state.currentSortMethod !== currentSortMethod) {
-            currentSortMethod = state.currentSortMethod;
+            currentSortMethod = normalizeSortMethod(state.currentSortMethod);
             C.PALETTES.forEach(palette => {
                 palette.colors = sortColorsArray(palette.originalColors, currentSortMethod);
             });

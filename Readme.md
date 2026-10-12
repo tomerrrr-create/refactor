@@ -55,9 +55,9 @@ There are two optimized rendering paths:
 This module strictly handles "pure" functional color processing. It calculates Luminance, Hue, and HSV directly from Hex strings without touching the DOM.
 * **Advanced Sorting Algorithms:** The `sortColorsArray` function powers the creative visual modes. Beyond simple luminance, it calculates complex arrays:
     * `dark-rainbow`: Splits colors by saturation and groups darks/lights, sorting the colorful mid-tones by Hue buckets.
-    * `biomes`: Groups colors into 90-degree Hue buckets and sorts by luminance within them.
     * `temperature`: Compares the Red and Blue channels to map colors from "warmest" to "coolest".
-    * `zen-void`, `waves`, `outside-in`: Spatial and geometric array sorting.
+    * `zen-void`: Sorts by RGB distance from the average palette color.
+    * `outside-in`: Places dark colors at both ends and lighter colors toward the center.
 
 ### Palette Data Structure (`data/palettes.js`)
 Palettes are stored as static JSON-like objects in js/data/palettes.js.

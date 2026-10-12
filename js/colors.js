@@ -25,10 +25,12 @@ export const SORT_MODES = [
     { method: 'outside-in', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2.7"/><path d="M2 12h5 M4.5 9.5L7 12l-2.5 2.5 M22 12h-5 M19.5 9.5L17 12l2.5 2.5"/></g>' },
     { method: 'hue', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3.3"/></g>' },
     { method: 'zig-zag', icon: '<path d="M3 16l5-8 8 8 5-8" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
-    { method: 'waves', icon: '<path d="M2 9q5-6 10 0t10 0 M2 15q5-6 10 0t10 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
-    { method: 'biomes', icon: '<path d="M3 18V9l6-4v13 M9 9l6-4v13 M15 9l6-4v13" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'zen-void', icon: '<path d="M18 5a9 9 0 1 0 1 13 M15 8a5 5 0 1 0 1 8" fill="none" stroke="currentColor" stroke-width="1.2"/>' }
 ];
+
+export function normalizeSortMethod(method) {
+    return SORT_MODES.some(mode => mode.method === method) ? method : 'luminance';
+}
 
 export function adjustBrightness(hex, factor) {
     const rgb = hexToRgb(hex);
@@ -131,15 +133,6 @@ export function sortColorsArray(colorsArray, method) {
             const lightHalf = reversedLuminance.slice(0, mid);
             return [...darkHalf, ...lightHalf];
         }
-        case 'waves': {
-            const sorted = [...sortedByLuminance];
-            const quarter = Math.floor(sorted.length / 4);
-            const q1 = sorted.slice(0, quarter); 
-            const q2 = sorted.slice(quarter, quarter * 2).reverse(); 
-            const q3 = sorted.slice(quarter * 2, quarter * 3); 
-            const q4 = sorted.slice(quarter * 3).reverse(); 
-            return [...q1, ...q2, ...q3, ...q4];
-        }
         case 'outside-in': {
             const outsideInArray = new Array(sortedByLuminance.length);
             let left = 0;
@@ -154,17 +147,6 @@ export function sortColorsArray(colorsArray, method) {
                 }
             }
             return outsideInArray;
-        }
-        case 'biomes': {
-            return [...colorsArray].sort((a, b) => {
-                const bucketSize = 90; 
-                const bucketA = Math.floor(getHue(a) / bucketSize);
-                const bucketB = Math.floor(getHue(b) / bucketSize);
-                if (bucketA === bucketB) {
-                    return getLuminance(a) - getLuminance(b);
-                }
-                return bucketA - bucketB;
-            });
         }
         case 'center-out': {
             const centerOut = new Array(sortedByLuminance.length);
