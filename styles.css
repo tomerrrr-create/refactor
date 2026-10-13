@@ -516,6 +516,10 @@ body {
     align-items: center;
     justify-content: center;
 }
+.help-item-text { min-width: 0; line-height: 1.6; }
+.help-item-text p { margin: 0; }
+.help-main-action { color: #e5e5e5; }
+.help-item-text .help-extra-actions { margin-top: 5px; color: #aaa; font-size: 12px; }
 .help-item-icon-wrapper .glyph,
 .help-item-icon-wrapper svg {
   width: var(--icon-size);

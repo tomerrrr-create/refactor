@@ -661,13 +661,19 @@ function populateHelpModal() {
 
     const categories = {
         inspiration: { titleKey: 'help_category_inspiration', buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset'] },
-        order: { titleKey: 'help_category_order', buttons: ['btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark'] },
+        order: { titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark'] },
         touch: { titleKey: 'help_category_touch', buttons: ['btnBrushMode', 'btnSymmetry', 'btnColorPicker'] },
-        evolution: { titleKey: 'help_category_evolution', buttons: ['btnToggleSimMode', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnErosion', 'btnDla', 'btnPlayPauseLife'] },
-        tools: { titleKey: 'help_category_tools', buttons: ['btnUndo', 'btnRedo', 'btnSave', 'btnResetBoard'] }
+        evolution: { titleKey: 'help_category_evolution', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward', 'btnSimSettings', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter', 'btnNudgeDarker'] },
+        advanced: { titleKey: 'help_category_advanced', buttons: ['btnOpenDebug'] },
+        tools: { titleKey: 'help_category_tools', buttons: ['btnUndo', 'btnRedo', 'btnSave', 'btnMacroPlay', 'btnResetBoard'] }
     };
 
     const helpData = {
+        btnCycleSort: app.getText('help_sort'), btnSpiral: app.getText('help_spiral'), btnMagnetModes: app.getText('help_magnet'),
+        btnContour: app.getText('help_contour'), btnSandpile: app.getText('help_sandpile'), btnTuring: app.getText('help_turing'),
+        btnNudgeBrighter: app.getText('help_nudge_forward'), btnNudgeDarker: app.getText('help_nudge_backward'),
+        btnStepForward: app.getText('help_step'), btnSimSettings: app.getText('help_sim_settings'),
+        btnMacroPlay: app.getText('help_macro'), btnOpenDebug: app.getText('help_technicians'),
         'btnPalette': app.getText('help_palette'), 'btnRandom': app.getText('help_random'), 'btnInvert': app.getText('help_invert'),
         'btnSpecialReset': app.getText('help_specialReset'), 'btnResizeUp': app.getText('help_resizeUp'), 'btnResizeDown': app.getText('help_resizeDown'),
         'btnGap': app.getText('help_gap'), 'btnDark': app.getText('help_dark'), 'btnBrushMode': app.getText('help_brushMode'), 'btnSymmetry': app.getText('help_symmetry'),
@@ -689,18 +695,38 @@ function populateHelpModal() {
             if (!btn || !helpData[btnId]) return;
             const helpItem = document.createElement('div');
             helpItem.className = 'flex items-center gap-4';
+            helpItem.dataset.helpFor = btnId;
             const iconWrapper = document.createElement('div');
             iconWrapper.className = 'help-item-icon-wrapper';
-            iconWrapper.innerHTML = btn.innerHTML;
-            if (btnId === 'btnPlayPauseLife') {
-                const playIcon = iconWrapper.querySelector('#iconPlay');
-                if(playIcon) playIcon.style.display = 'block';
-                const pauseIcon = iconWrapper.querySelector('#iconPause');
-                if(pauseIcon) pauseIcon.style.display = 'none';
-            }
+            // Copy one visible state, not all variants; scope SVG definition
+            // IDs so help icons do not duplicate the live controls' identifiers.
+            const rootIcons = [...btn.querySelectorAll(':scope > svg')];
+            const sourceIcon = btnId === 'btnPlayPauseLife' ? btn.querySelector('#iconPlay') :
+                rootIcons.find(icon => getComputedStyle(icon).display !== 'none') || rootIcons[0];
+            if (sourceIcon) {
+                const copy = sourceIcon.cloneNode(true);
+                copy.style.display = 'block'; iconWrapper.appendChild(copy);
+            } else iconWrapper.innerHTML = btn.innerHTML;
+            const ids = new Map([...iconWrapper.querySelectorAll('[id]')].map(element => [element.id, `help-${btnId}-${element.id}`]));
+            iconWrapper.querySelectorAll('*').forEach(element => {
+                if (element.id) element.id = ids.get(element.id);
+                [...element.attributes].forEach(attribute => {
+                    let value = attribute.value;
+                    ids.forEach((replacement, original) => {
+                        value = value.replaceAll(`url(#${original})`, `url(#${replacement})`);
+                        if (value === `#${original}`) value = `#${replacement}`;
+                    });
+                    if (value !== attribute.value) element.setAttribute(attribute.name, value);
+                });
+            });
             const textWrapper = document.createElement('div');
-            textWrapper.textContent = helpData[btnId];
-            textWrapper.className = 'text-gray-300 text-sm';
+            textWrapper.className = 'text-gray-300 text-sm help-item-text';
+            helpData[btnId].split('\n').forEach((text, index) => {
+                const paragraph = document.createElement('p');
+                paragraph.className = index === 0 ? 'help-main-action' : 'help-extra-actions';
+                paragraph.textContent = text;
+                textWrapper.appendChild(paragraph);
+            });
             helpItem.appendChild(iconWrapper);
             helpItem.appendChild(textWrapper);
             contentDiv.appendChild(helpItem);
@@ -735,12 +761,10 @@ function populateHelpModal() {
     const shortcutsContainer = document.createElement('div');
     shortcutsContainer.className = 'space-y-2';
     const shortcuts = [
-        { keys: ['Ctrl', '+', 'Z'], descriptionKey: 'help_shortcut_undo' }, { keys: ['Ctrl', '+', 'Y'], descriptionKey: 'help_shortcut_redo' },
-        { keys: ['Ctrl', '+', 'S'], descriptionKey: 'help_shortcut_save' }, { keys: ['I'], descriptionKey: 'help_shortcut_invert' },
-        { keys: ['R'], descriptionKey: 'help_shortcut_random' }, { keys: ['D'], descriptionKey: 'help_shortcut_dark' },
-        { keys: ['B'], descriptionKey: 'help_shortcut_brush' }, { keys: ['M'], descriptionKey: 'help_shortcut_symmetry' },
-        { keys: ['G'], descriptionKey: 'help_shortcut_gap' }, { keys: ['←', '/', '→'], descriptionKey: 'help_shortcut_palette' },
-        { keys: ['+', '/', '-'], descriptionKey: 'help_shortcut_resize' }
+        { keys: ['Alt', '+', '↓'], descriptionKey: 'help_keyboard_sort' },
+        { keys: ['Tab', '/', 'Shift', '+', 'Tab'], descriptionKey: 'help_keyboard_focus' },
+        { keys: ['Enter', '/', 'Space'], descriptionKey: 'help_keyboard_activate' },
+        { keys: ['Esc'], descriptionKey: 'help_keyboard_escape' }
     ];
     shortcuts.forEach(shortcut => {
         const item = document.createElement('div');
