@@ -76,6 +76,7 @@ export const translations = {
   "startup_sort_center-out": { en: "Center out", he: "מהמרכז החוצה", ru: "От центра наружу", nl: "Van binnen naar buiten" },
   "startup_sort_temperature": { en: "Temperature", he: "טמפרטורה", ru: "Температура", nl: "Temperatuur" },
   "startup_sort_outside-in": { en: "Outside in", he: "מהחוץ פנימה", ru: "Снаружи внутрь", nl: "Van buiten naar binnen" },
+  "startup_sort_rainbow-fold": { en: "Rainbow Fold", he: "קיפול קשת", ru: "Сложенная радуга", nl: "Gevouwen regenboog" },
   "startup_fill_random": { en: "Random colors", he: "צבעים אקראיים", ru: "Случайные цвета", nl: "Willekeurige kleuren" },
   "startup_fill_dark": { en: "Darkest color", he: "הצבע הכהה ביותר", ru: "Самый тёмный цвет", nl: "Donkerste kleur" },
   "startup_fill_light": { en: "Lightest color", he: "הצבע הבהיר ביותר", ru: "Самый светлый цвет", nl: "Lichtste kleur" },
