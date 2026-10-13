@@ -224,6 +224,8 @@ tile.v = tile.k;
               }
           });
 
+          syncSelectedColorWithPalette();
+
           // 4. מרנדרים מחדש את תפריט הצבעים כדי שהמשתמש יראה את הסדר החדש
           if (typeof renderColorPickerContent === 'function') {
               renderColorPickerContent();
@@ -377,10 +379,7 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
             }
         }
 
-        updateGlowEffect();
-
-
-        updateColorPickerButtonUI();
+        syncSelectedColorWithPalette();
         updatePaletteHeader();
         applySeparator();
         updateSymmetryUI();
@@ -865,6 +864,14 @@ function applyNudgeLogic(direction) {
 
 
 
+
+      // Keep the chosen color stable when its palette index changes.
+      function syncSelectedColorWithPalette() {
+          selectedColorIndex = selectedColor ? palette().indexOf(selectedColor) : -1;
+          if (selectedColorIndex === -1) selectedColor = null;
+          updateGlowEffect();
+          updateColorPickerButtonUI();
+      }
 
       function resetSelectedColor() {
           selectedColor = null;
@@ -2912,7 +2919,10 @@ function applyHistorySettings(settings) {
         dom.btnGap.setAttribute('aria-label', getText('tooltip_gap'));
         changed = true;
     }
-    if (changed) renderToScreen(null);
+    if (changed) {
+        syncSelectedColorWithPalette();
+        renderToScreen(null);
+    }
 }
 
 function parseHistoryMacro(lines) {
@@ -3405,6 +3415,8 @@ function executeMacroAction(action) {
             if (currentSortMethod !== initState.sort) {
                 applySortMethod(initState.sort);
             }
+
+            syncSelectedColorWithPalette();
 
             // 2. יצירת לוח ריק בגודל הנכון ושחזור הצבעים מהמחרוזת הדחוסה
             initializeBoardAndCanvas(true); 
