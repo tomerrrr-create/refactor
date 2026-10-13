@@ -1943,6 +1943,9 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         document.querySelectorAll('[data-debug-text]').forEach(element => {
             element.textContent = getText(element.dataset.debugText);
         });
+        document.querySelectorAll('#sortCycleOptions option[data-position]').forEach(option => {
+            option.textContent = `${getText('sort_position')} ${option.dataset.position}`;
+        });
         dom.technicianDialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         document.getElementById('sortCycleDialog').dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         dom.paletteModalTitle.textContent = getText('paletteModal_title');

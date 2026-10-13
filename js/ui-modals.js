@@ -1013,10 +1013,6 @@ export function initializeModals(appContext) {
                 input.type = 'checkbox'; input.value = mode.method;
                 input.checked = draftSortMethods.includes(mode.method);
                 row.appendChild(input);
-            } else {
-                const number = document.createElement('span');
-                number.className = 'sort-order-number'; number.textContent = String(index + 1);
-                row.appendChild(number);
             }
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('viewBox', '0 0 24 24');
@@ -1028,26 +1024,25 @@ export function initializeModals(appContext) {
             name.textContent = app.getText(name.dataset.debugText);
             row.append(svg, name);
             if (isOrderingSort) {
-                const controls = document.createElement('div');
-                controls.className = 'sort-order-controls';
-                for (const [delta, key] of [[-1, 'sort_earlier'], [1, 'sort_later']]) {
-                    const button = document.createElement('button');
-                    button.type = 'button'; button.dataset.delta = String(delta);
-                    button.dataset.debugText = key; button.textContent = app.getText(key);
-                    button.id = `sort-move-${mode.method}-${delta}`;
-                    button.setAttribute('aria-labelledby', `${button.id} ${name.id}`);
-                    button.disabled = index + delta < 0 || index + delta >= modes.length;
-                    button.addEventListener('click', () => {
-                        draftSortMethods = moveSortMethod(draftSortMethods, mode.method, delta);
-                        renderSortOptions();
-                        const movedRow = [...sortOptions.children].find(tile => tile.dataset.method === mode.method);
-                        const matching = movedRow.querySelector(`button[data-delta="${delta}"]`);
-                        (matching.disabled ? movedRow.querySelector('button:not(:disabled)') : matching)?.focus();
-                        sortStatus.textContent = `${name.textContent}: ${draftSortMethods.indexOf(mode.method) + 1} / ${draftSortMethods.length}`;
-                    });
-                    controls.appendChild(button);
-                }
-                row.appendChild(controls);
+                const position = document.createElement('select');
+                position.className = 'sort-order-position';
+                position.id = 'sort-position-' + mode.method;
+                position.setAttribute('aria-labelledby', `${position.id} ${name.id}`);
+                modes.forEach((_, target) => {
+                    const option = document.createElement('option');
+                    option.value = String(target);
+                    option.dataset.position = String(target + 1);
+                    option.textContent = `${app.getText('sort_position')} ${target + 1}`;
+                    position.appendChild(option);
+                });
+                position.value = String(index);
+                position.addEventListener('change', () => {
+                    draftSortMethods = moveSortMethod(draftSortMethods, mode.method, Number(position.value));
+                    renderSortOptions();
+                    document.getElementById(position.id).focus();
+                    sortStatus.textContent = `${name.textContent}: ${draftSortMethods.indexOf(mode.method) + 1} / ${draftSortMethods.length}`;
+                });
+                row.appendChild(position);
             }
             sortOptions.appendChild(row);
         });
