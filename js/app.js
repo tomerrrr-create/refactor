@@ -323,6 +323,7 @@ function compressBoardState() {
             separatorPx,
 currentSortMethod, 
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
+            erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
                 isGold: tile.isGold,
@@ -406,6 +407,11 @@ k: tileState.k,
             updateSpiralButtonUI();
         }
         
+        if (['legacy', 'channels'].includes(state.erosionMode)) {
+            if (armedSimulation !== 'erosion') armSimulation('erosion');
+            erosionRules.mode = state.erosionMode;
+        }
+        updateErosionButtonUI();
         renderToScreen(null); 
       }
 
@@ -1466,6 +1472,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     // כיבוי ויזואלי של כל הכפתורים
     updateBrightnessEvoButtonUI();
     updateDlaButtonUI();
+    updateErosionButtonUI();
     updateBreatheEvoButtonUI();
     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -1530,6 +1537,7 @@ if (simulationName === 'magnet') {
         // הדלקה ויזואלית של האייקונים בכפתורים המחזוריים
         updateBrightnessEvoButtonUI();
         updateDlaButtonUI();
+        updateErosionButtonUI();
         updateBreatheEvoButtonUI();
         if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
         if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -1948,7 +1956,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnGameOfLife.title = getText('tooltip_gameOfLife'); 
         dom.btnBrightnessEvo.title = getText('tooltip_brightnessEvo');
         dom.btnGravitationalSort.title = getText('tooltip_gravitationalSort'); 
-        dom.btnErosion.title = getText('tooltip_erosion');
+        updateErosionButtonUI();
         dom.btnDla.title = getText('tooltip_dla'); 
         dom.btnContour.title = getText('tooltip_contour');
 dom.btnSpiral.title = getText('tooltip_spiral');
@@ -2037,6 +2045,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
  updateDlaButtonUI();
    dlaMode = 'off';
     updateDlaButtonUI();
+    updateErosionButtonUI();
     breatheEvoMode = 'off';
     updateBreatheEvoButtonUI();
 spiralMode = 'off';
@@ -2543,6 +2552,29 @@ function cycleBrightnessEvoMode() {
 }
 
 
+function updateErosionButtonUI() {
+    const channels = armedSimulation === 'erosion' && erosionRules.mode === 'channels';
+    document.getElementById('iconErosionLegacy').style.display = channels ? 'none' : 'block';
+    document.getElementById('iconErosionChannels').style.display = channels ? 'block' : 'none';
+    dom.btnErosion.title = `${getText('tooltip_erosion')}: ${getText(armedSimulation === 'erosion'
+        ? (channels ? 'erosion_channels' : 'erosion_legacy') : 'erosion_off')}`;
+    dom.btnErosion.setAttribute('aria-label', dom.btnErosion.title);
+}
+
+function cycleErosionMode() {
+    if (isLifePlaying) return;
+    const modes = ['off', 'legacy', 'channels'];
+    const current = armedSimulation === 'erosion' ? erosionRules.mode : 'off';
+    const next = modes[(modes.indexOf(current) + 1) % modes.length];
+    if (next === 'off') armSimulation(null);
+    else {
+        if (armedSimulation !== 'erosion') armSimulation('erosion');
+        erosionRules.mode = next;
+    }
+    updateErosionButtonUI();
+    window.logArtEvent('Erosion Mode Changed', next);
+}
+
 function updateDlaButtonUI() {
     dom.btnDla.classList.remove('mode-genetics', 'mode-no-genetics');
     if (dlaMode === 'genetics') {
@@ -3036,13 +3068,13 @@ function parseLegacyMacroText(text) {
     const uiEvents = [
         'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed'
     ];
 
     // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
     const simulationEvents = [
         'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed'
     ];
 
 
@@ -3360,7 +3392,11 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     gsMode = parsedRules.direction || gsMode;
                     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
                 }
-                else if (sim === 'erosion') Object.assign(erosionRules, parsedRules);
+                else if (sim === 'erosion') {
+                    Object.assign(erosionRules, parsedRules);
+                    erosionRules.mode = parsedRules.mode === 'channels' ? 'channels' : 'legacy';
+                    updateErosionButtonUI();
+                }
                 else if (sim === 'dla') {
                     if (parsedRules.mode) dlaMode = parsedRules.mode;
                     Object.assign(dlaRules, parsedRules);
@@ -3511,6 +3547,15 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'GRID_RESIZE') {
         _performResize(parseInt(action.details, 10));
+    }
+    else if (action.eventName === 'Erosion Mode Changed') {
+        if (action.details === 'off') {
+            if (armedSimulation === 'erosion') armSimulation(null);
+        } else if (['legacy', 'channels'].includes(action.details)) {
+            if (armedSimulation !== 'erosion') armSimulation('erosion');
+            erosionRules.mode = action.details;
+        }
+        updateErosionButtonUI();
     }
     else if (action.eventName === 'Gravitational Sort Mode') {
                 if (action.details === 'off') {
@@ -3907,7 +3952,7 @@ dom.btnBrightnessEvo.addEventListener('click', (e) => handleCtrlClick(e, cycleBr
 
 dom.btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, cycleBreatheEvoMode));
 
-        dom.btnErosion.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('erosion')));
+        dom.btnErosion.addEventListener('click', (e) => handleCtrlClick(e, cycleErosionMode));
 
 dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 
