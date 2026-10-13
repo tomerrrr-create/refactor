@@ -35,7 +35,25 @@ let app;
 
 // --- Internal Helper Functions ---
 
+let saveStatusTimer;
+function clearSaveStatus() {
+    clearTimeout(saveStatusTimer);
+    app.dom.saveStatus.textContent = '';
+    app.dom.saveStatus.classList.remove('visible');
+    delete app.dom.saveStatus.dataset.debugText;
+    delete app.dom.saveStatus.dataset.status;
+}
+function showSaveStatus(key, error = false) {
+    clearTimeout(saveStatusTimer);
+    app.dom.saveStatus.dataset.debugText = key;
+    app.dom.saveStatus.dataset.status = error ? 'error' : 'success';
+    app.dom.saveStatus.textContent = app.getText(key);
+    app.dom.saveStatus.classList.add('visible');
+    saveStatusTimer = setTimeout(() => app.dom.saveStatus.classList.remove('visible'), 4000);
+}
+
 function closeModal() {
+    clearSaveStatus();
     app.dom.saveModal.classList.remove('modal-visible');
     if (app.dom.imagePreview.src) { URL.revokeObjectURL(app.dom.imagePreview.src); }
     app.dom.imagePreview.src = '';
@@ -1738,6 +1756,7 @@ function saveMagnetSettings() {
 
 
 return {
+        showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
         openSortCycleModal,
         openResizeModal,

@@ -468,6 +468,19 @@ body {
   justify-content: center;
   gap: 12px;
 }
+.save-status {
+  min-height: 2.6em;
+  margin: 12px 0 0;
+  color: #e3c677;
+  font-size: 13px;
+  line-height: 1.3;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.save-status.visible { opacity: 1; transform: translateY(0); }
+.save-status[data-status="error"] { color: #e2a48a; }
+
 .save-actions .save-tile {
   width: min(90px, calc((100% - 24px) / 3));
   height: auto;
