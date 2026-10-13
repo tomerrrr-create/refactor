@@ -372,8 +372,8 @@ body {
     transform: scale(1);
   }
   50% {
-    filter: drop-shadow(0 0 8px var(--gold));
-    transform: scale(1.1);
+    filter: drop-shadow(0 0 var(--glow-radius, 8px) var(--gold));
+    transform: scale(var(--glow-scale, 1.1));
   }
 }
 .glow-animation .glyph-random, .glow-animation .glyph-invert, .glow-animation.palette, .glow-animation svg, .glow-animation .glyph-special-reset {
@@ -381,6 +381,12 @@ body {
 }
 .glow-animation-separator svg {
   animation: glow-effect 2s ease-in-out infinite;
+}
+.ctrl.picker-swipe-glow:not(.palette) > svg,
+.ctrl.palette.picker-swipe-glow {
+  --glow-radius: 6px;
+  --glow-scale: 1.04;
+  animation: glow-effect .8s ease-in-out -.2s infinite;
 }
 
 
@@ -1155,6 +1161,7 @@ button, .ctrl {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
 }
+#btnPalette, #btnColorPicker, #btnCycleSort { touch-action: none !important; }
 
 /* --- Structural fix for Palette Modal Sticky Headers --- */
 #paletteModalGrid {

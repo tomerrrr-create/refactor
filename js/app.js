@@ -1,5 +1,6 @@
 // js/app.js
 
+import { bindPickerGestures } from './picker-gestures.js';
 import { SORT_MODES, normalizeSortMethod, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
 import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailableLangs, translations, onLanguageChange } from './i18n.js';
 import * as C from './constants.js';
@@ -1873,7 +1874,6 @@ function handlePointerDownCtrl(e) {
 
 
             
-            if (btn.id === 'btnCycleSort') { modals.openSortCycleModal(); return; }
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') {
@@ -1886,18 +1886,7 @@ function handlePointerDownCtrl(e) {
                 }, C.LONG_PRESS_SHOW_MS * 2);
                 return;
             }
-if (btn.id === 'btnColorPicker') {
-            // בחירת הצבע באינדקס 0 (המייצג את הצבע הכהה/הבסיס בפלטות הממוינות)
-            selectedColorIndex = 0;
-            selectedColor = palette()[0];
-            isRainbowModeActive = false;
-            
-            // עדכון המסגרת הזוהרת והאייקון של הכפתור
-            updateGlowEffect();
-            updateColorPickerButtonUI();
-            
-            return;
-        }
+
 
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
         }, C.LONG_PRESS_SHOW_MS);
@@ -2846,42 +2835,6 @@ function cycleSortMethod() {
           }
       }
 
-
-// --- Palette Click Combo Logic ---
-      let paletteClickTimer = null;
-      const DOUBLE_CLICK_DELAY = 150;
-
-      function handlePaletteClickCombo() {
-          if (paletteClickTimer === null) {
-              paletteClickTimer = setTimeout(() => {
-                  switchPalette(); 
-                  paletteClickTimer = null; 
-              }, DOUBLE_CLICK_DELAY);
-          } else {
-              clearTimeout(paletteClickTimer);
-              paletteClickTimer = null;
-              modals.openPaletteModal(); 
-          }
-      }
-      // ---------------------------------
-
-
-// --- Color Picker Click Combo Logic ---
-      let colorClickTimer = null;
-
-      function handleColorPickerClickCombo() {
-          if (colorClickTimer === null) {
-              colorClickTimer = setTimeout(() => {
-                  handleColorPickerClick(); 
-                  colorClickTimer = null; 
-              }, 150); // 150 מילישניות כמו שבחרת
-          } else {
-              clearTimeout(colorClickTimer);
-              colorClickTimer = null;
-              modals.openColorPickerModal(); 
-          }
-      }
-      // ---------------------------------
 
 // --- Art Logger: Export Functionality ---
 
@@ -3888,7 +3841,11 @@ updateBrightnessEvoButtonUI();
 
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
 
-dom.btnPalette.addEventListener('click', (e) => handleCtrlClick(e, handlePaletteClickCombo));
+bindPickerGestures(dom.btnPalette, {
+    onTap: switchPalette, onOpen: modals.openPaletteModal,
+    canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
+    holdMs: C.LONG_PRESS_SHOW_MS
+});
 
         dom.btnResetBoard.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(resetToGoldAndDefaultPalette)));
         dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
@@ -3901,13 +3858,27 @@ dom.btnPalette.addEventListener('click', (e) => handleCtrlClick(e, handlePalette
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         dom.btnSymmetry.addEventListener('click', (e) => handleCtrlClick(e, cycleSymmetryMode));
-dom.btnCycleSort.addEventListener('click', (e) => handleCtrlClick(e, cycleSortMethod));
+bindPickerGestures(dom.btnCycleSort, {
+    onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
+    canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
+    holdMs: C.LONG_PRESS_SHOW_MS
+});
 dom.btnCycleSort.addEventListener('keydown', e => {
     if (e.altKey && e.key === 'ArrowDown') {
         e.preventDefault(); modals.openSortCycleModal();
     }
 });
-dom.btnColorPicker.addEventListener('click', (e) => handleCtrlClick(e, handleColorPickerClickCombo));
+bindPickerGestures(dom.btnColorPicker, {
+    onTap: handleColorPickerClick, onOpen: modals.openColorPickerModal,
+    onHold: () => {
+        selectedColorIndex = 0;
+        selectedColor = palette()[0];
+        isRainbowModeActive = false;
+        updateGlowEffect(); updateColorPickerButtonUI();
+    },
+    canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
+    holdMs: C.LONG_PRESS_SHOW_MS
+});
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
         dom.btnToggleSimMode.addEventListener('click', (e) => handleCtrlClick(e, toggleSimMode));
         dom.btnGameOfLife.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('gameOfLife')));
@@ -3962,6 +3933,7 @@ if (dom.btnSimSettings) {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
+            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
