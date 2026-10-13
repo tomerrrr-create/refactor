@@ -17,7 +17,7 @@
 
 // --- הגדרות מיון עיצוב אלכימיה ---
 export const SORT_MODES = [
-    { method: 'luminance', icon: '<circle cx="12" cy="12" r="9" fill="#ffffff" stroke="none"/><circle cx="12" cy="12" r="7.8" fill="#d5d5d5" stroke="none"/><circle cx="12" cy="12" r="6.6" fill="#aaaaaa" stroke="none"/><circle cx="12" cy="12" r="5.4" fill="#808080" stroke="none"/><circle cx="12" cy="12" r="4.2" fill="#555555" stroke="none"/><circle cx="12" cy="12" r="3" fill="#2a2a2a" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="#000000" stroke="none"/>' },
+    { method: 'luminance', icon: '<path d="M8 4h8 M12 4v16 M8 20h8" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'dark-rainbow', icon: '<path d="M3 16a9 9 0 0 1 2.1-5.8 M6.5 8.88A9 9 0 0 1 21 16 M6 16a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'reversed', icon: '<circle cx="12" cy="12" r="2" fill="#fff" stroke="none"/>' },
     { method: 'center-out', icon: '<path d="M12 20V4 M10 20L5 12Q3.5 10 2 10 M14 20l5-8q1.5-2 3-2" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
