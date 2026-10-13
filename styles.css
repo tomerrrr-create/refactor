@@ -509,6 +509,7 @@ body {
 #helpModalContent::-webkit-scrollbar-thumb, #paletteModalGrid::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
 #helpModalContent::-webkit-scrollbar-thumb:hover, #paletteModalGrid::-webkit-scrollbar-thumb:hover { background: #777; }
 .help-item-icon-wrapper {
+    color: #e3c677;
     width: 50px;
     height: 50px;
     flex-shrink: 0;

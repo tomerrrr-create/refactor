@@ -715,10 +715,16 @@ function populateHelpModal() {
             // Copy one visible state, not all variants; scope SVG definition
             // IDs so help icons do not duplicate the live controls' identifiers.
             const rootIcons = [...btn.querySelectorAll(':scope > svg')];
-            const sourceIcon = btnId === 'btnPlayPauseLife' ? btn.querySelector('#iconPlay') :
+            const sourceIcon = btnId === 'btnPlayPauseLife' ? rootIcons[0] :
                 rootIcons.find(icon => getComputedStyle(icon).display !== 'none') || rootIcons[0];
             if (sourceIcon) {
                 const copy = sourceIcon.cloneNode(true);
+                if (btnId === 'btnPlayPauseLife') {
+                    const play = copy.querySelector('#iconPlay');
+                    const pause = copy.querySelector('#iconPause');
+                    if (play) { play.style.display = 'block'; play.setAttribute('fill', 'currentColor'); }
+                    if (pause) pause.style.display = 'none';
+                }
                 copy.style.display = 'block'; iconWrapper.appendChild(copy);
             } else iconWrapper.innerHTML = btn.innerHTML;
             const ids = new Map([...iconWrapper.querySelectorAll('[id]')].map(element => [element.id, `help-${btnId}-${element.id}`]));
