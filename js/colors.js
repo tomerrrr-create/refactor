@@ -17,7 +17,7 @@
 
 // --- הגדרות מיון עיצוב אלכימיה ---
 export const SORT_MODES = [
-    { method: 'luminance', icon: '<defs><radialGradient id="sortLuminanceHalo"><stop offset="50%" stop-color="#000"/><stop offset="75%" stop-color="#575757"/><stop offset="92%" stop-color="#bdbdbd"/><stop offset="100%" stop-color="#fff"/></radialGradient></defs><circle cx="12" cy="12" r="8" fill="url(#sortLuminanceHalo)" stroke="none"/>' },
+    { method: 'luminance', icon: '<defs><radialGradient id="sortLuminanceHalo" cx="32%" cy="28%" r="75%" fx="26%" fy="22%"><stop offset="0%" stop-color="#fff"/><stop offset="25%" stop-color="#ededed"/><stop offset="50%" stop-color="#8c8c8c"/><stop offset="75%" stop-color="#383838"/><stop offset="100%" stop-color="#000"/></radialGradient></defs><circle cx="12" cy="12" r="9" fill="url(#sortLuminanceHalo)" stroke="#a0a0a0" stroke-width="0.5"/>' },
     { method: 'dark-rainbow', icon: '<path d="M3 16a9 9 0 0 1 2.1-5.8 M6.5 8.88A9 9 0 0 1 21 16 M6 16a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'reversed', icon: '<circle cx="12" cy="12" r="2" fill="#fff" stroke="none"/>' },
     { method: 'center-out', icon: '<path d="M12 20V4 M10 20L5 12Q3.5 10 2 10 M14 20l5-8q1.5-2 3-2" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
