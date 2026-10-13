@@ -676,7 +676,8 @@ function populateHelpModal() {
         inspiration: { tab: 'creation', titleKey: 'help_category_inspiration', buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset'] },
         order: { tab: 'creation', titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark'] },
         touch: { tab: 'creation', titleKey: 'help_category_touch', buttons: ['btnBrushMode', 'btnSymmetry', 'btnColorPicker'] },
-        evolution: { tab: 'evolution', titleKey: 'help_category_evolution', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward', 'btnSimSettings', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter', 'btnNudgeDarker'] },
+        controls: { tab: 'evolution', titleKey: 'help_category_controls', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward', 'btnSimSettings'] },
+        evolution: { tab: 'evolution', titleKey: 'help_category_evolution_modes', buttons: ['btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter', 'btnNudgeDarker'] },
         advanced: { tab: 'tools', titleKey: 'help_category_advanced', buttons: ['btnOpenDebug'] },
         tools: { tab: 'tools', titleKey: 'help_category_tools', buttons: ['btnUndo', 'btnRedo', 'btnSave', 'btnMacroPlay', 'btnResetBoard'] }
     };

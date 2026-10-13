@@ -106,6 +106,8 @@ export const translations = {
 
   spiral_black_hole: { en: "Black Hole", he: "חור שחור", ru: "Чёрная дыра", nl: "Zwart gat" },
   help_category_evolution: { en: "Evolution", he: "אבולוציה", ru: "Эволюция", nl: "Evolutie" },
+  help_category_controls: { en: "Controls", he: "כלי שליטה", ru: "Управление", nl: "Bediening" },
+  help_category_evolution_modes: { en: "Evolution modes", he: "מצבי אבולוציה", ru: "Режимы эволюции", nl: "Evolutiemodi" },
   help_category_tips: { en: "Tips & Tricks", he: "טיפים וטריקים", ru: "Советы и хитрости", nl: "Tips & Trucs" },
   help_tip1: {"en": "Pause simulations before drawing. Choose a tool, then Play; Single step advances it once.", "he": "השהו סימולציות לפני ציור. בחרו כלי ואז הפעלה; צעד בודד מקדם אותו פעם אחת.", "ru": "Приостановите симуляцию перед рисованием. Выберите инструмент и запуск; один шаг продвигает его один раз.", "nl": "Pauzeer simulaties voordat je tekent. Kies een tool en Afspelen; Eén stap voert één stap uit."},
   help_tip2: {"en": "A quick double-tap on Palette or Color opens its picker; a single tap cycles choices.", "he": "לחיצה כפולה מהירה על פלטה או צבע פותחת את הבורר; לחיצה בודדת מדפדפת בין האפשרויות.", "ru": "Быстрое двойное нажатие на палитру или цвет открывает выбор; одиночное переключает варианты.", "nl": "Snel dubbeltikken op Palet of Kleur opent de kiezer; één tik bladert door keuzes."},
