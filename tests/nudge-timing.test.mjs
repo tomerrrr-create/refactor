@@ -35,9 +35,9 @@ function harness({direction = 'nudgeBrighter', stored = null, blockedStorage = f
 }
 const rules = ms=>JSON.stringify({nudgeTimingVersion:1,intervalMs:ms});
 
-test('fast default shifts once per frame in both directions; gold stays unchanged',()=>{
+test('saved fast setting shifts once per frame in both directions; gold stays unchanged',()=>{
     for(const [direction,expected] of [['nudgeBrighter',12],['nudgeDarker',89]]){
-        const h=harness({direction});
+        const h=harness({direction, stored:'{"intervalMs":0}'});
         for(let i=0;i<10;i++)h.frame(i*16);
         assert.equal(h.context.currentGenerationCount,10);
         assert.equal(h.context.boardState[0].k,expected);
@@ -53,7 +53,7 @@ test('slow counts only shifts, including exact 200 ms boundary',()=>{
     assert.deepEqual(JSON.parse(h.logs[0][1]),{nudgeTimingVersion:1,intervalMs:200});
 });
 test('changing speed while running does not manufacture a generation or shift',()=>{
-    const h=harness();h.frame(0);h.frame(16);
+    const h=harness({stored:'{"intervalMs":0}'});h.frame(0);h.frame(16);
     h.context.setNudgeInterval(200);h.frame(32);h.frame(215);
     assert.equal(h.context.currentGenerationCount,2);
     h.frame(216);assert.equal(h.context.currentGenerationCount,3);
@@ -67,7 +67,7 @@ test('preferences survive reload; malformed or blocked storage uses defaults',()
     assert.equal(loaded.timing().intervalMs,123);
     loaded.context.applyNudgeTiming('No specific rules mapping');assert.equal(loaded.timing().legacyFrames,true);
     for(const stored of ['{broken', 'null', '{"intervalMs":201,"unmarkedMode":"fast"}']){
-        assert.equal(harness({stored}).timing().intervalMs,0);
+        assert.equal(harness({stored}).timing().intervalMs,100);
     }
     const blocked=harness({blockedStorage:true});blocked.context.setNudgeInterval(200);
     assert.equal(blocked.timing().intervalMs,200);
@@ -79,7 +79,7 @@ test('versioned PLAY overrides local speed without changing stored preferences',
     assert.equal(h.context.currentGenerationCount,1);
     assert.equal(h.storage.get('colorGridNudge'),null);
     vm.runInContext('replayNudgeTiming = null',h.context);
-    assert.equal(h.timing().intervalMs,0);
+    assert.equal(h.timing().intervalMs,100);
 });
 test('unmarked recordings always use original slow frame counting',()=>{
     const old=harness();old.context.applyNudgeTiming('No specific rules mapping');
@@ -125,4 +125,18 @@ test('slider updates apply and log immediately but persist only when requested',
     assert.equal(h.storage.get('colorGridNudge'),null);
     h.context.persistNudgeSettings();
     assert.deepEqual(JSON.parse(h.storage.get('colorGridNudge')),{intervalMs:75});
+});
+
+
+test('default is 100ms with immediate first shift and exact interval boundary',()=>{
+    for(const [direction,expected] of [['nudgeBrighter',4],['nudgeDarker',0]]){
+        const h=harness({direction});
+        assert.equal(h.timing().intervalMs,100);
+        h.frame(0);h.frame(16);h.frame(99);
+        assert.equal(h.context.currentGenerationCount,1);
+        h.frame(100);h.frame(101);h.frame(199);
+        assert.equal(h.context.currentGenerationCount,2);
+        assert.equal(h.context.boardState[0].k,expected);
+        assert.equal(h.context.boardState[1].k,8);
+    }
 });

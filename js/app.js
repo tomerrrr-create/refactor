@@ -19,7 +19,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
 // Preferences are independent of macro playback; replay never overwrites them.
-let nudgeIntervalMs = 0;
+let nudgeIntervalMs = 100;
 let replayNudgeTiming = null;
 let lastNudgeTime = -Infinity;
 try {
