@@ -1155,6 +1155,8 @@ button, .ctrl {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
 }
+#btnPalette, #btnColorPicker { touch-action: none !important; }
+.ctrl.picker-swipe-ready { background: #d5aa4818; box-shadow: 0 0 0 2px #d5aa4880; }
 
 /* --- Structural fix for Palette Modal Sticky Headers --- */
 #paletteModalGrid {
