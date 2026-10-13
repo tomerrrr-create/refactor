@@ -1203,8 +1203,7 @@ export function initializeModals(appContext) {
     });
     app.dom.btnConfirmResetLogger.addEventListener('click', () => {
         app.resetArtRecipeLog();
-        closeRecipeResetPrompt();
-        app.dom.btnResetLogger.focus();
+        app.dom.btnSave.focus();
     });
     app.dom.saveModal.addEventListener('keydown', e => {
         if (e.key === 'Escape' && !app.dom.saveResetConfirmation.hidden) {

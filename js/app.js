@@ -2865,7 +2865,7 @@ function resetArtRecipeLog() {
     artRecipeLog = [];
     historyRecipeCursor = 0;
     logCurrentStateAsInit();
-    modals.showSaveStatus('saveModal_logResetDone');
+    modals.closeModal();
 }
 
 function exportArtRecipeLog() {
@@ -2909,7 +2909,7 @@ function exportArtRecipeLog() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
-    modals.showSaveStatus('saveModal_logDownloadStarted');
+    modals.closeModal();
 }
 
       
