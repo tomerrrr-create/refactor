@@ -1591,6 +1591,7 @@ if (simulationName === 'magnet') {
                 dom.btnSave.disabled = false; 
                 return; 
             }
+            modals.clearSaveStatus();
             dom.imagePreview.src = URL.createObjectURL(blob);
             dom.fileNameInput.value = C.PALETTES[activePaletteIndex]?.name || getText('saveModal_defaultFilename');
             dom.saveModal.classList.add('modal-visible');
@@ -2864,12 +2865,12 @@ function resetArtRecipeLog() {
     artRecipeLog = [];
     historyRecipeCursor = 0;
     logCurrentStateAsInit();
-    alert(getText('saveModal_logResetDone'));
+    modals.showSaveStatus('saveModal_logResetDone');
 }
 
 function exportArtRecipeLog() {
     if (artRecipeLog.length === 0) {
-        alert("No actions logged yet. Perform some actions first!");
+        modals.showSaveStatus('saveModal_logEmpty', true);
         return;
     }
 
@@ -2908,6 +2909,7 @@ function exportArtRecipeLog() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
+    modals.showSaveStatus('saveModal_logDownloadStarted');
 }
 
       

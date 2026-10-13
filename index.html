@@ -402,6 +402,13 @@
                 <path d="M9 18h6M10 22h4M12 2a5 5 0 0 0-5 5c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4.3c1.8-1.2 3-3.3 3-5.7a5 5 0 0 0-5-5Z"></path>
             </svg>
         </button>
+        <button id="btnSaveLogger" type="button" class="save-tile" style="background-color: #607D8B;">
+            <svg viewBox="0 0 24 24" stroke="black" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 5C5 11 19 13 12 19"></path>
+                <circle cx="14" cy="3" r="0.8" fill="black" stroke="none"></circle>
+                <circle cx="10" cy="21" r="0.8" fill="black" stroke="none"></circle>
+            </svg>
+        </button>
         <button id="btnLoadProjectIdea" class="save-tile" style="background-color: #8B3A3A;">
             <svg viewBox="0 0 24 24" fill="#B22222" stroke="black" stroke-width="2.5">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -413,14 +420,9 @@
                 <circle cx="12" cy="11" r="0.8" fill="black" stroke="none"></circle>
             </svg>
         </button>
-        <button id="btnSaveLogger" type="button" class="save-tile" style="background-color: #607D8B;">
-            <svg viewBox="0 0 24 24" stroke="black" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 5C5 11 19 13 12 19"></path>
-                <circle cx="14" cy="3" r="0.8" fill="black" stroke="none"></circle>
-                <circle cx="10" cy="21" r="0.8" fill="black" stroke="none"></circle>
-            </svg>
-        </button>
       </div>
+
+      <p id="saveStatus" class="save-status" role="status" aria-live="polite" aria-atomic="true"></p>
 
       <input type="file" id="projectFileInput" accept=".json, .cga, .txt" style="display: none;" />
     
