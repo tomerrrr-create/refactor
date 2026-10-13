@@ -2868,7 +2868,7 @@ function resetArtRecipeLog() {
     modals.closeModal();
 }
 
-function exportArtRecipeLog() {
+async function exportArtRecipeLog() {
     if (artRecipeLog.length === 0) {
         modals.showSaveStatus('saveModal_logEmpty', true);
         return;
@@ -2901,14 +2901,20 @@ function exportArtRecipeLog() {
     // 4. הרכבת השם החדש בדיוק בתבנית שביקשת!
     const fileName = `Intuition_Path_${cleanPaletteName}_${linesCount}.txt`;
 
-    const blob = new Blob([artRecipeLog.join('\n')], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
+    const file = new File([artRecipeLog.join('\n')], fileName, { type: 'text/plain' });
+    const shareData = { files: [file], title: fileName.replace(/\.txt$/, '') };
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        try {
+            await navigator.share(shareData);
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Macro share API error:', err);
+                triggerDownload(file);
+            }
+        }
+    } else {
+        triggerDownload(file);
+    }
     modals.closeModal();
 }
 
