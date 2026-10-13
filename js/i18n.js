@@ -274,6 +274,8 @@ chi_preset_electric: { en: "Electric", he: "חשמל", ru: "Электричес
   chi_preset_harmony: { en: "Harmony", he: "הרמוני", ru: "Гармония", nl: "Harmonie" },
  chi_preset_ripples: { en: "Ripples", he: "אדוות", ru: "Ряבь", nl: "Rimpelingen" },
  chi_preset_nova: { en: "Nova", he: "נובה", ru: "Нова", nl: "Nova" },
+  chi_preset_alexis: { en: "Alexis", he: "אלקסיס", ru: "Алексис", nl: "Alexis" },
+  chi_preset_zen: { en: "Zen", he: "זן", ru: "Дзен", nl: "Zen" },
   tooltip_turing: { en: "Turing Patterns", he: "תבניות טיורינג (ביולוגיה)", ru: "Паттерны Тьюринга", nl: "Turing Patronen" },
   turing_modal_title: { en: "Turing Patterns", he: "תבניות טיורינג", ru: "Паттерны Тьюринга", nl: "Turing Patronen" },
   turing_preset_coral: { en: "Coral", he: "אלמוג", ru: "Коралл", nl: "Koraal" },

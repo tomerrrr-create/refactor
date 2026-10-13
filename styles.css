@@ -1433,3 +1433,5 @@ button, .ctrl {
 
 .startup-entry { margin-top: 18px; }
 #startupSettingsStatus { color: #c3b99e; font-size: 13px; line-height: 1.5; margin: 0; }
+
+.chi-flow-panel { max-height: calc(100dvh - 32px); overflow-y: auto; }
