@@ -7,7 +7,7 @@ class Target {
     addEventListener(type, handler) { const list = this.listeners.get(type) || []; list.push(handler); this.listeners.set(type, list); }
     emit(type, event = {}) { for (const handler of this.listeners.get(type) || []) handler(event); }
 }
-function harness(t, { pointerType = 'touch', hold = true } = {}) {
+function harness(t, { pointerType = 'touch', hold = true, canOpen = () => true } = {}) {
     const original = { document: globalThis.document, window: globalThis.window, setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
     t.after(() => Object.assign(globalThis, original));
     const doc = new Target(), win = new Target(), button = new Target();
@@ -23,7 +23,7 @@ function harness(t, { pointerType = 'touch', hold = true } = {}) {
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, { fn, at: now + ms }); return id; },
         clearTimeout: id => timers.delete(id) });
     bindPickerGestures(button, { onTap: () => actions.push('tap'), onOpen: () => actions.push('open'),
-        onHold: hold ? () => actions.push('hold') : undefined, canInteract: () => allowed });
+        onHold: hold ? () => actions.push('hold') : undefined, canInteract: () => allowed, canOpen });
     return { actions, button, doc, win, classes, captured,
         block() { allowed = false; },
         event(type, x = 25, y = 25, extra = {}) { button.emit(type, { pointerId: 1, pointerType, isPrimary: true, button: 0, clientX: x, clientY: y, detail: 1, ...extra }); },
@@ -101,4 +101,26 @@ test('desktop color hold remains locked against a later upward drag', t => {
     const h = harness(t, { pointerType: 'mouse' });
     h.event('pointerdown'); h.advance(600); h.event('pointermove', 25, -5); h.event('pointerup', 25, -5); h.event('click');
     assert.deepEqual(h.actions, ['hold']);
+});
+
+test('opening eligibility gates glow and swipes without blocking ordinary taps', t => {
+    let selected = false, playing = false;
+    const h = harness(t, { canOpen: () => selected && !playing });
+    h.event('pointerdown'); h.event('pointerup'); h.event('click');
+    assert.deepEqual(h.actions, ['tap']);
+    for (const state of [[false, false], [true, true]]) {
+        [selected, playing] = state;
+        h.event('pointerdown'); h.event('pointermove', 25, -5);
+        assert.equal(h.classes.size, 0);
+        h.event('pointerup', 25, -5); h.event('click');
+        assert.deepEqual(h.actions, ['tap']);
+    }
+    selected = true; playing = false;
+    h.event('pointerdown'); h.event('pointermove', 25, -5);
+    assert(h.classes.has('picker-swipe-glow'));
+    playing = true; h.event('pointerup', 25, -5); h.event('click');
+    assert.equal(h.classes.size, 0); assert.deepEqual(h.actions, ['tap']);
+    playing = false;
+    h.event('pointerdown'); h.event('pointermove', 25, -5); h.event('pointerup', 25, -5); h.event('click');
+    assert.deepEqual(h.actions, ['tap', 'open']);
 });
