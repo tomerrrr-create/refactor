@@ -1102,7 +1102,7 @@ export function initializeModals(appContext) {
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('viewBox', '0 0 24 24');
             svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
-            svg.setAttribute('aria-hidden', 'true'); svg.innerHTML = mode.icon.replaceAll('sortLuminanceHalo', 'sortOptionLuminanceHalo');
+            svg.setAttribute('aria-hidden', 'true'); svg.innerHTML = mode.icon;
             const name = document.createElement('span');
             name.id = 'sort-name-' + mode.method;
             name.dataset.debugText = 'startup_sort_' + mode.method;
