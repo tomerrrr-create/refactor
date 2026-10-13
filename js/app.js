@@ -2566,7 +2566,7 @@ function updateErosionButtonUI() {
 
 function cycleErosionMode() {
     if (isLifePlaying) return;
-    const modes = ['off', 'legacy', 'channels', 'channels-solid'];
+    const modes = ['off', 'legacy', 'channels-solid', 'channels'];
     const current = armedSimulation === 'erosion' ? erosionRules.mode : 'off';
     const next = modes[(modes.indexOf(current) + 1) % modes.length];
     if (next === 'off') armSimulation(null);
@@ -2865,7 +2865,7 @@ function resetArtRecipeLog() {
     artRecipeLog = [];
     historyRecipeCursor = 0;
     logCurrentStateAsInit();
-    modals.showSaveStatus('saveModal_logResetDone');
+    modals.closeModal();
 }
 
 function exportArtRecipeLog() {
@@ -2909,7 +2909,7 @@ function exportArtRecipeLog() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
-    modals.showSaveStatus('saveModal_logDownloadStarted');
+    modals.closeModal();
 }
 
       

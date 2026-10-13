@@ -179,7 +179,7 @@ A specialized downward-falling algorithm mimicking sediment settling and weather
     * **Weathering:** If it lands on `Earth`, there is a chance (`erosionStrength`) it will "erode" the earth tile (incrementing its index by 1) before sliding.
     * **Sliding:** If the path directly below is blocked, it checks the bottom-left and bottom-right diagonals. A 75% bias is mathematically applied to correct for the left-to-right processing loop, ensuring a balanced, centered pile.
 
-The Erosion button cycles through **Off → Original → Channel carving → Forward carving**. The original rules above are retained.
+The Erosion button cycles through **Off → Original → Forward carving → Channel carving**. The original rules above are retained.
 
 * **Channel carving:** The first 20% of palette indices are air, the middle 60% earth, and the last 20% water. These roles follow palette order, including custom sorting.
 * Water erodes at most one adjacent earth cell (below or beside it) per generation, reducing its palette index until it becomes air. It prefers downward movement, then diagonals, then sideways movement into air.
