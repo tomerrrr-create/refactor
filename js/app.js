@@ -1874,7 +1874,6 @@ function handlePointerDownCtrl(e) {
 
 
             
-            if (btn.id === 'btnCycleSort') { modals.openSortCycleModal(); return; }
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') {
@@ -3859,7 +3858,11 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         dom.btnSymmetry.addEventListener('click', (e) => handleCtrlClick(e, cycleSymmetryMode));
-dom.btnCycleSort.addEventListener('click', (e) => handleCtrlClick(e, cycleSortMethod));
+bindPickerGestures(dom.btnCycleSort, {
+    onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
+    canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
+    holdMs: C.LONG_PRESS_SHOW_MS
+});
 dom.btnCycleSort.addEventListener('keydown', e => {
     if (e.altKey && e.key === 'ArrowDown') {
         e.preventDefault(); modals.openSortCycleModal();
@@ -3930,7 +3933,7 @@ if (dom.btnSimSettings) {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnPalette || btn === dom.btnColorPicker) return;
+            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 

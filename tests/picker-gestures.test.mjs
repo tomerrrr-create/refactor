@@ -38,7 +38,7 @@ test('touch taps run on release immediately; compatibility clicks and double tap
 test('touch swipe captures outside the button and opens only on release', t => {
     const h = harness(t); h.event('pointerdown'); assert(h.captured.has(1));
     h.event('pointermove', 25, 1); h.event('pointerleave', 25, 1);
-    assert(h.classes.has('picker-swipe-ready')); assert.deepEqual(h.actions, []);
+    assert.equal(h.classes.size, 0); assert.deepEqual(h.actions, []);
     h.event('pointerup', 25, -10); h.event('click'); h.advance(1000);
     assert.deepEqual(h.actions, ['open']); assert.equal(h.classes.size, 0); assert.equal(h.captured.size, 0);
 });
@@ -87,7 +87,7 @@ test('desktop clicks stay immediate and captured upward drags open on release on
     const h = harness(t, { pointerType: 'mouse' }); h.event('pointerdown'); h.event('pointerup'); h.event('click');
     assert.deepEqual(h.actions, ['tap']); h.event('pointerdown'); assert(h.captured.has(1));
     h.event('pointermove', 25, -5); h.event('pointerleave', 25, -5);
-    assert.deepEqual(h.actions, ['tap']); assert(h.classes.has('picker-swipe-ready'));
+    assert.deepEqual(h.actions, ['tap']); assert.equal(h.classes.size, 0);
     h.event('pointerup', 25, -5); h.event('click');
     assert.deepEqual(h.actions, ['tap', 'open']); assert.equal(h.captured.size, 0);
 });
