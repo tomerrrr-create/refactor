@@ -414,15 +414,20 @@
                 <circle cx="12" cy="12" r="10"></circle>
             </svg>
         </button>
-        <button id="btnResetLogger" type="button" class="save-tile" style="background-color: #6B8E23;">
-            <svg viewBox="0 0 24 24" stroke="black" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 3C6 8 6 14 12 19C18 14 18 8 12 3Z M7 21h10"></path>
-                <circle cx="12" cy="11" r="0.8" fill="black" stroke="none"></circle>
-            </svg>
-        </button>
+
       </div>
 
       <p id="saveStatus" class="save-status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <div class="save-reset-section">
+        <button id="btnResetLogger" type="button" class="save-reset-link" data-debug-text="saveModal_resetRecipe" aria-expanded="false" aria-controls="saveResetConfirmation">Reset recipe</button>
+        <div id="saveResetConfirmation" class="save-reset-confirm" hidden role="group" aria-labelledby="saveResetPrompt">
+          <p id="saveResetPrompt" data-debug-text="saveModal_resetRecipePrompt"></p>
+          <div class="save-reset-confirm-actions">
+            <button id="btnCancelResetLogger" type="button" data-debug-text="gs_modal_cancel"></button>
+            <button id="btnConfirmResetLogger" type="button" data-debug-text="saveModal_resetRecipe"></button>
+          </div>
+        </div>
+      </div>
 
       <input type="file" id="projectFileInput" accept=".json, .cga, .txt" style="display: none;" />
     
@@ -649,7 +654,7 @@
                 <button id="btnGolPresetJoelson" class="gol-preset-btn">Joel</button>
                 <button id="btnGolPresetCharlie" class="gol-preset-btn">Charlie</button>
                 <button id="btnGolPresetMeditation" class="gol-preset-btn">Meditate</button>
-                <button id="btnGolPresetYuval" class="gol-preset-btn">Paint 5</button>
+                <button id="btnGolPresetContinuum" class="gol-preset-btn" data-debug-text="gol_preset_continuum">Continuum</button>
                 <button id="btnGolPresetVibration" class="gol-preset-btn">Vibrate</button>
 
 
@@ -873,7 +878,7 @@
 
 
 <div id="chiFlowSettingsModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
-  <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+  <div class="chi-flow-panel relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
     
     <button id="chiFlowModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -907,7 +912,7 @@
 
 <div class="flex flex-col gap-2">
       <h3 class="font-semibold text-gray-300">Presets</h3>
-      <div class="grid grid-flow-col grid-rows-4 gap-2">
+      <div class="grid grid-flow-col grid-rows-5 gap-2">
         <button id="btnChiPresetNova" class="gol-preset-btn">Nova</button>
         <button id="btnChiPresetHarmony" class="gol-preset-btn">Harmony</button>
         <button id="btnChiPresetTopography" class="gol-preset-btn">Topography</button>
@@ -916,6 +921,8 @@
         <button id="btnChiPresetRipples" class="gol-preset-btn">Ripples</button>
         <button id="btnChiPresetCrystals" class="gol-preset-btn">Crystals</button>
         <button id="btnChiPresetWildfire" class="gol-preset-btn">Wildfire</button>
+        <button id="btnChiPresetAlexis" class="gol-preset-btn">Alexis</button>
+        <button id="btnChiPresetZen" class="gol-preset-btn">Zen</button>
 
       </div>
     </div>
