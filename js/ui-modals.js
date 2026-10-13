@@ -541,6 +541,7 @@ function openColorPickerModal(targetTileIndex = null) {
 }
 
 function openHelpModal() {
+    activeHelpTab = app.isSimulationMode() ? 'evolution' : 'creation';
     populateHelpModal();
     app.dom.helpModal.classList.add('modal-visible');
 }
@@ -655,17 +656,29 @@ function populatePaletteModal() {
 
 
 
+let activeHelpTab = 'creation';
+function selectHelpTab(tab) {
+    activeHelpTab = tab;
+    document.querySelectorAll('[data-help-tab]').forEach(button => {
+        const selected = button.dataset.helpTab === tab;
+        button.setAttribute('aria-selected', String(selected));
+        button.tabIndex = selected ? 0 : -1;
+        document.getElementById(button.getAttribute('aria-controls')).hidden = !selected;
+    });
+    document.getElementById('helpModalContent').scrollTop = 0;
+}
+
 function populateHelpModal() {
-    const contentDiv = document.getElementById('helpModalContent');
-    contentDiv.innerHTML = '';
+    const bodies = Object.fromEntries([...document.querySelectorAll('[data-help-body]')].map(body => [body.dataset.helpBody, body]));
+    Object.values(bodies).forEach(body => body.replaceChildren());
 
     const categories = {
-        inspiration: { titleKey: 'help_category_inspiration', buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset'] },
-        order: { titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark'] },
-        touch: { titleKey: 'help_category_touch', buttons: ['btnBrushMode', 'btnSymmetry', 'btnColorPicker'] },
-        evolution: { titleKey: 'help_category_evolution', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward', 'btnSimSettings', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter', 'btnNudgeDarker'] },
-        advanced: { titleKey: 'help_category_advanced', buttons: ['btnOpenDebug'] },
-        tools: { titleKey: 'help_category_tools', buttons: ['btnUndo', 'btnRedo', 'btnSave', 'btnMacroPlay', 'btnResetBoard'] }
+        inspiration: { tab: 'creation', titleKey: 'help_category_inspiration', buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset'] },
+        order: { tab: 'creation', titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark'] },
+        touch: { tab: 'creation', titleKey: 'help_category_touch', buttons: ['btnBrushMode', 'btnSymmetry', 'btnColorPicker'] },
+        evolution: { tab: 'evolution', titleKey: 'help_category_evolution', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward', 'btnSimSettings', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter', 'btnNudgeDarker'] },
+        advanced: { tab: 'tools', titleKey: 'help_category_advanced', buttons: ['btnOpenDebug'] },
+        tools: { tab: 'tools', titleKey: 'help_category_tools', buttons: ['btnUndo', 'btnRedo', 'btnSave', 'btnMacroPlay', 'btnResetBoard'] }
     };
 
     const helpData = {
@@ -685,6 +698,7 @@ function populateHelpModal() {
 
     for (const categoryKey in categories) {
         const category = categories[categoryKey];
+        const contentDiv = bodies[category.tab];
         const titleEl = document.createElement('h3');
         titleEl.className = 'help-category-title';
         titleEl.textContent = app.getText(category.titleKey);
@@ -733,26 +747,30 @@ function populateHelpModal() {
         });
     }
 
-    const tipsTitle = document.createElement('h3');
-    tipsTitle.className = 'help-category-title';
-    tipsTitle.textContent = app.getText('help_category_tips');
-    contentDiv.appendChild(tipsTitle);
+    for (const [tab, tips] of [['creation', ['help_tip2', 'help_tip3', 'help_tip4', 'help_tip5', 'help_tip6']], ['evolution', ['help_tip1']]]) {
+        const contentDiv = bodies[tab];
+        const tipsTitle = document.createElement('h3');
+        tipsTitle.className = 'help-category-title';
+        tipsTitle.textContent = app.getText('help_category_tips');
+        contentDiv.appendChild(tipsTitle);
 
-    const tipsContainer = document.createElement('div');
-    tipsContainer.className = 'space-y-3 text-sm text-gray-300 pl-2';
-    const tips = ['help_tip1', 'help_tip2', 'help_tip3', 'help_tip4', 'help_tip5', 'help_tip6'];
-    tips.forEach(tipKey => {
-        const tipItem = document.createElement('p');
-        const accent = document.createElement('span');
-        accent.textContent = '*';
-        accent.style.color = app.C.GOLD;
-        accent.style.marginRight = '8px';
-        tipItem.appendChild(accent);
-        tipItem.appendChild(document.createTextNode(app.getText(tipKey)));
-        tipsContainer.appendChild(tipItem);
-    });
-    contentDiv.appendChild(tipsContainer);
+        const tipsContainer = document.createElement('div');
+        tipsContainer.className = 'space-y-3 text-sm text-gray-300 pl-2';
 
+        tips.forEach(tipKey => {
+            const tipItem = document.createElement('p');
+            const accent = document.createElement('span');
+            accent.textContent = '*';
+            accent.style.color = app.C.GOLD;
+            accent.style.marginRight = '8px';
+            tipItem.appendChild(accent);
+            tipItem.appendChild(document.createTextNode(app.getText(tipKey)));
+            tipsContainer.appendChild(tipItem);
+        });
+        contentDiv.appendChild(tipsContainer);
+
+    }
+    const contentDiv = bodies.tools;
     const shortcutsTitle = document.createElement('h3');
     shortcutsTitle.className = 'help-category-title';
     shortcutsTitle.textContent = app.getText('help_category_shortcuts');
@@ -788,6 +806,7 @@ function populateHelpModal() {
         shortcutsContainer.appendChild(item);
     });
     contentDiv.appendChild(shortcutsContainer);
+    selectHelpTab(activeHelpTab);
 }
 
 // --- START: New Preset Button Logic ---
@@ -1011,6 +1030,23 @@ let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית
 
 export function initializeModals(appContext) {
     app = appContext;
+    const helpTabs = [...document.querySelectorAll('[data-help-tab]')];
+    helpTabs.forEach((button, index) => {
+        button.addEventListener('click', () => selectHelpTab(button.dataset.helpTab));
+        button.addEventListener('keydown', event => {
+            const rtl = app.getCurrentLang() === 'he';
+            let next;
+            if (event.key === 'Home') next = 0;
+            else if (event.key === 'End') next = helpTabs.length - 1;
+            else if (event.key === 'ArrowRight') next = (index + (rtl ? -1 : 1) + helpTabs.length) % helpTabs.length;
+            else if (event.key === 'ArrowLeft') next = (index + (rtl ? 1 : -1) + helpTabs.length) % helpTabs.length;
+            else return;
+            event.preventDefault();
+            selectHelpTab(helpTabs[next].dataset.helpTab);
+            helpTabs[next].focus();
+        });
+    });
+
 
     const sortDialog = document.getElementById('sortCycleDialog');
     const sortOptions = document.getElementById('sortCycleOptions');

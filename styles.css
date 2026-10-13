@@ -517,6 +517,11 @@ body {
     justify-content: center;
 }
 .help-item-text { min-width: 0; line-height: 1.6; }
+.help-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
+.help-tabs button { min-height: 40px; padding: 8px 4px; background: transparent; color: #aaa; border: 1px solid #b28b3630; border-radius: 8px; font: inherit; font-size: 13px; cursor: pointer; }
+.help-tabs button[aria-selected="true"] { color: #e3c677; border-color: #d5aa4880; background: #d5aa4810; }
+.help-tabs button:focus-visible, #helpModalContent [role="tabpanel"]:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 2px; }
+#helpModalContent [hidden] { display: none; }
 .help-item-text p { margin: 0; }
 .help-main-action { color: #e5e5e5; }
 .help-item-text .help-extra-actions { margin-top: 5px; color: #aaa; font-size: 12px; }

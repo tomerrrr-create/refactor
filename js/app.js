@@ -1950,6 +1950,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         document.getElementById('sortCycleDialog').dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         dom.paletteModalTitle.textContent = getText('paletteModal_title');
         dom.helpIntroText.textContent = getText('help_intro');
+        document.getElementById('helpTabs').setAttribute('aria-label', getText('help_topics'));
         dom.gsSettingsTitle.textContent = getText('gs_modal_title');
         dom.btnGsSettingsCancel.textContent = getText('gs_modal_cancel');
         dom.btnGsSettingsSave.textContent = getText('gs_modal_save_close');
@@ -3718,6 +3719,7 @@ else if (action.eventName === 'Invert Colors') {
         
         // Phase 1 Addition: Add adaptColors to the context for modals
         const contextForModals = {
+            isSimulationMode: () => isSimModeActive,
             SORT_MODES,
             getSortCycleMethods: () => [...sortCycleMethods],
             saveSortCycleMethods: methods => {

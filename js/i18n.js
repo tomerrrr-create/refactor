@@ -9,6 +9,10 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  help_topics: {"en": "Help topics", "he": "נושאי עזרה", "ru": "Темы справки", "nl": "Helponderwerpen"},
+  help_tab_tools: {"en": "Tools", "he": "כלים", "ru": "Инструменты", "nl": "Tools"},
+  help_tab_evolution: {"en": "Evolution", "he": "אבולוציה", "ru": "Эволюция", "nl": "Evolutie"},
+  help_tab_creation: {"en": "Creation", "he": "יצירה", "ru": "Творчество", "nl": "Creatie"},
   help_keyboard_escape: {"en": "Close the sorting, Nudge speed and technician dialogs. Unsaved sorting edits are discarded.", "he": "סגירת חלונות המיון, מהירות Nudge והטכנאים. שינויי מיון שלא נשמרו מתבטלים.", "ru": "Закрыть диалоги сортировки, скорости Nudge и техников. Несохранённые изменения сортировки отменяются.", "nl": "Sluit de dialoog voor sorteren, Nudge-snelheid of technici. Niet-opgeslagen sorteerwijzigingen vervallen."},
   help_keyboard_activate: {"en": "Activate a focused button; Space toggles a focused checkbox. Use arrows in position selectors.", "he": "הפעלת כפתור ממוקד; רווח משנה סימון בתיבת בחירה ממוקדת. בבוררי המיקום אפשר להשתמש בחצים.", "ru": "Активировать кнопку в фокусе; пробел переключает флажок. В выборе позиции используйте стрелки.", "nl": "Activeer een knop met focus; Spatie wisselt een selectievakje. Gebruik pijlen in positiekiezers."},
   help_keyboard_focus: {"en": "Move between focusable controls; Shift + Tab moves backward.", "he": "מעבר בין פקדים שניתן למקד; Shift + Tab חוזר לאחור.", "ru": "Перемещение между элементами; Shift + Tab — назад.", "nl": "Wissel tussen focusbare bedieningselementen; Shift + Tab gaat terug."},
@@ -155,7 +159,7 @@ export const translations = {
   gs_modal_save_close: { en: "Save & Close", he: "שמור וסגור", ru: "Сохранить и закрыть", nl: "Opslaan & Sluiten" },
   gs_modal_cancel: { en: "Cancel", he: "ביטול", ru: "Отмена", nl: "Annuleren" },
   help_title: { en: "Controls Guide", he: "מה כל כפתור עושה?", ru: "Руководство по управлению", nl: "Gids voor besturing" },
-  help_intro: {"en": "Tap, draw and explore. A short tap performs the main action; some buttons also respond to a quick double tap or a hold. Choose a simulation before pressing Play.", "he": "געו, ציירו וחקרו. לחיצה קצרה מבצעת את הפעולה הראשית; בחלק מהכפתורים יש גם לחיצה כפולה מהירה או החזקה. בחרו סימולציה לפני לחיצה על הפעלה.", "ru": "Нажимайте, рисуйте и исследуйте. Короткое нажатие выполняет основное действие; некоторые кнопки поддерживают быстрое двойное нажатие или удержание. Выберите симуляцию перед запуском.", "nl": "Tik, teken en ontdek. Een korte tik voert de hoofdactie uit; sommige knoppen reageren ook op snel dubbeltikken of vasthouden. Kies een simulatie voordat je op Afspelen drukt."},
+  help_intro: {"en": "Choose a topic to explore the tools, actions and gestures.", "he": "בחרו נושא כדי לגלות את הכלים, הפעולות והמחוות.", "ru": "Выберите тему, чтобы узнать об инструментах, действиях и жестах.", "nl": "Kies een onderwerp om tools, acties en gebaren te ontdekken."},
   help_category_inspiration: { en: "Inspiration & Discovery", he: "השראה וגילוי", ru: "Вдохновение и открытия", nl: "Inspiratie & Ontdekking" },
   help_category_order: { en: "Order & Organization", he: "סדר וארגון", ru: "Порядок и организация", nl: "Orde & Organisatie" },
   help_category_touch: { en: "Personal Touch", he: "מגע אישי", ru: "Личный штрих", nl: "Persoonlijke Toets" },
