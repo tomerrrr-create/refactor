@@ -17,11 +17,11 @@
 
 // --- הגדרות מיון עיצוב אלכימיה ---
 export const SORT_MODES = [
-    { method: 'luminance', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="8"/><path d="M12 4C5 7 5 17 12 20"/></g>' },
+    { method: 'luminance', icon: '<path d="M12 20V4 M10 20L5 12Q3.5 10 2 10 M14 20l5-8q1.5-2 3-2" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'dark-rainbow', icon: '<path d="M3 16a9 9 0 0 1 2.1-5.8 M6.5 8.88A9 9 0 0 1 21 16 M6 16a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
-    { method: 'reversed', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="8"/><path d="M12 4C19 7 19 17 12 20"/></g>' },
-    { method: 'center-out', icon: '<path d="M12 20V4 M10 20L5 12Q3.5 10 2 10 M14 20l5-8q1.5-2 3-2" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
-    { method: 'temperature', icon: '<path d="M7 4C8 8 3 10 3 14c0 8 8 8 8 0l-.2-3.5Q8.5 12 8.5 8 8 5.5 7 4Z M18 4l3 8-3 8-3-8Z" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'reversed', icon: '<g transform="rotate(180 12 12)"><path d="M12 20V4 M10 20L5 12Q3.5 10 2 10 M14 20l5-8q1.5-2 3-2" fill="none" stroke="currentColor" stroke-width="1.2"/></g>' },
+    { method: 'center-out', icon: '<path d="M8.6 7l-5 5 5 5 M15.4 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+    { method: 'temperature', icon: '<path d="M14 3l-4 5 5 4-6 5 2 4" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'outside-in', icon: '<path d="M3.6 7l5 5-5 5 M20.4 7l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'rainbow-fold', icon: '<path d="M12 11C7 7 8 3 12 3C16 3 17 7 12 11C17 7 21 9 21 12C21 16 17 17 12 13C7 17 3 16 3 12C3 9 7 7 12 11Z M12 13q1 5-2 8" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
     { method: 'hue', icon: '<g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3.3"/></g>' },
