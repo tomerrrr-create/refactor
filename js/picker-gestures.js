@@ -6,6 +6,7 @@ export function bindPickerGestures(button, {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
     let active = null, holdTimer = null, suppressClick = false;
 
+    function clearGlow() { button.classList.remove('picker-swipe-glow'); }
     function swipeReady(state) {
         return !state.held && state.y - state.currentY >= SWIPE_DISTANCE &&
             state.y - state.currentY >= Math.abs(state.currentX - state.x) * VERTICAL_RATIO;
@@ -17,7 +18,7 @@ export function bindPickerGestures(button, {
         if (!active) return;
         const id = active.id;
         active = null; suppressClick = true;
-        clearTimeout(holdTimer); releaseCapture(id);
+        clearTimeout(holdTimer); clearGlow(); releaseCapture(id);
     }
     function updatePosition(event) {
         const state = active;
@@ -25,6 +26,7 @@ export function bindPickerGestures(button, {
         if (Math.hypot(state.currentX - state.x, state.currentY - state.y) >= TAP_SLOP) {
             state.moved = true; clearTimeout(holdTimer);
         }
+        button.classList.toggle('picker-swipe-glow', swipeReady(state) && !button.disabled && canInteract());
     }
     button.addEventListener('pointerdown', event => {
         if (event.isPrimary === false || event.button !== 0 || active) return;
@@ -41,7 +43,7 @@ export function bindPickerGestures(button, {
         holdTimer = setTimeout(() => {
             if (!active || active.moved) return;
             if (button.disabled || !canInteract()) { cancel(); return; }
-            active.held = true;
+            active.held = true; clearGlow();
             onHold?.();
         }, holdMs);
     });
@@ -56,7 +58,7 @@ export function bindPickerGestures(button, {
         const inside = state.currentX >= state.bounds.left && state.currentX <= state.bounds.right &&
             state.currentY >= state.bounds.top && state.currentY <= state.bounds.bottom;
         const tap = !state.moved && !state.held && inside;
-        active = null; clearTimeout(holdTimer); releaseCapture(state.id);
+        active = null; clearTimeout(holdTimer); clearGlow(); releaseCapture(state.id);
         suppressClick = state.touch || !tap;
         if (button.disabled || !canInteract()) return;
         if (open) onOpen();
