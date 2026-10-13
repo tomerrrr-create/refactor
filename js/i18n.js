@@ -128,6 +128,8 @@ export const translations = {
   saveModal_resetLogger: {"en": "Reset macro and save starting state", "he": "איפוס מאקרו ושמירת תחילית", "ru": "Сбросить макрос и сохранить начальное состояние", "nl": "Macro wissen en beginstatus bewaren"},
   saveModal_saveLogger: {"en": "Save macro", "he": "שמירת מאקרו", "ru": "Сохранить макрос", "nl": "Macro opslaan"},
   saveModal_logResetDone: {"en": "New starting state captured. Your macro begins here.", "he": "תחילית חדשה נשמרה. המאקרו מתחיל מכאן.", "ru": "Начальное состояние сохранено. Макрос начинается здесь.", "nl": "Nieuwe beginstatus bewaard. Je macro begint hier."},
+  saveModal_resetRecipe: { en: "Reset recipe", he: "איפוס מתכון", ru: "Сбросить рецепт", nl: "Recept wissen" },
+  saveModal_resetRecipePrompt: { en: "Clear the recorded actions and use this board as a new starting state? This cannot be undone.", he: "למחוק את הפעולות שנרשמו ולשמור את הלוח הנוכחי כתחילית חדשה? לא ניתן לבטל את האיפוס.", ru: "Удалить записанные действия и сохранить эту доску как начальное состояние? Сброс нельзя отменить.", nl: "De opgenomen acties wissen en dit bord als nieuwe beginstatus bewaren? Dit kan niet ongedaan worden gemaakt." },
   saveModal_logDownloadStarted: { en: "Macro download started.", he: "הורדת המאקרו החלה.", ru: "Загрузка макроса началась.", nl: "De macrodownload is gestart." },
   saveModal_logEmpty: { en: "No actions to save yet.", he: "עדיין אין פעולות לשמירה.", ru: "Пока нет действий для сохранения.", nl: "Er zijn nog geen acties om op te slaan." },
   breatheModal_solo: { en: "Solo", he: "תא תא", ru: "Соло", nl: "Solo" },

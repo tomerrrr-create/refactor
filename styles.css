@@ -466,7 +466,7 @@ body {
 }
 .save-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: 12px;
 }
@@ -484,11 +484,38 @@ body {
 .save-status[data-status="error"] { color: #e2a48a; }
 
 .save-actions .save-tile {
-  width: min(90px, calc((100% - 24px) / 3));
+  width: min(90px, calc((100% - 36px) / 4));
   height: auto;
   aspect-ratio: 1;
   flex-shrink: 0;
 }
+
+.save-reset-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ffffff12;
+}
+.save-reset-link {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  color: #c7ad88;
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-color: #c7ad8855;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.save-reset-link:hover { color: #e3c677; }
+.save-reset-link:focus-visible, .save-reset-confirm button:focus-visible {
+  outline: 2px solid #e3c677;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.save-reset-confirm p { margin: 0 0 12px; color: #b9b1a7; font-size: 13px; line-height: 1.5; }
+.save-reset-confirm-actions { display: flex; justify-content: center; gap: 12px; }
+.save-reset-confirm button { padding: 8px 12px; background: none; border: none; color: #aaa; font-size: 13px; cursor: pointer; }
+#btnConfirmResetLogger { color: #e3c677; border: 1px solid #e3c67755; border-radius: 6px; }
 
 .save-tile {
   width: 90px;

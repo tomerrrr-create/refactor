@@ -36,7 +36,13 @@ let app;
 // --- Internal Helper Functions ---
 
 let saveStatusTimer;
+function closeRecipeResetPrompt() {
+    app.dom.saveResetConfirmation.hidden = true;
+    app.dom.btnResetLogger.hidden = false;
+    app.dom.btnResetLogger.setAttribute('aria-expanded', 'false');
+}
 function clearSaveStatus() {
+    closeRecipeResetPrompt();
     clearTimeout(saveStatusTimer);
     app.dom.saveStatus.textContent = '';
     app.dom.saveStatus.classList.remove('visible');
@@ -1184,7 +1190,29 @@ export function initializeModals(appContext) {
     app.dom.btnSaveImage.addEventListener('click', () => app.downloadImage());
     app.dom.btnSaveProjectIdea.addEventListener('click', app.handleSaveProject);
     app.dom.btnLoadProjectIdea.addEventListener('click', app.handleLoadProject);
-    app.dom.btnResetLogger.addEventListener('click', app.resetArtRecipeLog);
+    app.dom.btnResetLogger.addEventListener('click', () => {
+        clearSaveStatus();
+        app.dom.btnResetLogger.hidden = true;
+        app.dom.btnResetLogger.setAttribute('aria-expanded', 'true');
+        app.dom.saveResetConfirmation.hidden = false;
+        app.dom.btnCancelResetLogger.focus();
+    });
+    app.dom.btnCancelResetLogger.addEventListener('click', () => {
+        closeRecipeResetPrompt();
+        app.dom.btnResetLogger.focus();
+    });
+    app.dom.btnConfirmResetLogger.addEventListener('click', () => {
+        app.resetArtRecipeLog();
+        closeRecipeResetPrompt();
+        app.dom.btnResetLogger.focus();
+    });
+    app.dom.saveModal.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !app.dom.saveResetConfirmation.hidden) {
+            e.preventDefault(); e.stopPropagation();
+            closeRecipeResetPrompt();
+            app.dom.btnResetLogger.focus();
+        }
+    });
     app.dom.btnSaveLogger.addEventListener('click', app.exportArtRecipeLog);
     app.dom.projectFileInput.addEventListener('change', app.onProjectFileSelected);
 

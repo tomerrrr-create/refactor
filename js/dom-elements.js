@@ -82,6 +82,9 @@ spiralSettingsModal: document.getElementById('spiralSettingsModal'),
   btnResetLogger: document.getElementById('btnResetLogger'),
   btnSaveLogger: document.getElementById('btnSaveLogger'),
   saveStatus: document.getElementById('saveStatus'),
+  saveResetConfirmation: document.getElementById('saveResetConfirmation'),
+  btnCancelResetLogger: document.getElementById('btnCancelResetLogger'),
+  btnConfirmResetLogger: document.getElementById('btnConfirmResetLogger'),
   projectFileInput: document.getElementById('projectFileInput'),
 
   // Color Picker Modal Elements
