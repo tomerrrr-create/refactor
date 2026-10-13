@@ -1,5 +1,5 @@
-// Shared interaction for the palette and color controls. Swipe opening is
-// limited to touch/pen; ordinary desktop clicks retain their existing action.
+// Shared interaction for the palette and color controls. Mouse drags and touch
+// swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
     onTap, onOpen, onHold, canInteract, beforeStart = () => {}, holdMs = 600
 }) {
@@ -8,7 +8,7 @@ export function bindPickerGestures(button, {
 
     function clearHint() { button.classList.remove('picker-swipe-ready'); }
     function swipeReady(state) {
-        return state.touch && !state.held && state.y - state.currentY >= SWIPE_DISTANCE &&
+        return !state.held && state.y - state.currentY >= SWIPE_DISTANCE &&
             state.y - state.currentY >= Math.abs(state.currentX - state.x) * VERTICAL_RATIO;
     }
     function releaseCapture(id) {
@@ -39,7 +39,7 @@ export function bindPickerGestures(button, {
             touch: event.pointerType === 'touch' || event.pointerType === 'pen',
             moved: false, held: false, bounds: button.getBoundingClientRect()
         };
-        if (active.touch) button.setPointerCapture(event.pointerId);
+        button.setPointerCapture(event.pointerId);
         holdTimer = setTimeout(() => {
             if (!active || active.moved) return;
             if (button.disabled || !canInteract()) { cancel(); return; }
@@ -74,9 +74,6 @@ export function bindPickerGestures(button, {
     });
     button.addEventListener('pointercancel', event => { if (active?.id === event.pointerId) cancel(); });
     button.addEventListener('lostpointercapture', event => { if (active?.id === event.pointerId) cancel(); });
-    button.addEventListener('pointerleave', event => {
-        if (active?.id === event.pointerId && !active.touch) cancel();
-    });
     document.addEventListener('visibilitychange', () => { if (document.hidden) cancel(); });
     window.addEventListener('blur', cancel);
 }

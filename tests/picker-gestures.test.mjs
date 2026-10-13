@@ -83,8 +83,22 @@ test('blocked, disabled and secondary pointers do not act', t => {
     h.event('pointerdown'); h.event('pointermove', 25, -5); h.block(); h.event('pointerup', 25, -5); h.event('click');
     h.advance(1000); assert.deepEqual(h.actions, []);
 });
-test('desktop clicks work without adding a mouse swipe opening gesture', t => {
+test('desktop clicks stay immediate and captured upward drags open on release only', t => {
     const h = harness(t, { pointerType: 'mouse' }); h.event('pointerdown'); h.event('pointerup'); h.event('click');
-    assert.deepEqual(h.actions, ['tap']); h.event('pointerdown'); h.event('pointermove', 25, -5); h.event('pointerup', 25, -5); h.event('click');
-    assert.deepEqual(h.actions, ['tap']);
+    assert.deepEqual(h.actions, ['tap']); h.event('pointerdown'); assert(h.captured.has(1));
+    h.event('pointermove', 25, -5); h.event('pointerleave', 25, -5);
+    assert.deepEqual(h.actions, ['tap']); assert(h.classes.has('picker-swipe-ready'));
+    h.event('pointerup', 25, -5); h.event('click');
+    assert.deepEqual(h.actions, ['tap', 'open']); assert.equal(h.captured.size, 0);
+});
+test('desktop return drag and cancellation cannot trigger a tap or open', t => {
+    const h = harness(t, { pointerType: 'mouse' });
+    h.event('pointerdown'); h.event('pointermove', 25, -5); h.event('pointermove'); h.event('pointerup'); h.event('click');
+    h.event('pointerdown'); h.event('pointermove', 25, -5); h.event('pointercancel'); h.event('pointerup', 25, -5); h.event('click');
+    h.advance(1000); assert.deepEqual(h.actions, []); assert.equal(h.classes.size, 0);
+});
+test('desktop color hold remains locked against a later upward drag', t => {
+    const h = harness(t, { pointerType: 'mouse' });
+    h.event('pointerdown'); h.advance(600); h.event('pointermove', 25, -5); h.event('pointerup', 25, -5); h.event('click');
+    assert.deepEqual(h.actions, ['hold']);
 });
