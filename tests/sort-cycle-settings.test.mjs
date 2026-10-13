@@ -77,3 +77,36 @@ test('retired methods are removed from saved selections and fall back to luminan
         assert.deepEqual(sortColorsArray(colors, removed), sortColorsArray(colors, 'luminance'));
     }
 });
+
+
+test('rainbow fold uses rainbow order and folds it inward without changing colors', () => {
+    const spectrum = ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff'];
+    assert.deepEqual(sortColorsArray(spectrum, 'rainbow-fold'),
+        ['#ff0000', '#00ff00', '#0000ff', '#ff00ff', '#00ffff', '#ffff00']);
+    for (const input of [[], ['#ff0000'], spectrum.slice(0, 5), spectrum,
+        ['#ffffff', '#000000', '#808080', ...spectrum, '#ff0000']]) {
+        const before = [...input], rainbow = sortColorsArray(input, 'dark-rainbow');
+        const folded = sortColorsArray(input, 'rainbow-fold');
+        assert.deepEqual(input, before);
+        assert.deepEqual([...folded].sort(), [...input].sort());
+        // Walking alternately from the left and right recovers the rainbow.
+        const recovered = []; let left = 0, right = folded.length - 1;
+        while (left <= right) {
+            recovered.push(folded[left++]);
+            if (left <= right) recovered.push(folded[right--]);
+        }
+        assert.deepEqual(recovered, rainbow);
+    }
+});
+
+test('rainbow fold is optional and can be saved and cycled only after selection', () => {
+    assert.equal(normalizeSortMethod('rainbow-fold'), 'rainbow-fold');
+    assert(!DEFAULT_SORT_CYCLE.includes('rainbow-fold'));
+    assert(!loadSortCycle({ getItem: () => null }).includes('rainbow-fold'));
+    let text; const storage = { setItem: (_, value) => { text = value; }, getItem: () => text };
+    const selected = ['luminance', 'rainbow-fold'];
+    assert(persistSortCycle(selected, storage));
+    assert.deepEqual(loadSortCycle(storage), selected);
+    assert.equal(nextSortMethod('luminance', loadSortCycle(storage)), 'rainbow-fold');
+    assert.equal(nextSortMethod('rainbow-fold', loadSortCycle(storage)), 'luminance');
+});
