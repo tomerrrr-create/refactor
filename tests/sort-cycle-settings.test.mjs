@@ -44,15 +44,16 @@ test('custom order survives saves and drives every step of the cycle', () => {
     assert.equal(nextSortMethod('outside-in', restored), 'temperature');
 });
 
-test('earlier/later moves preserve selection and do not wrap at the ends or mutate the draft', () => {
-    const selected = ['temperature', 'hue', 'luminance'];
-    assert.deepEqual(moveSortMethod(selected, 'hue', -1), ['hue', 'temperature', 'luminance']);
-    assert.deepEqual(moveSortMethod(selected, 'hue', 1), ['temperature', 'luminance', 'hue']);
-    for (const [method, delta] of [['temperature', -1], ['luminance', 1], ['unknown', -1], ['hue', 2]]) {
-        assert.deepEqual(moveSortMethod(selected, method, delta), selected);
+test('direct positions move either end across the cycle without changing other relative order', () => {
+    const selected = ['luminance', 'hue', 'temperature', 'zen-void'];
+    assert.deepEqual(moveSortMethod(selected, 'zen-void', 0), ['zen-void', 'luminance', 'hue', 'temperature']);
+    assert.deepEqual(moveSortMethod(selected, 'luminance', 3), ['hue', 'temperature', 'zen-void', 'luminance']);
+    assert.deepEqual(moveSortMethod(selected, 'hue', 2), ['luminance', 'temperature', 'hue', 'zen-void']);
+    for (const [method, target] of [['hue', -1], ['hue', 4], ['hue', 1.5], ['unknown', 0], ['hue', 1]]) {
+        assert.deepEqual(moveSortMethod(selected, method, target), selected);
     }
-    assert.deepEqual(selected, ['temperature', 'hue', 'luminance']);
-    assert.deepEqual(moveSortMethod(['hue'], 'hue', 1), ['hue']);
+    assert.deepEqual(selected, ['luminance', 'hue', 'temperature', 'zen-void']);
+    assert.deepEqual(moveSortMethod(['hue'], 'hue', 0), ['hue']);
 });
 
 test('newly exposed algorithms preserve all palette colors and do not mutate the input', () => {

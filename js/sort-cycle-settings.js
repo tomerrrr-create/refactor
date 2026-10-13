@@ -25,10 +25,11 @@ export function nextSortMethod(current, selected) {
     return methods[(methods.indexOf(current) + 1) % methods.length];
 }
 
-export function moveSortMethod(selected, method, delta) {
+export function moveSortMethod(selected, method, target) {
     const methods = normalizeSortCycle(selected);
-    const index = methods.indexOf(method), target = index + delta;
-    if (![-1, 1].includes(delta) || index < 0 || target < 0 || target >= methods.length) return methods;
-    [methods[index], methods[target]] = [methods[target], methods[index]];
+    const index = methods.indexOf(method);
+    if (!Number.isInteger(target) || index < 0 || target < 0 || target >= methods.length || index === target) return methods;
+    methods.splice(index, 1);
+    methods.splice(target, 0, method);
     return methods;
 }
