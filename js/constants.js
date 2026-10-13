@@ -67,6 +67,7 @@ export const defaultMagnetRules = {
 };
 
 export const defaultErosionRules = {
+    mode: 'legacy',
     erosionStrength: 0.1
 };
 
