@@ -1840,6 +1840,7 @@ function handlePointerDownCtrl(e) {
         clearTimeout(technicianHoldTimer);
         dom.btnToggleSimMode.classList.remove('technician-hold');
         const btn = e.currentTarget;
+        if (btn === dom.btnSave || btn === dom.btnPlayPauseLife) return;
         if (btn.id === 'btnToggleSimMode') {
             // The button moves when simulation controls appear. Keep the hold
             // tied to its original hit area until release or a deliberate drag.
@@ -1849,31 +1850,6 @@ function handlePointerDownCtrl(e) {
         longPressTimer = setTimeout(() => {
             wasLongPress = true;
 
-            // מחיקת היסטוריית הלוגר בלחיצה ארוכה על כפתור השמירה
-
-            // מחיקת היסטוריית הלוגר בלחיצה ארוכה על כפתור השמירה
-            if (btn.id === 'btnSave') {
-                artRecipeLog = []; // איפוס המערך שמחזיק את פעולות הלוגר
-                historyRecipeCursor = 0;
-                
-                // === תוספת: שמירת תמונת המצב ההתחלתית ===
-                const initState = {
-                    recipeVersion: 2,
-                    n: n,
-                    pal: activePaletteIndex,
-                    sort: currentSortMethod,
-                    sep: separatorPx,
-                    board: compressBoardState()
-                };
-                window.logArtEvent('INIT_STATE', JSON.stringify(initState));
-                // =========================================
-                
-                alert("לוגר אופס בהצלחה! מצב התחלתי נשמר."); 
-                return;
-            }
-
-
-            
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
             if (btn.id === 'btnToggleSimMode') {
@@ -1925,6 +1901,10 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnSaveImage.title = getText('saveModal_saveImage');
         dom.btnSaveProjectIdea.title = getText('saveModal_saveIdea');
         dom.btnLoadProjectIdea.title = getText('saveModal_loadIdea');
+        for (const [button, key] of [[dom.btnResetLogger, 'saveModal_resetLogger'], [dom.btnSaveLogger, 'saveModal_saveLogger']]) {
+            button.title = getText(key);
+            button.setAttribute('aria-label', getText(key));
+        }
         dom.resizeModalTitle.textContent = getText('resizeModal_title');
         dom.resizeModalPrompt.textContent = getText('resizeModal_prompt');
         dom.btnConfirmResize.textContent = getText('resizeModal_confirm');
@@ -2838,6 +2818,13 @@ function cycleSortMethod() {
 
 // --- Art Logger: Export Functionality ---
 
+
+function resetArtRecipeLog() {
+    artRecipeLog = [];
+    historyRecipeCursor = 0;
+    logCurrentStateAsInit();
+    alert(getText('saveModal_logResetDone'));
+}
 
 function exportArtRecipeLog() {
     if (artRecipeLog.length === 0) {
@@ -3757,7 +3744,7 @@ setMagnetRules: (r) => { magnetRules = r; },
 
 
 
-            handleSaveProject, handleLoadProject, onProjectFileSelected,
+            handleSaveProject, handleLoadProject, onProjectFileSelected, resetArtRecipeLog, exportArtRecipeLog,
             pointerState,
             resetWasLongPress,
 downloadImage: shareOrDownloadImage,
@@ -3915,17 +3902,6 @@ dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 if (dom.btnSimSettings) {
             dom.btnSimSettings.addEventListener('click', (e) => handleCtrlClick(e, openCurrentSimSettings));
         }
-
-// Art Logger: Long Press specifically on Play button
-        let playLongPressTimer = null;
-        dom.btnPlayPauseLife.addEventListener('pointerdown', (e) => {
-            playLongPressTimer = setTimeout(() => {
-                wasLongPress = true; // מונע הפעלת Play/Pause רגיל מהקליק
-                exportArtRecipeLog();
-            }, 1000);
-        });
-        dom.btnPlayPauseLife.addEventListener('pointerup', () => clearTimeout(playLongPressTimer));
-        dom.btnPlayPauseLife.addEventListener('pointerleave', () => clearTimeout(playLongPressTimer));
 
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));

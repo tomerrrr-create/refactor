@@ -1161,6 +1161,8 @@ export function initializeModals(appContext) {
     app.dom.btnSaveImage.addEventListener('click', () => app.downloadImage());
     app.dom.btnSaveProjectIdea.addEventListener('click', app.handleSaveProject);
     app.dom.btnLoadProjectIdea.addEventListener('click', app.handleLoadProject);
+    app.dom.btnResetLogger.addEventListener('click', app.resetArtRecipeLog);
+    app.dom.btnSaveLogger.addEventListener('click', app.exportArtRecipeLog);
     app.dom.projectFileInput.addEventListener('change', app.onProjectFileSelected);
 
     // Resize Modal
