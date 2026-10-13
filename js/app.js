@@ -3881,37 +3881,40 @@ bindPickerGestures(dom.btnColorPicker, {
 });
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
         dom.btnToggleSimMode.addEventListener('click', (e) => handleCtrlClick(e, toggleSimMode));
-        dom.btnGameOfLife.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('gameOfLife')));
+        // A swipe opens settings only for the selected, paused evolution.
+        // Tap actions stay independent of that restriction.
+        const evolutionPickers = [
+            [dom.btnGameOfLife, 'gameOfLife', () => armSimulation('gameOfLife'), modals.openGolSettingsModal],
+            [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
+            [dom.btnContour, 'contour', () => armSimulation('contour'), modals.openContourSettingsModal],
+            [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
+            [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
+            [dom.btnSandpile, 'sandpile', () => armSimulation('sandpile'), modals.openChiFlowSettingsModal],
+            [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
+            [dom.btnNudgeBrighter, 'nudgeBrighter', handleNudgeBrighterClick, modals.openNudgeSettingsModal],
+            [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal]
+        ].filter(([button]) => button);
+        const evolutionPickerButtons = new Set(evolutionPickers.map(([button]) => button));
+        evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
+            bindPickerGestures(button, {
+                onTap, onOpen,
+                canInteract: () => !isBreathing,
+                canOpen: () => !isLifePlaying && armedSimulation === simulation,
+                beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
+            });
+        });
 
 dom.btnBrightnessEvo.addEventListener('click', (e) => handleCtrlClick(e, cycleBrightnessEvoMode));
 
-
 dom.btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, cycleBreatheEvoMode));
-
-
-dom.btnGravitationalSort.addEventListener('click', (e) => handleCtrlClick(e, cycleGravitationalSortMode));
 
         dom.btnErosion.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('erosion')));
 
 dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 
-
-dom.btnContour.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('contour')));
-
-dom.btnSpiral.addEventListener('click', (e) => handleCtrlClick(e, cycleSpiralMode));
-if (dom.btnMagnetModes) {
-    dom.btnMagnetModes.addEventListener('click', (e) => handleCtrlClick(e, cycleMagnetMode));
-}
-
-
-
-dom.btnSandpile.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('sandpile')));
-
-dom.btnTuring.addEventListener('click', (e) => handleCtrlClick(e, () => armSimulation('turing')));
 if (dom.btnSimSettings) {
             dom.btnSimSettings.addEventListener('click', (e) => handleCtrlClick(e, openCurrentSimSettings));
         }
-
 
 // Art Logger: Long Press specifically on Play button
         let playLongPressTimer = null;
@@ -3926,14 +3929,12 @@ if (dom.btnSimSettings) {
 
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
-        dom.btnNudgeBrighter.addEventListener('click', (e) => handleCtrlClick(e, handleNudgeBrighterClick));
-        dom.btnNudgeDarker.addEventListener('click', (e) => handleCtrlClick(e, handleNudgeDarkerClick));
 
         dom.btnLangToggle.addEventListener('click', toggleLanguage);
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort) return;
+            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
