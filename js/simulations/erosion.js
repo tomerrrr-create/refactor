@@ -1,5 +1,5 @@
 export function runErosionGeneration({ n, currentBoardState, currentPalette, erosionRules }) {
-    if (erosionRules.mode === 'channels') {
+    if (['channels', 'channels-solid'].includes(erosionRules.mode)) {
         return runChannelErosion({ n, currentBoardState, currentPalette, erosionRules });
     }
     const pLen = currentPalette.length;
@@ -65,10 +65,13 @@ export function runErosionGeneration({ n, currentBoardState, currentPalette, ero
 function runChannelErosion({ n, currentBoardState, currentPalette, erosionRules }) {
     const airEnd = Math.floor(currentPalette.length * 0.2);
     const earthEnd = Math.floor(currentPalette.length * 0.8);
+    const solidEarth = erosionRules.mode === 'channels-solid';
     const indices = currentBoardState.map(tile => tile.k);
     const moved = new Uint8Array(indices.length);
-    const isAir = i => !currentBoardState[i].isGold && indices[i] < airEnd;
-    const isEarth = i => !currentBoardState[i].isGold && indices[i] >= airEnd && indices[i] < earthEnd;
+    const isAir = i => !currentBoardState[i].isGold && (solidEarth
+        ? indices[i] >= airEnd && indices[i] < earthEnd : indices[i] < airEnd);
+    const isEarth = i => !currentBoardState[i].isGold && (solidEarth
+        ? indices[i] < airEnd : indices[i] >= airEnd && indices[i] < earthEnd);
     const strength = erosionRules.erosionStrength;
 
     // Bottom-up updates, with a random row direction to avoid a lateral bias.
@@ -88,7 +91,8 @@ function runChannelErosion({ n, currentBoardState, currentPalette, erosionRules 
             const earth = contacts.filter(isEarth);
             if (earth.length && Math.random() < strength) {
                 // One gradual erosion event per water particle and generation.
-                indices[earth[Math.floor(Math.random() * earth.length)]]--;
+                const contact = earth[Math.floor(Math.random() * earth.length)];
+                indices[contact] = Math.max(0, indices[contact] - 1);
             }
 
             let target = -1;

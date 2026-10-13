@@ -68,3 +68,36 @@ test('legacy mode and old settings retain the original earth/air groups and move
         assert.deepEqual(next.map(t => t.k), [2, 2, 2, 2, 0, 8, 2, 2, 2]);
     }
 });
+
+const solid = (state, strength = 0) => runErosionGeneration({
+    n: Math.sqrt(state.length), currentBoardState: state, currentPalette: palette,
+    erosionRules: { mode: 'channels-solid', erosionStrength: strength }
+});
+
+test('persistent earth swaps only the material groups and retains movement priorities', t => {
+    t.mock.method(Math, 'random', () => 0.9);
+    assert.equal(solid(board([1, 8, 1, 2, 2, 2, 2, 2, 2]))[4].k, 8);
+    assert.equal(solid(board([2, 8, 2, 2, 1, 1, 1, 1, 1]))[3].k, 8);
+    const lateral = solid(board([1, 1, 1, 8, 2, 2, 1, 1, 1]));
+    assert.equal(lateral[4].k, 8); assert.equal(lateral[5].k, 2);
+});
+
+test('persistent earth erodes backward to zero without becoming air or invalid', t => {
+    t.mock.method(Math, 'random', () => 0);
+    let state = board([1, 8, 1, 1, 1, 1, 1, 1, 1]);
+    state = solid(state, 1);
+    assert.equal(state[4].k, 0); assert.equal(state[1].k, 8);
+    for (let i = 0; i < 100; i++) state = solid(state, 1);
+    assert.equal(state[4].k, 0); assert.equal(state[1].k, 8);
+    assert(state.every(t => t.k >= 0 && t.v === t.k));
+    assert.equal(state.filter(t => t.k < 2).length, 8);
+});
+
+test('persistent earth retains water colors, floor accumulation and gold protection', () => {
+    let state = board([9, 8, 2, 1, 2, 0, 8, 2, 9]); state[3].isGold = true;
+    const original = structuredClone(state);
+    for (let i = 0; i < 60; i++) state = solid(state, 1);
+    assert.deepEqual(state.filter(t => t.k >= 8).map(t => t.k).sort(), [8, 8, 9, 9]);
+    assert.equal(state[6].k, 8); assert.equal(state[8].k, 9);
+    assert.deepEqual(state[3], original[3]);
+});

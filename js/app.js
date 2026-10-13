@@ -407,7 +407,7 @@ k: tileState.k,
             updateSpiralButtonUI();
         }
         
-        if (['legacy', 'channels'].includes(state.erosionMode)) {
+        if (['legacy', 'channels', 'channels-solid'].includes(state.erosionMode)) {
             if (armedSimulation !== 'erosion') armSimulation('erosion');
             erosionRules.mode = state.erosionMode;
         }
@@ -2554,16 +2554,18 @@ function cycleBrightnessEvoMode() {
 
 function updateErosionButtonUI() {
     const channels = armedSimulation === 'erosion' && erosionRules.mode === 'channels';
-    document.getElementById('iconErosionLegacy').style.display = channels ? 'none' : 'block';
+    const solid = armedSimulation === 'erosion' && erosionRules.mode === 'channels-solid';
+    document.getElementById('iconErosionLegacy').style.display = channels || solid ? 'none' : 'block';
     document.getElementById('iconErosionChannels').style.display = channels ? 'block' : 'none';
+    document.getElementById('iconErosionSolid').style.display = solid ? 'block' : 'none';
     dom.btnErosion.title = `${getText('tooltip_erosion')}: ${getText(armedSimulation === 'erosion'
-        ? (channels ? 'erosion_channels' : 'erosion_legacy') : 'erosion_off')}`;
+        ? (solid ? 'erosion_solid' : channels ? 'erosion_channels' : 'erosion_legacy') : 'erosion_off')}`;
     dom.btnErosion.setAttribute('aria-label', dom.btnErosion.title);
 }
 
 function cycleErosionMode() {
     if (isLifePlaying) return;
-    const modes = ['off', 'legacy', 'channels'];
+    const modes = ['off', 'legacy', 'channels', 'channels-solid'];
     const current = armedSimulation === 'erosion' ? erosionRules.mode : 'off';
     const next = modes[(modes.indexOf(current) + 1) % modes.length];
     if (next === 'off') armSimulation(null);
@@ -3394,7 +3396,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 }
                 else if (sim === 'erosion') {
                     Object.assign(erosionRules, parsedRules);
-                    erosionRules.mode = parsedRules.mode === 'channels' ? 'channels' : 'legacy';
+                    erosionRules.mode = ['channels', 'channels-solid'].includes(parsedRules.mode) ? parsedRules.mode : 'legacy';
                     updateErosionButtonUI();
                 }
                 else if (sim === 'dla') {
@@ -3551,7 +3553,7 @@ function executeMacroAction(action) {
     else if (action.eventName === 'Erosion Mode Changed') {
         if (action.details === 'off') {
             if (armedSimulation === 'erosion') armSimulation(null);
-        } else if (['legacy', 'channels'].includes(action.details)) {
+        } else if (['legacy', 'channels', 'channels-solid'].includes(action.details)) {
             if (armedSimulation !== 'erosion') armSimulation('erosion');
             erosionRules.mode = action.details;
         }
