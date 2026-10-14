@@ -34,7 +34,7 @@ After changing HTML, CSS, JS, icons, the manifest, or the worker, run `node tool
 - **Choose:** tap palette/color/sort controls to cycle; swipe or drag upward to open their pickers. Hold the color control for 600 ms to select the first palette entry, or 1,200 ms total for rainbow painting.
 - **Evolve:** select an evolution, then use Single step or Play/Pause. Swipe the selected, paused evolution upward for supported settings. Running discrete mode cycles skip Off; paused cycles include it. Breathe is a separate visual animation and pauses when its mode changes.
 - **Customize:** select and reorder the sorting cycle. Game of Life and Chi Flow each have three configurable cycle positions, distinguished by zero, one or two stars. Free one position, then fill it before saving. **Yours** keeps the last personal rules independently; Cancel discards modal edits.
-- **Configure:** the technician menu is available inside WTF/help or by continuing to hold the evolution-entry control. It configures startup preferences and the board/brush used by the initialization hold.
+- **Configure:** the technician menu is available inside WTF/help or by swiping upward on the evolution-entry control. It configures startup preferences and the board/brush used by the initialization hold.
 - **Save:** the save modal exports PNG images, JSON board projects and TXT action recipes/macros, and loads JSON/TXT. Reset recipe clears the recorded journey and captures the current board as its new beginning.
 
 Preferences live in `localStorage`; saved creations are explicit exports. Macro playback uses recorded rule values and generation targets, including mode changes. Random processes can produce different pixels; playback must not overwrite saved preferences.

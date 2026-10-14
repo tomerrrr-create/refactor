@@ -1965,7 +1965,6 @@ function updateMacroPaletteButtonUI(paletteIndex) {
       
       function hideLongPressDisplay() {
           clearTimeout(longPressTimer);
-          dom.btnToggleSimMode.classList.remove('technician-hold');
           dom.longPressOverlay.classList.remove('visible');
           dom.longPressDisplay.classList.remove('visible');
           setTimeout(() => { dom.longPressDisplay.innerHTML = ''; }, 250);
@@ -2018,7 +2017,6 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 function handlePointerDownCtrl(e) {
         if (isBreathing) return;
         clearTimeout(longPressTimer);
-        dom.btnToggleSimMode.classList.remove('technician-hold');
         const btn = e.currentTarget;
         if (btn === dom.btnSave || btn === dom.btnPlayPauseLife) return;
         longPressTimer = setTimeout(() => {
@@ -4312,15 +4310,9 @@ bindPickerGestures(dom.btnColorPicker, {
             onHold: () => {
                 if (!isSimModeActive) toggleSimMode();
                 prepareBoardForSimMode();
-                dom.btnToggleSimMode.classList.add('technician-hold');
             },
-            onExtendedHold: () => {
-                dom.btnToggleSimMode.classList.remove('technician-hold');
-                modals.openTechnicianMenu(dom.btnToggleSimMode);
-            },
-            onEnd: () => dom.btnToggleSimMode.classList.remove('technician-hold'),
             canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
-            holdMs: C.LONG_PRESS_SHOW_MS, extendedHoldMs: C.LONG_PRESS_SHOW_MS * 3
+            holdMs: C.LONG_PRESS_SHOW_MS
         });
         // A swipe opens settings only for the selected, paused evolution.
         // Tap actions stay independent of that restriction.

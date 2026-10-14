@@ -48,7 +48,7 @@ The brush cycles between painting, gold line completion and copying. Gold line c
 | Palette | Next palette in the current group | Swipe/drag upward to open palette selection |
 | Paint color | Next palette entry | Swipe/drag upward to open the color picker |
 | Sort method | Next enabled sorting method | Swipe/drag upward to choose methods and arrange their cycle |
-| Evolution entry | Switch interface mode | Hold 600 ms to initialize the board; continue holding to open technicians |
+| Evolution entry | Switch interface mode | Hold 600 ms to initialize the board; swipe up to open technicians |
 | Selected evolution with settings | Select/cycle its behavior | Swipe/drag upward while paused to open settings |
 
 The picker gesture is shared between touch and mouse; it does not require a double click. A recognized swipe suppresses the tap action, so opening a picker does not also advance its cycle. A soft glow marks a supported opening gesture. Evolution settings open only for the selected evolution while paused; opening them does not start a generation.
@@ -88,7 +88,7 @@ Available/unavailable icons and stars transition softly over about half a second
 
 ### Technician settings and defaults
 
-Open technicians using the gold control inside **WTF/help**, or keep holding the evolution-entry control. Initialization fires after 600 ms; technicians opens after another 1,200 ms (**1,800 ms total**). Initialization happens before the menu opens, so this route changes the board.
+Open technicians using the gold control inside **WTF/help**, or swipe upward on the evolution-entry control. Holding that control for 600 ms still initializes the board; continuing to hold performs no additional action. An upward swipe opens technicians without initializing the board.
 
 The menu contains startup settings and initialization settings. Startup settings govern palette, sorting, board size, separators, initial fill, brush size/mode/color, symmetry and interface mode. They affect a later opening, rather than immediately replacing the current drawing.
 

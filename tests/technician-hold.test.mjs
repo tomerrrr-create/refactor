@@ -28,22 +28,22 @@ function harness(t, pointerType = 'touch') {
         release() {event('pointerup'); event('click');},
         advance(time) {for (;;) {const next = [...timers].filter(([,v]) => v.at <= time).sort((a,b) => a[1].at-b[1].at)[0]; if(!next) break; now=next[1].at; timers.delete(next[0]); next[1].fn();} now=time;}};
 }
-test('hold initializes at 600ms then opens technicians at 1800ms without an extra click', t => {
-    const h=harness(t); h.down(); h.advance(599); assert.deepEqual(h.actions,[]);
-    h.advance(600); assert.deepEqual(h.actions,['toggle','init']); assert(h.classes.has('technician-hold'));
-    h.advance(1799); assert(!h.actions.includes('technicians')); h.advance(1800);
-    assert.deepEqual(h.actions,['toggle','init','technicians']); h.release(); h.advance(5000); assert.equal(h.actions.length,3); assert(!h.classes.has('technician-hold'));
+for (const pointerType of ['touch', 'mouse']) test(`${pointerType} prolonged hold initializes once and never opens technicians`, t => {
+    const h=harness(t,pointerType); h.down(); h.advance(599); assert.deepEqual(h.actions,[]);
+    h.advance(600); assert.deepEqual(h.actions,['toggle','init']);
+    h.advance(1800); h.advance(10000); h.release(); h.advance(20000);
+    assert.deepEqual(h.actions,['toggle','init']); assert(!h.classes.has('technician-hold'));
 });
 test('short click and normal long press retain their actions', t => {
     const h=harness(t); h.down(); h.advance(100); h.release(); h.advance(3000); assert.deepEqual(h.actions,['toggle']);
     h.down(); h.advance(4000); h.release(); h.advance(7000); assert.deepEqual(h.actions,['toggle','init']); assert(!h.classes.has('technician-hold'));
 });
-test('cancelling a hold clears both the second stage and its hint', t => {
+test('cancelling after initialization triggers no further hold action', t => {
     const h=harness(t); h.down(); h.advance(900); h.event('pointercancel'); h.advance(3000);
     assert.deepEqual(h.actions,['toggle','init']); assert(!h.classes.has('technician-hold'));
 });
 test('active simulation mode initializes without toggling off', t => {
-    const h=harness(t); h.context.isSimModeActive=true; h.down(); h.advance(1800); assert.deepEqual(h.actions,['init','technicians']);
+    const h=harness(t); h.context.isSimModeActive=true; h.down(); h.advance(1800); assert.deepEqual(h.actions,['init']);
 });
 for(const pointerType of ['touch','mouse']) test(`${pointerType} upward swipe opens technicians without toggle or init`, t => {
     const h=harness(t,pointerType); h.down(); h.advance(200); h.event('pointermove',25,-10); h.advance(2000); h.event('pointerup',25,-10); h.event('click');
