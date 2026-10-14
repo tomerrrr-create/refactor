@@ -9,6 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  startup_palette_picker_title: { en: "Startup palette", he: "פלטת פתיחה", ru: "Начальная палитра", nl: "Startpalet" },
   save_reset_title: {"en": "Reset recipe?", "he": "איפוס מתכון?", "ru": "Сбросить рецепт?", "nl": "Recept wissen?"},
   save_reset_note: {"en": "Start a new recording from this board.", "he": "התחלת הקלטה חדשה מהלוח הנוכחי.", "ru": "Начать новую запись с этого поля.", "nl": "Begin een nieuwe opname met dit bord."},
   save_reset_yes: {"en": "Yes", "he": "כן", "ru": "Да", "nl": "Ja"},

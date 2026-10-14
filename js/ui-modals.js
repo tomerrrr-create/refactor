@@ -215,12 +215,17 @@ function updateChiReachDisplay() {
 
 
 function refreshLocalizedModalText() {
+    document.querySelectorAll('.modal-dismiss').forEach(button => button.setAttribute('aria-label', app.getText('saveModal_close')));
     if (!app.dom.chiFlowSettingsModal.classList.contains('hidden')) updateChiReachDisplay();
     app.dom.chiFlowModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
-    document.querySelectorAll('#startupPalette option').forEach(option => {
-        const palette = app.C.PALETTES.find(p => p.originalName === option.value);
-        if (palette) option.textContent = getPaletteDisplayName(palette);
-    });
+    updateStartupPalettePreview();
+    document.getElementById('btnStartupPaletteClose').setAttribute('aria-label', app.getText('saveModal_close'));
+    const picker = document.getElementById('startupPaletteDialog');
+    if (picker.open) {
+        picker.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
+        populateStartupPalettePicker();
+        document.getElementById('startup-active-palette-preview')?.scrollIntoView({ block: 'nearest' });
+    }
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
 }
@@ -678,15 +683,16 @@ function openPaletteModal() {
 
 
 
-function populatePaletteModal() {
-    app.dom.paletteModalGrid.innerHTML = '';
+function populatePaletteGrid(grid, selectedIndex, onSelect, startup = false) {
+    grid.innerHTML = '';
     const frag = document.createDocumentFragment();
 
     // אנחנו משתמשים במערך הקבוצות הגלובלי שכבר מוין ב-constants.js
     app.C.PALETTE_GROUPS.forEach(group => {
         
         // אם אין פלטות בקבוצה הזו (למשל אם הארכיון ריק), נדלג עליה
-        if (group.indexes.length === 0) return;
+        const indexes = startup ? group.indexes.filter(index => !app.C.PALETTES[index].isArchived) : group.indexes;
+        if (indexes.length === 0) return;
 
         // יצירת כותרת הקבוצה
         const header = document.createElement('div');
@@ -715,27 +721,29 @@ function populatePaletteModal() {
         header.style.boxSizing = 'border-box';
         // --- END: תוספת לכותרות דביקות ---
 
-        header.innerHTML = `<span data-debug-text="palette_group_${group.id}">${app.getText('palette_group_' + group.id)}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${group.indexes.length} <span data-debug-text="palette_items">${app.getText('palette_items')}</span></span>`;
+        header.innerHTML = `<span data-debug-text="palette_group_${group.id}">${app.getText('palette_group_' + group.id)}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${indexes.length} <span data-debug-text="palette_items">${app.getText('palette_items')}</span></span>`;
         frag.appendChild(header);
         
         
         // יצירת הכפתורים מתוך האינדקסים שהוכנו מראש לקבוצה
-        group.indexes.forEach(index => {
+        indexes.forEach(index => {
             const palette = app.C.PALETTES[index];
-            const preview = document.createElement('div');
+            const preview = document.createElement(startup ? 'button' : 'div');
+            if (startup) {
+                preview.type = 'button';
+                preview.dataset.paletteName = palette.originalName;
+                preview.setAttribute('aria-pressed', String(index === selectedIndex));
+            }
             preview.className = 'palette-preview';
             
-            if (index === app.getActivePaletteIndex()) {
+            if (index === selectedIndex) {
                 preview.style.boxShadow = '0 0 0 2px var(--gold)';
                 preview.style.transform = 'scale(1.05)';
                 preview.style.transition = 'all 0.2s';
-                preview.id = 'active-palette-preview'; // <-- תוספת מזהה לגלילה האוטומטית
+                preview.id = startup ? 'startup-active-palette-preview' : 'active-palette-preview'; // <-- תוספת מזהה לגלילה האוטומטית
             }
 
-            preview.addEventListener('click', () => {
-                app.switchToPalette(index);
-                closePaletteModal();
-            });
+            preview.addEventListener('click', () => onSelect(index));
 
             const iconContainer = document.createElement('div');
             iconContainer.className = 'palette-preview-icon';
@@ -764,7 +772,35 @@ function populatePaletteModal() {
         });
     });
 
-    app.dom.paletteModalGrid.appendChild(frag);
+    grid.appendChild(frag);
+}
+
+
+function populatePaletteModal() {
+    populatePaletteGrid(app.dom.paletteModalGrid, app.getActivePaletteIndex(), index => {
+        app.switchToPalette(index);
+        closePaletteModal();
+    });
+}
+
+function updateStartupPalettePreview() {
+    const palette = app.C.PALETTES.find(p => p.originalName === document.getElementById('startupPalette').value);
+    if (!palette) return;
+    const icon = document.getElementById('startupPaletteIcon');
+    if (palette.iconHTML) icon.innerHTML = palette.iconHTML;
+    else icon.textContent = palette.emoji;
+    document.getElementById('startupPaletteName').textContent = getPaletteDisplayName(palette);
+}
+
+function populateStartupPalettePicker() {
+    const selectedIndex = app.C.PALETTES.findIndex(p => p.originalName === document.getElementById('startupPalette').value);
+    populatePaletteGrid(document.getElementById('startupPaletteGrid'), selectedIndex, index => {
+        const field = document.getElementById('startupPalette');
+        field.value = app.C.PALETTES[index].originalName;
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        updateStartupPalettePreview();
+        document.getElementById('startupPaletteDialog').close();
+    }, true);
 }
 
 
@@ -1263,6 +1299,20 @@ export function initializeModals(appContext) {
     });
 
     // Save Modal
+    const modalDismissActions = {
+        btnTechnicianCloseTop: () => app.dom.technicianDialog.close(),
+        btnSortCycleCloseTop: () => document.getElementById('sortCycleDialog').close(),
+        btnNudgeCloseTop: () => document.getElementById('nudgeSettingsDialog').close(),
+        btnRecipeResetCloseTop: () => app.dom.btnCancelResetLogger.click(),
+        btnColorPickerCloseTop: closeColorPickerModal,
+        btnGolCloseTop: closeGolSettingsModal,
+        btnSpiralCloseTop: closeSpiralSettingsModal,
+        btnGravityCloseTop: closeGravitationalSortSettingsModal
+    };
+    Object.entries(modalDismissActions).forEach(([id, close]) => {
+        document.getElementById(id).addEventListener('click', close);
+    });
+
     app.dom.btnModalClose.addEventListener('click', closeModal);
     app.dom.saveModal.addEventListener('click', (e) => { if (e.target === app.dom.saveModal) { closeModal(); } });
     app.dom.btnSaveImage.addEventListener('click', () => app.downloadImage());
@@ -1434,8 +1484,23 @@ export function initializeModals(appContext) {
             select.appendChild(option);
         });
     }
-    addStartupOptions('startupPalette', app.C.PALETTES.filter(p => !p.isArchived)
-        .map(p => [p.originalName, getPaletteDisplayName(p)]));
+    const startupPaletteDialog = document.getElementById('startupPaletteDialog');
+    const startupPaletteTrigger = document.getElementById('btnStartupPalette');
+    startupPaletteTrigger.addEventListener('click', () => {
+        populateStartupPalettePicker();
+        startupPaletteDialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
+        startupPaletteDialog.showModal();
+        const selected = document.getElementById('startup-active-palette-preview');
+        selected?.focus({ preventScroll: true });
+        selected?.scrollIntoView({ block: 'center' });
+    });
+    document.getElementById('btnStartupPaletteClose').addEventListener('click', () => startupPaletteDialog.close());
+    startupPaletteDialog.addEventListener('close', () => startupPaletteTrigger.focus());
+    startupPaletteDialog.addEventListener('click', event => {
+        if (event.target !== startupPaletteDialog) return;
+        const bounds = startupPaletteDialog.getBoundingClientRect();
+        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) startupPaletteDialog.close();
+    });
     addStartupOptions('startupBoardSize', app.C.SIZES.slice().sort((a, b) => a - b).map(n => [n, `${n} × ${n}`]));
     addStartupOptions('startupSeparator', app.C.SEPARATORS.slice().reverse().map(gap => [gap, `${gap} px`]));
     addStartupOptions('startupSort', app.SORT_MODES.map(mode => [mode.method, '', 'startup_sort_' + mode.method]));
@@ -1447,6 +1512,7 @@ export function initializeModals(appContext) {
     function fillStartupForm(settings) {
         Object.entries(startupFields).forEach(([key, id]) => { document.getElementById(id).value = settings[key]; });
         document.getElementById('startupBrushValue').value = settings.brushSize;
+        updateStartupPalettePreview();
         startupStatus.textContent = '';
     }
     startupToggle.addEventListener('click', () => {
@@ -1454,7 +1520,7 @@ export function initializeModals(appContext) {
         initToggle.setAttribute('aria-expanded', 'false');
         startupForm.hidden = !startupForm.hidden;
         startupToggle.setAttribute('aria-expanded', String(!startupForm.hidden));
-        if (!startupForm.hidden) document.getElementById('startupPalette').focus();
+        if (!startupForm.hidden) document.getElementById('btnStartupPalette').focus();
     });
     startupForm.addEventListener('input', () => {
         document.getElementById('startupBrushValue').value = document.getElementById('startupBrushSize').value;
