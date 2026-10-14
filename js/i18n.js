@@ -9,6 +9,9 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  settings_aligned: {"en": "Aligned", "he": "בהרמוניה", "ru": "В гармонии", "nl": "In harmonie"},
+  settings_session_only: {"en": "For this session", "he": "לכניסה זו", "ru": "На этот сеанс", "nl": "Voor deze sessie"},
+
   workspace_reset: {"en": "Reset", "he": "איפוס", "ru": "Сброс", "nl": "Herstellen"},
   workspace_reset_title: {"en": "Restore all default settings", "he": "שחזור כל הגדרות ברירת המחדל", "ru": "Восстановить все настройки по умолчанию", "nl": "Alle standaardinstellingen herstellen"},
   workspace_reset_prompt: {"en": "Restore all settings? Your board stays.", "he": "לשחזר את כל ההגדרות? הלוח נשאר.", "ru": "Восстановить все настройки? Поле останется.", "nl": "Alle instellingen herstellen? Je bord blijft behouden."},

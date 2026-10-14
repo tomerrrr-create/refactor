@@ -39,12 +39,15 @@ let app;
 // --- Internal Helper Functions ---
 
 let saveStatusTimer;
+let settingsImportCloseTimer;
 function closeRecipeResetPrompt() {
     app.dom.saveResetConfirmation.hidden = true;
     app.dom.btnResetLogger.hidden = false;
     app.dom.btnResetLogger.setAttribute('aria-expanded', 'false');
 }
 function clearSaveStatus() {
+    clearTimeout(settingsImportCloseTimer);
+    app.dom.saveModal.classList.remove('settings-import-closing');
     closeRecipeResetPrompt();
     clearTimeout(saveStatusTimer);
     app.dom.saveStatus.textContent = '';
@@ -67,6 +70,21 @@ function closeModal() {
     if (app.dom.imagePreview.src) { URL.revokeObjectURL(app.dom.imagePreview.src); }
     app.dom.imagePreview.src = '';
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
+}
+
+function closeAfterSettingsImport(onClosed) {
+    clearSaveStatus();
+    if (!app.dom.saveModal.classList.contains('modal-visible') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        closeModal();
+        onClosed();
+        return;
+    }
+    app.dom.saveModal.classList.add('settings-import-closing');
+    app.dom.saveModal.classList.remove('modal-visible');
+    settingsImportCloseTimer = setTimeout(() => {
+        closeModal();
+        onClosed();
+    }, 900);
 }
 
 function closeResizeModal() {
@@ -1901,6 +1919,7 @@ function saveMagnetSettings() {
 
 return {
         refreshLocalizedModalText,
+        closeAfterSettingsImport,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
         openSortCycleModal,
