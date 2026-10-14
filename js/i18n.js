@@ -9,6 +9,10 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  spiral_b: {"en": "Pinwheel", "he": "שבשבת", "ru": "Вертушка", "nl": "Windmolentje"},
+  spiral_radial: {"en": "Diamond", "he": "יהלום", "ru": "Ромб", "nl": "Diamant"},
+  spiral_down: {"en": "Hexagon", "he": "משושה", "ru": "Шестиугольник", "nl": "Zeshoek"},
+  spiral_left: {"en": "Turbine", "he": "טורבינה", "ru": "Турбина", "nl": "Turbine"},
   help_how_it_works: {"en": "How it works", "he": "איך זה עובד?", "ru": "Как это работает", "nl": "Zo werkt het"},
   help_evolution_choose: {"en": "Choose an evolution.", "he": "בחרו אבולוציה.", "ru": "Выберите эволюцию.", "nl": "Kies een evolutie."},
   help_evolution_advance: {"en": "Single step advances one generation. Play runs generations continuously.", "he": "צעד קדימה מקדם דור אחד. Play מריץ דורות ברצף.", "ru": "Один шаг продвигает на поколение. Запуск запускает поколения непрерывно.", "nl": "Eén stap gaat één generatie vooruit. Afspelen laat generaties doorlopen."},
@@ -31,7 +35,7 @@ export const translations = {
   help_sandpile: {"en": "Chi Flow\nAwakening and color flow based on neighbors.", "he": "זרימת צ׳י\nהתעוררות וזרימת צבע לפי השכנים.", "ru": "Поток Ци\nПробуждение и поток цвета по соседям.", "nl": "Chi Flow\nOntwaken en kleurstroming op basis van buren."},
   help_contour: {"en": "Contours\nGrow boundaries between neighboring colors.", "he": "קווי מתאר\nהרחבת גבולות בין צבעים שכנים.", "ru": "Контуры\nРасширение границ между соседними цветами.", "nl": "Contouren\nBreid grenzen tussen naburige kleuren uit."},
   help_magnet: {"en": "Magnet\nTap to cycle: Cosmic, regular or time.", "he": "מגנט\nלחיצה למעבר בין Cosmic, רגיל וזמן.", "ru": "Магнит\nНажатие переключает Cosmic, обычный и временной магнит.", "nl": "Magneet\nTik om te wisselen: Cosmic, gewoon of tijd."},
-  help_spiral: {"en": "Spiral\nTap to cycle: Experiment B, Left or Black hole.", "he": "ספירלה\nלחיצה למעבר בין ניסוי B, שמאלה וחור שחור.", "ru": "Спираль\nНажатие переключает эксперимент B, влево и чёрную дыру.", "nl": "Spiraal\nTik om te wisselen: Experiment B, Links of Zwart gat."},
+  help_spiral: {"en": "Spiral\nTap to cycle: Pinwheel, Turbine or Circle.", "he": "ספירלה\nלחיצה למעבר בין שבשבת, טורבינה ועיגול.", "ru": "Спираль\nНажатие переключает вертушку, турбину и круг.", "nl": "Spiraal\nTik om te wisselen: Windmolentje, Turbine of Cirkel."},
   help_sim_settings: {"en": "Evolution settings\nAdjust how the selected evolution behaves.", "he": "הגדרות אבולוציה\nשינוי אופן הפעולה של האבולוציה שנבחרה.", "ru": "Настройки эволюции\nИзменить поведение выбранной эволюции.", "nl": "Evolutie-instellingen\nPas het gedrag van de gekozen evolutie aan."},
   help_step: {"en": "Single step\nAdvance the selected evolution by one generation.", "he": "צעד אחד קדימה\nקידום דור אחד באבולוציה שנבחרה.", "ru": "Один шаг вперёд\nПродвинуть выбранную эволюцию на одно поколение.", "nl": "Eén stap vooruit\nGa één generatie vooruit met de gekozen evolutie."},
   help_sort: {"en": "Sorting method\nTap for the next method. Swipe up for more settings.", "he": "שיטת מיון\nלחיצה לשיטה הבאה. החלקה מעלה להגדרות נוספות.", "ru": "Способ сортировки\nНажатие — следующий способ. Свайп вверх — настройки.", "nl": "Sorteermethode\nTik voor de volgende methode. Veeg omhoog voor meer instellingen."},
@@ -110,7 +114,7 @@ export const translations = {
   debug_init_description: { en: "What happens when you long-press the simulation entry button.", he: "מה קורה בלחיצה ארוכה על כפתור הכניסה לסימולציה.", ru: "Что происходит при долгом нажатии кнопки входа в симуляцию.", nl: "Wat er gebeurt wanneer je de knop voor de simulatiemodus lang indrukt." },
   debug_back: { en: "Back to help", he: "חזרה לעזרה", ru: "Назад к справке", nl: "Terug naar hulp" },
 
-  spiral_black_hole: { en: "Black Hole", he: "חור שחור", ru: "Чёрная дыра", nl: "Zwart gat" },
+  spiral_black_hole: {"en": "Circle", "he": "עיגול", "ru": "Круг", "nl": "Cirkel"},
   help_category_evolution: { en: "Evolution", he: "אבולוציה", ru: "Эволюция", nl: "Evolutie" },
   help_category_controls: { en: "Controls", he: "כלי שליטה", ru: "Управление", nl: "Bediening" },
   help_category_evolution_modes: { en: "Evolution modes", he: "מצבי אבולוציה", ru: "Режимы эволюции", nl: "Evolutiemodi" },
