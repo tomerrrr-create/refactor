@@ -12,11 +12,21 @@ This is a static application: vanilla JavaScript ES modules, HTML5 Canvas, Tailw
 python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000`. Initial styling and export dependencies are loaded from CDNs. Tests use Node's built-in runner:
+Open `http://localhost:8000`. Styling is bundled locally; normal use and exports do not require a CDN. Tests use Node's built-in runner:
 
 ```bash
 node --test tests/*.test.mjs
 ```
+
+## Install FYI
+
+- iPhone: open in Safari, Share → Add to Home Screen (enable Open as Web App if offered).
+- Android: open in Chrome, menu → Install app / Add to Home screen.
+- After the first complete online load, the installed app also works offline. The existing seedling icon is temporary.
+- Updates wait for an explicit **Update** tap; save your drawing first. Closing all app tabs also permits a waiting version to activate.
+- Browser and installed-app storage can be separate on iOS. Export/import the settings TXT to transfer preferences; export the drawing separately.
+
+After changing HTML, CSS, JS, icons, the manifest, or the worker, run `node tools/update-pwa-cache.mjs`, then the tests. The cache-version test prevents stale offline releases. The worker caches only this app's resources and never clears preferences or other sites' caches.
 
 ## Main interactions
 

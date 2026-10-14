@@ -9,6 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  pwa_update_ready: { en: "New version ready. Save your work before updating.", he: "גרסה חדשה מוכנה. יש לשמור את העבודה לפני העדכון.", ru: "Новая версия готова. Сохраните работу перед обновлением.", nl: "Nieuwe versie klaar. Sla je werk op voordat je bijwerkt." },
+  pwa_update: { en: "Update", he: "עדכון", ru: "Обновить", nl: "Bijwerken" },
   startup_palette_picker_title: { en: "Startup palette", he: "פלטת פתיחה", ru: "Начальная палитра", nl: "Startpalet" },
   save_reset_title: {"en": "Reset recipe?", "he": "איפוס מתכון?", "ru": "Сбросить рецепт?", "nl": "Recept wissen?"},
   save_reset_note: {"en": "Start a new recording from this board.", "he": "התחלת הקלטה חדשה מהלוח הנוכחי.", "ru": "Начать новую запись с этого поля.", "nl": "Begin een nieuwe opname met dit bord."},
