@@ -1,3 +1,4 @@
+import { bindPresetCycleMembership } from './preset-cycle-membership.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
@@ -121,6 +122,8 @@ function closePaletteModal() {
 
 
 function closeGolSettingsModal() {
+    golCycleMembership = null;
+    app.dom.btnGolSettingsSave.disabled = false;
     app.dom.gameOfLifeSettingsModal.classList.remove('modal-visible');
     // --- START MODIFICATION ---
     // (הסרת הקוד הישן שטיפל בגבולות האדומים של שדות הטקסט)
@@ -157,11 +160,15 @@ function closeContourSettingsModal() {
     let tempChiAwakening = [];
     let tempChiFlow = [];
     let tempChiReach = 2;
+let chiCycleMembership = null;
+let golCycleMembership = null;
 
 const CHI_PRESETS = CHI_FLOW_PRESETS;
 
 
 function closeChiFlowSettingsModal() {
+        chiCycleMembership = null;
+        app.dom.btnChiSettingsSave.disabled = false;
         app.dom.chiFlowSettingsModal.classList.add('hidden');
         app.resetWasLongPress(); // <-- תוספת תיקון הבאג
     }
@@ -220,6 +227,7 @@ function updateActiveChiPresetButton() {
             }
         }
         updateChiPresetButtons(activeId);
+        chiCycleMembership?.refresh();
     }
 
 
@@ -236,15 +244,26 @@ function updateActiveChiPresetButton() {
 app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
 
         updateChiPresetButtons(btnElement ? btnElement.id : '');
+        chiCycleMembership?.refresh();
+    }
+
+    function readChiCycleRules() {
+        return { awakening: [...tempChiAwakening], flow: [...tempChiFlow], reach: parseInt(app.dom.chiReachSlider.value, 10) };
+    }
+
+    function writeChiCycleRules(rules) {
+        tempChiAwakening = [...rules.awakening];
+        tempChiFlow = [...rules.flow];
+        tempChiReach = rules.reach;
+        renderChiFlowChips(app.dom.chiAwakeningChipsContainer, tempChiAwakening, 8);
+        renderChiFlowChips(app.dom.chiFlowChipsContainer, tempChiFlow, 8);
+        app.dom.chiReachSlider.value = tempChiReach;
+        app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
+        updateActiveChiPresetButton();
     }
 
     function saveChiFlowSettings() {
-        app.setChiFlowRules({
-            awakening: [...tempChiAwakening],
-            flow: [...tempChiFlow],
-            reach: parseInt(app.dom.chiReachSlider.value, 10)
-        });
-        closeChiFlowSettingsModal();
+        if (chiCycleMembership.commit()) closeChiFlowSettingsModal();
     }
 
     function openChiFlowSettingsModal() {
@@ -278,7 +297,14 @@ app.dom.btnChiPresetElectric.textContent = app.getText('chi_preset_electric');
         app.dom.btnChiPresetAlexis.textContent = app.getText('chi_preset_alexis');
         app.dom.btnChiPresetZen.textContent = app.getText('chi_preset_zen');
 
-updateActiveChiPresetButton();        app.dom.chiFlowSettingsModal.classList.remove('hidden');
+updateActiveChiPresetButton();
+        chiCycleMembership = bindPresetCycleMembership({
+            iconButton: app.dom.btnSandpile,
+            presets: Object.entries(CHI_PRESETS).map(([name, rules]) => ({ button: document.getElementById('btnChiPreset' + name), rules })),
+            state: app.getChiFlowCycle(), readRules: readChiCycleRules, writeRules: writeChiCycleRules,
+            save: app.setChiFlowCycle, saveButton: app.dom.btnChiSettingsSave, getText: app.getText
+        });
+        app.dom.chiFlowSettingsModal.classList.remove('hidden');
     }
 
     // --- END: Chi Flow Modal Logic ---
@@ -906,6 +932,7 @@ function updateActivePresetButton() {
       presetButton.classList.remove('active');
     }
   }
+  golCycleMembership?.refresh();
 }
 
 // 3. עדכון פונקציית applyGolPreset הקיימת
@@ -940,6 +967,13 @@ function openGolSettingsModal() {
 updateActivePresetButton();
     // --- END: MODIFICATION ---
     
+    golCycleMembership = bindPresetCycleMembership({
+        iconButton: app.dom.btnGameOfLife,
+        presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
+        state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
+        writeRules: rules => applyGolPreset(rules.survival, rules.birth),
+        save: app.setGameOfLifeCycle, saveButton: app.dom.btnGolSettingsSave, getText: app.getText
+    });
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
 }
@@ -951,37 +985,17 @@ updateActivePresetButton();
 // --- END: MODIFICATION ---
 
 
+function readGolCycleRules() {
+    const values = container => [...container.querySelectorAll('.gol-chip-btn.active')].map(chip => parseInt(chip.dataset.number, 10));
+    return { survival: values(app.dom.golSurvivalChipsContainer), birth: values(app.dom.golBirthChipsContainer) };
+}
+
 function saveGolSettings() {
-    // --- START MODIFICATION ---
-    // אין יותר ולידציה, רק איסוף נתונים מהכפתורים
-    const newSurvivalRules = [];
-    app.dom.golSurvivalChipsContainer.querySelectorAll('.gol-chip-btn.active').forEach(chip => {
-        newSurvivalRules.push(parseInt(chip.dataset.number, 10));
-    });
-
-    const newBirthRules = [];
-    app.dom.golBirthChipsContainer.querySelectorAll('.gol-chip-btn.active').forEach(chip => {
-        newBirthRules.push(parseInt(chip.dataset.number, 10));
-    });
-
-    const newRules = {
-        survival: newSurvivalRules,
-        birth: newBirthRules,
-    };
-    // --- END MODIFICATION ---
-
-    app.setGameOfLifeRules(newRules);
-    closeGolSettingsModal();
+    if (golCycleMembership.commit()) closeGolSettingsModal();
 }
 
 function resetGolSettings() {
-    app.setGameOfLifeRules({ ...app.C.defaultGameOfLifeRules });
-    const rules = app.getGameOfLifeRules();
-    
-    // --- START MODIFICATION ---
-    // עדכון הממשק הוויזואלי (הצ'יפים) במקום שדות הטקסט
-    applyGolPreset(rules.survival, rules.birth);
-    // --- END MODIFICATION ---
+    applyGolPreset(app.C.defaultGameOfLifeRules.survival, app.C.defaultGameOfLifeRules.birth);
 }
 
 function openGravitationalSortSettingsModal() {
@@ -1511,14 +1525,14 @@ app.dom.chiReachSlider.addEventListener('input', (e) => {
 
 
 app.dom.btnChiSettingsReset.addEventListener('click', () => applyChiPreset('Nova', app.dom.btnChiPresetNova));
-    app.dom.btnChiPresetTopography.addEventListener('click', (e) => applyChiPreset('Topography', e.target));
-    app.dom.btnChiPresetWildfire.addEventListener('click', (e) => applyChiPreset('Wildfire', e.target));
-    app.dom.btnChiPresetCrystals.addEventListener('click', (e) => applyChiPreset('Crystals', e.target));
-    app.dom.btnChiPresetRipples.addEventListener('click', (e) => applyChiPreset('Ripples', e.target));
-app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('Electric', e.target));
-    app.dom.btnChiPresetFluent.addEventListener('click', (e) => applyChiPreset('Fluent', e.target));
-    app.dom.btnChiPresetHarmony.addEventListener('click', (e) => applyChiPreset('Harmony', e.target));
-    app.dom.btnChiPresetNova.addEventListener('click', (e) => applyChiPreset('Nova', e.target));
+    app.dom.btnChiPresetTopography.addEventListener('click', (e) => applyChiPreset('Topography', e.currentTarget));
+    app.dom.btnChiPresetWildfire.addEventListener('click', (e) => applyChiPreset('Wildfire', e.currentTarget));
+    app.dom.btnChiPresetCrystals.addEventListener('click', (e) => applyChiPreset('Crystals', e.currentTarget));
+    app.dom.btnChiPresetRipples.addEventListener('click', (e) => applyChiPreset('Ripples', e.currentTarget));
+app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('Electric', e.currentTarget));
+    app.dom.btnChiPresetFluent.addEventListener('click', (e) => applyChiPreset('Fluent', e.currentTarget));
+    app.dom.btnChiPresetHarmony.addEventListener('click', (e) => applyChiPreset('Harmony', e.currentTarget));
+    app.dom.btnChiPresetNova.addEventListener('click', (e) => applyChiPreset('Nova', e.currentTarget));
     app.dom.btnChiPresetAlexis.addEventListener('click', (e) => applyChiPreset('Alexis', e.currentTarget));
     app.dom.btnChiPresetZen.addEventListener('click', (e) => applyChiPreset('Zen', e.currentTarget));
 

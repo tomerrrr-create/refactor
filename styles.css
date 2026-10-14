@@ -1493,3 +1493,21 @@ button, .ctrl {
 #startupSettingsStatus { color: #c3b99e; font-size: 13px; line-height: 1.5; margin: 0; }
 
 .chi-flow-panel { max-height: calc(100dvh - 32px); overflow-y: auto; }
+
+/* Quiet bronze seals beside the existing preset buttons. */
+.cycle-preset-row { display: flex; align-items: center; min-width: 0; gap: 2px; }
+.cycle-preset-row > .gol-preset-btn { flex: 1; min-width: 0; font-size: .75rem; line-height: 1.4; }
+.cycle-membership-buttons { display: flex; flex-wrap: wrap; flex-shrink: 0; max-width: 28px; }
+.cycle-membership-icon { display: grid; place-items: center; width: 28px; height: 40px; border: 0; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(105, 70, 38, .12), transparent 70%); color: #735238; transition: color .3s ease, filter .3s ease, background .3s ease; }
+.cycle-membership-icon svg { width: 22px; height: 22px; }
+.cycle-membership-icon.is-assigned { color: #e2c397; background: radial-gradient(ellipse at center, rgba(190, 140, 70, .14), transparent 72%); filter: drop-shadow(0 0 4px rgba(194, 142, 74, .4)); }
+.cycle-membership-icon:not(:disabled) { cursor: pointer; }
+.cycle-membership-icon:focus-visible { outline: 1px solid #c19a68; outline-offset: 1px; }
+@media (hover: hover) and (pointer: fine) {
+  .cycle-membership-icon:not(:disabled):hover { color: #f2d9af; filter: drop-shadow(0 0 6px rgba(194, 142, 74, .6)); }
+}
+.cycle-custom-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.cycle-custom-presets:not(:empty) { margin-top: 8px; }
+.cycle-custom-presets > .cycle-preset-row { min-width: 105px; }
+#btnGolSettingsSave:disabled, #btnChiSettingsSave:disabled { opacity: .45; cursor: default; }
+#gameOfLifeSettingsModal > div { max-height: calc(100dvh - 32px); overflow-y: auto; }
