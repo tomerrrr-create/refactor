@@ -27,3 +27,11 @@ test('Chi Flow includes Reach validation and rejects zero-valued neighbor rules'
     const result = c.normalizeEvolutionCycle([{ ...rules, reach: 11 }, { ...rules, flow: [0] }, { ...rules, reach: 7 }], defaults);
     assert.deepEqual(plain(result), [rules, rules, { ...rules, reach: 7 }]);
 });
+test('source identity preserves Yours independently; outdated preset references follow the recorded rules', () => {
+    const presets = { Ripple: defaults[1], Nova: defaults[2] };
+    assert.deepEqual(plain(c.normalizeCycleSources(['yours', 'Ripple', 'removed'], defaults, presets)), ['yours', 'Ripple', 'Nova']);
+    const personal = { survival: [1, 7], birth: [2] };
+    c.localStorage = { getItem: () => JSON.stringify({ sources: ['Ripple', 'yours', 'Nova'], yoursRules: personal }) };
+    const result = c.loadCycleIdentity('identity', [defaults[1], personal, defaults[2]], presets);
+    assert.deepEqual(plain(result), { sources: ['Ripple', 'yours', 'Nova'], yoursRules: personal });
+});

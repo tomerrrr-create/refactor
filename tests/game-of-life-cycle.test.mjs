@@ -16,6 +16,7 @@ function harness() {
     c.gameOfLifeCycle = c.defaultGolCycle.map(plain);
     c.localStorage = { setItem() {} };
     vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replaceAll('export ', ''), c);
+    c.gameOfLifeSources = c.inferCycleSources(c.gameOfLifeCycle, c.C.GAME_OF_LIFE_PRESETS);
     c.armSimulation = sim => { assert(!c.isLifePlaying); c.armedSimulation = sim; c.armCalls++; };
     c.updateGameOfLifeButtonUI = () => {};
     c.updateSortButtonUI = () => {};
@@ -92,12 +93,26 @@ test('all three slots accept independent custom rules and playback never persist
     let writes = 0;
     c.localStorage.setItem = () => writes++;
     c.setGameOfLifeCycle(slots, 1);
-    assert.equal(writes, 1);
+    assert.equal(writes, 2);
     assert.deepEqual(plain(c.gameOfLifeRules), custom);
     slots[1].survival.length = 0;
     assert.deepEqual(plain(c.gameOfLifeCycle[1]), custom);
     const recorded = c.getGameOfLifeRecordingRules();
     c.restoreGameOfLifeRules(recorded);
-    assert.equal(writes, 1);
+    assert.equal(writes, 2);
     assert.deepEqual(plain(c.gameOfLifeCycle[1]), custom);
+});
+
+test('Yours survives replacement by a named preset and snapshot replay', () => {
+    const c = harness();
+    const personalBefore = plain(c.personalGameOfLifeRules);
+    const slots = c.gameOfLifeCycle.map(plain);
+    slots[0] = plain(slots[1]);
+    const sources = [c.gameOfLifeSources[1], c.gameOfLifeSources[1], c.gameOfLifeSources[2]];
+    c.setGameOfLifeCycle(slots, 0, sources, personalBefore);
+    assert.deepEqual(plain(c.personalGameOfLifeRules), personalBefore);
+    const snapshot = c.getGameOfLifeRecordingRules();
+    c.restoreGameOfLifeRules(snapshot);
+    assert.deepEqual(plain(c.personalGameOfLifeRules), personalBefore);
+    assert.deepEqual(plain(c.gameOfLifeSources), plain(sources));
 });

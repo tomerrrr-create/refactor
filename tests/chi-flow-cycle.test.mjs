@@ -16,6 +16,7 @@ function harness() {
     c.chiFlowCycle = c.defaultChiCycle.map(plain);
     c.localStorage = { setItem() {} };
     vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replaceAll('export ', ''), c);
+    c.chiFlowSources = c.inferCycleSources(c.chiFlowCycle, c.C.CHI_FLOW_PRESETS);
     c.armSimulation = sim => { assert(!c.isLifePlaying); c.armedSimulation = sim; c.armCalls++; };
     c.updateChiFlowButtonUI = () => {};
     c.updateSortButtonUI = () => {};
@@ -92,12 +93,26 @@ test('all three slots accept independent custom rules and playback never persist
     let writes = 0;
     c.localStorage.setItem = () => writes++;
     c.setChiFlowCycle(slots, 1);
-    assert.equal(writes, 1);
+    assert.equal(writes, 2);
     assert.deepEqual(plain(c.chiFlowRules), custom);
     slots[1].awakening.length = 0;
     assert.deepEqual(plain(c.chiFlowCycle[1]), custom);
     const recorded = c.getChiFlowRecordingRules();
     c.restoreChiFlowRules(recorded);
-    assert.equal(writes, 1);
+    assert.equal(writes, 2);
     assert.deepEqual(plain(c.chiFlowCycle[1]), custom);
+});
+
+test('Yours survives replacement by a named preset and snapshot replay', () => {
+    const c = harness();
+    const personalBefore = plain(c.personalChiFlowRules);
+    const slots = c.chiFlowCycle.map(plain);
+    slots[0] = plain(slots[1]);
+    const sources = [c.chiFlowSources[1], c.chiFlowSources[1], c.chiFlowSources[2]];
+    c.setChiFlowCycle(slots, 0, sources, personalBefore);
+    assert.deepEqual(plain(c.personalChiFlowRules), personalBefore);
+    const snapshot = c.getChiFlowRecordingRules();
+    c.restoreChiFlowRules(snapshot);
+    assert.deepEqual(plain(c.personalChiFlowRules), personalBefore);
+    assert.deepEqual(plain(c.chiFlowSources), plain(sources));
 });

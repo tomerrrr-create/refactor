@@ -300,7 +300,7 @@ app.dom.btnChiPresetElectric.textContent = app.getText('chi_preset_electric');
 updateActiveChiPresetButton();
         chiCycleMembership = bindPresetCycleMembership({
             iconButton: app.dom.btnSandpile,
-            presets: Object.entries(CHI_PRESETS).map(([name, rules]) => ({ button: document.getElementById('btnChiPreset' + name), rules })),
+            presets: Object.entries(CHI_PRESETS).map(([name, rules]) => ({ button: document.getElementById('btnChiPreset' + name), rules, source: name })),
             state: app.getChiFlowCycle(), readRules: readChiCycleRules, writeRules: writeChiCycleRules,
             save: app.setChiFlowCycle, saveButton: app.dom.btnChiSettingsSave, getText: app.getText
         });

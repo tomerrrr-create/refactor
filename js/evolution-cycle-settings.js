@@ -25,3 +25,26 @@ export function loadEvolutionCycle(key, defaults) {
 export function persistEvolutionCycle(key, slots) {
     try { localStorage.setItem(key, JSON.stringify(slots)); } catch { /* Session changes still work. */ }
 }
+
+// Source identity only controls preset/Yours labels; playback still uses rule snapshots.
+export function inferCycleSources(slots, presets) {
+    return slots.map((rules, index) => index === 0 ? 'yours'
+        : Object.entries(presets).find(([, preset]) => JSON.stringify(preset) === JSON.stringify(rules))?.[0] || 'custom-' + index);
+}
+
+export function normalizeCycleSources(sources, slots, presets) {
+    const fallback = inferCycleSources(slots, presets);
+    return slots.map((rules, index) => {
+        const source = sources?.[index];
+        if (source === 'yours' || /^custom-[0-2]$/.test(source)) return source;
+        if (presets[source] && JSON.stringify(presets[source]) === JSON.stringify(rules)) return source;
+        return fallback[index];
+    });
+}
+
+export function loadCycleIdentity(key, slots, presets) {
+    let value;
+    try { value = JSON.parse(localStorage.getItem(key)); } catch { /* Use snapshots below. */ }
+    return { sources: normalizeCycleSources(value?.sources, slots, presets),
+        yoursRules: normalizeEvolutionCycle([value?.yoursRules, slots[1], slots[2]], slots)[0] };
+}
