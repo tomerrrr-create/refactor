@@ -21,6 +21,7 @@ function harness(index = 2) {
         performance: { now: () => 0 }, dom: {}, modals: {},
         resetSelectedColor() {}, updatePaletteHeader() {}, renderToScreen() {}, hideLongPressDisplay() {},
         showPaletteGroupTransition() {},
+        capturePaletteGroupBoard() { return null; },
         areStatesEqual: (a, b) => JSON.stringify(a) === JSON.stringify(b)
     });
     h.getCurrentState = () => ({ activePaletteIndex: h.activePaletteIndex, tiles: plain(h.boardState) });
