@@ -584,6 +584,13 @@ body {
   font-size: 12px;
   line-height: 1.3;
 }
+.save-smoothing {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 28px;
+  color: #c3b99e; font-size: 11px; line-height: 1.3; cursor: pointer;
+}
+.save-smoothing input { margin: 0; width: 13px; height: 13px; accent-color: #d5aa48; cursor: pointer; }
+.save-smoothing:has(input:checked) { color: #e3c677; }
+.save-smoothing input:focus-visible { outline: 1px solid #ffe7a0; outline-offset: 3px; }
 
 .save-reset-section {
   margin-top: 12px;

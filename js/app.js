@@ -1680,6 +1680,7 @@ if (simulationName === 'magnet') {
 
       // הפונקציה הראשית החדשה שמחליפה את הקודמת
       async function shareOrDownloadImage() {
+        const smoothExport = dom.saveSmoothImage.checked;
         const originalButtonText = dom.btnSaveImage.innerHTML;
         dom.btnSaveImage.innerHTML = `
             <svg class="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1704,7 +1705,7 @@ if (simulationName === 'magnet') {
             offscreenCtx.fillRect(0, 0, exportSize, exportSize);
             offscreenCtx.save();
             offscreenCtx.translate(borderSize, borderSize);
-            renderBoard(offscreenCtx, drawingAreaSize, drawingAreaSize, null);
+            renderBoard(offscreenCtx, drawingAreaSize, drawingAreaSize, null, smoothExport);
             offscreenCtx.restore();
             resolve();
         }, 50));
@@ -1955,6 +1956,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.fileNameInput.placeholder = getText('saveModal_defaultFilename');
         dom.btnModalClose.title = getText('saveModal_close');
         dom.btnSaveImage.title = getText('saveModal_saveImage');
+        dom.saveSmoothImage.parentElement.title = getText('save_smooth_note');
         dom.btnSaveProjectIdea.title = getText('saveModal_saveIdea');
         dom.btnLoadProjectIdea.title = getText('saveModal_loadIdea');
         for (const [button, key] of [[dom.btnResetLogger, 'saveModal_resetLogger'], [dom.btnSaveLogger, 'saveModal_saveLogger']]) {

@@ -9,6 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  save_smooth: {"en": "Smooth", "he": "ריכוך", "ru": "Сгладить", "nl": "Zacht"},
+  save_smooth_note: {"en": "Soft edges · without separators", "he": "קצוות רכים · ללא מפרידים", "ru": "Мягкие края · без разделителей", "nl": "Zachte randen · zonder scheidingslijnen"},
   smooth_rendering: {"en": "Smooth rendering", "he": "תצוגה מוחלקת", "ru": "Сглаживание", "nl": "Vloeiende weergave"},
   smooth_rendering_note: {"en": "Display only · without separators. Saved images stay crisp.", "he": "תצוגה בלבד · ללא מפרידים. תמונות שמורות נשארות חדות.", "ru": "Только отображение · без разделителей. Сохранённые изображения остаются чёткими.", "nl": "Alleen weergave · zonder scheidingslijnen. Opgeslagen afbeeldingen blijven scherp."},
   spiral_b: {"en": "Pinwheel", "he": "שבשבת", "ru": "Вертушка", "nl": "Windmolentje"},
