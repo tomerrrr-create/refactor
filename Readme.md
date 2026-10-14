@@ -535,6 +535,6 @@ Development convention: use `work` for changes and `main` for merged releases.
 
 Install FYI from Safari on iPhone (Share → Add to Home Screen) or Chrome on Android (Install app / Add to Home screen). Open it online once and allow its offline resources to finish downloading before disconnecting. No store or backend is required.
 
-The current home-screen icon is the existing seedling. Updates are offered with a small **Update** control; export your drawing before accepting, because the app reloads. Local preferences remain intact. Browser and installed-app storage may be separate on iOS; transfer preferences with the settings TXT and drawings with the project export.
+The home-screen icon is a quiet golden eclipse. Updates are offered with a small **Update** control; export your drawing before accepting, because the app reloads. Local preferences remain intact. Browser and installed-app storage may be separate on iOS; transfer preferences with the settings TXT and drawings with the project export.
 
 Maintenance: styling and boot resources are local. After changing app assets or the worker, run `node tools/update-pwa-cache.mjs` and `node --test tests/*.test.mjs`. This generates a scoped offline resource list and content-based cache version. The worker installs a complete snapshot before offering an update and removes only older FYI caches for the same URL scope.
