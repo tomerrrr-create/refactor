@@ -1,5 +1,6 @@
 // js/app.js
 
+import { loadEvolutionCycle, persistEvolutionCycle, normalizeEvolutionCycle } from './evolution-cycle-settings.js';
 import { bindPickerGestures } from './picker-gestures.js';
 import { SORT_MODES, normalizeSortMethod, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
 import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailableLangs, translations, onLanguageChange } from './i18n.js';
@@ -238,6 +239,10 @@ tile.v = tile.k;
       let gameOfLifeRules = cloneGameOfLifeRules(C.defaultGameOfLifeRules);
       let personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeRules);
       let gameOfLifeMode = 'personal';
+      const defaultGolCycle = [C.defaultGameOfLifeRules, C.GAME_OF_LIFE_PRESETS.btnGolPresetShuffle, C.GAME_OF_LIFE_PRESETS.btnGolPresetCoral];
+      let gameOfLifeCycle = loadEvolutionCycle('colorGridGolCycle', defaultGolCycle);
+      personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
+      gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
@@ -247,6 +252,10 @@ let magnetRules = { ...C.defaultMagnetRules };
 let chiFlowRules = cloneChiFlowRules(C.defaultChiFlowRules);
 let personalChiFlowRules = cloneChiFlowRules(chiFlowRules);
 let chiFlowMode = 'personal';
+const defaultChiCycle = [C.defaultChiFlowRules, C.CHI_FLOW_PRESETS.Ripples, C.CHI_FLOW_PRESETS.Nova];
+let chiFlowCycle = loadEvolutionCycle('colorGridChiCycle', defaultChiCycle);
+personalChiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
+chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let turingRules = { ...C.defaultTuringRules };
       let dlaState = null;
       let turingState = null;
@@ -1366,7 +1375,12 @@ function pauseLife() {
               }
           });
 
-          gameLoop();
+          // Let the macro scheduler advance past PLAY before generation one runs.
+          if (isExecutingMacroCommand && (armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile')) {
+              animationFrameId = requestAnimationFrame(gameLoop);
+          } else {
+              gameLoop();
+          }
       }
 
       
@@ -2547,7 +2561,7 @@ function cloneGameOfLifeRules(rules) {
 
 function getGameOfLifeRecordingRules() {
     return { ...cloneGameOfLifeRules(gameOfLifeRules), cycleMode: gameOfLifeMode,
-        personalRules: cloneGameOfLifeRules(personalGameOfLifeRules) };
+        personalRules: cloneGameOfLifeRules(personalGameOfLifeRules), cycleSlots: gameOfLifeCycle.map(cloneGameOfLifeRules) };
 }
 
 function updateGameOfLifeButtonUI() {
@@ -2557,25 +2571,38 @@ function updateGameOfLifeButtonUI() {
     dom.btnGameOfLife.querySelectorAll('[data-gol-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
-    const name = gameOfLifeMode === 'personal' ? getText('gol_mode_personal') : gameOfLifeMode === 'coral' ? 'Coral' : 'Shuffle';
+    const preset = Object.entries(C.GAME_OF_LIFE_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(gameOfLifeRules))?.[0];
+    const name = preset ? document.getElementById(preset)?.textContent.trim() : getText('cycle_custom');
     dom.btnGameOfLife.title = getText('tooltip_gameOfLife') + (active ? ': ' + name : '');
     dom.btnGameOfLife.setAttribute('aria-label', dom.btnGameOfLife.title);
 }
 
 function setPersonalGameOfLifeRules(rules) {
-    personalGameOfLifeRules = cloneGameOfLifeRules(rules);
-    gameOfLifeRules = cloneGameOfLifeRules(rules);
-    gameOfLifeMode = 'personal';
+    const slots = gameOfLifeCycle.map(cloneGameOfLifeRules);
+    slots[0] = cloneGameOfLifeRules(rules);
+    setGameOfLifeCycle(slots, 0);
+}
+
+function setGameOfLifeCycle(slots, index) {
+    gameOfLifeCycle = normalizeEvolutionCycle(slots, defaultGolCycle);
+    personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
+    gameOfLifeMode = ['personal', 'shuffle', 'coral'][index];
+    gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[index]);
+    persistEvolutionCycle('colorGridGolCycle', gameOfLifeCycle);
     updateGameOfLifeButtonUI();
     window.logArtEvent('Game of Life Mode Changed', JSON.stringify({
-        ...getGameOfLifeRecordingRules(), mode: armedSimulation === 'gameOfLife' ? 'personal' : 'off'
+        ...getGameOfLifeRecordingRules(), mode: armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off'
     }));
 }
 
 function restoreGameOfLifeRules(snapshot) {
     gameOfLifeRules = cloneGameOfLifeRules(snapshot);
-    gameOfLifeMode = ['coral', 'shuffle'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
-    personalGameOfLifeRules = cloneGameOfLifeRules(snapshot.personalRules || snapshot);
+    gameOfLifeMode = ['shuffle', 'coral'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
+    // Older recordings have one personal snapshot and two fixed preset shortcuts.
+    const legacySlots = [snapshot.personalRules || snapshot, ...defaultGolCycle.slice(1)];
+    gameOfLifeCycle = normalizeEvolutionCycle(snapshot.cycleSlots || legacySlots, defaultGolCycle);
+    gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode)] = cloneGameOfLifeRules(snapshot);
+    personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
     updateGameOfLifeButtonUI();
 }
 
@@ -2588,9 +2615,7 @@ function cycleGameOfLifeMode() {
     } else {
         if (current === 'off') armSimulation('gameOfLife');
         gameOfLifeMode = next;
-        const preset = next === 'coral' ? C.GAME_OF_LIFE_PRESETS.btnGolPresetCoral
-            : next === 'shuffle' ? C.GAME_OF_LIFE_PRESETS.btnGolPresetShuffle : personalGameOfLifeRules;
-        gameOfLifeRules = cloneGameOfLifeRules(preset);
+        gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(next)]);
     }
     updateGameOfLifeButtonUI();
     window.logArtEvent('Game of Life Mode Changed', JSON.stringify({ ...getGameOfLifeRecordingRules(), mode: next }));
@@ -2602,7 +2627,7 @@ function cloneChiFlowRules(rules) {
 
 function getChiFlowRecordingRules() {
     return { ...cloneChiFlowRules(chiFlowRules), cycleMode: chiFlowMode,
-        personalRules: cloneChiFlowRules(personalChiFlowRules) };
+        personalRules: cloneChiFlowRules(personalChiFlowRules), cycleSlots: chiFlowCycle.map(cloneChiFlowRules) };
 }
 
 function updateChiFlowButtonUI() {
@@ -2612,25 +2637,38 @@ function updateChiFlowButtonUI() {
     dom.btnSandpile.querySelectorAll('[data-chi-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
-    const name = chiFlowMode === 'personal' ? getText('chi_mode_personal') : chiFlowMode === 'nova' ? getText('chi_preset_nova') : getText('chi_preset_ripples');
+    const preset = Object.entries(C.CHI_FLOW_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(chiFlowRules))?.[0];
+    const name = preset ? getText('chi_preset_' + preset.toLowerCase()) : getText('cycle_custom');
     dom.btnSandpile.title = getText('chi_modal_title') + (active ? ': ' + name : '');
     dom.btnSandpile.setAttribute('aria-label', dom.btnSandpile.title);
 }
 
 function setPersonalChiFlowRules(rules) {
-    personalChiFlowRules = cloneChiFlowRules(rules);
-    chiFlowRules = cloneChiFlowRules(rules);
-    chiFlowMode = 'personal';
+    const slots = chiFlowCycle.map(cloneChiFlowRules);
+    slots[0] = cloneChiFlowRules(rules);
+    setChiFlowCycle(slots, 0);
+}
+
+function setChiFlowCycle(slots, index) {
+    chiFlowCycle = normalizeEvolutionCycle(slots, defaultChiCycle);
+    personalChiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
+    chiFlowMode = ['personal', 'ripples', 'nova'][index];
+    chiFlowRules = cloneChiFlowRules(chiFlowCycle[index]);
+    persistEvolutionCycle('colorGridChiCycle', chiFlowCycle);
     updateChiFlowButtonUI();
     window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({
-        ...getChiFlowRecordingRules(), mode: armedSimulation === 'sandpile' ? 'personal' : 'off'
+        ...getChiFlowRecordingRules(), mode: armedSimulation === 'sandpile' ? chiFlowMode : 'off'
     }));
 }
 
 function restoreChiFlowRules(snapshot) {
     chiFlowRules = cloneChiFlowRules(snapshot);
-    chiFlowMode = ['nova', 'ripples'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
-    personalChiFlowRules = cloneChiFlowRules(snapshot.personalRules || snapshot);
+    chiFlowMode = ['ripples', 'nova'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
+    // Older recordings have one personal snapshot and two fixed preset shortcuts.
+    const legacySlots = [snapshot.personalRules || snapshot, ...defaultChiCycle.slice(1)];
+    chiFlowCycle = normalizeEvolutionCycle(snapshot.cycleSlots || legacySlots, defaultChiCycle);
+    chiFlowCycle[['personal', 'ripples', 'nova'].indexOf(chiFlowMode)] = cloneChiFlowRules(snapshot);
+    personalChiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
     updateChiFlowButtonUI();
 }
 
@@ -2643,9 +2681,7 @@ function cycleChiFlowMode() {
     } else {
         if (current === 'off') armSimulation('sandpile');
         chiFlowMode = next;
-        const preset = next === 'nova' ? C.CHI_FLOW_PRESETS.Nova
-            : next === 'ripples' ? C.CHI_FLOW_PRESETS.Ripples : personalChiFlowRules;
-        chiFlowRules = cloneChiFlowRules(preset);
+        chiFlowRules = cloneChiFlowRules(chiFlowCycle[['personal', 'ripples', 'nova'].indexOf(next)]);
     }
     updateChiFlowButtonUI();
     window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
@@ -3919,6 +3955,8 @@ else if (action.eventName === 'Invert Colors') {
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
             switchToPalette,
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
+            getGameOfLifeCycle: () => ({ slots: gameOfLifeCycle.map(cloneGameOfLifeRules), index: ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode) }),
+            setGameOfLifeCycle,
             getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; },
 syncGsModeFromModal: (direction) => {
                 if (armedSimulation !== 'gravitationalSort') {
@@ -3952,6 +3990,8 @@ syncMagnetFromModal: (method, anchorIndex) => {
 },
 
 getChiFlowRules: () => chiFlowRules, setChiFlowRules: setPersonalChiFlowRules,
+getChiFlowCycle: () => ({ slots: chiFlowCycle.map(cloneChiFlowRules), index: ['personal', 'ripples', 'nova'].indexOf(chiFlowMode) }),
+setChiFlowCycle,
 getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
 getMagnetRules: () => magnetRules, 
 setMagnetRules: (r) => { magnetRules = r; },
