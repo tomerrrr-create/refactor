@@ -1,4 +1,4 @@
-import { bindPresetCycleMembership } from './preset-cycle-membership.js';
+import { bindPresetCycleEditor } from './preset-cycle-editor.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
@@ -193,6 +193,7 @@ function renderChiFlowChips(container, activeValues, maxVal) {
                     btn.classList.add('active');
                 }
                 updateActiveChiPresetButton(); // <-- זו השורה שהוספנו!
+                chiCycleMembership?.manualChange();
             };
             container.appendChild(btn);
         }
@@ -244,7 +245,7 @@ function updateActiveChiPresetButton() {
 app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
 
         updateChiPresetButtons(btnElement ? btnElement.id : '');
-        chiCycleMembership?.refresh();
+        chiCycleMembership?.selectPreset(presetName, p);
     }
 
     function readChiCycleRules() {
@@ -298,7 +299,9 @@ app.dom.btnChiPresetElectric.textContent = app.getText('chi_preset_electric');
         app.dom.btnChiPresetZen.textContent = app.getText('chi_preset_zen');
 
 updateActiveChiPresetButton();
-        chiCycleMembership = bindPresetCycleMembership({
+        chiCycleMembership = bindPresetCycleEditor({
+            toolbar: document.getElementById('chiCycleToolbar'),
+            defaults: [app.C.defaultChiFlowRules, CHI_PRESETS.Ripples, CHI_PRESETS.Nova], defaultSources: ['Harmony', 'Ripples', 'Nova'],
             iconButton: app.dom.btnSandpile,
             presets: Object.entries(CHI_PRESETS).map(([name, rules]) => ({ button: document.getElementById('btnChiPreset' + name), rules, source: name })),
             state: app.getChiFlowCycle(), readRules: readChiCycleRules, writeRules: writeChiCycleRules,
@@ -967,7 +970,9 @@ function openGolSettingsModal() {
 updateActivePresetButton();
     // --- END: MODIFICATION ---
     
-    golCycleMembership = bindPresetCycleMembership({
+    golCycleMembership = bindPresetCycleEditor({
+        toolbar: document.getElementById('golCycleToolbar'),
+        defaults: [app.C.defaultGameOfLifeRules, PRESET_RULES.btnGolPresetShuffle, PRESET_RULES.btnGolPresetCoral], defaultSources: ['btnGolPresetPaint', 'btnGolPresetShuffle', 'btnGolPresetCoral'],
         iconButton: app.dom.btnGameOfLife,
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
@@ -996,6 +1001,7 @@ function saveGolSettings() {
 
 function resetGolSettings() {
     applyGolPreset(app.C.defaultGameOfLifeRules.survival, app.C.defaultGameOfLifeRules.birth);
+    golCycleMembership?.manualChange();
 }
 
 function openGravitationalSortSettingsModal() {
@@ -1454,6 +1460,7 @@ app.dom.gameOfLifeSettingsModal.querySelectorAll('.gol-chip-btn').forEach(chip =
     chip.addEventListener('click', () => {
         chip.classList.toggle('active');
         updateActivePresetButton(); // בדוק מחדש אחרי לחיצה ידנית
+        golCycleMembership?.manualChange();
     });
 });
 
@@ -1462,7 +1469,10 @@ app.dom.gameOfLifeSettingsModal.querySelectorAll('.gol-chip-btn').forEach(chip =
 for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     const button = document.getElementById(buttonId);
     if (button) {
-        button.addEventListener('click', () => applyGolPreset(rules.survival, rules.birth));
+        button.addEventListener('click', () => {
+            applyGolPreset(rules.survival, rules.birth);
+            golCycleMembership?.selectPreset(buttonId, rules);
+        });
     }
 }
 // --- END: MODIFICATION ---
@@ -1524,6 +1534,7 @@ app.dom.chiReachSlider.addEventListener('input', (e) => {
     tempChiReach = parseInt(e.target.value, 10);
     app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
     updateActiveChiPresetButton(); // <-- שינינו את שם הפונקציה כאן
+    chiCycleMembership?.manualChange();
 });
 
 

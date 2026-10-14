@@ -627,13 +627,13 @@
   </div>
 
 <div id="gameOfLifeSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
-    <div class="relative evolution-rules-panel bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+    <div class="relative retro-evolution-panel bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
       <h2 id="golSettingsTitle" class="text-xl font-bold text-center text-gray-200">Game of Life Rules</h2>
+      <div id="golCycleToolbar" class="preset-cycle-toolbar"></div>
       
-      <div class="evolution-rule-grids">
-<div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300">Survival Rules</h3>
-        <p class="rule-description">A live cell survives if it has:</p>
+        <p class="text-sm text-gray-400">A live cell survives if it has:</p>
         <div id="golSurvivalChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button class="gol-chip-btn" data-number="0">0</button>
           <button class="gol-chip-btn" data-number="1">1</button>
@@ -649,7 +649,7 @@
 
       <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300">Birth Rules</h3>
-        <p class="rule-description">A dead cell is born if it has:</p>
+        <p class="text-sm text-gray-400">A dead cell is born if it has:</p>
         <div id="golBirthChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button class="gol-chip-btn" data-number="0">0</button>
           <button class="gol-chip-btn" data-number="1">1</button>
@@ -662,10 +662,9 @@
           <button class="gol-chip-btn" data-number="8">8</button>
         </div>
       </div>
-      </div>
-<div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300">Presets</h3>
-<div class="cycle-preset-grid">
+<div class="grid grid-flow-col grid-rows-5 gap-2">
                 <button id="btnGolPresetPaint" class="gol-preset-btn">Paint 4</button>
                 <button id="btnGolPresetPaint2" class="gol-preset-btn">Paint 1</button>
                 <button id="btnGolPresetShuffle" class="gol-preset-btn">Shuffle</button>
@@ -905,31 +904,30 @@
 
 
 <div id="chiFlowSettingsModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
-  <div class="chi-flow-panel relative evolution-rules-panel bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+  <div class="chi-flow-panel relative retro-evolution-panel bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
     
     <button id="chiFlowModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
     
     <h2 id="chiFlowModalTitle" class="text-xl font-bold text-center text-gray-200">Chi Flow Settings</h2>
+      <div id="chiCycleToolbar" class="preset-cycle-toolbar"></div>
 
-    <div class="evolution-rule-grids">
-<div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2">
       <h3 id="chiAwakeningLabel" class="font-semibold text-gray-300">Awakening Rules</h3>
-      <p id="chiAwakeningDesc" class="rule-description"></p>
+      <p id="chiAwakeningDesc" class="text-sm text-gray-400"></p>
       <div id="chiAwakeningChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
       <h3 id="chiFlowLabel" class="font-semibold text-gray-300">Flow Rules</h3>
-      <p id="chiFlowDesc" class="rule-description"></p>
+      <p id="chiFlowDesc" class="text-sm text-gray-400"></p>
       <div id="chiFlowChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
       </div>
     </div>
 
-    </div>
-<div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2">
       <div class="flex justify-between items-end">
         <h3 id="chiReachLabel" class="font-semibold text-gray-300">Magnetic Reach</h3>
         <span id="chiReachValue" class="text-gray-300 font-mono text-sm bg-gray-700 px-2 py-0.5 rounded">Auto</span>
@@ -941,7 +939,7 @@
 
 <div class="flex flex-col gap-2">
       <h3 class="font-semibold text-gray-300">Presets</h3>
-      <div class="cycle-preset-grid">
+      <div class="grid grid-flow-col grid-rows-5 gap-2">
         <button id="btnChiPresetNova" class="gol-preset-btn">Nova</button>
         <button id="btnChiPresetHarmony" class="gol-preset-btn">Harmony</button>
         <button id="btnChiPresetTopography" class="gol-preset-btn">Topography</button>
