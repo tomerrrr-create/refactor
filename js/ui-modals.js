@@ -1247,6 +1247,7 @@ export function initializeModals(appContext) {
     app.dom.btnModalClose.addEventListener('click', closeModal);
     app.dom.saveModal.addEventListener('click', (e) => { if (e.target === app.dom.saveModal) { closeModal(); } });
     app.dom.btnSaveImage.addEventListener('click', () => app.downloadImage());
+    document.getElementById('btnSaveSettings').addEventListener('click', app.handleSaveSettings);
     app.dom.btnSaveProjectIdea.addEventListener('click', app.handleSaveProject);
     app.dom.btnLoadProjectIdea.addEventListener('click', app.handleLoadProject);
     app.dom.btnResetLogger.addEventListener('click', () => {

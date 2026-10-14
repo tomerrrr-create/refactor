@@ -9,6 +9,13 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  saveModal_settings: {"en": "Settings", "he": "הגדרות", "ru": "Настройки", "nl": "Instellingen"},
+  saveModal_saveSettings: {"en": "Save personal settings", "he": "שמירת הגדרות אישיות", "ru": "Сохранить личные настройки", "nl": "Persoonlijke instellingen opslaan"},
+  settings_loaded: {"en": "Settings loaded. Your board is unchanged.", "he": "ההגדרות נטענו. הלוח נשאר כפי שהיה.", "ru": "Настройки загружены. Поле не изменено.", "nl": "Instellingen geladen. Je bord is ongewijzigd."},
+  settings_loaded_session: {"en": "Settings loaded for this session; browser storage is unavailable.", "he": "ההגדרות נטענו לכניסה זו; הדפדפן לא הצליח לשמור אותן.", "ru": "Настройки загружены на этот сеанс; хранилище браузера недоступно.", "nl": "Instellingen geladen voor deze sessie; browseropslag is niet beschikbaar."},
+  settings_load_error: {"en": "Could not load these settings. Nothing was changed.", "he": "לא ניתן לטעון את ההגדרות. דבר לא השתנה.", "ru": "Не удалось загрузить настройки. Ничего не изменено.", "nl": "Instellingen konden niet worden geladen. Niets is gewijzigd."},
+  settings_save_error: {"en": "Could not save settings. Try again.", "he": "לא ניתן לשמור הגדרות. נסו שוב.", "ru": "Не удалось сохранить настройки. Повторите попытку.", "nl": "Instellingen konden niet worden opgeslagen. Probeer opnieuw."},
+
   spiral_modal_title: {"en": "Spiral Settings", "he": "הגדרות ספירלה", "ru": "Настройки спирали", "nl": "Spiraalinstellingen"},
   spiral_method_label: {"en": "Rotation Method", "he": "שיטת סיבוב", "ru": "Способ вращения", "nl": "Rotatiemethode"},
   spiral_vortex: {"en": "Vortex", "he": "מערבולת", "ru": "Вихрь", "nl": "Draaikolk"},
