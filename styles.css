@@ -1555,6 +1555,9 @@ button, .ctrl {
 
 /* A sealed cycle, an open slot, and a lit assignment have distinct appearances. */
 .cycle-membership-icon.is-unavailable { color: #63503a; opacity: .38; background: transparent; filter: none; cursor: default; }
-.cycle-membership-icon.is-available { color: #c09960; opacity: 1; background: radial-gradient(ellipse at center, #b28b3614, transparent 72%); filter: none; }
-.cycle-membership-icon.is-available::before { content: ''; position: absolute; width: 26px; height: 26px; border: 1px dashed #b7955c99; border-radius: 50%; pointer-events: none; }
+.cycle-membership-icon.is-available { color: #8fa3ad; opacity: .85; background: transparent; filter: none; }
 .cycle-membership-icon.is-assigned { opacity: 1; color: #f0d7a9; filter: drop-shadow(0 0 4px #ce9e5a80); }
+
+@media (hover: hover) and (pointer: fine) {
+  .cycle-membership-icon.is-available:not(:disabled):hover { color: #becbd1; filter: none; }
+}
