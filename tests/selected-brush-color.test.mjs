@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { SORT_MODES, normalizeSortMethod, sortColorsArray } from '../js/colors.js';
+import { nextSortMethod } from '../js/sort-cycle-settings.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function excerpt(start, end) {
@@ -44,6 +45,29 @@ test('all sorting methods keep the exact brush color and visible board colors', 
         assert.equal(h.C.PALETTES[0].colors[h.boardState[0].k], before);
         assert.equal(h.C.PALETTES[0].colors[h.boardState[0].prevK], previous);
     }
+});
+
+test('sort hold returns to the first configured method, preserves colors and logs once', () => {
+    const h = harness(), events = [];
+    h.window.logArtEvent = (...args) => events.push(args);
+    h.sortCycleMethods = ['reversed', 'temperature', 'luminance'];
+    h.nextSortMethod = nextSortMethod;
+    h.animationLoopId = null;
+    h.hideLongPressDisplay = () => {};
+    h.bindPickerGestures = (_button, options) => { h.sortGestures = options; };
+    vm.runInContext(excerpt('function cycleSortMethod(', '// פונקציה חדשה: מנתבת'), h);
+    vm.runInContext(excerpt('bindPickerGestures(dom.btnCycleSort,', "dom.btnCycleSort.addEventListener('keydown'"), h);
+    const color = h.C.PALETTES[0].colors[h.boardState[0].k];
+    h.sortGestures.onHold();
+    assert.equal(h.currentSortMethod, 'reversed');
+    assert.equal(h.C.PALETTES[0].colors[h.boardState[0].k], color);
+    assert.equal(h.C.PALETTES[0].colors[h.selectedColorIndex], h.selectedColor);
+    assert.deepEqual(events, [['Sort by', 'reversed']]);
+    h.sortGestures.onHold();
+    assert.equal(events.length, 1);
+    h.sortGestures.onTap();
+    assert.equal(h.currentSortMethod, 'temperature');
+    assert.deepEqual(h.sortCycleMethods, ['reversed', 'temperature', 'luminance']);
 });
 
 test('history/project restoration remaps shared colors and clears unavailable colors', () => {

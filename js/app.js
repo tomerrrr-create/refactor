@@ -2998,7 +2998,10 @@ function updateSortButtonUI() {
 // -----------------------------
 
 function cycleSortMethod() {
-    const nextMethod = nextSortMethod(currentSortMethod, sortCycleMethods);
+    selectSortMethod(nextSortMethod(currentSortMethod, sortCycleMethods));
+}
+
+function selectSortMethod(nextMethod) {
     if (nextMethod === currentSortMethod) return;
     // 1. עוצרים לולאות ציור כפולות כדי לשחרר את המעבד
     if (animationLoopId) {
@@ -4117,6 +4120,7 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnSymmetry.addEventListener('click', (e) => handleCtrlClick(e, cycleSymmetryMode));
 bindPickerGestures(dom.btnCycleSort, {
     onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
+    onHold: () => selectSortMethod(sortCycleMethods[0]),
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
