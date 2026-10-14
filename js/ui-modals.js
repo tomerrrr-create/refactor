@@ -215,6 +215,7 @@ function updateChiReachDisplay() {
 
 
 function refreshLocalizedModalText() {
+    document.querySelectorAll('.modal-dismiss').forEach(button => button.setAttribute('aria-label', app.getText('saveModal_close')));
     if (!app.dom.chiFlowSettingsModal.classList.contains('hidden')) updateChiReachDisplay();
     app.dom.chiFlowModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
     updateStartupPalettePreview();
@@ -1298,6 +1299,20 @@ export function initializeModals(appContext) {
     });
 
     // Save Modal
+    const modalDismissActions = {
+        btnTechnicianCloseTop: () => app.dom.technicianDialog.close(),
+        btnSortCycleCloseTop: () => document.getElementById('sortCycleDialog').close(),
+        btnNudgeCloseTop: () => document.getElementById('nudgeSettingsDialog').close(),
+        btnRecipeResetCloseTop: () => app.dom.btnCancelResetLogger.click(),
+        btnColorPickerCloseTop: closeColorPickerModal,
+        btnGolCloseTop: closeGolSettingsModal,
+        btnSpiralCloseTop: closeSpiralSettingsModal,
+        btnGravityCloseTop: closeGravitationalSortSettingsModal
+    };
+    Object.entries(modalDismissActions).forEach(([id, close]) => {
+        document.getElementById(id).addEventListener('click', close);
+    });
+
     app.dom.btnModalClose.addEventListener('click', closeModal);
     app.dom.saveModal.addEventListener('click', (e) => { if (e.target === app.dom.saveModal) { closeModal(); } });
     app.dom.btnSaveImage.addEventListener('click', () => app.downloadImage());
