@@ -368,6 +368,89 @@ body {
 #boardOverlay {
     transition: opacity 350ms ease-in-out;
 }
+
+/* A quiet numerical apparition for crossing palette families. */
+.palette-group-transition {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    pointer-events: none;
+    animation: palette-family-lifetime 3.2s linear both;
+}
+.palette-group-previous-board, .palette-group-shade {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+.palette-group-previous-board {
+    z-index: 0;
+    animation: palette-family-board-fade 3.2s ease-in-out both;
+}
+.palette-group-shade {
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(8, 8, 7, .38), rgba(8, 8, 7, .7) 50%, rgba(8, 8, 7, .38));
+    animation: palette-family-veil 3.2s cubic-bezier(.4, 0, .2, 1) both;
+}
+.palette-group-transition::before,
+.palette-group-transition::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    left: calc(50% - 22px);
+    width: 44px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(213, 170, 72, .45), transparent);
+    animation: palette-family-veil 3.2s cubic-bezier(.4, 0, .2, 1) both;
+}
+.palette-group-transition::before { top: calc(50% - 43px); }
+.palette-group-transition::after { top: calc(50% + 43px); }
+.palette-group-number {
+    position: relative;
+    z-index: 2;
+    grid-area: 1 / 1;
+    color: var(--gold);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(30px, 7vmin, 52px);
+    font-weight: 400;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: .12em;
+    padding-left: .12em;
+    text-shadow: 0 0 22px rgba(213, 170, 72, .12);
+}
+.palette-group-number.is-departing { animation: palette-family-depart 3.2s ease-in-out both; }
+.palette-group-number.is-arriving { animation: palette-family-arrive 3.2s ease-in-out both; }
+@keyframes palette-family-lifetime {
+    0%, 100% { opacity: 1; }
+}
+@keyframes palette-family-board-fade {
+    0%, 20% { opacity: 1; }
+    70%, 100% { opacity: 0; }
+}
+@keyframes palette-family-veil {
+    0%, 100% { opacity: 0; }
+    24%, 76% { opacity: 1; }
+}
+@keyframes palette-family-depart {
+    0% { opacity: 0; filter: blur(2px); }
+    14%, 23% { opacity: .8; filter: blur(0); }
+    48%, 100% { opacity: 0; filter: blur(3px); }
+}
+@keyframes palette-family-arrive {
+    0%, 38% { opacity: 0; filter: blur(3px); }
+    65%, 80% { opacity: .8; filter: blur(0); }
+    100% { opacity: 0; filter: blur(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .palette-group-transition { animation-duration: .6s; }
+    .palette-group-shade, .palette-group-transition::before, .palette-group-transition::after { animation-duration: .6s; }
+    .palette-group-previous-board { display: none; animation: none; }
+    .palette-group-number { animation: none !important; }
+    .palette-group-number.is-departing { display: none; }
+}
 @keyframes glow-effect {
   0%, 100% {
     filter: drop-shadow(0 0 0px var(--gold));

@@ -1,21 +1,124 @@
-# 🎨 Follow Your Intuition - Complete Developer Documentation
+# Follow Your Intuition — Extended User and Maintainer Guide
 
-Welcome to the comprehensive technical documentation for the "Follow Your Intuition" application. 
-This application is built using **Vanilla JavaScript (ES6 Modules)** without external frameworks (except Tailwind CSS for styling and html2canvas for image export). It is powered by a high-performance **HTML5 Canvas** engine designed to run cellular automata and physics-based simulations.
+Follow Your Intuition is a browser-based canvas for meditative pixel art and evolving color patterns. Its two working modes are **creation** and **evolution**. Draw, copy, reorder colors and explore cellular or spatial behaviors on the same square board.
+
+Start with [README-QUICK.md](README-QUICK.md) for a short overview and code map. This guide retains the detailed engine documentation and adds the current interaction, preferences and recording behavior. Internal identifiers are shown where they matter for maintenance; displayed names may differ.
+
+## Contents
+
+- [Run and check](#run-and-check)
+- [Using the app](#using-the-app)
+- [Project structure](#1-project-structure)
+- [State management and rendering](#2-state-management-and-rendering)
+- [Color engine and palettes](#3-color-engine-and-palettes)
+- [UI, localization and modals](#4-ui-localization-and-modals)
+- [Simulation integration](#5-simulation-integration)
+- [Evolution engines](#6-evolution-engines)
+- [Additional systems and maintenance](#7-additional-systems-and-maintenance)
+- [Art logger and macro replay](#8-art-logger-and-macro-replay)
+
+## Run and check
+
+The application uses vanilla JavaScript ES modules, HTML5 Canvas, Tailwind CSS and custom CSS. There is no build step, package installation or application backend required for local use. Tailwind and html2canvas are loaded from CDNs, so initial dependency loading requires network access.
+
+From the repository root:
+
+```bash
+python3 -m http.server 8000
+```
+
+Open `http://localhost:8000`; use HTTP rather than opening `index.html` directly. Any static host can serve the application. `.idx/dev.nix` also defines an HTTP preview for the development environment.
+
+Run the Node tests from the same directory:
+
+```bash
+node --test tests/*.test.mjs
+```
+
+The tests cover gestures, brush/color synchronization, preferences, sorting cycles, erosion, history and macro compatibility. Browser checks remain important for touch/mouse behavior, native sharing and layout.
+
+## Using the app
+
+### Creation and color selection
+
+The brush cycles between painting, gold line completion and copying. Gold line completion connects successive points; copying starts from a dragged source tile. The startup default is line completion. Brush size, grid size, separators and symmetry control the composition.
+
+| Control | Tap/click | Additional interaction |
+| --- | --- | --- |
+| Palette | Next palette in the current group | Swipe/drag upward to open palette selection |
+| Paint color | Next palette entry | Swipe/drag upward to open the color picker |
+| Sort method | Next enabled sorting method | Swipe/drag upward to choose methods and arrange their cycle |
+| Evolution entry | Switch interface mode | Hold 600 ms to initialize the board; continue holding to open technicians |
+| Selected evolution with settings | Select/cycle its behavior | Swipe/drag upward while paused to open settings |
+
+The picker gesture is shared between touch and mouse; it does not require a double click. A recognized swipe suppresses the tap action, so opening a picker does not also advance its cycle. A soft glow marks a supported opening gesture. Evolution settings open only for the selected evolution while paused; opening them does not start a generation.
+
+Hold the paint-color control for **600 ms** to select index zero in the current palette. Continue to **1,200 ms total** for rainbow painting, which chooses colors randomly while painting. Moving into a swipe cancels these hold actions. The color picker opens on the page containing the current selection and marks it; rainbow has its own selection indicator.
+
+Changing the sorting method remaps tile indices and the selected brush color to preserve their visible colors. Changing palettes clears the ordinary paint-color selection. Palette positions named “darkest” or “lightest” in several engine controls mean the first or last entry of the current ordering; custom sorting can change their physical brightness.
+
+### Evolutions, play and cycles
+
+Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Ordinary editing is disabled while the evolution runs. Breathe animates the rendering rather than discrete generations, so Single step is disabled for it.
+
+For Game of Life, Chi Flow, erosion, gravity, magnet, spiral, brightness and DLA, switching a mode during playback changes the running rules without reinitializing the board. The cycle wraps between active modes and skips Off. When paused, Off remains part of the cycle and disarms the evolution. Breathe is different: changing its mode pauses it.
+
+Button cycles intentionally expose a subset of the modes available in settings. For example, magnet cycles Cosmic → Regular → Time; Expand remains in its modal. Spiral cycles Pinwheel → Turbine → Circle; the other modes remain in its modal.
+
+### Presets, cycle membership and Yours
+
+Game of Life and Chi Flow have three configurable cycle positions, represented by the evolution icon with **zero, one or two stars**. Initial choices are:
+
+| Evolution | First position | Second position | Third position |
+| --- | --- | --- | --- |
+| Game of Life | Yours, initially Paint 4 rules | Shuffle | Coral |
+| Chi Flow | Yours, initially Harmony rules | Ripples | Nova |
+
+The compact bronze preset panels have the cycle control **to the left** of each preset name. Rule counts are square grids: Game of Life uses 0–8; Chi Flow's existing rule choices are 1–8. Selected rule tiles are gold.
+
+- **Unavailable:** a dim bronze icon when all three positions are occupied; it cannot be added.
+- **Available:** a faint cool icon carrying the star count of the vacant position.
+- **Assigned:** a lit gold icon carrying its existing position's star count.
+
+Click an assigned icon to free its position, then an available icon to fill it. Only one position can be vacant at a time, and Save is disabled until it is filled. Membership does not apply a generation or immediately change the running app. Save commits the draft; Cancel discards it. Name selection and cycle membership are separate controls.
+
+**Yours always appears first** and retains the last personal rules, even if it is removed from the cycle or another preset is displayed. It can occupy any cycle position. Ordinary saved rule edits update the personal choice; when Yours is assigned, its position receives those edited rules. Other custom snapshots already present in a cycle can appear as additional Yours entries. Rule snapshots and their source identities are saved separately so a personal choice can match a named preset without losing its identity.
+
+Available/unavailable icons and stars transition softly over about half a second. Their enabled state changes immediately. Reduced-motion preferences disable these transitions.
+
+### Technician settings and defaults
+
+Open technicians using the gold control inside **WTF/help**, or keep holding the evolution-entry control. Initialization fires after 600 ms; technicians opens after another 1,200 ms (**1,800 ms total**). Initialization happens before the menu opens, so this route changes the board.
+
+The menu contains startup settings and initialization settings. Startup settings govern palette, sorting, board size, separators, initial fill, brush size/mode/color, symmetry and interface mode. They affect a later opening, rather than immediately replacing the current drawing.
+
+Without saved preferences, startup uses Journey, a 7×7 randomized board, 2-pixel separators, luminance sorting, a size-1 gold line-completion brush, no selected paint color, no symmetry and the creation interface.
+
+Initialization defaults are a 249×249 board and size-7 brush. The hold also removes separators, darkens the board, selects its final palette entry, enables kaleidoscope symmetry and starts a new recipe from that board. This is distinct from the creation-reset action, which restores a 5×5 Journey board with a central gold seed.
+
+Nudge's interval defaults to 100 ms and can be set from 0 to 200 ms. Its selected, paused settings can be opened like the other supported evolution settings.
+
+### Save, load and help
+
+All export and recipe-reset actions are in the save modal:
+
+| Action | Result |
+| --- | --- |
+| Image / Moment | PNG of the current canvas |
+| Macro / Journey | TXT action recipe for replay |
+| JSON / Idea | Board project snapshot |
+| Load | Restore JSON or load a TXT macro |
+| Reset recipe | Confirm, clear the recorded journey and capture the current board as a new `INIT_STATE` |
+
+Reset recipe does not reset the board. Export uses native file sharing when supported, and downloading where available as a fallback. A browser cannot confirm the eventual operating-system save destination; finishing or dismissing the share sheet can close the save modal.
+
+A loaded TXT recipe offers macro play, an optional initial palette override and fullscreen presentation. Random evolutions can differ visually between runs. Use JSON to retain a specific board state and TXT to retain its sequence of operations.
+
+WTF/help is grouped into Creation, Evolution and Tools. English is the primary interface language; Hebrew, Russian and Dutch are also supported.
 
 ---
 
-## 📑 Table of Contents
-1. [Project Structure](#1--project-structure)
-2. [State Management & Rendering](#2--state-management--rendering)
-3. [The Color Engine & Palettes](#3--the-color-engine--palettes)
-4. [UI, Localization & Modals](#4--ui-localization--modals)
-5. [Simulation Engine: Getting Started](#5-%EF%B8%8F-simulation-engine-getting-started)
-7. [Additional Systems & Extension Guides](#7--additional-systems--extension-guides)
-8. [Art Logger & Macro Replay System](#8--art-logger--macro-replay-system)
----
-
-## 1. 📁 Project Structure
+## 1. Project structure
 
 The code is modularized to separate logic, state, and UI:
 
@@ -25,31 +128,36 @@ The code is modularized to separate logic, state, and UI:
 * **`js/colors.js`**: The color engine. It handles color space conversions (RGB/HEX/HSV) and provides advanced sorting algorithms (Luminance, Dark Rainbow, Temperature, etc.).
 * **`js/dom-elements.js`**: A central `dom` object mapping all required HTML elements. This avoids repetitive DOM lookups and keeps the code clean.
 * **`js/simulations.js`**: A router file that imports and re-exports simulation logic from the `simulations/` directory.
-* **`js/simulations/*.js`**: Pure logic for each simulation. These functions are functional: they take a state and return a new state.
+* **`js/simulations/*.js`**: Engine implementations. Some return copied state; others deliberately mutate the current board or retain reusable buffers.
 * **`js/ui-modals.js`**: Manages the lifecycle and rendering of all modal windows (Settings, Color Picker, Help) using Dependency Injection.
-* **`js/i18n.js`**: Internationalization module supporting multiple languages.
-* **`js/data/palettes.js`**: The raw data containing all color palettes used in the app.
+* **`js/i18n.js`**: English, Hebrew, Russian and Dutch translations. Update all four when changing interface text.
+* **`js/data/palettes.js`**: Palette colors, stable original names, icons and archive flags.
+* **`js/picker-gestures.js`**: Shared pointer gestures, hold stages, click suppression and picker glow.
+* **`js/preset-cycle-membership.js`**: Draft preset membership, vacancy rules and retained UI nodes for fades.
+* **`js/evolution-cycle-settings.js`**: Rule snapshot validation, storage and preset/Yours source identities.
+* **`js/startup-settings.js`**, **`js/sim-init-settings.js`**, **`js/sort-cycle-settings.js`**: Validated startup, initialization and sorting-cycle preferences.
+* **`tests/*.test.mjs`**: Node regression tests. Nudge's engine and timing remain in `app.js`.
 
 ---
 
-## 2. 🧠 State Management & Rendering
+## 2. State management and rendering
 
 ### Board State (`boardState`)
 The grid is represented as a 1D array of length `n * n`. Each tile object contains:
 * `k`: The current color index from the active palette.
-* `v`: An internal float value (often used for physics simulations like Turing or Sandpile).
+* `v`: A numeric palette coordinate used by several engines; brightness can retain fractional values. Turing chemical concentrations are held in separate buffers.
 * `prevK`: The previous color index (used for smooth color interpolation/lerp).
 * `animStart`: Timestamp of when the current color transition started.
-* `isGold`: A boolean flag protecting the tile from being modified by simulations.
+* `isGold`: Marks a gold tile. Protection is engine-specific: several engines skip gold, Contours explicitly overwrites it, and some spatial modes move it. Do not assume universal immunity.
 
 ### Rendering Engine (`renderBoard` in `app.js`)
 There are two optimized rendering paths:
 1.  **Classic Path (`separatorPx > 0`)**: Renders individual tiles using `fillRect`. Optimized for the creative/drawing mode.
-2.  **Ultra-Fast Path (`separatorPx === 0`)**: Specifically for simulations. It renders directly to an `OffscreenCanvas` at `n x n` resolution by manipulating `ImageData` (pixel-level manipulation). The resulting image is then stretched over the main canvas with `imageSmoothingEnabled = false` for maximum performance at 60FPS.
+2.  **Ultra-Fast Path (`separatorPx === 0`)**: It renders to a cached offscreen canvas at `n × n` resolution using `ImageData`, then scales to the main canvas with `imageSmoothingEnabled = false`. This avoids a fill operation per separated tile; performance still depends on board size, engine and device.
 
 ---
 
-## 3. 🎨 The Color Engine & Palettes
+## 3. Color engine and palettes
 
 ### Color Mathematics (`js/colors.js`)
 This module strictly handles "pure" functional color processing. It calculates Luminance, Hue, and HSV directly from Hex strings without touching the DOM.
@@ -59,11 +167,31 @@ This module strictly handles "pure" functional color processing. It calculates L
     * `zen-void`: Sorts by RGB distance from the average palette color.
     * `outside-in`: Places dark colors at both ends and lighter colors toward the center.
 
+### Sorting selection and order
+
+The sort modal lets the user enable methods, arrange their tap-cycle order and reset it to defaults. At least one method remains enabled. With one enabled method, another tap selects that same method; this is expected. `sort-cycle-settings.js` normalizes obsolete/duplicate IDs and stores the selection.
+
+| Method ID | Ordering |
+| --- | --- |
+| `luminance` | Dark to bright by luminance |
+| `reversed` | Bright to dark by luminance |
+| `dark-rainbow` | Neutral darks, hue-bucketed colors, then neutral lights |
+| `center-out` | Low luminance at the center, alternating outward |
+| `outside-in` | Low luminance at both ends, alternating inward |
+| `rainbow-fold` | Outside-in arrangement of Dark Rainbow order |
+| `temperature` | Warm to cool by red-minus-blue, with luminance tie-breaking |
+| `hue` | Hue, with luminance tie-breaking |
+| `zig-zag` | Rearranges the two halves of reversed luminance order |
+| `zen-void` | RGB distance from the palette's average color, near to far |
+
+The default tap cycle is luminance → dark-rainbow → reversed → center-out → temperature → outside-in. Additional methods are available through the modal; Waves/Bioms are no longer available. `SORT_MODES` in `colors.js` is the actual registry, and sorting icons also have corresponding SVG definitions in `index.html`.
+
 ### Palette Data Structure (`data/palettes.js`)
 Palettes are stored as static JSON-like objects in js/data/palettes.js.
 
 Palette Structure:
 
+```js
 {
     name: "Golden Hour",   // Display name
     emoji: "🌅",           // Fallback icon
@@ -72,18 +200,22 @@ Palette Structure:
         "#f5a25d", 
         "#ffd700"
     ],
-    isArchived: false      // Set to true to hide from the UI
+    isArchived: false      // true routes this palette to Basement
 }
+```
+
 Auto-Grouping:
-You do not need to manually assign a palette to a UI group (Origin, Expansion, Resonance). In constants.js, the PALETTE_GROUPS constant automatically categorizes palettes based on their colors.length. Just add your palette to the array, and the UI will handle the rest.
+You do not need to manually assign a palette to a UI group (Origin, Expansion, Resonance). In constants.js, the PALETTE_GROUPS constant automatically categorizes palettes based on their colors.length. Groups are Origin (up to 25 colors), Expansion (26–80), Resonance (81+) and Basement (archived). Within each group, palettes are sorted by color count; equal counts retain source order. The tap cycle stays within the current group.
+
+Palette icons use `iconHTML` for SVG or an emoji fallback. Display names can be translated while `originalName` preserves identity. Some older JSON/macro data uses array indices, so reordering palette data can affect compatibility; there is no separate persistent palette ID.
 
 ---
 
-## 4. 🌍 UI, Localization & Modals
+## 4. UI, localization and modals
 
 ### Internationalization (`js/i18n.js`)
 The application uses a custom, lightweight i18n engine.
-* **The Dictionary:** The `translations` object acts as the single source of truth. Every text element is mapped to a key.
+* **The Dictionary:** `translations` holds localized strings; some legacy labels/fallbacks remain in HTML. Use `getText` or the existing `data-debug-text` bindings for new text and provide all four languages.
 * **Adding New Languages:** To add a language, update the `translations` dictionary with the new locale code (e.g., `es` for Spanish) and update the `getAvailableLangs()` array. Always use `getText('key')` in the JS logic.
 
 ### Modal Management & Dependency Injection (`js/ui-modals.js`)
@@ -92,34 +224,56 @@ Because `app.js` controls the core state, importing it directly into `ui-modals.
 
 
 Adding a New Settings Modal:
-HTML: Create the modal structure in index.html with a .hidden class.
+HTML: Define the modal or dialog in `index.html`, using the appropriate existing visibility and focus lifecycle.
 
 DOM Setup: Map the buttons and containers in dom-elements.js.
 
-UI Setup: In ui-modals.js, write an openMyNewModal() function. Use modal.classList.add('modal-visible') to trigger the CSS transition.
+UI Setup: In `ui-modals.js`, connect an opener/closer to the injected context. Use `modal-visible` for overlays that already follow that transition pattern; native dialogs use their own lifecycle.
 
 Save Logic: When the user clicks "Save" inside the modal, read the slider/button values, update the respective rule object via a setter provided in the context, and close the modal.
 
 ---
 
-## 5. ⚙️ Simulation Engine: Getting Started
+### Preferences and modal drafts
+
+Preferences use `localStorage`, with validation and defaults when stored data is invalid or unavailable. They are independent from explicit JSON/TXT creation exports.
+
+| Preference | Implementation | Storage key |
+| --- | --- | --- |
+| Startup | `startup-settings.js` | `colorGridStartup` |
+| Initialization hold | `sim-init-settings.js` | `colorGridSimulationInit` |
+| Selected sorting methods and order | `sort-cycle-settings.js` | `colorGridSortCycle` |
+| Game of Life rule slots and personal/source metadata | `evolution-cycle-settings.js`, `app.js` | `colorGridGolCycleMembership`, `colorGridGolCycleMembershipIdentity` |
+| Chi Flow rule slots and personal/source metadata | Same modules | `colorGridChiCycleMembership`, `colorGridChiCycleMembershipIdentity` |
+| Nudge timing | `app.js` | `colorGridNudge` |
+
+Not every default is in `constants.js`: startup/init defaults have dedicated modules, and Nudge's interval remains in `app.js`. Default rule arrays and both preset registries are in `constants.js`.
+
+`preset-cycle-membership.js` maintains a modal draft with one possible vacancy. It retains rendered glyph/button nodes across refreshes, allowing opacity, color and star transitions to interpolate instead of abruptly rebuilding the UI. Functional enable/disable changes remain immediate. Commit persists complete slots and personal identity; cancelling discards the draft.
+
+Different modals use dialogs, visibility classes or inline display state. Follow the existing modal's lifecycle rather than applying one universal close/open recipe. Dependency-injected getters/setters from `initializeModals(context)` keep UI modules from importing `app.js`.
+
+---
+
+## 5. Simulation integration
 
 Execution is controlled by the `armedSimulation` variable. When active, `togglePlayPauseLife()` starts the `gameLoop()`. Inside the `gameLoop`, a `switch(armedSimulation)` statement calls the respective logic from the `Simulations` module and updates the `boardState`.
 
-### 🛠️ Guide: Adding a New Simulation (e.g., "Chaos")
-1.  **Logic (`js/simulations/chaos.js`)**: Create a functional block that receives `n`, `currentBoardState`, `currentPalette`, and rules, then returns a new `nextBoardState` array.
+### Adding an evolution
+1.  **Logic (`js/simulations/chaos.js`)**: Define an engine with explicit board/rule inputs and document whether it copies or mutates its board, and whether it keeps auxiliary state.
 2.  **Exporting (`js/simulations.js`)**: Export your function.
 3.  **Constants (`js/constants.js`)**: Define default rules: `export const defaultChaosRules = { ... };`.
 4.  **UI (`index.html` & `dom-elements.js`)**: Add a button `<button id="btnChaos" ...>` and reference it in the `dom` object.
 5.  **Wiring (`app.js`)**: Initialize rules, include the button in simulation reset lists, and add the click Event Listener.
-6.  **Loop Integration (`app.js`)**: Add the case to the `gameLoop` switch statement.
+6.  **Loop Integration (`app.js`)**: Add dispatch to both `gameLoop` and `stepForward`, unless it is a rendering-only animation like Breathe.
+7.  **Compatibility:** Add rule recording/replay, settings/gesture wiring where relevant, four-language text and focused regression coverage.
 
 ---
 
-## 6. 🔬 Advanced Simulations Architecture
+## 6. Evolution engines
 
 
-All simulations adhere to a strictly functional, immutable paradigm: they read the `currentBoardState`, process the specialized logic using their respective rules, and return a *new* `nextBoardState` array.
+Engine contracts differ. Game of Life, Chi Flow, erosion, contours and brightness create copied board data. Gravity, magnet and spiral generally swap or update tiles in place. Turing retains chemical buffers; DLA retains crystal and walker state. Treat allocation, caches and gold handling as part of each engine's contract.
 
 ---
 
@@ -132,7 +286,7 @@ Unlike other simulations that update discrete states per generation, `Breathe` o
 * **Modes (`breatheEvoMode`):**
     * `solo`: Each tile pulses individually. The sine wave's phase is offset by an initial `startDelay` assigned to the tile when the simulation arms.
     * `group`: A synchronized organic pulse. The sine phase is offset by the tile's current color index (`tileData.k * 0.8`), causing adjacent colors to breathe in localized "waves".
-* **Performance:** Extracts the calculation into `getBreatheBrightnessFactor()` to keep the core rendering pipeline ultra-fast.
+* **Performance:** Extracts the calculation into `getBreatheBrightnessFactor()` without changing the board's underlying color indices.
 
 ---
 
@@ -142,7 +296,7 @@ Unlike other simulations that update discrete states per generation, `Breathe` o
 These models simulate cellular smoothing and contrasting by treating the color index (`v`) as a continuous float representing "brightness".
 
 * **Brightness Evolution (Smoothing):**
-    * Calculates the average `v` of the 8 surrounding neighbors (Moore neighborhood).
+    * Calculates the average `v` over the valid 3×3 neighborhood, including the cell itself and excluding gold tiles.
     * Smooths the current cell's value towards the local average using a fixed `smoothingFactor` (0.5).
     * Mathematically mimics a blur or diffusion effect over time.
 * **Contrast Generation (Sharpening):**
@@ -159,8 +313,8 @@ These models simulate cellular smoothing and contrasting by treating the color i
 An edge-detection algorithm that generates topological contour maps based on color gradients.
 
 * **Threshold Logic:**
-    * The user UI defines `sensitivity` (0-100), which maps to a threshold percentage (0.5% to 50% of the total palette length).
-    * A tile is marked as an "edge" if the absolute difference in index (`Math.abs(currentK - neighborK)`) between it and its North/South/East/West neighbors exceeds the `LUMINANCE_THRESHOLD`.
+    * The user UI defines `sensitivity` (0-100), which maps to a threshold percentage (nominally 1% to 50% of the palette length).
+    * A tile is marked as an "edge" if the absolute difference in index (`Math.abs(currentK - neighborK)`) between it and its North/South/East/West neighbors is at least `LUMINANCE_THRESHOLD`.
 * **Execution:**
     * It reads the entire board first (`indicesToChange`), then applies the contour line color (Darkest or Lightest index) simultaneously. This prevents cascading chain reactions within a single frame.
 
@@ -174,7 +328,7 @@ A specialized downward-falling algorithm mimicking sediment settling and weather
 * **Palette Mapping:**
     * The palette is virtually sliced into three states based on index percentages: `Earth` (Bottom 20%), `Air` (Middle 60%), and `Water` (Top 20%).
 * **Physics Rules:**
-    * Only `Water` tiles (the lightest colors) actively fall.
+    * Only `Water` tiles (the final palette entries) actively fall; ordering determines the material roles.
     * **Direct Fall:** Swaps with `Air` immediately below.
     * **Weathering:** If it lands on `Earth`, there is a chance (`erosionStrength`) it will "erode" the earth tile (incrementing its index by 1) before sliding.
     * **Sliding:** If the path directly below is blocked, it checks the bottom-left and bottom-right diagonals. A 75% bias is mathematically applied to correct for the left-to-right processing loop, ensuring a balanced, centered pile.
@@ -184,40 +338,43 @@ The Erosion button cycles through **Off → Original → Forward carving → Cha
 * **Channel carving:** The first 20% of palette indices are air, the middle 60% earth, and the last 20% water. These roles follow palette order, including custom sorting.
 * Water erodes at most one adjacent earth cell (below or beside it) per generation, reducing its palette index until it becomes air. It prefers downward movement, then diagonals, then sideways movement into air.
 * **Forward carving:** Shares channel-carving movement, but the first 20% of indices are earth and the middle 60% air. Earth erodes forward through palette indices until it becomes air. The final 20% remain water.
-* Each water cell moves at most once per generation. Water remains at the floor; no water is injected or removed. Gold cells remain protected. The mode is included in project saves and action-log rules.
+* Each water cell moves at most once per generation. Water remains at the floor; no water is injected or removed. Gold cells are protected in the channel modes; the legacy pass does not apply the same exclusion. The selected mode is included in project saves and action-log rules.
 
 ---
 
-### 5. Spiral & Vortex Physics
+### 5. Spiral and radial sorting
+
 **File:** `js/simulations/spiral.js`
 
-A complex physics engine that manipulates tiles using polar coordinates (angle and radius) rather than standard Cartesian (X/Y) movement.
+Most modes calculate a target using angle and distance from the center, then swap colors with suitable neighbors. A square grid still constrains local movement, so radial motion can appear polygonal. Some modes track moved cells; this is not a universal rule for every branch.
 
-* **Core Mathematics:**
-    * Calculates the tile's distance (`distToCenter`) and angle (`Math.atan2(dy, dx)`) from the exact center.
-    * Applies a rotational force (`spinStrength`) and a gravitational pull (`pullStrength`).
-    * Re-converts the new polar coordinates back into a Cartesian target `(targetR, targetC)`.
-* **Collision & Movement:**
-    * Instead of jumping directly, the tile evaluates its 8 immediate neighbors and swaps with the one that minimizes the squared distance (`neighborDistSq`) to the theoretical target.
-    * Employs a `movedThisFrame` tracking Set to lock pixels after they move, preventing "lightspeed" skipping across the board in a single frame.
-* **Modes (`spiralRules.method`):**
-    * `b` (Experiment B): A clean, fluid spiral with high `baseSpinStrength`, low pull, and 0% turbulence.
-    * `vortex`: Introduces sinusoidal turbulence (`Math.sin() * Math.cos()`) modulated by a global time phase to create chaotic, unpredictable eddies.
-    * `left` / `down`: Overrides the dynamic targets with fixed directional vectors to simulate black holes or side-drafts.
-    * `radial`: Pure, spinless inward gravity (`spinStrength = 0`).
-    * `a` (Experiment A): A unique time-boxed algorithm. It pre-calculates a perfect radial sorting array, then executes bubble-sort passes inward and outward. It terminates early if execution exceeds a `timeBudgetMs` (12ms) to guarantee frame rates.
+| Internal ID | English label | Behavior / exposure |
+| --- | --- | --- |
+| `b` | Pinwheel | Inward neighbor flow with a small angular offset; first button mode |
+| `left` | Turbine | Inward spinning flow with stronger angular variation; second button mode |
+| `black_hole` | Circle | Inward swaps plus comb-sort passes over exact Euclidean radial order; third button mode |
+| `radial` | Diamond | Inward targeting without spin; modal only |
+| `down` | Hexagon | Inward targeting with its own spin parameters; modal only |
+| `a` | Experiment A | Cached radial order with fixed-stride bidirectional passes; modal only |
+| `vortex` | Vortex | Turbulent angular/radial targeting; modal only |
 
----
+Circle caches geometry by board size and convergence progress by board reference. It preserves colors through swaps, can swap nonadjacent positions in its radial passes, and restarts convergence after edits or palette remapping. Its swaps include gold tiles. Experiment A's active branch is not the older commented-out time-budget implementation. Preserve these IDs when changing displayed names.
 
+### 6. Chi Flow
 
-### 6. Chi Flow (Sandpile Model)
-**File:** `js/simulations/chi_flow.js`
+**File:** `js/simulations/chi_flow.js` — internal evolution ID: `sandpile`.
 
-Based on the Abelian sandpile model, this simulation treats cell values as physical "energy" or "sand grains". It is highly dynamic and includes self-sustaining logic.
+Chi Flow is a color-index cellular automaton, rather than a classical Abelian sandpile with conserved grains:
 
-* **The Core Mechanism:** Iterates over the grid checking neighbors. When a cell's accumulated energy crosses a specific threshold (defined by the `awakening` rule array), it becomes unstable and "topples", distributing its energy to surrounding cells.
-* **Dynamic Reach (Radius):** The `reach` parameter determines the magnetic pull of the distribution. If the user sets it to `0` (Auto), the algorithm dynamically calculates the reach based on the palette size (`Math.max(2, Math.floor(numColors / 6))`).
-* **The Ignition System:** To prevent the simulation from dying out (reaching a static equilibrium), an internal `applyIgnition` mechanism monitors the board. If the active cell count drops below 150, it artificially injects random "sparks" of color in a 9x9 grid around existing active cells, simulating spontaneous combustion or localized energy surges.
+1. Count the eight neighbors with index greater than zero. Neighbor lookup wraps at board edges.
+2. For a cell at index zero, a matching `awakening` count changes it to index one.
+3. For an active cell, count neighbors ahead of it within `reach` in cyclic palette order. A matching `flow` count advances its index by one, wrapping at the palette length.
+
+`reach` is a distance in **palette indices**, not a spatial radius. Auto (`0`) uses `max(2, floor(numberOfColors / 6))`. The UI rule choices are 1–8.
+
+An ignition pass operates when the input has between one and 149 active cells. It injects random palette entries in bounded 9×9 areas around those cells. It is stochastic and does not independently ignite a completely empty board. This engine does not apply a general `isGold` exclusion.
+
+Default rules correspond to Harmony. Presets are centralized in `CHI_FLOW_PRESETS` in `constants.js`; the initial cycle is Yours → Ripples → Nova. The user can replace any of those positions without changing the engine ID.
 
 ---
 
@@ -226,7 +383,7 @@ Based on the Abelian sandpile model, this simulation treats cell values as physi
 
 A highly optimized implementation of the Gray-Scott Reaction-Diffusion equations, simulating biological and chemical pattern formation (like animal stripes or coral).
 
-* **Memory Architecture (Ping-Pong Buffers):** To maintain 60FPS with heavy floating-point math, it uses pre-allocated `Float32Array` buffers for chemical A and B concentrations. It swaps between current and `next` buffers, avoiding Garbage Collection spikes.
+* **Memory Architecture (Ping-Pong Buffers):** It uses pre-allocated `Float32Array` buffers for chemical A and B concentrations. It swaps current and `next` buffers to reduce allocation in the numerical loop; mapping chemicals back to board tiles still allocates.
 * **Laplacian Convolution:** Computes diffusion using a 3x3 kernel with precise mathematical weights: Center (-1.0), Adjacent (0.2), and Diagonal (0.05).
 * **Visual Mapping (Non-Linear):** Chemical float values aren't mapped linearly to the palette. 
     1. **Stretching:** The active chemical range `[0.05, 0.78]` is stretched to cover `[0.0, 1.0]` so no palette colors are lost.
@@ -237,16 +394,16 @@ A highly optimized implementation of the Gray-Scott Reaction-Diffusion equations
 ### 8. Magnetism
 **File:** `js/simulations/magnet.js`
 
-A complex spatial attraction engine optimized for mobile devices. It forces colors to flow toward or away from a defined `anchorColorIndex`.
+A spatial attraction engine using anchors around the selected palette entry. `anchorColorIndex = -1` resolves to index zero in the current ordering. The main cycle is Cosmic → Regular → Time; Expand remains selectable through settings.
 
-* **Extreme Optimizations (Zero Allocation):** This file deliberately trades modern syntactic sugar for raw speed:
+* **Buffer reuse and in-place updates:** This file deliberately trades modern syntactic sugar for raw speed:
     * Reuses a flat `Uint8Array` to track moved pixels instead of using `Set()`.
     * Uses classic variables for swapping (`temp = a; a = b; b = temp`) instead of array destructuring `[a,b] = [b,a]`.
-    * Replaces `Math.pow(x, 2)` with raw multiplication `(x * x)` inside hot loops to prevent CPU throttling.
+    * Uses multiplication for squared distances in hot loops. Anchor coordinate objects can still be allocated; do not describe the whole engine as zero allocation.
 * **Execution Modes:**
-    * `magnet`: Standard linear attraction towards the anchor.
-    * `cosmic_magnet`: Applies a stronger, non-linear gravity well effect.
-    * `time_magnet`: Uses the palette length (`% pLen`) to offset the attraction, creating visual ripples and phase-delayed waves.
+    * `magnet`: Organic attraction with alternative neighbor candidates.
+    * `cosmic_magnet`: Strict/geometric attraction toward the best candidate neighbor.
+    * `time_magnet`: Uses palette-relative modular ordering and alternative neighbor selection; its displayed name does not mean the code uses a wall-clock timer.
     * `expand`: Reverses the target logic, acting as a repulsive force radiating outward from the anchor.
 
 ---
@@ -254,46 +411,57 @@ A complex spatial attraction engine optimized for mobile devices. It forces colo
 ### 9. Gravitational Sort
 **File:** `js/simulations/gravitational_sort.js`
 
-Simulates density and weight, forcing darker colors to sink and lighter colors to rise based on specific geometric vectors.
+Spatially sorts current palette indices with direction-dependent comparisons. “Heavy” or “dark” describes palette order here, not an independently recomputed luminance.
 
-* **Zero-Allocation Sorting:** Operates entirely by mutating the `nextBoardState` in place, avoiding any new object creation during the bubble-sort-like passes.
+* **In-place sorting and caching:** Operates entirely by mutating the `nextBoardState` in place, avoiding board copies during the sorting passes. Radial cache construction allocates when needed; this is not a blanket zero-allocation claim for the entire application.
 * **Directional Vectors:**
     * `up` / `right`: Linear sorts using optimized, direction-specific `for` loops.
-    * `center_x`: Collapses the board horizontally toward the middle column.
-    * `radial`: Uses a pre-calculated, cached array (`cachedRadialOrder`) of indices sorted by their distance to the center, pulling "heavy" colors inward.
-    * `vortex`: Combines the radial pull with a rotational offset, creating a swirling drain effect.
+    * `center_x`: Pulls lower indices toward the center using four-neighbor distance checks.
+    * `vortex`: Uses cached radial order and bidirectional fixed-stride sorting; available through settings, outside the three-mode button cycle.
 
 ---
 
-### 10. Conway's Game of Life
+### 10. Game of Life
 **File:** `js/simulations/game_of_life.js`
 
-A specialized, artistic adaptation of the classic cellular automaton.
+An artistic adaptation of the classic cellular automaton. The default is Paint 4, not Conway's standard survival `[2, 3]` / birth `[3]`: Paint 4 uses survival 0–8 and birth 4–8. Presets are centralized in `GAME_OF_LIFE_PRESETS`; the initial cycle is Yours → Shuffle → Coral.
 
 * **Live Cell Definition:** Instead of a binary state, a cell is considered "alive" if its color index is strictly greater than 0 (`notDarkest`). Gold tiles are strictly immune.
 * **List-Based Rules:** Supports complex rulesets by checking if the live neighbor count is `.includes()` in the survival/birth arrays (e.g., survival: `[2, 3]`, birth: `[3]`).
+* **Boundaries:** Game of Life checks neighbors within the board; it does not wrap edges like Chi Flow.
 * **Color Genetics:** When a new cell is born, it doesn't just pick a random color. It calculates the *average RGB value* of its surrounding live "parent" cells and finds the closest matching color index in the active palette, creating beautiful gradients as the population evolves.
 
 ---
 
 ### 11. DLA (Diffusion-Limited Aggregation)
+
 **File:** `js/simulations/dla.js`
 
-Simulates fractal growth processes like lightning, crystal formation, or fungal branching using random walkers.
+Random walkers move until they touch an existing crystal, then add a colored cell. Initialization and respawning use available board positions, rather than always launching from edges. If necessary, initialization creates a center seed.
 
-* **The Walkers:** Spawns invisible "walkers" at random edge locations. These wander the board randomly until they touch the existing "crystal" structure.
-* **Crystal Sticking & Coloring:** When a walker touches the crystal, it locks in place. Its new color is derived sequentially from the crystal neighbor it touched (`(neighborColorIndex + 1) % pLen`), creating a time-mapped rainbow effect along the branches.
-* **Performance Tracking:** Maintains an `emptyIndices` array to efficiently spawn new walkers only in available spaces, rather than randomly guessing empty coordinates on a nearly full board.
+The button cycles Genetics → No genetics:
+
+- Genetics averages valid neighboring crystal colors, finds the nearest palette entry and retains a successful-color fallback.
+- No genetics derives the entry from crystal size modulo palette length.
+
+Both avoid index zero when creating crystal cells. `emptyIndices` supports respawning on crowded boards. Crystal sets and walker data are persistent simulation state, so a live mode change must not reinitialize them. The `fastMode` branch currently returns the state unchanged; do not assume it is an implemented faster variant.
+
+### 12. Nudge
+
+**Implementation:** `js/app.js` (`applyNudgeLogic`, `getNudgeTiming`, `applyNudgeTiming`).
+
+Nudge moves editable tile indices toward higher or lower entries of the current palette. Single step performs one shift; continuous playback uses the selected interval, default 100 ms. Zero selects a shift on each available frame, not an unbounded loop.
+
+Timing preferences are saved under `colorGridNudge`. Recorded timing uses `nudgeTimingVersion: 1`; legacy recordings without this metadata retain their original frame-counting behavior. Replay timing is separate from the saved user preference. Avoid interpreting old generation tags with the new interval semantics.
+
+---
+
+## 7. Additional systems and maintenance
 
 
+### Palette remapping
 
-
-## 7. 🔄 Additional Systems & Extension Guides
-
-
-### 🎨 Palette Re-mapping System
-
-The application features a unique re-mapping system. When a user changes the sorting method of a palette (e.g., from "Luminance" to "Reversed"):
+The application remaps palette indices to preserve visible colors. When a user changes the sorting method of a palette (e.g., from "Luminance" to "Reversed"):
 1.  `applySortMethod` is triggered.
 2.  The engine captures the exact Hex color of every tile on the board.
 3.  The underlying palette arrays in `C.PALETTES` are sorted.
@@ -301,60 +469,64 @@ The application features a unique re-mapping system. When a user changes the sor
 
 ---
 
-### 🖱️ Input & Interactions
+### Input and interactions
 Input is handled via a unified Pointer Event system supporting mouse and touch:
 * **`pointerState`**: Tracks dragging, source indices for copying, and timers.
-* **Brush Mode**: When `isBrushModeOn` is active, it paints colors. When inactive, it performs a "Drag & Copy" where a source tile's properties are spread across the path.
+* **Brush Mode**: `isBrushModeOn` selects painting; `isContinuousBrushOn` adds line completion between successive anchors. Copy mode tracks a dragged source and applies it at the destination. Gesture cancellation and suppressed compatibility clicks prevent duplicate actions.
 * **Symmetry**: All manual interactions automatically trigger the `getSymmetricIndices` helper to apply changes across the Vertical, Horizontal, Mandala, or Kaleidoscope axes.
 
 
+---
 
-
-----
-
-### 🎨 Styling & Animations (`styles.css`)
+### Styling and animations (`styles.css`)
 The app utilizes Tailwind CSS for utility classes, heavily customized with vanilla CSS in `styles.css`.
 * **CSS Variables:** Global theme colors like `--gold` (`#FFD700`), `--sim-color`, and `--bg-color` are defined in the `:root`.
 * **Glow Effects:** The `.glowing-border` and `.glowing-border-rainbow` classes use CSS `box-shadow` and `border-image` to create dynamic, breathing borders around the canvas based on the currently selected color.
-* **Custom Animations:** Keyframes like `fadeInText`, `fadeOutText`, and `spin` are explicitly defined for splash screens and loading states, ensuring smooth 60FPS UI transitions.
+* **Custom Animations:** Keyframes like `fadeInText`, `fadeOutText`, and `spin` are explicitly defined for splash screens and loading states, for interface transitions. Do not infer a fixed frame-rate guarantee from their presence.
 
 ---
 
+## 8. Art logger and macro replay
 
----
+### Recording and exports
 
-## 8. 📝 Art Logger & Macro Replay System
+`window.logArtEvent(eventName, details, forceLog)` appends session recipe events. A recipe begins with `INIT_STATE` containing board dimensions, palette, sorting, separators and compressed color indices. This compression is not a complete JSON project backup: it does not carry every tile field.
 
-The **Art Logger** and **Macro Engine** form a complete system to record and replay the technical "recipe" behind every creation. It allows for the exact reconstruction of specific visual states by documenting and executing every influential action taken during a session.
+Events carry timestamps, and generation-based actions include `[GEN:n]`. The logger records board strokes/diffs, palette and sorting changes, play, pause, single steps, live mode changes, Nudge timing and history metadata. Logging has some overhead and does not make the entire application allocation-free.
 
-### Part 1: The Logger (Recording)
-*   **Event-Driven Dispatcher:** The system utilizes a global `window.logArtEvent(eventName, details)` function. This ensures that logging is decoupled from the heavy `animationLoop` or `gameLoop`, preserving a constant **60FPS** with zero performance overhead.
-*   **Precise Timestamps:** Every action is recorded with a strict timestamp down to the millisecond (e.g., `[20:22:17.751]`). This allows the playback engine to calculate precise *Deltas* (time gaps) between actions.
-*   **State Serialization:** For complex simulation rules, the system captures a "Snapshot" of all active parameters (formatted as JSON) at the moment a simulation begins (`PLAY` command) or advances (`STEP FORWARD` command).
+`PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys.
 
-#### Tracked Metadata
-The logger generates a sequence containing:
-1.  **Palette & Color Management:** Transitions between palettes, color randomization, and inversion.
-2.  **Sorting Logic:** Real-time updates when the color sorting method is changed.
-3.  **Simulation Snapshots:** Full rule-set dumps captured upon execution.
-4.  **Runtime Interventions:** Logging manual pauses, manual steps forward, and parameter tweaks.
-5.  **Manual Brush Strokes:** Tracks direct user canvas interactions (drawing/painting) using a highly efficient "Stroke Diff" calculation recorded upon `onPointerUp`, preserving the exact sequential order of altered pixels.
+Save the journey through the save modal, using `exportArtRecipeLog()`. Current TXT filenames use `Intuition_Path_<palette>_<line-count>.txt`. Save/Play long presses no longer export or reset the logger. `resetArtRecipeLog()` clears the recipe and captures the current board as a new start; its UI requires confirmation.
 
+### Playback and history compatibility
 
-#### Interaction & Export
-*   **Trigger:** Hidden behind a **Long Press (1000ms)** on the Play/Pause button (`dom.btnPlayPauseLife`).
-*   **Output:** Generates a `.txt` file named `Art_Recipe_[ISO_Timestamp].txt`.
+`onProjectFileSelected` routes TXT to `parseMacroText` and JSON to board restoration. Loading a macro exposes a play overlay and optional initial-palette override.
 
-### Part 2: The Macro Engine (Playback)
-*   **Smart Routing:** The standard upload button (`projectFileInput`) acts as a smart router. If a `.json` file is loaded, it applies a static state. If a `.txt` file is loaded, it routes the file to the `parseMacroText` engine.
-*   **Timer Queue:** The parsed text is converted into an array of actionable objects. The `scheduleNextMacroStep` function uses native `setTimeout` to trigger the next event based on the exact recorded time *Deltas*.
-* **Smart Undo/Redo Engine (Two-Pass Parsing):** To ensure a flawless playback experience, the parser scans the file in two passes. It automatically identifies and annihilates `UNDO` and `REDO` command pairs, effectively erasing user drafting and hesitation. Only the final, committed actions are processed, providing a seamless and "perfect" visual replay without delays.
-*   **Rules Injection:** When the macro encounters a `PLAY` or `STEP FORWARD` command containing a rules JSON, it dynamically reconstructs the `simulationRules` objects (e.g., `gravitationalSortRules`, `dlaRules`) in the background via `applyMacroRules()` before execution, ensuring 100% accurate reproduction.
-* **Stroke Reconstruction:** When the engine encounters a `DRAW_STROKE` command, it bypasses the simulation logic and directly updates the `boardState` array using the recorded indices. [cite_start]It automatically resets the `isGold` flag for these tiles to ensure that manual drawing in a macro correctly overrides protected areas.
+- `parseHistoryMacro` handles `recipeVersion: 2`, using history action IDs/ranges to resolve Undo/Redo and restore the relevant settings.
+- `parseLegacyMacroText` retains support for older recipes, including their UI-event folding and history behavior.
+- `scheduleNextMacroStep` schedules time-based events; `gameLoop` consumes generation-based events when their target generation is reached.
+- `applyMacroRules` restores rules before execution. `executeMacroAction` restores live mode transitions and logs replayed events without duplicating the underlying callback logs.
 
+Game of Life and Chi Flow begin their macro-driven loop on an animation frame so the queue advances beyond PLAY before generation one. This preserves mode events recorded at that first generation. Ordinary manual Play remains immediate.
 
-### Part 3: Safety & Interruption (Kill Switches)
-To maintain stability while a macro is loaded or playing, strict interceptors are in place:
-*   **Pause/Resume:** The macro can be paused via the main Play/Pause button. Manual drawing is allowed *only* while the macro is paused.
-*   **Input Blocking:** Manual canvas interactions (`onPointerDown`) are strictly blocked while the macro is actively running to prevent state conflicts.
-*   **Critical Kill Switch:** If the user manually clicks any simulation button (e.g., Game of Life, Erosion) while a macro is loaded, the `isExecutingMacroCommand` flag recognizes the external interference and instantly terminates the macro queue (`stopMacro()`) to hand control back to the user.
+Macro playback must not persist recorded startup, cycle/Yours or Nudge choices into user preferences. Actual rules determine evolution behavior; preset names and source metadata support UI reconstruction. Old mode IDs, missing metadata and historical Off events must remain readable even though live cycles now skip Off.
+
+The player preserves recorded operations and generation targets, not a deterministic random seed. Stochastic engines can produce different pixels. Stroke replay explicitly clears gold flags on its changed tiles; it is not a complete restoration of every historical tile property.
+
+### Input and interruption
+
+Canvas painting is blocked while `isMacroPlaying` is true. Board clicks during playback can switch fullscreen presentation. Loading a macro pauses an existing evolution first.
+
+`armSimulation` can cancel a loaded macro when the user manually arms an evolution while paused. Playback sets `isExecutingMacroCommand` to bypass that kill switch and suppress duplicate logging. Do not assume every possible button interaction cancels a running macro; check the handler and its playback guards.
+
+### Maintenance checklist
+
+Development convention: use `work` for changes and `main` for merged releases.
+
+1. Keep internal IDs stable when renaming or redesigning controls. Chi Flow's ID is `sandpile`; spiral IDs such as `left` and `black_hole` retain compatibility despite their newer displayed names.
+2. Record actual rules and relevant generation targets for behavior changes. Add a replay handler as well as the recording event.
+3. Preserve separate user preferences and replay state; never persist a macro snapshot as a user preference.
+4. Verify paused Off, live wraparound, single step, modal cancellation, source identities and Yours preservation for cycle changes.
+5. Preserve tile/brush colors through sorting remaps and validate older JSON/TXT inputs.
+6. Run relevant Node tests and check the affected touch/mouse path in a browser. Measure large-board performance before changing in-place swaps or buffer reuse.
+7. Update both this guide and the [quick guide](README-QUICK.md) when changing an interaction or architectural contract. Update all four interface languages for user-facing text.
