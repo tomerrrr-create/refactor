@@ -1,3 +1,4 @@
+import { GAME_OF_LIFE_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
 import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
@@ -877,25 +878,7 @@ function populateHelpModal() {
 
 // 1. אובייקט עזר שמכיל את החוקים של כל פריסט
 
-const PRESET_RULES = {
-  'btnGolPresetHarmonic': { survival: [3, 4, 5], birth: [3] },
-  'btnGolPresetHive': { survival: [2, 3, 4, 5], birth: [4] },
-  'btnGolPresetLivingTexture': { survival: [3, 4, 6, 7, 8], birth: [3, 6, 7, 8] },
-  'btnGolPresetAmoeba': { survival: [1, 3, 5, 8], birth: [3, 5, 7] },
-  'btnGolPresetPaint': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [4, 5, 6, 7, 8] },
-  'btnGolPresetPaint2': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [1, 2, 3, 4, 5, 6, 7, 8] },
-
-  'btnGolPresetCoral': { survival: [4, 5, 6, 7, 8], birth: [3] },
-    'btnGolPresetMeditation': { survival: [1, 2, 3, 4, 5], birth: [3] },
-  'btnGolPresetJoelson': { survival: [2, 3, 4, 5], birth: [4, 5, 6, 7, 8] },
-  'btnGolPresetVibration': { survival: [5, 6, 7, 8], birth: [4, 5, 6, 7, 8] },
-'btnGolPresetCharlie': { survival: [2, 5, 8], birth: [3, 5, 7, 8] },
-  'btnGolPresetNaive': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [3] },
-  'btnGolPresetSpace': { survival: [2, 3, 5, 6, 7, 8], birth: [3, 6, 7, 8] },
-  'btnGolPresetContinuum': { survival: [0, 1, 2, 3, 4, 5, 6, 7], birth: [4, 5, 6, 7] },
-  'btnGolPresetShuffle': { survival: [0, 1, 2, 4, 6, 7, 8], birth: [3, 5] }
-
-};
+const PRESET_RULES = GAME_OF_LIFE_PRESETS;
 
 // 2. הפונקציה החדשה שבודקת ומעדכנת את כפתורי הפריסט
 function updateActivePresetButton() {

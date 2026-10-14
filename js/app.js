@@ -235,7 +235,9 @@ tile.v = tile.k;
 
 
       
-      let gameOfLifeRules = { ...C.defaultGameOfLifeRules };
+      let gameOfLifeRules = cloneGameOfLifeRules(C.defaultGameOfLifeRules);
+      let personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeRules);
+      let gameOfLifeMode = 'personal';
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
@@ -1154,7 +1156,7 @@ break;
         
         // --- תוספת: תיעוד מורחב ב-Art Logger כולל מצב וחוקים ---
         let simDetails = "No specific rules mapping";
-        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(gameOfLifeRules);
+        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(erosionRules);
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
@@ -1288,7 +1290,7 @@ function pauseLife() {
 
         // --- Art Logger: Snapshoting Simulation State ---
         let simDetails = "No specific rules mapping";
-        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(gameOfLifeRules);
+        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(erosionRules);
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
@@ -1501,6 +1503,10 @@ if (!isTogglingOff && simulationName !== null) {
 
 
         // הגדרת דיפולט (ברירת מחדל) לכפתורים מחזוריים כשהם נדלקים
+        if (simulationName === 'gameOfLife') {
+            gameOfLifeMode = 'personal';
+            gameOfLifeRules = cloneGameOfLifeRules(personalGameOfLifeRules);
+        }
         if (simulationName === 'brightnessEvo') {
             brightnessEvoMode = 'brightness';
         }
@@ -1558,6 +1564,7 @@ if (simulationName === 'magnet') {
         }
     
     }
+    updateGameOfLifeButtonUI();
 }
 
       
@@ -1954,7 +1961,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnSave.title = getText('tooltip_save');
         dom.btnShowBreatheMenu.title = getText('tooltip_breathe'); 
         dom.btnTutorial.title = getText('tooltip_tutorial');
-        dom.btnGameOfLife.title = getText('tooltip_gameOfLife'); 
+        updateGameOfLifeButtonUI();
         dom.btnBrightnessEvo.title = getText('tooltip_brightnessEvo');
         dom.btnGravitationalSort.title = getText('tooltip_gravitationalSort'); 
         updateErosionButtonUI();
@@ -2525,6 +2532,62 @@ function updateBrightnessEvoButtonUI() {
 }
 
 
+// Game of Life keeps the personal rules separate from its two preset shortcuts.
+function cloneGameOfLifeRules(rules) {
+    return { survival: [...rules.survival], birth: [...rules.birth] };
+}
+
+function getGameOfLifeRecordingRules() {
+    return { ...cloneGameOfLifeRules(gameOfLifeRules), cycleMode: gameOfLifeMode,
+        personalRules: cloneGameOfLifeRules(personalGameOfLifeRules) };
+}
+
+function updateGameOfLifeButtonUI() {
+    const active = armedSimulation === 'gameOfLife';
+    dom.btnGameOfLife.classList.toggle('simulation-active', active);
+    const stars = active && gameOfLifeMode !== 'personal' ? (gameOfLifeMode === 'coral' ? 1 : 2) : 0;
+    dom.btnGameOfLife.querySelectorAll('[data-gol-star]').forEach((star, index) => {
+        star.style.display = index < stars ? '' : 'none';
+    });
+    const name = gameOfLifeMode === 'personal' ? getText('gol_mode_personal') : gameOfLifeMode === 'coral' ? 'Coral' : 'Shuffle';
+    dom.btnGameOfLife.title = getText('tooltip_gameOfLife') + (active ? ': ' + name : '');
+    dom.btnGameOfLife.setAttribute('aria-label', dom.btnGameOfLife.title);
+}
+
+function setPersonalGameOfLifeRules(rules) {
+    personalGameOfLifeRules = cloneGameOfLifeRules(rules);
+    gameOfLifeRules = cloneGameOfLifeRules(rules);
+    gameOfLifeMode = 'personal';
+    updateGameOfLifeButtonUI();
+    window.logArtEvent('Game of Life Mode Changed', JSON.stringify({
+        ...getGameOfLifeRecordingRules(), mode: armedSimulation === 'gameOfLife' ? 'personal' : 'off'
+    }));
+}
+
+function restoreGameOfLifeRules(snapshot) {
+    gameOfLifeRules = cloneGameOfLifeRules(snapshot);
+    gameOfLifeMode = ['coral', 'shuffle'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
+    personalGameOfLifeRules = cloneGameOfLifeRules(snapshot.personalRules || snapshot);
+    updateGameOfLifeButtonUI();
+}
+
+function cycleGameOfLifeMode() {
+    if (isLifePlaying && armedSimulation !== 'gameOfLife') return;
+    const current = armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off';
+    const next = nextEvolutionMode(current, ['off', 'personal', 'coral', 'shuffle']);
+    if (next === 'off') {
+        armSimulation(null);
+    } else {
+        if (current === 'off') armSimulation('gameOfLife');
+        gameOfLifeMode = next;
+        const preset = next === 'coral' ? C.GAME_OF_LIFE_PRESETS.btnGolPresetCoral
+            : next === 'shuffle' ? C.GAME_OF_LIFE_PRESETS.btnGolPresetShuffle : personalGameOfLifeRules;
+        gameOfLifeRules = cloneGameOfLifeRules(preset);
+    }
+    updateGameOfLifeButtonUI();
+    window.logArtEvent('Game of Life Mode Changed', JSON.stringify({ ...getGameOfLifeRecordingRules(), mode: next }));
+}
+
 // Running evolutions cycle through active modes; paused cycles retain Off.
 function nextEvolutionMode(current, sequence) {
     let index = (sequence.indexOf(current) + 1) % sequence.length;
@@ -3077,13 +3140,13 @@ function parseLegacyMacroText(text) {
     const uiEvents = [
         'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed'
     ];
 
     // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
     const simulationEvents = [
         'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed'
     ];
 
 
@@ -3395,7 +3458,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 if (typeof updateBreatheEvoButtonUI === 'function') updateBreatheEvoButtonUI();
             } else {
                 const parsedRules = JSON.parse(rulesStr);
-                if (sim === 'gameOfLife') Object.assign(gameOfLifeRules, parsedRules);
+                if (sim === 'gameOfLife') restoreGameOfLifeRules(parsedRules);
                 else if (sim === 'gravitationalSort') {
                     Object.assign(gravitationalSortRules, parsedRules);
                     gsMode = parsedRules.direction || gsMode;
@@ -3556,6 +3619,15 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'GRID_RESIZE') {
         _performResize(parseInt(action.details, 10));
+    }
+    else if (action.eventName === 'Game of Life Mode Changed') {
+        const snapshot = JSON.parse(action.details);
+        if (snapshot.mode === 'off') {
+            if (armedSimulation === 'gameOfLife') armSimulation(null);
+        } else if (armedSimulation !== 'gameOfLife') {
+            armSimulation('gameOfLife');
+        }
+        restoreGameOfLifeRules(snapshot);
     }
     else if (action.eventName === 'Erosion Mode Changed') {
         if (action.details === 'off') {
@@ -3774,7 +3846,7 @@ else if (action.eventName === 'Invert Colors') {
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
             switchToPalette,
-            getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: (r) => { gameOfLifeRules = r; },
+            getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
             getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; },
 syncGsModeFromModal: (direction) => {
                 if (armedSimulation !== 'gravitationalSort') {
@@ -3947,7 +4019,7 @@ bindPickerGestures(dom.btnColorPicker, {
         // A swipe opens settings only for the selected, paused evolution.
         // Tap actions stay independent of that restriction.
         const evolutionPickers = [
-            [dom.btnGameOfLife, 'gameOfLife', () => armSimulation('gameOfLife'), modals.openGolSettingsModal],
+            [dom.btnGameOfLife, 'gameOfLife', cycleGameOfLifeMode, modals.openGolSettingsModal],
             [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
             [dom.btnContour, 'contour', () => armSimulation('contour'), modals.openContourSettingsModal],
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
