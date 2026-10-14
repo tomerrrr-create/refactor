@@ -20,6 +20,7 @@ function harness(index = 2) {
         boardState: [{ k: 263, v: 263, isGold: false }, { k: 263, v: 263, isGold: true }],
         performance: { now: () => 0 }, dom: {}, modals: {},
         resetSelectedColor() {}, updatePaletteHeader() {}, renderToScreen() {}, hideLongPressDisplay() {},
+        showPaletteGroupTransition() {},
         areStatesEqual: (a, b) => JSON.stringify(a) === JSON.stringify(b)
     });
     h.getCurrentState = () => ({ activePaletteIndex: h.activePaletteIndex, tiles: plain(h.boardState) });

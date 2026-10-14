@@ -2,6 +2,7 @@
 
 import { loadEvolutionCycle, persistEvolutionCycle, normalizeEvolutionCycle, normalizeCycleSources, loadCycleIdentity } from './evolution-cycle-settings.js';
 import { bindPickerGestures } from './picker-gestures.js';
+import { showPaletteGroupTransition } from './palette-group-transition.js';
 import { SORT_MODES, normalizeSortMethod, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
 import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailableLangs, translations, onLanguageChange } from './i18n.js';
 import * as C from './constants.js';
@@ -1001,9 +1002,13 @@ function handlePaletteSwitch(backwards = false) {
         if (isAnimating) return;
         const nextIndex = getNextPaletteGroupIndex(activePaletteIndex);
         if (nextIndex === activePaletteIndex) return;
+        const fromCount = paletteLen();
         // Keep palette change and index adaptation as separate undoable actions.
         switchToPalette(nextIndex);
         adaptColors();
+        if (activePaletteIndex === nextIndex) {
+            showPaletteGroupTransition(dom.board, fromCount, paletteLen());
+        }
       }
       
       function _performResize(newSize) {
