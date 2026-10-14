@@ -387,7 +387,7 @@
       <button id="btnModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
-      <img id="imagePreview" class="rounded-md mb-4 border-2 border-gray-600 max-w-full h-auto" src="" alt="Image Preview">
+      <img id="imagePreview" class="rounded-md mb-4 border-2 border-gray-600 max-w-full h-auto" src="" alt="Image Preview" data-i18n-alt="save_image_preview">
       <div class="mb-6 text-right">
         <label id="fileNameLabel" for="fileNameInput" class="block text-sm font-medium text-gray-300 mb-1"></label>
         <input type="text" id="fileNameInput" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
@@ -628,12 +628,12 @@
 
 <div id="gameOfLifeSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
     <div class="relative retro-evolution-panel bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
-      <h2 id="golSettingsTitle" class="text-xl font-bold text-center text-gray-200">Game of Life Rules</h2>
+      <h2 id="golSettingsTitle" class="text-xl font-bold text-center text-gray-200" data-debug-text="gol_modal_title">Game of Life Rules</h2>
       <div id="golCycleToolbar" class="preset-cycle-toolbar"></div>
       
       <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300">Survival Rules</h3>
-        <p class="text-sm text-gray-400">A live cell survives if it has:</p>
+        <h3 class="font-semibold text-gray-300" data-debug-text="gol_survival_label">Survival Rules</h3>
+        <p class="text-sm text-gray-400" data-debug-text="gol_survival_desc">A live cell survives if it has:</p>
         <div id="golSurvivalChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button class="gol-chip-btn" data-number="0">0</button>
           <button class="gol-chip-btn" data-number="1">1</button>
@@ -648,8 +648,8 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300">Birth Rules</h3>
-        <p class="text-sm text-gray-400">A dead cell is born if it has:</p>
+        <h3 class="font-semibold text-gray-300" data-debug-text="gol_birth_label">Birth Rules</h3>
+        <p class="text-sm text-gray-400" data-debug-text="gol_birth_desc">A dead cell is born if it has:</p>
         <div id="golBirthChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button class="gol-chip-btn" data-number="0">0</button>
           <button class="gol-chip-btn" data-number="1">1</button>
@@ -663,34 +663,34 @@
         </div>
       </div>
       <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300">Presets</h3>
+        <h3 class="font-semibold text-gray-300" data-debug-text="evolution_presets">Presets</h3>
 <div class="grid grid-flow-col grid-rows-5 gap-2">
-                <button id="btnGolPresetPaint" class="gol-preset-btn">Paint 4</button>
-                <button id="btnGolPresetPaint2" class="gol-preset-btn">Paint 1</button>
-                <button id="btnGolPresetShuffle" class="gol-preset-btn">Shuffle</button>
-                <button id="btnGolPresetHarmonic" class="gol-preset-btn">Harmonic</button>
-                <button id="btnGolPresetNaive" class="gol-preset-btn">Naive</button>
+                <button id="btnGolPresetPaint" data-debug-text="gol_preset_paint" class="gol-preset-btn">Paint 4</button>
+                <button id="btnGolPresetPaint2" data-debug-text="gol_preset_paint2" class="gol-preset-btn">Paint 1</button>
+                <button id="btnGolPresetShuffle" data-debug-text="gol_preset_shuffle" class="gol-preset-btn">Shuffle</button>
+                <button id="btnGolPresetHarmonic" data-debug-text="gol_preset_harmonic" class="gol-preset-btn">Harmonic</button>
+                <button id="btnGolPresetNaive" data-debug-text="gol_preset_naive" class="gol-preset-btn">Naive</button>
 
-                <button id="btnGolPresetCoral" class="gol-preset-btn">Coral</button>
-                <button id="btnGolPresetSpace" class="gol-preset-btn">Space</button>
-                <button id="btnGolPresetAmoeba" class="gol-preset-btn">Amoeba</button>
-                <button id="btnGolPresetHive" class="gol-preset-btn">Hive</button>           
-                <button id="btnGolPresetLivingTexture" class="gol-preset-btn">Alive</button>
+                <button id="btnGolPresetCoral" data-debug-text="gol_preset_coral" class="gol-preset-btn">Coral</button>
+                <button id="btnGolPresetSpace" data-debug-text="gol_preset_space" class="gol-preset-btn">Space</button>
+                <button id="btnGolPresetAmoeba" data-debug-text="gol_preset_amoeba" class="gol-preset-btn">Amoeba</button>
+                <button id="btnGolPresetHive" data-debug-text="gol_preset_hive" class="gol-preset-btn">Hive</button>
+                <button id="btnGolPresetLivingTexture" data-debug-text="gol_preset_livingtexture" class="gol-preset-btn">Alive</button>
 
-                <button id="btnGolPresetJoelson" class="gol-preset-btn">Joel</button>
-                <button id="btnGolPresetCharlie" class="gol-preset-btn">Charlie</button>
-                <button id="btnGolPresetMeditation" class="gol-preset-btn">Meditate</button>
+                <button id="btnGolPresetJoelson" data-debug-text="gol_preset_joelson" class="gol-preset-btn">Joel</button>
+                <button id="btnGolPresetCharlie" data-debug-text="gol_preset_charlie" class="gol-preset-btn">Charlie</button>
+                <button id="btnGolPresetMeditation" data-debug-text="gol_preset_meditation" class="gol-preset-btn">Meditate</button>
                 <button id="btnGolPresetContinuum" class="gol-preset-btn" data-debug-text="gol_preset_continuum">Continuum</button>
-                <button id="btnGolPresetVibration" class="gol-preset-btn">Vibrate</button>
+                <button id="btnGolPresetVibration" data-debug-text="gol_preset_vibration" class="gol-preset-btn">Vibrate</button>
 
 
         </div>
       </div>
       <div class="flex justify-between items-center mt-4 border-t border-gray-700 pt-4">
-        <button id="btnGolSettingsReset" class="text-gray-400 hover:text-white text-sm">Reset to Default</button>
+        <button id="btnGolSettingsReset" class="text-gray-400 hover:text-white text-sm" data-debug-text="evolution_reset_default">Reset to Default</button>
         <div class="flex gap-4">
-          <button id="btnGolSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
-          <button id="btnGolSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">Save & Close</button>
+          <button id="btnGolSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_cancel">Cancel</button>
+          <button id="btnGolSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);" data-debug-text="evolution_save_close">Save & Close</button>
         </div>
       </div>
     </div>
@@ -700,10 +700,10 @@
 
 <div id="spiralSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
   <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
-    <h2 id="spiralSettingsTitle" class="text-xl font-bold text-center text-gray-200">הגדרות ספירלה</h2>
+    <h2 id="spiralSettingsTitle" class="text-xl font-bold text-center text-gray-200" data-debug-text="spiral_modal_title">הגדרות ספירלה</h2>
     
 <div class="flex flex-col gap-2">
-<h3 id="spiralMethodLabel" class="font-semibold text-gray-300 text-center">שיטת סיבוב</h3>
+<h3 id="spiralMethodLabel" class="font-semibold text-gray-300 text-center" data-debug-text="spiral_method_label">שיטת סיבוב</h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
           
           <button class="spiral-method-btn gol-preset-btn active flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="b">
@@ -722,7 +722,7 @@
                   <path d="M 12 15 C 9 15 7 13 6 10" stroke-width="0.8"></path>
                   <path d="M 9 12 C 9 9 11 7 14 6" stroke-width="0.8"></path>
               </svg>
-              <span class="text-xs">מערבולת</span>
+              <span class="text-xs" data-debug-text="spiral_vortex">מערבולת</span>
           </button>
 
           <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="radial">
@@ -765,7 +765,7 @@
                   <circle cx="12" cy="12" r="8" stroke-width="0.4"></circle>
                   <circle cx="12" cy="12" r="11" stroke-width="0.4"></circle>
               </svg>
-              <span class="text-xs">ניסוי A</span>
+              <span class="text-xs" data-debug-text="spiral_a">ניסוי A</span>
           </button>
 
         </div>
@@ -776,8 +776,8 @@
 
     <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
       <div class="flex gap-4">
-        <button id="btnSpiralSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">ביטול</button>
-        <button id="btnSpiralSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">שמור וסגור</button>
+        <button id="btnSpiralSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_cancel">ביטול</button>
+        <button id="btnSpiralSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);" data-debug-text="evolution_save_close">שמור וסגור</button>
       </div>
     </div>
   </div>
@@ -791,32 +791,32 @@
       
 
 <div class="flex flex-col gap-2">
-<h3 class="font-semibold text-gray-300 text-center">כיוון המיון</h3>
+<h3 class="font-semibold text-gray-300 text-center" data-debug-text="gs_modal_direction">כיוון המיון</h3>
 
         <div class="flex items-center justify-center gap-4">
 
-            <button class="gs-direction-btn active" data-direction="up" title="למעלה">
+            <button class="gs-direction-btn active" data-direction="up" data-i18n-title="gs_direction_up" title="למעלה">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="12,19 12,5"/>
                     <polyline points="5,12 12,5 19,12"/>
                 </svg>
             </button>
 
-            <button class="gs-direction-btn" data-direction="right" title="ימינה">
+            <button class="gs-direction-btn" data-direction="right" data-i18n-title="gs_direction_right" title="ימינה">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="5,12 19,12"/>
                     <polyline points="12,5 19,12 12,19"/>
                 </svg>
             </button>
             
-            <button class="gs-direction-btn" data-direction="center_x" title="מרכז">
+            <button class="gs-direction-btn" data-direction="center_x" data-i18n-title="gs_direction_center_x" title="מרכז">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="4" y1="4" x2="20" y2="20"/>
                     <line x1="4" y1="20" x2="20" y2="4"/>
                 </svg>
             </button>
 
-            <button class="gs-direction-btn" data-direction="vortex" title="מערבולת">
+            <button class="gs-direction-btn" data-direction="vortex" data-i18n-title="gs_direction_vortex" title="מערבולת">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="8"/>
                     <circle cx="12" cy="12" r="4"/>
@@ -829,8 +829,8 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300 text-center">עוצמת המיון</h3>
-        <p class="text-sm text-gray-400 text-center">סיכוי של כל תא "ליפול" בכל צעד</p>
+        <h3 class="font-semibold text-gray-300 text-center" data-debug-text="gs_modal_strength">עוצמת המיון</h3>
+        <p class="text-sm text-gray-400 text-center" data-debug-text="gs_modal_strength_desc">סיכוי של כל תא "ליפול" בכל צעד</p>
         <div class="flex items-center justify-center gap-4">
             <input type="range" id="gsStrength" min="1" max="100" value="100" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
             <span id="gsStrengthValue" class="text-gray-300 font-mono w-12 text-center">100%</span>
@@ -910,57 +910,57 @@
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
     
-    <h2 id="chiFlowModalTitle" class="text-xl font-bold text-center text-gray-200">Chi Flow Settings</h2>
+    <h2 id="chiFlowModalTitle" data-debug-text="chi_modal_title" class="text-xl font-bold text-center text-gray-200">Chi Flow Settings</h2>
       <div id="chiCycleToolbar" class="preset-cycle-toolbar"></div>
 
     <div class="flex flex-col gap-2">
-      <h3 id="chiAwakeningLabel" class="font-semibold text-gray-300">Awakening Rules</h3>
-      <p id="chiAwakeningDesc" class="text-sm text-gray-400"></p>
+      <h3 id="chiAwakeningLabel" data-debug-text="chi_awakening_label" class="font-semibold text-gray-300">Awakening Rules</h3>
+      <p id="chiAwakeningDesc" data-debug-text="chi_awakening_desc" class="text-sm text-gray-400"></p>
       <div id="chiAwakeningChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <h3 id="chiFlowLabel" class="font-semibold text-gray-300">Flow Rules</h3>
-      <p id="chiFlowDesc" class="text-sm text-gray-400"></p>
+      <h3 id="chiFlowLabel" data-debug-text="chi_flow_label" class="font-semibold text-gray-300">Flow Rules</h3>
+      <p id="chiFlowDesc" data-debug-text="chi_flow_desc" class="text-sm text-gray-400"></p>
       <div id="chiFlowChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
       <div class="flex justify-between items-end">
-        <h3 id="chiReachLabel" class="font-semibold text-gray-300">Magnetic Reach</h3>
+        <h3 id="chiReachLabel" data-debug-text="chi_reach_label" class="font-semibold text-gray-300">Magnetic Reach</h3>
         <span id="chiReachValue" class="text-gray-300 font-mono text-sm bg-gray-700 px-2 py-0.5 rounded">Auto</span>
       </div>
       <p id="chiReachDesc" class="text-sm text-gray-400"></p>
       <input type="range" id="chiReachSlider" min="0" max="7" step="1" value="2" aria-labelledby="chiReachLabel" aria-describedby="chiReachDesc" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-2">
-      <div class="relative h-4 text-xs text-gray-400" aria-hidden="true"><span class="absolute left-0">50%</span><span class="absolute" style="left:28.571%;transform:translateX(-50%)">Auto · 100%</span><span class="absolute right-0">400%</span></div>
+      <div class="relative h-4 text-xs text-gray-400" aria-hidden="true"><span class="absolute left-0">50%</span><span class="absolute" id="chiReachAutoTick" style="left:28.571%;transform:translateX(-50%)">Auto · 100%</span><span class="absolute right-0">400%</span></div>
     </div>
 
 
 <div class="flex flex-col gap-2">
-      <h3 class="font-semibold text-gray-300">Presets</h3>
+      <h3 class="font-semibold text-gray-300" data-debug-text="evolution_presets">Presets</h3>
       <div class="grid grid-flow-col grid-rows-5 gap-2">
-        <button id="btnChiPresetNova" class="gol-preset-btn">Nova</button>
-        <button id="btnChiPresetHarmony" class="gol-preset-btn">Harmony</button>
-        <button id="btnChiPresetTopography" class="gol-preset-btn">Topography</button>
-        <button id="btnChiPresetFluent" class="gol-preset-btn">Fluent</button>
-        <button id="btnChiPresetElectric" class="gol-preset-btn">Electric</button>
-        <button id="btnChiPresetRipples" class="gol-preset-btn">Ripples</button>
-        <button id="btnChiPresetCrystals" class="gol-preset-btn">Crystals</button>
-        <button id="btnChiPresetWildfire" class="gol-preset-btn">Wildfire</button>
-        <button id="btnChiPresetAlexis" class="gol-preset-btn">Alexis</button>
-        <button id="btnChiPresetZen" class="gol-preset-btn">Zen</button>
+        <button id="btnChiPresetNova" data-debug-text="chi_preset_nova" class="gol-preset-btn">Nova</button>
+        <button id="btnChiPresetHarmony" data-debug-text="chi_preset_harmony" class="gol-preset-btn">Harmony</button>
+        <button id="btnChiPresetTopography" data-debug-text="chi_preset_topography" class="gol-preset-btn">Topography</button>
+        <button id="btnChiPresetFluent" data-debug-text="chi_preset_fluent" class="gol-preset-btn">Fluent</button>
+        <button id="btnChiPresetElectric" data-debug-text="chi_preset_electric" class="gol-preset-btn">Electric</button>
+        <button id="btnChiPresetRipples" data-debug-text="chi_preset_ripples" class="gol-preset-btn">Ripples</button>
+        <button id="btnChiPresetCrystals" data-debug-text="chi_preset_crystals" class="gol-preset-btn">Crystals</button>
+        <button id="btnChiPresetWildfire" data-debug-text="chi_preset_wildfire" class="gol-preset-btn">Wildfire</button>
+        <button id="btnChiPresetAlexis" data-debug-text="chi_preset_alexis" class="gol-preset-btn">Alexis</button>
+        <button id="btnChiPresetZen" data-debug-text="chi_preset_zen" class="gol-preset-btn">Zen</button>
 
       </div>
     </div>
 
 
     <div class="flex justify-between items-center mt-4 border-t border-gray-700 pt-4">
-      <button id="btnChiSettingsReset" class="text-gray-400 hover:text-white text-sm">Reset</button>
+      <button id="btnChiSettingsReset" class="text-gray-400 hover:text-white text-sm" data-debug-text="evolution_reset">Reset</button>
       <div class="flex gap-4">
-        <button id="btnChiSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
-        <button id="btnChiSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">Save & Close</button>
+        <button id="btnChiSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_cancel">Cancel</button>
+        <button id="btnChiSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);" data-debug-text="evolution_save_close">Save & Close</button>
       </div>
     </div>
     
@@ -972,19 +972,19 @@
     <button id="turingModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
-    <h2 id="turingModalTitle" class="text-xl font-bold text-center text-gray-200">Turing Patterns</h2>
+    <h2 id="turingModalTitle" class="text-xl font-bold text-center text-gray-200" data-debug-text="turing_modal_title">Turing Patterns</h2>
     
     <div class="flex flex-col gap-2 mt-2">
-      <h3 class="font-semibold text-gray-300 text-center">Presets (צורות)</h3>
+      <h3 class="font-semibold text-gray-300 text-center" data-debug-text="evolution_presets">Presets (צורות)</h3>
 <div class="grid grid-cols-2 gap-3 mt-2">
-        <button id="btnTuringPresetCoral" class="gol-preset-btn">Coral</button>
-        <button id="btnTuringPresetMaze" class="gol-preset-btn">Maze</button>
-        <button id="btnTuringPresetSpots" class="gol-preset-btn">Spots</button>
-        <button id="btnTuringPresetCells" class="gol-preset-btn">Cells</button>
-        <button id="btnTuringPresetBoiling" class="gol-preset-btn">Boiling</button>
-        <button id="btnTuringPresetUSkate" class="gol-preset-btn">U-Skate</button>
-        <button id="btnTuringPresetChaos" class="gol-preset-btn">Chaos</button>
-        <button id="btnTuringPresetWaves" class="gol-preset-btn">Waves</button>
+        <button id="btnTuringPresetCoral" data-debug-text="turing_preset_coral" class="gol-preset-btn">Coral</button>
+        <button id="btnTuringPresetMaze" data-debug-text="turing_preset_maze" class="gol-preset-btn">Maze</button>
+        <button id="btnTuringPresetSpots" data-debug-text="turing_preset_spots" class="gol-preset-btn">Spots</button>
+        <button id="btnTuringPresetCells" data-debug-text="turing_preset_cells" class="gol-preset-btn">Cells</button>
+        <button id="btnTuringPresetBoiling" data-debug-text="turing_preset_boiling" class="gol-preset-btn">Boiling</button>
+        <button id="btnTuringPresetUSkate" data-debug-text="turing_preset_uskate" class="gol-preset-btn">U-Skate</button>
+        <button id="btnTuringPresetChaos" data-debug-text="turing_preset_chaos" class="gol-preset-btn">Chaos</button>
+        <button id="btnTuringPresetWaves" data-debug-text="turing_preset_waves" class="gol-preset-btn">Waves</button>
       </div>
     </div>
 
@@ -992,11 +992,11 @@
 
 
 <div class="flex flex-col gap-4 mt-6 border-t border-gray-700 pt-4">
-  <h3 class="font-semibold text-gray-300 text-center">כיוונון עדין (Advanced)</h3>
+  <h3 class="font-semibold text-gray-300 text-center" data-debug-text="turing_advanced">כיוונון עדין (Advanced)</h3>
   
   <div class="flex flex-col gap-1">
     <div class="flex justify-between text-sm text-gray-400">
-      <span>Feed (הזנה)</span>
+      <span data-debug-text="turing_feed">Feed (הזנה)</span>
       <span id="turingFeedValue" class="font-mono" style="color: var(--gold);">0.034</span>
     </div>
     <input type="range" id="turingFeedSlider" min="0.010" max="0.100" step="0.001" value="0.034" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
@@ -1004,7 +1004,7 @@
 
   <div class="flex flex-col gap-1">
     <div class="flex justify-between text-sm text-gray-400">
-      <span>Kill (תמותה)</span>
+      <span data-debug-text="turing_kill">Kill (תמותה)</span>
       <span id="turingKillValue" class="font-mono" style="color: var(--gold);">0.056</span>
     </div>
     <input type="range" id="turingKillSlider" min="0.010" max="0.070" step="0.001" value="0.056" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
@@ -1016,8 +1016,8 @@
 
     <div class="flex justify-end items-center mt-6 border-t border-gray-700 pt-4">
       <div class="flex gap-4">
-        <button id="btnTuringSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
-        <button id="btnTuringSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">Save & Close</button>
+        <button id="btnTuringSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_cancel">Cancel</button>
+        <button id="btnTuringSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);" data-debug-text="evolution_save_close">Save & Close</button>
       </div>
     </div>
   </div>
@@ -1031,22 +1031,22 @@
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
     
-    <h2 id="magnetSettingsTitle" class="text-xl font-bold text-center text-gray-200">הגדרות מגנט</h2>
+    <h2 id="magnetSettingsTitle" class="text-xl font-bold text-center text-gray-200" data-debug-text="magnet_modal_title">הגדרות מגנט</h2>
 
     <div class="flex flex-col gap-2">
-      <h3 id="magnetModeLabel" class="font-semibold text-gray-300 text-center">סוג המגנט</h3>
+      <h3 id="magnetModeLabel" class="font-semibold text-gray-300 text-center" data-debug-text="magnet_mode_label">סוג המגנט</h3>
       <div class="grid grid-cols-4 gap-2" id="magnetMethodContainer"></div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <h3 id="magnetAnchorLabel" class="font-semibold text-gray-300 text-center">צבע Anchor</h3>
+      <h3 id="magnetAnchorLabel" class="font-semibold text-gray-300 text-center" data-debug-text="magnet_anchor_label">צבע Anchor</h3>
       <div id="magnetAnchorSwatches" class="flex flex-wrap gap-2 justify-center max-h-64 overflow-auto p-2 border border-gray-700 rounded-xl"></div>
     </div>
 
     <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
       <div class="flex gap-4">
-        <button id="btnMagnetSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">ביטול</button>
-        <button id="btnMagnetSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">שמור וסגור</button>
+        <button id="btnMagnetSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_cancel">ביטול</button>
+        <button id="btnMagnetSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);" data-debug-text="evolution_save_close">שמור וסגור</button>
       </div>
     </div>
   </div>

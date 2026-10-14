@@ -179,19 +179,32 @@ function setChiReachDraft(rules) {
 function updateChiReachDisplay() {
     const paletteSize = app.C.PALETTES[app.getActivePaletteIndex()].colors.length;
     const percent = tempChiReachPercent;
-    const label = percent !== null ? (percent === 100 ? 'Auto · 100%' : `${percent}%`) :
+    const auto = app.getText('chi_reach_auto');
+    const label = percent !== null ? (percent === 100 ? `${auto} · 100%` : `${percent}%`) :
         tempChiReachOffset === null ? `${app.getText('chi_reach_fixed')}: ${tempChiReach}` :
-        tempChiReachOffset === 0 ? 'Auto' : `Auto ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
+        tempChiReachOffset === 0 ? auto : `${auto} ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
     // Old fixed/offset settings remain untouched until the user moves the slider.
     const displayedPercent = percent ?? resolveChiReach(readChiCycleRules(), paletteSize) / getAutoChiReach(paletteSize) * 100;
     const nearest = CHI_REACH_PERCENTAGES.reduce((best, value, index) =>
         Math.abs(value - displayedPercent) < Math.abs(CHI_REACH_PERCENTAGES[best] - displayedPercent) ? index : best, 0);
     app.dom.chiReachSlider.value = nearest;
+    document.getElementById('chiReachAutoTick').textContent = `${auto} · 100%`;
     app.dom.chiReachValue.textContent = label;
     app.dom.chiReachSlider.setAttribute('aria-valuetext', label);
     app.dom.chiReachDesc.textContent = app.getText(percent === null ? 'chi_reach_legacy_note' : 'chi_reach_desc');
 }
 
+
+function refreshLocalizedModalText() {
+    if (!app.dom.chiFlowSettingsModal.classList.contains('hidden')) updateChiReachDisplay();
+    app.dom.chiFlowModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
+    document.querySelectorAll('#startupPalette option').forEach(option => {
+        const palette = app.C.PALETTES.find(p => p.originalName === option.value);
+        if (palette) option.textContent = palette.name;
+    });
+    chiCycleMembership?.refresh();
+    golCycleMembership?.refresh();
+}
 
 function closeChiFlowSettingsModal() {
         chiCycleMembership = null;
@@ -333,6 +346,7 @@ updateActiveChiPresetButton();
             save: app.setChiFlowCycle, saveButton: app.dom.btnChiSettingsSave, getText: app.getText
         });
         app.dom.chiFlowSettingsModal.classList.remove('hidden');
+        refreshLocalizedModalText();
     }
 
     // --- END: Chi Flow Modal Logic ---
@@ -682,7 +696,7 @@ function populatePaletteModal() {
         header.style.boxSizing = 'border-box';
         // --- END: תוספת לכותרות דביקות ---
 
-        header.innerHTML = `<span>${group.title}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${group.indexes.length} items</span>`;
+        header.innerHTML = `<span data-debug-text="palette_group_${group.id}">${app.getText('palette_group_' + group.id)}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${group.indexes.length} <span data-debug-text="palette_items">${app.getText('palette_items')}</span></span>`;
         frag.appendChild(header);
         
         
@@ -1393,7 +1407,7 @@ export function initializeModals(appContext) {
         });
     }
     addStartupOptions('startupPalette', app.C.PALETTES.filter(p => !p.isArchived)
-        .map(p => [p.originalName, p.originalName]));
+        .map(p => [p.originalName, p.name]));
     addStartupOptions('startupBoardSize', app.C.SIZES.slice().sort((a, b) => a - b).map(n => [n, `${n} × ${n}`]));
     addStartupOptions('startupSeparator', app.C.SEPARATORS.slice().reverse().map(gap => [gap, `${gap} px`]));
     addStartupOptions('startupSort', app.SORT_MODES.map(mode => [mode.method, '', 'startup_sort_' + mode.method]));
@@ -1765,7 +1779,7 @@ function renderMagnetAnchorSwatches() {
         ? 'border-gold-400 text-gold-400 bg-gray-900 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]' 
         : 'border-gray-600 hover:border-gray-400 text-gray-400'
     }`;
-    rootBtn.innerHTML = `${eclipseIcon} ROOT`;
+    rootBtn.innerHTML = `${eclipseIcon} <span data-debug-text="magnet_root">${app.getText('magnet_root')}</span>`;
     rootBtn.onclick = () => {
         tempMagnetRules.anchorColorIndex = -1;
         renderMagnetAnchorSwatches();
@@ -1845,6 +1859,7 @@ function saveMagnetSettings() {
 
 
 return {
+        refreshLocalizedModalText,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
         openSortCycleModal,

@@ -30,6 +30,11 @@ export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, def
     toolbar.replaceChildren();
     const buttons = [];
     function refresh() {
+        const reset = toolbar.querySelector('.cycle-reset-dot');
+        if (reset) {
+            reset.title = getText('cycle_reset');
+            reset.setAttribute('aria-label', reset.title);
+        }
         buttons.forEach((button, index) => {
             button.setAttribute('aria-pressed', String(draft.index === index));
             const preset = presets.find(p => (p.source || p.button.id) === draft.sources[index]) ||
