@@ -1,4 +1,4 @@
-import { GAME_OF_LIFE_PRESETS } from './constants.js';
+import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
 import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
@@ -158,18 +158,7 @@ function closeContourSettingsModal() {
     let tempChiFlow = [];
     let tempChiReach = 2;
 
-const CHI_PRESETS = {
-        'Topography': { awakening: [3,4,5,6,7,8], flow: [2,3], reach: 0 },
-        'Fluent': { awakening: [1,2,3,4,5,6,7,8], flow: [1,2,3,4,5,6,7,8], reach: 0 },
-        'Crystals': { awakening: [3,4,5,6,7,8], flow: [3,4,5,6,7,8], reach: 0 },
-        'Ripples': { awakening: [3,4,5,6,7,8], flow: [2,4,5,6], reach: 0 },
-        'Electric': { awakening: [3,4,5,6,7,8], flow: [1], reach: 0 },
-        'Wildfire': { awakening: [1,3,5,7], flow: [2,4,6,8], reach: 0 },
-        'Harmony': { awakening: [3,4,5,6,7,8], flow: [3,5,7], reach: 0 },
-        'Nova': { awakening: [3,4,5,6,7,8], flow: [1,2], reach: 0 },
-        'Alexis': { awakening: [4,5,6,7,8], flow: [4,5,6,7,8], reach: 0 },
-        'Zen': { awakening: [3,4,5,6,7,8], flow: [2,3,4], reach: 0 }
-    };
+const CHI_PRESETS = CHI_FLOW_PRESETS;
 
 
 function closeChiFlowSettingsModal() {

@@ -244,7 +244,9 @@ tile.v = tile.k;
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
-let chiFlowRules = { ...C.defaultChiFlowRules };
+let chiFlowRules = cloneChiFlowRules(C.defaultChiFlowRules);
+let personalChiFlowRules = cloneChiFlowRules(chiFlowRules);
+let chiFlowMode = 'personal';
       let turingRules = { ...C.defaultTuringRules };
       let dlaState = null;
       let turingState = null;
@@ -1163,7 +1165,7 @@ break;
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
-        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(chiFlowRules);
+        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
@@ -1297,7 +1299,7 @@ function pauseLife() {
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
-        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(chiFlowRules);
+        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
@@ -1503,6 +1505,10 @@ if (!isTogglingOff && simulationName !== null) {
 
 
         // הגדרת דיפולט (ברירת מחדל) לכפתורים מחזוריים כשהם נדלקים
+        if (simulationName === 'sandpile') {
+            chiFlowMode = 'personal';
+            chiFlowRules = cloneChiFlowRules(personalChiFlowRules);
+        }
         if (simulationName === 'gameOfLife') {
             gameOfLifeMode = 'personal';
             gameOfLifeRules = cloneGameOfLifeRules(personalGameOfLifeRules);
@@ -1565,6 +1571,7 @@ if (simulationName === 'magnet') {
     
     }
     updateGameOfLifeButtonUI();
+    updateChiFlowButtonUI();
 }
 
       
@@ -1962,6 +1969,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnShowBreatheMenu.title = getText('tooltip_breathe'); 
         dom.btnTutorial.title = getText('tooltip_tutorial');
         updateGameOfLifeButtonUI();
+        updateChiFlowButtonUI();
         dom.btnBrightnessEvo.title = getText('tooltip_brightnessEvo');
         dom.btnGravitationalSort.title = getText('tooltip_gravitationalSort'); 
         updateErosionButtonUI();
@@ -2588,6 +2596,61 @@ function cycleGameOfLifeMode() {
     window.logArtEvent('Game of Life Mode Changed', JSON.stringify({ ...getGameOfLifeRecordingRules(), mode: next }));
 }
 
+function cloneChiFlowRules(rules) {
+    return { awakening: [...rules.awakening], flow: [...rules.flow], reach: rules.reach };
+}
+
+function getChiFlowRecordingRules() {
+    return { ...cloneChiFlowRules(chiFlowRules), cycleMode: chiFlowMode,
+        personalRules: cloneChiFlowRules(personalChiFlowRules) };
+}
+
+function updateChiFlowButtonUI() {
+    const active = armedSimulation === 'sandpile';
+    dom.btnSandpile.classList.toggle('simulation-active', active);
+    const stars = active && chiFlowMode !== 'personal' ? (chiFlowMode === 'ripples' ? 1 : 2) : 0;
+    dom.btnSandpile.querySelectorAll('[data-chi-star]').forEach((star, index) => {
+        star.style.display = index < stars ? '' : 'none';
+    });
+    const name = chiFlowMode === 'personal' ? getText('chi_mode_personal') : chiFlowMode === 'nova' ? getText('chi_preset_nova') : getText('chi_preset_ripples');
+    dom.btnSandpile.title = getText('chi_modal_title') + (active ? ': ' + name : '');
+    dom.btnSandpile.setAttribute('aria-label', dom.btnSandpile.title);
+}
+
+function setPersonalChiFlowRules(rules) {
+    personalChiFlowRules = cloneChiFlowRules(rules);
+    chiFlowRules = cloneChiFlowRules(rules);
+    chiFlowMode = 'personal';
+    updateChiFlowButtonUI();
+    window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({
+        ...getChiFlowRecordingRules(), mode: armedSimulation === 'sandpile' ? 'personal' : 'off'
+    }));
+}
+
+function restoreChiFlowRules(snapshot) {
+    chiFlowRules = cloneChiFlowRules(snapshot);
+    chiFlowMode = ['nova', 'ripples'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
+    personalChiFlowRules = cloneChiFlowRules(snapshot.personalRules || snapshot);
+    updateChiFlowButtonUI();
+}
+
+function cycleChiFlowMode() {
+    if (isLifePlaying && armedSimulation !== 'sandpile') return;
+    const current = armedSimulation === 'sandpile' ? chiFlowMode : 'off';
+    const next = nextEvolutionMode(current, ['off', 'personal', 'ripples', 'nova']);
+    if (next === 'off') {
+        armSimulation(null);
+    } else {
+        if (current === 'off') armSimulation('sandpile');
+        chiFlowMode = next;
+        const preset = next === 'nova' ? C.CHI_FLOW_PRESETS.Nova
+            : next === 'ripples' ? C.CHI_FLOW_PRESETS.Ripples : personalChiFlowRules;
+        chiFlowRules = cloneChiFlowRules(preset);
+    }
+    updateChiFlowButtonUI();
+    window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
+}
+
 // Running evolutions cycle through active modes; paused cycles retain Off.
 function nextEvolutionMode(current, sequence) {
     let index = (sequence.indexOf(current) + 1) % sequence.length;
@@ -3140,13 +3203,13 @@ function parseLegacyMacroText(text) {
     const uiEvents = [
         'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed'
     ];
 
     // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
     const simulationEvents = [
         'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed'
     ];
 
 
@@ -3485,7 +3548,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     magnetMode = parsedRules.method || magnetMode;
                     if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
                 }
-                else if (sim === 'sandpile') Object.assign(chiFlowRules, parsedRules);
+                else if (sim === 'sandpile') restoreChiFlowRules(parsedRules);
                 else if (sim === 'turing') Object.assign(turingRules, parsedRules);
             }
         } catch (e) {
@@ -3628,6 +3691,15 @@ function executeMacroAction(action) {
             armSimulation('gameOfLife');
         }
         restoreGameOfLifeRules(snapshot);
+    }
+    else if (action.eventName === 'Chi Flow Mode Changed') {
+        const snapshot = JSON.parse(action.details);
+        if (snapshot.mode === 'off') {
+            if (armedSimulation === 'sandpile') armSimulation(null);
+        } else if (armedSimulation !== 'sandpile') {
+            armSimulation('sandpile');
+        }
+        restoreChiFlowRules(snapshot);
     }
     else if (action.eventName === 'Erosion Mode Changed') {
         if (action.details === 'off') {
@@ -3879,7 +3951,7 @@ syncMagnetFromModal: (method, anchorIndex) => {
     updateMagnetButtonUI();
 },
 
-getChiFlowRules: () => chiFlowRules, setChiFlowRules: (r) => { chiFlowRules = r; },
+getChiFlowRules: () => chiFlowRules, setChiFlowRules: setPersonalChiFlowRules,
 getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
 getMagnetRules: () => magnetRules, 
 setMagnetRules: (r) => { magnetRules = r; },
@@ -4024,7 +4096,7 @@ bindPickerGestures(dom.btnColorPicker, {
             [dom.btnContour, 'contour', () => armSimulation('contour'), modals.openContourSettingsModal],
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
-            [dom.btnSandpile, 'sandpile', () => armSimulation('sandpile'), modals.openChiFlowSettingsModal],
+            [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
             [dom.btnNudgeBrighter, 'nudgeBrighter', handleNudgeBrighterClick, modals.openNudgeSettingsModal],
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal]
