@@ -4134,7 +4134,15 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnUndo.addEventListener('click', (e) => handleCtrlClick(e, undo));
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
-        dom.btnSymmetry.addEventListener('click', (e) => handleCtrlClick(e, cycleSymmetryMode));
+        bindPickerGestures(dom.btnSymmetry, {
+            onTap: cycleSymmetryMode,
+            onOpen: () => {
+                symmetryMode = 'off';
+                updateSymmetryUI();
+            },
+            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
+            holdMs: C.LONG_PRESS_SHOW_MS
+        });
 bindPickerGestures(dom.btnCycleSort, {
     onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
     onHold: () => selectSortMethod(sortCycleMethods[0]),
@@ -4222,7 +4230,7 @@ if (dom.btnSimSettings) {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
