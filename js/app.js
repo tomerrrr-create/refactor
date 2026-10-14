@@ -1,3 +1,4 @@
+import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
 import { resolveChiReach } from './chi-reach.js';
 // js/app.js
 
@@ -1757,6 +1758,87 @@ if (simulationName === 'magnet') {
 
 
       
+      function getWorkspaceSettings() {
+        return {
+            startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
+            sortCycle: [...sortCycleMethods], nudgeIntervalMs,
+            smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked },
+            brush: { size: brushSize, mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
+            cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
+            rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
+                erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules }, turing: { ...turingRules } }
+        };
+      }
+
+      // Applies preferences only. No board, palette, sort, history or macro state is restored.
+      function applyWorkspacePreferences(settings) {
+        gravitationalSortRules = { ...settings.rules.gravity };
+        spiralRules = { ...settings.rules.spiral };
+        magnetRules = { ...settings.rules.magnet };
+        erosionRules = { ...settings.rules.erosion };
+        dlaRules = { ...settings.rules.dla };
+        contourRules = { ...settings.rules.contour };
+        turingRules = { ...settings.rules.turing };
+        if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
+        if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
+        if (armedSimulation === 'magnet') magnetMode = magnetRules.method;
+        if (armedSimulation === 'dla') dlaMode = dlaRules.colorGenetics ? 'genetics' : 'no-genetics';
+        updateGravitationalSortButtonUI(); updateSpiralButtonUI();
+        updateMagnetButtonUI(); updateDlaButtonUI(); updateErosionButtonUI();
+        isSmoothRendering = settings.smoothing.display;
+        dom.saveSmoothImage.checked = settings.smoothing.export;
+        document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
+        brushSize = settings.brush.size;
+        document.getElementById('brushSizeSlider').value = brushSize;
+        document.getElementById('brushSizeValue').textContent = brushSize;
+        setBrushMode(settings.brush.mode !== 'copy', settings.brush.mode === 'continuous');
+        symmetryMode = settings.brush.symmetry;
+        updateSymmetryUI();
+        renderToScreen(null);
+      }
+
+      function importWorkspaceSettings(settings) {
+        // The file has been fully validated before any state or preferences change.
+        if (isMacroPlaying) throw new Error('Cannot import settings during macro playback');
+        pauseLife();
+        startupSettings = { ...settings.startup };
+        simulationInitSettings = { ...settings.simulationInit };
+        sortCycleMethods = [...settings.sortCycle];
+        setNudgeInterval(settings.nudgeIntervalMs);
+        persistNudgeSettings();
+        const sources = (slots, presets) => slots.map((rules, i) =>
+            Object.entries(presets).find(([, preset]) => JSON.stringify(preset) === JSON.stringify(rules))?.[0] || 'custom-' + i);
+        setGameOfLifeCycle(settings.cycles.gameOfLife, ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode),
+            sources(settings.cycles.gameOfLife, C.GAME_OF_LIFE_PRESETS), settings.cycles.gameOfLife[0]);
+        setChiFlowCycle(settings.cycles.chiFlow, ['personal', 'ripples', 'nova'].indexOf(chiFlowMode),
+            sources(settings.cycles.chiFlow, C.CHI_FLOW_PRESETS), settings.cycles.chiFlow[0]);
+        applyWorkspacePreferences(settings);
+        const storedStartup = persistStartup(startupSettings);
+        const storedInit = persistSimInit(simulationInitSettings);
+        const storedSort = persistSortCycle(sortCycleMethods);
+        const storedWorkspace = persistWorkspaceSettings(settings);
+        modals.refreshLocalizedModalText();
+        return storedStartup && storedInit && storedSort && storedWorkspace;
+      }
+
+      async function handleSaveSettings() {
+        const button = document.getElementById('btnSaveSettings');
+        button.disabled = true;
+        try {
+            const file = new File([serializeWorkspaceSettings(getWorkspaceSettings())],
+                getSanitizedFileName('txt').replace(/\.txt$/, '_settings.txt'), { type: 'text/plain' });
+            const shareData = { files: [file], title: getText('saveModal_settings') };
+            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                try { await navigator.share(shareData); }
+                catch (err) { if (err.name === 'AbortError') return; triggerDownload(file); }
+            } else triggerDownload(file);
+            modals.closeModal();
+        } catch (error) {
+            console.error('Settings export failed:', error);
+            modals.showSaveStatus('settings_save_error', true);
+        } finally { button.disabled = false; }
+      }
+
       async function handleSaveProject() {
           const stateString = JSON.stringify(getCurrentState(), null, 2);
           const blob = new Blob([stateString], { type: 'application/json' });
@@ -1806,6 +1888,18 @@ function updateMacroPaletteButtonUI(paletteIndex) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const text = e.target.result;
+            if (isWorkspaceSettingsText(text)) {
+                try {
+                    const stored = importWorkspaceSettings(deserializeWorkspaceSettings(text));
+                    dom.saveModal.classList.add('modal-visible');
+                    modals.showSaveStatus(stored ? 'settings_loaded' : 'settings_loaded_session');
+                } catch (error) {
+                    console.error('Settings import failed:', error);
+                    dom.saveModal.classList.add('modal-visible');
+                    modals.showSaveStatus('settings_load_error', true);
+                }
+                return;
+            }
             try {
                 macroQueue = parseMacroText(text);
             } catch (error) {
@@ -1964,6 +2058,9 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnModalClose.title = getText('saveModal_close');
         dom.btnSaveImage.title = getText('saveModal_saveImage');
         dom.saveSmoothImage.parentElement.title = getText('save_smooth_note');
+        const settingsButton = document.getElementById('btnSaveSettings');
+        settingsButton.title = getText('saveModal_saveSettings');
+        settingsButton.setAttribute('aria-label', settingsButton.title);
         dom.btnSaveProjectIdea.title = getText('saveModal_saveIdea');
         dom.btnLoadProjectIdea.title = getText('saveModal_loadIdea');
         for (const [button, key] of [[dom.btnResetLogger, 'saveModal_resetLogger'], [dom.btnSaveLogger, 'saveModal_saveLogger']]) {
@@ -3968,6 +4065,7 @@ else if (action.eventName === 'Invert Colors') {
             getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
             isNudgeReplayActive: () => isMacroLoaded,
             setNudgeInterval, persistNudgeSettings,
+            resetWorkspaceSettings: () => importWorkspaceSettings(defaultWorkspaceSettings()),
             getStartupSettings: () => ({ ...startupSettings }),
             saveStartupSettings: (settings) => {
                 const normalized = normalizeStartup(settings);
@@ -4052,7 +4150,7 @@ setMagnetRules: (r) => { magnetRules = r; },
 
 
 
-            handleSaveProject, handleLoadProject, onProjectFileSelected, resetArtRecipeLog, exportArtRecipeLog,
+            handleSaveSettings, handleSaveProject, handleLoadProject, onProjectFileSelected, resetArtRecipeLog, exportArtRecipeLog,
             pointerState,
             resetWasLongPress,
 downloadImage: shareOrDownloadImage,
@@ -4101,6 +4199,8 @@ updateBrightnessEvoButtonUI();
         updateGlowEffect();
         updateLayout();
         updateAllUIText();
+        const importedPreferences = loadWorkspaceSettings();
+        if (importedPreferences) applyWorkspacePreferences(importedPreferences);
         logCurrentStateAsInit();
 
         

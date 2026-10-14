@@ -9,6 +9,20 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  workspace_reset: {"en": "Reset", "he": "איפוס", "ru": "Сброс", "nl": "Herstellen"},
+  workspace_reset_title: {"en": "Restore all default settings", "he": "שחזור כל הגדרות ברירת המחדל", "ru": "Восстановить все настройки по умолчанию", "nl": "Alle standaardinstellingen herstellen"},
+  workspace_reset_prompt: {"en": "Restore all settings? Your board stays.", "he": "לשחזר את כל ההגדרות? הלוח נשאר.", "ru": "Восстановить все настройки? Поле останется.", "nl": "Alle instellingen herstellen? Je bord blijft behouden."},
+  workspace_reset_done: {"en": "Defaults restored. Your board is unchanged.", "he": "ברירות המחדל שוחזרו. הלוח נשאר כפי שהיה.", "ru": "Настройки восстановлены. Поле не изменено.", "nl": "Standaardinstellingen hersteld. Je bord is ongewijzigd."},
+  workspace_reset_session: {"en": "Defaults restored for this session; browser storage is unavailable.", "he": "ברירות המחדל שוחזרו לכניסה זו; הדפדפן לא הצליח לשמור אותן.", "ru": "Настройки восстановлены на этот сеанс; хранилище недоступно.", "nl": "Standaardinstellingen hersteld voor deze sessie; opslag is niet beschikbaar."},
+  workspace_reset_error: {"en": "Could not reset settings right now.", "he": "לא ניתן לאפס את ההגדרות כרגע.", "ru": "Сейчас не удалось сбросить настройки.", "nl": "Instellingen kunnen nu niet worden hersteld."},
+
+  saveModal_settings: {"en": "Settings", "he": "הגדרות", "ru": "Настройки", "nl": "Instellingen"},
+  saveModal_saveSettings: {"en": "Save personal settings", "he": "שמירת הגדרות אישיות", "ru": "Сохранить личные настройки", "nl": "Persoonlijke instellingen opslaan"},
+  settings_loaded: {"en": "Settings loaded. Your board is unchanged.", "he": "ההגדרות נטענו. הלוח נשאר כפי שהיה.", "ru": "Настройки загружены. Поле не изменено.", "nl": "Instellingen geladen. Je bord is ongewijzigd."},
+  settings_loaded_session: {"en": "Settings loaded for this session; browser storage is unavailable.", "he": "ההגדרות נטענו לכניסה זו; הדפדפן לא הצליח לשמור אותן.", "ru": "Настройки загружены на этот сеанс; хранилище браузера недоступно.", "nl": "Instellingen geladen voor deze sessie; browseropslag is niet beschikbaar."},
+  settings_load_error: {"en": "Could not load these settings. Nothing was changed.", "he": "לא ניתן לטעון את ההגדרות. דבר לא השתנה.", "ru": "Не удалось загрузить настройки. Ничего не изменено.", "nl": "Instellingen konden niet worden geladen. Niets is gewijzigd."},
+  settings_save_error: {"en": "Could not save settings. Try again.", "he": "לא ניתן לשמור הגדרות. נסו שוב.", "ru": "Не удалось сохранить настройки. Повторите попытку.", "nl": "Instellingen konden niet worden opgeslagen. Probeer opnieuw."},
+
   spiral_modal_title: {"en": "Spiral Settings", "he": "הגדרות ספירלה", "ru": "Настройки спирали", "nl": "Spiraalinstellingen"},
   spiral_method_label: {"en": "Rotation Method", "he": "שיטת סיבוב", "ru": "Способ вращения", "nl": "Rotatiemethode"},
   spiral_vortex: {"en": "Vortex", "he": "מערבולת", "ru": "Вихрь", "nl": "Draaikolk"},

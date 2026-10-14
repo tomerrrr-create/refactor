@@ -1,5 +1,5 @@
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
-import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES } from './chi-reach.js';
+import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
@@ -185,8 +185,8 @@ function updateChiReachDisplay() {
         tempChiReachOffset === 0 ? auto : `${auto} ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
     // Old fixed/offset settings remain untouched until the user moves the slider.
     const displayedPercent = percent ?? resolveChiReach(readChiCycleRules(), paletteSize) / getAutoChiReach(paletteSize) * 100;
-    const nearest = CHI_REACH_PERCENTAGES.reduce((best, value, index) =>
-        Math.abs(value - displayedPercent) < Math.abs(CHI_REACH_PERCENTAGES[best] - displayedPercent) ? index : best, 0);
+    const nearest = CHI_REACH_SLIDER_PERCENTAGES.reduce((best, value, index) =>
+        Math.abs(value - displayedPercent) < Math.abs(CHI_REACH_SLIDER_PERCENTAGES[best] - displayedPercent) ? index : best, 0);
     app.dom.chiReachSlider.value = nearest;
     document.getElementById('chiReachAutoTick').textContent = `${auto} · 100%`;
     app.dom.chiReachValue.textContent = label;
@@ -1247,6 +1247,7 @@ export function initializeModals(appContext) {
     app.dom.btnModalClose.addEventListener('click', closeModal);
     app.dom.saveModal.addEventListener('click', (e) => { if (e.target === app.dom.saveModal) { closeModal(); } });
     app.dom.btnSaveImage.addEventListener('click', () => app.downloadImage());
+    document.getElementById('btnSaveSettings').addEventListener('click', app.handleSaveSettings);
     app.dom.btnSaveProjectIdea.addEventListener('click', app.handleSaveProject);
     app.dom.btnLoadProjectIdea.addEventListener('click', app.handleLoadProject);
     app.dom.btnResetLogger.addEventListener('click', () => {
@@ -1354,6 +1355,9 @@ export function initializeModals(appContext) {
     smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
+        hideWorkspaceResetConfirmation();
+        workspaceResetStatus.textContent = '';
+        delete workspaceResetStatus.dataset.debugText;
         smoothRenderingToggle.checked = app.getSmoothRendering();
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
@@ -1448,6 +1452,43 @@ export function initializeModals(appContext) {
         }));
         const persisted = app.saveStartupSettings(settings);
         startupStatus.textContent = app.getText(persisted ? 'startup_saved' : 'startup_saved_session');
+    });
+    const resetWorkspaceButton = document.getElementById('btnResetWorkspace');
+    const resetWorkspaceConfirmation = document.getElementById('workspaceResetConfirmation');
+    const workspaceResetStatus = document.getElementById('workspaceResetStatus');
+    const confirmWorkspaceReset = document.getElementById('btnConfirmWorkspaceReset');
+    function hideWorkspaceResetConfirmation() {
+        resetWorkspaceConfirmation.hidden = true;
+        resetWorkspaceButton.setAttribute('aria-expanded', 'false');
+    }
+    resetWorkspaceButton.addEventListener('click', () => {
+        resetWorkspaceConfirmation.hidden = !resetWorkspaceConfirmation.hidden;
+        resetWorkspaceButton.setAttribute('aria-expanded', String(!resetWorkspaceConfirmation.hidden));
+        workspaceResetStatus.textContent = '';
+        delete workspaceResetStatus.dataset.debugText;
+    });
+    document.getElementById('btnCancelWorkspaceReset').addEventListener('click', () => {
+        hideWorkspaceResetConfirmation();
+        resetWorkspaceButton.focus();
+    });
+    confirmWorkspaceReset.addEventListener('click', () => {
+        confirmWorkspaceReset.disabled = true;
+        try {
+            const persisted = app.resetWorkspaceSettings();
+            fillInitForm(app.getSimulationInit());
+            fillStartupForm(app.getStartupSettings());
+            smoothRenderingToggle.checked = app.getSmoothRendering();
+            hideWorkspaceResetConfirmation();
+            const key = persisted ? 'workspace_reset_done' : 'workspace_reset_session';
+            workspaceResetStatus.dataset.debugText = key;
+            workspaceResetStatus.textContent = app.getText(key);
+            resetWorkspaceButton.classList.remove('reset-complete');
+            requestAnimationFrame(() => resetWorkspaceButton.classList.add('reset-complete'));
+            resetWorkspaceButton.focus();
+        } catch (error) {
+            workspaceResetStatus.dataset.debugText = 'workspace_reset_error';
+            workspaceResetStatus.textContent = app.getText('workspace_reset_error');
+        } finally { confirmWorkspaceReset.disabled = false; }
     });
     app.dom.btnCloseDebug.addEventListener('click', () => app.dom.technicianDialog.close());
     app.dom.technicianDialog.addEventListener('keydown', (event) => {
@@ -1572,7 +1613,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
 app.dom.chiReachSlider.addEventListener('input', (e) => {
     tempChiReach = 0;
     tempChiReachOffset = null;
-    tempChiReachPercent = CHI_REACH_PERCENTAGES[Number(e.target.value)];
+    tempChiReachPercent = CHI_REACH_SLIDER_PERCENTAGES[Number(e.target.value)];
     updateChiReachDisplay();
     updateActiveChiPresetButton(); // <-- שינינו את שם הפונקציה כאן
     chiCycleMembership?.manualChange();
