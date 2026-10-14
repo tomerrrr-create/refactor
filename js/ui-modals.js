@@ -263,8 +263,8 @@ function updateActiveChiPresetButton() {
             if (arraysAreEqual(tempChiAwakening, rules.awakening) &&
                 arraysAreEqual(tempChiFlow, rules.flow) &&
                 tempChiReach === rules.reach &&
-                (tempChiReachPercent === 100 && rules.reach === 0 && !Number.isInteger(rules.reachOffset) ||
-                 tempChiReachPercent === null && (tempChiReachOffset ?? null) === (rules.reachOffset ?? (rules.reach === 0 ? 0 : null)))) {
+                (tempChiReachPercent === (rules.reachPercent ?? 100) && rules.reach === 0 && !Number.isInteger(rules.reachOffset) ||
+                 tempChiReachPercent === null && !Number.isInteger(rules.reachPercent) && (tempChiReachOffset ?? null) === (rules.reachOffset ?? (rules.reach === 0 ? 0 : null)))) {
                 activeId = 'btnChiPreset' + presetName;
                 break;
             }
