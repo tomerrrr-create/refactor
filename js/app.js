@@ -235,14 +235,18 @@ tile.v = tile.k;
 
 
       
-      let gameOfLifeRules = { ...C.defaultGameOfLifeRules };
+      let gameOfLifeRules = cloneGameOfLifeRules(C.defaultGameOfLifeRules);
+      let personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeRules);
+      let gameOfLifeMode = 'personal';
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
-let chiFlowRules = { ...C.defaultChiFlowRules };
+let chiFlowRules = cloneChiFlowRules(C.defaultChiFlowRules);
+let personalChiFlowRules = cloneChiFlowRules(chiFlowRules);
+let chiFlowMode = 'personal';
       let turingRules = { ...C.defaultTuringRules };
       let dlaState = null;
       let turingState = null;
@@ -1154,14 +1158,14 @@ break;
         
         // --- תוספת: תיעוד מורחב ב-Art Logger כולל מצב וחוקים ---
         let simDetails = "No specific rules mapping";
-        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(gameOfLifeRules);
+        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(erosionRules);
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
-        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(chiFlowRules);
+        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
@@ -1288,14 +1292,14 @@ function pauseLife() {
 
         // --- Art Logger: Snapshoting Simulation State ---
         let simDetails = "No specific rules mapping";
-        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(gameOfLifeRules);
+        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(erosionRules);
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
-        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(chiFlowRules);
+        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
         else if (armedSimulation === 'brightnessEvo') simDetails = `Mode: ${brightnessEvoMode}`;
@@ -1501,6 +1505,14 @@ if (!isTogglingOff && simulationName !== null) {
 
 
         // הגדרת דיפולט (ברירת מחדל) לכפתורים מחזוריים כשהם נדלקים
+        if (simulationName === 'sandpile') {
+            chiFlowMode = 'personal';
+            chiFlowRules = cloneChiFlowRules(personalChiFlowRules);
+        }
+        if (simulationName === 'gameOfLife') {
+            gameOfLifeMode = 'personal';
+            gameOfLifeRules = cloneGameOfLifeRules(personalGameOfLifeRules);
+        }
         if (simulationName === 'brightnessEvo') {
             brightnessEvoMode = 'brightness';
         }
@@ -1558,6 +1570,8 @@ if (simulationName === 'magnet') {
         }
     
     }
+    updateGameOfLifeButtonUI();
+    updateChiFlowButtonUI();
 }
 
       
@@ -1954,7 +1968,8 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnSave.title = getText('tooltip_save');
         dom.btnShowBreatheMenu.title = getText('tooltip_breathe'); 
         dom.btnTutorial.title = getText('tooltip_tutorial');
-        dom.btnGameOfLife.title = getText('tooltip_gameOfLife'); 
+        updateGameOfLifeButtonUI();
+        updateChiFlowButtonUI();
         dom.btnBrightnessEvo.title = getText('tooltip_brightnessEvo');
         dom.btnGravitationalSort.title = getText('tooltip_gravitationalSort'); 
         updateErosionButtonUI();
@@ -2525,6 +2540,117 @@ function updateBrightnessEvoButtonUI() {
 }
 
 
+// Game of Life keeps the personal rules separate from its two preset shortcuts.
+function cloneGameOfLifeRules(rules) {
+    return { survival: [...rules.survival], birth: [...rules.birth] };
+}
+
+function getGameOfLifeRecordingRules() {
+    return { ...cloneGameOfLifeRules(gameOfLifeRules), cycleMode: gameOfLifeMode,
+        personalRules: cloneGameOfLifeRules(personalGameOfLifeRules) };
+}
+
+function updateGameOfLifeButtonUI() {
+    const active = armedSimulation === 'gameOfLife';
+    dom.btnGameOfLife.classList.toggle('simulation-active', active);
+    const stars = active && gameOfLifeMode !== 'personal' ? (gameOfLifeMode === 'shuffle' ? 1 : 2) : 0;
+    dom.btnGameOfLife.querySelectorAll('[data-gol-star]').forEach((star, index) => {
+        star.style.display = index < stars ? '' : 'none';
+    });
+    const name = gameOfLifeMode === 'personal' ? getText('gol_mode_personal') : gameOfLifeMode === 'coral' ? 'Coral' : 'Shuffle';
+    dom.btnGameOfLife.title = getText('tooltip_gameOfLife') + (active ? ': ' + name : '');
+    dom.btnGameOfLife.setAttribute('aria-label', dom.btnGameOfLife.title);
+}
+
+function setPersonalGameOfLifeRules(rules) {
+    personalGameOfLifeRules = cloneGameOfLifeRules(rules);
+    gameOfLifeRules = cloneGameOfLifeRules(rules);
+    gameOfLifeMode = 'personal';
+    updateGameOfLifeButtonUI();
+    window.logArtEvent('Game of Life Mode Changed', JSON.stringify({
+        ...getGameOfLifeRecordingRules(), mode: armedSimulation === 'gameOfLife' ? 'personal' : 'off'
+    }));
+}
+
+function restoreGameOfLifeRules(snapshot) {
+    gameOfLifeRules = cloneGameOfLifeRules(snapshot);
+    gameOfLifeMode = ['coral', 'shuffle'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
+    personalGameOfLifeRules = cloneGameOfLifeRules(snapshot.personalRules || snapshot);
+    updateGameOfLifeButtonUI();
+}
+
+function cycleGameOfLifeMode() {
+    if (isLifePlaying && armedSimulation !== 'gameOfLife') return;
+    const current = armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off';
+    const next = nextEvolutionMode(current, ['off', 'personal', 'shuffle', 'coral']);
+    if (next === 'off') {
+        armSimulation(null);
+    } else {
+        if (current === 'off') armSimulation('gameOfLife');
+        gameOfLifeMode = next;
+        const preset = next === 'coral' ? C.GAME_OF_LIFE_PRESETS.btnGolPresetCoral
+            : next === 'shuffle' ? C.GAME_OF_LIFE_PRESETS.btnGolPresetShuffle : personalGameOfLifeRules;
+        gameOfLifeRules = cloneGameOfLifeRules(preset);
+    }
+    updateGameOfLifeButtonUI();
+    window.logArtEvent('Game of Life Mode Changed', JSON.stringify({ ...getGameOfLifeRecordingRules(), mode: next }));
+}
+
+function cloneChiFlowRules(rules) {
+    return { awakening: [...rules.awakening], flow: [...rules.flow], reach: rules.reach };
+}
+
+function getChiFlowRecordingRules() {
+    return { ...cloneChiFlowRules(chiFlowRules), cycleMode: chiFlowMode,
+        personalRules: cloneChiFlowRules(personalChiFlowRules) };
+}
+
+function updateChiFlowButtonUI() {
+    const active = armedSimulation === 'sandpile';
+    dom.btnSandpile.classList.toggle('simulation-active', active);
+    const stars = active && chiFlowMode !== 'personal' ? (chiFlowMode === 'ripples' ? 1 : 2) : 0;
+    dom.btnSandpile.querySelectorAll('[data-chi-star]').forEach((star, index) => {
+        star.style.display = index < stars ? '' : 'none';
+    });
+    const name = chiFlowMode === 'personal' ? getText('chi_mode_personal') : chiFlowMode === 'nova' ? getText('chi_preset_nova') : getText('chi_preset_ripples');
+    dom.btnSandpile.title = getText('chi_modal_title') + (active ? ': ' + name : '');
+    dom.btnSandpile.setAttribute('aria-label', dom.btnSandpile.title);
+}
+
+function setPersonalChiFlowRules(rules) {
+    personalChiFlowRules = cloneChiFlowRules(rules);
+    chiFlowRules = cloneChiFlowRules(rules);
+    chiFlowMode = 'personal';
+    updateChiFlowButtonUI();
+    window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({
+        ...getChiFlowRecordingRules(), mode: armedSimulation === 'sandpile' ? 'personal' : 'off'
+    }));
+}
+
+function restoreChiFlowRules(snapshot) {
+    chiFlowRules = cloneChiFlowRules(snapshot);
+    chiFlowMode = ['nova', 'ripples'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
+    personalChiFlowRules = cloneChiFlowRules(snapshot.personalRules || snapshot);
+    updateChiFlowButtonUI();
+}
+
+function cycleChiFlowMode() {
+    if (isLifePlaying && armedSimulation !== 'sandpile') return;
+    const current = armedSimulation === 'sandpile' ? chiFlowMode : 'off';
+    const next = nextEvolutionMode(current, ['off', 'personal', 'ripples', 'nova']);
+    if (next === 'off') {
+        armSimulation(null);
+    } else {
+        if (current === 'off') armSimulation('sandpile');
+        chiFlowMode = next;
+        const preset = next === 'nova' ? C.CHI_FLOW_PRESETS.Nova
+            : next === 'ripples' ? C.CHI_FLOW_PRESETS.Ripples : personalChiFlowRules;
+        chiFlowRules = cloneChiFlowRules(preset);
+    }
+    updateChiFlowButtonUI();
+    window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
+}
+
 // Running evolutions cycle through active modes; paused cycles retain Off.
 function nextEvolutionMode(current, sequence) {
     let index = (sequence.indexOf(current) + 1) % sequence.length;
@@ -3077,13 +3203,13 @@ function parseLegacyMacroText(text) {
     const uiEvents = [
         'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed'
     ];
 
     // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
     const simulationEvents = [
         'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed'
     ];
 
 
@@ -3395,7 +3521,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 if (typeof updateBreatheEvoButtonUI === 'function') updateBreatheEvoButtonUI();
             } else {
                 const parsedRules = JSON.parse(rulesStr);
-                if (sim === 'gameOfLife') Object.assign(gameOfLifeRules, parsedRules);
+                if (sim === 'gameOfLife') restoreGameOfLifeRules(parsedRules);
                 else if (sim === 'gravitationalSort') {
                     Object.assign(gravitationalSortRules, parsedRules);
                     gsMode = parsedRules.direction || gsMode;
@@ -3422,7 +3548,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     magnetMode = parsedRules.method || magnetMode;
                     if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
                 }
-                else if (sim === 'sandpile') Object.assign(chiFlowRules, parsedRules);
+                else if (sim === 'sandpile') restoreChiFlowRules(parsedRules);
                 else if (sim === 'turing') Object.assign(turingRules, parsedRules);
             }
         } catch (e) {
@@ -3556,6 +3682,24 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'GRID_RESIZE') {
         _performResize(parseInt(action.details, 10));
+    }
+    else if (action.eventName === 'Game of Life Mode Changed') {
+        const snapshot = JSON.parse(action.details);
+        if (snapshot.mode === 'off') {
+            if (armedSimulation === 'gameOfLife') armSimulation(null);
+        } else if (armedSimulation !== 'gameOfLife') {
+            armSimulation('gameOfLife');
+        }
+        restoreGameOfLifeRules(snapshot);
+    }
+    else if (action.eventName === 'Chi Flow Mode Changed') {
+        const snapshot = JSON.parse(action.details);
+        if (snapshot.mode === 'off') {
+            if (armedSimulation === 'sandpile') armSimulation(null);
+        } else if (armedSimulation !== 'sandpile') {
+            armSimulation('sandpile');
+        }
+        restoreChiFlowRules(snapshot);
     }
     else if (action.eventName === 'Erosion Mode Changed') {
         if (action.details === 'off') {
@@ -3774,7 +3918,7 @@ else if (action.eventName === 'Invert Colors') {
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
             switchToPalette,
-            getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: (r) => { gameOfLifeRules = r; },
+            getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
             getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; },
 syncGsModeFromModal: (direction) => {
                 if (armedSimulation !== 'gravitationalSort') {
@@ -3807,7 +3951,7 @@ syncMagnetFromModal: (method, anchorIndex) => {
     updateMagnetButtonUI();
 },
 
-getChiFlowRules: () => chiFlowRules, setChiFlowRules: (r) => { chiFlowRules = r; },
+getChiFlowRules: () => chiFlowRules, setChiFlowRules: setPersonalChiFlowRules,
 getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
 getMagnetRules: () => magnetRules, 
 setMagnetRules: (r) => { magnetRules = r; },
@@ -3947,12 +4091,12 @@ bindPickerGestures(dom.btnColorPicker, {
         // A swipe opens settings only for the selected, paused evolution.
         // Tap actions stay independent of that restriction.
         const evolutionPickers = [
-            [dom.btnGameOfLife, 'gameOfLife', () => armSimulation('gameOfLife'), modals.openGolSettingsModal],
+            [dom.btnGameOfLife, 'gameOfLife', cycleGameOfLifeMode, modals.openGolSettingsModal],
             [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
             [dom.btnContour, 'contour', () => armSimulation('contour'), modals.openContourSettingsModal],
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
-            [dom.btnSandpile, 'sandpile', () => armSimulation('sandpile'), modals.openChiFlowSettingsModal],
+            [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
             [dom.btnNudgeBrighter, 'nudgeBrighter', handleNudgeBrighterClick, modals.openNudgeSettingsModal],
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal]

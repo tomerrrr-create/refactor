@@ -52,6 +52,27 @@ export const defaultGameOfLifeRules = {
     birth: [4, 5, 6, 7, 8]
 };
 
+
+export const GAME_OF_LIFE_PRESETS = {
+  'btnGolPresetHarmonic': { survival: [3, 4, 5], birth: [3] },
+  'btnGolPresetHive': { survival: [2, 3, 4, 5], birth: [4] },
+  'btnGolPresetLivingTexture': { survival: [3, 4, 6, 7, 8], birth: [3, 6, 7, 8] },
+  'btnGolPresetAmoeba': { survival: [1, 3, 5, 8], birth: [3, 5, 7] },
+  'btnGolPresetPaint': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [4, 5, 6, 7, 8] },
+  'btnGolPresetPaint2': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [1, 2, 3, 4, 5, 6, 7, 8] },
+
+  'btnGolPresetCoral': { survival: [4, 5, 6, 7, 8], birth: [3] },
+    'btnGolPresetMeditation': { survival: [1, 2, 3, 4, 5], birth: [3] },
+  'btnGolPresetJoelson': { survival: [2, 3, 4, 5], birth: [4, 5, 6, 7, 8] },
+  'btnGolPresetVibration': { survival: [5, 6, 7, 8], birth: [4, 5, 6, 7, 8] },
+'btnGolPresetCharlie': { survival: [2, 5, 8], birth: [3, 5, 7, 8] },
+  'btnGolPresetNaive': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [3] },
+  'btnGolPresetSpace': { survival: [2, 3, 5, 6, 7, 8], birth: [3, 6, 7, 8] },
+  'btnGolPresetContinuum': { survival: [0, 1, 2, 3, 4, 5, 6, 7], birth: [4, 5, 6, 7] },
+  'btnGolPresetShuffle': { survival: [0, 1, 2, 4, 6, 7, 8], birth: [3, 5] }
+
+};
+
 export const defaultGravitationalSortRules = {
     direction: 'up',
     strength: 0.6
@@ -86,6 +107,20 @@ export const defaultChiFlowRules = {
     awakening: [3, 4, 5, 6, 7, 8],
     flow: [3, 5, 7],
     reach: 0
+};
+
+
+export const CHI_FLOW_PRESETS = {
+        'Topography': { awakening: [3,4,5,6,7,8], flow: [2,3], reach: 0 },
+        'Fluent': { awakening: [1,2,3,4,5,6,7,8], flow: [1,2,3,4,5,6,7,8], reach: 0 },
+        'Crystals': { awakening: [3,4,5,6,7,8], flow: [3,4,5,6,7,8], reach: 0 },
+        'Ripples': { awakening: [3,4,5,6,7,8], flow: [2,4,5,6], reach: 0 },
+        'Electric': { awakening: [3,4,5,6,7,8], flow: [1], reach: 0 },
+        'Wildfire': { awakening: [1,3,5,7], flow: [2,4,6,8], reach: 0 },
+        'Harmony': { awakening: [3,4,5,6,7,8], flow: [3,5,7], reach: 0 },
+        'Nova': { awakening: [3,4,5,6,7,8], flow: [1,2], reach: 0 },
+        'Alexis': { awakening: [4,5,6,7,8], flow: [4,5,6,7,8], reach: 0 },
+        'Zen': { awakening: [3,4,5,6,7,8], flow: [2,3,4], reach: 0 }
 };
 
 export const defaultTuringRules = {
