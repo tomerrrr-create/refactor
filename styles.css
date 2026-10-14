@@ -378,35 +378,46 @@ body {
     place-items: center;
     overflow: hidden;
     pointer-events: none;
-    background: #000;
-    animation: palette-family-veil 3s ease-in-out both;
+    background: linear-gradient(180deg, rgba(8, 8, 7, .38), rgba(8, 8, 7, .7) 50%, rgba(8, 8, 7, .38));
+    animation: palette-family-veil 3.2s cubic-bezier(.4, 0, .2, 1) both;
 }
+.palette-group-transition::before,
+.palette-group-transition::after {
+    content: '';
+    position: absolute;
+    left: calc(50% - 22px);
+    width: 44px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(213, 170, 72, .45), transparent);
+}
+.palette-group-transition::before { top: calc(50% - 43px); }
+.palette-group-transition::after { top: calc(50% + 43px); }
 .palette-group-number {
     grid-area: 1 / 1;
     color: var(--gold);
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(32px, 9vmin, 72px);
+    font-size: clamp(30px, 7vmin, 52px);
     font-weight: 400;
     font-variant-numeric: lining-nums tabular-nums;
-    letter-spacing: .08em;
-    padding-left: .08em;
-    text-shadow: 0 0 18px rgba(255, 215, 0, .16);
+    letter-spacing: .12em;
+    padding-left: .12em;
+    text-shadow: 0 0 22px rgba(213, 170, 72, .12);
 }
-.palette-group-number.is-departing { animation: palette-family-depart 3s ease-in-out both; }
-.palette-group-number.is-arriving { animation: palette-family-arrive 3s ease-in-out both; }
+.palette-group-number.is-departing { animation: palette-family-depart 3.2s ease-in-out both; }
+.palette-group-number.is-arriving { animation: palette-family-arrive 3.2s ease-in-out both; }
 @keyframes palette-family-veil {
-    0% { opacity: .65; }
-    12%, 82% { opacity: 1; }
-    100% { opacity: 0; }
+    0%, 100% { opacity: 0; }
+    24%, 76% { opacity: 1; }
 }
 @keyframes palette-family-depart {
-    0%, 18% { opacity: 1; filter: blur(0); transform: scale(1); }
-    45%, 100% { opacity: 0; filter: blur(7px); transform: scale(.94); }
+    0% { opacity: 0; filter: blur(2px); }
+    14%, 23% { opacity: .8; filter: blur(0); }
+    48%, 100% { opacity: 0; filter: blur(3px); }
 }
 @keyframes palette-family-arrive {
-    0%, 35% { opacity: 0; filter: blur(7px); transform: scale(1.06); }
-    62%, 86% { opacity: 1; filter: blur(0); transform: scale(1); }
-    100% { opacity: 0; filter: blur(0); transform: scale(1); }
+    0%, 38% { opacity: 0; filter: blur(3px); }
+    65%, 80% { opacity: .8; filter: blur(0); }
+    100% { opacity: 0; filter: blur(0); }
 }
 @media (prefers-reduced-motion: reduce) {
     .palette-group-transition { animation-duration: .6s; }
