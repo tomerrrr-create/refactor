@@ -7,19 +7,6 @@ import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
 import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
 // js/ui-modals.js
 
-// Navigation context exists only while editing a panel from the technician menu.
-let technicianSettingsRoute = null;
-function returnToTechnicianMenu(modalId, delay = 0) {
-    const route = technicianSettingsRoute;
-    if (!route || route.modalId !== modalId) return;
-    technicianSettingsRoute = null;
-    setTimeout(() => {
-        app.dom.technicianDialog.showModal();
-        app.dom.technicianDialog.scrollTop = route.scrollTop;
-        document.getElementById(route.buttonId).focus({ preventScroll: true });
-    }, delay);
-}
-
 let lastWheelTime = 0;
 let touchStartX = 0;
 
@@ -110,8 +97,7 @@ function closeResizeModal() {
 function closeSpiralSettingsModal() {
     app.dom.spiralSettingsModal.style.display = 'none';
     app.dom.spiralSettingsModal.classList.remove('modal-visible');
-    app.resetWasLongPress();
-    returnToTechnicianMenu('spiralSettingsModal', 0);
+    app.resetWasLongPress(); 
 }
 
 function openSpiralSettingsModal() {
@@ -140,8 +126,7 @@ const currentMethod = app.spiralRules ? app.spiralRules.method : 'magnet';    ap
 function closeColorPickerModal() {
     app.dom.colorPickerModal.classList.remove('modal-visible');
     app.pointerState.longPressTarget = null;
-    app.resetWasLongPress();
-    returnToTechnicianMenu('colorPickerModal', 300);
+    app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
 function closeHelpModal() {
@@ -165,14 +150,12 @@ function closeGolSettingsModal() {
     // --- END MODIFICATION ---
     setTimeout(() => app.dom.gameOfLifeSettingsModal.style.display = 'none', 300);
     app.resetWasLongPress();
-    returnToTechnicianMenu('gameOfLifeSettingsModal', 300);
 }
 
 function closeGravitationalSortSettingsModal() {
     app.dom.gravitationalSortSettingsModal.classList.remove('modal-visible');
     setTimeout(() => app.dom.gravitationalSortSettingsModal.style.display = 'none', 300);
     app.resetWasLongPress();
-    returnToTechnicianMenu('gravitationalSortSettingsModal', 300);
 }
 
 
@@ -189,7 +172,6 @@ function closeContourSettingsModal() {
     app.dom.contourSettingsModal.classList.remove('modal-visible');
     setTimeout(() => app.dom.contourSettingsModal.style.display = 'none', 300);
     app.resetWasLongPress();
-    returnToTechnicianMenu('contourSettingsModal', 300);
 }
 // --- END: Added for Contour Settings ---
 
@@ -252,8 +234,7 @@ function closeChiFlowSettingsModal() {
         chiCycleMembership = null;
         app.dom.btnChiSettingsSave.disabled = false;
         app.dom.chiFlowSettingsModal.classList.add('hidden');
-        app.resetWasLongPress();
-        returnToTechnicianMenu('chiFlowSettingsModal', 0);
+        app.resetWasLongPress(); // <-- תוספת תיקון הבאג
     }
 
 
@@ -419,7 +400,6 @@ const TURING_PRESETS = {
 function closeTuringSettingsModal() {
     app.dom.turingSettingsModal.classList.add('hidden');
     app.resetWasLongPress();
-    returnToTechnicianMenu('turingSettingsModal', 0);
 }
 
 // 1. פונקציה חדשה: סנכרון תצוגת הסליידרים
@@ -1140,7 +1120,7 @@ function saveGravitationalSortSettings() {
     app.setGravitationalSortRules(newRules);
     
     // עדכון: סנכרון האייקון בלוח הבקרה למצב החדש שנבחר
-    if (!technicianSettingsRoute?.settingsOnly && typeof app.syncGsModeFromModal === 'function') {
+    if (typeof app.syncGsModeFromModal === 'function') {
         app.syncGsModeFromModal(newRules.direction);
     }
     
@@ -1311,7 +1291,7 @@ export function initializeModals(appContext) {
         else sortStatus.textContent = app.getText('sort_cycle_session');
     });
     document.getElementById('btnCancelSortCycle').addEventListener('click', () => sortDialog.close());
-    sortDialog.addEventListener('close', () => { app.resetWasLongPress(); returnToTechnicianMenu('sortCycleDialog'); });
+    sortDialog.addEventListener('close', () => app.resetWasLongPress());
     sortDialog.addEventListener('click', event => {
         if (event.target !== sortDialog) return;
         const box = sortDialog.getBoundingClientRect();
@@ -1432,7 +1412,6 @@ export function initializeModals(appContext) {
         nudgeDialog.showModal();
         if (!nudgeSpeed.disabled) nudgeSpeed.focus();
     }
-    nudgeDialog.addEventListener('close', () => returnToTechnicianMenu('nudgeSettingsDialog'));
     document.getElementById('btnCloseNudgeSettings').addEventListener('click', () => nudgeDialog.close());
     nudgeDialog.addEventListener('close', () => {
         app.persistNudgeSettings();
@@ -1445,64 +1424,11 @@ export function initializeModals(appContext) {
             nudgeDialog.close();
         }
     });
-    const technicianLinks = [
-        ['gol', 'gameOfLife', 'gameOfLifeSettingsModal', 'btnGameOfLife', 'tech_gol', openGolSettingsModal],
-        ['chi', 'sandpile', 'chiFlowSettingsModal', 'btnSandpile', 'tech_chi', openChiFlowSettingsModal],
-        ['gravity', 'gravitationalSort', 'gravitationalSortSettingsModal', 'btnGravitationalSort', 'tech_gravity', openGravitationalSortSettingsModal],
-        ['spiral', 'spiral', 'spiralSettingsModal', 'btnSpiral', 'tech_spiral', openSpiralSettingsModal],
-        ['magnet', 'magnet', 'magnetSettingsModal', 'btnMagnetModes', 'tech_magnet', openMagnetSettingsModal],
-        ['contour', 'contour', 'contourSettingsModal', 'btnContour', 'tech_contour', openContourSettingsModal],
-        ['turing', 'turing', 'turingSettingsModal', 'btnTuring', 'tech_turing', openTuringSettingsModal],
-        ['sort', null, 'sortCycleDialog', 'btnCycleSort', 'tech_sort', openSortCycleModal],
-        ['nudge', null, 'nudgeSettingsDialog', 'btnNudgeBrighter', 'tech_nudge', openNudgeSettingsModal],
-        ['brush', null, 'colorPickerModal', 'btnColorPicker', 'tech_brush', openColorPickerModal]
-    ];
-    for (const [id, simulation, modalId, iconId, labelKey, open] of technicianLinks) {
-        const button = document.createElement('button');
-        button.id = 'btnTechSettings_' + id;
-        button.type = 'button';
-        button.className = 'technician-settings-link';
-        button.setAttribute('aria-haspopup', 'dialog');
-        button.setAttribute('aria-controls', modalId);
-        const icons = [...document.getElementById(iconId)?.querySelectorAll('svg') || []];
-        const icon = (icons.find(svg => svg.style.display !== 'none') || icons[0])?.cloneNode(true);
-        if (icon) {
-            icon.removeAttribute('id');
-            icon.style.display = '';
-            if (id === 'brush') icon.querySelectorAll('circle').forEach(element => {
-                element.style.fill = 'none';
-                element.style.stroke = 'currentColor';
-                element.style.strokeWidth = '1.5';
-            });
-            icon.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'));
-            icon.setAttribute('aria-hidden', 'true');
-            button.appendChild(icon);
-        }
-        const label = document.createElement('span');
-        label.dataset.debugText = labelKey;
-        label.textContent = app.getText(labelKey);
-        button.appendChild(label);
-        document.getElementById(simulation ? 'technicianEvolutionLinks' : 'technicianToolLinks').appendChild(button);
-        button.addEventListener('click', () => {
-            if (app.isNudgeReplayActive() || app.isBreathing() || (simulation && app.isLifePlaying())) return;
-            technicianSettingsRoute = { modalId, buttonId: button.id, scrollTop: app.dom.technicianDialog.scrollTop,
-                settingsOnly: Boolean(simulation && app.getArmedSimulation() !== simulation) };
-            app.dom.technicianDialog.close();
-            open();
-        });
-    }
-    function refreshTechnicianLinks() {
-        technicianLinks.forEach(([id, simulation]) => {
-            document.getElementById('btnTechSettings_' + id).disabled = app.isNudgeReplayActive() || app.isBreathing() || Boolean(simulation && app.isLifePlaying());
-        });
-    }
-
     let technicianReturnFocus = app.dom.btnOpenDebug;
     const smoothRenderingToggle = document.getElementById('smoothRenderingToggle');
     smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
-        refreshTechnicianLinks();
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
@@ -1676,7 +1602,7 @@ export function initializeModals(appContext) {
     });
     app.dom.technicianDialog.addEventListener('close', () => {
         app.resetWasLongPress();
-        if (!technicianSettingsRoute) technicianReturnFocus.focus();
+        technicianReturnFocus.focus();
     });
 
     // Help Modal
@@ -1850,7 +1776,7 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
             app.spiralRules.method = activeBtn.dataset.method;
             
             // עדכון: סנכרון האייקון בלוח הבקרה למצב החדש שנבחר בספירלה
-            if (!technicianSettingsRoute?.settingsOnly && typeof app.syncSpiralModeFromModal === 'function') {
+            if (typeof app.syncSpiralModeFromModal === 'function') {
                 app.syncSpiralModeFromModal(activeBtn.dataset.method);
             }
         }
@@ -1887,7 +1813,6 @@ let tempMagnetRules = { method: 'magnet', anchorColorIndex: -1 };
 function closeMagnetSettingsModal() {
     app.dom.magnetSettingsModal.style.display = 'none';
     app.resetWasLongPress();
-    returnToTechnicianMenu('magnetSettingsModal', 0);
 }
 
 function renderMagnetMethodButtons() {
@@ -2056,7 +1981,7 @@ function saveMagnetSettings() {
     // התיקון שלנו: שימוש ב"טלפון" כדי לשמור את הנתונים חזרה בצורה מסודרת
     app.setMagnetRules({ ...tempMagnetRules });
 
-    if (!technicianSettingsRoute?.settingsOnly && typeof app.syncMagnetFromModal === 'function') {
+    if (typeof app.syncMagnetFromModal === 'function') {
         app.syncMagnetFromModal(tempMagnetRules.method, tempMagnetRules.anchorColorIndex);
     }
 

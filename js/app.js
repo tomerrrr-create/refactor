@@ -4097,7 +4097,6 @@ else if (action.eventName === 'Invert Colors') {
                 simulationInitSettings = { ...settings };
                 return persisted;
             },
-            getArmedSimulation: () => armedSimulation,
             getN: () => n, isBreathing: () => isBreathing, isLifePlaying: () => isLifePlaying,
             _performResize, animateBoardTransition,
             setColorPickerPage: (p) => { colorPickerPage = p; }, getColorPickerPage: () => colorPickerPage,
