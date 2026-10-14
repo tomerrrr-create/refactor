@@ -9,6 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  chi_reach_fixed: {"en": "Fixed", "he": "קבוע", "ru": "Фиксированный", "nl": "Vast"},
+  chi_reach_legacy_note: {"en": "Saved fixed range. Move the slider to adjust from Auto.", "he": "טווח קבוע שנשמר. הזיזו את הסליידר לכוונון ביחס ל־Auto.", "ru": "Сохранён фиксированный диапазон. Двигайте ползунок для настройки относительно Auto.", "nl": "Opgeslagen vast bereik. Verplaats de schuifregelaar om vanaf Auto aan te passen."},
   cycle_manual: {"en": "Custom", "he": "אישי", "ru": "Свои правила", "nl": "Aangepast"},
   cycle_reset: {"en": "Reset cycle", "he": "איפוס סייקל", "ru": "Сбросить цикл", "nl": "Cyclus herstellen"},
   save_smooth: {"en": "Smooth", "he": "ריכוך", "ru": "Сгладить", "nl": "Zacht"},
@@ -287,7 +289,7 @@ export const translations = {
   chi_flow_label: { en: "Flow Rules", he: "חוקי זרימה", ru: "Правила потока", nl: "Stroomregels" },
   chi_flow_desc: { en: "An active cell flows to the next color if pulled by:", he: "תא פעיל מתקדם לצבע הבא אם הוא נמשך על ידי:", ru: "Активная клетка перетекает в следующий цвет, если ее тянут:", nl: "Een active cel stroomt naar de volgende kleur als deze wordt getrokken door:" },
   chi_reach_label: { en: "Magnetic Reach", he: "טווח משיכה (מגנטיות)", ru: "Магнитный охват", nl: "Magnetisch bereik" },
-  chi_reach_desc: { en: "How far ahead a neighbor's color can be to pull a cell.", he: "כמה צבעים קדימה שכן יכול להיות כדי למשוך את התא.", ru: "Насколько цвет соседа может опережать, чтобы притянуть клетку.", nl: "Hoe ver vooruit de kleur van een buurman kan zijn om een cel te trekken." },
+  chi_reach_desc: { en: "Adjust the color pull range around Auto for the current palette.", he: "כוונון טווח המשיכה סביב Auto, לפי הפלטה הנוכחית.", ru: "Настройте диапазон притяжения цветов относительно Auto для текущей палитры.", nl: "Pas het kleurbereik rond Auto aan voor het huidige palet." },
   chi_preset_topography: { en: "Topography", he: "טופוגרפיה", ru: "Топография", nl: "Topografie" },
   chi_preset_wildfire: { en: "Wildfire", he: "אש פראית", ru: "Лесной пожар", nl: "Natuurbrand" },
   chi_preset_crystals: { en: "Crystals", he: "גבישים", ru: "Кристаллы", nl: "Kristallen" },

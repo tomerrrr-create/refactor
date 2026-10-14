@@ -1,15 +1,12 @@
+import { resolveChiReach } from '../chi-reach.js';
+
 export function generateSandpile(currentBoardState, currentPalette, chiFlowRules) {
     const n = Math.sqrt(currentBoardState.length);
     const nextBoardState = currentBoardState.map(cell => ({ ...cell }));
     let hasChanged = false;
     const numColors = currentPalette.length;
 
-    // מגנטיות - עכשיו נשלטת על ידי המשתמש (reach) במקום חישוב קשיח
-let pullReach = chiFlowRules.reach;
-// אם המשתמש בחר 0 (Auto), נשתמש בנוסחה הדינמית החכמה מהקוד הישן שלך
-if (pullReach === 0) {
-    pullReach = Math.max(2, Math.floor(numColors / 6));
-}
+    const pullReach = resolveChiReach(chiFlowRules, numColors);
 
     for (let i = 0; i < currentBoardState.length; i++) {
         const row = Math.floor(i / n);

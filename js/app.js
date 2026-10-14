@@ -2641,7 +2641,8 @@ function cycleGameOfLifeMode() {
 }
 
 function cloneChiFlowRules(rules) {
-    return { awakening: [...rules.awakening], flow: [...rules.flow], reach: rules.reach };
+    return { awakening: [...rules.awakening], flow: [...rules.flow], reach: rules.reach,
+        ...(Number.isInteger(rules.reachOffset) ? { reachOffset: rules.reachOffset } : {}) };
 }
 
 function getChiFlowRecordingRules() {

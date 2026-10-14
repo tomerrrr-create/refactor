@@ -8,12 +8,18 @@ export function normalizeEvolutionCycle(value, defaults) {
     return value.map((rules, index) => {
         const fallback = defaults[index];
         if (!rules || typeof rules !== 'object') return cloneCycleRules(fallback);
-        const valid = Object.keys(fallback).every(key => Array.isArray(fallback[key])
+        const requiredKeys = Object.keys(fallback).filter(key => key !== 'reachOffset');
+        const valid = requiredKeys.every(key => Array.isArray(fallback[key])
             ? Array.isArray(rules[key]) && rules[key].every(n => Number.isInteger(n) && n >= (key === 'awakening' || key === 'flow' ? 1 : 0) && n <= 8)
             : Number.isInteger(rules[key]) && rules[key] >= 0 && rules[key] <= 10);
         if (!valid) return cloneCycleRules(fallback);
-        return Object.fromEntries(Object.keys(fallback).map(key => [key, Array.isArray(rules[key])
+        const normalized = Object.fromEntries(requiredKeys.map(key => [key, Array.isArray(rules[key])
             ? [...new Set(rules[key])].sort((a, b) => a - b) : rules[key]]));
+        if ('reach' in fallback && 'reachOffset' in rules) {
+            if (!Number.isInteger(rules.reachOffset) || rules.reachOffset < -10 || rules.reachOffset > 10) return cloneCycleRules(fallback);
+            normalized.reachOffset = rules.reachOffset;
+        }
+        return normalized;
     });
 }
 

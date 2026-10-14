@@ -1,4 +1,5 @@
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
+import { getAutoChiReach } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
@@ -160,10 +161,27 @@ function closeContourSettingsModal() {
     let tempChiAwakening = [];
     let tempChiFlow = [];
     let tempChiReach = 2;
+    let tempChiReachOffset = 0;
 let chiCycleMembership = null;
 let golCycleMembership = null;
 
 const CHI_PRESETS = CHI_FLOW_PRESETS;
+
+function setChiReachDraft(rules) {
+    tempChiReach = rules.reach;
+    tempChiReachOffset = Number.isInteger(rules.reachOffset) ? rules.reachOffset : rules.reach === 0 ? 0 : null;
+    updateChiReachDisplay();
+}
+
+function updateChiReachDisplay() {
+    const label = tempChiReachOffset === null ? `${app.getText('chi_reach_fixed')}: ${tempChiReach}` :
+        tempChiReachOffset === 0 ? 'Auto' : `Auto ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
+    const paletteSize = app.C.PALETTES[app.getActivePaletteIndex()].colors.length;
+    app.dom.chiReachSlider.value = tempChiReachOffset ?? Math.max(-10, Math.min(10, tempChiReach - getAutoChiReach(paletteSize)));
+    app.dom.chiReachValue.textContent = label;
+    app.dom.chiReachSlider.setAttribute('aria-valuetext', label);
+    app.dom.chiReachDesc.textContent = app.getText(tempChiReachOffset === null ? 'chi_reach_legacy_note' : 'chi_reach_desc');
+}
 
 
 function closeChiFlowSettingsModal() {
@@ -222,7 +240,7 @@ function updateActiveChiPresetButton() {
             // בודק אם החוקים הזמניים זהים לחוקים של אחד הפריסטים
             if (arraysAreEqual(tempChiAwakening, rules.awakening) &&
                 arraysAreEqual(tempChiFlow, rules.flow) &&
-                tempChiReach === rules.reach) {
+                tempChiReach === rules.reach && (tempChiReachOffset ?? null) === (rules.reachOffset ?? (rules.reach === 0 ? 0 : null))) {
                 activeId = 'btnChiPreset' + presetName;
                 break;
             }
@@ -237,29 +255,26 @@ function updateActiveChiPresetButton() {
         if (!p) return;
         tempChiAwakening = [...p.awakening];
         tempChiFlow = [...p.flow];
-        tempChiReach = p.reach;
+        setChiReachDraft(p);
 
         renderChiFlowChips(app.dom.chiAwakeningChipsContainer, tempChiAwakening, 8);
         renderChiFlowChips(app.dom.chiFlowChipsContainer, tempChiFlow, 8);
-        app.dom.chiReachSlider.value = tempChiReach;
-app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
 
         updateChiPresetButtons(btnElement ? btnElement.id : '');
         chiCycleMembership?.selectPreset(presetName, p);
     }
 
     function readChiCycleRules() {
-        return { awakening: [...tempChiAwakening], flow: [...tempChiFlow], reach: parseInt(app.dom.chiReachSlider.value, 10) };
+        return { awakening: [...tempChiAwakening], flow: [...tempChiFlow], reach: tempChiReachOffset === null ? tempChiReach : 0,
+            ...(tempChiReachOffset === null ? {} : { reachOffset: tempChiReachOffset }) };
     }
 
     function writeChiCycleRules(rules) {
         tempChiAwakening = [...rules.awakening];
         tempChiFlow = [...rules.flow];
-        tempChiReach = rules.reach;
+        setChiReachDraft(rules);
         renderChiFlowChips(app.dom.chiAwakeningChipsContainer, tempChiAwakening, 8);
         renderChiFlowChips(app.dom.chiFlowChipsContainer, tempChiFlow, 8);
-        app.dom.chiReachSlider.value = tempChiReach;
-        app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
         updateActiveChiPresetButton();
     }
 
@@ -271,13 +286,11 @@ app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
         const currentRules = app.getChiFlowRules();
         tempChiAwakening = [...currentRules.awakening];
         tempChiFlow = [...currentRules.flow];
-        tempChiReach = currentRules.reach;
+        setChiReachDraft(currentRules);
 
         renderChiFlowChips(app.dom.chiAwakeningChipsContainer, tempChiAwakening, 8);
         renderChiFlowChips(app.dom.chiFlowChipsContainer, tempChiFlow, 8);
         
-        app.dom.chiReachSlider.value = tempChiReach;
-app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
 
         // טעינת הטקסטים לפי השפה הנוכחית
         app.dom.chiFlowModalTitle.textContent = app.getText('chi_modal_title');
@@ -286,7 +299,7 @@ app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
         app.dom.chiFlowLabel.textContent = app.getText('chi_flow_label');
         app.dom.chiFlowDesc.textContent = app.getText('chi_flow_desc');
         app.dom.chiReachLabel.textContent = app.getText('chi_reach_label');
-        app.dom.chiReachDesc.textContent = app.getText('chi_reach_desc');
+        updateChiReachDisplay();
         app.dom.btnChiPresetTopography.textContent = app.getText('chi_preset_topography');
         app.dom.btnChiPresetWildfire.textContent = app.getText('chi_preset_wildfire');
         app.dom.btnChiPresetCrystals.textContent = app.getText('chi_preset_crystals');
@@ -1531,8 +1544,9 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
 
 
 app.dom.chiReachSlider.addEventListener('input', (e) => {
-    tempChiReach = parseInt(e.target.value, 10);
-    app.dom.chiReachValue.textContent = tempChiReach === 0 ? 'Auto' : tempChiReach;
+    tempChiReach = 0;
+    tempChiReachOffset = parseInt(e.target.value, 10);
+    updateChiReachDisplay();
     updateActiveChiPresetButton(); // <-- שינינו את שם הפונקציה כאן
     chiCycleMembership?.manualChange();
 });
