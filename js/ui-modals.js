@@ -41,7 +41,7 @@ let app;
 let saveStatusTimer;
 let settingsImportCloseTimer;
 function closeRecipeResetPrompt() {
-    app.dom.saveResetConfirmation.hidden = true;
+    if (app.dom.saveResetConfirmation.open) app.dom.saveResetConfirmation.close();
     app.dom.btnResetLogger.hidden = false;
     app.dom.btnResetLogger.setAttribute('aria-expanded', 'false');
 }
@@ -1270,9 +1270,8 @@ export function initializeModals(appContext) {
     app.dom.btnLoadProjectIdea.addEventListener('click', app.handleLoadProject);
     app.dom.btnResetLogger.addEventListener('click', () => {
         clearSaveStatus();
-        app.dom.btnResetLogger.hidden = true;
         app.dom.btnResetLogger.setAttribute('aria-expanded', 'true');
-        app.dom.saveResetConfirmation.hidden = false;
+        app.dom.saveResetConfirmation.showModal();
         app.dom.btnCancelResetLogger.focus();
     });
     app.dom.btnCancelResetLogger.addEventListener('click', () => {
@@ -1283,9 +1282,15 @@ export function initializeModals(appContext) {
         app.resetArtRecipeLog();
         app.dom.btnSave.focus();
     });
-    app.dom.saveModal.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && !app.dom.saveResetConfirmation.hidden) {
-            e.preventDefault(); e.stopPropagation();
+    app.dom.saveResetConfirmation.addEventListener('cancel', e => {
+        e.preventDefault();
+        closeRecipeResetPrompt();
+        app.dom.btnResetLogger.focus();
+    });
+    app.dom.saveResetConfirmation.addEventListener('click', e => {
+        if (e.target !== app.dom.saveResetConfirmation) return;
+        const rect = app.dom.saveResetConfirmation.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
             closeRecipeResetPrompt();
             app.dom.btnResetLogger.focus();
         }
