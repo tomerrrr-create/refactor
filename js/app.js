@@ -277,6 +277,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let activePaletteIndex = 0;
       let n = 7;
       let separatorPx = 2;
+      let isSmoothRendering = false;
       let isBrushModeOn = true; 
       let isContinuousBrushOn = false;
       let hasPerformedInitialAutofill = false; 
@@ -290,8 +291,6 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let selectedColorIndex = -1;
       let colorPickerPage = 0;
       let longPressTimer = null;
-      let technicianHoldTimer = null;
-      let simulationHoldBounds = null;
       let wasLongPress = false;
       let startupSettings = loadStartup();
       let simulationInitSettings = loadSimInit();
@@ -553,7 +552,7 @@ let offscreenRenderCanvas = null;
 let offscreenRenderCtx = null;
 let cachedImgData = null; // משתנה למניעת דליפת זיכרון!
 
-function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
+function renderBoard(targetCtx, width, height, timestamp = performance.now(), smooth = false) {
     if (!targetCtx) return;
     if (boardState.length === 0) return;
 
@@ -625,7 +624,8 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
         offscreenRenderCtx.putImageData(imgData, 0, 0);
 
         // מתיחת הקנבס הווירטואלי על פני הקנבס האמיתי
-        targetCtx.imageSmoothingEnabled = false; 
+        targetCtx.imageSmoothingEnabled = smooth;
+        if (smooth) targetCtx.imageSmoothingQuality = 'high';
         targetCtx.drawImage(offscreenRenderCanvas, 0, 0, width, height);
         
         return; // סיימנו את הרינדור המהיר!
@@ -683,7 +683,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now()) {
 
       function renderToScreen(timestamp) {
         if (!ctx || !canvas) return;
-        renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp);
+        renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp, isSmoothRendering);
       }
 
       // --- startBreatheAnimation and stopBreatheAnimation are now removed. ---
@@ -1857,8 +1857,6 @@ function updateMacroPaletteButtonUI(paletteIndex) {
       
       function hideLongPressDisplay() {
           clearTimeout(longPressTimer);
-          clearTimeout(technicianHoldTimer);
-          simulationHoldBounds = null;
           dom.btnToggleSimMode.classList.remove('technician-hold');
           dom.longPressOverlay.classList.remove('visible');
           dom.longPressDisplay.classList.remove('visible');
@@ -1912,31 +1910,14 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 function handlePointerDownCtrl(e) {
         if (isBreathing) return;
         clearTimeout(longPressTimer);
-        clearTimeout(technicianHoldTimer);
         dom.btnToggleSimMode.classList.remove('technician-hold');
         const btn = e.currentTarget;
         if (btn === dom.btnSave || btn === dom.btnPlayPauseLife) return;
-        if (btn.id === 'btnToggleSimMode') {
-            // The button moves when simulation controls appear. Keep the hold
-            // tied to its original hit area until release or a deliberate drag.
-            simulationHoldBounds = btn.getBoundingClientRect();
-            btn.setPointerCapture(e.pointerId);
-        }
         longPressTimer = setTimeout(() => {
             wasLongPress = true;
 
             if (btn.id === 'btnInvert') { modals.openAdvancedColorMappingModal(); return; }
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
-            if (btn.id === 'btnToggleSimMode') {
-                if (!isSimModeActive) toggleSimMode();
-                prepareBoardForSimMode();
-                btn.classList.add('technician-hold');
-                technicianHoldTimer = setTimeout(() => {
-                    btn.classList.remove('technician-hold');
-                    modals.openTechnicianMenu(btn);
-                }, C.LONG_PRESS_SHOW_MS * 2);
-                return;
-            }
 
 
             if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
@@ -3983,6 +3964,11 @@ else if (action.eventName === 'Invert Colors') {
                 symmetry: symmetryMode, interfaceMode: isSimModeActive ? 'simulation' : 'creative'
             }),
             getSimulationInit: () => ({ ...simulationInitSettings }),
+            getSmoothRendering: () => isSmoothRendering,
+            setSmoothRendering: value => {
+                isSmoothRendering = Boolean(value);
+                renderToScreen(performance.now());
+            },
             saveSimulationInit: (settings) => {
                 const persisted = persistSimInit(settings);
                 simulationInitSettings = { ...settings };
@@ -4176,7 +4162,22 @@ bindPickerGestures(dom.btnColorPicker, {
     holdMs: C.LONG_PRESS_SHOW_MS
 });
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
-        dom.btnToggleSimMode.addEventListener('click', (e) => handleCtrlClick(e, toggleSimMode));
+        bindPickerGestures(dom.btnToggleSimMode, {
+            onTap: toggleSimMode,
+            onOpen: () => modals.openTechnicianMenu(dom.btnToggleSimMode),
+            onHold: () => {
+                if (!isSimModeActive) toggleSimMode();
+                prepareBoardForSimMode();
+                dom.btnToggleSimMode.classList.add('technician-hold');
+            },
+            onExtendedHold: () => {
+                dom.btnToggleSimMode.classList.remove('technician-hold');
+                modals.openTechnicianMenu(dom.btnToggleSimMode);
+            },
+            onEnd: () => dom.btnToggleSimMode.classList.remove('technician-hold'),
+            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
+            holdMs: C.LONG_PRESS_SHOW_MS, extendedHoldMs: C.LONG_PRESS_SHOW_MS * 3
+        });
         // A swipe opens settings only for the selected, paused evolution.
         // Tap actions stay independent of that restriction.
         const evolutionPickers = [
@@ -4219,17 +4220,11 @@ if (dom.btnSimSettings) {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
             btn.addEventListener('pointercancel', hideLongPressDisplay);
-        });
-        dom.btnToggleSimMode.addEventListener('pointermove', e => {
-            const box = simulationHoldBounds;
-            if (box && (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom)) {
-                hideLongPressDisplay();
-            }
         });
 // Brush Size Slider Logic
 const brushSizeSlider = document.getElementById('brushSizeSlider');

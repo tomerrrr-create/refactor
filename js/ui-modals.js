@@ -1305,8 +1305,11 @@ export function initializeModals(appContext) {
         }
     });
     let technicianReturnFocus = app.dom.btnOpenDebug;
+    const smoothRenderingToggle = document.getElementById('smoothRenderingToggle');
+    smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
+        smoothRenderingToggle.checked = app.getSmoothRendering();
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
         startupForm.hidden = true;
