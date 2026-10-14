@@ -1,3 +1,4 @@
+import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
@@ -281,7 +282,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let activePaletteIndex = 0;
       let n = 7;
       let separatorPx = 2;
-      let isSmoothRendering = false;
+      let isSmoothRendering = DEFAULT_SMOOTH_RENDERING;
       let isBrushModeOn = true; 
       let isContinuousBrushOn = false;
       let hasPerformedInitialAutofill = false; 
@@ -1819,8 +1820,9 @@ if (simulationName === 'magnet') {
         const storedInit = persistSimInit(simulationInitSettings);
         const storedSort = persistSortCycle(sortCycleMethods);
         const storedWorkspace = persistWorkspaceSettings(settings);
+        const storedSmooth = persistSmoothRendering(settings.smoothing.display);
         modals.refreshLocalizedModalText();
-        return storedStartup && storedInit && storedSort && storedWorkspace;
+        return storedStartup && storedInit && storedSort && storedWorkspace && storedSmooth;
       }
 
       async function handleSaveSettings() {
@@ -4069,7 +4071,12 @@ else if (action.eventName === 'Invert Colors') {
             getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
             isNudgeReplayActive: () => isMacroLoaded,
             setNudgeInterval, persistNudgeSettings,
-            resetWorkspaceSettings: () => importWorkspaceSettings(defaultWorkspaceSettings()),
+            resetWorkspaceSettings: () => {
+                const settings = defaultWorkspaceSettings();
+                // Keep the settings-file V1 baseline intact; the current display default is on.
+                settings.smoothing.display = DEFAULT_SMOOTH_RENDERING;
+                return importWorkspaceSettings(settings);
+            },
             getStartupSettings: () => ({ ...startupSettings }),
             saveStartupSettings: (settings) => {
                 const normalized = normalizeStartup(settings);
@@ -4090,6 +4097,7 @@ else if (action.eventName === 'Invert Colors') {
             getSmoothRendering: () => isSmoothRendering,
             setSmoothRendering: value => {
                 isSmoothRendering = Boolean(value);
+                persistSmoothRendering(isSmoothRendering);
                 renderToScreen(performance.now());
             },
             saveSimulationInit: (settings) => {
@@ -4205,6 +4213,9 @@ updateBrightnessEvoButtonUI();
         updateAllUIText();
         const importedPreferences = loadWorkspaceSettings();
         if (importedPreferences) applyWorkspacePreferences(importedPreferences);
+        isSmoothRendering = loadSmoothRendering(importedPreferences?.smoothing.display ?? DEFAULT_SMOOTH_RENDERING);
+        document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
+        renderToScreen(null);
         logCurrentStateAsInit();
 
         
