@@ -1606,3 +1606,16 @@ button, .ctrl {
 .cycle-slot-button:focus-visible, .cycle-reset-dot:focus-visible { outline: 1px solid #d5aa48; outline-offset: 2px; }
 @media (hover: hover) and (pointer: fine) { .cycle-slot-button:hover, .cycle-reset-dot:hover { background: #d5aa4814; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .cycle-slot-button { transition: none; } }
+
+.technician-reset-section { margin-top: 8px; padding-top: 18px; border-top: 1px solid #b28b362b; text-align: center; }
+.technician-reset-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 9px 18px; border: 1px solid #b28b3659; border-radius: 999px; background: radial-gradient(ellipse at center, #b28b3619, #090a09); color: #d5aa48; font: inherit; font-size: 13px; cursor: pointer; transition: box-shadow .3s ease, color .3s ease; }
+.technician-reset-button svg { width: 23px; height: 23px; }
+.technician-reset-button:hover { color: #ffe7a0; box-shadow: 0 0 20px #b28b3626; }
+.technician-reset-button:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 3px; }
+.technician-reset-button.reset-complete svg { animation: workspace-reset-orbit .9s ease-in-out; }
+.workspace-reset-confirmation { margin-top: 14px; }
+.workspace-reset-confirmation .init-settings-actions { justify-content: center; }
+#workspaceResetStatus { margin: 10px 0 0; }
+#workspaceResetStatus:empty { display: none; }
+@keyframes workspace-reset-orbit { from { transform: rotate(-180deg); opacity: .4; } to { transform: rotate(0); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .technician-reset-button.reset-complete svg { animation: none; } }

@@ -576,6 +576,23 @@
         </div>
         <p id="startupSettingsStatus" role="status" aria-live="polite"></p>
       </form>
+      <div class="technician-reset-section">
+        <button id="btnResetWorkspace" type="button" class="technician-reset-button" aria-expanded="false" aria-controls="workspaceResetConfirmation" data-i18n-title="workspace_reset_title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18.7 6.8A8 8 0 1 0 20 12M18.7 3.8v3.4h-3.4"></path>
+            <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"></circle>
+          </svg>
+          <span data-debug-text="workspace_reset"></span>
+        </button>
+        <div id="workspaceResetConfirmation" class="workspace-reset-confirmation" hidden role="group" aria-labelledby="workspaceResetPrompt">
+          <p id="workspaceResetPrompt" class="init-settings-note" data-debug-text="workspace_reset_prompt"></p>
+          <div class="init-settings-actions">
+            <button id="btnConfirmWorkspaceReset" type="button" class="init-save" data-debug-text="workspace_reset"></button>
+            <button id="btnCancelWorkspaceReset" type="button" class="init-reset" data-debug-text="evolution_cancel"></button>
+          </div>
+        </div>
+        <p id="workspaceResetStatus" class="init-settings-note" role="status" aria-live="polite"></p>
+      </div>
       <button id="btnCloseDebug" type="button" class="technician-back" data-debug-text="debug_back" autofocus></button>
     </div>
   </dialog>

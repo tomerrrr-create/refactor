@@ -1355,6 +1355,9 @@ export function initializeModals(appContext) {
     smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
+        hideWorkspaceResetConfirmation();
+        workspaceResetStatus.textContent = '';
+        delete workspaceResetStatus.dataset.debugText;
         smoothRenderingToggle.checked = app.getSmoothRendering();
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
@@ -1449,6 +1452,43 @@ export function initializeModals(appContext) {
         }));
         const persisted = app.saveStartupSettings(settings);
         startupStatus.textContent = app.getText(persisted ? 'startup_saved' : 'startup_saved_session');
+    });
+    const resetWorkspaceButton = document.getElementById('btnResetWorkspace');
+    const resetWorkspaceConfirmation = document.getElementById('workspaceResetConfirmation');
+    const workspaceResetStatus = document.getElementById('workspaceResetStatus');
+    const confirmWorkspaceReset = document.getElementById('btnConfirmWorkspaceReset');
+    function hideWorkspaceResetConfirmation() {
+        resetWorkspaceConfirmation.hidden = true;
+        resetWorkspaceButton.setAttribute('aria-expanded', 'false');
+    }
+    resetWorkspaceButton.addEventListener('click', () => {
+        resetWorkspaceConfirmation.hidden = !resetWorkspaceConfirmation.hidden;
+        resetWorkspaceButton.setAttribute('aria-expanded', String(!resetWorkspaceConfirmation.hidden));
+        workspaceResetStatus.textContent = '';
+        delete workspaceResetStatus.dataset.debugText;
+    });
+    document.getElementById('btnCancelWorkspaceReset').addEventListener('click', () => {
+        hideWorkspaceResetConfirmation();
+        resetWorkspaceButton.focus();
+    });
+    confirmWorkspaceReset.addEventListener('click', () => {
+        confirmWorkspaceReset.disabled = true;
+        try {
+            const persisted = app.resetWorkspaceSettings();
+            fillInitForm(app.getSimulationInit());
+            fillStartupForm(app.getStartupSettings());
+            smoothRenderingToggle.checked = app.getSmoothRendering();
+            hideWorkspaceResetConfirmation();
+            const key = persisted ? 'workspace_reset_done' : 'workspace_reset_session';
+            workspaceResetStatus.dataset.debugText = key;
+            workspaceResetStatus.textContent = app.getText(key);
+            resetWorkspaceButton.classList.remove('reset-complete');
+            requestAnimationFrame(() => resetWorkspaceButton.classList.add('reset-complete'));
+            resetWorkspaceButton.focus();
+        } catch (error) {
+            workspaceResetStatus.dataset.debugText = 'workspace_reset_error';
+            workspaceResetStatus.textContent = app.getText('workspace_reset_error');
+        } finally { confirmWorkspaceReset.disabled = false; }
     });
     app.dom.btnCloseDebug.addEventListener('click', () => app.dom.technicianDialog.close());
     app.dom.technicianDialog.addEventListener('keydown', (event) => {
