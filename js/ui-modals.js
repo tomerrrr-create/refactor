@@ -1,5 +1,5 @@
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
-import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES } from './chi-reach.js';
+import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
@@ -185,8 +185,8 @@ function updateChiReachDisplay() {
         tempChiReachOffset === 0 ? auto : `${auto} ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
     // Old fixed/offset settings remain untouched until the user moves the slider.
     const displayedPercent = percent ?? resolveChiReach(readChiCycleRules(), paletteSize) / getAutoChiReach(paletteSize) * 100;
-    const nearest = CHI_REACH_PERCENTAGES.reduce((best, value, index) =>
-        Math.abs(value - displayedPercent) < Math.abs(CHI_REACH_PERCENTAGES[best] - displayedPercent) ? index : best, 0);
+    const nearest = CHI_REACH_SLIDER_PERCENTAGES.reduce((best, value, index) =>
+        Math.abs(value - displayedPercent) < Math.abs(CHI_REACH_SLIDER_PERCENTAGES[best] - displayedPercent) ? index : best, 0);
     app.dom.chiReachSlider.value = nearest;
     document.getElementById('chiReachAutoTick').textContent = `${auto} · 100%`;
     app.dom.chiReachValue.textContent = label;
@@ -1572,7 +1572,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
 app.dom.chiReachSlider.addEventListener('input', (e) => {
     tempChiReach = 0;
     tempChiReachOffset = null;
-    tempChiReachPercent = CHI_REACH_PERCENTAGES[Number(e.target.value)];
+    tempChiReachPercent = CHI_REACH_SLIDER_PERCENTAGES[Number(e.target.value)];
     updateChiReachDisplay();
     updateActiveChiPresetButton(); // <-- שינינו את שם הפונקציה כאן
     chiCycleMembership?.manualChange();

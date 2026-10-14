@@ -1,3 +1,6 @@
+export const CHI_REACH_SLIDER_PERCENTAGES = Object.freeze([50, 75, 100, 200, 400]);
+
+// Keep previously saved percentages valid; only the visible slider stations change.
 export const CHI_REACH_PERCENTAGES = Object.freeze([50, 75, 100, 125, 150, 200, 300, 400]);
 
 export function getAutoChiReach(paletteSize) {
