@@ -561,8 +561,13 @@
       </button>
       <form id="startupSettingsForm" class="init-settings" hidden>
         <p class="init-settings-note" data-debug-text="startup_note"></p>
-        <label for="startupPalette" data-debug-text="startup_palette"></label>
-        <select id="startupPalette"></select>
+        <label for="btnStartupPalette" data-debug-text="startup_palette"></label>
+        <input id="startupPalette" type="hidden">
+        <button id="btnStartupPalette" type="button" class="startup-palette-trigger" aria-haspopup="dialog" aria-controls="startupPaletteDialog">
+          <span id="startupPaletteIcon" aria-hidden="true"></span>
+          <span id="startupPaletteName"></span>
+          <svg class="startup-palette-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg>
+        </button>
         <label for="startupBoardSize" data-debug-text="init_board_size"></label>
         <select id="startupBoardSize"></select>
         <label for="startupSeparator" data-debug-text="startup_separator"></label>
@@ -647,6 +652,16 @@
         <button id="btnConfirmResize" class="mt-6 w-full text-black font-bold py-2 px-4 rounded-lg"></button>
     </div>
   </div>
+
+  <dialog id="startupPaletteDialog" class="startup-palette-dialog" aria-labelledby="startupPaletteTitle">
+    <header class="startup-palette-heading">
+      <h2 id="startupPaletteTitle" data-debug-text="startup_palette_picker_title"></h2>
+      <button id="btnStartupPaletteClose" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
+      </button>
+    </header>
+    <div id="startupPaletteGrid"></div>
+  </dialog>
 
   <div id="paletteModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
     <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-lg max-h-[80vh] flex flex-col">
