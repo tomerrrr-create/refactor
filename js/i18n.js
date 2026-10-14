@@ -9,7 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  settings_aligned: {"en": "Aligned", "he": "בהרמוניה", "ru": "В гармонии", "nl": "In harmonie"},
+  settings_aligned: {"en": "Settings applied", "he": "ההגדרות הוחלו", "ru": "Настройки применены", "nl": "Instellingen toegepast"},
   settings_session_only: {"en": "For this session", "he": "לכניסה זו", "ru": "На этот сеанс", "nl": "Voor deze sessie"},
 
   workspace_reset: {"en": "Reset", "he": "איפוס", "ru": "Сброс", "nl": "Herstellen"},
