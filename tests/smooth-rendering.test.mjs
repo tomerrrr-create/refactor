@@ -44,3 +44,24 @@ test('separated tiles retain the direct rectangle rendering path', () => {
     h.ctx.drawImage = () => { throw Error('Separated tiles must not be resampled'); };
     h.renderToScreen(null); assert.equal(rectangles, 5);
 });
+
+for (const screenSmooth of [false, true]) for (const exportSmooth of [false, true]) {
+    test(`save checkbox ${exportSmooth} controls actual export independently of screen ${screenSmooth}`, async () => {
+        const h = harness();
+        h.isSmoothRendering = screenSmooth; h.renderToScreen(null);
+        const exported = { drawImage() {}, fillRect() {}, save() {}, translate() {}, restore() {} };
+        h.document.createElement = () => ({ getContext: () => exported, toBlob: cb => cb({}) });
+        h.dom = { btnSaveImage: { innerHTML: 'icon', disabled: false }, saveSmoothImage: { checked: exportSmooth } };
+        h.setTimeout = fn => fn(); h.navigator = {}; h.getSanitizedFileName = () => 'test.png';
+        h.File = class { constructor(bytes, name) { this.name = name; } };
+        let closed = false, downloaded = false;
+        h.triggerDownload = () => { downloaded = true; };
+        h.modals = { closeModal: () => { closed = true; } };
+        const start = source.indexOf('async function shareOrDownloadImage()');
+        vm.runInContext(source.slice(start, source.indexOf('async function handleSaveProject()', start)), h);
+        await h.shareOrDownloadImage();
+        assert.equal(exported.imageSmoothingEnabled, exportSmooth);
+        assert.equal(h.ctx.imageSmoothingEnabled, screenSmooth);
+        assert(closed && downloaded); assert.equal(h.dom.btnSaveImage.disabled, false);
+    });
+}

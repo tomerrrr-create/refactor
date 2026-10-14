@@ -11,6 +11,7 @@ export const dom = {
   board: document.getElementById('board'),
   boardCanvas: document.getElementById('boardCanvas'), // Added a specific reference to the canvas
   boardOverlay: document.getElementById('boardOverlay'),
+  saveSmoothImage: document.getElementById('saveSmoothImage'),
   root: document.documentElement,
   splashText: document.getElementById('splashText'),
 
