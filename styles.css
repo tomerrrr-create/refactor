@@ -1493,3 +1493,62 @@ button, .ctrl {
 #startupSettingsStatus { color: #c3b99e; font-size: 13px; line-height: 1.5; margin: 0; }
 
 .chi-flow-panel { max-height: calc(100dvh - 32px); overflow-y: auto; }
+
+/* Quiet bronze seals beside the existing preset buttons. */
+.cycle-preset-row { display: flex; align-items: center; min-width: 0; gap: 2px; }
+.cycle-preset-row > .gol-preset-btn { flex: 1; min-width: 0; font-size: .75rem; line-height: 1.4; }
+.cycle-membership-buttons { display: flex; flex-wrap: wrap; flex-shrink: 0; max-width: 28px; }
+.cycle-membership-icon { display: grid; place-items: center; width: 28px; height: 40px; border: 0; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(105, 70, 38, .12), transparent 70%); color: #735238; transition: color .3s ease, filter .3s ease, background .3s ease; }
+.cycle-membership-icon svg { width: 22px; height: 22px; }
+.cycle-membership-icon.is-assigned { color: #e2c397; background: radial-gradient(ellipse at center, rgba(190, 140, 70, .14), transparent 72%); filter: drop-shadow(0 0 4px rgba(194, 142, 74, .4)); }
+.cycle-membership-icon:not(:disabled) { cursor: pointer; }
+.cycle-membership-icon:focus-visible { outline: 1px solid #c19a68; outline-offset: 1px; }
+@media (hover: hover) and (pointer: fine) {
+  .cycle-membership-icon:not(:disabled):hover { color: #f2d9af; filter: drop-shadow(0 0 6px rgba(194, 142, 74, .6)); }
+}
+.cycle-custom-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.cycle-custom-presets:not(:empty) { margin-top: 8px; }
+.cycle-custom-presets > .cycle-preset-row { min-width: 105px; }
+#btnGolSettingsSave:disabled, #btnChiSettingsSave:disabled { opacity: .45; cursor: default; }
+#gameOfLifeSettingsModal > div { max-height: calc(100dvh - 32px); overflow-y: auto; }
+
+/* Evolution rule tablets share the technician panel's aged gold and dark stone. */
+#gameOfLifeSettingsModal .evolution-rules-panel,
+#chiFlowSettingsModal .evolution-rules-panel {
+  padding: 22px 20px 18px; gap: 18px; border: 1px solid #b28b3659; border-radius: 18px;
+  background: radial-gradient(ellipse at top, #b28b360c, transparent 55%), #090a09;
+  box-shadow: 0 0 70px #b28b3615; max-height: calc(100dvh - 32px); overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: #6d552c #090a09;
+}
+.evolution-rules-panel > h2 { color: #e3c677; font-size: 20px; font-weight: 400; letter-spacing: .04em; padding-bottom: 14px; border-bottom: 1px solid #b28b362b; }
+.evolution-rules-panel h3 { color: #b9a57a; font-size: 12px; font-weight: 500; letter-spacing: .07em; }
+.evolution-rule-grids { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.evolution-rule-grids > div { gap: 9px; }
+.rule-description { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+#golSurvivalChipsContainer, #golBirthChipsContainer,
+#chiAwakeningChipsContainer, #chiFlowChipsContainer {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px !important;
+  width: 100%; max-width: 156px; padding: 0; margin-inline: auto; direction: ltr;
+}
+.evolution-rule-grids .gol-chip-btn { width: 100% !important; height: auto !important; aspect-ratio: 1; padding: 0; border-radius: 7px; border: 1px solid #b28b3633; background: linear-gradient(135deg, #1c1a12, #0d0e0c); color: #b4a589; font: 14px monospace; box-shadow: inset 0 1px 0 #ffffff05; transition: background .2s, color .2s, border-color .2s; }
+.evolution-rule-grids .gol-chip-btn.active { background: var(--gold); color: #151309; border-color: #efd986; box-shadow: 0 0 9px #d5aa482b, inset 0 1px 0 #fff3; }
+.evolution-rule-grids .gol-chip-btn:focus-visible { outline: 1px solid #ffe7a0; outline-offset: 2px; }
+.evolution-rules-panel .cycle-preset-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row; gap: 6px; }
+.evolution-rules-panel .cycle-preset-row { direction: ltr; gap: 0; min-height: 40px; padding: 0 5px; border: 1px solid #b28b3629; border-radius: 8px; background: linear-gradient(135deg, #1c1a12, #0d0e0c); }
+.evolution-rules-panel .cycle-preset-row > .gol-preset-btn { align-self: stretch; padding: 7px 5px; border: 0; border-radius: 0; background: transparent; color: #c3b99e; font-size: 12px; font-weight: 400; line-height: 1.35; text-align: left; transform: none; box-shadow: none; }
+.evolution-rules-panel .cycle-preset-row:has(> .gol-preset-btn.active) { border-color: #d5aa4877; background: linear-gradient(135deg, #30271a, #17150f); }
+.evolution-rules-panel .cycle-preset-row > .gol-preset-btn.active { color: #f0d18b; }
+.evolution-rules-panel .cycle-membership-buttons { max-width: none; flex-wrap: nowrap; }
+.evolution-rules-panel .cycle-membership-icon { width: 30px; height: 38px; }
+.evolution-rules-panel .cycle-membership-icon svg { width: 21px; height: 21px; }
+.evolution-rules-panel .cycle-preset-row:has(.is-assigned) { box-shadow: inset 0 1px 0 #e3c67706; }
+.evolution-rules-panel > div:last-child { margin-top: 0; padding-top: 14px; border-color: #b28b362b; gap: 8px; }
+.evolution-rules-panel > div:last-child > div { gap: 8px; }
+.evolution-rules-panel > div:last-child button { font-size: 12px; font-weight: 400; min-height: 40px; padding: 8px 12px; }
+.evolution-rules-panel > div:last-child button[id$="Cancel"] { border: 1px solid #b28b3645; background: #17160f; color: #bfb292; }
+.evolution-rules-panel > div:last-child button[id$="Reset"] { color: #a58b54; }
+.evolution-rules-panel > div:last-child button[id$="Save"] { border: 1px solid #d8b967; background: linear-gradient(135deg, #e3c677, #b38b38) !important; color: #151309; }
+#chiReachSlider { accent-color: #d5aa48; }
+@media (hover: hover) and (pointer: fine) {
+  .evolution-rules-panel .cycle-preset-row > .gol-preset-btn:hover { color: #f0d18b; background: #d5aa4808; transform: none; }
+}

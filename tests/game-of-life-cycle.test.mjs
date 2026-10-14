@@ -12,6 +12,11 @@ const personal = { survival: [1, 2], birth: [3, 6] };
 function harness() {
     const c = vm.createContext({ C: { GAME_OF_LIFE_PRESETS: presets }, gameOfLifeRules: plain(personal), personalGameOfLifeRules: plain(personal), gameOfLifeMode: 'personal',
         armedSimulation: null, isLifePlaying: false, isExecutingMacroCommand: false, window: {}, artRecipeLog: [], currentGenerationCount: 0, armCalls: 0 });
+    c.defaultGolCycle = [plain(personal), plain(presets.btnGolPresetShuffle), plain(presets.btnGolPresetCoral)];
+    c.gameOfLifeCycle = c.defaultGolCycle.map(plain);
+    c.localStorage = { setItem() {} };
+    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replaceAll('export ', ''), c);
+    c.gameOfLifeSources = c.inferCycleSources(c.gameOfLifeCycle, c.C.GAME_OF_LIFE_PRESETS);
     c.armSimulation = sim => { assert(!c.isLifePlaying); c.armedSimulation = sim; c.armCalls++; };
     c.updateGameOfLifeButtonUI = () => {};
     c.updateSortButtonUI = () => {};
@@ -19,7 +24,7 @@ function harness() {
     c.currentSortMethod = 'luminance';
     const logger = source.indexOf('window.logArtEvent = function');
     vm.runInContext(source.slice(logger, source.indexOf('// ------------------------------------------', logger)), c);
-    vm.runInContext(['cloneGameOfLifeRules', 'getGameOfLifeRecordingRules', 'setPersonalGameOfLifeRules', 'restoreGameOfLifeRules', 'cycleGameOfLifeMode', 'nextEvolutionMode'].map(fn).join('\n'), c);
+    vm.runInContext(['cloneGameOfLifeRules', 'getGameOfLifeRecordingRules', 'setPersonalGameOfLifeRules', 'setGameOfLifeCycle', 'restoreGameOfLifeRules', 'cycleGameOfLifeMode', 'nextEvolutionMode'].map(fn).join('\n'), c);
     vm.runInContext(source.slice(source.indexOf('function applyMacroRules('), source.indexOf('function executeMacroAction(')), c);
     vm.runInContext(source.slice(source.indexOf('function getHistorySettings('), source.indexOf('function toggleMacroFullScreen(')), c);
     vm.runInContext(source.slice(source.indexOf('function executeMacroAction('), source.indexOf('        async function initializeApp(')), c);
@@ -79,4 +84,35 @@ test('PLAY/STEP restore snapshot metadata; old macros without metadata retain th
     replay.applyMacroRules('Armed: gameOfLife | Rules: ' + JSON.stringify(personal));
     assert.equal(replay.gameOfLifeMode, 'personal'); assert.deepEqual(plain(replay.gameOfLifeRules), personal);
     assert.deepEqual(plain(replay.personalGameOfLifeRules), personal);
+});
+
+test('all three slots accept independent custom rules and playback never persists preferences', () => {
+    const c = harness();
+    const custom = plain(personal);
+    const slots = [plain(presets.btnGolPresetCoral), plain(custom), plain(presets.btnGolPresetShuffle)];
+    let writes = 0;
+    c.localStorage.setItem = () => writes++;
+    c.setGameOfLifeCycle(slots, 1);
+    assert.equal(writes, 2);
+    assert.deepEqual(plain(c.gameOfLifeRules), custom);
+    slots[1].survival.length = 0;
+    assert.deepEqual(plain(c.gameOfLifeCycle[1]), custom);
+    const recorded = c.getGameOfLifeRecordingRules();
+    c.restoreGameOfLifeRules(recorded);
+    assert.equal(writes, 2);
+    assert.deepEqual(plain(c.gameOfLifeCycle[1]), custom);
+});
+
+test('Yours survives replacement by a named preset and snapshot replay', () => {
+    const c = harness();
+    const personalBefore = plain(c.personalGameOfLifeRules);
+    const slots = c.gameOfLifeCycle.map(plain);
+    slots[0] = plain(slots[1]);
+    const sources = [c.gameOfLifeSources[1], c.gameOfLifeSources[1], c.gameOfLifeSources[2]];
+    c.setGameOfLifeCycle(slots, 0, sources, personalBefore);
+    assert.deepEqual(plain(c.personalGameOfLifeRules), personalBefore);
+    const snapshot = c.getGameOfLifeRecordingRules();
+    c.restoreGameOfLifeRules(snapshot);
+    assert.deepEqual(plain(c.personalGameOfLifeRules), personalBefore);
+    assert.deepEqual(plain(c.gameOfLifeSources), plain(sources));
 });
