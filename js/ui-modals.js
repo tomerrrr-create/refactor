@@ -1,3 +1,4 @@
+import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
@@ -218,7 +219,7 @@ function refreshLocalizedModalText() {
     app.dom.chiFlowModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
     document.querySelectorAll('#startupPalette option').forEach(option => {
         const palette = app.C.PALETTES.find(p => p.originalName === option.value);
-        if (palette) option.textContent = palette.name;
+        if (palette) option.textContent = getPaletteDisplayName(palette);
     });
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
@@ -755,7 +756,7 @@ function populatePaletteModal() {
 
             const name = document.createElement('span');
             name.className = 'palette-preview-name';
-            name.textContent = `${palette.name} (${palette.colors.length})`;
+            name.textContent = `${getPaletteDisplayName(palette)} (${palette.colors.length})`;
 
             preview.appendChild(iconContainer);
             preview.appendChild(name);
@@ -1434,7 +1435,7 @@ export function initializeModals(appContext) {
         });
     }
     addStartupOptions('startupPalette', app.C.PALETTES.filter(p => !p.isArchived)
-        .map(p => [p.originalName, p.name]));
+        .map(p => [p.originalName, getPaletteDisplayName(p)]));
     addStartupOptions('startupBoardSize', app.C.SIZES.slice().sort((a, b) => a - b).map(n => [n, `${n} × ${n}`]));
     addStartupOptions('startupSeparator', app.C.SEPARATORS.slice().reverse().map(gap => [gap, `${gap} px`]));
     addStartupOptions('startupSort', app.SORT_MODES.map(mode => [mode.method, '', 'startup_sort_' + mode.method]));

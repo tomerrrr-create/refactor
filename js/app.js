@@ -1,3 +1,4 @@
+import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
 import { resolveChiReach } from './chi-reach.js';
@@ -696,7 +697,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         const pal = C.PALETTES[activePaletteIndex];
         if (pal.iconHTML) { dom.btnPalette.innerHTML = pal.iconHTML; } 
         else { dom.btnPalette.innerHTML = ''; dom.btnPalette.textContent = pal.emoji; }
-        const label = `${getText('tooltip_palette')}: ${pal.name} (${activePaletteIndex + 1}/${C.PALETTES.length})`;
+        const label = `${getText('tooltip_palette')}: ${getPaletteDisplayName(pal)} (${activePaletteIndex + 1}/${C.PALETTES.length})`;
         dom.btnPalette.title = getText('tooltip_palette');
         dom.btnPalette.setAttribute('aria-label', label);
       }
@@ -1874,7 +1875,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
             <span style="display: flex; align-items: center; justify-content: center; font-size: 14px;">
                 ${iconHtml}
             </span>
-            <span>${pal.name}</span>
+            <span>${getPaletteDisplayName(pal)}</span>
         </div>
     `;
 }
