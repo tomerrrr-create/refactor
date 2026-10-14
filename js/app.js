@@ -1892,7 +1892,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
             if (isWorkspaceSettingsText(text)) {
                 try {
                     const stored = importWorkspaceSettings(deserializeWorkspaceSettings(text));
-                    modals.closeAfterSettingsImport(() => showSettingsImportTransition(dom.board,
+                    modals.closeModalSlowly(() => showSettingsImportTransition(dom.board,
                         getText('settings_aligned'), stored ? '' : getText('settings_session_only')));
                 } catch (error) {
                     console.error('Settings import failed:', error);
@@ -3172,7 +3172,7 @@ function resetArtRecipeLog() {
     artRecipeLog = [];
     historyRecipeCursor = 0;
     logCurrentStateAsInit();
-    modals.closeModal();
+    modals.closeModalSlowly();
 }
 
 async function exportArtRecipeLog() {

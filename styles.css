@@ -1610,8 +1610,8 @@ button, .ctrl {
 @keyframes workspace-reset-orbit { from { transform: rotate(-180deg); opacity: .4; } to { transform: rotate(0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .technician-reset-button.reset-complete svg { animation: none; } }
 
-#saveModal.settings-import-closing { transition: opacity .9s ease-in-out, visibility .9s ease-in-out; pointer-events: none; }
+#saveModal.save-modal-closing { transition: opacity .9s ease-in-out, visibility .9s ease-in-out; pointer-events: none; }
 .settings-import-word { max-width: 90%; padding: 0 12px; font-size: clamp(25px, 6vmin, 42px); letter-spacing: .06em; text-align: center; animation: settings-import-word 3.2s ease-in-out both; }
 .settings-import-note { position: absolute; z-index: 2; top: calc(50% + 58px); max-width: 85%; color: #c3b99e; font-size: 12px; text-align: center; animation: settings-import-word 3.2s ease-in-out both; }
 @keyframes settings-import-word { 0%, 100% { opacity: 0; filter: blur(2px); transform: translateY(3px); } 24%, 72% { opacity: .9; filter: blur(0); transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { #saveModal.settings-import-closing { transition: none; } .settings-import-word, .settings-import-note { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #saveModal.save-modal-closing { transition: none; } .settings-import-word, .settings-import-note { animation: none; } }

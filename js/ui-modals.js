@@ -39,15 +39,15 @@ let app;
 // --- Internal Helper Functions ---
 
 let saveStatusTimer;
-let settingsImportCloseTimer;
+let saveModalCloseTimer;
 function closeRecipeResetPrompt() {
     if (app.dom.saveResetConfirmation.open) app.dom.saveResetConfirmation.close();
     app.dom.btnResetLogger.hidden = false;
     app.dom.btnResetLogger.setAttribute('aria-expanded', 'false');
 }
 function clearSaveStatus() {
-    clearTimeout(settingsImportCloseTimer);
-    app.dom.saveModal.classList.remove('settings-import-closing');
+    clearTimeout(saveModalCloseTimer);
+    app.dom.saveModal.classList.remove('save-modal-closing');
     closeRecipeResetPrompt();
     clearTimeout(saveStatusTimer);
     app.dom.saveStatus.textContent = '';
@@ -72,16 +72,16 @@ function closeModal() {
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
-function closeAfterSettingsImport(onClosed) {
+function closeModalSlowly(onClosed = () => {}) {
     clearSaveStatus();
     if (!app.dom.saveModal.classList.contains('modal-visible') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         closeModal();
         onClosed();
         return;
     }
-    app.dom.saveModal.classList.add('settings-import-closing');
+    app.dom.saveModal.classList.add('save-modal-closing');
     app.dom.saveModal.classList.remove('modal-visible');
-    settingsImportCloseTimer = setTimeout(() => {
+    saveModalCloseTimer = setTimeout(() => {
         closeModal();
         onClosed();
     }, 900);
@@ -1924,7 +1924,7 @@ function saveMagnetSettings() {
 
 return {
         refreshLocalizedModalText,
-        closeAfterSettingsImport,
+        closeModalSlowly,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
         openSortCycleModal,
