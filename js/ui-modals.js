@@ -301,7 +301,7 @@ app.dom.btnChiPresetElectric.textContent = app.getText('chi_preset_electric');
 updateActiveChiPresetButton();
         chiCycleMembership = bindPresetCycleEditor({
             toolbar: document.getElementById('chiCycleToolbar'),
-            defaults: [app.C.defaultChiFlowRules, CHI_PRESETS.Ripples, CHI_PRESETS.Nova], defaultSources: ['yours', 'Ripples', 'Nova'],
+            defaults: [app.C.defaultChiFlowRules, CHI_PRESETS.Ripples, CHI_PRESETS.Nova], defaultSources: ['Harmony', 'Ripples', 'Nova'],
             iconButton: app.dom.btnSandpile,
             presets: Object.entries(CHI_PRESETS).map(([name, rules]) => ({ button: document.getElementById('btnChiPreset' + name), rules, source: name })),
             state: app.getChiFlowCycle(), readRules: readChiCycleRules, writeRules: writeChiCycleRules,
@@ -972,7 +972,7 @@ updateActivePresetButton();
     
     golCycleMembership = bindPresetCycleEditor({
         toolbar: document.getElementById('golCycleToolbar'),
-        defaults: [app.C.defaultGameOfLifeRules, PRESET_RULES.btnGolPresetShuffle, PRESET_RULES.btnGolPresetCoral], defaultSources: ['yours', 'btnGolPresetShuffle', 'btnGolPresetCoral'],
+        defaults: [app.C.defaultGameOfLifeRules, PRESET_RULES.btnGolPresetShuffle, PRESET_RULES.btnGolPresetCoral], defaultSources: ['btnGolPresetPaint', 'btnGolPresetShuffle', 'btnGolPresetCoral'],
         iconButton: app.dom.btnGameOfLife,
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,

@@ -2,101 +2,46 @@ import { cloneCycleRules } from './evolution-cycle-settings.js';
 
 // Modal-local rules only. Saving uses the existing evolution snapshot API.
 export function createCycleEditorDraft(state, defaults, defaultSources) {
-    const draft = {
+    return {
         slots: state.slots.map(cloneCycleRules), sources: [...state.sources],
+        // Retain the recording API's personal snapshot for backward compatibility.
         yoursRules: cloneCycleRules(state.yoursRules),
         index: state.index >= 0 && state.index < 3 ? state.index : 0,
-        target: null,
+        selectSlot(index) {
+            if (Number.isInteger(index) && index >= 0 && index < 3) this.index = index;
+        },
         assign(rules, source) {
-            const index = this.target ?? 0;
-            this.slots[index] = cloneCycleRules(rules);
-            this.sources[index] = source;
-            this.index = index;
+            this.slots[this.index] = cloneCycleRules(rules);
+            this.sources[this.index] = source;
         },
         manualChange(rules) {
             this.yoursRules = cloneCycleRules(rules);
-            this.assign(rules, 'yours');
+            this.assign(rules, 'custom-' + this.index);
         },
         reset() {
-            this.slots = [cloneCycleRules(this.yoursRules), ...defaults.slice(1).map(cloneCycleRules)];
+            this.slots = defaults.map(cloneCycleRules);
             this.sources = [...defaultSources];
-            this.index = 0;
-            this.target = null;
         }
     };
-    return draft;
 }
 
 export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, defaults, defaultSources, readRules, writeRules, save, getText }) {
     const draft = createCycleEditorDraft(state, defaults, defaultSources);
     toolbar.replaceChildren();
     const buttons = [];
-    const picker = document.createElement('div');
-    picker.className = 'cycle-slot-picker';
-    picker.hidden = true;
-    picker.setAttribute('role', 'group');
-    let picking = null;
-    const grid = presets[0].button.parentElement;
-    grid.querySelector('[data-cycle-yours]')?.remove();
-    const yoursButton = document.createElement('button');
-    yoursButton.type = 'button';
-    yoursButton.className = 'gol-preset-btn';
-    yoursButton.dataset.cycleYours = '';
-    yoursButton.textContent = getText('cycle_custom');
-    grid.prepend(yoursButton);
-
     function refresh() {
         buttons.forEach((button, index) => {
-            button.setAttribute('aria-pressed', String((picking ?? draft.target) === index));
-            button.setAttribute('aria-expanded', String(!picker.hidden && picking === index));
-            const preset = presets.find(p => (p.source || p.button.id) === draft.sources[index]);
-            const name = draft.sources[index] === 'yours' ? getText('cycle_custom') : preset?.button.textContent || getText('cycle_manual');
+            button.setAttribute('aria-pressed', String(draft.index === index));
+            const preset = presets.find(p => (p.source || p.button.id) === draft.sources[index]) ||
+                presets.find(p => JSON.stringify(p.rules) === JSON.stringify(draft.slots[index]));
+            const name = preset?.button.textContent || getText('cycle_manual');
             button.title = `${getText('cycle_position')} ${index + 1}: ${name}`;
             button.setAttribute('aria-label', button.title);
         });
-        presets.forEach(preset => preset.button.classList.toggle('active',
-            draft.sources[draft.index] === (preset.source || preset.button.id) && JSON.stringify(readRules()) === JSON.stringify(preset.rules)));
-        yoursButton.classList.toggle('active', draft.sources[draft.index] === 'yours' && JSON.stringify(readRules()) === JSON.stringify(draft.yoursRules));
     }
     function selectPreset(source, rules) {
-        if (picking !== null) draft.target = picking;
         draft.assign(rules, source);
-        picking = null;
-        picker.hidden = true;
         writeRules(cloneCycleRules(rules));
-        refresh();
-    }
-    yoursButton.onclick = () => selectPreset('yours', draft.yoursRules);
-    function openPicker(index) {
-        picking = index;
-        picker.setAttribute('aria-label', `${getText('cycle_position')} ${index + 1}`);
-        picker.replaceChildren();
-        const choices = [
-            { label: getText('cycle_manual'), source: 'manual' },
-            { label: getText('cycle_custom'), source: 'yours', rules: draft.yoursRules },
-            ...presets.map(p => ({ label: p.button.textContent, source: p.source || p.button.id, rules: p.rules }))
-        ];
-        for (const choice of choices) {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'gol-preset-btn';
-            button.textContent = choice.label;
-            button.dataset.cycleChoice = choice.source;
-            button.onclick = () => {
-                draft.target = index;
-                if (choice.source === 'manual') {
-                    const rules = cloneCycleRules(draft.slots[index]);
-                    draft.manualChange(rules);
-                    picking = null;
-                    picker.hidden = true;
-                    writeRules(rules);
-                    refresh();
-                    toolbar.closest('.retro-evolution-panel').querySelector('.gol-chip-btn')?.focus();
-                } else selectPreset(choice.source, choice.rules);
-            };
-            picker.append(button);
-        }
-        picker.hidden = false;
         refresh();
     }
     for (let index = 0; index < 3; index++) {
@@ -104,7 +49,6 @@ export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, def
         button.type = 'button';
         button.className = 'cycle-slot-button';
         button.dataset.cycleSlot = String(index);
-        button.setAttribute('aria-haspopup', 'true');
         const svg = iconButton.querySelector('svg').cloneNode(true);
         svg.removeAttribute('id');
         svg.setAttribute('aria-hidden', 'true');
@@ -114,8 +58,9 @@ export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, def
         });
         button.append(svg);
         button.onclick = () => {
-            if (!picker.hidden && picking === index) { picker.hidden = true; picking = null; refresh(); }
-            else openPicker(index);
+            draft.selectSlot(index);
+            writeRules(cloneCycleRules(draft.slots[index]));
+            refresh();
         };
         buttons.push(button);
         toolbar.append(button);
@@ -127,22 +72,10 @@ export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, def
     reset.setAttribute('aria-label', reset.title);
     reset.onclick = () => {
         draft.reset();
-        picking = null;
-        picker.hidden = true;
-        writeRules(cloneCycleRules(draft.slots[0]));
+        writeRules(cloneCycleRules(draft.slots[draft.index]));
         refresh();
     };
-    toolbar.append(reset, picker);
-    toolbar.onkeydown = event => {
-        if (event.key === 'Escape' && !picker.hidden) {
-            event.stopPropagation();
-            const index = picking;
-            picking = null;
-            picker.hidden = true;
-            refresh();
-            buttons[index]?.focus();
-        }
-    };
+    toolbar.append(reset);
     refresh();
     return {
         refresh, selectPreset,
