@@ -2565,12 +2565,14 @@ function updateErosionButtonUI() {
 }
 
 function cycleErosionMode() {
-    if (isLifePlaying) return;
+    if (isLifePlaying && armedSimulation !== 'erosion') return;
     const modes = ['off', 'legacy', 'channels-solid', 'channels'];
     const current = armedSimulation === 'erosion' ? erosionRules.mode : 'off';
     const next = modes[(modes.indexOf(current) + 1) % modes.length];
-    if (next === 'off') armSimulation(null);
-    else {
+    if (next === 'off') {
+        pauseLife();
+        armSimulation(null);
+    } else {
         if (armedSimulation !== 'erosion') armSimulation('erosion');
         erosionRules.mode = next;
     }
@@ -3560,7 +3562,10 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'Erosion Mode Changed') {
         if (action.details === 'off') {
-            if (armedSimulation === 'erosion') armSimulation(null);
+            if (armedSimulation === 'erosion') {
+                pauseLife();
+                armSimulation(null);
+            }
         } else if (['legacy', 'channels', 'channels-solid'].includes(action.details)) {
             if (armedSimulation !== 'erosion') armSimulation('erosion');
             erosionRules.mode = action.details;
