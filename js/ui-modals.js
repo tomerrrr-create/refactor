@@ -701,6 +701,27 @@ function populateHelpModal() {
     const bodies = Object.fromEntries([...document.querySelectorAll('[data-help-body]')].map(body => [body.dataset.helpBody, body]));
     Object.values(bodies).forEach(body => body.replaceChildren());
 
+    const evolutionIntro = document.createElement('section');
+    evolutionIntro.setAttribute('aria-labelledby', 'help-evolution-how-title');
+    const introTitle = document.createElement('h3');
+    introTitle.id = 'help-evolution-how-title';
+    introTitle.className = 'help-category-title';
+    introTitle.textContent = app.getText('help_how_it_works');
+    const introSteps = document.createElement('ol');
+    introSteps.className = 'space-y-2 text-sm text-gray-300';
+    introSteps.style.listStyleType = 'decimal';
+    introSteps.style.paddingInlineStart = '20px';
+    ['help_evolution_choose', 'help_evolution_advance', 'help_evolution_explore'].forEach(key => {
+        const step = document.createElement('li');
+        step.textContent = app.getText(key);
+        introSteps.appendChild(step);
+    });
+    const settingsHint = document.createElement('p');
+    settingsHint.className = 'text-xs text-gray-400 mt-3';
+    settingsHint.textContent = app.getText('help_evolution_settings_hint');
+    evolutionIntro.append(introTitle, introSteps, settingsHint);
+    bodies.evolution.appendChild(evolutionIntro);
+
     const categories = {
         inspiration: { tab: 'creation', titleKey: 'help_category_inspiration', buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset'] },
         order: { tab: 'creation', titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark'] },
@@ -783,7 +804,7 @@ function populateHelpModal() {
         });
     }
 
-    for (const [tab, tips] of [['creation', ['help_tip2', 'help_tip3', 'help_tip4', 'help_tip5', 'help_tip6', 'help_tip7']], ['evolution', ['help_tip1']]]) {
+    for (const [tab, tips] of [['creation', ['help_tip3', 'help_tip4', 'help_tip5', 'help_tip6']], ['evolution', ['help_tip1']]]) {
         const contentDiv = bodies[tab];
         const tipsTitle = document.createElement('h3');
         tipsTitle.className = 'help-category-title';
