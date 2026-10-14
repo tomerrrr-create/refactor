@@ -1,3 +1,4 @@
+import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
@@ -39,15 +40,15 @@ let app;
 // --- Internal Helper Functions ---
 
 let saveStatusTimer;
-let settingsImportCloseTimer;
+let saveModalCloseTimer;
 function closeRecipeResetPrompt() {
-    app.dom.saveResetConfirmation.hidden = true;
+    if (app.dom.saveResetConfirmation.open) app.dom.saveResetConfirmation.close();
     app.dom.btnResetLogger.hidden = false;
     app.dom.btnResetLogger.setAttribute('aria-expanded', 'false');
 }
 function clearSaveStatus() {
-    clearTimeout(settingsImportCloseTimer);
-    app.dom.saveModal.classList.remove('settings-import-closing');
+    clearTimeout(saveModalCloseTimer);
+    app.dom.saveModal.classList.remove('save-modal-closing');
     closeRecipeResetPrompt();
     clearTimeout(saveStatusTimer);
     app.dom.saveStatus.textContent = '';
@@ -72,16 +73,16 @@ function closeModal() {
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
-function closeAfterSettingsImport(onClosed) {
+function closeModalSlowly(onClosed = () => {}) {
     clearSaveStatus();
     if (!app.dom.saveModal.classList.contains('modal-visible') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         closeModal();
         onClosed();
         return;
     }
-    app.dom.saveModal.classList.add('settings-import-closing');
+    app.dom.saveModal.classList.add('save-modal-closing');
     app.dom.saveModal.classList.remove('modal-visible');
-    settingsImportCloseTimer = setTimeout(() => {
+    saveModalCloseTimer = setTimeout(() => {
         closeModal();
         onClosed();
     }, 900);
@@ -218,7 +219,7 @@ function refreshLocalizedModalText() {
     app.dom.chiFlowModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
     document.querySelectorAll('#startupPalette option').forEach(option => {
         const palette = app.C.PALETTES.find(p => p.originalName === option.value);
-        if (palette) option.textContent = palette.name;
+        if (palette) option.textContent = getPaletteDisplayName(palette);
     });
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
@@ -755,7 +756,7 @@ function populatePaletteModal() {
 
             const name = document.createElement('span');
             name.className = 'palette-preview-name';
-            name.textContent = `${palette.name} (${palette.colors.length})`;
+            name.textContent = `${getPaletteDisplayName(palette)} (${palette.colors.length})`;
 
             preview.appendChild(iconContainer);
             preview.appendChild(name);
@@ -1270,9 +1271,8 @@ export function initializeModals(appContext) {
     app.dom.btnLoadProjectIdea.addEventListener('click', app.handleLoadProject);
     app.dom.btnResetLogger.addEventListener('click', () => {
         clearSaveStatus();
-        app.dom.btnResetLogger.hidden = true;
         app.dom.btnResetLogger.setAttribute('aria-expanded', 'true');
-        app.dom.saveResetConfirmation.hidden = false;
+        app.dom.saveResetConfirmation.showModal();
         app.dom.btnCancelResetLogger.focus();
     });
     app.dom.btnCancelResetLogger.addEventListener('click', () => {
@@ -1283,9 +1283,15 @@ export function initializeModals(appContext) {
         app.resetArtRecipeLog();
         app.dom.btnSave.focus();
     });
-    app.dom.saveModal.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && !app.dom.saveResetConfirmation.hidden) {
-            e.preventDefault(); e.stopPropagation();
+    app.dom.saveResetConfirmation.addEventListener('cancel', e => {
+        e.preventDefault();
+        closeRecipeResetPrompt();
+        app.dom.btnResetLogger.focus();
+    });
+    app.dom.saveResetConfirmation.addEventListener('click', e => {
+        if (e.target !== app.dom.saveResetConfirmation) return;
+        const rect = app.dom.saveResetConfirmation.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
             closeRecipeResetPrompt();
             app.dom.btnResetLogger.focus();
         }
@@ -1429,7 +1435,7 @@ export function initializeModals(appContext) {
         });
     }
     addStartupOptions('startupPalette', app.C.PALETTES.filter(p => !p.isArchived)
-        .map(p => [p.originalName, p.name]));
+        .map(p => [p.originalName, getPaletteDisplayName(p)]));
     addStartupOptions('startupBoardSize', app.C.SIZES.slice().sort((a, b) => a - b).map(n => [n, `${n} × ${n}`]));
     addStartupOptions('startupSeparator', app.C.SEPARATORS.slice().reverse().map(gap => [gap, `${gap} px`]));
     addStartupOptions('startupSort', app.SORT_MODES.map(mode => [mode.method, '', 'startup_sort_' + mode.method]));
@@ -1919,7 +1925,7 @@ function saveMagnetSettings() {
 
 return {
         refreshLocalizedModalText,
-        closeAfterSettingsImport,
+        closeModalSlowly,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
         openSortCycleModal,

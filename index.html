@@ -441,24 +441,36 @@
             </svg>
           </button>
         </div>
-      </div>
-
-      <p id="saveStatus" class="save-status" role="status" aria-live="polite" aria-atomic="true"></p>
-      <div class="save-reset-section">
-        <button id="btnResetLogger" type="button" class="save-reset-link" data-debug-text="saveModal_resetRecipe" aria-expanded="false" aria-controls="saveResetConfirmation">Reset recipe</button>
-        <div id="saveResetConfirmation" class="save-reset-confirm" hidden role="group" aria-labelledby="saveResetPrompt">
-          <p id="saveResetPrompt" data-debug-text="saveModal_resetRecipePrompt"></p>
-          <div class="save-reset-confirm-actions">
-            <button id="btnCancelResetLogger" type="button" data-debug-text="gs_modal_cancel"></button>
-            <button id="btnConfirmResetLogger" type="button" data-debug-text="saveModal_resetRecipe"></button>
-          </div>
+        <div class="save-action">
+          <button id="btnResetLogger" type="button" aria-haspopup="dialog" class="save-tile" style="background-color: #C2A14A;" aria-expanded="false" aria-controls="saveResetConfirmation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18.5 6.5A8 8 0 1 0 20 13"></path>
+              <circle cx="12" cy="12" r="1.5" fill="black" stroke="none"></circle>
+            </svg>
+          </button>
         </div>
       </div>
 
+      <p id="saveStatus" class="save-status" role="status" aria-live="polite" aria-atomic="true"></p>
       <input type="file" id="projectFileInput" accept=".json, .cga, .txt" style="display: none;" />
     
     </div>
   </div>
+
+  <dialog id="saveResetConfirmation" class="save-reset-dialog" aria-labelledby="saveResetTitle" aria-describedby="saveResetPrompt">
+    <div class="save-reset-card">
+      <svg class="save-reset-sigil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+        <path d="M18.5 6.5A8 8 0 1 0 20 13"></path>
+        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+      </svg>
+      <h2 id="saveResetTitle" data-debug-text="save_reset_title"></h2>
+      <p id="saveResetPrompt" data-debug-text="save_reset_note"></p>
+      <div class="save-reset-confirm-actions">
+        <button id="btnCancelResetLogger" type="button" data-debug-text="save_reset_no" autofocus></button>
+        <button id="btnConfirmResetLogger" type="button" data-debug-text="save_reset_yes"></button>
+      </div>
+    </div>
+  </dialog>
 
   <div id="colorPickerModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50">
     <div class="bg-black border border-gray-700 rounded-lg p-6 w-full max-w-xs sm:max-w-sm text-center relative flex flex-col">

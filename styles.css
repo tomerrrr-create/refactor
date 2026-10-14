@@ -586,32 +586,22 @@ body {
 .save-smoothing:has(input:checked) { color: #e3c677; }
 .save-smoothing input:focus-visible { outline: 1px solid #ffe7a0; outline-offset: 3px; }
 
-.save-reset-section {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #ffffff12;
-}
-.save-reset-link {
-  background: none;
-  border: none;
-  padding: 8px 12px;
-  color: #c7ad88;
-  font-size: 13px;
-  text-decoration: underline;
-  text-decoration-color: #c7ad8855;
-  text-underline-offset: 4px;
-  cursor: pointer;
-}
-.save-reset-link:hover { color: #e3c677; }
-.save-reset-link:focus-visible, .save-reset-confirm button:focus-visible {
-  outline: 2px solid #e3c677;
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-.save-reset-confirm p { margin: 0 0 12px; color: #b9b1a7; font-size: 13px; line-height: 1.5; }
+.save-status:empty { display: none; }
+#btnResetLogger:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
+.save-reset-dialog { position: fixed; inset: 0; margin: auto; padding: 0; width: min(330px, calc(100vw - 40px)); border: 1px solid #c2a14a66; border-radius: 18px; color: #eaeaea; background: radial-gradient(ellipse at top, #c2a14a12, transparent 70%), #10110f; box-shadow: 0 0 55px #c2a14a18; }
+.save-reset-dialog::backdrop { background: #000a; backdrop-filter: blur(2px); }
+.save-reset-dialog[open] { animation: save-reset-arrive .2s ease-out; }
+.save-reset-card { padding: 24px; text-align: center; }
+.save-reset-sigil { display: block; width: 34px; height: 34px; color: #c2a14a; margin: 0 auto 14px; }
+.save-reset-card h2 { margin: 0 0 10px; font-size: 18px; font-weight: 500; }
+.save-reset-card p { margin: 0 0 22px; color: #b9b1a7; font-size: 13px; line-height: 1.5; }
 .save-reset-confirm-actions { display: flex; justify-content: center; gap: 12px; }
-.save-reset-confirm button { padding: 8px 12px; background: none; border: none; color: #aaa; font-size: 13px; cursor: pointer; }
-#btnConfirmResetLogger { color: #e3c677; border: 1px solid #e3c67755; border-radius: 6px; }
+.save-reset-confirm-actions button { min-width: 90px; min-height: 44px; padding: 10px 18px; background: transparent; border: 1px solid #c2a14a44; border-radius: 10px; color: #d8cebb; font: inherit; font-size: 14px; cursor: pointer; transition: box-shadow .2s ease; }
+.save-reset-confirm-actions button:hover { box-shadow: 0 0 16px #c2a14a22; }
+.save-reset-confirm-actions button:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
+#btnConfirmResetLogger { color: #15140e; background: #c2a14a; border-color: #c2a14a; }
+@keyframes save-reset-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .save-reset-dialog[open] { animation: none; } }
 
 .save-tile {
   width: 90px;
@@ -1620,8 +1610,8 @@ button, .ctrl {
 @keyframes workspace-reset-orbit { from { transform: rotate(-180deg); opacity: .4; } to { transform: rotate(0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .technician-reset-button.reset-complete svg { animation: none; } }
 
-#saveModal.settings-import-closing { transition: opacity .9s ease-in-out, visibility .9s ease-in-out; pointer-events: none; }
+#saveModal.save-modal-closing { transition: opacity .9s ease-in-out, visibility .9s ease-in-out; pointer-events: none; }
 .settings-import-word { max-width: 90%; padding: 0 12px; font-size: clamp(25px, 6vmin, 42px); letter-spacing: .06em; text-align: center; animation: settings-import-word 3.2s ease-in-out both; }
 .settings-import-note { position: absolute; z-index: 2; top: calc(50% + 58px); max-width: 85%; color: #c3b99e; font-size: 12px; text-align: center; animation: settings-import-word 3.2s ease-in-out both; }
 @keyframes settings-import-word { 0%, 100% { opacity: 0; filter: blur(2px); transform: translateY(3px); } 24%, 72% { opacity: .9; filter: blur(0); transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { #saveModal.settings-import-closing { transition: none; } .settings-import-word, .settings-import-note { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #saveModal.save-modal-closing { transition: none; } .settings-import-word, .settings-import-note { animation: none; } }

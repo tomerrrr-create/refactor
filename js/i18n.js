@@ -9,6 +9,11 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  save_reset_title: {"en": "Reset recipe?", "he": "איפוס מתכון?", "ru": "Сбросить рецепт?", "nl": "Recept wissen?"},
+  save_reset_note: {"en": "Start a new recording from this board.", "he": "התחלת הקלטה חדשה מהלוח הנוכחי.", "ru": "Начать новую запись с этого поля.", "nl": "Begin een nieuwe opname met dit bord."},
+  save_reset_yes: {"en": "Yes", "he": "כן", "ru": "Да", "nl": "Ja"},
+  save_reset_no: {"en": "No", "he": "לא", "ru": "Нет", "nl": "Nee"},
+
   settings_aligned: {"en": "Settings applied", "he": "ההגדרות הוחלו", "ru": "Настройки применены", "nl": "Instellingen toegepast"},
   settings_session_only: {"en": "For this session", "he": "לכניסה זו", "ru": "На этот сеанс", "nl": "Voor deze sessie"},
 
