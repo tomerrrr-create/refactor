@@ -2,7 +2,7 @@
 // swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
     onTap, onOpen, onHold, onExtendedHold, canInteract, canOpen = () => true,
-    beforeStart = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
+    beforeStart = () => {}, onEnd = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
 }) {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
     let active = null, holdTimer = null, extendedHoldTimer = null, suppressClick = false;
@@ -25,6 +25,7 @@ export function bindPickerGestures(button, {
         const id = active.id;
         active = null; suppressClick = true;
         clearHoldTimers(); clearGlow(); releaseCapture(id);
+        onEnd();
     }
     function updatePosition(event) {
         const state = active;
@@ -72,6 +73,7 @@ export function bindPickerGestures(button, {
             state.currentY >= state.bounds.top && state.currentY <= state.bounds.bottom;
         const tap = !state.moved && !state.held && inside;
         active = null; clearHoldTimers(); clearGlow(); releaseCapture(state.id);
+        onEnd();
         suppressClick = state.touch || !tap;
         if (button.disabled || !canInteract()) return;
         if (open) onOpen();
