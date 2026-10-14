@@ -578,11 +578,6 @@ body {
   height: auto;
   aspect-ratio: 1;
 }
-.save-action-label {
-  color: #d6d6d6;
-  font-size: 12px;
-  line-height: 1.3;
-}
 .save-smoothing {
   display: inline-flex; align-items: center; gap: 5px; min-height: 28px;
   color: #c3b99e; font-size: 11px; line-height: 1.3; cursor: pointer;
