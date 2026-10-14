@@ -1,3 +1,5 @@
+import { resolveChiReach } from '../js/chi-reach.js';
+import { CHI_REACH_PERCENTAGES } from '../js/chi-reach.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -10,12 +12,12 @@ const plain = value => JSON.parse(JSON.stringify(value));
 const fn = name => source.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?^\\}`, 'm'))[0];
 const personal = { awakening: [1, 2], flow: [3, 6], reach: 3 };
 function harness() {
-    const c = vm.createContext({ C: { CHI_FLOW_PRESETS: presets }, chiFlowRules: plain(personal), personalChiFlowRules: plain(personal), chiFlowMode: 'personal',
+    const c = vm.createContext({ resolveChiReach, paletteLen: () => 64, C: { CHI_FLOW_PRESETS: presets }, chiFlowRules: plain(personal), personalChiFlowRules: plain(personal), chiFlowMode: 'personal',
         armedSimulation: null, isLifePlaying: false, isExecutingMacroCommand: false, window: {}, artRecipeLog: [], currentGenerationCount: 0, armCalls: 0 });
     c.defaultChiCycle = [plain(personal), plain(presets.Ripples), plain(presets.Nova)];
     c.chiFlowCycle = c.defaultChiCycle.map(plain);
     c.localStorage = { setItem() {} };
-    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replaceAll('export ', ''), c);
+    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, 'const CHI_REACH_PERCENTAGES = ' + JSON.stringify(CHI_REACH_PERCENTAGES) + ';').replaceAll('export ', ''), c);
     c.chiFlowSources = c.inferCycleSources(c.chiFlowCycle, c.C.CHI_FLOW_PRESETS);
     c.armSimulation = sim => { assert(!c.isLifePlaying); c.armedSimulation = sim; c.armCalls++; };
     c.updateChiFlowButtonUI = () => {};
@@ -114,5 +116,19 @@ test('Yours survives replacement by a named preset and snapshot replay', () => {
     const snapshot = c.getChiFlowRecordingRules();
     c.restoreChiFlowRules(snapshot);
     assert.deepEqual(plain(c.personalChiFlowRules), personalBefore);
-    assert.deepEqual(plain(c.chiFlowSources), plain(sources));
+    assert.deepEqual(plain(c.chiFlowSources), plain(snapshot.cycleSources));
+});
+
+test('new recordings contain final absolute Reach only and replay without percentage knowledge', () => {
+    const c=harness();
+    const rules={awakening:[3],flow:[2],reach:0,reachPercent:400};
+    c.setChiFlowCycle([rules,rules,rules],1);
+    const snapshot=plain(c.getChiFlowRecordingRules());
+    assert.equal(snapshot.reach,40);
+    assert(!JSON.stringify(snapshot).includes('reachPercent'));
+    assert(!JSON.stringify(snapshot).includes('reachOffset'));
+    assert.equal(c.chiFlowRules.reachPercent,400);
+    const replay=harness();replay.restoreChiFlowRules(snapshot);
+    assert.deepEqual(plain(replay.getChiFlowRecordingRules()),snapshot);
+    assert.equal(replay.chiFlowCycle[2].reach,40);
 });

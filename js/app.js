@@ -1,3 +1,4 @@
+import { resolveChiReach } from './chi-reach.js';
 // js/app.js
 
 import { loadEvolutionCycle, persistEvolutionCycle, normalizeEvolutionCycle, normalizeCycleSources, loadCycleIdentity } from './evolution-cycle-settings.js';
@@ -986,6 +987,12 @@ function handlePaletteSwitch(backwards = false) {
             updatePaletteHeader();
             renderToScreen(null);
         });
+        // Record the newly resolved pull range when a live Chi palette changes.
+        // Playback receives ordinary absolute rule snapshots, never percentages.
+        if (!isExecutingMacroCommand && armedSimulation === 'sandpile' &&
+            (chiFlowRules.reach === 0 || Number.isInteger(chiFlowRules.reachOffset) || Number.isInteger(chiFlowRules.reachPercent))) {
+            window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: chiFlowMode }));
+        }
       }
 
       function switchPalette(backwards = false) {
@@ -2642,12 +2649,17 @@ function cycleGameOfLifeMode() {
 
 function cloneChiFlowRules(rules) {
     return { awakening: [...rules.awakening], flow: [...rules.flow], reach: rules.reach,
-        ...(Number.isInteger(rules.reachOffset) ? { reachOffset: rules.reachOffset } : {}) };
+        ...(Number.isInteger(rules.reachOffset) ? { reachOffset: rules.reachOffset } : {}),
+        ...(Number.isInteger(rules.reachPercent) ? { reachPercent: rules.reachPercent } : {}) };
 }
 
 function getChiFlowRecordingRules() {
-    return { ...cloneChiFlowRules(chiFlowRules), cycleMode: chiFlowMode,
-        personalRules: cloneChiFlowRules(personalChiFlowRules), cycleSlots: chiFlowCycle.map(cloneChiFlowRules), cycleSources: [...chiFlowSources] };
+    const recorded = rules => ({ awakening: [...rules.awakening], flow: [...rules.flow],
+        reach: resolveChiReach(rules, paletteLen()) });
+    const slots = chiFlowCycle.map(recorded);
+    return { ...recorded(chiFlowRules), cycleMode: chiFlowMode,
+        personalRules: recorded(personalChiFlowRules), cycleSlots: slots,
+        cycleSources: normalizeCycleSources(chiFlowSources, slots, C.CHI_FLOW_PRESETS) };
 }
 
 function updateChiFlowButtonUI() {

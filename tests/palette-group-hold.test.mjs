@@ -16,7 +16,7 @@ function harness(index = 2) {
             ], LONG_PRESS_SHOW_MS: 600 },
         activePaletteIndex: index, currentSortMethod: 'luminance', isAnimating: false,
         isSelectingMacroPalette: false, isMacroPlaying: false, isExecutingMacroCommand: false,
-        isBreathing: false, isLifePlaying: false, hasPerformedInitialAutofill: false,
+        armedSimulation: null, isBreathing: false, isLifePlaying: false, hasPerformedInitialAutofill: false,
         boardState: [{ k: 263, v: 263, isGold: false }, { k: 263, v: 263, isGold: true }],
         performance: { now: () => 0 }, dom: {}, modals: {},
         resetSelectedColor() {}, updatePaletteHeader() {}, renderToScreen() {}, hideLongPressDisplay() {},

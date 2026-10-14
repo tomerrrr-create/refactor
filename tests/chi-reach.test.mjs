@@ -44,3 +44,26 @@ test('resolved reach controls actual Chi Flow pulls, not just displayed metadata
     assert.equal(generateSandpile(board,palette,{...rules,reachOffset:-2}).nextBoardState[index].k,1);
     assert.equal(board[index].k,1);
 });
+
+test('percentage stations scale across palette groups with nearest-integer rounding', () => {
+    const percentages=[50,75,100,125,150,200,300,400];
+    const expected=[[2,2,3,4,5,6,9,12],[5,8,10,13,15,20,30,40],[22,33,44,55,66,88,132,176]];
+    [23,64,264].forEach((size,i)=>percentages.forEach((reachPercent,j)=>{
+        assert.equal(resolveChiReach({reach:0,reachPercent},size),expected[i][j]);
+    }));
+    assert.equal(resolveChiReach({reach:0,reachPercent:400},3),2);
+});
+test('percentage snapshots survive cycle normalization and identity while legacy snapshots remain intact', () => {
+    const old={awakening:[3],flow:[2],reach:0,reachOffset:-10};
+    const relative={awakening:[3],flow:[2],reach:0,reachPercent:75};
+    assert.deepEqual(normalizeEvolutionCycle([old,relative,relative],[old,relative,relative]),[old,relative,relative]);
+    assert.deepEqual(normalizeEvolutionCycle([{...relative,reachPercent:76},old,old],[old,old,old])[0],old);
+});
+test('percentage changes affect actual engine pulls', () => {
+    const board=Array.from({length:256},()=>({k:9,v:9}));
+    const index=8*16+8;board[index]={k:1,v:1};
+    const rules={awakening:[],flow:[8],reach:0,reachPercent:200};
+    const palette=Array(24).fill('#000000');
+    assert.equal(generateSandpile(board,palette,rules).nextBoardState[index].k,2);
+    assert.equal(generateSandpile(board,palette,{...rules,reachPercent:50}).nextBoardState[index].k,1);
+});

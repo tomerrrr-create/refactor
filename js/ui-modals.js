@@ -1,5 +1,5 @@
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
-import { getAutoChiReach } from './chi-reach.js';
+import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
@@ -162,6 +162,7 @@ function closeContourSettingsModal() {
     let tempChiFlow = [];
     let tempChiReach = 2;
     let tempChiReachOffset = 0;
+    let tempChiReachPercent = 100;
 let chiCycleMembership = null;
 let golCycleMembership = null;
 
@@ -170,17 +171,25 @@ const CHI_PRESETS = CHI_FLOW_PRESETS;
 function setChiReachDraft(rules) {
     tempChiReach = rules.reach;
     tempChiReachOffset = Number.isInteger(rules.reachOffset) ? rules.reachOffset : rules.reach === 0 ? 0 : null;
+    tempChiReachPercent = CHI_REACH_PERCENTAGES.includes(rules.reachPercent) ? rules.reachPercent :
+        Number.isInteger(rules.reachOffset) || rules.reach !== 0 ? null : 100;
     updateChiReachDisplay();
 }
 
 function updateChiReachDisplay() {
-    const label = tempChiReachOffset === null ? `${app.getText('chi_reach_fixed')}: ${tempChiReach}` :
-        tempChiReachOffset === 0 ? 'Auto' : `Auto ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
     const paletteSize = app.C.PALETTES[app.getActivePaletteIndex()].colors.length;
-    app.dom.chiReachSlider.value = tempChiReachOffset ?? Math.max(-10, Math.min(10, tempChiReach - getAutoChiReach(paletteSize)));
+    const percent = tempChiReachPercent;
+    const label = percent !== null ? (percent === 100 ? 'Auto · 100%' : `${percent}%`) :
+        tempChiReachOffset === null ? `${app.getText('chi_reach_fixed')}: ${tempChiReach}` :
+        tempChiReachOffset === 0 ? 'Auto' : `Auto ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
+    // Old fixed/offset settings remain untouched until the user moves the slider.
+    const displayedPercent = percent ?? resolveChiReach(readChiCycleRules(), paletteSize) / getAutoChiReach(paletteSize) * 100;
+    const nearest = CHI_REACH_PERCENTAGES.reduce((best, value, index) =>
+        Math.abs(value - displayedPercent) < Math.abs(CHI_REACH_PERCENTAGES[best] - displayedPercent) ? index : best, 0);
+    app.dom.chiReachSlider.value = nearest;
     app.dom.chiReachValue.textContent = label;
     app.dom.chiReachSlider.setAttribute('aria-valuetext', label);
-    app.dom.chiReachDesc.textContent = app.getText(tempChiReachOffset === null ? 'chi_reach_legacy_note' : 'chi_reach_desc');
+    app.dom.chiReachDesc.textContent = app.getText(percent === null ? 'chi_reach_legacy_note' : 'chi_reach_desc');
 }
 
 
@@ -240,7 +249,9 @@ function updateActiveChiPresetButton() {
             // בודק אם החוקים הזמניים זהים לחוקים של אחד הפריסטים
             if (arraysAreEqual(tempChiAwakening, rules.awakening) &&
                 arraysAreEqual(tempChiFlow, rules.flow) &&
-                tempChiReach === rules.reach && (tempChiReachOffset ?? null) === (rules.reachOffset ?? (rules.reach === 0 ? 0 : null))) {
+                tempChiReach === rules.reach &&
+                (tempChiReachPercent === 100 && rules.reach === 0 && !Number.isInteger(rules.reachOffset) ||
+                 tempChiReachPercent === null && (tempChiReachOffset ?? null) === (rules.reachOffset ?? (rules.reach === 0 ? 0 : null)))) {
                 activeId = 'btnChiPreset' + presetName;
                 break;
             }
@@ -265,8 +276,9 @@ function updateActiveChiPresetButton() {
     }
 
     function readChiCycleRules() {
-        return { awakening: [...tempChiAwakening], flow: [...tempChiFlow], reach: tempChiReachOffset === null ? tempChiReach : 0,
-            ...(tempChiReachOffset === null ? {} : { reachOffset: tempChiReachOffset }) };
+        return { awakening: [...tempChiAwakening], flow: [...tempChiFlow], reach: tempChiReachPercent !== null ? 0 : tempChiReach,
+            ...(tempChiReachPercent !== null ? { reachPercent: tempChiReachPercent } :
+                tempChiReachOffset === null ? {} : { reachOffset: tempChiReachOffset }) };
     }
 
     function writeChiCycleRules(rules) {
@@ -1545,7 +1557,8 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
 
 app.dom.chiReachSlider.addEventListener('input', (e) => {
     tempChiReach = 0;
-    tempChiReachOffset = parseInt(e.target.value, 10);
+    tempChiReachOffset = null;
+    tempChiReachPercent = CHI_REACH_PERCENTAGES[Number(e.target.value)];
     updateChiReachDisplay();
     updateActiveChiPresetButton(); // <-- שינינו את שם הפונקציה כאן
     chiCycleMembership?.manualChange();
