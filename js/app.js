@@ -3768,6 +3768,7 @@ else if (action.eventName === 'Invert Colors') {
                 selectedColorIndex = c ? palette().indexOf(c) : -1;
             },
             setIsRainbowModeActive: (b) => { isRainbowModeActive = b; },
+            isRainbowModeActive: () => isRainbowModeActive,
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
             switchToPalette,
@@ -3928,6 +3929,12 @@ bindPickerGestures(dom.btnColorPicker, {
         selectedColorIndex = 0;
         selectedColor = palette()[0];
         isRainbowModeActive = false;
+        updateGlowEffect(); updateColorPickerButtonUI();
+    },
+    onExtendedHold: () => {
+        selectedColor = null;
+        selectedColorIndex = -1;
+        isRainbowModeActive = true;
         updateGlowEffect(); updateColorPickerButtonUI();
     },
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
