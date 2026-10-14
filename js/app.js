@@ -2525,14 +2525,19 @@ function updateBrightnessEvoButtonUI() {
 }
 
 
+// Running evolutions cycle through active modes; paused cycles retain Off.
+function nextEvolutionMode(current, sequence) {
+    let index = (sequence.indexOf(current) + 1) % sequence.length;
+    if (isLifePlaying && sequence[index] === 'off') index = (index + 1) % sequence.length;
+    return sequence[index];
+}
+
 function cycleBrightnessEvoMode() {
     // שומרים את המצב הקודם כדי שנוכל להשוות
     const oldMode = brightnessEvoMode;
 
     const sequence = ['off', 'brightness', 'contrast'];
-    const currentIndex = sequence.indexOf(brightnessEvoMode);
-    const nextIndex = (currentIndex + 1) % sequence.length;
-    brightnessEvoMode = sequence[nextIndex];
+    brightnessEvoMode = nextEvolutionMode(brightnessEvoMode, sequence);
     
     window.logArtEvent('Brightness Evo Mode Changed', brightnessEvoMode);
 
@@ -2565,12 +2570,14 @@ function updateErosionButtonUI() {
 }
 
 function cycleErosionMode() {
-    if (isLifePlaying) return;
+    if (isLifePlaying && armedSimulation !== 'erosion') return;
     const modes = ['off', 'legacy', 'channels-solid', 'channels'];
     const current = armedSimulation === 'erosion' ? erosionRules.mode : 'off';
-    const next = modes[(modes.indexOf(current) + 1) % modes.length];
-    if (next === 'off') armSimulation(null);
-    else {
+    const next = nextEvolutionMode(current, modes);
+    if (next === 'off') {
+        pauseLife();
+        armSimulation(null);
+    } else {
         if (armedSimulation !== 'erosion') armSimulation('erosion');
         erosionRules.mode = next;
     }
@@ -2592,9 +2599,7 @@ function cycleDlaMode() {
     const oldMode = dlaMode;
 
     const sequence = ['off', 'genetics', 'no-genetics'];
-    const currentIndex = sequence.indexOf(dlaMode);
-    const nextIndex = (currentIndex + 1) % sequence.length;
-    dlaMode = sequence[nextIndex];
+    dlaMode = nextEvolutionMode(dlaMode, sequence);
     
     window.logArtEvent('DLA Mode Changed', dlaMode);
 
@@ -2634,9 +2639,7 @@ function cycleGravitationalSortMode() {
 
 
 
-    const currentIndex = sequence.indexOf(gsMode);
-    const nextIndex = (currentIndex + 1) % sequence.length;
-    gsMode = sequence[nextIndex];
+    gsMode = nextEvolutionMode(gsMode, sequence);
 
     if (gsMode !== 'off') {
         gravitationalSortRules.direction = gsMode; // מעדכן את חוקי הסימולציה בפועל
@@ -2735,9 +2738,7 @@ const sequence = SPIRAL_MODE_SEQUENCE;
 // const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
 
 
-    const currentIndex = sequence.indexOf(spiralMode);
-    const nextIndex = (currentIndex + 1) % sequence.length;
-    spiralMode = sequence[nextIndex];
+    spiralMode = nextEvolutionMode(spiralMode, sequence);
 
     if (spiralMode !== 'off') {
         spiralRules.method = spiralMode;
@@ -2776,9 +2777,7 @@ function updateMagnetButtonUI() {
 function cycleMagnetMode() {
     const oldMode = magnetMode;
     const sequence = ['off', 'cosmic_magnet', 'magnet', 'time_magnet'];
-    const currentIndex = sequence.indexOf(magnetMode);
-    const nextIndex = (currentIndex + 1) % sequence.length;
-    magnetMode = sequence[nextIndex];
+    magnetMode = nextEvolutionMode(magnetMode, sequence);
 
     if (magnetMode !== 'off') {
         magnetRules.method = magnetMode;
@@ -3560,7 +3559,10 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'Erosion Mode Changed') {
         if (action.details === 'off') {
-            if (armedSimulation === 'erosion') armSimulation(null);
+            if (armedSimulation === 'erosion') {
+                pauseLife();
+                armSimulation(null);
+            }
         } else if (['legacy', 'channels', 'channels-solid'].includes(action.details)) {
             if (armedSimulation !== 'erosion') armSimulation('erosion');
             erosionRules.mode = action.details;
