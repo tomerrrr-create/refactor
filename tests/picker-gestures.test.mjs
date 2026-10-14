@@ -7,7 +7,7 @@ class Target {
     addEventListener(type, handler) { const list = this.listeners.get(type) || []; list.push(handler); this.listeners.set(type, list); }
     emit(type, event = {}) { for (const handler of this.listeners.get(type) || []) handler(event); }
 }
-function harness(t, { pointerType = 'touch', hold = true, canOpen = () => true } = {}) {
+function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, canOpen = () => true } = {}) {
     const original = { document: globalThis.document, window: globalThis.window, setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
     t.after(() => Object.assign(globalThis, original));
     const doc = new Target(), win = new Target(), button = new Target();
@@ -23,7 +23,8 @@ function harness(t, { pointerType = 'touch', hold = true, canOpen = () => true }
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, { fn, at: now + ms }); return id; },
         clearTimeout: id => timers.delete(id) });
     bindPickerGestures(button, { onTap: () => actions.push('tap'), onOpen: () => actions.push('open'),
-        onHold: hold ? () => actions.push('hold') : undefined, canInteract: () => allowed, canOpen });
+        onHold: hold ? () => actions.push('hold') : undefined,
+        onExtendedHold: extendedHold ? () => actions.push('extendedHold') : undefined, canInteract: () => allowed, canOpen });
     return { actions, button, doc, win, classes, captured,
         block() { allowed = false; },
         event(type, x = 25, y = 25, extra = {}) { button.emit(type, { pointerId: 1, pointerType, isPrimary: true, button: 0, clientX: x, clientY: y, detail: 1, ...extra }); },
@@ -123,4 +124,38 @@ test('opening eligibility gates glow and swipes without blocking ordinary taps',
     playing = false;
     h.event('pointerdown'); h.event('pointermove', 25, -5); h.event('pointerup', 25, -5); h.event('click');
     assert.deepEqual(h.actions, ['tap', 'open']);
+});
+
+for (const pointerType of ['touch', 'mouse']) {
+    test(`${pointerType} holds select the first stage at 600ms and the second at 1200ms`, t => {
+        const h = harness(t, { pointerType, extendedHold: true });
+        h.event('pointerdown'); h.advance(599); assert.deepEqual(h.actions, []);
+        h.advance(600); assert.deepEqual(h.actions, ['hold']);
+        h.advance(1199); assert.deepEqual(h.actions, ['hold']);
+        h.advance(1200); assert.deepEqual(h.actions, ['hold', 'extendedHold']);
+        h.event('pointerup'); h.event('click'); h.advance(2000);
+        assert.deepEqual(h.actions, ['hold', 'extendedHold']);
+    });
+}
+for (const [name, end] of [
+    ['release', h => { h.event('pointerup'); h.event('click'); }],
+    ['cancel', h => h.event('pointercancel')],
+    ['lost capture', h => h.event('lostpointercapture')],
+    ['blur', h => h.win.emit('blur')],
+    ['background', h => { h.doc.hidden = true; h.doc.emit('visibilitychange'); }],
+    ['movement after first hold', h => { h.event('pointermove', 25, -10); h.event('pointerup', 25, -10); h.event('click'); }],
+    ['disabled control', h => { h.button.disabled = true; }],
+    ['blocked interaction', h => h.block()]
+]) {
+    test(`${name} prevents the extended hold after the first stage`, t => {
+        const h = harness(t, { extendedHold: true });
+        h.event('pointerdown'); h.advance(600); end(h); h.advance(2000);
+        assert.deepEqual(h.actions, ['hold']);
+    });
+}
+test('an upward swipe cancels both hold stages and still opens the picker', t => {
+    const h = harness(t, { extendedHold: true });
+    h.event('pointerdown'); h.advance(200); h.event('pointermove', 25, -10);
+    h.advance(1500); h.event('pointerup', 25, -10); h.event('click');
+    assert.deepEqual(h.actions, ['open']);
 });

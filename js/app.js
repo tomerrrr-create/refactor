@@ -3931,6 +3931,12 @@ bindPickerGestures(dom.btnColorPicker, {
         isRainbowModeActive = false;
         updateGlowEffect(); updateColorPickerButtonUI();
     },
+    onExtendedHold: () => {
+        selectedColor = null;
+        selectedColorIndex = -1;
+        isRainbowModeActive = true;
+        updateGlowEffect(); updateColorPickerButtonUI();
+    },
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
