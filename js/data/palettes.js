@@ -1377,7 +1377,7 @@ colors: (function() {
 
 {
   originalName: "Autumn into Winter 264",
-  emoji: '🍂',
+  iconHTML: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V5 M12 10L7 6 M12 13l5-5 M12 17l-5-3" stroke="#91A0A6"/><path d="M5 20h14" stroke="#D38448"/><path d="M16 3h4" stroke="#D5D7D0"/></svg>',
   isArchived: false,
   colors: [
     "#100F16", "#121017", "#131119", "#15121A", "#16131B", "#18141C", "#19161E", "#1B171F",
@@ -1418,7 +1418,7 @@ colors: (function() {
 
 {
   originalName: "זוהר הגלסיות",
-  emoji: '🌌',
+  iconHTML: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15L13 5 M7 19L18 8 M14 19l7-7" stroke="#AFCDF9"/><circle cx="13" cy="5" r="1.3" fill="#F5D8F2" stroke="none"/><circle cx="18" cy="8" r="1.3" fill="#C655AB" stroke="none"/><circle cx="21" cy="12" r="1.1" fill="#F5D8F2" stroke="none"/></svg>',
   isArchived: false,
   colors: [
     "#030510", "#040612", "#040714", "#050717", "#060819", "#06091B", "#070A1D", "#080A1F",
