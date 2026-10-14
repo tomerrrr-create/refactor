@@ -195,9 +195,13 @@ function updateChiReachDisplay() {
 }
 
 
-function refreshEvolutionModalText() {
+function refreshLocalizedModalText() {
     if (!app.dom.chiFlowSettingsModal.classList.contains('hidden')) updateChiReachDisplay();
     app.dom.chiFlowModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
+    document.querySelectorAll('#startupPalette option').forEach(option => {
+        const palette = app.C.PALETTES.find(p => p.originalName === option.value);
+        if (palette) option.textContent = palette.name;
+    });
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
 }
@@ -342,7 +346,7 @@ updateActiveChiPresetButton();
             save: app.setChiFlowCycle, saveButton: app.dom.btnChiSettingsSave, getText: app.getText
         });
         app.dom.chiFlowSettingsModal.classList.remove('hidden');
-        refreshEvolutionModalText();
+        refreshLocalizedModalText();
     }
 
     // --- END: Chi Flow Modal Logic ---
@@ -692,7 +696,7 @@ function populatePaletteModal() {
         header.style.boxSizing = 'border-box';
         // --- END: תוספת לכותרות דביקות ---
 
-        header.innerHTML = `<span>${group.title}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${group.indexes.length} items</span>`;
+        header.innerHTML = `<span data-debug-text="palette_group_${group.id}">${app.getText('palette_group_' + group.id)}</span> <span style="font-size: 0.8rem; opacity: 0.7;">${group.indexes.length} <span data-debug-text="palette_items">${app.getText('palette_items')}</span></span>`;
         frag.appendChild(header);
         
         
@@ -1403,7 +1407,7 @@ export function initializeModals(appContext) {
         });
     }
     addStartupOptions('startupPalette', app.C.PALETTES.filter(p => !p.isArchived)
-        .map(p => [p.originalName, p.originalName]));
+        .map(p => [p.originalName, p.name]));
     addStartupOptions('startupBoardSize', app.C.SIZES.slice().sort((a, b) => a - b).map(n => [n, `${n} × ${n}`]));
     addStartupOptions('startupSeparator', app.C.SEPARATORS.slice().reverse().map(gap => [gap, `${gap} px`]));
     addStartupOptions('startupSort', app.SORT_MODES.map(mode => [mode.method, '', 'startup_sort_' + mode.method]));
@@ -1775,7 +1779,7 @@ function renderMagnetAnchorSwatches() {
         ? 'border-gold-400 text-gold-400 bg-gray-900 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]' 
         : 'border-gray-600 hover:border-gray-400 text-gray-400'
     }`;
-    rootBtn.innerHTML = `${eclipseIcon} ROOT`;
+    rootBtn.innerHTML = `${eclipseIcon} <span data-debug-text="magnet_root">${app.getText('magnet_root')}</span>`;
     rootBtn.onclick = () => {
         tempMagnetRules.anchorColorIndex = -1;
         renderMagnetAnchorSwatches();
@@ -1855,7 +1859,7 @@ function saveMagnetSettings() {
 
 
 return {
-        refreshEvolutionModalText,
+        refreshLocalizedModalText,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
         openSortCycleModal,

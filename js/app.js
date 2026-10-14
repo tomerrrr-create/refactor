@@ -1977,6 +1977,11 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         document.querySelectorAll('[data-debug-text]').forEach(element => {
             element.textContent = getText(element.dataset.debugText);
         });
+        for (const [attribute, target] of [['data-i18n-title', 'title'], ['data-i18n-alt', 'alt']]) {
+            document.querySelectorAll(`[${attribute}]`).forEach(element => {
+                element.setAttribute(target, getText(element.getAttribute(attribute)));
+            });
+        }
         document.querySelectorAll('#sortCycleOptions option[data-position]').forEach(option => {
             option.textContent = `${getText('sort_position')} ${option.dataset.position}`;
         });
@@ -2038,7 +2043,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
             }
         }
         setTextContent();
-        modals?.refreshEvolutionModalText();
+        modals?.refreshLocalizedModalText();
         updatePaletteHeader();
         if (dom.helpModal.classList.contains('modal-visible')) {
             modals.populateHelpModal();

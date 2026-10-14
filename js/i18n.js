@@ -9,6 +9,25 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  spiral_modal_title: {"en": "Spiral Settings", "he": "הגדרות ספירלה", "ru": "Настройки спирали", "nl": "Spiraalinstellingen"},
+  spiral_method_label: {"en": "Rotation Method", "he": "שיטת סיבוב", "ru": "Способ вращения", "nl": "Rotatiemethode"},
+  spiral_vortex: {"en": "Vortex", "he": "מערבולת", "ru": "Вихрь", "nl": "Draaikolk"},
+  spiral_a: {"en": "Experiment A", "he": "ניסוי A", "ru": "Эксперимент A", "nl": "Experiment A"},
+  gs_direction_up: {"en": "Up", "he": "למעלה", "ru": "Вверх", "nl": "Omhoog"},
+  gs_direction_right: {"en": "Right", "he": "ימינה", "ru": "Вправо", "nl": "Rechts"},
+  gs_direction_center_x: {"en": "Center", "he": "מרכז", "ru": "Центр", "nl": "Midden"},
+  gs_direction_vortex: {"en": "Vortex", "he": "מערבולת", "ru": "Вихрь", "nl": "Draaikolk"},
+  turing_advanced: {"en": "Fine Tuning", "he": "כיוונון עדין", "ru": "Тонкая настройка", "nl": "Fijnafstelling"},
+  turing_feed: {"en": "Feed", "he": "הזנה", "ru": "Подача", "nl": "Toevoer"},
+  turing_kill: {"en": "Kill", "he": "תמותה", "ru": "Убыль", "nl": "Afbraak"},
+  magnet_root: {"en": "ROOT", "he": "שורש", "ru": "Корень", "nl": "Wortel"},
+  palette_group_classic: {"en": "Origin ◈", "he": "מקור ◈", "ru": "Исток ◈", "nl": "Oorsprong ◈"},
+  palette_group_extended: {"en": "Expansion ✦", "he": "התרחבות ✦", "ru": "Расширение ✦", "nl": "Uitbreiding ✦"},
+  palette_group_continuous: {"en": "Resonance ♾️", "he": "תהודה ♾️", "ru": "Резонанс ♾️", "nl": "Resonantie ♾️"},
+  palette_group_archive: {"en": "Basement ▽", "he": "מרתף ▽", "ru": "Подвал ▽", "nl": "Kelder ▽"},
+  palette_items: {"en": "items", "he": "פלטות", "ru": "палитр", "nl": "paletten"},
+  save_image_preview: {"en": "Image Preview", "he": "תצוגה מקדימה של התמונה", "ru": "Предпросмотр изображения", "nl": "Voorbeeld van de afbeelding"},
+
   evolution_presets: {"en": "Presets", "he": "פריסטים", "ru": "Пресеты", "nl": "Voorinstellingen"},
   evolution_reset: {"en": "Reset", "he": "איפוס", "ru": "Сброс", "nl": "Herstellen"},
   evolution_reset_default: {"en": "Reset to Default", "he": "איפוס לברירת המחדל", "ru": "По умолчанию", "nl": "Standaard herstellen"},
@@ -347,7 +366,7 @@ turing_preset_waves: { en: "Waves", he: "גלים", ru: "Волны", nl: "Golve
   tooltip_spiral: { en: "Spiral Pattern", he: "ספירלה", ru: "Спираль", nl: "Spiraal" },
   magnet_modal_title: { en: "Magnet Settings", he: "הגדרות מגנט", ru: "Настройки магнита", nl: "Magneetinstellingen" },
   magnet_mode_label: { en: "Magnet Type", he: "סוג המגנט", ru: "Тип магнита", nl: "Type magneet" },
-  magnet_anchor_label: { en: "Anchor Color", he: "צבע Anchor", ru: "Цвет якоря", nl: "Anker kleur" },
+  magnet_anchor_label: { en: "Anchor Color", he: "צבע עוגן", ru: "Цвет якоря", nl: "Anker kleur" },
 }; 
 
 
