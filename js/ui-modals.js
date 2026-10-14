@@ -783,7 +783,7 @@ function populateHelpModal() {
         });
     }
 
-    for (const [tab, tips] of [['creation', ['help_tip2', 'help_tip3', 'help_tip4', 'help_tip5', 'help_tip6']], ['evolution', ['help_tip1']]]) {
+    for (const [tab, tips] of [['creation', ['help_tip2', 'help_tip3', 'help_tip4', 'help_tip5', 'help_tip6', 'help_tip7']], ['evolution', ['help_tip1']]]) {
         const contentDiv = bodies[tab];
         const tipsTitle = document.createElement('h3');
         tipsTitle.className = 'help-category-title';
