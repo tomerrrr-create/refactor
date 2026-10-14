@@ -1,8 +1,9 @@
+import { CHI_REACH_PERCENTAGES } from '../js/chi-reach.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-const source = readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replaceAll('export ', '');
+const source = readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, 'const CHI_REACH_PERCENTAGES = ' + JSON.stringify(CHI_REACH_PERCENTAGES) + ';').replaceAll('export ', '');
 const defaults = [{ survival: [0, 2], birth: [3] }, { survival: [4], birth: [] }, { survival: [8], birth: [2] }];
 const plain = x => JSON.parse(JSON.stringify(x));
 const c = vm.createContext({}); vm.runInContext(source, c);
@@ -24,7 +25,7 @@ test('malformed or unavailable storage falls back safely; valid preferences roun
 });
 test('Chi Flow includes Reach validation and rejects zero-valued neighbor rules', () => {
     const rules = { awakening: [3, 4], flow: [2], reach: 0 }, defaults = [rules, rules, rules];
-    const result = c.normalizeEvolutionCycle([{ ...rules, reach: 11 }, { ...rules, flow: [0] }, { ...rules, reach: 7 }], defaults);
+    const result = c.normalizeEvolutionCycle([{ ...rules, reach: -1 }, { ...rules, flow: [0] }, { ...rules, reach: 7 }], defaults);
     assert.deepEqual(plain(result), [rules, rules, { ...rules, reach: 7 }]);
 });
 test('source identity preserves Yours independently; outdated preset references follow the recorded rules', () => {

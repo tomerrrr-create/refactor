@@ -1,3 +1,4 @@
+import { CHI_REACH_PERCENTAGES } from '../js/chi-reach.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,7 +16,7 @@ function harness() {
     c.defaultGolCycle = [plain(personal), plain(presets.btnGolPresetShuffle), plain(presets.btnGolPresetCoral)];
     c.gameOfLifeCycle = c.defaultGolCycle.map(plain);
     c.localStorage = { setItem() {} };
-    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replaceAll('export ', ''), c);
+    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, 'const CHI_REACH_PERCENTAGES = ' + JSON.stringify(CHI_REACH_PERCENTAGES) + ';').replaceAll('export ', ''), c);
     c.gameOfLifeSources = c.inferCycleSources(c.gameOfLifeCycle, c.C.GAME_OF_LIFE_PRESETS);
     c.armSimulation = sim => { assert(!c.isLifePlaying); c.armedSimulation = sim; c.armCalls++; };
     c.updateGameOfLifeButtonUI = () => {};
