@@ -628,12 +628,12 @@
 
 <div id="gameOfLifeSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
     <div class="relative retro-evolution-panel bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
-      <h2 id="golSettingsTitle" class="text-xl font-bold text-center text-gray-200">Game of Life Rules</h2>
+      <h2 id="golSettingsTitle" class="text-xl font-bold text-center text-gray-200" data-debug-text="gol_modal_title">Game of Life Rules</h2>
       <div id="golCycleToolbar" class="preset-cycle-toolbar"></div>
       
       <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300">Survival Rules</h3>
-        <p class="text-sm text-gray-400">A live cell survives if it has:</p>
+        <h3 class="font-semibold text-gray-300" data-debug-text="gol_survival_label">Survival Rules</h3>
+        <p class="text-sm text-gray-400" data-debug-text="gol_survival_desc">A live cell survives if it has:</p>
         <div id="golSurvivalChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button class="gol-chip-btn" data-number="0">0</button>
           <button class="gol-chip-btn" data-number="1">1</button>
@@ -648,8 +648,8 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300">Birth Rules</h3>
-        <p class="text-sm text-gray-400">A dead cell is born if it has:</p>
+        <h3 class="font-semibold text-gray-300" data-debug-text="gol_birth_label">Birth Rules</h3>
+        <p class="text-sm text-gray-400" data-debug-text="gol_birth_desc">A dead cell is born if it has:</p>
         <div id="golBirthChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button class="gol-chip-btn" data-number="0">0</button>
           <button class="gol-chip-btn" data-number="1">1</button>
@@ -663,34 +663,34 @@
         </div>
       </div>
       <div class="flex flex-col gap-2">
-        <h3 class="font-semibold text-gray-300">Presets</h3>
+        <h3 class="font-semibold text-gray-300" data-debug-text="evolution_presets">Presets</h3>
 <div class="grid grid-flow-col grid-rows-5 gap-2">
-                <button id="btnGolPresetPaint" class="gol-preset-btn">Paint 4</button>
-                <button id="btnGolPresetPaint2" class="gol-preset-btn">Paint 1</button>
-                <button id="btnGolPresetShuffle" class="gol-preset-btn">Shuffle</button>
-                <button id="btnGolPresetHarmonic" class="gol-preset-btn">Harmonic</button>
-                <button id="btnGolPresetNaive" class="gol-preset-btn">Naive</button>
+                <button id="btnGolPresetPaint" data-debug-text="gol_preset_paint" class="gol-preset-btn">Paint 4</button>
+                <button id="btnGolPresetPaint2" data-debug-text="gol_preset_paint2" class="gol-preset-btn">Paint 1</button>
+                <button id="btnGolPresetShuffle" data-debug-text="gol_preset_shuffle" class="gol-preset-btn">Shuffle</button>
+                <button id="btnGolPresetHarmonic" data-debug-text="gol_preset_harmonic" class="gol-preset-btn">Harmonic</button>
+                <button id="btnGolPresetNaive" data-debug-text="gol_preset_naive" class="gol-preset-btn">Naive</button>
 
-                <button id="btnGolPresetCoral" class="gol-preset-btn">Coral</button>
-                <button id="btnGolPresetSpace" class="gol-preset-btn">Space</button>
-                <button id="btnGolPresetAmoeba" class="gol-preset-btn">Amoeba</button>
-                <button id="btnGolPresetHive" class="gol-preset-btn">Hive</button>           
-                <button id="btnGolPresetLivingTexture" class="gol-preset-btn">Alive</button>
+                <button id="btnGolPresetCoral" data-debug-text="gol_preset_coral" class="gol-preset-btn">Coral</button>
+                <button id="btnGolPresetSpace" data-debug-text="gol_preset_space" class="gol-preset-btn">Space</button>
+                <button id="btnGolPresetAmoeba" data-debug-text="gol_preset_amoeba" class="gol-preset-btn">Amoeba</button>
+                <button id="btnGolPresetHive" data-debug-text="gol_preset_hive" class="gol-preset-btn">Hive</button>
+                <button id="btnGolPresetLivingTexture" data-debug-text="gol_preset_livingtexture" class="gol-preset-btn">Alive</button>
 
-                <button id="btnGolPresetJoelson" class="gol-preset-btn">Joel</button>
-                <button id="btnGolPresetCharlie" class="gol-preset-btn">Charlie</button>
-                <button id="btnGolPresetMeditation" class="gol-preset-btn">Meditate</button>
+                <button id="btnGolPresetJoelson" data-debug-text="gol_preset_joelson" class="gol-preset-btn">Joel</button>
+                <button id="btnGolPresetCharlie" data-debug-text="gol_preset_charlie" class="gol-preset-btn">Charlie</button>
+                <button id="btnGolPresetMeditation" data-debug-text="gol_preset_meditation" class="gol-preset-btn">Meditate</button>
                 <button id="btnGolPresetContinuum" class="gol-preset-btn" data-debug-text="gol_preset_continuum">Continuum</button>
-                <button id="btnGolPresetVibration" class="gol-preset-btn">Vibrate</button>
+                <button id="btnGolPresetVibration" data-debug-text="gol_preset_vibration" class="gol-preset-btn">Vibrate</button>
 
 
         </div>
       </div>
       <div class="flex justify-between items-center mt-4 border-t border-gray-700 pt-4">
-        <button id="btnGolSettingsReset" class="text-gray-400 hover:text-white text-sm">Reset to Default</button>
+        <button id="btnGolSettingsReset" class="text-gray-400 hover:text-white text-sm" data-debug-text="evolution_reset_default">Reset to Default</button>
         <div class="flex gap-4">
-          <button id="btnGolSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
-          <button id="btnGolSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">Save & Close</button>
+          <button id="btnGolSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_cancel">Cancel</button>
+          <button id="btnGolSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);" data-debug-text="evolution_save_close">Save & Close</button>
         </div>
       </div>
     </div>
@@ -910,57 +910,57 @@
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
     
-    <h2 id="chiFlowModalTitle" class="text-xl font-bold text-center text-gray-200">Chi Flow Settings</h2>
+    <h2 id="chiFlowModalTitle" data-debug-text="chi_modal_title" class="text-xl font-bold text-center text-gray-200">Chi Flow Settings</h2>
       <div id="chiCycleToolbar" class="preset-cycle-toolbar"></div>
 
     <div class="flex flex-col gap-2">
-      <h3 id="chiAwakeningLabel" class="font-semibold text-gray-300">Awakening Rules</h3>
-      <p id="chiAwakeningDesc" class="text-sm text-gray-400"></p>
+      <h3 id="chiAwakeningLabel" data-debug-text="chi_awakening_label" class="font-semibold text-gray-300">Awakening Rules</h3>
+      <p id="chiAwakeningDesc" data-debug-text="chi_awakening_desc" class="text-sm text-gray-400"></p>
       <div id="chiAwakeningChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <h3 id="chiFlowLabel" class="font-semibold text-gray-300">Flow Rules</h3>
-      <p id="chiFlowDesc" class="text-sm text-gray-400"></p>
+      <h3 id="chiFlowLabel" data-debug-text="chi_flow_label" class="font-semibold text-gray-300">Flow Rules</h3>
+      <p id="chiFlowDesc" data-debug-text="chi_flow_desc" class="text-sm text-gray-400"></p>
       <div id="chiFlowChipsContainer" class="flex flex-wrap items-center justify-center gap-2 pt-1">
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
       <div class="flex justify-between items-end">
-        <h3 id="chiReachLabel" class="font-semibold text-gray-300">Magnetic Reach</h3>
+        <h3 id="chiReachLabel" data-debug-text="chi_reach_label" class="font-semibold text-gray-300">Magnetic Reach</h3>
         <span id="chiReachValue" class="text-gray-300 font-mono text-sm bg-gray-700 px-2 py-0.5 rounded">Auto</span>
       </div>
       <p id="chiReachDesc" class="text-sm text-gray-400"></p>
       <input type="range" id="chiReachSlider" min="0" max="7" step="1" value="2" aria-labelledby="chiReachLabel" aria-describedby="chiReachDesc" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-2">
-      <div class="relative h-4 text-xs text-gray-400" aria-hidden="true"><span class="absolute left-0">50%</span><span class="absolute" style="left:28.571%;transform:translateX(-50%)">Auto · 100%</span><span class="absolute right-0">400%</span></div>
+      <div class="relative h-4 text-xs text-gray-400" aria-hidden="true"><span class="absolute left-0">50%</span><span class="absolute" id="chiReachAutoTick" style="left:28.571%;transform:translateX(-50%)">Auto · 100%</span><span class="absolute right-0">400%</span></div>
     </div>
 
 
 <div class="flex flex-col gap-2">
-      <h3 class="font-semibold text-gray-300">Presets</h3>
+      <h3 class="font-semibold text-gray-300" data-debug-text="evolution_presets">Presets</h3>
       <div class="grid grid-flow-col grid-rows-5 gap-2">
-        <button id="btnChiPresetNova" class="gol-preset-btn">Nova</button>
-        <button id="btnChiPresetHarmony" class="gol-preset-btn">Harmony</button>
-        <button id="btnChiPresetTopography" class="gol-preset-btn">Topography</button>
-        <button id="btnChiPresetFluent" class="gol-preset-btn">Fluent</button>
-        <button id="btnChiPresetElectric" class="gol-preset-btn">Electric</button>
-        <button id="btnChiPresetRipples" class="gol-preset-btn">Ripples</button>
-        <button id="btnChiPresetCrystals" class="gol-preset-btn">Crystals</button>
-        <button id="btnChiPresetWildfire" class="gol-preset-btn">Wildfire</button>
-        <button id="btnChiPresetAlexis" class="gol-preset-btn">Alexis</button>
-        <button id="btnChiPresetZen" class="gol-preset-btn">Zen</button>
+        <button id="btnChiPresetNova" data-debug-text="chi_preset_nova" class="gol-preset-btn">Nova</button>
+        <button id="btnChiPresetHarmony" data-debug-text="chi_preset_harmony" class="gol-preset-btn">Harmony</button>
+        <button id="btnChiPresetTopography" data-debug-text="chi_preset_topography" class="gol-preset-btn">Topography</button>
+        <button id="btnChiPresetFluent" data-debug-text="chi_preset_fluent" class="gol-preset-btn">Fluent</button>
+        <button id="btnChiPresetElectric" data-debug-text="chi_preset_electric" class="gol-preset-btn">Electric</button>
+        <button id="btnChiPresetRipples" data-debug-text="chi_preset_ripples" class="gol-preset-btn">Ripples</button>
+        <button id="btnChiPresetCrystals" data-debug-text="chi_preset_crystals" class="gol-preset-btn">Crystals</button>
+        <button id="btnChiPresetWildfire" data-debug-text="chi_preset_wildfire" class="gol-preset-btn">Wildfire</button>
+        <button id="btnChiPresetAlexis" data-debug-text="chi_preset_alexis" class="gol-preset-btn">Alexis</button>
+        <button id="btnChiPresetZen" data-debug-text="chi_preset_zen" class="gol-preset-btn">Zen</button>
 
       </div>
     </div>
 
 
     <div class="flex justify-between items-center mt-4 border-t border-gray-700 pt-4">
-      <button id="btnChiSettingsReset" class="text-gray-400 hover:text-white text-sm">Reset</button>
+      <button id="btnChiSettingsReset" class="text-gray-400 hover:text-white text-sm" data-debug-text="evolution_reset">Reset</button>
       <div class="flex gap-4">
-        <button id="btnChiSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
-        <button id="btnChiSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);">Save & Close</button>
+        <button id="btnChiSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_cancel">Cancel</button>
+        <button id="btnChiSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);" data-debug-text="evolution_save_close">Save & Close</button>
       </div>
     </div>
     

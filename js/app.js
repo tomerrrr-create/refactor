@@ -2038,6 +2038,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
             }
         }
         setTextContent();
+        modals?.refreshEvolutionModalText();
         updatePaletteHeader();
         if (dom.helpModal.classList.contains('modal-visible')) {
             modals.populateHelpModal();

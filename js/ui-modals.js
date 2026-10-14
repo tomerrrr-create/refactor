@@ -179,19 +179,28 @@ function setChiReachDraft(rules) {
 function updateChiReachDisplay() {
     const paletteSize = app.C.PALETTES[app.getActivePaletteIndex()].colors.length;
     const percent = tempChiReachPercent;
-    const label = percent !== null ? (percent === 100 ? 'Auto · 100%' : `${percent}%`) :
+    const auto = app.getText('chi_reach_auto');
+    const label = percent !== null ? (percent === 100 ? `${auto} · 100%` : `${percent}%`) :
         tempChiReachOffset === null ? `${app.getText('chi_reach_fixed')}: ${tempChiReach}` :
-        tempChiReachOffset === 0 ? 'Auto' : `Auto ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
+        tempChiReachOffset === 0 ? auto : `${auto} ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
     // Old fixed/offset settings remain untouched until the user moves the slider.
     const displayedPercent = percent ?? resolveChiReach(readChiCycleRules(), paletteSize) / getAutoChiReach(paletteSize) * 100;
     const nearest = CHI_REACH_PERCENTAGES.reduce((best, value, index) =>
         Math.abs(value - displayedPercent) < Math.abs(CHI_REACH_PERCENTAGES[best] - displayedPercent) ? index : best, 0);
     app.dom.chiReachSlider.value = nearest;
+    document.getElementById('chiReachAutoTick').textContent = `${auto} · 100%`;
     app.dom.chiReachValue.textContent = label;
     app.dom.chiReachSlider.setAttribute('aria-valuetext', label);
     app.dom.chiReachDesc.textContent = app.getText(percent === null ? 'chi_reach_legacy_note' : 'chi_reach_desc');
 }
 
+
+function refreshEvolutionModalText() {
+    if (!app.dom.chiFlowSettingsModal.classList.contains('hidden')) updateChiReachDisplay();
+    app.dom.chiFlowModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
+    chiCycleMembership?.refresh();
+    golCycleMembership?.refresh();
+}
 
 function closeChiFlowSettingsModal() {
         chiCycleMembership = null;
@@ -333,6 +342,7 @@ updateActiveChiPresetButton();
             save: app.setChiFlowCycle, saveButton: app.dom.btnChiSettingsSave, getText: app.getText
         });
         app.dom.chiFlowSettingsModal.classList.remove('hidden');
+        refreshEvolutionModalText();
     }
 
     // --- END: Chi Flow Modal Logic ---
@@ -1845,6 +1855,7 @@ function saveMagnetSettings() {
 
 
 return {
+        refreshEvolutionModalText,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
         openSortCycleModal,
