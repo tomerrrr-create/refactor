@@ -50,57 +50,81 @@ export function bindPresetCycleMembership({ presets, iconButton, state, readRule
         return { ...preset, source: preset.source || preset.button.id, row };
     });
 
+    const personalRows = new Map();
+
     function icon(index) {
         const svg = iconButton.querySelector('svg').cloneNode(true);
         svg.removeAttribute('id');
         svg.setAttribute('aria-hidden', 'true');
         svg.querySelectorAll('[data-gol-star], [data-chi-star]').forEach((star, i) => {
-            star.style.display = i < index ? '' : 'none';
+            star.style.display = '';
+            star.style.opacity = i < index ? '1' : '0';
         });
         return svg;
     }
     function renderRow({ button, rules, row, source }) {
-        row.querySelector('.cycle-membership-buttons')?.remove();
-        const group = document.createElement('span');
-        group.className = 'cycle-membership-buttons';
+        let group = row.querySelector('.cycle-membership-buttons');
+        if (!group) {
+            group = document.createElement('span');
+            group.className = 'cycle-membership-buttons';
+            row.prepend(group);
+        }
         const indices = draft.slots.flatMap((slot, index) => slot && sources[index] === source ? [index] : []);
         const positions = indices.length ? indices : [null];
-        positions.forEach(index => {
-            const toggle = document.createElement('button');
-            toggle.type = 'button';
-            toggle.className = 'cycle-membership-icon' + (index === null ? '' : ' is-assigned');
+        while (group.children.length > positions.length) group.lastElementChild.remove();
+        positions.forEach((index, offset) => {
+            let toggle = group.children[offset];
+            if (!toggle) {
+                toggle = document.createElement('button');
+                toggle.type = 'button';
+                group.append(toggle);
+            }
+            const available = index === null && draft.vacant !== null;
+            const position = index ?? draft.vacant;
+            const status = index !== null ? 'assigned' : available ? 'available' : 'unavailable';
+            toggle.className = 'cycle-membership-icon is-' + status;
+            toggle.dataset.cycleState = status;
+            if (position !== null) toggle.dataset.cyclePosition = String(position);
+            else delete toggle.dataset.cyclePosition;
             toggle.setAttribute('aria-pressed', String(index !== null));
             toggle.setAttribute('aria-label', index === null
-                ? getText('cycle_add') + ': ' + button.textContent.trim()
+                ? getText('cycle_add') + ': ' + button.textContent.trim() + (available ? ', ' + getText('cycle_position') + ' ' + (position + 1) : '')
                 : getText('cycle_remove') + ': ' + button.textContent.trim() + ', ' + getText('cycle_position') + ' ' + (index + 1));
             toggle.title = toggle.getAttribute('aria-label');
             toggle.disabled = index === null ? draft.vacant === null : draft.vacant !== null;
-            toggle.append(icon(index ?? 0));
-            toggle.addEventListener('click', () => {
+            if (!toggle.querySelector('svg')) toggle.append(icon(position ?? 0));
+            toggle.querySelectorAll('[data-gol-star], [data-chi-star]').forEach((star, i) => {
+                star.style.opacity = i < (position ?? 0) ? '1' : '0';
+            });
+            toggle.onclick = () => {
                 const target = index ?? draft.vacant;
                 const changed = index === null ? draft.fill(rules) : draft.remove(index);
                 if (changed) sources[target] = index === null ? source : null;
                 if (changed) { membershipChanged = true; refresh(); }
-            });
-            group.append(toggle);
+            };
         });
-        row.prepend(group);
     }
     function personalRow(rules, source, label) {
-        const row = document.createElement('div');
-        row.className = 'cycle-preset-row';
-        row.dataset.cyclePersonal = source;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'gol-preset-btn' + (sameCycleRules(readRules(), rules) ? ' active' : '');
+        let row = personalRows.get(source);
+        if (!row) {
+            row = document.createElement('div');
+            row.className = 'cycle-preset-row';
+            row.dataset.cyclePersonal = source;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'gol-preset-btn';
+            row.append(button);
+            personalRows.set(source, row);
+        }
+        const button = row.querySelector('.gol-preset-btn');
+        button.classList.toggle('active', sameCycleRules(readRules(), rules));
         button.textContent = label;
-        button.addEventListener('click', () => {
+        button.onclick = () => {
             previewingPersonal = true;
             writeRules(cloneCycleRules(rules));
             refresh();
             previewingPersonal = false;
-        });
-        row.append(button);
+        };
         renderRow({ button, rules, row, source });
         return row;
     }
@@ -110,14 +134,21 @@ export function bindPresetCycleMembership({ presets, iconButton, state, readRule
             yoursRules = cloneCycleRules(current);
         }
         rows.forEach(renderRow);
-        grid.querySelectorAll('[data-cycle-personal]').forEach(row => row.remove());
-        grid.prepend(personalRow(yoursRules, 'yours', getText('cycle_custom')));
+        const yoursRow = personalRow(yoursRules, 'yours', getText('cycle_custom'));
+        if (grid.firstElementChild !== yoursRow) grid.prepend(yoursRow);
         const custom = sources.flatMap((source, index) => source?.startsWith('custom-') && draft.slots[index] ? [{ source, rules: draft.slots[index] }] : []);
         // Preserve a removed custom choice until its vacancy is filled or cancelled.
         if (draft.removedRules && !presets.some(p => sameCycleRules(p.rules, draft.removedRules)) && !sameCycleRules(draft.removedRules, yoursRules)) {
             custom.push({ source: 'custom-' + draft.vacant, rules: draft.removedRules });
         }
-        custom.forEach(({ source, rules }, index) => grid.append(personalRow(rules, source, getText('cycle_custom') + ' ' + (index + 2))));
+        const desiredSources = new Set(['yours', ...custom.map(item => item.source)]);
+        for (const [source, row] of personalRows) {
+            if (!desiredSources.has(source)) { row.remove(); personalRows.delete(source); }
+        }
+        custom.forEach(({ source, rules }, index) => {
+            const row = personalRow(rules, source, getText('cycle_custom') + ' ' + (index + 2));
+            if (!row.isConnected) grid.append(row);
+        });
         saveButton.disabled = draft.vacant !== null;
     }
     function commit() {

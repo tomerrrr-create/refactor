@@ -1498,7 +1498,7 @@ button, .ctrl {
 .cycle-preset-row { display: flex; align-items: center; min-width: 0; gap: 2px; }
 .cycle-preset-row > .gol-preset-btn { flex: 1; min-width: 0; font-size: .75rem; line-height: 1.4; }
 .cycle-membership-buttons { display: flex; flex-wrap: wrap; flex-shrink: 0; max-width: 28px; }
-.cycle-membership-icon { display: grid; place-items: center; width: 28px; height: 40px; border: 0; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(105, 70, 38, .12), transparent 70%); color: #735238; transition: color .3s ease, filter .3s ease, background .3s ease; }
+.cycle-membership-icon { position: relative; display: grid; place-items: center; width: 28px; height: 40px; border: 0; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(105, 70, 38, .12), transparent 70%); color: #735238; transition: color .5s ease, opacity .5s ease, filter .5s ease, background .5s ease; }
 .cycle-membership-icon svg { width: 22px; height: 22px; }
 .cycle-membership-icon.is-assigned { color: #e2c397; background: radial-gradient(ellipse at center, rgba(190, 140, 70, .14), transparent 72%); filter: drop-shadow(0 0 4px rgba(194, 142, 74, .4)); }
 .cycle-membership-icon:not(:disabled) { cursor: pointer; }
@@ -1551,4 +1551,18 @@ button, .ctrl {
 #chiReachSlider { accent-color: #d5aa48; }
 @media (hover: hover) and (pointer: fine) {
   .evolution-rules-panel .cycle-preset-row > .gol-preset-btn:hover { color: #f0d18b; background: #d5aa4808; transform: none; }
+}
+
+/* A sealed cycle, an open slot, and a lit assignment have distinct appearances. */
+.cycle-membership-icon.is-unavailable { color: #63503a; opacity: .38; background: transparent; filter: none; cursor: default; }
+.cycle-membership-icon.is-available { color: #7f8f96; opacity: .6; background: transparent; filter: none; }
+.cycle-membership-icon.is-assigned { opacity: 1; color: #f0d7a9; filter: drop-shadow(0 0 4px #ce9e5a80); }
+
+@media (hover: hover) and (pointer: fine) {
+  .cycle-membership-icon.is-available:not(:disabled):hover { color: #99a8b0; filter: none; }
+}
+
+.cycle-membership-icon [data-gol-star], .cycle-membership-icon [data-chi-star] { transition: opacity .5s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .cycle-membership-icon, .cycle-membership-icon [data-gol-star], .cycle-membership-icon [data-chi-star] { transition: none; }
 }
