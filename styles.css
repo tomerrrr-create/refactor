@@ -1645,3 +1645,10 @@ button, .ctrl {
 #colorPickerModal > div, #spiralSettingsModal > div, #gravitationalSortSettingsModal > div { max-height: calc(100dvh - 32px); overflow-y: auto; box-sizing: border-box; }
 #colorPickerHeader { padding-top: 28px; }
 #golSettingsTitle, #spiralSettingsTitle, #gsSettingsTitle { padding-inline: 24px; }
+
+.pwa-update { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 1100; display: flex; align-items: center; gap: 12px; width: min(440px, calc(100vw - 32px)); box-sizing: border-box; padding: 12px 14px; border: 1px solid #b28b3659; border-radius: 12px; background: #10110ff5; color: #c3b99e; font-family: inherit; line-height: 1.5; }
+.pwa-update[hidden] { display: none; }
+.pwa-update p { margin: 0; flex: 1; font-size: 12px; }
+.pwa-update button { min-width: 44px; min-height: 44px; padding: 8px; border: 0; border-radius: 8px; background: transparent; color: #e3c677; font: inherit; cursor: pointer; }
+.pwa-update button[data-update] { background: #d5aa481a; }
+.pwa-update button:focus-visible { outline: 2px solid #ffe7a0; }

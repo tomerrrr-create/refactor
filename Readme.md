@@ -19,7 +19,7 @@ Start with [README-QUICK.md](README-QUICK.md) for a short overview and code map.
 
 ## Run and check
 
-The application uses vanilla JavaScript ES modules, HTML5 Canvas, Tailwind CSS and custom CSS. There is no build step, package installation or application backend required for local use. Tailwind and html2canvas are loaded from CDNs, so initial dependency loading requires network access.
+The application uses vanilla JavaScript ES modules, HTML5 Canvas, Tailwind CSS and custom CSS. There is no build step, package installation or application backend required for local use. The Tailwind styling runtime is bundled locally, and image export uses Canvas directly. An online first load installs the resources needed for subsequent offline use.
 
 From the repository root:
 
@@ -530,3 +530,11 @@ Development convention: use `work` for changes and `main` for merged releases.
 5. Preserve tile/brush colors through sorting remaps and validate older JSON/TXT inputs.
 6. Run relevant Node tests and check the affected touch/mouse path in a browser. Measure large-board performance before changing in-place swaps or buffer reuse.
 7. Update both this guide and the [quick guide](README-QUICK.md) when changing an interaction or architectural contract. Update all four interface languages for user-facing text.
+
+## FYI installation and offline use
+
+Install FYI from Safari on iPhone (Share → Add to Home Screen) or Chrome on Android (Install app / Add to Home screen). Open it online once and allow its offline resources to finish downloading before disconnecting. No store or backend is required.
+
+The current home-screen icon is the existing seedling. Updates are offered with a small **Update** control; export your drawing before accepting, because the app reloads. Local preferences remain intact. Browser and installed-app storage may be separate on iOS; transfer preferences with the settings TXT and drawings with the project export.
+
+Maintenance: styling and boot resources are local. After changing app assets or the worker, run `node tools/update-pwa-cache.mjs` and `node --test tests/*.test.mjs`. This generates a scoped offline resource list and content-based cache version. The worker installs a complete snapshot before offering an update and removes only older FYI caches for the same URL scope.

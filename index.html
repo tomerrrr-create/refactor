@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
 
 <title>Follow Your Intuition</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FYI">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="apple-touch-icon" href="icons/fyi-180.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">  <meta property="og:type" content="website">
   <meta property="og:url" content="https://tomerrrr-create.github.io/color-grid-app/">
   <meta property="og:title" content="Follow Your Intuition">
@@ -20,8 +26,8 @@
 
   <meta name="twitter:image" content="https://raw.githubusercontent.com/tomerrrr-create/color-grid-app/refs/heads/main/og.PNG">
   
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="vendor/tailwind-runtime.js"></script>
+
 
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -1127,5 +1133,6 @@
 </div>
 
 
-<script type="module" src="js/app.js"></script></body>
+<script type="module" src="js/app.js"></script>
+<script type="module" src="js/pwa.js"></script></body>
 </html>
