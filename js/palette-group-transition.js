@@ -13,7 +13,7 @@ export function showPaletteGroupTransition(board, fromCount, toCount) {
         overlay.appendChild(number);
     }
     host.appendChild(overlay);
-    const cleanupTimer = setTimeout(() => overlay.remove(), 1500);
+    const cleanupTimer = setTimeout(() => overlay.remove(), 3500);
     overlay.addEventListener('animationend', event => {
         if (event.target !== overlay) return;
         clearTimeout(cleanupTimer);

@@ -378,55 +378,40 @@ body {
     place-items: center;
     overflow: hidden;
     pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(8, 12, 18, .9), rgba(0, 0, 0, .35));
-    animation: palette-family-veil 1.2s ease-in-out both;
-}
-.palette-group-transition::before {
-    content: '';
-    position: absolute;
-    width: 36%;
-    aspect-ratio: 1;
-    border: 1px solid rgba(213, 197, 155, .22);
-    border-radius: 50%;
-    box-shadow: 0 0 28px rgba(202, 180, 121, .15), inset 0 0 25px rgba(163, 194, 202, .1);
-    animation: palette-family-orbit 1.2s ease-in-out both;
+    background: #000;
+    animation: palette-family-veil 3s ease-in-out both;
 }
 .palette-group-number {
     grid-area: 1 / 1;
-    color: #e3ddcd;
+    color: var(--gold);
     font-family: Georgia, 'Times New Roman', serif;
     font-size: clamp(32px, 9vmin, 72px);
     font-weight: 400;
     font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: .08em;
     padding-left: .08em;
-    text-shadow: 0 0 16px rgba(184, 204, 210, .45), 0 0 35px rgba(219, 194, 135, .25);
+    text-shadow: 0 0 18px rgba(255, 215, 0, .16);
 }
-.palette-group-number.is-departing { animation: palette-family-depart 1.2s ease-in-out both; }
-.palette-group-number.is-arriving { animation: palette-family-arrive 1.2s ease-in-out both; }
+.palette-group-number.is-departing { animation: palette-family-depart 3s ease-in-out both; }
+.palette-group-number.is-arriving { animation: palette-family-arrive 3s ease-in-out both; }
 @keyframes palette-family-veil {
     0% { opacity: .65; }
-    18%, 55% { opacity: 1; }
+    12%, 82% { opacity: 1; }
     100% { opacity: 0; }
 }
-@keyframes palette-family-orbit {
-    0% { opacity: .2; transform: scale(.8) rotateX(25deg); }
-    45% { opacity: .8; transform: scale(1.1) rotateX(0); }
-    100% { opacity: 0; transform: scale(1.35) rotateX(-20deg); }
-}
 @keyframes palette-family-depart {
-    0%, 15% { opacity: .9; filter: blur(0); transform: scale(1); }
-    48%, 100% { opacity: 0; filter: blur(7px); transform: scale(.88); }
+    0%, 18% { opacity: 1; filter: blur(0); transform: scale(1); }
+    45%, 100% { opacity: 0; filter: blur(7px); transform: scale(.94); }
 }
 @keyframes palette-family-arrive {
-    0%, 30% { opacity: 0; filter: blur(7px); transform: scale(1.12); }
-    65%, 85% { opacity: 1; filter: blur(0); transform: scale(1); }
+    0%, 35% { opacity: 0; filter: blur(7px); transform: scale(1.06); }
+    62%, 86% { opacity: 1; filter: blur(0); transform: scale(1); }
     100% { opacity: 0; filter: blur(0); transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
     .palette-group-transition { animation-duration: .6s; }
-    .palette-group-transition::before, .palette-group-number { animation: none !important; }
-    .palette-group-transition::before, .palette-group-number.is-departing { display: none; }
+    .palette-group-number { animation: none !important; }
+    .palette-group-number.is-departing { display: none; }
 }
 @keyframes glow-effect {
   0%, 100% {
