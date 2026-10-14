@@ -470,6 +470,8 @@ function renderColorPickerContent() {
     const currentPalette = app.C.PALETTES[app.getActivePaletteIndex()];
     const colors = currentPalette.colors;
     const totalPages = Math.ceil(colors.length / app.C.COLORS_PER_PAGE);
+    const selectedColorIndex = app.getSelectedColorIndex();
+    const rainbowSelected = app.isRainbowModeActive();
 
     let currentPage = app.getColorPickerPage();
     if (currentPage >= totalPages) {
@@ -490,7 +492,8 @@ function renderColorPickerContent() {
     const frag = document.createDocumentFragment();
 
     const rainbowSwatch = document.createElement('div');
-    rainbowSwatch.className = 'color-swatch';
+    rainbowSwatch.className = 'color-swatch' + (rainbowSelected ? ' is-selected' : '');
+    if (rainbowSelected) rainbowSwatch.setAttribute('aria-current', 'true');
     const rainbowSwatchInner = document.createElement('div');
     rainbowSwatchInner.className = 'color-swatch-inner';
     rainbowSwatchInner.innerHTML = app.createRainbowIconSVG();
@@ -503,9 +506,11 @@ function renderColorPickerContent() {
     const endIndex = startIndex + app.C.COLORS_PER_PAGE;
     const pageColors = colors.slice(startIndex, endIndex);
 
-    pageColors.forEach((color) => {
+    pageColors.forEach((color, index) => {
+        const selected = !rainbowSelected && startIndex + index === selectedColorIndex;
         const swatch = document.createElement('div');
-        swatch.className = 'color-swatch';
+        swatch.className = 'color-swatch' + (selected ? ' is-selected' : '');
+        if (selected) swatch.setAttribute('aria-current', 'true');
         const swatchInner = document.createElement('div');
         swatchInner.className = 'color-swatch-inner';
         swatchInner.style.backgroundColor = color;
@@ -564,7 +569,9 @@ function renderColorPickerContent() {
 function openColorPickerModal(targetTileIndex = null) {
     if (app.isBreathing()) return;
     app.pointerState.longPressTarget = targetTileIndex;
-    app.setColorPickerPage(0);
+    const selectedColorIndex = app.getSelectedColorIndex();
+    app.setColorPickerPage(!app.isRainbowModeActive() && selectedColorIndex >= 0
+        ? Math.floor(selectedColorIndex / app.C.COLORS_PER_PAGE) : 0);
     renderColorPickerContent();
     app.dom.colorPickerModal.classList.add('modal-visible');
 }

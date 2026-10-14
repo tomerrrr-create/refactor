@@ -3768,6 +3768,7 @@ else if (action.eventName === 'Invert Colors') {
                 selectedColorIndex = c ? palette().indexOf(c) : -1;
             },
             setIsRainbowModeActive: (b) => { isRainbowModeActive = b; },
+            isRainbowModeActive: () => isRainbowModeActive,
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
             switchToPalette,
