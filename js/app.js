@@ -1,3 +1,4 @@
+import { showSettingsImportTransition } from './settings-import-transition.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
 import { resolveChiReach } from './chi-reach.js';
 // js/app.js
@@ -1851,7 +1852,7 @@ if (simulationName === 'magnet') {
       }
 
       function handleLoadProject() { 
-        modals.closeModal(); 
+        // Keep the save panel behind the file picker until the file type is known.
         setTimeout(() => { dom.projectFileInput.click(); }, 50); 
     }  
     
@@ -1891,8 +1892,8 @@ function updateMacroPaletteButtonUI(paletteIndex) {
             if (isWorkspaceSettingsText(text)) {
                 try {
                     const stored = importWorkspaceSettings(deserializeWorkspaceSettings(text));
-                    dom.saveModal.classList.add('modal-visible');
-                    modals.showSaveStatus(stored ? 'settings_loaded' : 'settings_loaded_session');
+                    modals.closeAfterSettingsImport(() => showSettingsImportTransition(dom.board,
+                        getText('settings_aligned'), stored ? '' : getText('settings_session_only')));
                 } catch (error) {
                     console.error('Settings import failed:', error);
                     dom.saveModal.classList.add('modal-visible');
@@ -1900,6 +1901,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 }
                 return;
             }
+            modals.closeModal();
             try {
                 macroQueue = parseMacroText(text);
             } catch (error) {
@@ -1947,6 +1949,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
     // -- טיפול בקבצי מצב רגילים (.json) --
         const reader = new FileReader();
         reader.onload = function(e) {
+          modals.closeModal();
           try {
             const state = JSON.parse(e.target.result);
             if (state.n && state.tiles && typeof state.activePaletteIndex !== 'undefined') { animateBoardTransition(() => { applyState(state); history = []; future = []; updateUndoRedoButtons(); }); } 
