@@ -2545,7 +2545,7 @@ function getGameOfLifeRecordingRules() {
 function updateGameOfLifeButtonUI() {
     const active = armedSimulation === 'gameOfLife';
     dom.btnGameOfLife.classList.toggle('simulation-active', active);
-    const stars = active && gameOfLifeMode !== 'personal' ? (gameOfLifeMode === 'coral' ? 1 : 2) : 0;
+    const stars = active && gameOfLifeMode !== 'personal' ? (gameOfLifeMode === 'shuffle' ? 1 : 2) : 0;
     dom.btnGameOfLife.querySelectorAll('[data-gol-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
@@ -2574,7 +2574,7 @@ function restoreGameOfLifeRules(snapshot) {
 function cycleGameOfLifeMode() {
     if (isLifePlaying && armedSimulation !== 'gameOfLife') return;
     const current = armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off';
-    const next = nextEvolutionMode(current, ['off', 'personal', 'coral', 'shuffle']);
+    const next = nextEvolutionMode(current, ['off', 'personal', 'shuffle', 'coral']);
     if (next === 'off') {
         armSimulation(null);
     } else {

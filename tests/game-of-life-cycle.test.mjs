@@ -28,8 +28,8 @@ function harness() {
 test('paused cycle reaches Off, preset shortcuts never overwrite personal rules', () => {
     const c = harness();
     c.cycleGameOfLifeMode(); assert.deepEqual(plain(c.gameOfLifeRules), personal);
-    c.cycleGameOfLifeMode(); assert.deepEqual(plain(c.gameOfLifeRules), plain(presets.btnGolPresetCoral));
     c.cycleGameOfLifeMode(); assert.deepEqual(plain(c.gameOfLifeRules), plain(presets.btnGolPresetShuffle));
+    c.cycleGameOfLifeMode(); assert.deepEqual(plain(c.gameOfLifeRules), plain(presets.btnGolPresetCoral));
     c.cycleGameOfLifeMode(); assert.equal(c.armedSimulation, null);
     c.cycleGameOfLifeMode(); assert.deepEqual(plain(c.gameOfLifeRules), personal);
 });
@@ -57,6 +57,8 @@ test('running cycles log complete rule snapshots at their generations, parse and
         assert(c.isLifePlaying); assert.equal(c.armedSimulation, 'gameOfLife');
     }
     assert.equal(c.armCalls, 0);
+    const modes = c.artRecipeLog.filter(line => line.includes('[GEN:') && line.includes('Game of Life Mode Changed')).map(line => JSON.parse(line.split(' -> ')[1]).mode);
+    assert.deepEqual(modes, ['shuffle', 'coral', 'personal', 'shuffle', 'coral', 'personal']);
     const queue = c.parseMacroText(c.artRecipeLog.join('\n'));
     const changes = queue.filter(a => a.eventName === 'Game of Life Mode Changed' && a.isGenBased);
     assert.deepEqual(plain(changes.map(a => a.targetGen)), [4, 8, 12, 16, 20, 24]);
