@@ -1498,15 +1498,6 @@ button, .ctrl {
 .debug-entry svg { width: 22px; height: 22px; }
 .debug-entry:hover { filter: brightness(1.08); box-shadow: 0 3px 22px #d5aa4840; }
 .debug-entry:focus-visible, .technician-back:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 4px; }
-@keyframes technician-hold-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 #d5aa4800; }
-  50% { box-shadow: 0 0 14px 2px #d5aa4860; }
-}
-#btnToggleSimMode.technician-hold { animation: technician-hold-pulse .8s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) {
-  #btnToggleSimMode.technician-hold { animation: none; box-shadow: 0 0 8px #d5aa4840; }
-}
-
 .technician-dialog {
   position: fixed; inset: 0; margin: auto; padding: 0;
   width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px);
