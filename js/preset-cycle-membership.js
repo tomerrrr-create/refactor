@@ -68,14 +68,19 @@ export function bindPresetCycleMembership({ presets, iconButton, state, readRule
         positions.forEach(index => {
             const toggle = document.createElement('button');
             toggle.type = 'button';
-            toggle.className = 'cycle-membership-icon' + (index === null ? '' : ' is-assigned');
+            const available = index === null && draft.vacant !== null;
+            const position = index ?? draft.vacant;
+            const status = index !== null ? 'assigned' : available ? 'available' : 'unavailable';
+            toggle.className = 'cycle-membership-icon is-' + status;
+            toggle.dataset.cycleState = status;
+            if (position !== null) toggle.dataset.cyclePosition = String(position);
             toggle.setAttribute('aria-pressed', String(index !== null));
             toggle.setAttribute('aria-label', index === null
-                ? getText('cycle_add') + ': ' + button.textContent.trim()
+                ? getText('cycle_add') + ': ' + button.textContent.trim() + (available ? ', ' + getText('cycle_position') + ' ' + (position + 1) : '')
                 : getText('cycle_remove') + ': ' + button.textContent.trim() + ', ' + getText('cycle_position') + ' ' + (index + 1));
             toggle.title = toggle.getAttribute('aria-label');
             toggle.disabled = index === null ? draft.vacant === null : draft.vacant !== null;
-            toggle.append(icon(index ?? 0));
+            toggle.append(icon(position ?? 0));
             toggle.addEventListener('click', () => {
                 const target = index ?? draft.vacant;
                 const changed = index === null ? draft.fill(rules) : draft.remove(index);
