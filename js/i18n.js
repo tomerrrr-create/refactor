@@ -9,6 +9,20 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  tech_settings: {"en": "Settings", "he": "הגדרות", "ru": "Настройки", "nl": "Instellingen"},
+  tech_evolutions: {"en": "Evolutions", "he": "אבולוציות", "ru": "Эволюции", "nl": "Evoluties"},
+  tech_tools: {"en": "Tools", "he": "כלים", "ru": "Инструменты", "nl": "Gereedschap"},
+  tech_gol: {"en": "Game of Life", "he": "משחק החיים", "ru": "Игра «Жизнь»", "nl": "Levensspel"},
+  tech_chi: {"en": "Chi Flow", "he": "זרימת צ׳י", "ru": "Поток Ци", "nl": "Chi-stroom"},
+  tech_gravity: {"en": "Gravity", "he": "גרביטציה", "ru": "Гравитация", "nl": "Zwaartekracht"},
+  tech_spiral: {"en": "Spiral", "he": "ספירלה", "ru": "Спираль", "nl": "Spiraal"},
+  tech_magnet: {"en": "Magnet", "he": "מגנט", "ru": "Магнит", "nl": "Magneet"},
+  tech_contour: {"en": "Contours", "he": "קווי מתאר", "ru": "Контуры", "nl": "Contouren"},
+  tech_turing: {"en": "Turing", "he": "טיורינג", "ru": "Тьюринг", "nl": "Turing"},
+  tech_sort: {"en": "Sorting cycle", "he": "סבב המיון", "ru": "Цикл сортировки", "nl": "Sorteercyclus"},
+  tech_nudge: {"en": "Nudge speed", "he": "מהירות Nudge", "ru": "Скорость Nudge", "nl": "Nudge-snelheid"},
+  tech_brush: {"en": "Color & brush", "he": "צבע ומברשת", "ru": "Цвет и кисть", "nl": "Kleur en penseel"},
+
   startup_palette_picker_title: { en: "Startup palette", he: "פלטת פתיחה", ru: "Начальная палитра", nl: "Startpalet" },
   save_reset_title: {"en": "Reset recipe?", "he": "איפוס מתכון?", "ru": "Сбросить рецепт?", "nl": "Recept wissen?"},
   save_reset_note: {"en": "Start a new recording from this board.", "he": "התחלת הקלטה חדשה מהלוח הנוכחי.", "ru": "Начать новую запись с этого поля.", "nl": "Begin een nieuwe opname met dit bord."},
