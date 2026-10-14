@@ -119,7 +119,7 @@ export const CHI_FLOW_PRESETS = {
         'Wildfire': { awakening: [1,3,5,7], flow: [2,4,6,8], reach: 0 },
         'Harmony': { awakening: [3,4,5,6,7,8], flow: [3,5,7], reach: 0 },
         'Nova': { awakening: [3,4,5,6,7,8], flow: [1,2], reach: 0 },
-        'Alexis': { awakening: [4,5,6,7,8], flow: [4,5,6,7,8], reach: 0 },
+        'Alexis': { awakening: [4,5,6,7,8], flow: [4,5,6,7,8], reach: 0, reachPercent: 400 },
         'Zen': { awakening: [3,4,5,6,7,8], flow: [2,3,4], reach: 0 }
 };
 
