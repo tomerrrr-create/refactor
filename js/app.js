@@ -163,6 +163,13 @@ function getPrevPaletteIndex(currentIndex) {
     return group.indexes[prevPos];
 }
 
+function getNextPaletteGroupIndex(currentIndex) {
+    const groups = C.PALETTE_GROUPS.filter(group => group.id !== 'archive' && group.indexes.length);
+    if (!groups.length) return currentIndex;
+    const currentGroup = groups.findIndex(group => group.indexes.includes(currentIndex));
+    return groups[(currentGroup + 1) % groups.length].indexes[0];
+}
+
 
 // --- מערכת מיון פלטות צבעים (Sorting Infrastructure) ---
       let currentSortMethod = 'luminance'; // שיטת המיון הפעילה כברירת מחדל
@@ -833,6 +840,9 @@ function invertGrid() {
       // Phase 1 Addition: New function to adapt colors
       function adaptColors() {
         performAction(() => {
+          if (boardState.some(tile => !tile.isGold && tile.k !== norm(tile.k))) {
+            window.logArtEvent('ADAPT_COLORS', '---');
+          }
           const len = paletteLen();
           const now = performance.now();
           boardState.forEach(tile => {
@@ -985,6 +995,15 @@ function handlePaletteSwitch(backwards = false) {
             dom.btnRandom.classList.add('glow-animation');
             setTimeout(() => { dom.btnRandom.classList.remove('glow-animation'); }, 4000);
         }
+      }
+
+      function switchPaletteGroup() {
+        if (isAnimating) return;
+        const nextIndex = getNextPaletteGroupIndex(activePaletteIndex);
+        if (nextIndex === activePaletteIndex) return;
+        // Keep palette change and index adaptation as separate undoable actions.
+        switchToPalette(nextIndex);
+        adaptColors();
       }
       
       function _performResize(newSize) {
@@ -3269,7 +3288,7 @@ function parseLegacyMacroText(text) {
 
 
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
-    const boardChangingEvents = ['DRAW_STROKE', 'GO_DARK', 'SHUFFLE_COLORS', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'SEPARATOR_CHANGE', 'GRID_RESIZE'];
+    const boardChangingEvents = ['DRAW_STROKE', 'GO_DARK', 'SHUFFLE_COLORS', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'ADAPT_COLORS', 'SEPARATOR_CHANGE', 'GRID_RESIZE'];
     
 
     // --- גבולות זמן (במילי-שניות) ---
@@ -3706,6 +3725,9 @@ function executeMacroAction(action) {
     else if (action.eventName === 'GO_DARK') {
         performAction(goDark);
     }
+    else if (action.eventName === 'ADAPT_COLORS') {
+        adaptColors();
+    }
     else if (action.eventName === 'Sort by') {
         applySortMethod(action.details);
         if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
@@ -4103,6 +4125,7 @@ updateBrightnessEvoButtonUI();
 
 bindPickerGestures(dom.btnPalette, {
     onTap: switchPalette, onOpen: modals.openPaletteModal,
+    onHold: switchPaletteGroup,
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });

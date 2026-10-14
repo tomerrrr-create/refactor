@@ -46,6 +46,20 @@ test('undo of a logless history action does not remove the previous stroke', () 
     assert.equal(r.parse().filter(e => e.eventName === 'DRAW_STROKE').length, 1);
 });
 
+test('palette group transition and adaptation are independently cancelled and restored', () => {
+    const r = recipe();
+    r.add('Palette Change', 'Journey | Sort: luminance'); r.commit(1);
+    r.add('ADAPT_COLORS', '---'); r.commit(2);
+    assert.deepEqual(r.parse().map(e => e.eventName), ['INIT_STATE', 'Palette Change', 'ADAPT_COLORS']);
+    r.undo(2, settings());
+    assert.deepEqual(r.parse().map(e => e.eventName), ['INIT_STATE', 'Palette Change', 'HISTORY_SETTINGS']);
+    r.undo(1, settings());
+    assert.deepEqual(r.parse().map(e => e.eventName), ['INIT_STATE', 'HISTORY_SETTINGS']);
+    r.redo(1, settings()); r.redo(2, settings());
+    assert.deepEqual(r.parse().filter(e => !['INIT_STATE', 'HISTORY_SETTINGS'].includes(e.eventName)).map(e => e.eventName),
+        ['Palette Change', 'ADAPT_COLORS']);
+});
+
 test('multiple undos remove settings checkpoints belonging to cancelled actions', () => {
     const r = recipe();
     r.add('DRAW_STROKE', [{ i: 0, k: 1 }]); r.commit(1);
