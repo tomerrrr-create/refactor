@@ -7,6 +7,7 @@ import { resolveChiReach } from './chi-reach.js';
 
 import { loadEvolutionCycle, persistEvolutionCycle, normalizeEvolutionCycle, normalizeCycleSources, loadCycleIdentity } from './evolution-cycle-settings.js';
 import { bindPickerGestures } from './picker-gestures.js';
+import { createEvolutionExplanation } from './evolution-explanation.js';
 import { capturePaletteGroupBoard, showPaletteGroupTransition } from './palette-group-transition.js';
 import { SORT_MODES, normalizeSortMethod, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
 import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailableLangs, translations, onLanguageChange } from './i18n.js';
@@ -4316,6 +4317,7 @@ bindPickerGestures(dom.btnColorPicker, {
         });
         // A swipe opens settings only for the selected, paused evolution.
         // Tap actions stay independent of that restriction.
+        const evolutionExplanation = createEvolutionExplanation(dom.boardCanvas.parentElement.parentElement);
         const evolutionPickers = [
             [dom.btnGameOfLife, 'gameOfLife', cycleGameOfLifeMode, modals.openGolSettingsModal],
             [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
@@ -4325,25 +4327,22 @@ bindPickerGestures(dom.btnColorPicker, {
             [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
             [dom.btnNudgeBrighter, 'nudgeBrighter', handleNudgeBrighterClick, modals.openNudgeSettingsModal],
-            [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal]
+            [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
+            [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, null],
+            [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, null],
+            [dom.btnErosion, 'erosion', cycleErosionMode, null],
+            [dom.btnDla, 'dla', cycleDlaMode, null]
         ].filter(([button]) => button);
         const evolutionPickerButtons = new Set(evolutionPickers.map(([button]) => button));
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap, onOpen,
+                onHold: () => evolutionExplanation.show(button, simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => !isLifePlaying && armedSimulation === simulation,
+                canOpen: () => Boolean(onOpen) && !evolutionExplanation.isOpen() && !isLifePlaying && armedSimulation === simulation,
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });
-
-dom.btnBrightnessEvo.addEventListener('click', (e) => handleCtrlClick(e, cycleBrightnessEvoMode));
-
-dom.btnShowBreatheMenu.addEventListener('click', (e) => handleCtrlClick(e, cycleBreatheEvoMode));
-
-        dom.btnErosion.addEventListener('click', (e) => handleCtrlClick(e, cycleErosionMode));
-
-dom.btnDla.addEventListener('click', (e) => handleCtrlClick(e, cycleDlaMode));
 
 if (dom.btnSimSettings) {
             dom.btnSimSettings.addEventListener('click', (e) => handleCtrlClick(e, openCurrentSimSettings));
