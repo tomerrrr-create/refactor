@@ -9,6 +9,9 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  soft_bloom_intensity: {"en": "Glow intensity", "he": "עוצמת ההילה", "ru": "Интенсивность свечения", "nl": "Sterkte van de gloed"},
+  soft_bloom_title: {"en": "Soft Bloom", "he": "הילה רכה", "ru": "Мягкое свечение", "nl": "Zachte gloed"},
+  soft_bloom_note: {"en": "A gentle glow around colors. Display only; combines with Smooth.", "he": "אור עדין סביב הצבעים. לתצוגה בלבד; משתלב עם Smooth.", "ru": "Мягкое свечение вокруг цветов. Только на экране; сочетается со Smooth.", "nl": "Een zachte gloed rond kleuren. Alleen op het scherm; combineerbaar met Smooth."},
   erosion_pace_inactive: {"en": "Acceleration is not used in this mode.", "he": "האצת שחיקה אינה פעילה במצב זה.", "ru": "В этом режиме ускорение не используется.", "nl": "Versnelling wordt in deze modus niet gebruikt."},
   erosion_pace_label: {"en": "Erosion acceleration", "he": "האצת שחיקה", "ru": "Ускорение эрозии", "nl": "Erosieversnelling"},
   erosion_pace_original: {"en": "Original", "he": "מקורי", "ru": "Исходная", "nl": "Origineel"},

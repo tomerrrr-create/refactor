@@ -1,3 +1,4 @@
+import { createSoftBloom, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from './smooth-rendering-settings.js';
@@ -288,6 +289,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let n = 7;
       let separatorPx = 2;
       let isSmoothRendering = DEFAULT_SMOOTH_RENDERING;
+      let isSoftBloom = false, softBloomIntensity = DEFAULT_BLOOM_INTENSITY, softBloom;
       let isBrushModeOn = true; 
       let isContinuousBrushOn = false;
       let hasPerformedInitialAutofill = false; 
@@ -696,6 +698,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
       function renderToScreen(timestamp) {
         if (!ctx || !canvas) return;
         renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp, isSmoothRendering);
+        softBloom?.draw();
       }
 
       // --- startBreatheAnimation and stopBreatheAnimation are now removed. ---
@@ -1776,7 +1779,8 @@ if (simulationName === 'magnet') {
         return {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
-            smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked },
+            smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked, ...(isSoftBloom ? { bloom: true } : {}),
+                ...(softBloomIntensity !== DEFAULT_BLOOM_INTENSITY ? { bloomIntensity: softBloomIntensity } : {}) },
             brush: { size: brushSize, mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
@@ -1800,6 +1804,14 @@ if (simulationName === 'magnet') {
         updateGravitationalSortButtonUI(); updateSpiralButtonUI();
         updateMagnetButtonUI(); updateDlaButtonUI(); updateErosionButtonUI();
         isSmoothRendering = settings.smoothing.display;
+        isSoftBloom = Boolean(settings.smoothing.bloom);
+        softBloomIntensity = normalizeBloomIntensity(settings.smoothing.bloomIntensity);
+        softBloom?.setIntensity(softBloomIntensity);
+        softBloom?.setEnabled(isSoftBloom);
+        document.getElementById('softBloomToggle').checked = isSoftBloom;
+        document.getElementById('softBloomIntensity').value = softBloomIntensity;
+        document.getElementById('softBloomIntensity').disabled = !isSoftBloom;
+        document.getElementById('softBloomIntensityValue').value = softBloomIntensity + '%';
         dom.saveSmoothImage.checked = settings.smoothing.export;
         document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
         brushSize = settings.brush.size;
@@ -4096,6 +4108,7 @@ else if (action.eventName === 'Invert Colors') {
         onLanguageChange(updateAllUIText);
         
         // Phase 1 Addition: Add adaptColors to the context for modals
+        softBloom = createSoftBloom(dom.boardCanvas, document.getElementById('boardBloom'));
         const contextForModals = {
             refreshProfiles: () => settingsProfiles?.refresh(),
             isSimulationMode: () => isSimModeActive,
@@ -4132,6 +4145,24 @@ else if (action.eventName === 'Invert Colors') {
                 symmetry: symmetryMode, interfaceMode: isSimModeActive ? 'simulation' : 'creative'
             }),
             getSimulationInit: () => ({ ...simulationInitSettings }),
+            getSoftBloomIntensity: () => softBloomIntensity,
+            previewSoftBloomIntensity: value => {
+                softBloom.setIntensity(value);
+                softBloom.draw();
+            },
+            setSoftBloomIntensity: value => {
+                softBloomIntensity = normalizeBloomIntensity(value);
+                softBloom.setIntensity(softBloomIntensity);
+                softBloom.draw();
+                settingsProfiles?.scheduleCapture();
+            },
+            getSoftBloom: () => isSoftBloom,
+            setSoftBloom: value => {
+                isSoftBloom = Boolean(value);
+                softBloom.setEnabled(isSoftBloom);
+                renderToScreen(null);
+                settingsProfiles?.scheduleCapture();
+            },
             getSmoothRendering: () => isSmoothRendering,
             setSmoothRendering: value => {
                 isSmoothRendering = Boolean(value);

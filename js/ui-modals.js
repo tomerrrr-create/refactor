@@ -1428,6 +1428,24 @@ export function initializeModals(appContext) {
         }
     });
     let technicianReturnFocus = app.dom.btnOpenDebug;
+    const softBloomToggle = document.getElementById('softBloomToggle');
+    const bloomIntensity = document.getElementById('softBloomIntensity');
+    const bloomIntensityValue = document.getElementById('softBloomIntensityValue');
+    function refreshBloomControls() {
+        softBloomToggle.checked = app.getSoftBloom();
+        bloomIntensity.disabled = !app.getSoftBloom();
+        bloomIntensity.value = app.getSoftBloomIntensity();
+        bloomIntensityValue.value = bloomIntensity.value + '%';
+    }
+    softBloomToggle.addEventListener('change', () => {
+        app.setSoftBloom(softBloomToggle.checked);
+        refreshBloomControls();
+    });
+    bloomIntensity.addEventListener('input', () => {
+        bloomIntensityValue.value = bloomIntensity.value + '%';
+        app.previewSoftBloomIntensity(Number(bloomIntensity.value));
+    });
+    bloomIntensity.addEventListener('change', () => app.setSoftBloomIntensity(Number(bloomIntensity.value)));
     const smoothRenderingToggle = document.getElementById('smoothRenderingToggle');
     smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
@@ -1437,6 +1455,7 @@ export function initializeModals(appContext) {
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
         smoothRenderingToggle.checked = app.getSmoothRendering();
+        refreshBloomControls();
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
         startupForm.hidden = true;
@@ -1574,6 +1593,7 @@ export function initializeModals(appContext) {
             fillInitForm(app.getSimulationInit());
             fillStartupForm(app.getStartupSettings());
             smoothRenderingToggle.checked = app.getSmoothRendering();
+            refreshBloomControls();
             hideWorkspaceResetConfirmation();
             const key = persisted ? 'workspace_reset_done' : 'workspace_reset_session';
             workspaceResetStatus.dataset.debugText = key;
