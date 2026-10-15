@@ -1,0 +1,78 @@
+export const EROSION_MODES = ['legacy', 'channels-solid', 'channels'];
+export const EROSION_CHANNEL_MODES = ['channels-solid', 'channels'];
+export const EROSION_STAGE_SYMBOLS = ['I', 'II', 'III', 'IV', 'V'];
+
+export function validErosionStages(stages) {
+    return stages !== null && typeof stages === 'object' && !Array.isArray(stages) &&
+        Object.entries(stages).every(([mode, stage]) => EROSION_CHANNEL_MODES.includes(mode) &&
+            Number.isInteger(stage) && stage >= 0 && stage <= 4);
+}
+
+export function erosionEarthSpan(paletteLength, mode) {
+    return mode === 'channels'
+        ? Math.floor(paletteLength * .8) - Math.floor(paletteLength * .2)
+        : Math.floor(paletteLength * .2);
+}
+
+export function erosionPaceEvents(paletteLength, mode, pace) {
+    const span = erosionEarthSpan(paletteLength, mode);
+    return Math.max(1, [span, Math.round(span * 2 / 3), Math.round(span / 3), 1][pace]);
+}
+
+export function erosionStageEvents(paletteLength, mode, stage) {
+    const span = erosionEarthSpan(paletteLength, mode);
+    return Math.max(1, Math.round(span * [1, 5 / 6, 2 / 3, 1 / 2, 1 / 3][stage]));
+}
+
+export function resolveErosionEvents(paletteLength, rules) {
+    const span = erosionEarthSpan(paletteLength, rules.mode);
+    if (Object.hasOwn(rules.erosionStages ?? {}, rules.mode)) {
+        return erosionStageEvents(paletteLength, rules.mode, rules.erosionStages[rules.mode]);
+    }
+    if ([1, 2, 3].includes(rules.erosionPace)) {
+        return erosionPaceEvents(paletteLength, rules.mode, rules.erosionPace);
+    }
+    return Number.isSafeInteger(rules.erosionEvents) && rules.erosionEvents > 0
+        ? Math.min(span, rules.erosionEvents) : span;
+}
+
+// Recipes store resolved counts, independent of future UI station definitions.
+// Preferences keep their original relative or per-mode settings.
+export function recordErosionRules(rules, paletteLength) {
+    return {
+        mode: rules.mode,
+        erosionStrength: rules.erosionStrength,
+        ...(EROSION_CHANNEL_MODES.includes(rules.mode)
+            ? { erosionEvents: resolveErosionEvents(paletteLength, rules) } : {})
+    };
+}
+
+// Missing fields in old recordings must reset new options, not inherit preferences.
+export function restoreErosionRules(value) {
+    return {
+        mode: EROSION_MODES.includes(value.mode) ? value.mode : 'legacy',
+        erosionStrength: typeof value.erosionStrength === 'number' && Number.isFinite(value.erosionStrength)
+            && value.erosionStrength >= 0 && value.erosionStrength <= 1 ? value.erosionStrength : .1,
+        ...(Number.isSafeInteger(value.erosionEvents) && value.erosionEvents > 0
+            ? { erosionEvents: value.erosionEvents } : {}),
+        ...([1, 2, 3].includes(value.erosionPace) ? { erosionPace: value.erosionPace } : {}),
+        ...(validErosionStages(value.erosionStages) ? { erosionStages: { ...value.erosionStages } } : {})
+    };
+}
+
+export function erodedIndex(index, paletteLength, rules) {
+    const forward = rules.mode === 'channels-solid';
+    if (!Object.hasOwn(rules.erosionStages ?? {}, rules.mode) && ![1, 2, 3].includes(rules.erosionPace) &&
+        (!Number.isSafeInteger(rules.erosionEvents) || rules.erosionEvents < 1)) {
+        return forward ? index + 1 : Math.max(0, index - 1);
+    }
+    const span = erosionEarthSpan(paletteLength, rules.mode);
+    if (span < 1) return index;
+    const events = resolveErosionEvents(paletteLength, rules);
+    const earthEnd = Math.floor(paletteLength * .8);
+    const progress = forward ? index : earthEnd - 1 - index;
+    // Partition the soil range into events equal-sized stages, rounded to colors.
+    // No per-cell counters or extra random draws; partial erosion uses fewer stages.
+    const next = Math.min(span, Math.ceil((Math.floor(progress * events / span) + 1) * span / events));
+    return forward ? next : earthEnd - 1 - next;
+}

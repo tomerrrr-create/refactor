@@ -1,3 +1,4 @@
+import { recordErosionRules, restoreErosionRules } from '../js/erosion-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -22,10 +23,12 @@ function harness() {
     const c = vm.createContext({ window: {}, artRecipeLog: [], currentGenerationCount: 0,
         isExecutingMacroCommand: false, isLifePlaying: false, armedSimulation: null,
         brightnessEvoMode: 'off', dlaMode: 'off', gsMode: 'off', spiralMode: 'off', magnetMode: 'off',
-        erosionRules: { mode: 'legacy' }, gravitationalSortRules: { direction: 'up' },
+        erosionRules: { mode: 'legacy', erosionStrength: .1 }, gravitationalSortRules: { direction: 'up' },
         spiralRules: { method: 'b' }, magnetRules: { method: 'cosmic_magnet' },
         SPIRAL_MODE_SEQUENCE: ['off', 'b', 'left', 'black_hole'], boardState: board, dlaState,
         armCalls: 0, pauseCalls: 0 });
+    c.restoreErosionRules = restoreErosionRules;
+    c.getErosionRecordingRules = () => recordErosionRules(c.erosionRules, 64);
     c.armSimulation = sim => { c.armCalls++; if (!c.isLifePlaying) c.armedSimulation = sim; };
     c.pauseLife = () => { if (c.isLifePlaying) { c.pauseCalls++; c.isLifePlaying = false; c.window.logArtEvent('PAUSE', '---'); } };
     for (const name of ['updateErosionButtonUI', 'updateGravitationalSortButtonUI', 'updateSpiralButtonUI', 'updateMagnetButtonUI', 'updateBrightnessEvoButtonUI', 'updateDlaButtonUI']) c[name] = () => {};
@@ -55,12 +58,12 @@ for (const item of cases) {
         assert.equal(c.armCalls, 0); assert.equal(c.pauseCalls, 0);
         const queue = c.parseMacroText(c.artRecipeLog.join('\n'));
         const recorded = queue.filter(e => e.eventName === item.event && e.isGenBased);
-        assert.deepEqual(JSON.parse(JSON.stringify(recorded.map(e => ({ mode: e.details, gen: e.targetGen })))), expected);
+        assert.deepEqual(JSON.parse(JSON.stringify(recorded.map(e => ({ mode: item.sim === 'erosion' ? JSON.parse(e.details).mode : e.details, gen: e.targetGen })))), expected);
         const replay = harness(); replay.armedSimulation = item.sim; replay.isLifePlaying = true;
         for (const event of recorded) {
             replay.currentGenerationCount = event.targetGen;
             replay.executeMacroAction(event);
-            assert.equal(item.get(replay), event.details); assert.equal(replay.isLifePlaying, true);
+            assert.equal(item.get(replay), item.sim === 'erosion' ? JSON.parse(event.details).mode : event.details); assert.equal(replay.isLifePlaying, true);
         }
         assert.equal(replay.armCalls, 0); assert.equal(replay.pauseCalls, 0);
     });

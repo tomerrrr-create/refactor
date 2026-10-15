@@ -1,4 +1,5 @@
 import * as C from './constants.js';
+import { EROSION_MODES, validErosionStages } from './erosion-settings.js';
 import { DEFAULT_STARTUP, normalizeStartup } from './startup-settings.js';
 import { DEFAULT_SIM_INIT, validateSimInit } from './sim-init-settings.js';
 import { DEFAULT_SORT_CYCLE, normalizeSortCycle } from './sort-cycle-settings.js';
@@ -23,12 +24,14 @@ export function defaultWorkspaceSettings() {
             dla: C.defaultDlaRules, contour: C.defaultContourRules, turing: C.defaultTuringRules } });
 }
 
-function mergeKnown(defaults, overrides) {
+function mergeKnown(defaults, overrides, path = '') {
     if (!object(overrides)) throw new Error('Invalid settings object');
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
+        // Optional extension; V1’s original baseline stays unchanged.
+        if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
         if (!Object.hasOwn(defaults, key)) throw new Error('Unknown settings field: ' + key);
-        result[key] = object(defaults[key]) ? mergeKnown(defaults[key], value) : clone(value);
+        result[key] = object(defaults[key]) ? mergeKnown(defaults[key], value, path ? path + '.' + key : key) : clone(value);
     }
     return result;
 }
@@ -60,7 +63,11 @@ export function validateWorkspaceSettings(value) {
         ['b', 'a', 'vortex', 'radial', 'down', 'left', 'black_hole'].includes(r.spiral.method) &&
         ['magnet', 'cosmic_magnet', 'time_magnet', 'expand'].includes(r.magnet.method) &&
         integer(r.magnet.anchorColorIndex, -1, Math.max(...C.PALETTES.map(p => p.colors.length)) - 1) &&
-        ['legacy', 'channels', 'channels-solid'].includes(r.erosion.mode) && number(r.erosion.erosionStrength, 0, 1) &&
+        EROSION_MODES.includes(r.erosion.mode) && number(r.erosion.erosionStrength, 0, 1) &&
+        (!Object.hasOwn(r.erosion, 'erosionEvents') || integer(r.erosion.erosionEvents, 1,
+            Math.max(...C.PALETTES.map(p => Math.floor(p.colors.length * .8) - Math.floor(p.colors.length * .2))))) &&
+        (!Object.hasOwn(r.erosion, 'erosionPace') || integer(r.erosion.erosionPace, 1, 3)) &&
+        (!Object.hasOwn(r.erosion, 'erosionStages') || validErosionStages(r.erosion.erosionStages)) &&
         Object.values(r.dla).every(v => typeof v === 'boolean') &&
         number(r.contour.sensitivity, 0, 100) && ['darkest', 'lightest'].includes(r.contour.lineColor) &&
         number(r.turing.feed, .01, .1) && number(r.turing.kill, .01, .07) &&

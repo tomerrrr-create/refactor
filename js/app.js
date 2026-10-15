@@ -1,3 +1,4 @@
+import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
@@ -330,6 +331,7 @@ let magnetMode = 'off';
       let settingsProfiles;
 
       function palette() { return C.PALETTES[activePaletteIndex].colors; }
+      function getErosionRecordingRules() { return recordErosionRules(erosionRules, palette().length); }
 
 // === פונקציה לדחיסת מצב הלוח עבור המאקרו ===
 function compressBoardState() {
@@ -995,6 +997,10 @@ function handlePaletteSwitch(backwards = false) {
             resetSelectedColor();
             updatePaletteHeader();
             renderToScreen(null);
+            // Keep the resolved erosion snapshot inside this undoable palette action.
+            if (!isExecutingMacroCommand && armedSimulation === 'erosion') {
+                window.logArtEvent('Erosion Mode Changed', JSON.stringify(getErosionRecordingRules()));
+            }
         });
         // Record the newly resolved pull range when a live Chi palette changes.
         // Playback receives ordinary absolute rule snapshots, never percentages.
@@ -1216,7 +1222,7 @@ break;
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
-        else if (armedSimulation === 'erosion') simDetails = JSON.stringify(erosionRules);
+        else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
@@ -1350,7 +1356,7 @@ function pauseLife() {
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
-        else if (armedSimulation === 'erosion') simDetails = JSON.stringify(erosionRules);
+        else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
@@ -2909,7 +2915,7 @@ function cycleErosionMode() {
         erosionRules.mode = next;
     }
     updateErosionButtonUI();
-    window.logArtEvent('Erosion Mode Changed', next);
+    window.logArtEvent('Erosion Mode Changed', next === 'off' ? 'off' : JSON.stringify(getErosionRecordingRules()));
 }
 
 function updateDlaButtonUI() {
@@ -3181,6 +3187,7 @@ function selectSortMethod(nextMethod) {
               case 'sandpile': modals.openChiFlowSettingsModal(); break;
               case 'turing': modals.openTuringSettingsModal(); break;
               case 'magnet': modals.openMagnetSettingsModal(); break;
+              case 'erosion': modals.openErosionSettingsModal(); break;
               case 'nudgeBrighter':
               case 'nudgeDarker': modals.openNudgeSettingsModal(); break;
           }
@@ -3716,6 +3723,10 @@ if (sortMethod && currentSortMethod !== sortMethod) {
     replayNudgeTiming = null;
 
     // הטמעת החוקים (Rules Injection)
+    if (sim === 'erosion' && rulesStr === "No specific rules mapping") {
+        erosionRules = restoreErosionRules({});
+        updateErosionButtonUI();
+    }
     if (rulesStr !== "No specific rules mapping") {
         try {
             if (sim === 'brightnessEvo') {
@@ -3733,8 +3744,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
                 }
                 else if (sim === 'erosion') {
-                    Object.assign(erosionRules, parsedRules);
-                    erosionRules.mode = ['channels', 'channels-solid'].includes(parsedRules.mode) ? parsedRules.mode : 'legacy';
+                    erosionRules = restoreErosionRules(parsedRules);
                     updateErosionButtonUI();
                 }
                 else if (sim === 'dla') {
@@ -3918,6 +3928,13 @@ function executeMacroAction(action) {
         } else if (['legacy', 'channels', 'channels-solid'].includes(action.details)) {
             if (armedSimulation !== 'erosion') armSimulation('erosion');
             erosionRules.mode = action.details;
+        } else if (action.details.trimStart().startsWith('{')) {
+            // New recordings carry absolute rule snapshots; old mode strings above stay supported.
+            const snapshot = JSON.parse(action.details);
+            if (['legacy', 'channels-solid', 'channels'].includes(snapshot?.mode)) {
+                if (armedSimulation !== 'erosion') armSimulation('erosion');
+                erosionRules = restoreErosionRules(snapshot);
+            }
         }
         updateErosionButtonUI();
     }
@@ -4153,6 +4170,18 @@ syncGsModeFromModal: (direction) => {
                 updateGravitationalSortButtonUI();
             },
 
+            getErosionRules: () => ({ ...erosionRules }),
+            canEditErosion: () => !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
+            getPaletteLength: () => palette().length,
+            saveErosionRules: rules => {
+                if (isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
+                erosionRules = restoreErosionRules(rules);
+                updateErosionButtonUI();
+                persistWorkspaceSettings(getWorkspaceSettings());
+                window.logArtEvent('Erosion Mode Changed', JSON.stringify(getErosionRecordingRules()));
+                settingsProfiles?.scheduleCapture();
+                return true;
+            },
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
 
@@ -4358,7 +4387,7 @@ bindPickerGestures(dom.btnColorPicker, {
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, null],
             [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, null],
-            [dom.btnErosion, 'erosion', cycleErosionMode, null],
+            [dom.btnErosion, 'erosion', cycleErosionMode, modals.openErosionSettingsModal],
             [dom.btnDla, 'dla', cycleDlaMode, null]
         ].filter(([button]) => button);
         const evolutionPickerButtons = new Set(evolutionPickers.map(([button]) => button));

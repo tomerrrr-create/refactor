@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FYI">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link rel="apple-touch-icon" href="icons/fyi-social-preview.png">
-<link rel="icon" type="image/png" href="icons/fyi-social-preview.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/fyi-eclipse-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/fyi-eclipse-192.png">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://tomerrrr-create.github.io/color-grid-app/">
   <meta property="og:title" content="Follow Your Intuition">
@@ -1160,6 +1160,37 @@
 </div>
 
 
+<dialog id="erosionSettingsDialog" class="erosion-settings-dialog" aria-labelledby="erosionSettingsTitle">
+  <form id="erosionSettingsForm">
+    <button type="button" id="btnErosionClose" class="modal-dismiss" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+    <h2 id="erosionSettingsTitle" data-erosion-text="erosion_settings_title"></h2>
+    <div class="erosion-mode-toolbar">
+    <div id="erosionMode" class="erosion-mode-icons" role="group">
+      <button type="button" class="cycle-slot-button" data-erosion-mode="legacy" data-erosion-label="erosion_legacy" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15 L12 9 L18 15"/></svg>
+      </button>
+      <button type="button" class="cycle-slot-button" data-erosion-mode="channels-solid" data-erosion-label="erosion_solid" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15a6 6 0 0 1 12 0"/></svg>
+      </button>
+      <button type="button" class="cycle-slot-button" data-erosion-mode="channels" data-erosion-label="erosion_channels" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 15l5-5 5 5 5-5 5 5"/></svg>
+      </button>
+    </div>
+      <button type="button" id="btnErosionReset" class="cycle-reset-dot"></button>
+    </div>
+    <p id="erosionModeName"></p>
+    <section id="erosionEventsSettings">
+      <label for="erosionEvents" data-erosion-text="erosion_pace_label"></label>
+      <output id="erosionEventsValue" for="erosionEvents"></output>
+      <div class="erosion-events-row"><input id="erosionEvents" type="range" min="0" max="4" step="1"></div>
+      <div class="erosion-pace-stops" aria-hidden="true"><span>I</span><span>II</span><span>III</span><span>IV</span><span>V</span></div>
+    </section>
+    <div class="init-settings-actions">
+      <button type="button" id="btnErosionCancel" class="init-reset" data-erosion-text="evolution_cancel"></button>
+      <button type="submit" id="btnErosionSave" class="init-save" data-erosion-text="evolution_save_close"></button>
+    </div>
+  </form>
+</dialog>
 <script type="module" src="js/app.js"></script>
 <script type="module" src="js/pwa.js"></script></body>
 </html>
