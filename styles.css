@@ -1694,11 +1694,12 @@ button, .ctrl {
 .erosion-settings-dialog h2 { margin: 0 0 24px; padding-inline-end: 28px; font-size: 21px; color: var(--gold); }
 .erosion-settings-dialog label { display: block; margin: 16px 0 10px; font-size: 14px; }
 .erosion-settings-dialog select { width: 100%; min-height: 44px; border: 1px solid #b28b3666; border-radius: 8px; padding: 8px; background: #1c1c1c; color: inherit; font: inherit; }
-.erosion-settings-dialog .erosion-original-label { display: flex; align-items: center; gap: 10px; }
 .erosion-settings-dialog input { accent-color: var(--gold); }
 .erosion-events-row { display: flex; align-items: center; gap: 16px; }
 .erosion-events-row input { flex: 1; min-width: 0; direction: ltr; }
-.erosion-events-row output { min-width: 65px; text-align: center; color: var(--gold); }
+#erosionEventsValue { display: block; color: var(--gold); margin-bottom: 12px; }
+.erosion-pace-stops { display: flex; justify-content: space-between; gap: 8px; direction: ltr; margin-top: 8px; font-size: 11px; color: #aaa99e; }
+.erosion-pace-stops span { flex: 1; text-align: center; unicode-bidi: plaintext; }
 .erosion-settings-dialog p { font-size: 12px; color: #aaa99e; line-height: 1.6; margin: 10px 0; }
 .erosion-settings-dialog .init-settings-actions { margin-top: 24px; }
 @media (prefers-reduced-motion: reduce) { .erosion-settings-dialog[open] { animation: none; } }

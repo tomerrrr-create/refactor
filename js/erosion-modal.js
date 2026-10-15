@@ -1,11 +1,10 @@
-import { erosionEarthSpan } from './erosion-settings.js';
+import { erosionPaceEvents, resolveErosionEvents } from './erosion-settings.js';
 import { onLanguageChange } from './i18n.js';
 
 export function initializeErosionModal(app) {
     const dialog = document.getElementById('erosionSettingsDialog');
     const form = document.getElementById('erosionSettingsForm');
     const mode = document.getElementById('erosionMode');
-    const original = document.getElementById('erosionOriginal');
     const slider = document.getElementById('erosionEvents');
     const value = document.getElementById('erosionEventsValue');
     const settings = document.getElementById('erosionEventsSettings');
@@ -18,26 +17,30 @@ export function initializeErosionModal(app) {
         });
         document.getElementById('btnErosionClose').setAttribute('aria-label', app.getText('saveModal_close'));
         if (!draft) return;
-        const span = erosionEarthSpan(app.getPaletteLength(), draft.mode);
         mode.value = draft.mode;
-        original.checked = !Object.hasOwn(draft, 'erosionEvents');
         settings.hidden = draft.mode === 'legacy';
-        slider.max = String(Math.max(1, span));
-        slider.value = String(Math.min(span, draft.erosionEvents ?? Math.min(5, span)));
-        slider.disabled = original.checked;
-        value.value = original.checked ? app.getText('erosion_original') : slider.value;
-        slider.setAttribute('aria-valuetext', value.value);
-        document.getElementById('erosionEventsLimit').textContent = app.getText('erosion_events_limit')
-            .replace('{n}', span);
+        const count = resolveErosionEvents(app.getPaletteLength(), draft);
+        const savedCount = !draft.erosionPace && Object.hasOwn(draft, 'erosionEvents');
+        const keys = ['erosion_pace_original', 'erosion_pace_fast', 'erosion_pace_faster', 'erosion_pace_max'];
+        // Preserve older absolute counts until the user actually moves the slider.
+        const nearest = [0, 1, 2, 3].reduce((best, pace) =>
+            Math.abs(erosionPaceEvents(app.getPaletteLength(), draft.mode, pace) - count) <
+            Math.abs(erosionPaceEvents(app.getPaletteLength(), draft.mode, best) - count) ? pace : best, 0);
+        slider.value = String(savedCount ? nearest : draft.erosionPace ?? 0);
+        value.value = app.getText(savedCount ? 'erosion_pace_saved' : keys[Number(slider.value)]);
+        const details = app.getText('erosion_events_count').replace('{n}', count);
+        slider.setAttribute('aria-valuetext', `${value.value} — ${details}`);
+        document.getElementById('erosionEventsLimit').textContent = details;
     }
     function close() { dialog.close(); }
     mode.addEventListener('change', () => { draft.mode = mode.value; render(); });
-    original.addEventListener('change', () => {
-        if (original.checked) delete draft.erosionEvents;
-        else draft.erosionEvents = Number(slider.value);
+    slider.addEventListener('input', () => {
+        const pace = Number(slider.value);
+        delete draft.erosionEvents;
+        if (pace === 0) delete draft.erosionPace;
+        else draft.erosionPace = pace;
         render();
     });
-    slider.addEventListener('input', () => { draft.erosionEvents = Number(slider.value); render(); });
     form.addEventListener('submit', event => {
         event.preventDefault();
         if (draft && app.saveErosionRules(draft)) close();

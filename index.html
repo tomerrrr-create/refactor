@@ -1171,9 +1171,10 @@
       <option value="channels" data-erosion-text="erosion_channels"></option>
     </select>
     <section id="erosionEventsSettings">
-      <label class="erosion-original-label"><input id="erosionOriginal" type="checkbox"><span data-erosion-text="erosion_original"></span></label>
-      <label for="erosionEvents" data-erosion-text="erosion_events_label"></label>
-      <div class="erosion-events-row"><input id="erosionEvents" type="range" min="1" max="159" step="1" aria-describedby="erosionEventsNote erosionEventsLimit"><output id="erosionEventsValue" for="erosionEvents"></output></div>
+      <label for="erosionEvents" data-erosion-text="erosion_pace_label"></label>
+      <output id="erosionEventsValue" for="erosionEvents"></output>
+      <div class="erosion-events-row"><input id="erosionEvents" type="range" min="0" max="3" step="1" aria-describedby="erosionEventsNote erosionEventsLimit"></div>
+      <div class="erosion-pace-stops" aria-hidden="true"><span data-erosion-text="erosion_pace_original"></span><span data-erosion-text="erosion_pace_fast"></span><span data-erosion-text="erosion_pace_faster"></span><span data-erosion-text="erosion_pace_max"></span></div>
       <p id="erosionEventsNote" data-erosion-text="erosion_events_note"></p>
       <p id="erosionEventsLimit"></p>
     </section>

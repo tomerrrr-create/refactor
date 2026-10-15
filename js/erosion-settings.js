@@ -6,6 +6,20 @@ export function erosionEarthSpan(paletteLength, mode) {
         : Math.floor(paletteLength * .2);
 }
 
+export function erosionPaceEvents(paletteLength, mode, pace) {
+    const span = erosionEarthSpan(paletteLength, mode);
+    return Math.max(1, [span, Math.round(span * 2 / 3), Math.round(span / 3), 1][pace]);
+}
+
+export function resolveErosionEvents(paletteLength, rules) {
+    const span = erosionEarthSpan(paletteLength, rules.mode);
+    if ([1, 2, 3].includes(rules.erosionPace)) {
+        return erosionPaceEvents(paletteLength, rules.mode, rules.erosionPace);
+    }
+    return Number.isSafeInteger(rules.erosionEvents) && rules.erosionEvents > 0
+        ? Math.min(span, rules.erosionEvents) : span;
+}
+
 // Missing fields in old recordings must reset new options, not inherit preferences.
 export function restoreErosionRules(value) {
     return {
@@ -13,18 +27,20 @@ export function restoreErosionRules(value) {
         erosionStrength: typeof value.erosionStrength === 'number' && Number.isFinite(value.erosionStrength)
             && value.erosionStrength >= 0 && value.erosionStrength <= 1 ? value.erosionStrength : .1,
         ...(Number.isSafeInteger(value.erosionEvents) && value.erosionEvents > 0
-            ? { erosionEvents: value.erosionEvents } : {})
+            ? { erosionEvents: value.erosionEvents } : {}),
+        ...([1, 2, 3].includes(value.erosionPace) ? { erosionPace: value.erosionPace } : {})
     };
 }
 
 export function erodedIndex(index, paletteLength, rules) {
     const forward = rules.mode === 'channels-solid';
-    if (!Number.isSafeInteger(rules.erosionEvents) || rules.erosionEvents < 1) {
+    if (![1, 2, 3].includes(rules.erosionPace) &&
+        (!Number.isSafeInteger(rules.erosionEvents) || rules.erosionEvents < 1)) {
         return forward ? index + 1 : Math.max(0, index - 1);
     }
     const span = erosionEarthSpan(paletteLength, rules.mode);
     if (span < 1) return index;
-    const events = Math.min(span, rules.erosionEvents);
+    const events = resolveErosionEvents(paletteLength, rules);
     const earthEnd = Math.floor(paletteLength * .8);
     const progress = forward ? index : earthEnd - 1 - index;
     // Partition the soil range into events equal-sized stages, rounded to colors.

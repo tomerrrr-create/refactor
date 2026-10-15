@@ -9,12 +9,16 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  erosion_pace_label: {"en": "Erosion acceleration", "he": "האצת שחיקה", "ru": "Ускорение эрозии", "nl": "Erosieversnelling"},
+  erosion_pace_original: {"en": "Original", "he": "מקורי", "ru": "Исходная", "nl": "Origineel"},
+  erosion_pace_fast: {"en": "Fast", "he": "מהיר", "ru": "Быстро", "nl": "Snel"},
+  erosion_pace_faster: {"en": "Very fast", "he": "מהיר מאוד", "ru": "Очень быстро", "nl": "Zeer snel"},
+  erosion_pace_max: {"en": "Maximum", "he": "מרבי", "ru": "Максимум", "nl": "Maximaal"},
+  erosion_pace_saved: {"en": "Previously saved rate", "he": "קצב שנשמר בעבר", "ru": "Ранее сохранённый темп", "nl": "Eerder opgeslagen tempo"},
+  erosion_events_count: {"en": "Full erosion: {n} successful events.", "he": "שחיקה מלאה: {n} אירועים מוצלחים.", "ru": "Полное размывание: {n} успешных событий.", "nl": "Volledige erosie: {n} geslaagde stappen."},
   erosion_settings_title: {"en": "Erosion settings", "he": "הגדרות שחיקה", "ru": "Настройки эрозии", "nl": "Erosie-instellingen"},
   erosion_mode_label: {"en": "Erosion mode", "he": "מצב שחיקה", "ru": "Режим эрозии", "nl": "Erosiemodus"},
-  erosion_original: {"en": "Original rate", "he": "קצב מקורי", "ru": "Исходный темп", "nl": "Oorspronkelijk tempo"},
-  erosion_events_label: {"en": "Events for full erosion", "he": "אירועים לשחיקה מלאה", "ru": "Событий до полного размывания", "nl": "Stappen tot volledige erosie"},
   erosion_events_note: {"en": "Successful erosion events, not generations. Partly eroded soil needs fewer events. The erosion probability stays unchanged.", "he": "אירועי שחיקה מוצלחים, לא דורות. אדמה שנשחקה חלקית דורשת פחות אירועים. ההסתברות לשחיקה נשארת ללא שינוי.", "ru": "Успешные события эрозии, не поколения. Частично размытая почва требует меньше событий. Вероятность эрозии не меняется.", "nl": "Geslaagde erosiestappen, geen generaties. Gedeeltelijk geërodeerde grond heeft minder stappen nodig. De erosiekans blijft gelijk."},
-  erosion_events_limit: {"en": "Up to {n} events in this mode and palette. A saved higher target is limited to this maximum.", "he": "עד {n} אירועים במצב ובפלטה הנוכחיים. יעד גבוה יותר שנשמר מוגבל למקסימום זה.", "ru": "До {n} событий в этом режиме и палитре. Сохранённое большее значение ограничивается этим максимумом.", "nl": "Maximaal {n} stappen bij deze modus en dit palet. Een hoger opgeslagen doel wordt tot dit maximum beperkt."},
   profiles_title: {"en": "Profiles", "he": "פרופילים", "ru": "Профили", "nl": "Profielen"},
   profile_number: {"en": "Profile {n}", "he": "פרופיל {n}", "ru": "Профиль {n}", "nl": "Profiel {n}"},
   profile_modified: {"en": "Modified settings", "he": "הגדרות ששונו", "ru": "Изменённые настройки", "nl": "Gewijzigde instellingen"},

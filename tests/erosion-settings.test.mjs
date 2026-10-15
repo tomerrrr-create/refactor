@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { erosionEarthSpan, erodedIndex, restoreErosionRules } from '../js/erosion-settings.js';
+import { erosionEarthSpan, erosionPaceEvents, resolveErosionEvents, erodedIndex, restoreErosionRules } from '../js/erosion-settings.js';
 import { runErosionGeneration } from '../js/simulations/erosion.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { createProfileState } from '../js/profile-state.js';
@@ -106,4 +106,56 @@ test('macro rule injection restores new targets and clears them for old recordin
     apply({ erosionStrength: .1 });
     assert.equal(context.erosionRules.mode, 'legacy');
     assert(!Object.hasOwn(context.erosionRules, 'erosionEvents'));
+    apply({ mode: 'channels', erosionStrength: .1, erosionPace: 2 });
+    assert.equal(context.erosionRules.erosionPace, 2);
+    assert(!Object.hasOwn(context.erosionRules, 'erosionEvents'));
+    apply({ mode: 'channels-solid', erosionStrength: .1, erosionEvents: 5 });
+    assert.equal(context.erosionRules.erosionEvents, 5);
+    assert(!Object.hasOwn(context.erosionRules, 'erosionPace'));
+    apply({ mode: 'channels', erosionStrength: .1 });
+    assert(!Object.hasOwn(context.erosionRules, 'erosionPace'));
+});
+
+test('four acceleration stops adapt to palette and mode and never slow erosion below original', () => {
+    assert.deepEqual([0, 1, 2, 3].map(p => erosionPaceEvents(264, 'channels-solid', p)), [52, 35, 17, 1]);
+    assert.deepEqual([0, 1, 2, 3].map(p => erosionPaceEvents(264, 'channels', p)), [159, 106, 53, 1]);
+    for (const size of [21, 23, 64, 264]) for (const mode of ['channels-solid', 'channels']) {
+        let previous = erosionEarthSpan(size, mode);
+        for (const pace of [0, 1, 2, 3]) {
+            const count = erosionPaceEvents(size, mode, pace);
+            assert(count >= 1 && count <= previous);
+            previous = count;
+            const rules = { mode, erosionStrength: .1, ...(pace ? { erosionPace: pace } : {}) };
+            assert.equal(resolveErosionEvents(size, rules), count);
+            let k = mode === 'channels-solid' ? 0 : Math.floor(size * .8) - 1;
+            for (let hit = 1; hit <= count; hit++) {
+                k = erodedIndex(k, size, rules);
+                const stillEarth = mode === 'channels-solid' ? k < Math.floor(size * .2) : k >= Math.floor(size * .2);
+                assert.equal(stillEarth, hit < count);
+            }
+            assert.equal(rules.erosionStrength, .1);
+        }
+    }
+});
+
+test('relative acceleration survives settings/profile storage and old absolute targets remain unchanged', () => {
+    const settings = defaultWorkspaceSettings();
+    settings.rules.erosion = { mode: 'channels-solid', erosionStrength: .1, erosionPace: 1 };
+    assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
+    let stored;
+    const storage = { getItem: () => stored ?? null, setItem: (_, text) => { stored = text; } };
+    const state = createProfileState({ settings: defaultWorkspaceSettings() }, storage);
+    state.capture({ settings }); state.save();
+    const restored = createProfileState({ settings: defaultWorkspaceSettings() }, storage);
+    assert.equal(restored.draft().settings.rules.erosion.erosionPace, 1);
+    assert.equal(resolveErosionEvents(64, settings.rules.erosion), 8);
+    assert.equal(resolveErosionEvents(264, settings.rules.erosion), 35);
+    for (const invalid of [0, 4, 1.5, '1', null]) {
+        settings.rules.erosion.erosionPace = invalid;
+        assert.throws(() => serializeWorkspaceSettings(settings));
+    }
+    delete settings.rules.erosion.erosionPace;
+    settings.rules.erosion.erosionEvents = 5;
+    assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
+    assert.equal(resolveErosionEvents(264, settings.rules.erosion), 5);
 });

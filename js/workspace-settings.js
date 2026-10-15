@@ -29,7 +29,7 @@ function mergeKnown(defaults, overrides, path = '') {
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
         // Optional extension; V1’s original baseline stays unchanged.
-        if (path === 'rules.erosion' && key === 'erosionEvents') { result[key] = clone(value); continue; }
+        if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace'].includes(key)) { result[key] = clone(value); continue; }
         if (!Object.hasOwn(defaults, key)) throw new Error('Unknown settings field: ' + key);
         result[key] = object(defaults[key]) ? mergeKnown(defaults[key], value, path ? path + '.' + key : key) : clone(value);
     }
@@ -66,6 +66,7 @@ export function validateWorkspaceSettings(value) {
         EROSION_MODES.includes(r.erosion.mode) && number(r.erosion.erosionStrength, 0, 1) &&
         (!Object.hasOwn(r.erosion, 'erosionEvents') || integer(r.erosion.erosionEvents, 1,
             Math.max(...C.PALETTES.map(p => Math.floor(p.colors.length * .8) - Math.floor(p.colors.length * .2))))) &&
+        (!Object.hasOwn(r.erosion, 'erosionPace') || integer(r.erosion.erosionPace, 1, 3)) &&
         Object.values(r.dla).every(v => typeof v === 'boolean') &&
         number(r.contour.sensitivity, 0, 100) && ['darkest', 'lightest'].includes(r.contour.lineColor) &&
         number(r.turing.feed, .01, .1) && number(r.turing.kill, .01, .07) &&
