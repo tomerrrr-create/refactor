@@ -742,8 +742,21 @@ body {
 #board.glowing-border {
   animation: glow-border 3s 2;
 }
-#board.glowing-border-rainbow {
-   animation: glow-border-rainbow 3s 2;
+#board.glowing-border-rainbow::after {
+  content: '';
+  position: absolute;
+  inset: -17px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background-image: var(--rainbow-frame-pattern, linear-gradient(var(--gold), var(--gold)));
+  background-size: 100% 100%;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  animation: rainbow-frame-pulse 3s ease-in-out 2;
 }
 
 @keyframes glow-border {
@@ -751,14 +764,9 @@ body {
     box-shadow: 0 0 12px 4px var(--glow-color);
   }
 }
-@keyframes glow-border-rainbow {
-  0% { box-shadow: 0 0 12px 4px #ff0000; }
-  16% { box-shadow: 0 0 12px 4px #ff7f00; }
-  33% { box-shadow: 0 0 12px 4px #ffff00; }
-  50% { box-shadow: 0 0 12px 4px #00ff00; }
-  66% { box-shadow: 0 0 12px 4px #0000ff; }
-  83% { box-shadow: 0 0 12px 4px #4b0082; }
-  100% { box-shadow: 0 0 12px 4px #8f00ff; }
+@keyframes rainbow-frame-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: .7; }
 }
 
 .rtl-mode {
