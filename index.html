@@ -1162,8 +1162,9 @@
 
 <dialog id="erosionSettingsDialog" class="erosion-settings-dialog" aria-labelledby="erosionSettingsTitle">
   <form id="erosionSettingsForm">
-    <button type="button" id="btnErosionClose" class="modal-dismiss" aria-label="Close">×</button>
+    <button type="button" id="btnErosionClose" class="modal-dismiss" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
     <h2 id="erosionSettingsTitle" data-erosion-text="erosion_settings_title"></h2>
+    <div class="erosion-mode-toolbar">
     <div id="erosionMode" class="erosion-mode-icons" role="group">
       <button type="button" class="cycle-slot-button" data-erosion-mode="legacy" data-erosion-label="erosion_legacy" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15 L12 9 L18 15"/></svg>
@@ -1175,18 +1176,18 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 15l5-5 5 5 5-5 5 5"/></svg>
       </button>
     </div>
+      <button type="button" id="btnErosionReset" class="cycle-reset-dot"></button>
+    </div>
     <p id="erosionModeName"></p>
     <section id="erosionEventsSettings">
       <label for="erosionEvents" data-erosion-text="erosion_pace_label"></label>
       <output id="erosionEventsValue" for="erosionEvents"></output>
-      <div class="erosion-events-row"><input id="erosionEvents" type="range" min="0" max="4" step="1" aria-describedby="erosionEventsNote erosionEventsLimit"></div>
+      <div class="erosion-events-row"><input id="erosionEvents" type="range" min="0" max="4" step="1"></div>
       <div class="erosion-pace-stops" aria-hidden="true"><span>I</span><span>II</span><span>III</span><span>IV</span><span>V</span></div>
-      <p id="erosionEventsNote" data-erosion-text="erosion_events_note"></p>
-      <p id="erosionEventsLimit"></p>
     </section>
     <div class="init-settings-actions">
-      <button type="button" id="btnErosionCancel" class="init-reset" data-erosion-text="gs_modal_cancel"></button>
-      <button type="submit" id="btnErosionSave" class="init-save" data-erosion-text="gs_modal_save_close"></button>
+      <button type="button" id="btnErosionCancel" class="init-reset" data-erosion-text="evolution_cancel"></button>
+      <button type="submit" id="btnErosionSave" class="init-save" data-erosion-text="evolution_save_close"></button>
     </div>
   </form>
 </dialog>

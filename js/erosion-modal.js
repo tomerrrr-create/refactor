@@ -9,6 +9,7 @@ export function initializeErosionModal(app) {
     const slider = document.getElementById('erosionEvents');
     const value = document.getElementById('erosionEventsValue');
     const settings = document.getElementById('erosionEventsSettings');
+    const reset = document.getElementById('btnErosionReset');
     let draft;
 
     function render() {
@@ -17,6 +18,8 @@ export function initializeErosionModal(app) {
             node.textContent = app.getText(node.dataset.erosionText);
         });
         document.getElementById('btnErosionClose').setAttribute('aria-label', app.getText('saveModal_close'));
+        reset.title = app.getText('evolution_reset_default');
+        reset.setAttribute('aria-label', reset.title);
         mode.setAttribute('aria-label', app.getText('erosion_mode_label'));
         modeButtons.forEach(button => {
             const label = app.getText(button.dataset.erosionLabel);
@@ -40,12 +43,18 @@ export function initializeErosionModal(app) {
             Math.abs(erosionStageEvents(app.getPaletteLength(), draft.mode, best) - count) ? next : best, 0);
         slider.value = String(inactive ? 0 : stage ?? (savedCount ? nearest : 0));
         value.value = !inactive && savedCount ? app.getText('erosion_pace_saved') : EROSION_STAGE_SYMBOLS[Number(slider.value)];
+        value.classList.toggle('erosion-saved-value', Boolean(!inactive && savedCount));
         const details = inactive ? app.getText('erosion_pace_inactive')
             : app.getText('erosion_events_count').replace('{n}', count);
         slider.setAttribute('aria-valuetext', `${value.value} — ${details}`);
-        document.getElementById('erosionEventsLimit').textContent = details;
     }
     function close() { dialog.close(); }
+    reset.addEventListener('click', () => {
+        if (!draft) return;
+        // Reset both channel rates in the draft, retaining the selected mode.
+        draft = { ...app.C.defaultErosionRules, mode: draft.mode };
+        render();
+    });
     modeButtons.forEach(button => button.addEventListener('click', () => {
         if (!draft) return;
         draft.mode = button.dataset.erosionMode;
