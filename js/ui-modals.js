@@ -1620,6 +1620,7 @@ export function initializeModals(appContext) {
     // Game of Life Settings Modal
     app.dom.btnGolSettingsSave.addEventListener('click', saveGolSettings);
     app.dom.btnGolSettingsCancel.addEventListener('click', closeGolSettingsModal);
+    app.dom.gameOfLifeSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.gameOfLifeSettingsModal) closeGolSettingsModal(); });
     app.dom.btnGolSettingsReset.addEventListener('click', resetGolSettings);
 
 
@@ -1661,6 +1662,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     });
     app.dom.btnGsSettingsSave.addEventListener('click', saveGravitationalSortSettings);
     app.dom.btnGsSettingsCancel.addEventListener('click', closeGravitationalSortSettingsModal);
+    app.dom.gravitationalSortSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.gravitationalSortSettingsModal) closeGravitationalSortSettingsModal(); });
 
 
 
