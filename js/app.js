@@ -1,3 +1,4 @@
+import { initializeProfileControls } from './profile-controls.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
@@ -106,6 +107,7 @@ window.logArtEvent = function(eventName, details, forceLog = false) {
         }
     
         artRecipeLog.push(`[${timestamp}]${genTag} ${eventName} -> ${details}`);
+    if (typeof settingsProfiles !== 'undefined' && !isExecutingMacroCommand) settingsProfiles?.scheduleCapture();
     };
 
 
@@ -324,6 +326,7 @@ let magnetMode = 'off';
       const originalColorPickerIconHTML = dom.btnColorPicker.innerHTML;
       
       let modals;
+      let settingsProfiles;
 
       function palette() { return C.PALETTES[activePaletteIndex].colors; }
 
@@ -1801,7 +1804,16 @@ if (simulationName === 'magnet') {
         renderToScreen(null);
       }
 
-      function importWorkspaceSettings(settings) {
+      function captureProfileSettings() {
+        return { settings: getWorkspaceSettings(), identity: {
+            gameOfLife: { index: ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode),
+                sources: [...gameOfLifeSources], yoursRules: cloneGameOfLifeRules(personalGameOfLifeRules) },
+            chiFlow: { index: ['personal', 'ripples', 'nova'].indexOf(chiFlowMode),
+                sources: [...chiFlowSources], yoursRules: cloneChiFlowRules(personalChiFlowRules) }
+        } };
+      }
+
+      function importWorkspaceSettings(settings, identity = null) {
         // The file has been fully validated before any state or preferences change.
         if (isMacroPlaying) throw new Error('Cannot import settings during macro playback');
         pauseLife();
@@ -1812,10 +1824,12 @@ if (simulationName === 'magnet') {
         persistNudgeSettings();
         const sources = (slots, presets) => slots.map((rules, i) =>
             Object.entries(presets).find(([, preset]) => JSON.stringify(preset) === JSON.stringify(rules))?.[0] || 'custom-' + i);
-        setGameOfLifeCycle(settings.cycles.gameOfLife, ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode),
-            sources(settings.cycles.gameOfLife, C.GAME_OF_LIFE_PRESETS), settings.cycles.gameOfLife[0]);
-        setChiFlowCycle(settings.cycles.chiFlow, ['personal', 'ripples', 'nova'].indexOf(chiFlowMode),
-            sources(settings.cycles.chiFlow, C.CHI_FLOW_PRESETS), settings.cycles.chiFlow[0]);
+        setGameOfLifeCycle(settings.cycles.gameOfLife, identity?.gameOfLife.index ?? ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode),
+            identity?.gameOfLife.sources ?? sources(settings.cycles.gameOfLife, C.GAME_OF_LIFE_PRESETS),
+            identity?.gameOfLife.yoursRules ?? settings.cycles.gameOfLife[0]);
+        setChiFlowCycle(settings.cycles.chiFlow, identity?.chiFlow.index ?? ['personal', 'ripples', 'nova'].indexOf(chiFlowMode),
+            identity?.chiFlow.sources ?? sources(settings.cycles.chiFlow, C.CHI_FLOW_PRESETS),
+            identity?.chiFlow.yoursRules ?? settings.cycles.chiFlow[0]);
         applyWorkspacePreferences(settings);
         const storedStartup = persistStartup(startupSettings);
         const storedInit = persistSimInit(simulationInitSettings);
@@ -1823,6 +1837,7 @@ if (simulationName === 'magnet') {
         const storedWorkspace = persistWorkspaceSettings(settings);
         const storedSmooth = persistSmoothRendering(settings.smoothing.display);
         modals.refreshLocalizedModalText();
+        modals.refreshTechnicianSettings();
         return storedStartup && storedInit && storedSort && storedWorkspace && storedSmooth;
       }
 
@@ -1917,6 +1932,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
      
 
             if (macroQueue.length > 0) {
+                settingsProfiles?.beginReplay();
                 isMacroLoaded = true;
                 currentMacroStep = 0;
                 pendingMacroPalette = null; // איפוס בחירה קודמת בטעינת קובץ חדש
@@ -3591,6 +3607,7 @@ function stopMacro() {
     macroQueue = [];
     isMacroLoaded = false;
     isMacroPlaying = false;
+    if (typeof settingsProfiles !== 'undefined') settingsProfiles?.endReplay();
     replayNudgeTiming = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
@@ -4059,6 +4076,7 @@ else if (action.eventName === 'Invert Colors') {
         
         // Phase 1 Addition: Add adaptColors to the context for modals
         const contextForModals = {
+            refreshProfiles: () => settingsProfiles?.refresh(),
             isSimulationMode: () => isSimModeActive,
             SORT_MODES,
             getSortCycleMethods: () => [...sortCycleMethods],
@@ -4215,6 +4233,12 @@ updateBrightnessEvoButtonUI();
         isSmoothRendering = loadSmoothRendering(importedPreferences?.smoothing.display ?? DEFAULT_SMOOTH_RENDERING);
         document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
         renderToScreen(null);
+        settingsProfiles = initializeProfileControls({
+            capture: captureProfileSettings,
+            apply: snapshot => importWorkspaceSettings(snapshot.settings, snapshot.identity),
+            canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
+            getText
+        });
         logCurrentStateAsInit();
 
         

@@ -228,6 +228,7 @@ function refreshLocalizedModalText() {
     }
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
+    app.refreshProfiles();
 }
 
 function closeChiFlowSettingsModal() {
@@ -1429,6 +1430,7 @@ export function initializeModals(appContext) {
     smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
+        app.refreshProfiles();
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
@@ -1440,6 +1442,8 @@ export function initializeModals(appContext) {
         initForm.hidden = true;
         initToggle.setAttribute('aria-expanded', 'false');
         app.dom.technicianDialog.showModal();
+        app.dom.technicianDialog.scrollTop = 0;
+        document.getElementById('btnTechnicianCloseTop').focus({ preventScroll: true });
     }
     app.dom.btnOpenDebug.addEventListener('click', () => openTechnicianMenu());
     initToggle.addEventListener('click', () => {
@@ -1993,6 +1997,10 @@ function saveMagnetSettings() {
 
 return {
         refreshLocalizedModalText,
+        refreshTechnicianSettings: () => {
+            fillInitForm(app.getSimulationInit());
+            fillStartupForm(app.getStartupSettings());
+        },
         closeModalSlowly,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
