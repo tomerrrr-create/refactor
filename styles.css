@@ -742,8 +742,16 @@ body {
 #board.glowing-border {
   animation: glow-border 3s 2;
 }
-#board.glowing-border-rainbow {
-   animation: glow-border-rainbow 3s 2;
+#board.glowing-border-rainbow::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border: 1px solid var(--gold);
+  border-radius: 13px;
+  box-shadow: 0 0 8px #ffd70022;
+  pointer-events: none;
+  opacity: 0;
+  animation: rainbow-frame-pulse 3s ease-in-out 2;
 }
 
 @keyframes glow-border {
@@ -751,14 +759,9 @@ body {
     box-shadow: 0 0 12px 4px var(--glow-color);
   }
 }
-@keyframes glow-border-rainbow {
-  0% { box-shadow: 0 0 12px 4px var(--rainbow-glow-0); }
-  16% { box-shadow: 0 0 12px 4px var(--rainbow-glow-1); }
-  33% { box-shadow: 0 0 12px 4px var(--rainbow-glow-2); }
-  50% { box-shadow: 0 0 12px 4px var(--rainbow-glow-3); }
-  66% { box-shadow: 0 0 12px 4px var(--rainbow-glow-4); }
-  83% { box-shadow: 0 0 12px 4px var(--rainbow-glow-5); }
-  100% { box-shadow: 0 0 12px 4px var(--rainbow-glow-6); }
+@keyframes rainbow-frame-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: .7; }
 }
 
 .rtl-mode {

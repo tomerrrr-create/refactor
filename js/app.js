@@ -2570,10 +2570,6 @@ function updateLayout() {
     function updateGlowEffect() {
         if (!dom.board) return;
         if (isRainbowModeActive) {
-            const colors = palette();
-            for (let i = 0; i < 7; i++) {
-                dom.board.style.setProperty(`--rainbow-glow-${i}`, colors[Math.round(i * (colors.length - 1) / 6)]);
-            }
             dom.board.classList.add('glowing-border-rainbow'); dom.board.classList.remove('glowing-border');
         }
         else if (selectedColor) { dom.root.style.setProperty('--glow-color', selectedColor); dom.board.classList.add('glowing-border'); dom.board.classList.remove('glowing-border-rainbow'); } 
