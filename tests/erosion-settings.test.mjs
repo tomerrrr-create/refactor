@@ -183,7 +183,7 @@ test('relative acceleration survives settings/profile storage and old absolute t
     assert.equal(resolveErosionEvents(264, settings.rules.erosion), 5);
 });
 
-test('five Greek stages span original to the former very-fast rate with exact hit counts', () => {
+test('five acceleration stages span original to the former very-fast rate with exact hit counts', () => {
     assert.deepEqual([0, 1, 2, 3, 4].map(s => erosionStageEvents(264, 'channels-solid', s)), [52, 43, 35, 26, 17]);
     assert.deepEqual([0, 1, 2, 3, 4].map(s => erosionStageEvents(264, 'channels', s)), [159, 133, 106, 80, 53]);
     for (const size of [21, 23, 64, 264]) for (const mode of ['channels-solid', 'channels']) {

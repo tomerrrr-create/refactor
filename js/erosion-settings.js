@@ -1,6 +1,6 @@
 export const EROSION_MODES = ['legacy', 'channels-solid', 'channels'];
 export const EROSION_CHANNEL_MODES = ['channels-solid', 'channels'];
-export const EROSION_STAGE_SYMBOLS = ['α', 'β', 'γ', 'δ', 'ε'];
+export const EROSION_STAGE_SYMBOLS = ['I', 'II', 'III', 'IV', 'V'];
 
 export function validErosionStages(stages) {
     return stages !== null && typeof stages === 'object' && !Array.isArray(stages) &&
