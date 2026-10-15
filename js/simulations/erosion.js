@@ -1,3 +1,5 @@
+import { erodedIndex } from '../erosion-settings.js';
+
 export function runErosionGeneration({ n, currentBoardState, currentPalette, erosionRules }) {
     if (['channels', 'channels-solid'].includes(erosionRules.mode)) {
         return runChannelErosion({ n, currentBoardState, currentPalette, erosionRules });
@@ -92,7 +94,7 @@ function runChannelErosion({ n, currentBoardState, currentPalette, erosionRules 
             if (earth.length && Math.random() < strength) {
                 // One gradual erosion event per water particle and generation.
                 const contact = earth[Math.floor(Math.random() * earth.length)];
-                indices[contact] = earthFirst ? indices[contact] + 1 : Math.max(0, indices[contact] - 1);
+                indices[contact] = erodedIndex(indices[contact], currentPalette.length, erosionRules);
             }
 
             let target = -1;

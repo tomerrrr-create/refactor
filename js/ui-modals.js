@@ -1,3 +1,4 @@
+import { initializeErosionModal } from './erosion-modal.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
@@ -1181,6 +1182,7 @@ let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית
 
 export function initializeModals(appContext) {
     app = appContext;
+    const openErosionSettingsModal = initializeErosionModal(app);
     const helpTabs = [...document.querySelectorAll('[data-help-tab]')];
     helpTabs.forEach((button, index) => {
         button.addEventListener('click', () => selectHelpTab(button.dataset.helpTab));
@@ -2007,6 +2009,7 @@ return {
         openSortCycleModal,
         openResizeModal,
         openNudgeSettingsModal,
+        openErosionSettingsModal,
         openColorPickerModal,
         openHelpModal,
         openPaletteModal,

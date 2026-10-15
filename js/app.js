@@ -1,3 +1,4 @@
+import { restoreErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
@@ -3181,6 +3182,7 @@ function selectSortMethod(nextMethod) {
               case 'sandpile': modals.openChiFlowSettingsModal(); break;
               case 'turing': modals.openTuringSettingsModal(); break;
               case 'magnet': modals.openMagnetSettingsModal(); break;
+              case 'erosion': modals.openErosionSettingsModal(); break;
               case 'nudgeBrighter':
               case 'nudgeDarker': modals.openNudgeSettingsModal(); break;
           }
@@ -3733,8 +3735,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
                 }
                 else if (sim === 'erosion') {
-                    Object.assign(erosionRules, parsedRules);
-                    erosionRules.mode = ['channels', 'channels-solid'].includes(parsedRules.mode) ? parsedRules.mode : 'legacy';
+                    erosionRules = restoreErosionRules(parsedRules);
                     updateErosionButtonUI();
                 }
                 else if (sim === 'dla') {
@@ -4153,6 +4154,18 @@ syncGsModeFromModal: (direction) => {
                 updateGravitationalSortButtonUI();
             },
 
+            getErosionRules: () => ({ ...erosionRules }),
+            canEditErosion: () => !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
+            getPaletteLength: () => palette().length,
+            saveErosionRules: rules => {
+                if (isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
+                erosionRules = restoreErosionRules(rules);
+                updateErosionButtonUI();
+                persistWorkspaceSettings(getWorkspaceSettings());
+                window.logArtEvent('Erosion Mode Changed', erosionRules.mode);
+                settingsProfiles?.scheduleCapture();
+                return true;
+            },
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
 
@@ -4358,7 +4371,7 @@ bindPickerGestures(dom.btnColorPicker, {
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, null],
             [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, null],
-            [dom.btnErosion, 'erosion', cycleErosionMode, null],
+            [dom.btnErosion, 'erosion', cycleErosionMode, modals.openErosionSettingsModal],
             [dom.btnDla, 'dla', cycleDlaMode, null]
         ].filter(([button]) => button);
         const evolutionPickerButtons = new Set(evolutionPickers.map(([button]) => button));
