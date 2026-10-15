@@ -19,6 +19,11 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
     }
     function refresh() {
         host.setAttribute('aria-label', getText('profiles_title'));
+        actions.querySelectorAll('[data-profile-label]').forEach(button => {
+            const label = getText(button.dataset.profileLabel);
+            button.setAttribute('aria-label', label);
+            button.title = label;
+        });
         document.getElementById('btnProfileStore').disabled = busy;
         document.getElementById('btnProfileLoad').disabled = busy;
         choices.forEach((button, index) => {

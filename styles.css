@@ -1669,8 +1669,12 @@ button, .ctrl {
 .profile-dot { width: 44px; min-height: 44px; padding: 0; border: 0; background: transparent; color: #e3c677; font-size: 17px; cursor: pointer; }
 .profile-dot:disabled { color: #604b23; cursor: default; }
 .profile-dot:not(:disabled) span { filter: drop-shadow(0 0 5px #d5aa4855); }
-.profile-actions { padding: 8px; border: 1px solid #b28b3645; border-radius: 10px; background: #11120e; }
-.profile-actions button { display: block; width: 100%; min-height: 44px; padding: 10px; border: 0; border-radius: 6px; background: transparent; color: #e3c677; text-align: start; font: inherit; cursor: pointer; }
-.profile-actions button:hover { background: #d5aa4815; }
+.profile-actions { width: fit-content; margin: 2px auto 0; padding: 6px; border: 1px solid #b28b3645; border-radius: 14px; background: linear-gradient(145deg, #1c1a12, #0d0e0c); }
+.profile-actions:not([hidden]) { display: flex; gap: 6px; direction: ltr; }
+.profile-actions button { display: grid; place-items: center; width: 50px; height: 48px; padding: 11px; border: 1px solid #b28b3630; border-radius: 9px; background: #d5aa4808; color: #e3c677; cursor: pointer; transition: background .18s ease, border-color .18s ease; }
+.profile-actions svg { width: 25px; height: 25px; }
+.profile-actions button:hover { background: #d5aa481c; border-color: #d5aa4880; }
+.profile-actions button:active { background: #d5aa482b; }
+@media (prefers-reduced-motion: reduce) { .profile-actions button { transition: none; } }
 .profile-controls :focus-visible { outline: 2px solid #ffe7a0; outline-offset: 3px; }
 .profile-choice:disabled, .profile-actions button:disabled { opacity: .5; cursor: default; }
