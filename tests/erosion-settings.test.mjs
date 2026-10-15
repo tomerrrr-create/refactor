@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { erosionEarthSpan, erosionPaceEvents, erosionStageEvents, resolveErosionEvents, erodedIndex, restoreErosionRules } from '../js/erosion-settings.js';
+import { erosionEarthSpan, erosionPaceEvents, erosionStageEvents, resolveErosionEvents, erodedIndex, restoreErosionRules, recordErosionRules } from '../js/erosion-settings.js';
 import { runErosionGeneration } from '../js/simulations/erosion.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { createProfileState } from '../js/profile-state.js';
@@ -108,6 +108,8 @@ test('macro rule injection restores new targets and clears them for old recordin
     assert(!Object.hasOwn(context.erosionRules, 'erosionEvents'));
     apply({ mode: 'channels', erosionStrength: .1, erosionPace: 2 });
     assert.equal(context.erosionRules.erosionPace, 2);
+    context.applyMacroRules('Armed: erosion | Rules: No specific rules mapping');
+    assert.deepEqual(context.erosionRules, { mode: 'legacy', erosionStrength: .1 });
     assert(!Object.hasOwn(context.erosionRules, 'erosionEvents'));
     apply({ mode: 'channels-solid', erosionStrength: .1, erosionEvents: 5 });
     assert.equal(context.erosionRules.erosionEvents, 5);
@@ -119,6 +121,22 @@ test('macro rule injection restores new targets and clears them for old recordin
     apply({ mode: 'channels-solid', erosionStrength: .1, erosionPace: 2 });
     assert(!Object.hasOwn(context.erosionRules, 'erosionStages'));
     assert.equal(context.erosionRules.erosionPace, 2);
+});
+
+test('new recording snapshots contain only absolute events and preserve relative preferences', () => {
+    const rules = { mode: 'channels-solid', erosionStrength: .1,
+        erosionStages: { 'channels-solid': 2, channels: 4 } };
+    const before = structuredClone(rules);
+    assert.deepEqual(recordErosionRules(rules, 264), { mode: 'channels-solid', erosionStrength: .1, erosionEvents: 35 });
+    assert.deepEqual(recordErosionRules({ ...rules, mode: 'channels' }, 264), { mode: 'channels', erosionStrength: .1, erosionEvents: 53 });
+    assert.deepEqual(recordErosionRules(rules, 64), { mode: 'channels-solid', erosionStrength: .1, erosionEvents: 8 });
+    const recorded = restoreErosionRules(recordErosionRules(rules, 264));
+    assert.equal(resolveErosionEvents(264, recorded), 35);
+    assert.equal(resolveErosionEvents(64, recorded), 12); // The smaller palette has only 12 soil colors.
+    assert.deepEqual(rules, before);
+    const original = recordErosionRules({ mode: 'channels-solid', erosionStrength: .1 }, 264);
+    assert.equal(original.erosionEvents, 52);
+    assert.deepEqual(recordErosionRules({ ...rules, mode: 'legacy' }, 264), { mode: 'legacy', erosionStrength: .1 });
 });
 
 test('four acceleration stops adapt to palette and mode and never slow erosion below original', () => {

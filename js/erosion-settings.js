@@ -36,6 +36,17 @@ export function resolveErosionEvents(paletteLength, rules) {
         ? Math.min(span, rules.erosionEvents) : span;
 }
 
+// Recipes store resolved counts, independent of future UI station definitions.
+// Preferences keep their original relative or per-mode settings.
+export function recordErosionRules(rules, paletteLength) {
+    return {
+        mode: rules.mode,
+        erosionStrength: rules.erosionStrength,
+        ...(EROSION_CHANNEL_MODES.includes(rules.mode)
+            ? { erosionEvents: resolveErosionEvents(paletteLength, rules) } : {})
+    };
+}
+
 // Missing fields in old recordings must reset new options, not inherit preferences.
 export function restoreErosionRules(value) {
     return {
