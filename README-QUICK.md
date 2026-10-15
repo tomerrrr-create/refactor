@@ -22,7 +22,7 @@ node --test tests/*.test.mjs
 
 - iPhone: open in Safari, Share → Add to Home Screen (enable Open as Web App if offered).
 - Android: open in Chrome, menu → Install app / Add to Home screen.
-- After the first complete online load, the installed app also works offline. The home-screen icon is a quiet golden eclipse.
+- After the first complete online load, the installed app also works offline. The home-screen icon uses the same green color-grid artwork as the sharing preview.
 - Updates wait for an explicit **Update** tap; save your drawing first. Closing all app tabs also permits a waiting version to activate.
 - Browser and installed-app storage can be separate on iOS. Export/import the settings TXT to transfer preferences; export the drawing separately.
 
