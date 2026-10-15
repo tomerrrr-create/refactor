@@ -6,7 +6,6 @@ Start with [README-QUICK.md](README-QUICK.md) for a short overview and code map.
 
 ## Contents
 
-- [Run and check](#run-and-check)
 - [Using the app](#using-the-app)
 - [Project structure](#1-project-structure)
 - [State management and rendering](#2-state-management-and-rendering)
@@ -17,25 +16,7 @@ Start with [README-QUICK.md](README-QUICK.md) for a short overview and code map.
 - [Additional systems and maintenance](#7-additional-systems-and-maintenance)
 - [Art logger and macro replay](#8-art-logger-and-macro-replay)
 
-## Run and check
 
-The application uses vanilla JavaScript ES modules, HTML5 Canvas, Tailwind CSS and custom CSS. There is no build step, package installation or application backend required for local use. The Tailwind styling runtime is bundled locally, and image export uses Canvas directly. An online first load installs the resources needed for subsequent offline use.
-
-From the repository root:
-
-```bash
-python3 -m http.server 8000
-```
-
-Open `http://localhost:8000`; use HTTP rather than opening `index.html` directly. Any static host can serve the application. `.idx/dev.nix` also defines an HTTP preview for the development environment.
-
-Run the Node tests from the same directory:
-
-```bash
-node --test tests/*.test.mjs
-```
-
-The tests cover gestures, brush/color synchronization, preferences, sorting cycles, erosion, history and macro compatibility. Browser checks remain important for touch/mouse behavior, native sharing and layout.
 
 ## Using the app
 
@@ -520,8 +501,6 @@ Canvas painting is blocked while `isMacroPlaying` is true. Board clicks during p
 `armSimulation` can cancel a loaded macro when the user manually arms an evolution while paused. Playback sets `isExecutingMacroCommand` to bypass that kill switch and suppress duplicate logging. Do not assume every possible button interaction cancels a running macro; check the handler and its playback guards.
 
 ### Maintenance checklist
-
-Development convention: use `work` for changes and `main` for merged releases.
 
 1. Keep internal IDs stable when renaming or redesigning controls. Chi Flow's ID is `sandpile`; spiral IDs such as `left` and `black_hole` retain compatibility despite their newer displayed names.
 2. Record actual rules and relevant generation targets for behavior changes. Add a replay handler as well as the recording event.
