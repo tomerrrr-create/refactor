@@ -1,6 +1,7 @@
-import { readSettingsProfiles, saveProfileSettings, renameSettingsProfile, PROFILE_COUNT, PROFILE_NAME_LIMIT } from './settings-profiles.js';
+import { readSettingsProfiles, saveProfileSettings, renameSettingsProfile, PROFILE_NAME_LIMIT, createSettingsProfile, readSelectedProfile, selectSettingsProfile } from './settings-profiles.js';
 
 export function initializeSettingsProfiles({ getText, getCurrentLang, captureSettingsText, applySettingsText }) {
+    let active = readSelectedProfile();
     const host = document.getElementById('settingsProfiles');
     const rows = document.getElementById('settingsProfileRows');
     const status = document.getElementById('settingsProfilesStatus');
@@ -19,6 +20,7 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
     }
     function renderApplyFeedback() {
         const applying = applyFeedback?.phase === 'pending';
+        document.getElementById('btnAddProfile').disabled = busy || applying;
         rows.querySelectorAll('[data-profile-apply]').forEach(button => {
             const index = Number(button.dataset.profileApply);
             const phase = applyFeedback?.index === index ? applyFeedback.phase : '';
@@ -29,6 +31,13 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
             button.setAttribute('aria-label', `${getText(key)}: ${label(index)}`);
             button.querySelector('.profile-apply-feedback').textContent = phase === 'success' ? '✓' : '';
         });
+        rows.querySelectorAll('[data-profile-select]').forEach(button => {
+            const chosen = Number(button.dataset.profileSelect) === active;
+            button.setAttribute('aria-checked', String(chosen));
+            button.querySelector('.profile-selection-marker').textContent = chosen ? '◉' : '○';
+            button.closest('.settings-profile-row').classList.toggle('profile-selected', chosen);
+            button.disabled = busy || applying;
+        });
         rows.querySelectorAll('[data-profile-options]').forEach(button => { button.disabled = busy || applying; });
     }
     function refresh() {
@@ -36,14 +45,16 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
         catch { profiles = []; showStatus('profiles_storage_error'); }
         dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         rows.replaceChildren();
-        for (let index = 0; index < PROFILE_COUNT; index++) {
+        for (let index = 0; index < profiles.length; index++) {
+            if (!profiles[index]?.settingsText) continue;
             const row = document.createElement('div'); row.className = 'settings-profile-row';
             const filled = Boolean(profiles[index]?.settingsText);
             row.dataset.filled = String(filled);
             const name = document.createElement('span'); name.className = 'settings-profile-name'; name.textContent = label(index); name.dir = 'auto';
-            const state = document.createElement('span'); state.className = 'settings-profile-state';
-            state.textContent = getText(filled ? 'profile_ready' : 'profile_empty');
-            const info = document.createElement('div'); info.className = 'settings-profile-info'; info.append(name, state);
+            const info = document.createElement('button'); info.type = 'button'; info.className = 'settings-profile-info profile-select';
+            info.dataset.profileSelect = index; info.setAttribute('role', 'radio');
+            const marker = document.createElement('span'); marker.className = 'profile-selection-marker'; marker.setAttribute('aria-hidden', 'true');
+            info.append(marker, name);
             const apply = document.createElement('button'); apply.type = 'button'; apply.className = 'profile-apply'; apply.dataset.profileApply = index;
             const applyLabel = document.createElement('span'); applyLabel.className = 'profile-apply-label'; applyLabel.textContent = getText('profile_apply');
             const feedback = document.createElement('span'); feedback.className = 'profile-apply-feedback'; feedback.setAttribute('aria-hidden', 'true');
@@ -59,6 +70,9 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
                     const current = readSettingsProfiles()[index];
                     if (!current.settingsText) throw new Error('Profile is empty');
                     const stored = applySettingsText(current.settingsText);
+                    active = index;
+                    const selectedStored = selectSettingsProfile(index);
+                    if (!selectedStored) showStatus('settings_loaded_session');
                     applyFeedback = stored ? { index, phase: 'success' } : null;
                     if (stored) feedbackTimer = setTimeout(() => { applyFeedback = null; renderApplyFeedback(); }, 1500);
                     else showStatus('settings_loaded_session');
@@ -68,6 +82,7 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
                     if (host.closest('dialog')?.open) rows.querySelector(`[data-profile-apply="${index}"]`)?.focus({ preventScroll: true });
                 }
             };
+            info.onclick = () => apply.click();
             const options = document.createElement('button'); options.type = 'button'; options.className = 'profile-options'; options.dataset.profileOptions = index;
             options.textContent = filled ? '⋯' : '+'; options.disabled = busy; options.setAttribute('aria-haspopup', 'dialog');
             const optionsLabel = `${getText(filled ? 'profile_options' : 'profile_setup')}: ${label(index)}`;
@@ -120,6 +135,27 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
         if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
     });
     dialog.addEventListener('close', () => rows.querySelector(`[data-profile-options="${selected}"]`)?.focus());
+    const add = document.getElementById('btnAddProfile');
+    const newForm = document.getElementById('profileNameForm');
+    const newName = document.getElementById('profileName');
+    newName.maxLength = PROFILE_NAME_LIMIT;
+    function closeNewForm() { newForm.hidden = true; add.setAttribute('aria-expanded', 'false'); newName.value = ''; }
+    add.onclick = () => {
+        newForm.hidden = !newForm.hidden;
+        add.setAttribute('aria-expanded', String(!newForm.hidden));
+        if (!newForm.hidden) newName.focus();
+    };
+    document.getElementById('btnCancelProfile').onclick = () => { closeNewForm(); add.focus(); };
+    newForm.addEventListener('submit', event => {
+        event.preventDefault();
+        if (!newName.value.trim()) { newName.focus(); return; }
+        try {
+            active = createSettingsProfile(newName.value, captureSettingsText());
+            const stored = selectSettingsProfile(active);
+            closeNewForm(); refresh(); showStatus(stored ? 'profile_saved' : 'settings_loaded_session');
+            rows.querySelector(`[data-profile-select="${active}"]`)?.focus();
+        } catch { showStatus('profiles_storage_error'); }
+    });
     refresh();
-    return { refresh };
+    return { refresh, closeNewForm, clearSelection() { active = null; selectSettingsProfile(null); refresh(); } };
 }

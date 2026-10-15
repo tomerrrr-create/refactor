@@ -1822,6 +1822,7 @@ if (simulationName === 'magnet') {
         const storedSort = persistSortCycle(sortCycleMethods);
         const storedWorkspace = persistWorkspaceSettings(settings);
         const storedSmooth = persistSmoothRendering(settings.smoothing.display);
+        modals.clearProfileSelection();
         modals.refreshLocalizedModalText();
         return storedStartup && storedInit && storedSort && storedWorkspace && storedSmooth;
       }

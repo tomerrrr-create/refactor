@@ -1437,6 +1437,7 @@ export function initializeModals(appContext) {
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
         settingsProfilesUI.refresh();
+        settingsProfilesUI.closeNewForm();
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
@@ -2003,6 +2004,7 @@ function saveMagnetSettings() {
 
 return {
         refreshLocalizedModalText,
+        clearProfileSelection: () => settingsProfilesUI.clearSelection(),
         closeModalSlowly,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,

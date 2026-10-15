@@ -538,3 +538,11 @@ Install FYI from Safari on iPhone (Share → Add to Home Screen) or Chrome on An
 The home-screen icon uses the same green color-grid artwork as the sharing preview. Updates are offered with a small **Update** control; export your drawing before accepting, because the app reloads. Local preferences remain intact. Browser and installed-app storage may be separate on iOS; transfer preferences with the settings TXT and drawings with the project export.
 
 Maintenance: styling and boot resources are local. After changing app assets or the worker, run `node tools/update-pwa-cache.mjs` and `node --test tests/*.test.mjs`. This generates a scoped offline resource list and content-based cache version. The worker installs a complete snapshot before offering an update and removes only older FYI caches for the same URL scope.
+
+## Local profiles
+
+The technician menu includes a Profiles list. Use + to save the current settings under a name; select a row to load that snapshot through the existing settings importer. The selected row has a radio marker and highlighted border. Profiles and the last selection survive closing and reopening in the same browser/site storage. Saving creates a new snapshot; later edits do not overwrite it or change the last-selected marker. Reopening does not reapply the snapshot over subsequent preference edits.
+
+Loading preserves the drawing and retains the existing distinction between immediate preferences and startup/initialization settings. Loading an external settings file or restoring defaults clears the selection, while keeping the saved profiles. Existing settings TXT import/export remains available in Save for transferring individual settings snapshots; the local profile list is not included. Clearing site data removes local profiles.
+
+Implementation: `js/settings-profiles.js` and `js/settings-profiles-ui.js` stores validated settings-file snapshots and selection in `colorGridSettingsProfiles` and `colorGridSelectedProfile`, and binds the technician controls through the existing modal context. No evolution engine or settings-file format changes are required.

@@ -9,6 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  profile_add: { en: "Save current settings as a profile", he: "שמירת ההגדרות הנוכחיות כפרופיל", ru: "Сохранить текущие настройки как профиль", nl: "Huidige instellingen als profiel opslaan" },
   profiles_title: { en: 'Profiles', he: 'פרופילים', ru: 'Профили', nl: 'Profielen' },
   profile_default_name: { en: 'Profile {n}', he: 'פרופיל {n}', ru: 'Профиль {n}', nl: 'Profiel {n}' },
   profile_apply: { en: 'Apply', he: 'הפעלה', ru: 'Применить', nl: 'Toepassen' },

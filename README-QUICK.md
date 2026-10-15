@@ -55,3 +55,11 @@ Preferences live in `localStorage`; saved creations are explicit exports. Macro 
 Preserve internal IDs and compatibility with existing JSON projects and TXT recipes. UI names can differ from engine IDs: Chi Flow uses `sandpile`. Update all four languages when changing interface text. Defaults are distributed across constants, preference modules and `app.js`.
 
 Engines have different mutation, allocation and gold-cell behavior. Preserve their existing buffer reuse and profile substantial engine changes on large boards. Changes to interactions or evolution rules need recording/playback checks as well as the relevant tests.
+
+## Local profiles
+
+The technician menu includes a Profiles list. Use + to save the current settings under a name; select a row to load that snapshot through the existing settings importer. The selected row has a radio marker and highlighted border. Profiles and the last selection survive closing and reopening in the same browser/site storage. Saving creates a new snapshot; later edits do not overwrite it or change the last-selected marker. Reopening does not reapply the snapshot over subsequent preference edits.
+
+Loading preserves the drawing and retains the existing distinction between immediate preferences and startup/initialization settings. Loading an external settings file or restoring defaults clears the selection, while keeping the saved profiles. Existing settings TXT import/export remains available in Save for transferring individual settings snapshots; the local profile list is not included. Clearing site data removes local profiles.
+
+Implementation: `js/settings-profiles.js` and `js/settings-profiles-ui.js` stores validated settings-file snapshots and selection in `colorGridSettingsProfiles` and `colorGridSelectedProfile`, and binds the technician controls through the existing modal context. No evolution engine or settings-file format changes are required.
