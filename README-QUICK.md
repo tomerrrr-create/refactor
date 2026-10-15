@@ -1,62 +1,40 @@
-# Follow Your Intuition — Quick Guide
+**# Follow Your Intuition — Quick Guide**
 
-A browser-based canvas for meditative pixel art and evolving color patterns. Draw on a square grid, explore palettes and their ordering, then run an **evolution** continuously or one generation at a time. The interface supports touch and mouse; English is the primary language, alongside Hebrew, Russian and Dutch.
+A browser-based canvas for meditative pixel art and evolving color patterns. Draw on a square grid, explore palettes and their ordering, then run an **\*\*evolution\*\*** continuously or one generation at a time. The interface supports touch and mouse; English is the primary language, alongside Hebrew, Russian and Dutch.
 
-For interaction details, engine explanations and maintenance guidance, read the [extended guide](Readme.md).
+For interaction details, engine explanations and maintenance guidance, read the [extended guide]\(Readme.md).
 
-## Run and check
 
-This is a static application: vanilla JavaScript ES modules, HTML5 Canvas, Tailwind CSS and custom CSS. There is no build step or application backend. Serve the repository over HTTP:
 
-```bash
-python3 -m http.server 8000
-```
+**## Main interactions**
 
-Open `http://localhost:8000`. Styling is bundled locally; normal use and exports do not require a CDN. Tests use Node's built-in runner:
+\- **\*\*Create:\*\*** paint, connect points with the gold brush mode, or drag to copy. Palette sorting preserves the board's visible colors and the selected paint color while changing their palette indices.
+\- **\*\*Choose:\*\*** tap palette/color/sort controls to cycle; swipe or drag upward to open their pickers. Hold the color control for 600 ms to select the first palette entry, or 1,200 ms total for rainbow painting.
+\- **\*\*Evolve:\*\*** select an evolution, then use Single step or Play/Pause. Hold any evolution button for a short explanation above the board; WTF opens help, while another tap or key dismisses the explanation. Swipe the selected, paused evolution upward for supported settings. Running discrete mode cycles skip Off; paused cycles include it. Breathe is a separate visual animation and pauses when its mode changes.
+\- **\*\*Customize:\*\*** select and reorder the sorting cycle. Game of Life and Chi Flow each have three configurable cycle positions, distinguished by zero, one or two stars. Free one position, then fill it before saving. **\*\*Yours\*\*** keeps the last personal rules independently; Cancel discards modal edits.
+\- **\*\*Configure:\*\*** the technician menu is available inside WTF/help or by swiping upward on the evolution-entry control. It configures startup preferences and the board/brush used by the initialization hold.
+\- **\*\*Save:\*\*** the save modal exports PNG images, JSON board projects and TXT action recipes/macros, and loads JSON/TXT. Reset recipe clears the recorded journey and captures the current board as its new beginning.
 
-```bash
-node --test tests/*.test.mjs
-```
+Preferences live in \`localStorage\`; saved creations are explicit exports. Macro playback uses recorded rule values and generation targets, including mode changes. Random processes can produce different pixels; playback must not overwrite saved preferences.
 
-## Install FYI
+**## Code map**
 
-- iPhone: open in Safari, Share → Add to Home Screen (enable Open as Web App if offered).
-- Android: open in Chrome, menu → Install app / Add to Home screen.
-- After the first complete online load, the installed app also works offline. The home-screen icon uses the same green color-grid artwork as the sharing preview.
-- Updates wait for an explicit **Update** tap; save your drawing first. Closing all app tabs also permits a waiting version to activate.
-- Browser and installed-app storage can be separate on iOS. Export/import the settings TXT to transfer preferences; export the drawing separately.
+\| Area | Files |
+\| --- | --- |
+\| Board, rendering, history, playback, Nudge | \`js/app.js\` |
+\| Layout, SVG icons and styles | \`index.html\`, \`styles.css\`, \`js/dom-elements.js\` |
+\| Modals, gestures and preset membership | \`js/ui-modals.js\`, \`js/picker-gestures.js\`, \`js/preset-cycle-membership.js\` |
+\| Palettes, sorting, defaults and presets | \`js/data/palettes.js\`, \`js/colors.js\`, \`js/constants.js\` |
+\| Evolution engines | \`js/simulations.js\`, \`js/simulations/\` |
+\| Preferences and languages | \`js/\*-settings.js\`, \`js/i18n.js\` |
 
-After changing HTML, CSS, JS, icons, the manifest, or the worker, run `node tools/update-pwa-cache.mjs`, then the tests. The cache-version test prevents stale offline releases. The worker caches only this app's resources and never clears preferences or other sites' caches.
+**## Maintenance essentials**
 
-## Main interactions
-
-- **Create:** paint, connect points with the gold brush mode, or drag to copy. Palette sorting preserves the board's visible colors and the selected paint color while changing their palette indices.
-- **Choose:** tap palette/color/sort controls to cycle; swipe or drag upward to open their pickers. Hold the color control for 600 ms to select the first palette entry, or 1,200 ms total for rainbow painting.
-- **Evolve:** select an evolution, then use Single step or Play/Pause. Hold any evolution button for a short explanation above the board; WTF opens help, while another tap or key dismisses the explanation. Swipe the selected, paused evolution upward for supported settings. Running discrete mode cycles skip Off; paused cycles include it. Breathe is a separate visual animation and pauses when its mode changes.
-- **Customize:** select and reorder the sorting cycle. Game of Life and Chi Flow each have three configurable cycle positions, distinguished by zero, one or two stars. Free one position, then fill it before saving. **Yours** keeps the last personal rules independently; Cancel discards modal edits.
-- **Configure:** the technician menu is available inside WTF/help or by swiping upward on the evolution-entry control. It configures startup preferences and the board/brush used by the initialization hold.
-- **Save:** the save modal exports PNG images, JSON board projects and TXT action recipes/macros, and loads JSON/TXT. Reset recipe clears the recorded journey and captures the current board as its new beginning.
-
-Preferences live in `localStorage`; saved creations are explicit exports. Macro playback uses recorded rule values and generation targets, including mode changes. Random processes can produce different pixels; playback must not overwrite saved preferences.
-
-## Code map
-
-| Area | Files |
-| --- | --- |
-| Board, rendering, history, playback, Nudge | `js/app.js` |
-| Layout, SVG icons and styles | `index.html`, `styles.css`, `js/dom-elements.js` |
-| Modals, gestures and preset membership | `js/ui-modals.js`, `js/picker-gestures.js`, `js/preset-cycle-membership.js` |
-| Palettes, sorting, defaults and presets | `js/data/palettes.js`, `js/colors.js`, `js/constants.js` |
-| Evolution engines | `js/simulations.js`, `js/simulations/` |
-| Preferences and languages | `js/*-settings.js`, `js/i18n.js` |
-
-## Maintenance essentials
-
-Preserve internal IDs and compatibility with existing JSON projects and TXT recipes. UI names can differ from engine IDs: Chi Flow uses `sandpile`. Update all four languages when changing interface text. Defaults are distributed across constants, preference modules and `app.js`.
+Preserve internal IDs and compatibility with existing JSON projects and TXT recipes. UI names can differ from engine IDs: Chi Flow uses \`sandpile\`. Update all four languages when changing interface text. Defaults are distributed across constants, preference modules and \`app.js\`.
 
 Engines have different mutation, allocation and gold-cell behavior. Preserve their existing buffer reuse and profile substantial engine changes on large boards. Changes to interactions or evolution rules need recording/playback checks as well as the relevant tests.
 
-## Three settings profiles
+**## Three settings profiles**
 
 At the top of technicians, 1 / 2 / 3 select three fixed profiles. Each profile keeps a saved baseline and an independent working draft. A star marks a draft that differs from its saved settings; switching away and back restores the draft, not the saved baseline. Stars on other profiles stay visible. All three drafts, baselines and the selection survive reopening in the same browser/site storage. On first use, profile 1 is selected and all three start with the current effective user preferences.
 
