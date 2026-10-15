@@ -38,9 +38,11 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
         rows.replaceChildren();
         for (let index = 0; index < PROFILE_COUNT; index++) {
             const row = document.createElement('div'); row.className = 'settings-profile-row';
+            const filled = Boolean(profiles[index]?.settingsText);
+            row.dataset.filled = String(filled);
             const name = document.createElement('span'); name.className = 'settings-profile-name'; name.textContent = label(index); name.dir = 'auto';
             const state = document.createElement('span'); state.className = 'settings-profile-state';
-            state.textContent = getText(profiles[index]?.settingsText ? 'profile_ready' : 'profile_empty');
+            state.textContent = getText(filled ? 'profile_ready' : 'profile_empty');
             const info = document.createElement('div'); info.className = 'settings-profile-info'; info.append(name, state);
             const apply = document.createElement('button'); apply.type = 'button'; apply.className = 'profile-apply'; apply.dataset.profileApply = index;
             const applyLabel = document.createElement('span'); applyLabel.className = 'profile-apply-label'; applyLabel.textContent = getText('profile_apply');
@@ -67,8 +69,9 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
                 }
             };
             const options = document.createElement('button'); options.type = 'button'; options.className = 'profile-options'; options.dataset.profileOptions = index;
-            options.textContent = '⋯'; options.disabled = busy; options.setAttribute('aria-haspopup', 'dialog');
-            options.setAttribute('aria-controls', dialog.id); options.setAttribute('aria-label', `${getText('profile_options')}: ${label(index)}`);
+            options.textContent = filled ? '⋯' : '+'; options.disabled = busy; options.setAttribute('aria-haspopup', 'dialog');
+            const optionsLabel = `${getText(filled ? 'profile_options' : 'profile_setup')}: ${label(index)}`;
+            options.setAttribute('aria-controls', dialog.id); options.setAttribute('aria-label', optionsLabel); options.title = optionsLabel;
             options.onclick = () => {
                 selected = index; title.textContent = label(index); nameInput.value = profiles[index]?.name || '';
                 dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr'; dialog.showModal();

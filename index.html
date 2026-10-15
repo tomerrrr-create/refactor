@@ -548,6 +548,11 @@
       <p class="technician-eyebrow">DEBUG / 001</p>
       <h2 id="technicianTitle" data-debug-text="debug_title"></h2>
       <p id="technicianSubtitle" data-debug-text="debug_subtitle"></p>
+      <section id="settingsProfiles" class="settings-profiles" aria-labelledby="settingsProfilesTitle">
+        <h3 id="settingsProfilesTitle" data-profile-text="profiles_title"></h3>
+        <div id="settingsProfileRows"></div>
+        <p id="settingsProfilesStatus" class="init-settings-note" role="status" aria-live="polite"></p>
+      </section>
       <label class="technician-option smooth-rendering-option">
         <span class="technician-option-heading"><bdi>smooth /</bdi><input id="smoothRenderingToggle" type="checkbox" role="switch" checked aria-describedby="smoothRenderingNote"></span>
         <span class="technician-option-title" data-debug-text="smooth_rendering"></span>
@@ -609,11 +614,6 @@
         </div>
         <p id="startupSettingsStatus" role="status" aria-live="polite"></p>
       </form>
-      <section id="settingsProfiles" class="settings-profiles" aria-labelledby="settingsProfilesTitle">
-        <h3 id="settingsProfilesTitle" data-profile-text="profiles_title"></h3>
-        <div id="settingsProfileRows"></div>
-        <p id="settingsProfilesStatus" class="init-settings-note" role="status" aria-live="polite"></p>
-      </section>
       <div class="technician-reset-section">
         <button id="btnResetWorkspace" type="button" class="technician-reset-button" aria-expanded="false" aria-controls="workspaceResetConfirmation" data-i18n-title="workspace_reset_title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

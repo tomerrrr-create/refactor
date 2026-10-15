@@ -14,6 +14,7 @@ export const translations = {
   profile_apply: { en: 'Apply', he: 'הפעלה', ru: 'Применить', nl: 'Toepassen' },
   profile_applying: { en: 'Applying settings', he: 'מחיל הגדרות', ru: 'Применение настроек', nl: 'Instellingen toepassen' },
   profile_options: { en: 'Profile options', he: 'אפשרויות פרופיל', ru: 'Параметры профиля', nl: 'Profielopties' },
+  profile_setup: { en: 'Set up profile', he: 'הגדרת פרופיל', ru: 'Настроить профиль', nl: 'Profiel instellen' },
   profile_empty: { en: 'Empty', he: 'ריק', ru: 'Пусто', nl: 'Leeg' },
   profile_ready: { en: 'Saved', he: 'שמור', ru: 'Сохранён', nl: 'Opgeslagen' },
   profile_save_current: { en: 'Save current settings', he: 'שמירת ההגדרות הנוכחיות', ru: 'Сохранить текущие настройки', nl: 'Huidige instellingen opslaan' },
