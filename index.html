@@ -564,8 +564,12 @@
           </div>
         </div>
         <div id="profileActions" class="profile-actions" hidden>
-          <button id="btnProfileStore" type="button" data-debug-text="profile_store"></button>
-          <button id="btnProfileLoad" type="button" data-debug-text="profile_load"></button>
+          <button id="btnProfileStore" type="button" data-profile-label="profile_store">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v16m-6-6 6 6 6-6"/></svg>
+          </button>
+          <button id="btnProfileLoad" type="button" data-profile-label="profile_load">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>
+          </button>
         </div>
         <input id="profileSettingsFile" type="file" accept=".txt,text/plain" hidden>
         <p id="profileStatus" class="init-settings-note" role="status" aria-live="polite"></p>
