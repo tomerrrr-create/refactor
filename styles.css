@@ -745,9 +745,9 @@ body {
 #board.glowing-border-rainbow::after {
   content: '';
   position: absolute;
-  inset: -7px;
+  inset: -17px;
   border: 1px solid var(--gold);
-  border-radius: 13px;
+  border-radius: 8px;
   box-shadow: 0 0 8px #ffd70022;
   pointer-events: none;
   opacity: 0;
