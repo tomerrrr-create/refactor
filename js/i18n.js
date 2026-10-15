@@ -12,6 +12,7 @@ export const translations = {
   profiles_title: { en: 'Profiles', he: 'פרופילים', ru: 'Профили', nl: 'Profielen' },
   profile_default_name: { en: 'Profile {n}', he: 'פרופיל {n}', ru: 'Профиль {n}', nl: 'Profiel {n}' },
   profile_apply: { en: 'Apply', he: 'הפעלה', ru: 'Применить', nl: 'Toepassen' },
+  profile_applying: { en: 'Applying settings', he: 'מחיל הגדרות', ru: 'Применение настроек', nl: 'Instellingen toepassen' },
   profile_options: { en: 'Profile options', he: 'אפשרויות פרופיל', ru: 'Параметры профиля', nl: 'Profielopties' },
   profile_empty: { en: 'Empty', he: 'ריק', ru: 'Пусто', nl: 'Leeg' },
   profile_ready: { en: 'Saved', he: 'שמור', ru: 'Сохранён', nl: 'Opgeslagen' },

@@ -12,13 +12,24 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
     const saveCurrent = document.getElementById('btnProfileSaveCurrent');
     const importFile = document.getElementById('btnProfileImport');
     let profiles = [], selected = null, pendingImport = null, statusKey = '', busy = false;
-    let toastTimer;
+    let applyFeedback = null, feedbackTimer;
     const label = index => profiles[index]?.name || getText('profile_default_name').replace('{n}', index + 1);
-    function showStatus(key, toast = false) {
-        clearTimeout(toastTimer);
+    function showStatus(key) {
         statusKey = key; status.textContent = key ? getText(key) : '';
-        status.classList.toggle('profile-toast', toast);
-        if (toast) toastTimer = setTimeout(() => showStatus(''), 3000);
+    }
+    function renderApplyFeedback() {
+        const applying = applyFeedback?.phase === 'pending';
+        rows.querySelectorAll('[data-profile-apply]').forEach(button => {
+            const index = Number(button.dataset.profileApply);
+            const phase = applyFeedback?.index === index ? applyFeedback.phase : '';
+            button.dataset.applyState = phase;
+            button.disabled = busy || applying || !profiles[index]?.settingsText;
+            button.setAttribute('aria-busy', String(phase === 'pending'));
+            const key = phase === 'pending' ? 'profile_applying' : phase === 'success' ? 'settings_aligned' : 'profile_apply';
+            button.setAttribute('aria-label', `${getText(key)}: ${label(index)}`);
+            button.querySelector('.profile-apply-feedback').textContent = phase === 'success' ? '✓' : '';
+        });
+        rows.querySelectorAll('[data-profile-options]').forEach(button => { button.disabled = busy || applying; });
     }
     function refresh() {
         try { profiles = readSettingsProfiles(); }
@@ -32,15 +43,28 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
             state.textContent = getText(profiles[index]?.settingsText ? 'profile_ready' : 'profile_empty');
             const info = document.createElement('div'); info.className = 'settings-profile-info'; info.append(name, state);
             const apply = document.createElement('button'); apply.type = 'button'; apply.className = 'profile-apply'; apply.dataset.profileApply = index;
-            apply.textContent = getText('profile_apply'); apply.disabled = busy || !profiles[index]?.settingsText;
-            apply.setAttribute('aria-label', `${getText('profile_apply')}: ${label(index)}`);
-            apply.onclick = () => {
+            const applyLabel = document.createElement('span'); applyLabel.className = 'profile-apply-label'; applyLabel.textContent = getText('profile_apply');
+            const feedback = document.createElement('span'); feedback.className = 'profile-apply-feedback'; feedback.setAttribute('aria-hidden', 'true');
+            apply.append(applyLabel, feedback);
+            apply.onclick = async () => {
+                if (applyFeedback?.phase === 'pending') return;
+                clearTimeout(feedbackTimer);
+                showStatus('');
+                applyFeedback = { index, phase: 'pending' }; renderApplyFeedback();
                 try {
+                    // Let the pending indicator paint before the existing synchronous import runs.
+                    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
                     const current = readSettingsProfiles()[index];
-                    if (!current.settingsText) return;
+                    if (!current.settingsText) throw new Error('Profile is empty');
                     const stored = applySettingsText(current.settingsText);
-                    showStatus(stored ? 'settings_aligned' : 'settings_loaded_session', true);
-                } catch { showStatus('settings_load_error'); }
+                    applyFeedback = stored ? { index, phase: 'success' } : null;
+                    if (stored) feedbackTimer = setTimeout(() => { applyFeedback = null; renderApplyFeedback(); }, 1500);
+                    else showStatus('settings_loaded_session');
+                } catch { applyFeedback = null; showStatus('settings_load_error'); }
+                finally {
+                    renderApplyFeedback();
+                    if (host.closest('dialog')?.open) rows.querySelector(`[data-profile-apply="${index}"]`)?.focus({ preventScroll: true });
+                }
             };
             const options = document.createElement('button'); options.type = 'button'; options.className = 'profile-options'; options.dataset.profileOptions = index;
             options.textContent = '⋯'; options.disabled = busy; options.setAttribute('aria-haspopup', 'dialog');
@@ -57,6 +81,7 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
         nameInput.placeholder = getText('profile_name'); nameInput.maxLength = PROFILE_NAME_LIMIT;
         if (dialog.open && selected !== null) title.textContent = label(selected);
         if (statusKey) status.textContent = getText(statusKey);
+        renderApplyFeedback();
     }
     function store(action, success) {
         try { action(); dialog.close(); showStatus(success); refresh(); }
