@@ -87,7 +87,7 @@ export function getEvolutionExplanation(simulation, lang) {
         evolutionExplanations[simulation]?.[0];
 }
 
-export function createEvolutionExplanation(host) {
+export function createEvolutionExplanation(host, { onHelp } = {}) {
     const panel = document.createElement('div');
     panel.className = 'evolution-explanation';
     panel.hidden = true;
@@ -96,11 +96,14 @@ export function createEvolutionExplanation(host) {
     panel.setAttribute('aria-modal', 'true');
     panel.setAttribute('aria-labelledby', 'evolutionExplanationTitle');
     panel.setAttribute('aria-describedby', 'evolutionExplanationText');
-    panel.innerHTML = '<div class="evolution-explanation-icon" aria-hidden="true"></div><h2 id="evolutionExplanationTitle"></h2><p id="evolutionExplanationText"></p>';
+    panel.innerHTML = '<div class="evolution-explanation-icon" aria-hidden="true"></div><h2 id="evolutionExplanationTitle"></h2><p id="evolutionExplanationText"></p><button type="button" class="evolution-explanation-help">WTF</button>';
     host.append(panel);
     const icon = panel.firstElementChild;
     const title = panel.querySelector('h2'), text = panel.querySelector('p');
+    const help = panel.querySelector('button');
+    help.hidden = !onHelp;
     let active = false, closing = false, faded = false, simulation, opener, timer, serial = 0;
+    let helpPointer = null, openHelpAfterFade = false;
     const pointers = new Set(), blockedPointers = new Set(), keys = new Set();
     function consume(event) { event.preventDefault(); event.stopImmediatePropagation(); }
     function refresh() {
@@ -117,6 +120,10 @@ export function createEvolutionExplanation(host) {
         panel.hidden = true;
         blockedPointers.clear();
         opener?.focus({ preventScroll: true });
+        if (openHelpAfterFade) {
+            openHelpAfterFade = false;
+            onHelp();
+        }
     }
     function close() {
         if (!active || closing) return;
@@ -130,12 +137,22 @@ export function createEvolutionExplanation(host) {
         if (!active) return;
         blockedPointers.add(event.pointerId);
         consume(event);
+        if (!closing && onHelp && event.target === help) {
+            helpPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+            return;
+        }
         close();
     }, true);
     function release(event) {
         pointers.delete(event.pointerId);
         // The opening hold must reach the gesture handler when released.
         if (blockedPointers.delete(event.pointerId)) consume(event);
+        if (helpPointer?.id === event.pointerId) {
+            openHelpAfterFade = event.type === 'pointerup' && event.target === help &&
+                Math.hypot(event.clientX - helpPointer.x, event.clientY - helpPointer.y) < 8;
+            helpPointer = null;
+            close();
+        }
         setTimeout(finish, 0);
     }
     document.addEventListener('pointerup', release, true);
@@ -143,12 +160,16 @@ export function createEvolutionExplanation(host) {
     document.addEventListener('click', event => {
         if (!active) return;
         consume(event);
-        if (event.detail === 0) close();
+        if (event.detail === 0) {
+            if (!closing && onHelp && event.target === help) openHelpAfterFade = true;
+            close();
+        }
     }, true);
     document.addEventListener('keydown', event => {
         if (!active) return;
         keys.add(event.code || event.key);
         consume(event);
+        if (!closing && onHelp && event.target === help && ['Enter', 'Space'].includes(event.code)) openHelpAfterFade = true;
         close();
     }, true);
     document.addEventListener('keyup', event => {
@@ -160,6 +181,7 @@ export function createEvolutionExplanation(host) {
         document.addEventListener(type, event => { if (active) consume(event); }, { capture: true, passive: false });
     }
     function abandon() {
+        helpPointer = null; openHelpAfterFade = false;
         pointers.clear(); blockedPointers.clear(); keys.clear();
         close(); finish();
     }
@@ -171,6 +193,7 @@ export function createEvolutionExplanation(host) {
             if (active || !evolutionExplanations[id]) return;
             simulation = id; opener = button;
             active = true; closing = faded = false;
+            helpPointer = null; openHelpAfterFade = false;
             clearTimeout(timer);
             icon.replaceChildren();
             const svgs = [...button.querySelectorAll(':scope > svg')];

@@ -1651,4 +1651,9 @@ button, .ctrl {
 .evolution-explanation-icon svg { width: clamp(64px, 14vw, 108px) !important; height: clamp(64px, 14vw, 108px) !important; color: #e3c677; filter: drop-shadow(0 0 16px #d5aa4826); }
 .evolution-explanation h2 { margin: 0; font: inherit; font-size: clamp(18px, 3.5vw, 24px); font-weight: 400; letter-spacing: .035em; }
 .evolution-explanation p { margin: 0; max-width: 30ch; color: #d5ccb5; font-size: clamp(13px, 2.7vw, 17px); line-height: 1.7; text-wrap: balance; }
+.evolution-explanation-help { align-self: flex-start; direction: ltr; min-width: 44px; min-height: 44px; padding: 8px 0; border: 0; background: transparent; color: #c3ac70; font: inherit; font-size: 12px; letter-spacing: .12em; text-decoration: underline; text-underline-offset: 5px; cursor: pointer; pointer-events: auto; }
+.evolution-explanation[dir="rtl"] .evolution-explanation-help { align-self: flex-end; }
+.evolution-explanation-help[hidden] { display: none; }
+.evolution-explanation-help:hover { color: #e3c677; }
+.evolution-explanation-help:focus-visible { outline: 1px solid #e3c677; outline-offset: 4px; border-radius: 3px; }
 @media (prefers-reduced-motion: reduce) { .evolution-explanation { transition: none; } }

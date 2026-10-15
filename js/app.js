@@ -4317,7 +4317,7 @@ bindPickerGestures(dom.btnColorPicker, {
         });
         // A swipe opens settings only for the selected, paused evolution.
         // Tap actions stay independent of that restriction.
-        const evolutionExplanation = createEvolutionExplanation(dom.boardCanvas.parentElement.parentElement);
+        const evolutionExplanation = createEvolutionExplanation(dom.boardCanvas.parentElement.parentElement, { onHelp: modals.openHelpModal });
         const evolutionPickers = [
             [dom.btnGameOfLife, 'gameOfLife', cycleGameOfLifeMode, modals.openGolSettingsModal],
             [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
