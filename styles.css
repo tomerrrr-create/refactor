@@ -1693,7 +1693,6 @@ button, .ctrl {
 .erosion-settings-dialog[open] { animation: save-reset-arrive .2s ease-out; }
 .erosion-settings-dialog h2 { margin: 0 0 24px; padding-inline-end: 28px; font-size: 21px; color: var(--gold); }
 .erosion-settings-dialog label { display: block; margin: 16px 0 10px; font-size: 14px; }
-.erosion-settings-dialog select { width: 100%; min-height: 44px; border: 1px solid #b28b3666; border-radius: 8px; padding: 8px; background: #1c1c1c; color: inherit; font: inherit; }
 .erosion-settings-dialog input { accent-color: var(--gold); }
 .erosion-events-row { display: flex; align-items: center; gap: 16px; }
 .erosion-events-row input { flex: 1; min-width: 0; direction: ltr; }
@@ -1703,3 +1702,8 @@ button, .ctrl {
 .erosion-settings-dialog p { font-size: 12px; color: #aaa99e; line-height: 1.6; margin: 10px 0; }
 .erosion-settings-dialog .init-settings-actions { margin-top: 24px; }
 @media (prefers-reduced-motion: reduce) { .erosion-settings-dialog[open] { animation: none; } }
+
+.erosion-mode-icons { display: flex; justify-content: center; align-items: center; gap: 28px; direction: ltr; }
+.erosion-mode-icons .cycle-slot-button { width: 48px; height: 48px; }
+.erosion-mode-icons svg { width: 32px; height: 32px; }
+.erosion-settings-dialog #erosionModeName { text-align: center; margin: 8px 0 22px; }

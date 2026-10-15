@@ -5,6 +5,7 @@ export function initializeErosionModal(app) {
     const dialog = document.getElementById('erosionSettingsDialog');
     const form = document.getElementById('erosionSettingsForm');
     const mode = document.getElementById('erosionMode');
+    const modeButtons = [...mode.querySelectorAll('[data-erosion-mode]')];
     const slider = document.getElementById('erosionEvents');
     const value = document.getElementById('erosionEventsValue');
     const settings = document.getElementById('erosionEventsSettings');
@@ -16,8 +17,16 @@ export function initializeErosionModal(app) {
             node.textContent = app.getText(node.dataset.erosionText);
         });
         document.getElementById('btnErosionClose').setAttribute('aria-label', app.getText('saveModal_close'));
+        mode.setAttribute('aria-label', app.getText('erosion_mode_label'));
+        modeButtons.forEach(button => {
+            const label = app.getText(button.dataset.erosionLabel);
+            button.title = label;
+            button.setAttribute('aria-label', label);
+            button.setAttribute('aria-pressed', String(button.dataset.erosionMode === draft?.mode));
+        });
         if (!draft) return;
-        mode.value = draft.mode;
+        const selected = modeButtons.find(button => button.dataset.erosionMode === draft.mode);
+        document.getElementById('erosionModeName').textContent = selected.title;
         settings.hidden = draft.mode === 'legacy';
         const count = resolveErosionEvents(app.getPaletteLength(), draft);
         const savedCount = !draft.erosionPace && Object.hasOwn(draft, 'erosionEvents');
@@ -33,7 +42,11 @@ export function initializeErosionModal(app) {
         document.getElementById('erosionEventsLimit').textContent = details;
     }
     function close() { dialog.close(); }
-    mode.addEventListener('change', () => { draft.mode = mode.value; render(); });
+    modeButtons.forEach(button => button.addEventListener('click', () => {
+        if (!draft) return;
+        draft.mode = button.dataset.erosionMode;
+        render();
+    }));
     slider.addEventListener('input', () => {
         const pace = Number(slider.value);
         delete draft.erosionEvents;
@@ -66,6 +79,6 @@ export function initializeErosionModal(app) {
         draft = app.getErosionRules();
         render();
         dialog.showModal();
-        mode.focus();
+        modeButtons.find(button => button.dataset.erosionMode === draft.mode).focus();
     };
 }

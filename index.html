@@ -1164,12 +1164,18 @@
   <form id="erosionSettingsForm">
     <button type="button" id="btnErosionClose" class="modal-dismiss" aria-label="Close">×</button>
     <h2 id="erosionSettingsTitle" data-erosion-text="erosion_settings_title"></h2>
-    <label for="erosionMode" data-erosion-text="erosion_mode_label"></label>
-    <select id="erosionMode">
-      <option value="legacy" data-erosion-text="erosion_legacy"></option>
-      <option value="channels-solid" data-erosion-text="erosion_solid"></option>
-      <option value="channels" data-erosion-text="erosion_channels"></option>
-    </select>
+    <div id="erosionMode" class="erosion-mode-icons" role="group">
+      <button type="button" class="cycle-slot-button" data-erosion-mode="legacy" data-erosion-label="erosion_legacy" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15 L12 9 L18 15"/></svg>
+      </button>
+      <button type="button" class="cycle-slot-button" data-erosion-mode="channels-solid" data-erosion-label="erosion_solid" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15a6 6 0 0 1 12 0"/></svg>
+      </button>
+      <button type="button" class="cycle-slot-button" data-erosion-mode="channels" data-erosion-label="erosion_channels" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 15l5-5 5 5 5-5 5 5"/></svg>
+      </button>
+    </div>
+    <p id="erosionModeName"></p>
     <section id="erosionEventsSettings">
       <label for="erosionEvents" data-erosion-text="erosion_pace_label"></label>
       <output id="erosionEventsValue" for="erosionEvents"></output>
