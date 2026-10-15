@@ -1,4 +1,12 @@
 export const EROSION_MODES = ['legacy', 'channels-solid', 'channels'];
+export const EROSION_CHANNEL_MODES = ['channels-solid', 'channels'];
+export const EROSION_STAGE_SYMBOLS = ['α', 'β', 'γ', 'δ', 'ε'];
+
+export function validErosionStages(stages) {
+    return stages !== null && typeof stages === 'object' && !Array.isArray(stages) &&
+        Object.entries(stages).every(([mode, stage]) => EROSION_CHANNEL_MODES.includes(mode) &&
+            Number.isInteger(stage) && stage >= 0 && stage <= 4);
+}
 
 export function erosionEarthSpan(paletteLength, mode) {
     return mode === 'channels'
@@ -11,8 +19,16 @@ export function erosionPaceEvents(paletteLength, mode, pace) {
     return Math.max(1, [span, Math.round(span * 2 / 3), Math.round(span / 3), 1][pace]);
 }
 
+export function erosionStageEvents(paletteLength, mode, stage) {
+    const span = erosionEarthSpan(paletteLength, mode);
+    return Math.max(1, Math.round(span * [1, 5 / 6, 2 / 3, 1 / 2, 1 / 3][stage]));
+}
+
 export function resolveErosionEvents(paletteLength, rules) {
     const span = erosionEarthSpan(paletteLength, rules.mode);
+    if (Object.hasOwn(rules.erosionStages ?? {}, rules.mode)) {
+        return erosionStageEvents(paletteLength, rules.mode, rules.erosionStages[rules.mode]);
+    }
     if ([1, 2, 3].includes(rules.erosionPace)) {
         return erosionPaceEvents(paletteLength, rules.mode, rules.erosionPace);
     }
@@ -28,13 +44,14 @@ export function restoreErosionRules(value) {
             && value.erosionStrength >= 0 && value.erosionStrength <= 1 ? value.erosionStrength : .1,
         ...(Number.isSafeInteger(value.erosionEvents) && value.erosionEvents > 0
             ? { erosionEvents: value.erosionEvents } : {}),
-        ...([1, 2, 3].includes(value.erosionPace) ? { erosionPace: value.erosionPace } : {})
+        ...([1, 2, 3].includes(value.erosionPace) ? { erosionPace: value.erosionPace } : {}),
+        ...(validErosionStages(value.erosionStages) ? { erosionStages: { ...value.erosionStages } } : {})
     };
 }
 
 export function erodedIndex(index, paletteLength, rules) {
     const forward = rules.mode === 'channels-solid';
-    if (![1, 2, 3].includes(rules.erosionPace) &&
+    if (!Object.hasOwn(rules.erosionStages ?? {}, rules.mode) && ![1, 2, 3].includes(rules.erosionPace) &&
         (!Number.isSafeInteger(rules.erosionEvents) || rules.erosionEvents < 1)) {
         return forward ? index + 1 : Math.max(0, index - 1);
     }

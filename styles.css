@@ -1707,3 +1707,8 @@ button, .ctrl {
 .erosion-mode-icons .cycle-slot-button { width: 48px; height: 48px; }
 .erosion-mode-icons svg { width: 32px; height: 32px; }
 .erosion-settings-dialog #erosionModeName { text-align: center; margin: 8px 0 22px; }
+
+/* Keep every mode's controls in place; legacy exposes the same disabled panel. */
+#erosionEventsSettings.erosion-settings-inactive { opacity: .38; }
+.erosion-settings-dialog #erosionModeName { min-height: 3.2em; }
+.erosion-settings-dialog #erosionEventsLimit { min-height: 3.2em; }

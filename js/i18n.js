@@ -9,6 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  erosion_pace_inactive: {"en": "Acceleration is not used in this mode.", "he": "האצת שחיקה אינה פעילה במצב זה.", "ru": "В этом режиме ускорение не используется.", "nl": "Versnelling wordt in deze modus niet gebruikt."},
   erosion_pace_label: {"en": "Erosion acceleration", "he": "האצת שחיקה", "ru": "Ускорение эрозии", "nl": "Erosieversnelling"},
   erosion_pace_original: {"en": "Original", "he": "מקורי", "ru": "Исходная", "nl": "Origineel"},
   erosion_pace_fast: {"en": "Fast", "he": "מהיר", "ru": "Быстро", "nl": "Snel"},
