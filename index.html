@@ -548,6 +548,28 @@
       <p class="technician-eyebrow">DEBUG / 001</p>
       <h2 id="technicianTitle" data-debug-text="debug_title"></h2>
       <p id="technicianSubtitle" data-debug-text="debug_subtitle"></p>
+      <section id="profileControls" class="profile-controls" aria-label="Profiles" data-i18n-label="profiles_title">
+        <div class="profile-buttons">
+          <div class="profile-slot">
+            <button type="button" class="profile-choice" data-profile-choice="0" aria-pressed="true">1<span class="profile-dirty" hidden aria-hidden="true">*</span></button>
+            <button type="button" class="profile-dot" data-profile-dot="0" aria-expanded="false" aria-controls="profileActions"><span aria-hidden="true">●</span></button>
+          </div>
+          <div class="profile-slot">
+            <button type="button" class="profile-choice" data-profile-choice="1" aria-pressed="false">2<span class="profile-dirty" hidden aria-hidden="true">*</span></button>
+            <button type="button" class="profile-dot" data-profile-dot="1" aria-expanded="false" aria-controls="profileActions" disabled><span aria-hidden="true">●</span></button>
+          </div>
+          <div class="profile-slot">
+            <button type="button" class="profile-choice" data-profile-choice="2" aria-pressed="false">3<span class="profile-dirty" hidden aria-hidden="true">*</span></button>
+            <button type="button" class="profile-dot" data-profile-dot="2" aria-expanded="false" aria-controls="profileActions" disabled><span aria-hidden="true">●</span></button>
+          </div>
+        </div>
+        <div id="profileActions" class="profile-actions" hidden>
+          <button id="btnProfileStore" type="button" data-debug-text="profile_store"></button>
+          <button id="btnProfileLoad" type="button" data-debug-text="profile_load"></button>
+        </div>
+        <input id="profileSettingsFile" type="file" accept=".txt,text/plain" hidden>
+        <p id="profileStatus" class="init-settings-note" role="status" aria-live="polite"></p>
+      </section>
       <label class="technician-option smooth-rendering-option">
         <span class="technician-option-heading"><bdi>smooth /</bdi><input id="smoothRenderingToggle" type="checkbox" role="switch" checked aria-describedby="smoothRenderingNote"></span>
         <span class="technician-option-title" data-debug-text="smooth_rendering"></span>

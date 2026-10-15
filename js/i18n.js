@@ -9,6 +9,16 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  profiles_title: {"en": "Profiles", "he": "פרופילים", "ru": "Профили", "nl": "Profielen"},
+  profile_number: {"en": "Profile {n}", "he": "פרופיל {n}", "ru": "Профиль {n}", "nl": "Profiel {n}"},
+  profile_modified: {"en": "Modified settings", "he": "הגדרות ששונו", "ru": "Изменённые настройки", "nl": "Gewijzigde instellingen"},
+  profile_actions: {"en": "Actions for profile {n}", "he": "פעולות לפרופיל {n}", "ru": "Действия профиля {n}", "nl": "Acties voor profiel {n}"},
+  profile_store: {"en": "Save current settings to this profile", "he": "שמירת ההגדרות הנוכחיות בפרופיל", "ru": "Сохранить текущие настройки в профиль", "nl": "Huidige instellingen in dit profiel opslaan"},
+  profile_load: {"en": "Load settings file into this profile", "he": "טעינת קובץ הגדרות לפרופיל", "ru": "Загрузить файл настроек в профиль", "nl": "Instellingenbestand in dit profiel laden"},
+  profile_saved: {"en": "Profile saved", "he": "הפרופיל נשמר", "ru": "Профиль сохранён", "nl": "Profiel opgeslagen"},
+  profile_session_only: {"en": "For this session; browser storage is unavailable.", "he": "לכניסה זו; הדפדפן לא הצליח לשמור את הפרופילים.", "ru": "На этот сеанс; хранилище браузера недоступно.", "nl": "Voor deze sessie; browseropslag is niet beschikbaar."},
+  profile_replay_busy: {"en": "Finish macro playback before changing profiles.", "he": "יש לסיים את ניגון המאקרו לפני שינוי פרופילים.", "ru": "Завершите воспроизведение макроса перед сменой профиля.", "nl": "Voltooi de macro voordat je van profiel wisselt."},
+
   pwa_update_ready: { en: "New version ready. Save your work before updating.", he: "גרסה חדשה מוכנה. יש לשמור את העבודה לפני העדכון.", ru: "Новая версия готова. Сохраните работу перед обновлением.", nl: "Nieuwe versie klaar. Sla je werk op voordat je bijwerkt." },
   pwa_update: { en: "Update", he: "עדכון", ru: "Обновить", nl: "Bijwerken" },
   startup_palette_picker_title: { en: "Startup palette", he: "פלטת פתיחה", ru: "Начальная палитра", nl: "Startpalet" },
