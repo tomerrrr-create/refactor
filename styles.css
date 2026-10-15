@@ -752,13 +752,13 @@ body {
   }
 }
 @keyframes glow-border-rainbow {
-  0% { box-shadow: 0 0 12px 4px #ff0000; }
-  16% { box-shadow: 0 0 12px 4px #ff7f00; }
-  33% { box-shadow: 0 0 12px 4px #ffff00; }
-  50% { box-shadow: 0 0 12px 4px #00ff00; }
-  66% { box-shadow: 0 0 12px 4px #0000ff; }
-  83% { box-shadow: 0 0 12px 4px #4b0082; }
-  100% { box-shadow: 0 0 12px 4px #8f00ff; }
+  0% { box-shadow: 0 0 12px 4px var(--rainbow-glow-0); }
+  16% { box-shadow: 0 0 12px 4px var(--rainbow-glow-1); }
+  33% { box-shadow: 0 0 12px 4px var(--rainbow-glow-2); }
+  50% { box-shadow: 0 0 12px 4px var(--rainbow-glow-3); }
+  66% { box-shadow: 0 0 12px 4px var(--rainbow-glow-4); }
+  83% { box-shadow: 0 0 12px 4px var(--rainbow-glow-5); }
+  100% { box-shadow: 0 0 12px 4px var(--rainbow-glow-6); }
 }
 
 .rtl-mode {
