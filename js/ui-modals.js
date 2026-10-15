@@ -1,5 +1,7 @@
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
+import { initializeSettingsProfiles } from './settings-profiles-ui.js';
+import { showSettingsImportTransition } from './settings-import-transition.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
@@ -36,6 +38,7 @@ function handlePaletteWheel(e) {
 }
 
 let app;
+let settingsProfilesUI;
 
 // --- Internal Helper Functions ---
 
@@ -228,6 +231,7 @@ function refreshLocalizedModalText() {
     }
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
+    settingsProfilesUI?.refresh();
 }
 
 function closeChiFlowSettingsModal() {
@@ -1426,9 +1430,18 @@ export function initializeModals(appContext) {
     });
     let technicianReturnFocus = app.dom.btnOpenDebug;
     const smoothRenderingToggle = document.getElementById('smoothRenderingToggle');
+    settingsProfilesUI = initializeSettingsProfiles({
+        getText: app.getText, getCurrentLang: app.getCurrentLang,
+        captureSettingsText: app.captureSettingsText, applySettingsText: app.applySettingsText,
+        onApplied: stored => {
+            app.dom.technicianDialog.close();
+            showSettingsImportTransition(app.dom.board, app.getText('settings_aligned'), stored ? '' : app.getText('settings_session_only'));
+        }
+    });
     smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
+        settingsProfilesUI.refresh();
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;

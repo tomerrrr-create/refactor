@@ -4067,6 +4067,8 @@ else if (action.eventName === 'Invert Colors') {
                 return persistSortCycle(sortCycleMethods);
             },
             dom, C, getText, getCurrentLang, performAction, getSymmetricIndices, applyActionToTiles,
+            captureSettingsText: () => serializeWorkspaceSettings(getWorkspaceSettings()),
+            applySettingsText: text => importWorkspaceSettings(deserializeWorkspaceSettings(text)),
             getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
             isNudgeReplayActive: () => isMacroLoaded,
             setNudgeInterval, persistNudgeSettings,
