@@ -1645,10 +1645,16 @@ button, .ctrl {
 .pwa-update button:focus-visible { outline: 2px solid #ffe7a0; }
 
 /* A quiet explanation above the board; input is consumed until dismissal ends. */
-.evolution-explanation { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 3vw, 24px); box-sizing: border-box; padding: clamp(18px, 5vw, 44px); background: rgba(5, 6, 5, .76); color: #e3c677; text-align: center; opacity: 0; transition: opacity 650ms ease; pointer-events: none; outline: none; }
+.evolution-explanation { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 3vw, 24px); box-sizing: border-box; padding: clamp(18px, 5vw, 44px); color: #e3c677; text-align: center; opacity: 0; transition: opacity 650ms ease; pointer-events: none; outline: none; }
+.evolution-explanation::before { content: ''; position: fixed; inset: 0; z-index: -1; background: rgba(5, 6, 5, .76); pointer-events: none; }
 .evolution-explanation[hidden] { display: none; }
 .evolution-explanation.is-visible { opacity: 1; }
-.evolution-explanation-icon svg { width: clamp(64px, 14vw, 108px) !important; height: clamp(64px, 14vw, 108px) !important; color: #e3c677; filter: drop-shadow(0 0 16px #d5aa4826); }
+.evolution-explanation-icon svg { width: clamp(64px, 14vw, 108px) !important; height: clamp(64px, 14vw, 108px) !important; color: var(--gold); filter: drop-shadow(0 0 6px #ffd70066) drop-shadow(0 0 20px #ffb84038); }
 .evolution-explanation h2 { margin: 0; font: inherit; font-size: clamp(18px, 3.5vw, 24px); font-weight: 400; letter-spacing: .035em; }
 .evolution-explanation p { margin: 0; max-width: 30ch; color: #d5ccb5; font-size: clamp(13px, 2.7vw, 17px); line-height: 1.7; text-wrap: balance; }
+.evolution-explanation-help { align-self: flex-start; direction: ltr; min-width: 44px; min-height: 44px; padding: 8px 0; border: 0; background: transparent; color: #c3ac70; font: inherit; font-size: 12px; letter-spacing: .12em; text-decoration: underline; text-underline-offset: 5px; cursor: pointer; pointer-events: auto; }
+.evolution-explanation[dir="rtl"] .evolution-explanation-help { align-self: flex-end; }
+.evolution-explanation-help[hidden] { display: none; }
+.evolution-explanation-help:hover { color: #e3c677; }
+.evolution-explanation-help:focus-visible { outline: 1px solid #e3c677; outline-offset: 4px; border-radius: 3px; }
 @media (prefers-reduced-motion: reduce) { .evolution-explanation { transition: none; } }
