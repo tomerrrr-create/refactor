@@ -1,6 +1,6 @@
 import { readSettingsProfiles, saveProfileSettings, renameSettingsProfile, PROFILE_COUNT, PROFILE_NAME_LIMIT } from './settings-profiles.js';
 
-export function initializeSettingsProfiles({ getText, getCurrentLang, captureSettingsText, applySettingsText, onApplied }) {
+export function initializeSettingsProfiles({ getText, getCurrentLang, captureSettingsText, applySettingsText }) {
     const host = document.getElementById('settingsProfiles');
     const rows = document.getElementById('settingsProfileRows');
     const status = document.getElementById('settingsProfilesStatus');
@@ -12,8 +12,14 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
     const saveCurrent = document.getElementById('btnProfileSaveCurrent');
     const importFile = document.getElementById('btnProfileImport');
     let profiles = [], selected = null, pendingImport = null, statusKey = '', busy = false;
+    let toastTimer;
     const label = index => profiles[index]?.name || getText('profile_default_name').replace('{n}', index + 1);
-    function showStatus(key) { statusKey = key; status.textContent = key ? getText(key) : ''; }
+    function showStatus(key, toast = false) {
+        clearTimeout(toastTimer);
+        statusKey = key; status.textContent = key ? getText(key) : '';
+        status.classList.toggle('profile-toast', toast);
+        if (toast) toastTimer = setTimeout(() => showStatus(''), 3000);
+    }
     function refresh() {
         try { profiles = readSettingsProfiles(); }
         catch { profiles = []; showStatus('profiles_storage_error'); }
@@ -33,8 +39,7 @@ export function initializeSettingsProfiles({ getText, getCurrentLang, captureSet
                     const current = readSettingsProfiles()[index];
                     if (!current.settingsText) return;
                     const stored = applySettingsText(current.settingsText);
-                    showStatus(stored ? 'profile_applied' : 'settings_loaded_session');
-                    onApplied(stored);
+                    showStatus(stored ? 'settings_aligned' : 'settings_loaded_session', true);
                 } catch { showStatus('settings_load_error'); }
             };
             const options = document.createElement('button'); options.type = 'button'; options.className = 'profile-options'; options.dataset.profileOptions = index;

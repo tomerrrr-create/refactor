@@ -1,7 +1,6 @@
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
 import { initializeSettingsProfiles } from './settings-profiles-ui.js';
-import { showSettingsImportTransition } from './settings-import-transition.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
@@ -1432,11 +1431,7 @@ export function initializeModals(appContext) {
     const smoothRenderingToggle = document.getElementById('smoothRenderingToggle');
     settingsProfilesUI = initializeSettingsProfiles({
         getText: app.getText, getCurrentLang: app.getCurrentLang,
-        captureSettingsText: app.captureSettingsText, applySettingsText: app.applySettingsText,
-        onApplied: stored => {
-            app.dom.technicianDialog.close();
-            showSettingsImportTransition(app.dom.board, app.getText('settings_aligned'), stored ? '' : app.getText('settings_session_only'));
-        }
+        captureSettingsText: app.captureSettingsText, applySettingsText: app.applySettingsText
     });
     smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
