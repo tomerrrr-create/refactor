@@ -205,7 +205,9 @@ export function createEvolutionExplanation(host, { onHelp } = {}) {
                     // Some variants use CSS on the control rather than SVG attributes.
                     const style = getComputedStyle(originals[index]);
                     for (const property of ['display', 'visibility', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'opacity']) {
-                        const value = style.getPropertyValue(property).replace(/url\(["']?[^)]*#([^"')]+)["']?\)/g, 'url(#$1)');
+                        let value = style.getPropertyValue(property);
+                        // Preserve geometry and mode visibility, not the control's on/off color.
+                        if ((property === 'fill' || property === 'stroke') && value !== 'none') value = 'var(--gold)';
                         node.style.setProperty(property, value);
                     }
                 });
