@@ -1822,7 +1822,6 @@ if (simulationName === 'magnet') {
         const storedSort = persistSortCycle(sortCycleMethods);
         const storedWorkspace = persistWorkspaceSettings(settings);
         const storedSmooth = persistSmoothRendering(settings.smoothing.display);
-        modals.clearProfileSelection();
         modals.refreshLocalizedModalText();
         return storedStartup && storedInit && storedSort && storedWorkspace && storedSmooth;
       }
@@ -4068,8 +4067,6 @@ else if (action.eventName === 'Invert Colors') {
                 return persistSortCycle(sortCycleMethods);
             },
             dom, C, getText, getCurrentLang, performAction, getSymmetricIndices, applyActionToTiles,
-            captureSettingsText: () => serializeWorkspaceSettings(getWorkspaceSettings()),
-            applySettingsText: text => importWorkspaceSettings(deserializeWorkspaceSettings(text)),
             getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
             isNudgeReplayActive: () => isMacroLoaded,
             setNudgeInterval, persistNudgeSettings,

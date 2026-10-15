@@ -1,6 +1,5 @@
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
-import { initializeSettingsProfiles } from './settings-profiles-ui.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { DEFAULT_STARTUP } from './startup-settings.js';
@@ -37,7 +36,6 @@ function handlePaletteWheel(e) {
 }
 
 let app;
-let settingsProfilesUI;
 
 // --- Internal Helper Functions ---
 
@@ -230,7 +228,6 @@ function refreshLocalizedModalText() {
     }
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
-    settingsProfilesUI?.refresh();
 }
 
 function closeChiFlowSettingsModal() {
@@ -1429,15 +1426,9 @@ export function initializeModals(appContext) {
     });
     let technicianReturnFocus = app.dom.btnOpenDebug;
     const smoothRenderingToggle = document.getElementById('smoothRenderingToggle');
-    settingsProfilesUI = initializeSettingsProfiles({
-        getText: app.getText, getCurrentLang: app.getCurrentLang,
-        captureSettingsText: app.captureSettingsText, applySettingsText: app.applySettingsText
-    });
     smoothRenderingToggle.addEventListener('change', () => app.setSmoothRendering(smoothRenderingToggle.checked));
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
-        settingsProfilesUI.refresh();
-        settingsProfilesUI.closeNewForm();
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
@@ -1449,8 +1440,6 @@ export function initializeModals(appContext) {
         initForm.hidden = true;
         initToggle.setAttribute('aria-expanded', 'false');
         app.dom.technicianDialog.showModal();
-        app.dom.technicianDialog.scrollTop = 0;
-        document.getElementById('btnTechnicianCloseTop').focus({ preventScroll: true });
     }
     app.dom.btnOpenDebug.addEventListener('click', () => openTechnicianMenu());
     initToggle.addEventListener('click', () => {
@@ -2004,7 +1993,6 @@ function saveMagnetSettings() {
 
 return {
         refreshLocalizedModalText,
-        clearProfileSelection: () => settingsProfilesUI.clearSelection(),
         closeModalSlowly,
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
