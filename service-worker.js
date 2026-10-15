@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = 'b03427b95d8fc20bf8be';
+const VERSION = 'dfb276e13a0282d67423';
 const ASSETS = [
     "./",
     "./index.html",
@@ -43,7 +43,8 @@ const ASSETS = [
     "./icons/fyi-eclipse-180.png",
     "./icons/fyi-eclipse-192.png",
     "./icons/fyi-eclipse-512.png",
-    "./icons/fyi-eclipse-maskable-512.png"
+    "./icons/fyi-eclipse-maskable-512.png",
+    "./icons/fyi-social-preview.png"
 ];
 const SCOPE = new URL(self.registration.scope);
 const CACHE_PREFIX = 'fyi-pwa-' + encodeURIComponent(SCOPE.pathname) + '-';
