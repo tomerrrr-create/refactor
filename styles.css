@@ -746,9 +746,14 @@ body {
   content: '';
   position: absolute;
   inset: -17px;
-  border: 1px solid var(--gold);
+  border: 1px solid transparent;
   border-radius: 8px;
-  box-shadow: 0 0 8px #ffd70022;
+  background-image: var(--rainbow-frame-pattern, linear-gradient(var(--gold), var(--gold)));
+  background-size: 100% 100%;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
   pointer-events: none;
   opacity: 0;
   animation: rainbow-frame-pulse 3s ease-in-out 2;
