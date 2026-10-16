@@ -23,7 +23,7 @@ function harness() {
         dom: { sortIconGroup: {}, btnGap: { setAttribute() {} } },
         modals: {}, window: { logArtEvent() {} }, n: 1, separatorPx: 0,
         updateGlowEffect() {}, updateColorPickerButtonUI() {}, updatePaletteHeader() {},
-        updateSortButtonUI() {}, updateErosionButtonUI() {}, applySeparator() {}, updateSymmetryUI() {}, renderToScreen() {},
+        updateSortButtonUI() {}, updateSeparatorButtonUI() {}, updateErosionButtonUI() {}, applySeparator() {}, updateSymmetryUI() {}, renderToScreen() {},
         getText: key => key, spiralMode: 'off', spiralRules: {}
     });
     vm.runInContext('function palette() { return C.PALETTES[activePaletteIndex].colors; }', ctx);

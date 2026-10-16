@@ -9,6 +9,10 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  separator_cycle_title: { en: "Separator cycle", he: "סייקל מפרידים", ru: "Цикл разделителей", nl: "Cyclus van tussenruimtes" },
+  separator_cycle_note: { en: "Choose widths in pixels. 0 removes separators.", he: "בחרו עוביים בפיקסלים. 0 מבטל את המפרידים.", ru: "Выберите толщину в пикселях. 0 убирает разделители.", nl: "Kies breedtes in pixels. 0 verwijdert de tussenruimtes." },
+  separator_cycle_required: { en: "Choose at least one width.", he: "בחרו לפחות עובי אחד.", ru: "Выберите хотя бы одну толщину.", nl: "Kies minstens één breedte." },
+
   soft_bloom_intensity: {"en": "Glow intensity", "he": "עוצמת ההילה", "ru": "Интенсивность свечения", "nl": "Sterkte van de gloed"},
   display_settings_title: {"en": "Display & effects", "he": "תצוגה ואפקטים", "ru": "Отображение и эффекты", "nl": "Weergave en effecten"},
   soft_bloom_title: {"en": "Soft Bloom", "he": "הילה רכה", "ru": "Мягкое свечение", "nl": "Zachte gloed"},

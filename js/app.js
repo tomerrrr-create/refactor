@@ -1,3 +1,4 @@
+import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth } from './separator-cycle.js';
 import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
@@ -289,6 +290,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let activePaletteIndex = 0;
       let n = 7;
       let separatorPx = 2;
+      let separatorCycle = [...DEFAULT_SEPARATOR_CYCLE];
       let isSmoothRendering = DEFAULT_SMOOTH_RENDERING;
       let isSoftBloom = DEFAULT_SOFT_BLOOM, softBloomIntensity = DEFAULT_BLOOM_INTENSITY, softBloom;
       let isBrushModeOn = true; 
@@ -721,9 +723,15 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         dom.btnPalette.setAttribute('aria-label', label);
       }
       
+      function updateSeparatorButtonUI() {
+          const label = `${getText('tooltip_gap')}: ${separatorPx}`;
+          dom.btnGap.title = label;
+          dom.btnGap.setAttribute('aria-label', label);
+          dom.gapValue.textContent = String(separatorPx);
+      }
+
       function applySeparator() {
-          dom.btnGap.title = getText('tooltip_gap');
-          dom.btnGap.setAttribute('aria-label', getText('tooltip_gap'));
+          updateSeparatorButtonUI();
           renderToScreen(null); 
       }
 
@@ -753,10 +761,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
       function cycleSeparator() {
           performAction(() => {
-            const seq = C.SEPARATORS;
-            let idx = seq.indexOf(separatorPx);
-            if (idx === -1) { idx = seq.indexOf(seq.reduce((p, c) => (Math.abs(c - separatorPx) < Math.abs(p - separatorPx) ? c : p))); }
-            separatorPx = seq[(idx + 1) % seq.length];
+            separatorPx = nextSeparatorWidth(separatorPx, separatorCycle);
             window.logArtEvent('SEPARATOR_CHANGE', separatorPx);
             applySeparator();
           });
@@ -1791,6 +1796,7 @@ if (simulationName === 'magnet') {
         return {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
+            ...(separatorCycle.join() === DEFAULT_SEPARATOR_CYCLE.join() ? {} : { separatorCycle: [...separatorCycle] }),
             smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked,
                 bloom: isSoftBloom, bloomIntensity: softBloomIntensity },
             brush: { size: brushSize, mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
@@ -1802,6 +1808,7 @@ if (simulationName === 'magnet') {
 
       // Applies preferences only. No board, palette, sort, history or macro state is restored.
       function applyWorkspacePreferences(settings) {
+        separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
         spiralRules = { ...settings.rules.spiral };
         magnetRules = { ...settings.rules.magnet };
@@ -2179,6 +2186,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
       }
 
       function updateAllUIText() {
+        updateSeparatorButtonUI();
         C.PALETTES.forEach(p => {
             if (!p.originalName) p.originalName = p.name; 
             const key = Object.keys(translations).find(k => translations[k].en === p.originalName);
@@ -3319,8 +3327,7 @@ function applyHistorySettings(settings) {
     }
     if (separatorPx !== settings.separatorPx) {
         separatorPx = settings.separatorPx;
-        dom.btnGap.title = getText('tooltip_gap');
-        dom.btnGap.setAttribute('aria-label', getText('tooltip_gap'));
+        updateSeparatorButtonUI();
         changed = true;
     }
     if (changed) {
@@ -4129,6 +4136,14 @@ else if (action.eventName === 'Invert Colors') {
             refreshProfiles: () => settingsProfiles?.refresh(),
             isSimulationMode: () => isSimModeActive,
             SORT_MODES,
+            getSeparatorCycle: () => [...separatorCycle],
+            setSeparatorCycle: values => {
+                const normalized = normalizeSeparatorCycle(values);
+                if (!normalized || isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
+                separatorCycle = normalized;
+                settingsProfiles?.scheduleCapture();
+                return true;
+            },
             getSortCycleMethods: () => [...sortCycleMethods],
             saveSortCycleMethods: methods => {
                 sortCycleMethods = normalizeSortCycle(methods);
@@ -4368,7 +4383,16 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnResizeUp.addEventListener('click', (e) => handleCtrlClick(e, () => resizeGrid(true)));
         dom.btnResizeDown.addEventListener('click', (e) => handleCtrlClick(e, () => resizeGrid(false)));
         dom.btnSave.addEventListener('click', (e) => handleCtrlClick(e, openSaveModalWithPreview));
-        dom.btnGap.addEventListener('click', (e) => handleCtrlClick(e, cycleSeparator));
+        bindPickerGestures(dom.btnGap, {
+            onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
+            canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'),
+            beforeStart: hideLongPressDisplay
+        });
+        dom.btnGap.addEventListener('keydown', event => {
+            if (event.altKey && event.key === 'ArrowDown') {
+                event.preventDefault(); modals.openSeparatorCycleModal();
+            }
+        });
         dom.btnBrushMode.addEventListener('click', (e) => handleCtrlClick(e, toggleBrushMode));
         dom.btnUndo.addEventListener('click', (e) => handleCtrlClick(e, undo));
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));

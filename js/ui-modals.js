@@ -1,3 +1,4 @@
+import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
@@ -1182,6 +1183,7 @@ let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית
 
 export function initializeModals(appContext) {
     app = appContext;
+    const openSeparatorCycleModal = initializeSeparatorCycleModal(app);
     const openErosionSettingsModal = initializeErosionModal(app);
     const helpTabs = [...document.querySelectorAll('[data-help-tab]')];
     helpTabs.forEach((button, index) => {
@@ -2047,6 +2049,7 @@ return {
         showSaveStatus, clearSaveStatus,
         openTechnicianMenu,
         openSortCycleModal,
+        openSeparatorCycleModal,
         openResizeModal,
         openNudgeSettingsModal,
         openErosionSettingsModal,
