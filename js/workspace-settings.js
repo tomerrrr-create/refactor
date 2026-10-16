@@ -31,6 +31,7 @@ function mergeKnown(defaults, overrides, path = '') {
     for (const [key, value] of Object.entries(overrides)) {
         // Optional extension; V1’s original baseline stays unchanged.
         if (path === '' && ['separatorCycle', 'simulationTheme'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
         if (!Object.hasOwn(defaults, key)) throw new Error('Unknown settings field: ' + key);

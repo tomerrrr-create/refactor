@@ -204,6 +204,7 @@ export const translations = {
   "startup_fill_dark": { en: "Darkest color", he: "הצבע הכהה ביותר", ru: "Самый тёмный цвет", nl: "Donkerste kleur" },
   "startup_fill_light": { en: "Lightest color", he: "הצבע הבהיר ביותר", ru: "Самый светлый цвет", nl: "Lichtste kleur" },
   "startup_fill_seed": { en: "Gold seed on dark", he: "זרע זהב על רקע כהה", ru: "Золотое семя на тёмном", nl: "Gouden zaad op donker" },
+  "startup_color_first": { en: "First palette color", he: "הצבע הראשון בפלטה", ru: "Первый цвет палитры", nl: "Eerste paletkleur" },
   "startup_color_none": { en: "No fixed color", he: "ללא צבע קבוע", ru: "Без фиксированного цвета", nl: "Geen vaste kleur" },
   "startup_color_darkest": { en: "Darkest color", he: "הצבע הכהה ביותר", ru: "Самый тёмный цвет", nl: "Donkerste kleur" },
   "startup_color_lightest": { en: "Lightest color", he: "הצבע הבהיר ביותר", ru: "Самый светлый цвет", nl: "Lichtste kleur" },

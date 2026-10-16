@@ -2114,9 +2114,10 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 applySeparator();
                 goDark();
                 const currentPalette = palette();
-                const lightestIndex = currentPalette.length - 1;
-                selectedColor = currentPalette[lightestIndex];
-                selectedColorIndex = lightestIndex;
+                const colorChoice = simulationInitSettings.brushColor || 'last';
+                selectedColorIndex = colorChoice === 'first' ? 0 : colorChoice === 'lightest'
+                    ? currentPalette.indexOf(sortColorsArray(currentPalette, 'luminance').at(-1)) : currentPalette.length - 1;
+                selectedColor = currentPalette[selectedColorIndex];
 
                 brushSize = simulationInitSettings.brushSize;
                 const brushSizeSlider = document.getElementById('brushSizeSlider');
@@ -2127,7 +2128,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
 
                 isRainbowModeActive = false;
-                symmetryMode = 'kaleidoscope';
+                symmetryMode = simulationInitSettings.symmetry || 'kaleidoscope';
                 updateSymmetryUI();
                 updateColorPickerButtonUI();
                 updateGlowEffect();
@@ -4469,7 +4470,7 @@ applySortMethod,
         const brightnessOrder = sortColorsArray(palette(), 'luminance');
         const darkestIndex = palette().indexOf(brightnessOrder[0]);
         const lightestIndex = palette().indexOf(brightnessOrder.at(-1));
-        selectedColorIndex = startupSettings.brushColor === 'darkest' ? darkestIndex :
+        selectedColorIndex = startupSettings.brushColor === 'first' ? 0 : startupSettings.brushColor === 'darkest' ? darkestIndex :
             startupSettings.brushColor === 'lightest' ? lightestIndex : -1;
         selectedColor = selectedColorIndex >= 0 ? palette()[selectedColorIndex] : null;
         initializeBoardAndCanvas(true);

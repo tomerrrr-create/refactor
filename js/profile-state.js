@@ -60,8 +60,17 @@ export function defaultProfileSnapshots(initial) {
     for (const method of ['rainbow-fold', 'zig-zag']) {
         if (!profiles[1].settings.sortCycle.includes(method)) profiles[1].settings.sortCycle.push(method);
     }
-    profiles[2].settings.startup.brushSize = 1;
-    profiles[2].settings.brush.size = 1;
+    for (const [index, size] of [1, 11, 3].entries()) {
+        profiles[index].settings.simulationInit.brushSize = size;
+        profiles[index].settings.startup.brushSize = size;
+        profiles[index].settings.brush.size = size;
+    }
+    Object.assign(profiles[1].settings.simulationInit, { symmetry: 'off', brushColor: 'first' });
+    profiles[1].settings.startup.symmetry = 'off';
+    profiles[1].settings.brush.symmetry = 'off';
+    profiles[1].settings.startup.brushColor = 'first';
+    profiles[2].settings.simulationInit.brushColor = 'lightest';
+    profiles[2].settings.startup.brushColor = 'lightest';
     return profiles.map(validateProfileSnapshot);
 }
 
@@ -97,7 +106,7 @@ function mergeChanges(draft, previous, current) {
 
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
-    let state = { version: 1, defaultsVersion: 1, selected: 0,
+    let state = { version: 1, defaultsVersion: 2, selected: 0,
         profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
@@ -108,10 +117,10 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 1, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 2, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
-            if (value.defaultsVersion !== 1) {
+            if (!value.defaultsVersion) {
                 const baseline = state.profiles[0].saved;
                 const defaults = defaultProfileSnapshots(baseline);
                 for (let index = 0; index < 3; index++) {
@@ -124,6 +133,26 @@ export function createProfileState(initial, storage) {
                             if (!Object.hasOwn(value.profiles[index][kind].settings, 'simulationTheme')) {
                                 profile[kind].settings.simulationTheme = ['blue', 'gold', 'teal'][index];
                             }
+                        }
+                    }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 2) {
+                // Upgrade only previous default values; retain explicit personal overrides.
+                for (const [index, profile] of state.profiles.entries()) {
+                    for (const kind of ['saved', 'draft']) {
+                        const settings = profile[kind].settings;
+                        const size = [1, 11, 3][index];
+                        if (settings.simulationInit.brushSize === 7) settings.simulationInit.brushSize = size;
+                        if (settings.brush.size === 1) settings.brush.size = size;
+                        if (settings.startup.brushSize === 1) settings.startup.brushSize = size;
+                        if (index === 1) {
+                            settings.simulationInit.symmetry ??= 'off';
+                            settings.simulationInit.brushColor ??= 'first';
+                        }
+                        if (index === 2) settings.simulationInit.brushColor ??= 'lightest';
+                        if (index > 0 && settings.startup.brushColor === 'none') {
+                            settings.startup.brushColor = index === 1 ? 'first' : 'lightest';
                         }
                     }
                 }
