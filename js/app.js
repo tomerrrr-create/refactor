@@ -569,7 +569,7 @@ let offscreenRenderCanvas = null;
 let offscreenRenderCtx = null;
 let cachedImgData = null; // משתנה למניעת דליפת זיכרון!
 
-function renderBoard(targetCtx, width, height, timestamp = performance.now(), smooth = false) {
+function renderBoard(targetCtx, width, height, timestamp = performance.now(), smooth = false, renderSeparatorPx = separatorPx) {
     if (isLifePlaying && armedSimulation === 'breathe' && randomBreatheSession) {
         randomBreatheSession.update(Math.max(0, (timestamp ?? performance.now()) - breatheStartTime));
     }
@@ -582,7 +582,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
     // ---------------------------------------------------------
     // נתיב אולטרה-מהיר: מצב סימולציה (בלי מרווחים - separatorPx === 0)
     // ---------------------------------------------------------
-    if (separatorPx === 0) {
+    if (renderSeparatorPx === 0) {
         if (!offscreenRenderCanvas) {
             offscreenRenderCanvas = document.createElement('canvas');
             offscreenRenderCtx = offscreenRenderCanvas.getContext('2d', { willReadFrequently: true });
@@ -659,7 +659,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
     targetCtx.fillStyle = '#000000';
     targetCtx.fillRect(0, 0, width, height);
 
-    const totalGapSize = (n - 1) * separatorPx;
+    const totalGapSize = (n - 1) * renderSeparatorPx;
     const tileSize = (width - totalGapSize) / n;
 
     for (let i = 0; i < n * n; i++) {
@@ -696,8 +696,8 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         targetCtx.fillStyle = finalColor;
         const row = Math.floor(i / n);
         const col = i % n;
-        const x = col * (tileSize + separatorPx);
-        const y = row * (tileSize + separatorPx);
+        const x = col * (tileSize + renderSeparatorPx);
+        const y = row * (tileSize + renderSeparatorPx);
         
         targetCtx.fillRect(x, y, tileSize, tileSize);
     }
@@ -1747,7 +1747,11 @@ if (simulationName === 'magnet') {
             offscreenCtx.fillRect(0, 0, exportSize, exportSize);
             offscreenCtx.save();
             offscreenCtx.translate(borderSize, borderSize);
-            renderBoard(offscreenCtx, drawingAreaSize, drawingAreaSize, null, smoothExport);
+            // Match the on-screen proportions only for separated PNG exports.
+            // Pass a local width: never alter the board's stored separator value.
+            const exportSeparatorPx = separatorPx > 0 && canvas.clientWidth > 0
+                ? separatorPx * drawingAreaSize / canvas.clientWidth : separatorPx;
+            renderBoard(offscreenCtx, drawingAreaSize, drawingAreaSize, null, smoothExport, exportSeparatorPx);
             offscreenCtx.restore();
             resolve();
         }, 50));
