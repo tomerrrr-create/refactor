@@ -2,7 +2,7 @@ import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth } 
 import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
-import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from './smooth-rendering-settings.js';
+import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, isSmoothDisplayAvailable } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
 import { updateRainbowFrame } from './rainbow-frame.js';
@@ -707,7 +707,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
       function renderToScreen(timestamp) {
         if (!ctx || !canvas) return;
-        renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp, isSmoothRendering);
+        renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp, isSmoothRendering && isSmoothDisplayAvailable(n, separatorPx));
         softBloom?.draw();
       }
 
@@ -2082,7 +2082,6 @@ function handlePointerDownCtrl(e) {
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
 
 
-            if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
         }, C.LONG_PRESS_SHOW_MS);
       }
 
@@ -4197,6 +4196,7 @@ else if (action.eventName === 'Invert Colors') {
                 settingsProfiles?.scheduleCapture();
             },
             getSmoothRendering: () => isSmoothRendering,
+            isSmoothDisplayAvailable: () => isSmoothDisplayAvailable(n, separatorPx),
             setSmoothRendering: value => {
                 isSmoothRendering = Boolean(value);
                 persistSmoothRendering(isSmoothRendering);
@@ -4380,8 +4380,13 @@ bindPickerGestures(dom.btnPalette, {
 
         dom.btnResetBoard.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(resetToGoldAndDefaultPalette)));
         dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
-        dom.btnResizeUp.addEventListener('click', (e) => handleCtrlClick(e, () => resizeGrid(true)));
-        dom.btnResizeDown.addEventListener('click', (e) => handleCtrlClick(e, () => resizeGrid(false)));
+        for (const [button, increase] of [[dom.btnResizeUp, true], [dom.btnResizeDown, false]]) {
+            bindPickerGestures(button, {
+                onTap: () => resizeGrid(increase), onOpen: modals.openResizeModal,
+                canInteract: () => !isBreathing,
+                beforeStart: hideLongPressDisplay
+            });
+        }
         dom.btnSave.addEventListener('click', (e) => handleCtrlClick(e, openSaveModalWithPreview));
         bindPickerGestures(dom.btnGap, {
             onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
@@ -4485,7 +4490,7 @@ if (dom.btnSimSettings) {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 

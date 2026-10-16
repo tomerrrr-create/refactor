@@ -1333,7 +1333,7 @@ button, .ctrl {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
 }
-#btnPalette, #btnColorPicker, #btnCycleSort,
+#btnPalette, #btnColorPicker, #btnCycleSort, #btnResizeUp, #btnResizeDown,
 #btnGameOfLife, #btnGravitationalSort, #btnContour, #btnSpiral,
 #btnMagnetModes, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker {
   touch-action: none !important;
@@ -1770,3 +1770,17 @@ button, .ctrl {
 .separator-cycle-options button[aria-pressed="true"] { border-color: #e3c677; background: #d5aa4820; color: #ffe7a0; }
 .separator-cycle-options button:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 3px; }
 #separatorCycleStatus { min-height: 1.5em; }
+
+.smooth-rendering-option.smooth-unavailable { opacity: .45; cursor: help; }
+#smoothUnavailableDialog .modal-dismiss { background: transparent; }
+
+#smoothUnavailablePrompt { white-space: pre-line; }
+
+.resize-size-controls { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 12px; direction: ltr; }
+.resize-size-step { display: grid; place-items: center; width: 44px; height: 44px; color: var(--gold); border: 1px solid #d5aa4840; border-radius: 8px; background: transparent; }
+.resize-size-step svg { width: 24px; height: 24px; }
+.resize-size-step:hover:not(:disabled) { background: #d5aa481a; border-color: var(--gold); }
+.resize-size-step:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.resize-size-step:disabled { opacity: .35; cursor: default; }
+#resizeInput { min-width: 0; appearance: textfield; -moz-appearance: textfield; }
+#resizeInput::-webkit-inner-spin-button, #resizeInput::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
