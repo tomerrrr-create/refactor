@@ -1856,8 +1856,13 @@ button, .ctrl {
 .guide-welcome[hidden], [data-guide-content][hidden] { display:none; }
 .guide-welcome h2 { margin:16px 0 12px; color:#f3dfab; font-size:clamp(25px,5vw,34px); line-height:1.3; }
 .guide-welcome > p { margin:0 0 24px; color:#c3b99e; font-size:14px; line-height:1.7; }
-.guide-ripple-tile { position:relative; display:grid; place-items:center; width:100%; height:clamp(210px,42dvh,380px); padding:0; overflow:hidden; border:1px solid #b28b3659; border-radius:18px; background:#0b100f; color:#f3dfab; font:inherit; cursor:crosshair; touch-action:manipulation; }
+.guide-ripple-tile { position:relative; display:grid; place-items:center; width:100%; height:clamp(210px,42dvh,380px); padding:0; overflow:hidden; border:1px solid #b28b3659; border-radius:18px; background:#100e09; color:#f3dfab; font:inherit; cursor:crosshair; touch-action:manipulation; }
 .guide-ripple-tile canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-.guide-ripple-tile span { position:relative; padding:12px 24px; border:1px solid #e3c67750; border-radius:100px; background:#0b100fc9; font-size:18px; pointer-events:none; }
+.guide-ripple-tile span { position:relative; padding:12px 24px; border:1px solid #e3c67750; border-radius:100px; background:#100e09c9; font-size:18px; pointer-events:none; }
 .guide-welcome .guide-welcome-hint { margin:18px 0 24px; font-size:12px; color:#a79872; }
+.guide-welcome .quick-start-footer { min-height:46px; }
+.guide-welcome .quick-start-footer [data-guide-begin] { background:#191811; border-color:#b28b3659; color:#c3b99e; animation:guideBeginReveal .8s ease-out both; }
+.guide-welcome .quick-start-footer [data-guide-begin][hidden] { display:none; }
+@keyframes guideBeginReveal { from { opacity:0; } to { opacity:1; } }
+@media (prefers-reduced-motion:reduce) { .guide-welcome .quick-start-footer [data-guide-begin] { animation:none; } }
 @media (max-height:650px) { .guide-welcome h2 { margin-top:6px; font-size:23px; } .guide-welcome > p { margin-bottom:14px; } .guide-ripple-tile { height:clamp(160px,32dvh,220px); } .guide-welcome .guide-welcome-hint { margin:12px 0; } }

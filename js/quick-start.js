@@ -322,7 +322,7 @@ export function initializeQuickStart() {
   const welcome = dialog.querySelector('[data-guide-welcome]'), content = dialog.querySelector('[data-guide-content]');
   const tile = dialog.querySelector('[data-guide-tile]'), begin = dialog.querySelector('[data-guide-begin]');
   const ripples = createGuideRipples(dialog.querySelector('[data-guide-canvas]'));
-  let welcoming = true;
+  let welcoming = true, touches = 0;
   function showPage() {
     welcome.hidden = !welcoming; content.hidden = welcoming;
     dialog.classList.toggle('is-welcome', welcoming);
@@ -332,11 +332,14 @@ export function initializeQuickStart() {
     if (welcoming) requestAnimationFrame(() => { if (dialog.open && welcoming) ripples.draw(); });
   }
   tile.addEventListener('click', event => {
+    if (!welcoming || !dialog.open) return;
+    touches++;
+    if (touches === 2) begin.hidden = false;
     const r = tile.getBoundingClientRect();
     ripples.burst(event.detail ? Math.max(0, Math.min(1, (event.clientX - r.left) / r.width)) : .5,
       event.detail ? Math.max(0, Math.min(1, (event.clientY - r.top) / r.height)) : .5);
   });
-  begin.addEventListener('click', () => { welcoming = false; ripples.stop(); showPage(); next.focus({preventScroll:true}); });
+  begin.addEventListener('click', () => { if (touches < 2) return; welcoming = false; ripples.stop(); showPage(); next.focus({preventScroll:true}); });
   const entries = [...document.querySelectorAll('[data-open-guide]')];
   const icons = ['btnPalette','btnPalette','btnColorPicker','btnSymmetry','btnResizeUp','btnToggleSimMode','btnGameOfLife','btnSandpile','btnGravitationalSort','btnContour','btnCycleSort','btnSave','btnMacroPlay'];
   let index = 0, trigger = null, gesture = null;
@@ -364,7 +367,7 @@ export function initializeQuickStart() {
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) panel.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}], {duration:220,easing:'ease-out'});
   }
   function move(delta) { index = Math.max(0, Math.min(copy().slides.length - 1, index + delta)); render(); }
-  entries.forEach(button => button.addEventListener('click', () => { trigger = button; index = 0; welcoming = true; ripples.stop(); render(); showPage(); dialog.showModal(); tile.focus({preventScroll:true}); }));
+  entries.forEach(button => button.addEventListener('click', () => { trigger = button; index = 0; welcoming = true; touches = 0; begin.hidden = true; ripples.stop(); render(); showPage(); dialog.showModal(); tile.focus({preventScroll:true}); }));
   function refresh() { entries.filter(b => !b.hasAttribute('data-debug-text')).forEach(b => b.textContent = copy().entry); if (dialog.open) render(); }
   back.addEventListener('click', () => move(-1));
   next.addEventListener('click', () => index === copy().slides.length - 1 ? dialog.close() : move(1));

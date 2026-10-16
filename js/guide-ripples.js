@@ -1,7 +1,7 @@
 // A bounded decorative canvas. It never reads or writes the artwork or simulations.
 export function createGuideRipples(canvas) {
   const ctx = canvas.getContext('2d');
-  const colors = [[227,198,119],[59,163,161],[218,113,74],[116,111,185]];
+  const colors = [[227,198,119],[213,170,72],[191,146,50],[255,231,160]];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let waves = [], frame = 0, lastPaint = 0, color = 0;
   function draw(now = performance.now()) {
@@ -12,7 +12,7 @@ export function createGuideRipples(canvas) {
     if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
     if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
     ctx.setTransform(pixelWidth / width, 0, 0, pixelHeight / height, 0, 0);
-    ctx.fillStyle = '#0b100f'; ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#100e09'; ctx.fillRect(0, 0, width, height);
     const columns = 25, rows = Math.max(1, Math.round(columns * height / width));
     const cell = width / columns;
     for (let y = 0; y < rows; y++) for (let x = 0; x < columns; x++) {
