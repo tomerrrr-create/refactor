@@ -3782,7 +3782,12 @@ function stopMacro() {
     macroQueue = [];
     isMacroLoaded = false;
     isMacroPlaying = false;
-    if (typeof settingsProfiles !== 'undefined') settingsProfiles?.endReplay();
+    try {
+        if (typeof settingsProfiles !== 'undefined') settingsProfiles?.endReplay();
+    } catch (error) {
+        // Profile validation must never leave the macro overlay blocking the board.
+        console.error('Failed to finish macro profile capture:', error);
+    }
     replayNudgeTiming = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
@@ -3920,7 +3925,10 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 }
                 else if (sim === 'dla') {
                     if (parsedRules.mode) dlaMode = parsedRules.mode;
-                    Object.assign(dlaRules, parsedRules);
+                    // `mode` belongs to playback/UI, not to the persisted DLA rules.
+                    for (const key of ['colorGenetics', 'injectFromEdges', 'fastMode']) {
+                        if (typeof parsedRules[key] === 'boolean') dlaRules[key] = parsedRules[key];
+                    }
                     if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
                 }
                 else if (sim === 'contour') Object.assign(contourRules, parsedRules);

@@ -101,7 +101,10 @@ export function createProfileState(initial, storage) {
             return persist();
         },
         beginReplay(value) { this.capture(value); suspended = true; },
-        endReplay(value) { this.observe(value); suspended = false; },
+        endReplay(value) {
+            try { this.observe(typeof value === 'function' ? value() : value); }
+            finally { suspended = false; }
+        },
         persist
     };
 }
