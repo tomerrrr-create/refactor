@@ -1811,4 +1811,4 @@ button, .ctrl {
 #btnGravitationalSort.mode-islands svg:not(#iconGsIslands) { display: none !important; }
 
 /* Keep the Islands leaves fine-lined, including the active simulation state. */
-#btnShowBreatheMenu #iconBreatheIslands { stroke: var(--gold); stroke-width: 1.25; }
+#btnShowBreatheMenu #iconBreatheIslands { stroke: var(--gold); stroke-width: 1.5; }
