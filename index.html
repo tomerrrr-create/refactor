@@ -788,7 +788,7 @@
                 <button id="btnGolPresetCoral" data-debug-text="gol_preset_coral" class="gol-preset-btn">Coral</button>
                 <button id="btnGolPresetSpace" data-debug-text="gol_preset_space" class="gol-preset-btn">Space</button>
                 <button id="btnGolPresetAmoeba" data-debug-text="gol_preset_amoeba" class="gol-preset-btn">Amoeba</button>
-                <button id="btnGolPresetHive" data-debug-text="gol_preset_hive" class="gol-preset-btn">Hive</button>
+                <button id="btnGolPresetHive" data-debug-text="gol_preset_hive" class="gol-preset-btn">Bees</button>
                 <button id="btnGolPresetLivingTexture" data-debug-text="gol_preset_livingtexture" class="gol-preset-btn">Alive</button>
 
                 <button id="btnGolPresetJoelson" data-debug-text="gol_preset_joelson" class="gol-preset-btn">Joel</button>
@@ -1048,11 +1048,11 @@
     <div class="flex flex-col gap-2">
       <div class="flex justify-between items-end">
         <h3 id="chiReachLabel" data-debug-text="chi_reach_label" class="font-semibold text-gray-300">Magnetic Reach</h3>
-        <span id="chiReachValue" class="text-gray-300 font-mono text-sm bg-gray-700 px-2 py-0.5 rounded">Auto</span>
+        <span id="chiReachValue" dir="ltr" class="text-gray-300 font-mono text-sm bg-gray-700 px-2 py-0.5 rounded">Auto</span>
       </div>
       <p id="chiReachDesc" class="text-sm text-gray-400"></p>
       <input type="range" id="chiReachSlider" min="0" max="4" step="1" value="2" aria-labelledby="chiReachLabel" aria-describedby="chiReachDesc" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-2">
-      <div class="relative h-4 text-xs text-gray-400" aria-hidden="true"><span class="absolute left-0">50%</span><span class="absolute" id="chiReachAutoTick" style="left:50%;transform:translateX(-50%)">Auto · 100%</span><span class="absolute right-0">400%</span></div>
+      <div class="relative h-4 text-xs text-gray-400" aria-hidden="true"><span class="absolute left-0" dir="ltr">×0.5</span><span class="absolute" id="chiReachAutoTick" style="left:50%;transform:translateX(-50%)">Auto</span><span class="absolute right-0" dir="ltr">×4</span></div>
     </div>
 
 
