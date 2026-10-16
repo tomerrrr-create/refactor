@@ -1742,3 +1742,8 @@ button, .ctrl {
 .technician-start-settings { margin-bottom: 20px; padding: 20px; border: 1px solid #b28b3645; border-radius: 12px; background: linear-gradient(135deg, #1c1a12, #0d0e0c); text-align: start; }
 .technician-start-settings .technician-option { padding: 0; border: 0; border-radius: 0; background: transparent; }
 .technician-start-settings .startup-entry { margin-top: 18px; padding-top: 18px; border-top: 1px solid #b28b3630; }
+
+/* Expanded section headings keep their context visible without moving the controls. */
+.technician-start-settings .technician-option[aria-expanded="true"] .technician-option-heading { background: #d5aa481a; box-shadow: 0 0 0 8px #d5aa481a; border-radius: 5px; }
+.technician-start-settings .technician-option[aria-expanded="true"] bdi { color: #ffe7a0; text-shadow: 0 0 12px #d5aa4840; }
+.technician-start-settings .technician-option[aria-expanded="true"] .technician-badge { border-color: #d5aa4880; }
