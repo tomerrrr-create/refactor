@@ -1770,3 +1770,6 @@ button, .ctrl {
 .separator-cycle-options button[aria-pressed="true"] { border-color: #e3c677; background: #d5aa4820; color: #ffe7a0; }
 .separator-cycle-options button:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 3px; }
 #separatorCycleStatus { min-height: 1.5em; }
+
+.smooth-rendering-option.smooth-unavailable { opacity: .45; cursor: help; }
+#smoothUnavailableDialog .modal-dismiss { background: transparent; }

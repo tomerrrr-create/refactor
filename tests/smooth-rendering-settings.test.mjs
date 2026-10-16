@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from '../js/smooth-rendering-settings.js';
+import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, isSmoothDisplayAvailable } from '../js/smooth-rendering-settings.js';
 import { defaultWorkspaceSettings, deserializeWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
 test('Smooth starts on and preserves explicit on/off choices across browser sessions', () => {
@@ -30,4 +30,13 @@ test('invalid or blocked storage falls back safely without preventing an immedia
     const blocked = { getItem() { throw Error('Blocked'); }, setItem() { throw Error('Blocked'); } };
     assert.equal(loadSmoothRendering(undefined, blocked), true);
     assert.equal(persistSmoothRendering(false, blocked), false);
+});
+
+
+test('display restriction applies only below 149 without separators', () => {
+    for (const size of [3, 7, 101, 148]) {
+        assert.equal(isSmoothDisplayAvailable(size, 0), false);
+        for (const gap of [1, 2, 3, 4, 5, 6]) assert.equal(isSmoothDisplayAvailable(size, gap), true);
+    }
+    for (const size of [149, 199, 299]) assert.equal(isSmoothDisplayAvailable(size, 0), true);
 });

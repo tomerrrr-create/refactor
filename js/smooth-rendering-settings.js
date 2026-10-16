@@ -16,3 +16,8 @@ export function persistSmoothRendering(value, storage = localStorage) {
         return true;
     } catch { return false; }
 }
+
+// Display restriction only; never changes the stored preference or PNG export.
+export function isSmoothDisplayAvailable(size, separatorWidth) {
+    return size >= 149 || separatorWidth !== 0;
+}

@@ -2,7 +2,7 @@ import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth } 
 import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
-import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from './smooth-rendering-settings.js';
+import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, isSmoothDisplayAvailable } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
 import { updateRainbowFrame } from './rainbow-frame.js';
@@ -707,7 +707,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
       function renderToScreen(timestamp) {
         if (!ctx || !canvas) return;
-        renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp, isSmoothRendering);
+        renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp, isSmoothRendering && isSmoothDisplayAvailable(n, separatorPx));
         softBloom?.draw();
       }
 
@@ -4197,6 +4197,7 @@ else if (action.eventName === 'Invert Colors') {
                 settingsProfiles?.scheduleCapture();
             },
             getSmoothRendering: () => isSmoothRendering,
+            isSmoothDisplayAvailable: () => isSmoothDisplayAvailable(n, separatorPx),
             setSmoothRendering: value => {
                 isSmoothRendering = Boolean(value);
                 persistSmoothRendering(isSmoothRendering);

@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { isSmoothDisplayAvailable } from '../js/smooth-rendering-settings.js';
 import { hexToRgb, lerp } from '../js/colors.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
-function harness() {
+function harness(size = 149) {
     const screen = { drawImage() {}, fillRect() {} };
-    const h = vm.createContext({ n: 2, separatorPx: 0, isSmoothRendering: false, softBloom: null, isLifePlaying: false,
-        boardState: [0, 1, 1, 0].map(k => ({ k, v: k, isGold: false, prevK: null })),
+    const h = vm.createContext({ isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, isLifePlaying: false,
+        boardState: Array.from({ length: size * size }, (_, i) => i % 2).map(k => ({ k, v: k, isGold: false, prevK: null })),
         palette: () => ['#000000', '#ffffff'], norm: k => k % 2,
         hexToRgb, lerp, performance: { now: () => 0 }, C: {}, ctx: screen,
         canvas: { clientWidth: 720, clientHeight: 720 },
@@ -37,7 +38,7 @@ test('export rendering stays crisp even while screen smoothing is enabled', () =
     assert.equal(h.ctx.imageSmoothingEnabled, true); assert.equal(exported.imageSmoothingEnabled, false);
 });
 test('separated tiles retain the direct rectangle rendering path', () => {
-    const h = harness(); let rectangles = 0;
+    const h = harness(2); let rectangles = 0;
     h.getPaletteColor = k => h.palette()[h.norm(k)];
     h.separatorPx = 2; h.isSmoothRendering = true;
     h.ctx.fillRect = () => rectangles++;
@@ -65,3 +66,19 @@ for (const screenSmooth of [false, true]) for (const exportSmooth of [false, tru
         assert(closed && downloaded); assert.equal(h.dom.btnSaveImage.disabled, false);
     });
 }
+
+
+test('small boards stay sharp without overwriting preference or changing smooth PNG export', () => {
+    for (const size of [7, 101, 148, 149]) {
+        const h = harness(size);
+        h.isSmoothRendering = true;
+        const before = JSON.stringify(h.boardState);
+        h.renderToScreen(null);
+        assert.equal(h.ctx.imageSmoothingEnabled, size >= 149);
+        assert.equal(h.isSmoothRendering, true);
+        const exported = { drawImage() {} };
+        h.renderBoard(exported, 2048, 2048, null, true);
+        assert.equal(exported.imageSmoothingEnabled, true);
+        assert.equal(JSON.stringify(h.boardState), before);
+    }
+});
