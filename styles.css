@@ -1760,3 +1760,6 @@ button, .ctrl {
 
 /* Align the Bloom intensity control with the text after the 36px icon and 12px gap. */
 .technician-display-settings .bloom-intensity-control { padding-inline-start: 48px; }
+
+/* Diagnostic separator width beside the existing gap icon. */
+#gapValue { position: absolute; left: calc(50% + var(--side-icon-size) / 2 - 9px); top: calc(50% + var(--side-icon-size) / 2 - 12px); width: 9px; height: 12px; background: #000; color: #fff; text-align: center; font: 300 11px/12px sans-serif; font-variant-numeric: tabular-nums; }

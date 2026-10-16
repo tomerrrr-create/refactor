@@ -19,6 +19,7 @@ export const dom = {
   btnRandom: document.getElementById('btnRandom'),
   btnPalette: document.getElementById('btnPalette'),
   btnGap: document.getElementById('btnGap'),
+  gapValue: document.getElementById('gapValue'),
   btnUndo: document.getElementById('btnUndo'),
   btnRedo: document.getElementById('btnRedo'),
   btnInvert: document.getElementById('btnInvert'),

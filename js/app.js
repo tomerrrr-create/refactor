@@ -721,9 +721,15 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         dom.btnPalette.setAttribute('aria-label', label);
       }
       
+      function updateSeparatorButtonUI() {
+          const label = `${getText('tooltip_gap')}: ${separatorPx}`;
+          dom.btnGap.title = label;
+          dom.btnGap.setAttribute('aria-label', label);
+          dom.gapValue.textContent = String(separatorPx);
+      }
+
       function applySeparator() {
-          dom.btnGap.title = getText('tooltip_gap');
-          dom.btnGap.setAttribute('aria-label', getText('tooltip_gap'));
+          updateSeparatorButtonUI();
           renderToScreen(null); 
       }
 
@@ -2179,6 +2185,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
       }
 
       function updateAllUIText() {
+        updateSeparatorButtonUI();
         C.PALETTES.forEach(p => {
             if (!p.originalName) p.originalName = p.name; 
             const key = Object.keys(translations).find(k => translations[k].en === p.originalName);
@@ -3319,8 +3326,7 @@ function applyHistorySettings(settings) {
     }
     if (separatorPx !== settings.separatorPx) {
         separatorPx = settings.separatorPx;
-        dom.btnGap.title = getText('tooltip_gap');
-        dom.btnGap.setAttribute('aria-label', getText('tooltip_gap'));
+        updateSeparatorButtonUI();
         changed = true;
     }
     if (changed) {
