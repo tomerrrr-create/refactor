@@ -856,8 +856,8 @@ function populateHelpModal() {
         inspiration: { tab: 'creation', titleKey: 'help_category_inspiration', buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset'] },
         order: { tab: 'creation', titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark'] },
         touch: { tab: 'creation', titleKey: 'help_category_touch', buttons: ['btnBrushMode', 'btnSymmetry', 'btnColorPicker'] },
-        controls: { tab: 'evolution', titleKey: 'help_category_controls', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward', 'btnSimSettings'] },
-        evolution: { tab: 'evolution', titleKey: 'help_category_evolution_modes', buttons: ['btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter', 'btnNudgeDarker'] },
+        controls: { tab: 'evolution', titleKey: 'help_category_controls', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward'] },
+        evolution: { tab: 'evolution', titleKey: 'help_category_evolution_modes', buttons: ['btnIslands', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter', 'btnNudgeDarker'] },
         advanced: { tab: 'tools', titleKey: 'help_category_advanced', buttons: ['btnOpenDebug'] },
         tools: { tab: 'tools', titleKey: 'help_category_tools', buttons: ['btnUndo', 'btnRedo', 'btnSave', 'btnMacroPlay', 'btnResetBoard'] }
     };
@@ -866,7 +866,7 @@ function populateHelpModal() {
         btnCycleSort: app.getText('help_sort'), btnSpiral: app.getText('help_spiral'), btnMagnetModes: app.getText('help_magnet'),
         btnContour: app.getText('help_contour'), btnSandpile: app.getText('help_sandpile'), btnTuring: app.getText('help_turing'),
         btnNudgeBrighter: app.getText('help_nudge_forward'), btnNudgeDarker: app.getText('help_nudge_backward'),
-        btnStepForward: app.getText('help_step'), btnSimSettings: app.getText('help_sim_settings'),
+        btnStepForward: app.getText('help_step'), btnIslands: app.getText('help_islands'),
         btnMacroPlay: app.getText('help_macro'), btnOpenDebug: app.getText('help_technicians'),
         'btnPalette': app.getText('help_palette'), 'btnRandom': app.getText('help_random'), 'btnInvert': app.getText('help_invert'),
         'btnSpecialReset': app.getText('help_specialReset'), 'btnResizeUp': app.getText('help_resizeUp'), 'btnResizeDown': app.getText('help_resizeDown'),

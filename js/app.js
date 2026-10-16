@@ -1418,7 +1418,7 @@ function pauseLife() {
           
           // מחזירים לפעולה את כל כפתורי הסימולציה
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, 
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1461,7 +1461,7 @@ function pauseLife() {
 
        
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, 
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1515,8 +1515,7 @@ function pauseLife() {
           
           // מכבים את כל הכפתורים למעט הכפתור של הסימולציה הפעילה!
           simButtons.forEach(btn => {
-              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase()) &&
-                  !(armedSimulation === 'islands' && btn === dom.btnShowBreatheMenu)) {
+              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase())) {
                   btn.disabled = true;
               }
           });
@@ -1629,7 +1628,7 @@ function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
 magnetMode = 'off';
 if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     
@@ -1646,7 +1645,6 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     // --- END RESET ---
 
 
-if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
 
 // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
 if (!isTogglingOff && simulationName !== null) {
@@ -1707,8 +1705,7 @@ if (simulationName === 'magnet') {
 
 
         // צביעת הכפתור הנבחר במסגרת פעילה (זהב)
-        const buttonToActivate = simulationName === 'islands' ? dom.btnShowBreatheMenu
-            : simButtons.find(btn => btn.id.toLowerCase().includes(simulationName.toLowerCase()));
+        const buttonToActivate = simButtons.find(btn => btn.id.toLowerCase().includes(simulationName.toLowerCase()));
         if (buttonToActivate) {
             buttonToActivate.classList.add('simulation-active');
         }
@@ -1730,11 +1727,6 @@ if (simulationName === 'magnet') {
             dom.btnStepForward.disabled = true;
         }
 
-        // בדיקה: האם לסימולציה שנבחרה יש חלון הגדרות?
-        const simsWithSettings = ['gameOfLife', 'gravitationalSort', 'contour', 'spiral', 'sandpile', 'turing', 'magnet', 'nudgeBrighter', 'nudgeDarker'];
-        if (dom.btnSimSettings && simsWithSettings.includes(simulationName)) {
-            dom.btnSimSettings.classList.remove('hide-settings');
-        }
     
     }
     updateGameOfLifeButtonUI();
@@ -2332,9 +2324,8 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
         armedSimulation = null;
         dlaState = null;
 turingState = null;
-if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
@@ -3009,6 +3000,8 @@ function cycleBrightnessEvoMode() {
 
 
 function updateErosionButtonUI() {
+    dom.btnErosion.classList.toggle('simulation-active', armedSimulation === 'erosion');
+    dom.btnErosion.setAttribute('aria-pressed', String(armedSimulation === 'erosion'));
     const channels = armedSimulation === 'erosion' && erosionRules.mode === 'channels';
     const solid = armedSimulation === 'erosion' && erosionRules.mode === 'channels-solid';
     document.getElementById('iconErosionLegacy').style.display = channels || solid ? 'none' : 'block';
@@ -3126,31 +3119,36 @@ function cycleGravitationalSortMode() {
 
 
 // --- NEW: Breathe Simulation UI and Cycling ---
+function updateIslandsButtonUI() {
+    const active = armedSimulation === 'islands';
+    dom.btnIslands.classList.toggle('simulation-active', active);
+    dom.btnIslands.title = getText('tooltip_islands');
+    dom.btnIslands.setAttribute('aria-label', dom.btnIslands.title);
+    dom.btnIslands.setAttribute('aria-pressed', String(active));
+}
+
 function updateBreatheEvoButtonUI() {
-    const modes = ['islands', 'solo', 'group', 'random-cell', 'random-color'];
-    const icons = ['iconBreatheIslands', 'iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
-    const selectedMode = armedSimulation === 'islands' ? 'islands' : breatheEvoMode;
+    updateIslandsButtonUI();
+    const modes = ['solo', 'group', 'random-cell', 'random-color'];
+    const icons = ['iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
+    const selectedMode = armedSimulation === 'breathe' ? breatheEvoMode : 'off';
     dom.btnShowBreatheMenu.classList.remove(...modes.map(mode => 'mode-' + mode), 'simulation-active');
     modes.forEach((mode, index) => {
         document.getElementById(icons[index]).style.display = mode === selectedMode || (selectedMode === 'off' && index === 0) ? 'block' : 'none';
     });
     if (modes.includes(selectedMode)) dom.btnShowBreatheMenu.classList.add('mode-' + selectedMode);
-    if (armedSimulation === 'breathe' || armedSimulation === 'islands') dom.btnShowBreatheMenu.classList.add('simulation-active');
-    dom.btnShowBreatheMenu.title = getText(selectedMode === 'islands' ? 'tooltip_islands' : 'tooltip_breathe');
+    if (armedSimulation === 'breathe') dom.btnShowBreatheMenu.classList.add('simulation-active');
+    dom.btnShowBreatheMenu.title = getText('tooltip_breathe');
     dom.btnShowBreatheMenu.setAttribute('aria-label', dom.btnShowBreatheMenu.title);
 }
 
 function cycleBreatheEvoMode() {
+    if (isLifePlaying && armedSimulation !== 'breathe') return;
     if (isLifePlaying) pauseLife();
-
-    const currentMode = armedSimulation === 'islands' ? 'islands' : breatheEvoMode;
-    const sequence = ['off', 'islands', 'solo', 'group', 'random-cell', 'random-color'];
+    const currentMode = armedSimulation === 'breathe' ? breatheEvoMode : 'off';
+    const sequence = ['off', 'solo', 'group', 'random-cell', 'random-color'];
     const nextMode = sequence[(sequence.indexOf(currentMode) + 1) % sequence.length];
-
-    // This button selects two independent engines; the breathing modes keep their own state.
-    if (nextMode === 'islands') {
-        armSimulation('islands');
-    } else if (nextMode === 'off') {
+    if (nextMode === 'off') {
         armSimulation(null);
     } else {
         if (armedSimulation !== 'breathe') armSimulation('breathe');
@@ -3295,23 +3293,6 @@ function selectSortMethod(nextMethod) {
     // 3. כופה על הלוח להתרנדר מיד מחדש עם הצבעים החדשים
     renderToScreen(null);
 }
-// פונקציה חדשה: מנתבת את הלחיצה על גלגל השיניים למודל הנכון
-      function openCurrentSimSettings() {
-          switch(armedSimulation) {
-              case 'gameOfLife': modals.openGolSettingsModal(); break;
-              case 'gravitationalSort': modals.openGravitationalSortSettingsModal(); break;
-              case 'contour': modals.openContourSettingsModal(); break;
-              case 'spiral': modals.openSpiralSettingsModal(); break;
-              case 'sandpile': modals.openChiFlowSettingsModal(); break;
-              case 'turing': modals.openTuringSettingsModal(); break;
-              case 'magnet': modals.openMagnetSettingsModal(); break;
-              case 'erosion': modals.openErosionSettingsModal(); break;
-              case 'nudgeBrighter':
-              case 'nudgeDarker': modals.openNudgeSettingsModal(); break;
-          }
-      }
-
-
 // --- Art Logger: Export Functionality ---
 
 
@@ -4655,6 +4636,7 @@ bindPickerGestures(dom.btnColorPicker, {
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, null],
             [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, null],
+            [dom.btnIslands, 'islands', () => armSimulation('islands'), null],
             [dom.btnErosion, 'erosion', cycleErosionMode, modals.openErosionSettingsModal],
             [dom.btnDla, 'dla', cycleDlaMode, null]
         ].filter(([button]) => button);
@@ -4662,16 +4644,13 @@ bindPickerGestures(dom.btnColorPicker, {
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap, onOpen,
-                onHold: () => evolutionExplanation.show(button, simulation === 'breathe' && armedSimulation === 'islands' ? 'islands' : simulation),
+                onHold: () => evolutionExplanation.show(button, simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && !evolutionExplanation.isOpen() && !isLifePlaying && armedSimulation === simulation,
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });
 
-if (dom.btnSimSettings) {
-            dom.btnSimSettings.addEventListener('click', (e) => handleCtrlClick(e, openCurrentSimSettings));
-        }
 
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));

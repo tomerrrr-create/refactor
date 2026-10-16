@@ -187,6 +187,7 @@ body {
 #btnGameOfLife,
 #btnBrightnessEvo,
 #btnShowBreatheMenu,
+#btnIslands,
 #btnGravitationalSort,
 #btnErosion,
 #btnDla,
@@ -283,6 +284,7 @@ body {
 
 .sim-mode-active #btnGameOfLife,
 .sim-mode-active #btnShowBreatheMenu,
+.sim-mode-active #btnIslands,
 .sim-mode-active #btnMagnetModes,
 .sim-mode-active #btnBrightnessEvo,
 .sim-mode-active #btnGravitationalSort,
@@ -304,10 +306,11 @@ body {
 }
 
 
-/* --- Easter Egg: Hidden Breathe Button --- */
+/* Outside the simulation overlay, Breathe and Turing reveal only when selected. */
 /* מעלים את הכפתור לחלוטין כל עוד הוא לא פעיל, אבל שומר אותו לחיץ */
+.sim-mode-active #btnTuring:not(.simulation-active),
 .sim-mode-active #btnShowBreatheMenu:not(.simulation-active) {
-    opacity: 0;
+    opacity: 0 !important;
 }
 
 /* Left Panel (Col 1) */
@@ -317,7 +320,7 @@ body {
 /* Center Panel (Cols 3, 4, 5, 6, 7) & Edges */
 
 /* שורה 1 - ניווט ושליטה */
-.sim-mode-active #btnShowBreatheMenu { grid-area: 1 / 3; }
+.sim-mode-active #btnTuring         { grid-area: 1 / 3; }
 .sim-mode-active #btnStepForward   { display: inline-flex; grid-area: 1 / 4; } 
 .sim-mode-active #btnPalette       { grid-area: 1 / 5; }                      
 .sim-mode-active #btnPlayPauseLife { grid-area: 1 / 6; }                      
@@ -328,7 +331,8 @@ body {
 .sim-mode-active #btnContour           { grid-area: 2 / 4; }
 .sim-mode-active #btnGameOfLife        { grid-area: 2 / 5; }
 .sim-mode-active #btnBrightnessEvo     { grid-area: 2 / 6; }
-.sim-mode-active #btnTuring            { grid-area: 2 / 7; }
+.sim-mode-active #btnIslands            { grid-area: 2 / 7; }
+.sim-mode-active #btnShowBreatheMenu    { grid-area: 1 / 7; }
 .sim-mode-active #btnNudgeBrighter     { grid-area: 2 / 1; }
 
 /* שורה 3 - (משמאל לימין) */
@@ -877,6 +881,7 @@ body {
 #btnMagnetModes.simulation-active svg,
 #btnBrightnessEvo.simulation-active svg,
 #btnShowBreatheMenu.simulation-active svg,
+#btnIslands.simulation-active svg,
 #btnGravitationalSort.simulation-active svg,
 #btnErosion.simulation-active svg,
 #btnDla.simulation-active svg,
@@ -1007,7 +1012,8 @@ body {
 #btnSpiral svg,
 #btnSandpile svg,
 #btnTuring svg,
-#btnShowBreatheMenu svg {
+#btnShowBreatheMenu svg,
+#btnIslands svg {
     stroke: var(--sim-color); /* צובע את קווי המתאר של האייקון בכחול */
 }
 
@@ -1307,34 +1313,6 @@ body {
 
 #btnMagnetModes.mode-expand #iconModeExpand { display: block !important; }
 #btnMagnetModes.mode-expand svg:not(#iconModeExpand) { display: none !important; }
-
-
-
-/* --- Simulation Settings Button Animations --- */
-#btnSimSettings {
-    grid-area: 1 / 7; /* מיקום יציב מימין ל-Play */
-    
-    /* התיזמון הנשימתי: 0.8 שניות Cubic Bezier מתאים ל'Faded' שלך */
-    transition: all 0.8s cubic-bezier(0.3, 0.0, 0.2, 1);
-    
-    background: rgba(255, 215, 0, 0.05); /* רקע זהב כמעט בלתי נראה, מרומז */
-    border-color: rgba(255, 215, 0, 0.15);
-    z-index: 10;
-    opacity: 0.7; /* שומר על ה'אפלה' של הממשק הקיים */
-}
-
-#btnSimSettings:hover {
-    opacity: 1; /* נדלק בנגיעה, כמו שאר הכפתורים */
-    background: rgba(255, 215, 0, 0.1);
-}
-
-/* מצב מוסתר */
-#btnSimSettings.hide-settings {
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(0.6) translateY(5px); /* מתכווץ ויורד מטה, כמו 'שחיקה' */
-    border: none;
-}
 
 
 
@@ -1822,8 +1800,8 @@ button, .ctrl {
 #btnGravitationalSort.mode-islands #iconGsIslands { display: block !important; }
 #btnGravitationalSort.mode-islands svg:not(#iconGsIslands) { display: none !important; }
 
-/* Keep the Islands leaves fine-lined, including the active simulation state. */
-#btnShowBreatheMenu #iconBreatheIslands { stroke: var(--gold); stroke-width: 1.5; }
+/* Preserve the approved leaf geometry; its color follows simulation selection. */
+#btnIslands svg { stroke-width: 1.5; }
 
 /* A manual, read-only introduction: no workspace settings or board mutations. */
 .quick-start-entry { display:block; width:100%; min-height:44px; padding:10px 16px; margin:0 0 18px; border:1px solid #b28b3659; border-radius:10px; background:linear-gradient(135deg,#1c1a12,#0d0e0c); color:#e3c677; font:inherit; cursor:pointer; }
