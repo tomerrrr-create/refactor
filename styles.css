@@ -1800,3 +1800,7 @@ button, .ctrl {
 .separator-cycle-options[hidden] { display: none; }
 
 #gapValue.fractional-gap { width: 24px; margin-left: -12px; font-size: 8px; }
+
+#btnGap[data-relative-gap="thin"] > svg { filter: drop-shadow(0 0 2px #ffd70070); }
+#btnGap[data-relative-gap="medium"] > svg { filter: drop-shadow(0 0 2px #ffd700b3) drop-shadow(0 0 5px #ffd7008c); }
+#btnGap[data-relative-gap="thick"] > svg { filter: drop-shadow(0 0 2px #ffd700) drop-shadow(0 0 8px #ffd700ed); }

@@ -747,10 +747,8 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           dom.gapValue.hidden = isRelativeSeparatorMode;
           dom.gapValue.textContent = String(Number(separatorPx.toFixed(2)));
           dom.gapValue.classList.toggle('fractional-gap', !Number.isInteger(separatorPx));
-          const noSeparators = isRelativeSeparatorMode && level === 0;
-          dom.gapHashIcon.style.display = noSeparators ? 'none' : '';
-          dom.gapHashIcon.setAttribute('stroke-width', isRelativeSeparatorMode ? ({ 5: 3.2, 3: 1.8, 1: .8, 0: 2 }[level]) : 2);
-          dom.gapNoSeparatorIcon.style.display = noSeparators ? '' : 'none';
+          if (isRelativeSeparatorMode) dom.btnGap.dataset.relativeGap = ({ 5: 'thick', 3: 'medium', 1: 'thin', 0: 'none' }[level]);
+          else delete dom.btnGap.dataset.relativeGap;
       }
 
       let separatorAvailabilityCache = { key: '', cycle: [], widths: [] };
