@@ -76,6 +76,8 @@ const displayNames = {
     "Northern Lights HD": {"en": "Northern Lights HD", "he": "זוהר הצפון HD", "ru": "Северное сияние HD", "nl": "Noorderlicht HD"},
     "Baby First Gaze": {"en": "Baby First Gaze", "he": "מבט ראשון של תינוק", "ru": "Первый взгляд малыша", "nl": "Eerste babyblik"},
     "Silent Enigma": {"en": "Silent Enigma", "he": "חידה שקטה", "ru": "Тихая загадка", "nl": "Stil enigma"},
+    "Tibetan Turquoise Gold 264": {"en": "Tibetan Turquoise Gold 264", "he": "טורקיז וזהב טיבטי 264", "ru": "Тибетская бирюза и золото 264", "nl": "Tibetaans turkoois en goud 264"},
+    "Jade Tides 264": {"en": "Jade Tides 264", "he": "גאות ירקן 264", "ru": "Нефритовые приливы 264", "nl": "Jadegetijden 264"},
     "Autumn into Winter 264": {"en": "Autumn into Winter 264", "he": "מסתיו לחורף 264", "ru": "Из осени в зиму 264", "nl": "Van herfst naar winter 264"},
     "זוהר הגלסיות": {"en": "Galactic Glow", "he": "זוהר הגלקסיות", "ru": "Сияние галактик", "nl": "Galactische gloed"}
 };
