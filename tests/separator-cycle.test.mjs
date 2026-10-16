@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth } from '../js/separator-cycle.js';
 
-test('the default cycle retains all existing widths and ordering', () => {
-    assert.deepEqual(DEFAULT_SEPARATOR_CYCLE, [6, 5, 3, 2, 0]);
-    let current = 2;
+test('the default cycle uses 5, 3, 1 and 0 in descending order', () => {
+    assert.deepEqual(DEFAULT_SEPARATOR_CYCLE, [5, 3, 1, 0]);
+    let current = 0;
     const visited = Array.from({ length: 6 }, () => current = nextSeparatorWidth(current, DEFAULT_SEPARATOR_CYCLE));
-    assert.deepEqual(visited, [0, 6, 5, 3, 2, 0]);
+    assert.deepEqual(visited, [5, 3, 1, 0, 5, 3]);
 });
 test('custom widths include 1 and 4, wrap, and enter at the first chosen width', () => {
     const chosen = [0, 4, 1, 4], before = [...chosen];
@@ -33,7 +33,7 @@ test('cycle extends V1 settings without changing the original baseline or old fi
     assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
     const old = deserializeWorkspaceSettings('FYI_SETTINGS_V1\n{"version":1,"settings":{}}');
     assert.equal(Object.hasOwn(old, 'separatorCycle'), false);
-    assert.equal(nextSeparatorWidth(2, old.separatorCycle), 0);
+    assert.equal(nextSeparatorWidth(2, old.separatorCycle), 5);
     for (const invalid of [[], [7], [-1], [1.5], ['2'], [4, 4], [0, 4], null]) {
         assert.throws(() => deserializeWorkspaceSettings('FYI_SETTINGS_V1\n' + JSON.stringify({ version: 1, settings: { separatorCycle: invalid } })));
     }
@@ -58,14 +58,14 @@ test('profiles persist independent cycles and support returning to the omitted d
 import { availableSeparatorCycle, maximumSeparatorWidth } from '../js/separator-cycle.js';
 import { fitStartupSeparator } from '../js/startup-settings.js';
 test('one-pixel rule preserves small boards and filters dense cycles by actual display width', () => {
-    assert.deepEqual(availableSeparatorCycle(9, 327), [6, 5, 3, 2, 0]);
-    assert.deepEqual(availableSeparatorCycle(55, 379), [6, 5, 3, 2, 0]);
-    assert.deepEqual(availableSeparatorCycle(55, 378), [5, 3, 2, 0]);
-    assert.deepEqual(availableSeparatorCycle(101, 327), [2, 0]);
-    assert.deepEqual(availableSeparatorCycle(101, 720), [6, 5, 3, 2, 0]);
+    assert.deepEqual(availableSeparatorCycle(9, 327), [5, 3, 1, 0]);
+    assert.deepEqual(availableSeparatorCycle(55, 379, [6, 5, 3, 2, 0]), [6, 5, 3, 2, 0]);
+    assert.deepEqual(availableSeparatorCycle(55, 378, [6, 5, 3, 2, 0]), [5, 3, 2, 0]);
+    assert.deepEqual(availableSeparatorCycle(101, 327), [1, 0]);
+    assert.deepEqual(availableSeparatorCycle(101, 720), [5, 3, 1, 0]);
     assert.deepEqual(availableSeparatorCycle(299, 327, [6, 4, 1]), [0]);
     assert.deepEqual(availableSeparatorCycle(101, 327, [6, 4, 1]), [1]);
-    assert.deepEqual(availableSeparatorCycle(1, 327), [6, 5, 3, 2, 0]);
+    assert.deepEqual(availableSeparatorCycle(1, 327), [5, 3, 1, 0]);
 });
 test('fitting keeps valid absolute values outside the personal cycle and selects only safe lower fallbacks', () => {
     assert.equal(fitStartupSeparator(9, 4, 327, [6, 2, 0]), 4);
