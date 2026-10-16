@@ -22,3 +22,34 @@ export function getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime
     
     return (1.0 * (1 - fadeInProgress)) + (animatedFactor * fadeInProgress);
 }
+// A small display-only schedule: prepare candidates once, then track at most two pulses.
+export function createRandomBreatheSession(board, mode, random = Math.random) {
+    const candidates = mode === 'random-color'
+        ? [...new Set(board.filter(tile => !tile.isGold).map(tile => tile.k))]
+        : board.flatMap((tile, index) => tile.isGold ? [] : [index]);
+    let pulses = [], nextAt = 0, previous, currentElapsed = 0;
+    return {
+        update(elapsed) {
+            currentElapsed = elapsed;
+            pulses = pulses.filter(pulse => elapsed < pulse.start + pulse.duration);
+            if (elapsed < nextAt || !candidates.length) return;
+            let index = Math.floor(random() * candidates.length);
+            if (candidates.length > 1 && candidates[index] === previous) index = (index + 1) % candidates.length;
+            previous = candidates[index];
+            pulses.push({ key: previous, start: elapsed, duration: 4000 + random() * 1200 });
+            nextAt = elapsed + 2900 + random() * 1000;
+        },
+        factor(index) {
+            const tile = board[index];
+            if (!tile || tile.isGold) return 1;
+            const key = mode === 'random-color' ? tile.k : index;
+            let brightness = 1;
+            for (const pulse of pulses) {
+                if (pulse.key !== key) continue;
+                const progress = (currentElapsed - pulse.start) / pulse.duration;
+                if (progress >= 0 && progress < 1) brightness -= 0.35 * Math.sin(Math.PI * progress) ** 2;
+            }
+            return brightness;
+        }
+    };
+}
