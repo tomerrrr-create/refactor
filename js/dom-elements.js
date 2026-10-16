@@ -38,9 +38,6 @@ export const dom = {
   // Simulation & Breathing Buttons
   btnToggleSimMode: document.getElementById('btnToggleSimMode'),
   btnShowBreatheMenu: document.getElementById('btnShowBreatheMenu'),
-  btnIslands: document.getElementById('btnIslands'),
-  btnSimulationPage: document.getElementById('btnSimulationPage'),
-  btnSimulationArrange: document.getElementById('simulationArrangeSlot'),
   btnGameOfLife: document.getElementById('btnGameOfLife'),
   btnBrightnessEvo: document.getElementById('btnBrightnessEvo'),
   btnGravitationalSort: document.getElementById('btnGravitationalSort'),
