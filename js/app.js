@@ -2115,9 +2115,9 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 goDark();
                 const currentPalette = palette();
                 const colorChoice = simulationInitSettings.brushColor || 'last';
-                selectedColorIndex = colorChoice === 'first' ? 0 : colorChoice === 'lightest'
+                selectedColorIndex = colorChoice === 'rainbow' ? -1 : colorChoice === 'first' ? 0 : colorChoice === 'lightest'
                     ? currentPalette.indexOf(sortColorsArray(currentPalette, 'luminance').at(-1)) : currentPalette.length - 1;
-                selectedColor = currentPalette[selectedColorIndex];
+                selectedColor = selectedColorIndex >= 0 ? currentPalette[selectedColorIndex] : null;
 
                 brushSize = simulationInitSettings.brushSize;
                 const brushSizeSlider = document.getElementById('brushSizeSlider');
@@ -2127,7 +2127,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
 
 
-                isRainbowModeActive = false;
+                isRainbowModeActive = colorChoice === 'rainbow';
                 symmetryMode = simulationInitSettings.symmetry || 'kaleidoscope';
                 updateSymmetryUI();
                 updateColorPickerButtonUI();

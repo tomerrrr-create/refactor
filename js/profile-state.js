@@ -1,5 +1,5 @@
 import { validateWorkspaceSettings, deserializeWorkspaceSettings, defaultWorkspaceSettings } from './workspace-settings.js';
-import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
+import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS, defaultGameOfLifeRules } from './constants.js';
 import { normalizeCycleSources, inferCycleSources } from './evolution-cycle-settings.js';
 
 import { DEFAULT_SMOOTH_RENDERING } from './smooth-rendering-settings.js';
@@ -62,7 +62,7 @@ export function defaultProfileSnapshots(initial) {
                 yoursRules: clone(snapshot.settings.cycles.chiFlow[0]) };
         }
     }
-    profiles[2].settings.startup.separatorPx = 2; // Keep profile 3 at its existing Small default.
+    Object.assign(profiles[2].settings.startup, { boardSize: 15, fill: 'random', separatorPx: 0 });
     profiles[0].settings.startup.separatorPx = 5; // Relative Large.
     Object.assign(profiles[1].settings.startup, { boardSize: 11, separatorPx: 2 }); // Legacy value 2 maps to relative Small.
     profiles[1].settings.sortCycle = first.settings.sortCycle
@@ -79,7 +79,14 @@ export function defaultProfileSnapshots(initial) {
     profiles[1].settings.startup.symmetry = 'off';
     profiles[1].settings.brush.symmetry = 'off';
     profiles[1].settings.startup.brushColor = 'first';
-    profiles[2].settings.simulationInit.brushColor = 'lightest';
+    // The left/right gold columns mirror left/right (named 'horizontal' internally).
+    Object.assign(profiles[2].settings.simulationInit, { brushSize: 1, brushColor: 'rainbow', symmetry: 'horizontal' });
+    profiles[2].settings.cycles.gameOfLife[0] = clone(GAME_OF_LIFE_PRESETS.btnGolPresetPaint2);
+    if (profiles[2].identity) {
+        profiles[2].identity.gameOfLife.index = 0;
+        profiles[2].identity.gameOfLife.sources[0] = 'btnGolPresetPaint2';
+        profiles[2].identity.gameOfLife.yoursRules = clone(GAME_OF_LIFE_PRESETS.btnGolPresetPaint2);
+    }
     profiles[2].settings.startup.brushColor = 'lightest';
     profiles.forEach((snapshot, index) => {
         snapshot.settings.rules.erosion.erosionStages = { ...PROFILE_EROSION_STAGES[index] };
@@ -121,7 +128,7 @@ function mergeChanges(draft, previous, current) {
 
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
-    let state = { version: 1, defaultsVersion: 4, selected: 0,
+    let state = { version: 1, defaultsVersion: 5, selected: 0,
         profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
@@ -132,7 +139,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 4, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 5, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -190,6 +197,27 @@ export function createProfileState(initial, storage) {
                         if (index === 0 && startup.separatorPx === 2) startup.separatorPx = 5;
                         if (index === 1) {
                             if (startup.boardSize === 7) startup.boardSize = 11;
+                        }
+                    }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 5) {
+                for (const kind of ['saved', 'draft']) {
+                    const snapshot = state.profiles[2][kind];
+                    const { startup, simulationInit, cycles } = snapshot.settings;
+                    if (startup.boardSize === 7) startup.boardSize = 15;
+                    if (startup.fill === 'dark') startup.fill = 'random';
+                    if (startup.separatorPx === 2) startup.separatorPx = 0;
+                    if (simulationInit.brushSize === 3) simulationInit.brushSize = 1;
+                    if (!simulationInit.brushColor || simulationInit.brushColor === 'lightest') simulationInit.brushColor = 'rainbow';
+                    if (!simulationInit.symmetry || simulationInit.symmetry === 'kaleidoscope') simulationInit.symmetry = 'horizontal';
+                    if (equal(cycles.gameOfLife[0], defaultGameOfLifeRules)) {
+                        cycles.gameOfLife[0] = clone(GAME_OF_LIFE_PRESETS.btnGolPresetPaint2);
+                        if (snapshot.identity) {
+                            snapshot.identity.gameOfLife.sources[0] = 'btnGolPresetPaint2';
+                            if (equal(snapshot.identity.gameOfLife.yoursRules, defaultGameOfLifeRules)) {
+                                snapshot.identity.gameOfLife.yoursRules = clone(GAME_OF_LIFE_PRESETS.btnGolPresetPaint2);
+                            }
                         }
                     }
                 }

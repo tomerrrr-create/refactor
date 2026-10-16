@@ -122,7 +122,9 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
     assert.equal(two.startup.fill, 'random');
     assert.equal(three.startup.paletteName, 'Ancient 264');
-    assert.equal(three.startup.fill, 'dark');
+    assert.equal(three.startup.fill, 'random');
+    assert.equal(three.startup.boardSize, 15);
+    assert.equal(three.startup.separatorPx, 0);
     assert.equal(three.startup.brushSize, 3);
     assert.equal(three.brush.size, 3);
     assert.deepEqual(snapshots.map(s => s.settings.simulationTheme), ['blue', 'gold', 'teal']);
@@ -133,7 +135,8 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
         assert.deepEqual({ ...settings.rules, erosion: one.rules.erosion }, one.rules);
         assert.equal(settings.simulationInit.boardSize, one.simulationInit.boardSize);
         assert.deepEqual(settings.smoothing, one.smoothing);
-        assert.deepEqual(settings.cycles.gameOfLife, one.cycles.gameOfLife);
+        assert.deepEqual(settings.cycles.gameOfLife.slice(1), one.cycles.gameOfLife.slice(1));
+        if (settings === two) assert.deepEqual(settings.cycles.gameOfLife[0], one.cycles.gameOfLife[0]);
     }
     assert.deepEqual(three.sortCycle, one.sortCycle);
     assert.deepEqual(two.sortCycle, ['luminance', 'dark-rainbow', 'reversed', 'center-out', 'rainbow-fold', 'zig-zag']);
@@ -198,7 +201,7 @@ test('factory reset restores the selected profile independently of personal save
 
 test('profile initialization and opening use the requested brushes, color meanings and symmetry', () => {
     const snapshots = [0, 1, 2].map(factoryProfileSnapshot);
-    assert.deepEqual(snapshots.map(s => s.settings.simulationInit.brushSize), [1, 11, 3]);
+    assert.deepEqual(snapshots.map(s => s.settings.simulationInit.brushSize), [1, 11, 1]);
     assert.deepEqual(snapshots.map(s => s.settings.startup.brushSize), [1, 11, 3]);
     assert.deepEqual(snapshots.map(s => s.settings.brush.size), [1, 11, 3]);
     const second = snapshots[1].settings;
@@ -206,7 +209,7 @@ test('profile initialization and opening use the requested brushes, color meanin
     assert.equal(second.simulationInit.brushColor, 'first');
     assert.equal(second.startup.brushColor, 'first');
     assert.equal(second.brush.symmetry, 'off');
-    assert.equal(snapshots[2].settings.simulationInit.brushColor, 'lightest');
+    assert.equal(snapshots[2].settings.simulationInit.brushColor, 'rainbow');
     assert.equal(snapshots[2].settings.startup.brushColor, 'lightest');
 });
 
@@ -264,15 +267,47 @@ test('startup resolves profile separators and board size before rendering, inclu
     for (const selected of [0, 1, 2]) {
         disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected, profiles }));
         const startup = loadProfileStartup(initial().settings.startup, disk);
-        assert.equal(startup.separatorPx, [5, 2, 2][selected]);
-        assert.equal(startup.boardSize, [7, 11, 7][selected]);
+        assert.equal(startup.separatorPx, [5, 2, 0][selected]);
+        assert.equal(startup.boardSize, [7, 11, 15][selected]);
     }
     profiles[1].draft.settings.startup.boardSize = 21;
     profiles[1].draft.settings.startup.separatorPx = 3;
     disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected: 1, profiles }));
     const personal = loadProfileStartup(initial().settings.startup, disk);
     assert.equal(personal.boardSize, 21); assert.equal(personal.separatorPx, 3);
-    assert.equal(defaultProfileSnapshots(initial())[2].settings.startup.separatorPx, 2);
+    assert.equal(defaultProfileSnapshots(initial())[2].settings.startup.separatorPx, 0);
     assert.equal(factoryProfileSnapshot(0).settings.startup.separatorPx, 5);
     assert.equal(factoryProfileSnapshot(1).settings.startup.separatorPx, 2);
+});
+
+test('profile 3 defaults use a random 15x15 board, rainbow hold and Paint 1 in the first Life slot', () => {
+    const profile = factoryProfileSnapshot(2);
+    assert.equal(profile.settings.startup.boardSize, 15);
+    assert.equal(profile.settings.startup.fill, 'random');
+    assert.equal(profile.settings.startup.separatorPx, 0);
+    assert.deepEqual(profile.settings.simulationInit, { boardSize: 249, brushSize: 1, brushColor: 'rainbow', symmetry: 'horizontal' });
+    assert.deepEqual(profile.settings.cycles.gameOfLife[0], { survival: [0,1,2,3,4,5,6,7,8], birth: [1,2,3,4,5,6,7,8] });
+    assert.equal(profile.identity.gameOfLife.index, 0);
+    assert.equal(profile.identity.gameOfLife.sources[0], 'btnGolPresetPaint2');
+    assert.deepEqual(profile.identity.gameOfLife.yoursRules, profile.settings.cycles.gameOfLife[0]);
+});
+
+test('profile 3 update preserves other profiles and explicit personal initialization choices', () => {
+    const disk = storage();
+    const profiles = [0, 1, 2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));
+    Object.assign(profiles[2].saved.settings.startup, { boardSize: 7, fill: 'dark', separatorPx: 2 });
+    Object.assign(profiles[2].saved.settings.simulationInit, { brushSize: 3, brushColor: 'lightest' });
+    delete profiles[2].saved.settings.simulationInit.symmetry;
+    Object.assign(profiles[2].draft.settings.simulationInit, { brushSize: 9, brushColor: 'first', symmetry: 'off' });
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 4, selected: 2, profiles }));
+    const state = createProfileState(initial(), disk);
+    assert.equal(state.draft(2).settings.simulationInit.brushSize, 9);
+    assert.equal(state.draft(2).settings.simulationInit.brushColor, 'first');
+    assert.equal(state.draft(2).settings.simulationInit.symmetry, 'off');
+    assert.deepEqual(state.draft(0), profiles[0].draft); assert.deepEqual(state.draft(1), profiles[1].draft);
+    state.persist(); const stored = JSON.parse(disk.getItem(PROFILE_STORAGE_KEY));
+    assert.equal(stored.profiles[2].saved.settings.startup.boardSize, 15);
+    assert.equal(stored.profiles[2].saved.settings.startup.separatorPx, 0);
+    assert.equal(stored.profiles[2].saved.settings.simulationInit.brushColor, 'rainbow');
+    assert.equal(stored.profiles[2].saved.settings.simulationInit.symmetry, 'horizontal');
 });

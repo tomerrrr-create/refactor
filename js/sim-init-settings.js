@@ -8,7 +8,7 @@ export function validateSimInit(settings) {
         Number.isInteger(settings.brushSize) && settings.brushSize >= 1 &&
         settings.brushSize <= 15 && settings.brushSize % 2 === 1 &&
         (!Object.hasOwn(settings, 'symmetry') || SYMMETRY_MODES.includes(settings.symmetry)) &&
-        (!Object.hasOwn(settings, 'brushColor') || ['first', 'last', 'lightest'].includes(settings.brushColor));
+        (!Object.hasOwn(settings, 'brushColor') || ['first', 'last', 'lightest', 'rainbow'].includes(settings.brushColor));
 }
 
 export function loadSimInit(storage) {

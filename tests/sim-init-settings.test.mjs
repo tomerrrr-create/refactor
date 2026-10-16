@@ -26,7 +26,7 @@ test('invalid values are rejected and blocked storage is reported', () => {
 test('initialization colors and symmetry persist and invalid extensions cannot enter preferences', () => {
     let stored;
     const storage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
-    for (const brushColor of ['first', 'last', 'lightest']) {
+    for (const brushColor of ['first', 'last', 'lightest', 'rainbow']) {
         const settings = { boardSize: 249, brushSize: 11, brushColor, symmetry: 'off' };
         assert(persistSimInit(settings, storage));
         assert.deepEqual(loadSimInit(storage), settings);
