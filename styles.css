@@ -1773,3 +1773,5 @@ button, .ctrl {
 
 .smooth-rendering-option.smooth-unavailable { opacity: .45; cursor: help; }
 #smoothUnavailableDialog .modal-dismiss { background: transparent; }
+
+#smoothUnavailablePrompt { white-space: pre-line; }
