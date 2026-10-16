@@ -43,3 +43,12 @@ test('invalid nested rules cannot fall back silently or enter storage', () => {
     settings.rules.gravity.direction = 'unknown';
     assert.throws(() => serializeWorkspaceSettings(settings));
 });
+
+test('optional profile themes round-trip without changing legacy V1 settings semantics', () => {
+    assert.equal(Object.hasOwn(defaultWorkspaceSettings(), 'simulationTheme'), false);
+    for (const simulationTheme of ['blue', 'gold', 'teal']) {
+        const settings = { ...defaultWorkspaceSettings(), simulationTheme };
+        assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
+    }
+    assert.throws(() => serializeWorkspaceSettings({ ...defaultWorkspaceSettings(), simulationTheme: 'unknown' }));
+});

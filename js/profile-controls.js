@@ -108,12 +108,11 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
     }
     window.addEventListener('pagehide', captureNow);
     document.addEventListener('visibilitychange', () => { if (document.hidden) captureNow(); });
-    if (state.restored) {
-        busy = true;
-        try { apply(state.draft()); state.observe(capture()); }
-        catch { message('settings_load_error'); }
-        finally { busy = false; }
-    } else if (!state.storageError) state.persist();
+    busy = true;
+    try { apply(state.draft()); state.observe(capture()); }
+    catch { message('settings_load_error'); }
+    finally { busy = false; }
+    if (!state.storageError) state.persist();
     refresh();
     return {
         refresh() { captureNow(); closeActions(); refresh(); },

@@ -36,3 +36,11 @@ test('source identity preserves Yours independently; outdated preset references 
     const result = c.loadCycleIdentity('identity', [defaults[1], personal, defaults[2]], presets);
     assert.deepEqual(plain(result), { sources: ['Ripple', 'yours', 'Nova'], yoursRules: personal });
 });
+
+test('Chi Flow preset names survive a Magnetic Reach override without accepting changed neighbor rules', () => {
+    const electric = { awakening: [3, 4, 5, 6, 7, 8], flow: [1], reach: 0 };
+    const boosted = { ...electric, reachPercent: 400 };
+    const result = c.normalizeCycleSources(['Electric', 'Electric', 'Electric'],
+        [boosted, boosted, { ...boosted, flow: [2] }], { Electric: electric });
+    assert.deepEqual(plain(result), ['Electric', 'Electric', 'custom-2']);
+});

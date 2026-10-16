@@ -1,4 +1,4 @@
-import { initializeSimulationTheme } from './simulation-theme.js';
+import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
@@ -1873,6 +1873,7 @@ if (simulationName === 'magnet') {
       function getWorkspaceSettings() {
         return {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
+            simulationTheme: getSimulationTheme(),
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
             ...(separatorCycle.join() === DEFAULT_SEPARATOR_CYCLE.join() ? {} : { separatorCycle: [...separatorCycle] }),
             smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked,
@@ -1886,6 +1887,7 @@ if (simulationName === 'magnet') {
 
       // Applies preferences only. No board, palette, sort, history or macro state is restored.
       function applyWorkspacePreferences(settings) {
+        if (settings.simulationTheme) applySimulationTheme(settings.simulationTheme);
         separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
         spiralRules = { ...settings.rules.spiral };
@@ -2911,7 +2913,9 @@ function updateChiFlowButtonUI() {
     dom.btnSandpile.querySelectorAll('[data-chi-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
-    const preset = Object.entries(C.CHI_FLOW_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(chiFlowRules))?.[0];
+    const source = chiFlowSources[['personal', 'ripples', 'nova'].indexOf(chiFlowMode)];
+    const preset = C.CHI_FLOW_PRESETS[source] ? source :
+        Object.entries(C.CHI_FLOW_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(chiFlowRules))?.[0];
     const name = preset ? getText('chi_preset_' + preset.toLowerCase()) : getText('cycle_custom');
     dom.btnSandpile.title = getText('chi_modal_title') + (active ? ': ' + name : '');
     dom.btnSandpile.setAttribute('aria-label', dom.btnSandpile.title);

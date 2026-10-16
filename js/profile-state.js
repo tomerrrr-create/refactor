@@ -13,6 +13,7 @@ const equal = (a, b) => canonical(a) === canonical(b);
 
 export function validateProfileSnapshot(value) {
     const settings = validateWorkspaceSettings(value.settings);
+    settings.simulationTheme ??= 'blue';
     const snapshot = { settings };
     if (value.identity) {
         snapshot.identity = {};
@@ -30,6 +31,35 @@ export function validateProfileSnapshot(value) {
         }
     }
     return snapshot;
+}
+
+// Profile 1 supplies every unspecified setting; named rules remain snapshots.
+export function defaultProfileSnapshots(initial) {
+    const first = validateProfileSnapshot(initial);
+    first.settings.simulationTheme = 'blue';
+    const profiles = [first, clone(first), clone(first)];
+    for (const [index, paletteName, fill, theme] of [
+        [1, 'Golden Midnight Extended', 'random', 'gold'],
+        [2, 'Ancient 264', 'dark', 'teal']
+    ]) {
+        const snapshot = profiles[index];
+        Object.assign(snapshot.settings.startup, { paletteName, fill, interfaceMode: 'simulation' });
+        snapshot.settings.simulationTheme = theme;
+        snapshot.settings.cycles.chiFlow = ['Electric', 'Harmony', 'Alexis'].map(name =>
+            ({ ...clone(CHI_FLOW_PRESETS[name]), reachPercent: 400 }));
+        if (snapshot.identity) {
+            snapshot.identity.chiFlow = { index: 0, sources: ['Electric', 'Harmony', 'Alexis'],
+                yoursRules: clone(snapshot.settings.cycles.chiFlow[0]) };
+        }
+    }
+    profiles[1].settings.sortCycle = first.settings.sortCycle
+        .filter(method => !['outside-in', 'temperature'].includes(method));
+    for (const method of ['rainbow-fold', 'zig-zag']) {
+        if (!profiles[1].settings.sortCycle.includes(method)) profiles[1].settings.sortCycle.push(method);
+    }
+    profiles[2].settings.startup.brushSize = 1;
+    profiles[2].settings.brush.size = 1;
+    return profiles.map(validateProfileSnapshot);
 }
 
 // Merge only manual changes since the last observation. Replay can change runtime
@@ -50,8 +80,8 @@ function mergeChanges(draft, previous, current) {
 
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
-    let state = { version: 1, selected: 0,
-        profiles: Array.from({ length: 3 }, () => ({ saved: clone(initial), draft: clone(initial) })) };
+    let state = { version: 1, defaultsVersion: 1, selected: 0,
+        profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
         storage ??= globalThis.localStorage;
@@ -61,9 +91,26 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 1, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
+            if (value.defaultsVersion !== 1) {
+                const baseline = state.profiles[0].saved;
+                const defaults = defaultProfileSnapshots(baseline);
+                for (let index = 0; index < 3; index++) {
+                    const profile = state.profiles[index];
+                    // Only replace the old identical, untouched copies. Keep personal settings.
+                    if (index > 0 && equal(profile.saved, baseline) && equal(profile.draft, baseline)) {
+                        state.profiles[index] = { saved: clone(defaults[index]), draft: clone(defaults[index]) };
+                    } else {
+                        for (const kind of ['saved', 'draft']) {
+                            if (!Object.hasOwn(value.profiles[index][kind].settings, 'simulationTheme')) {
+                                profile[kind].settings.simulationTheme = ['blue', 'gold', 'teal'][index];
+                            }
+                        }
+                    }
+                }
+            }
             restored = true;
         }
     } catch { storageError = true; }

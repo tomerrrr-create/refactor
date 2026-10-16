@@ -8,26 +8,28 @@ const LABELS = {
   ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза'},
   nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois'}
 };
+export function getSimulationTheme() {
+  return document.documentElement.dataset.simulationTheme || 'blue';
+}
+
+export function applySimulationTheme(value) {
+  const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'blue';
+  document.documentElement.dataset.simulationTheme = theme;
+  for (const preview of document.querySelectorAll('#simulationThemeSettings [data-theme]')) {
+    preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
+  }
+  try { localStorage.setItem(STORAGE_KEY, theme); return true; }
+  catch { return false; /* Appearance still works for this session. */ }
+}
+
 export function initializeSimulationTheme() {
   const section = document.getElementById('simulationThemeSettings');
   const previews = section.querySelectorAll('[data-theme]');
-  function apply(value) {
-    const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'blue';
-    document.documentElement.dataset.simulationTheme = theme;
-    for (const preview of previews) {
-      preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
-    }
-    translate();
-    return theme;
-  }
   let saved;
   try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* Use the existing blue appearance. */ }
-  apply(saved);
+  applySimulationTheme(saved);
   for (const preview of previews) {
-    preview.addEventListener('click', () => {
-      const theme = apply(preview.dataset.theme);
-      try { localStorage.setItem(STORAGE_KEY, theme); } catch { /* Appearance still works for this session. */ }
-    });
+    preview.addEventListener('click', () => applySimulationTheme(preview.dataset.theme));
   }
   function translate() {
     const labels = LABELS[getCurrentLang()] || LABELS.en;

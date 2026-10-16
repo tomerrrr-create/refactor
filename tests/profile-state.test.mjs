@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProfileState, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
+import { createProfileState, defaultProfileSnapshots, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
-const initial = () => ({ settings: defaultWorkspaceSettings() });
+const initial = () => ({ settings: { ...defaultWorkspaceSettings(), simulationTheme: 'blue' } });
 const storage = () => {
     const data = new Map();
     return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
@@ -113,4 +113,59 @@ test('failed replay completion resumes normal profile capture without accepting 
         const edited=change(initial(),s=>{s.brush.size=5;});
         assert.equal(state.capture(edited),true);assert.equal(state.draft().settings.brush.size,5);
     }
+});
+
+test('factory profiles keep unspecified settings and have distinct startup, sort, theme and Chi Flow defaults', () => {
+    const snapshots = defaultProfileSnapshots(initial());
+    const [one, two, three] = snapshots.map(snapshot => snapshot.settings);
+    assert.deepEqual(one, initial().settings);
+    assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
+    assert.equal(two.startup.fill, 'random');
+    assert.equal(three.startup.paletteName, 'Ancient 264');
+    assert.equal(three.startup.fill, 'dark');
+    assert.equal(three.startup.brushSize, 1);
+    assert.equal(three.brush.size, 1);
+    assert.deepEqual(snapshots.map(s => s.settings.simulationTheme), ['blue', 'gold', 'teal']);
+    for (const settings of [two, three]) {
+        assert.equal(settings.startup.interfaceMode, 'simulation');
+        assert.deepEqual(settings.cycles.chiFlow.map(r => r.flow), [[1], [3, 5, 7], [4, 5, 6, 7, 8]]);
+        assert(settings.cycles.chiFlow.every(r => r.reachPercent === 400));
+        assert.deepEqual(settings.rules, one.rules);
+        assert.deepEqual(settings.simulationInit, one.simulationInit);
+        assert.deepEqual(settings.smoothing, one.smoothing);
+        assert.deepEqual(settings.cycles.gameOfLife, one.cycles.gameOfLife);
+    }
+    assert.deepEqual(three.sortCycle, one.sortCycle);
+    assert.deepEqual(two.sortCycle, ['luminance', 'dark-rainbow', 'reversed', 'center-out', 'rainbow-fold', 'zig-zag']);
+});
+
+test('legacy untouched copies receive new defaults once, while edited profiles and drafts survive', () => {
+    const disk = storage();
+    const old = initial(); delete old.settings.simulationTheme;
+    const legacy = { version: 1, selected: 1, profiles: [0, 1, 2].map(() => ({ saved: structuredClone(old), draft: structuredClone(old) })) };
+    legacy.profiles[2].draft.settings.brush.size = 9;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify(legacy));
+    const state = createProfileState(initial(), disk);
+    assert.equal(state.selected, 1);
+    assert.equal(state.draft(1).settings.startup.paletteName, 'Golden Midnight Extended');
+    assert.equal(state.dirty(1), false);
+    assert.equal(state.draft(2).settings.brush.size, 9);
+    assert.equal(state.dirty(2), true);
+    assert.equal(state.draft(2).settings.simulationTheme, 'teal');
+    state.persist();
+    const reopened = createProfileState(initial(), disk);
+    assert.deepEqual(reopened.draft(2), state.draft(2));
+});
+
+test('profile themes survive switching, saving and reopening independently', () => {
+    const disk = storage();
+    const state = createProfileState(initial(), disk);
+    for (let i = 0; i < 3; i++) {
+        state.select(i); state.observe(state.draft());
+        state.capture(change(state.draft(), s => { s.simulationTheme = ['teal', 'blue', 'gold'][i]; }));
+        state.save();
+    }
+    const reopened = createProfileState(initial(), disk);
+    assert.deepEqual([0, 1, 2].map(i => reopened.draft(i).settings.simulationTheme), ['teal', 'blue', 'gold']);
+    assert.deepEqual([0, 1, 2].map(i => reopened.dirty(i)), [false, false, false]);
 });
