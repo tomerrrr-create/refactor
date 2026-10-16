@@ -1747,3 +1747,13 @@ button, .ctrl {
 .technician-start-settings .technician-option[aria-expanded="true"] .technician-option-heading { background: #d5aa481a; box-shadow: 0 0 0 8px #d5aa481a; border-radius: 5px; }
 .technician-start-settings .technician-option[aria-expanded="true"] bdi { color: #ffe7a0; text-shadow: 0 0 12px #d5aa4840; }
 .technician-start-settings .technician-option[aria-expanded="true"] .technician-badge { border-color: #d5aa4880; }
+
+/* Keep the action symbols physically left of their compact English headings. */
+.technician-start-settings .technician-option-heading { direction: ltr; justify-content: flex-start; }
+.technician-start-settings .technician-badge { order: -1; }
+
+.technician-effect-heading { display: inline-flex; align-items: center; gap: 12px; direction: ltr; }
+.technician-effect-heading .technician-badge { display: inline-flex; align-items: center; justify-content: center; color: #e3c677; }
+.technician-effect-heading svg { width: 18px; height: 18px; }
+.technician-start-settings .technician-badge,
+.technician-effect-heading .technician-badge { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex: 0 0 36px; width: 36px; min-height: 28px; }
