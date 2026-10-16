@@ -10,7 +10,7 @@
   --stroke: 3px;
   --gold: #FFD700;
   --glow-color: var(--gold);
- --sim-color: #3F51B5;
+  --sim-color: #a58b54;
 
 }
 
@@ -262,9 +262,9 @@ body {
   display: block;
   grid-column: 3 / 8; 
   grid-row: 2 / span 2;    
-  background: linear-gradient(to bottom, #0f172a, #000000);
+  background: linear-gradient(135deg, #1c1a12, #0d0e0c);
   border-radius: 12px;
-  border: 1px solid #334155;
+  border: 1px solid #b28b3645;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -998,11 +998,11 @@ body {
 #btnSandpile svg,
 #btnTuring svg,
 #btnShowBreatheMenu svg {
-    stroke: var(--sim-color); /* צובע את קווי המתאר של האייקון בכחול */
+    stroke: var(--sim-color); /* Muted technician-menu gold for unselected simulations. */
 }
 
 #btnDla svg {
-    fill: var(--sim-color); /* צובע את האייקון המלא של DLA בכחול */
+    fill: var(--sim-color); /* DLA uses a filled icon rather than an outline. */
 }
 
 
