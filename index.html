@@ -740,7 +740,17 @@
         </button>
         <h2 id="resizeModalTitle" class="text-lg font-semibold mb-4"></h2>
         <p id="resizeModalPrompt" class="text-sm text-gray-400 mb-4"></p>
-        <input type="number" id="resizeInput" class="bg-gray-700 border border-gray-600 text-white text-lg text-center rounded-lg focus:ring-gold-500 focus:border-gold-500 block w-full p-2.5" placeholder="5">
+        <div class="resize-size-controls">
+          <button id="btnResizeValueDown" type="button" class="resize-size-step">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+            <span class="sr-only" data-debug-text="resize_decrease_one"></span>
+          </button>
+          <input type="number" id="resizeInput" min="1" max="300" step="1" aria-labelledby="resizeModalTitle" class="bg-gray-700 border border-gray-600 text-white text-lg text-center rounded-lg focus:ring-gold-500 focus:border-gold-500 block w-full p-2.5" placeholder="5">
+          <button id="btnResizeValueUp" type="button" class="resize-size-step">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>
+            <span class="sr-only" data-debug-text="resize_increase_one"></span>
+          </button>
+        </div>
         <button id="btnConfirmResize" class="mt-6 w-full text-black font-bold py-2 px-4 rounded-lg"></button>
     </div>
   </div>

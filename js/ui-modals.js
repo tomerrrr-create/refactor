@@ -480,9 +480,16 @@ function openTuringSettingsModal() {
 
 // --- Modal Management Functions ---
 
+function refreshResizeSteps() {
+    const value = Number(app.dom.resizeInput.value);
+    document.getElementById('btnResizeValueDown').disabled = app.dom.resizeInput.value !== '' && value <= 1;
+    document.getElementById('btnResizeValueUp').disabled = app.dom.resizeInput.value !== '' && value >= 300;
+}
+
 function openResizeModal() {
     if (app.isBreathing()) return;
     app.dom.resizeInput.value = app.getN();
+    refreshResizeSteps();
     app.dom.resizeModal.classList.add('modal-visible');
     app.dom.resizeInput.focus();
     app.dom.resizeInput.select();
@@ -1359,7 +1366,16 @@ export function initializeModals(appContext) {
     app.dom.btnSaveLogger.addEventListener('click', app.exportArtRecipeLog);
     app.dom.projectFileInput.addEventListener('change', app.onProjectFileSelected);
 
-    // Resize Modal
+    // Resize Modal: these controls edit only the pending value, never the board.
+    for (const [id, delta] of [['btnResizeValueDown', -1], ['btnResizeValueUp', 1]]) {
+        document.getElementById(id).addEventListener('click', () => {
+            const value = parseInt(app.dom.resizeInput.value, 10);
+            app.dom.resizeInput.value = Math.max(1, Math.min(300, (Number.isFinite(value) ? value : app.getN()) + delta));
+            app.dom.resizeInput.style.borderColor = '';
+            refreshResizeSteps();
+        });
+    }
+    app.dom.resizeInput.addEventListener('input', refreshResizeSteps);
     app.dom.btnConfirmResize.addEventListener('click', handleConfirmResize);
     app.dom.resizeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { handleConfirmResize(); } });
     app.dom.btnResizeModalClose.addEventListener('click', closeResizeModal);
