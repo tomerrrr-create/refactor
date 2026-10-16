@@ -1695,6 +1695,7 @@ if (simulationName === 'magnet') {
             modals.clearSaveStatus();
             dom.imagePreview.src = URL.createObjectURL(blob);
             dom.fileNameInput.value = C.PALETTES[activePaletteIndex]?.name || getText('saveModal_defaultFilename');
+            dom.saveSmoothImage.checked = isSmoothRendering && isSmoothDisplayAvailable(n, separatorPx);
             dom.saveModal.classList.add('modal-visible');
             dom.btnSave.disabled = false;
         }, 'image/png');
