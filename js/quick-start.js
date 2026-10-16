@@ -1,3 +1,4 @@
+import { createGuideRipples } from './guide-ripples.js';
 import { getCurrentLang, onLanguageChange } from './i18n.js';
 const COPY = {
   "en": {
@@ -305,13 +306,37 @@ const COPY = {
     ]
   }
 };
+const WELCOME = {
+  en: ['A little touch. A world of color.', 'Before we begin, follow your intuition.', 'Touch here', 'Touch anywhere. Every touch starts a new ripple.', 'Let’s begin'],
+  he: ['נגיעה קטנה. עולם של צבע.', 'לפני שמתחילים, הולכים עם האינטואיציה.', 'געו כאן', 'געו בכל מקום באריח. כל נגיעה יוצרת אדווה חדשה.', 'מתחילים'],
+  ru: ['Одно касание. Мир цвета.', 'Прежде чем начать, доверьтесь интуиции.', 'Коснитесь здесь', 'Коснитесь любой точки плитки. Каждое касание создаёт новую волну.', 'Начнём'],
+  nl: ['Een kleine aanraking. Een wereld van kleur.', 'Volg je intuïtie, nog voor we beginnen.', 'Raak hier aan', 'Raak de tegel ergens aan. Elke aanraking maakt een nieuwe golf.', 'Laten we beginnen']
+};
 export function initializeQuickStart() {
   const dialog = document.getElementById('quickStartDialog');
-  const title = dialog.querySelector('h2'), body = dialog.querySelector('[data-guide-body]');
+  const title = dialog.querySelector('#quickStartTitle'), body = dialog.querySelector('[data-guide-body]');
   const tip = dialog.querySelector('[data-guide-tip]'), visual = dialog.querySelector('[data-guide-visual]');
   const count = dialog.querySelector('[data-guide-count]'), dots = dialog.querySelector('[data-guide-dots]');
   const back = dialog.querySelector('[data-guide-back]'), next = dialog.querySelector('[data-guide-next]');
   const close = dialog.querySelector('[data-guide-close]'), panel = dialog.querySelector('[data-guide-slide]');
+  const welcome = dialog.querySelector('[data-guide-welcome]'), content = dialog.querySelector('[data-guide-content]');
+  const tile = dialog.querySelector('[data-guide-tile]'), begin = dialog.querySelector('[data-guide-begin]');
+  const ripples = createGuideRipples(dialog.querySelector('[data-guide-canvas]'));
+  let welcoming = true;
+  function showPage() {
+    welcome.hidden = !welcoming; content.hidden = welcoming;
+    dialog.classList.toggle('is-welcome', welcoming);
+    dialog.setAttribute('aria-labelledby', welcoming ? 'guideWelcomeTitle' : 'quickStartTitle');
+    dialog.setAttribute('aria-describedby', welcoming ? 'guideWelcomeNote' : 'quickStartBody');
+    dialog.scrollTop = 0;
+    if (welcoming) requestAnimationFrame(() => { if (dialog.open && welcoming) ripples.draw(); });
+  }
+  tile.addEventListener('click', event => {
+    const r = tile.getBoundingClientRect();
+    ripples.burst(event.detail ? Math.max(0, Math.min(1, (event.clientX - r.left) / r.width)) : .5,
+      event.detail ? Math.max(0, Math.min(1, (event.clientY - r.top) / r.height)) : .5);
+  });
+  begin.addEventListener('click', () => { welcoming = false; ripples.stop(); showPage(); next.focus({preventScroll:true}); });
   const entries = [...document.querySelectorAll('[data-open-guide]')];
   const icons = ['btnPalette','btnPalette','btnColorPicker','btnSymmetry','btnResizeUp','btnToggleSimMode','btnGameOfLife','btnSandpile','btnGravitationalSort','btnContour','btnCycleSort','btnSave','btnMacroPlay'];
   let index = 0, trigger = null, gesture = null;
@@ -321,6 +346,9 @@ export function initializeQuickStart() {
     b.addEventListener('click', () => { index = i; render(); }); dots.append(b); return b;
   });
   function render() {
+    const w = WELCOME[getCurrentLang()] || WELCOME.en;
+    ['[data-guide-welcome-title]', '[data-guide-welcome-note]', '[data-guide-touch]', '[data-guide-welcome-hint]', '[data-guide-begin]'].forEach((selector, i) => dialog.querySelector(selector).textContent = w[i]);
+    tile.setAttribute('aria-label', `${w[2]}. ${w[3]}`);
     const c = copy(); dots.setAttribute('aria-label', c.entry); dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
     dialog.querySelector('[data-guide-label]').textContent = c.label;
     [title.textContent, body.textContent, tip.textContent] = c.slides[index];
@@ -336,14 +364,14 @@ export function initializeQuickStart() {
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) panel.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}], {duration:220,easing:'ease-out'});
   }
   function move(delta) { index = Math.max(0, Math.min(copy().slides.length - 1, index + delta)); render(); }
-  entries.forEach(button => button.addEventListener('click', () => { trigger = button; index = 0; render(); dialog.showModal(); next.focus({preventScroll:true}); }));
+  entries.forEach(button => button.addEventListener('click', () => { trigger = button; index = 0; welcoming = true; ripples.stop(); render(); showPage(); dialog.showModal(); tile.focus({preventScroll:true}); }));
   function refresh() { entries.filter(b => !b.hasAttribute('data-debug-text')).forEach(b => b.textContent = copy().entry); if (dialog.open) render(); }
   back.addEventListener('click', () => move(-1));
   next.addEventListener('click', () => index === copy().slides.length - 1 ? dialog.close() : move(1));
   close.addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => { gesture = null; trigger?.focus({preventScroll:true}); });
+  dialog.addEventListener('close', () => { gesture = null; ripples.stop(); trigger?.focus({preventScroll:true}); });
   dialog.addEventListener('click', e => { if (e.target !== dialog) return; const r=dialog.getBoundingClientRect(); if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom) dialog.close(); });
-  dialog.addEventListener('keydown', e => { if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move((e.key==='ArrowRight'?1:-1)*(dialog.dir==='rtl'?-1:1));} });
+  dialog.addEventListener('keydown', e => { if(!welcoming && (e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();move((e.key==='ArrowRight'?1:-1)*(dialog.dir==='rtl'?-1:1));} });
   panel.addEventListener('pointerdown', e => { if(!e.isPrimary || e.button!==0) return; gesture={id:e.pointerId,x:e.clientX,y:e.clientY}; panel.setPointerCapture(e.pointerId); });
   panel.addEventListener('pointerup', e => { if(!gesture||gesture.id!==e.pointerId)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;gesture=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.5)move((dx<0?1:-1)*(dialog.dir==='rtl'?-1:1)); });
   panel.addEventListener('pointercancel', () => { gesture=null; });

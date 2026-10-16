@@ -554,6 +554,17 @@
 
   <dialog id="quickStartDialog" class="technician-dialog quick-start-dialog" aria-labelledby="quickStartTitle" aria-describedby="quickStartBody">
     <header class="quick-start-header"><span data-guide-label></span><button type="button" data-guide-close>×</button></header>
+    <section class="guide-welcome" data-guide-welcome hidden>
+      <h2 id="guideWelcomeTitle" data-guide-welcome-title></h2>
+      <p id="guideWelcomeNote" data-guide-welcome-note></p>
+      <button type="button" class="guide-ripple-tile" data-guide-tile>
+        <canvas data-guide-canvas aria-hidden="true"></canvas>
+        <span data-guide-touch></span>
+      </button>
+      <p class="guide-welcome-hint" data-guide-welcome-hint></p>
+      <div class="quick-start-footer"><button type="button" data-guide-begin></button></div>
+    </section>
+    <div data-guide-content>
     <div class="quick-start-slide" data-guide-slide>
       <div class="quick-start-visual" data-guide-visual aria-hidden="true"></div>
       <p class="quick-start-count" data-guide-count></p>
@@ -561,6 +572,7 @@
     </div>
     <nav class="quick-start-dots" data-guide-dots aria-label="Steps"></nav>
     <footer class="quick-start-footer"><button type="button" data-guide-back></button><button type="button" data-guide-next></button></footer>
+    </div>
   </dialog>
 
   <dialog id="technicianDialog" class="technician-dialog" aria-labelledby="technicianTitle" aria-describedby="technicianSubtitle">
