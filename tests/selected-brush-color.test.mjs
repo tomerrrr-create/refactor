@@ -56,7 +56,7 @@ test('sort hold returns to the first configured method, preserves colors and log
     h.animationLoopId = null;
     h.hideLongPressDisplay = () => {};
     h.bindPickerGestures = (_button, options) => { h.sortGestures = options; };
-    vm.runInContext(excerpt('function cycleSortMethod(', '// פונקציה חדשה: מנתבת'), h);
+    vm.runInContext(excerpt('function cycleSortMethod(', '// --- Art Logger: Export Functionality ---'), h);
     vm.runInContext(excerpt('bindPickerGestures(dom.btnCycleSort,', "dom.btnCycleSort.addEventListener('keydown'"), h);
     const color = h.C.PALETTES[0].colors[h.boardState[0].k];
     h.sortGestures.onHold();
