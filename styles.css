@@ -1735,3 +1735,7 @@ button, .ctrl {
 .technician-display-settings .smooth-rendering-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
 .technician-display-settings .bloom-rendering-option { margin-bottom: 14px; }
 .technician-display-settings .bloom-intensity-control { margin: 0; padding: 0; }
+
+/* Keep the new breathing symbols delicate even while the simulation is armed. */
+#btnShowBreatheMenu #iconBreatheRandomCell,
+#btnShowBreatheMenu #iconBreatheRandomColor { stroke-width: 1.2; }

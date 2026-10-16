@@ -130,6 +130,7 @@ window.logArtEvent = function(eventName, details, forceLog = false) {
       // --- Breathe Animation State ---
       let isBreathing = false; // This variable is now effectively replaced by (isLifePlaying && armedSimulation === 'breathe')
       let breatheStartTime = 0;
+      let randomBreatheSession = null;
       let breatheEvoMode = 'off'; // 'off', 'solo' or 'group'
 
 
@@ -567,6 +568,9 @@ let offscreenRenderCtx = null;
 let cachedImgData = null; // משתנה למניעת דליפת זיכרון!
 
 function renderBoard(targetCtx, width, height, timestamp = performance.now(), smooth = false) {
+    if (isLifePlaying && armedSimulation === 'breathe' && randomBreatheSession) {
+        randomBreatheSession.update(Math.max(0, (timestamp ?? performance.now()) - breatheStartTime));
+    }
     if (!targetCtx) return;
     if (boardState.length === 0) return;
 
@@ -601,7 +605,9 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
             let rgb;
             if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
-                const brightnessFactor = Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode);
+                const brightnessFactor = randomBreatheSession
+                    ? randomBreatheSession.factor(i)
+                    : Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode);
                 const baseRgb = paletteAsRgb[norm(tileData.k)];
                 rgb = [
                     Math.round(baseRgb[0] * brightnessFactor),
@@ -661,7 +667,9 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         let finalColor;
 
         if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
-            const brightnessFactor = Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode);
+            const brightnessFactor = randomBreatheSession
+                    ? randomBreatheSession.factor(i)
+                    : Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode);
             const originalColor = getPaletteColor(tileData.k);
             finalColor = adjustBrightness(originalColor, brightnessFactor);
         }
@@ -1386,10 +1394,14 @@ function pauseLife() {
           if (armedSimulation === 'breathe') {
               const BREATHE_SPEED = 0.0015;
               const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;            
-              boardState.forEach(tile => {
-                  tile.startDelay = Math.random() * cycleDuration; 
-              });
+              if (!['random-cell', 'random-color'].includes(breatheEvoMode)) {
+                  boardState.forEach(tile => {
+                      tile.startDelay = Math.random() * cycleDuration;
+                  });
+              }
 
+              randomBreatheSession = ['random-cell', 'random-color'].includes(breatheEvoMode)
+                  ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode) : null;
               breatheStartTime = performance.now();
               isLifePlaying = true;
               
@@ -3009,26 +3021,14 @@ function cycleGravitationalSortMode() {
 
 // --- NEW: Breathe Simulation UI and Cycling ---
 function updateBreatheEvoButtonUI() {
-    dom.btnShowBreatheMenu.classList.remove('mode-solo', 'mode-group', 'simulation-active');
-
-    if (breatheEvoMode === 'solo') {
-        dom.btnShowBreatheMenu.classList.add('mode-solo');
-        dom.iconBreatheSolo.style.display = 'block';
-        dom.iconBreatheGroup.style.display = 'none';
-        if (armedSimulation === 'breathe') {
-            dom.btnShowBreatheMenu.classList.add('simulation-active');
-        }
-    } else if (breatheEvoMode === 'group') {
-        dom.btnShowBreatheMenu.classList.add('mode-group');
-        dom.iconBreatheSolo.style.display = 'none';
-        dom.iconBreatheGroup.style.display = 'block';
-        if (armedSimulation === 'breathe') {
-            dom.btnShowBreatheMenu.classList.add('simulation-active');
-        }
-    } else { // 'off'
-        dom.iconBreatheSolo.style.display = 'block';
-        dom.iconBreatheGroup.style.display = 'none';
-    }
+    const modes = ['solo', 'group', 'random-cell', 'random-color'];
+    const icons = ['iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
+    dom.btnShowBreatheMenu.classList.remove(...modes.map(mode => 'mode-' + mode), 'simulation-active');
+    modes.forEach((mode, index) => {
+        document.getElementById(icons[index]).style.display = mode === breatheEvoMode || (breatheEvoMode === 'off' && index === 0) ? 'block' : 'none';
+    });
+    if (modes.includes(breatheEvoMode)) dom.btnShowBreatheMenu.classList.add('mode-' + breatheEvoMode);
+    if (armedSimulation === 'breathe') dom.btnShowBreatheMenu.classList.add('simulation-active');
 }
 
 function cycleBreatheEvoMode() {
@@ -3037,7 +3037,7 @@ function cycleBreatheEvoMode() {
     }
 
     const oldMode = breatheEvoMode;
-    const sequence = ['off', 'solo', 'group'];
+    const sequence = ['off', 'solo', 'group', 'random-cell', 'random-color'];
     const currentIndex = sequence.indexOf(breatheEvoMode);
     const nextIndex = (currentIndex + 1) % sequence.length;
     breatheEvoMode = sequence[nextIndex];
