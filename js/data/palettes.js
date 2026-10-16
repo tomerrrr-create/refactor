@@ -1459,7 +1459,7 @@ colors: (function() {
 
 {
   originalName: "Jade Tides 264",
-  emoji: '🌊',
+  iconHTML: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true" fill="none" stroke-linejoin="round"><path d="M12 1.7L21 6.8V17.2L12 22.3L3 17.2V6.8Z" fill="#050D22" stroke="#83D9A0" stroke-width="1.2"/><path d="M3 6.8L12 12L21 6.8M12 12V22.3" stroke="#2878B6" stroke-width="1.1"/><path d="M7 7.2L12 4.3L17 7.2L12 10.1Z" fill="#84D4E8"/><path d="M5.7 11L10 13.5V18.7L5.7 16.2Z" fill="#83D9A0"/><path d="M14 13.5L18.3 11V16.2L14 18.7Z" fill="#B2A8D7"/><path d="M10 6.9H14M7.8 14V16M16.2 14V16" stroke="#A99B66" stroke-width="1.1" stroke-linecap="round"/></svg>',
   isArchived: false,
   colors: [
     "#050D22", "#061028", "#07132D", "#081733", "#081A38", "#091D3E", "#0A2043", "#0B2349",
@@ -1500,7 +1500,7 @@ colors: (function() {
 
 {
   originalName: "Tibetan Turquoise Gold 264",
-  emoji: '🪷',
+  iconHTML: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true" fill="none" stroke-linejoin="round"><path d="M12 1.6L16 5.6H18.4V8L22.4 12L18.4 16V18.4H16L12 22.4L8 18.4H5.6V16L1.6 12L5.6 8V5.6H8Z" fill="#061C25" stroke="#EACB73" stroke-width="1.15"/><path d="M12 4.7L19.3 12L12 19.3L4.7 12Z" stroke="#3BB9B8" stroke-width="1.5"/><path d="M8.3 8.3H15.7V15.7H8.3Z" stroke="#EACB73" stroke-width="1.1"/><path d="M12 7.1L16.9 12L12 16.9L7.1 12Z" fill="#3BB9B8"/><path d="M12 9.7L14.3 12L12 14.3L9.7 12Z" fill="#EACB73"/><path d="M12 2V3.5M20.5 12H22M12 20.5V22M2 12H3.5" stroke="#B4A55F" stroke-width="1.2"/></svg>',
   isArchived: false,
   colors: [
     "#061C25", "#061E27", "#061F29", "#06212A", "#06222C", "#06242E", "#072530", "#072731",
