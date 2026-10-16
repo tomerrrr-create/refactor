@@ -13,7 +13,7 @@ import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, 
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
 import { updateRainbowFrame } from './rainbow-frame.js';
-import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
+import { serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
 import { resolveChiReach } from './chi-reach.js';
 // js/app.js
 
@@ -4323,14 +4323,7 @@ else if (action.eventName === 'Invert Colors') {
             getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
             isNudgeReplayActive: () => isMacroLoaded,
             setNudgeInterval, persistNudgeSettings,
-            resetWorkspaceSettings: () => {
-                const settings = defaultWorkspaceSettings();
-                // Keep the settings-file V1 baseline intact; the current display default is on.
-                settings.smoothing.display = DEFAULT_SMOOTH_RENDERING;
-                settings.smoothing.bloom = DEFAULT_SOFT_BLOOM;
-                settings.smoothing.bloomIntensity = DEFAULT_BLOOM_INTENSITY;
-                return importWorkspaceSettings(settings);
-            },
+            resetWorkspaceSettings: () => settingsProfiles.resetToDefaults(),
             getStartupSettings: () => ({ ...startupSettings }),
             saveStartupSettings: (settings) => {
                 const normalized = normalizeStartup(settings);

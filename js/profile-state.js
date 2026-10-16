@@ -1,6 +1,9 @@
-import { validateWorkspaceSettings, deserializeWorkspaceSettings } from './workspace-settings.js';
+import { validateWorkspaceSettings, deserializeWorkspaceSettings, defaultWorkspaceSettings } from './workspace-settings.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
-import { normalizeCycleSources } from './evolution-cycle-settings.js';
+import { normalizeCycleSources, inferCycleSources } from './evolution-cycle-settings.js';
+
+import { DEFAULT_SMOOTH_RENDERING } from './smooth-rendering-settings.js';
+import { DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY } from './soft-bloom.js';
 
 export const PROFILE_STORAGE_KEY = 'colorGridProfileDraftsV1';
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -60,6 +63,20 @@ export function defaultProfileSnapshots(initial) {
     profiles[2].settings.startup.brushSize = 1;
     profiles[2].settings.brush.size = 1;
     return profiles.map(validateProfileSnapshot);
+}
+
+// Reset uses application defaults, never another profile's saved personal settings.
+export function factoryProfileSnapshot(index) {
+    if (!Number.isInteger(index) || index < 0 || index > 2) throw Error('Invalid profile');
+    const settings = defaultWorkspaceSettings();
+    Object.assign(settings.smoothing, { display: DEFAULT_SMOOTH_RENDERING,
+        bloom: DEFAULT_SOFT_BLOOM, bloomIntensity: DEFAULT_BLOOM_INTENSITY });
+    const identity = {};
+    for (const [name, presets] of [['gameOfLife', GAME_OF_LIFE_PRESETS], ['chiFlow', CHI_FLOW_PRESETS]]) {
+        identity[name] = { index: 0, sources: inferCycleSources(settings.cycles[name], presets),
+            yoursRules: clone(settings.cycles[name][0]) };
+    }
+    return defaultProfileSnapshots({ settings, identity })[index];
 }
 
 // Merge only manual changes since the last observation. Replay can change runtime

@@ -57,8 +57,8 @@ export const translations = {
   settings_session_only: {"en": "For this session", "he": "לכניסה זו", "ru": "На этот сеанс", "nl": "Voor deze sessie"},
 
   workspace_reset: {"en": "Reset", "he": "איפוס", "ru": "Сброс", "nl": "Herstellen"},
-  workspace_reset_title: {"en": "Restore all default settings", "he": "שחזור כל הגדרות ברירת המחדל", "ru": "Восстановить все настройки по умолчанию", "nl": "Alle standaardinstellingen herstellen"},
-  workspace_reset_prompt: {"en": "Restore all settings? Your board stays.", "he": "לשחזר את כל ההגדרות? הלוח נשאר.", "ru": "Восстановить все настройки? Поле останется.", "nl": "Alle instellingen herstellen? Je bord blijft behouden."},
+  workspace_reset_title: {"en": "Restore selected profile defaults", "he": "שחזור ברירות המחדל של הפרופיל הנבחר", "ru": "Восстановить настройки выбранного профиля", "nl": "Standaardinstellingen van het geselecteerde profiel herstellen"},
+  workspace_reset_prompt: {"en": "Restore this profile’s defaults? Your board stays.", "he": "לשחזר את ברירות המחדל של הפרופיל הזה? הלוח נשאר.", "ru": "Восстановить настройки этого профиля по умолчанию? Поле останется.", "nl": "Standaardinstellingen van dit profiel herstellen? Je bord blijft behouden."},
   workspace_reset_done: {"en": "Defaults restored. Your board is unchanged.", "he": "ברירות המחדל שוחזרו. הלוח נשאר כפי שהיה.", "ru": "Настройки восстановлены. Поле не изменено.", "nl": "Standaardinstellingen hersteld. Je bord is ongewijzigd."},
   workspace_reset_session: {"en": "Defaults restored for this session; browser storage is unavailable.", "he": "ברירות המחדל שוחזרו לכניסה זו; הדפדפן לא הצליח לשמור אותן.", "ru": "Настройки восстановлены на этот сеанс; хранилище недоступно.", "nl": "Standaardinstellingen hersteld voor deze sessie; opslag is niet beschikbaar."},
   workspace_reset_error: {"en": "Could not reset settings right now.", "he": "לא ניתן לאפס את ההגדרות כרגע.", "ru": "Сейчас не удалось сбросить настройки.", "nl": "Instellingen kunnen nu niet worden hersteld."},

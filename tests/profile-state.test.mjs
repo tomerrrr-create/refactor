@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProfileState, defaultProfileSnapshots, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
+import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
 const initial = () => ({ settings: { ...defaultWorkspaceSettings(), simulationTheme: 'blue' } });
@@ -168,4 +168,30 @@ test('profile themes survive switching, saving and reopening independently', () 
     const reopened = createProfileState(initial(), disk);
     assert.deepEqual([0, 1, 2].map(i => reopened.draft(i).settings.simulationTheme), ['teal', 'blue', 'gold']);
     assert.deepEqual([0, 1, 2].map(i => reopened.dirty(i)), [false, false, false]);
+});
+
+test('factory reset restores the selected profile independently of personal saved settings', () => {
+    const disk = storage();
+    const custom = change(initial(), s => {
+        s.brush.size = 9;
+        s.nudgeIntervalMs = 20;
+        s.smoothing.display = false;
+    });
+    // Existing personal baselines must never become factory reset defaults.
+    const state = createProfileState(custom, disk);
+    for (const index of [1, 2, 0]) {
+        const otherProfiles = [0, 1, 2].map(i => state.draft(i));
+        state.select(index);
+        state.replace(factoryProfileSnapshot(index));
+        assert.equal(state.dirty(index), false);
+        assert.equal(state.draft().settings.brush.size, 1);
+        assert.equal(state.draft().settings.nudgeIntervalMs, 100);
+        assert.equal(state.draft().settings.smoothing.display, true);
+        for (const other of [0, 1, 2].filter(i => i !== index)) assert.deepEqual(state.draft(other), otherProfiles[other]);
+        assert.deepEqual(createProfileState(initial(), disk).draft(), factoryProfileSnapshot(index));
+    }
+    assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.simulationTheme), ['blue', 'gold', 'teal']);
+    assert.equal(factoryProfileSnapshot(1).settings.startup.paletteName, 'Golden Midnight Extended');
+    assert.equal(factoryProfileSnapshot(2).settings.startup.paletteName, 'Ancient 264');
+    assert.throws(() => factoryProfileSnapshot(3));
 });

@@ -1,4 +1,4 @@
-import { createProfileState, readProfileFile } from './profile-state.js';
+import { createProfileState, readProfileFile, factoryProfileSnapshot } from './profile-state.js';
 
 export function initializeProfileControls({ capture, apply, canUse, getText }) {
     const state = createProfileState(capture());
@@ -117,6 +117,16 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
     return {
         refresh() { captureNow(); closeActions(); refresh(); },
         scheduleCapture,
+        resetToDefaults() {
+            if (busy || !canUse()) throw Error('Profiles are busy');
+            busy = true;
+            closeActions();
+            try {
+                const stored = apply(factoryProfileSnapshot(state.selected));
+                const profileStored = state.replace(capture());
+                return stored && profileStored;
+            } finally { busy = false; refresh(); }
+        },
         beginReplay() { state.beginReplay(capture()); refresh(); },
         endReplay() {
             // Capture lazily so failures also release the profile replay lock.
