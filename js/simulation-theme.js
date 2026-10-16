@@ -10,26 +10,32 @@ const LABELS = {
 };
 export function initializeSimulationTheme() {
   const section = document.getElementById('simulationThemeSettings');
-  const toggle = document.getElementById('simulationThemeToggle');
+  const previews = section.querySelectorAll('[data-theme]');
   function apply(value) {
     const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'blue';
     document.documentElement.dataset.simulationTheme = theme;
-    toggle.value = theme;
+    for (const preview of previews) {
+      preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
+    }
     translate();
     return theme;
   }
   let saved;
   try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* Use the existing blue appearance. */ }
   apply(saved);
-  toggle.addEventListener('change', () => {
-    const theme = apply(toggle.value);
-    try { localStorage.setItem(STORAGE_KEY, theme); } catch { /* Appearance still works for this session. */ }
-  });
+  for (const preview of previews) {
+    preview.addEventListener('click', () => {
+      const theme = apply(preview.dataset.theme);
+      try { localStorage.setItem(STORAGE_KEY, theme); } catch { /* Appearance still works for this session. */ }
+    });
+  }
   function translate() {
     const labels = LABELS[getCurrentLang()] || LABELS.en;
-    for (const option of toggle.options) option.textContent = labels[option.value];
-    toggle.setAttribute('aria-label', `Themes: ${labels[toggle.value]}`);
-    section.title = labels[toggle.value];
+    for (const preview of previews) {
+      const label = labels[preview.dataset.theme];
+      preview.setAttribute('aria-label', label);
+      preview.title = label;
+    }
   }
   onLanguageChange(translate);
   translate();

@@ -1856,13 +1856,29 @@ button, .ctrl {
 }
 .technician-display-settings .simulation-theme-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
 
-/* The third appearance needs an explicit choice instead of a binary switch. */
-#simulationThemeToggle { max-width: 55%; min-height: 36px; padding: 5px 8px; border: 1px solid #b28b3645; border-radius: 8px; background: #080a09; color: #e3c677; font: inherit; font-size: 12px; cursor: pointer; color-scheme: dark; }
-#simulationThemeToggle:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 4px; }
 :root[data-simulation-theme="teal"] { --sim-color: #68BDB5; }
 :root[data-simulation-theme="teal"] .sim-mode-active #simModeBackground {
   background: linear-gradient(135deg, #142724, #0a100f);
   border-color: #68bdb545;
   box-shadow: 0 4px 20px rgba(0, 0, 0, .4), 0 0 12px #68bdb514;
 }
-:root[data-simulation-theme="teal"] #simulationThemeToggle { color: #68BDB5; border-color: #68bdb560; }
+
+/* Each circle previews its own simulation appearance, independent of the selection. */
+.simulation-theme-option .technician-option-heading { flex-wrap: wrap; gap: 14px; }
+.simulation-theme-option .technician-effect-heading { white-space: nowrap; }
+.simulation-theme-previews { display: flex; gap: 8px; direction: ltr; flex-shrink: 0; margin-inline-start: auto; }
+.simulation-theme-preview {
+  display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 8px;
+  border: 1px solid var(--preview-border); border-radius: 50%;
+  color: var(--preview-color); background: var(--preview-background); cursor: pointer;
+  opacity: .46; filter: saturate(.5);
+  transition: opacity .2s, filter .2s, box-shadow .2s, border-color .2s;
+}
+.simulation-theme-preview[data-theme="teal"] { --preview-color: #68BDB5; --preview-border: #68bdb545; --preview-background: linear-gradient(135deg, #142724, #0a100f); }
+.simulation-theme-preview[data-theme="gold"] { --preview-color: #a58b54; --preview-border: #b28b3645; --preview-background: linear-gradient(135deg, #1c1a12, #0d0e0c); }
+.simulation-theme-preview[data-theme="blue"] { --preview-color: #3F51B5; --preview-border: #334155; --preview-background: linear-gradient(to bottom, #0f172a, #000); }
+.simulation-theme-preview svg { width: 26px; height: 26px; pointer-events: none; }
+.simulation-theme-preview[aria-pressed="true"] { opacity: 1; filter: none; border-color: var(--preview-color); box-shadow: 0 0 10px color-mix(in srgb, var(--preview-color) 25%, transparent); }
+.simulation-theme-preview:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+@media (hover: hover) { .simulation-theme-preview:hover { opacity: 1; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .simulation-theme-preview { transition: none; } }
