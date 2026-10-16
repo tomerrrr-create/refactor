@@ -2082,7 +2082,6 @@ function handlePointerDownCtrl(e) {
             if (btn.id === 'btnRandom') { performAction(shuffleExistingColors); return; }
 
 
-            if (btn.id === 'btnResizeUp' || btn.id === 'btnResizeDown') { modals.openResizeModal(); return; }
         }, C.LONG_PRESS_SHOW_MS);
       }
 
@@ -4381,8 +4380,13 @@ bindPickerGestures(dom.btnPalette, {
 
         dom.btnResetBoard.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(resetToGoldAndDefaultPalette)));
         dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
-        dom.btnResizeUp.addEventListener('click', (e) => handleCtrlClick(e, () => resizeGrid(true)));
-        dom.btnResizeDown.addEventListener('click', (e) => handleCtrlClick(e, () => resizeGrid(false)));
+        for (const [button, increase] of [[dom.btnResizeUp, true], [dom.btnResizeDown, false]]) {
+            bindPickerGestures(button, {
+                onTap: () => resizeGrid(increase), onOpen: modals.openResizeModal,
+                canInteract: () => !isBreathing,
+                beforeStart: hideLongPressDisplay
+            });
+        }
         dom.btnSave.addEventListener('click', (e) => handleCtrlClick(e, openSaveModalWithPreview));
         bindPickerGestures(dom.btnGap, {
             onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
@@ -4486,7 +4490,7 @@ if (dom.btnSimSettings) {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
