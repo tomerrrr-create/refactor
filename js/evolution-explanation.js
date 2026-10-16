@@ -2,6 +2,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
+    islands: [
+        ['Islands', 'Pixels copy a random neighbor’s color, gradually forming islands of color.'],
+        ['איים', 'פיקסלים מעתיקים צבע משכן אקראי ויוצרים בהדרגה איים של צבע.'],
+        ['Острова', 'Пиксели копируют цвет случайного соседа, постепенно образуя цветные острова.'],
+        ['Eilanden', 'Pixels nemen de kleur van een willekeurige buur over en vormen geleidelijk kleureilanden.']
+    ],
     gameOfLife: [
         ['Game of Life', 'Pixels appear and disappear according to their living neighbors.'],
         ['משחק החיים', 'פיקסלים מופיעים ונעלמים לפי השכנים החיים שלהם.'],

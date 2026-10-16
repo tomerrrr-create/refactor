@@ -1515,7 +1515,8 @@ function pauseLife() {
           
           // מכבים את כל הכפתורים למעט הכפתור של הסימולציה הפעילה!
           simButtons.forEach(btn => {
-              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase())) {
+              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase()) &&
+                  !(armedSimulation === 'islands' && btn === dom.btnShowBreatheMenu)) {
                   btn.disabled = true;
               }
           });
@@ -1706,7 +1707,8 @@ if (simulationName === 'magnet') {
 
 
         // צביעת הכפתור הנבחר במסגרת פעילה (זהב)
-        const buttonToActivate = simButtons.find(btn => btn.id.toLowerCase().includes(simulationName.toLowerCase()));
+        const buttonToActivate = simulationName === 'islands' ? dom.btnShowBreatheMenu
+            : simButtons.find(btn => btn.id.toLowerCase().includes(simulationName.toLowerCase()));
         if (buttonToActivate) {
             buttonToActivate.classList.add('simulation-active');
         }
@@ -2246,7 +2248,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnResizeUp.title = getText('tooltip_resizeUp');
         dom.btnResizeDown.title = getText('tooltip_resizeDown'); 
         dom.btnSave.title = getText('tooltip_save');
-        dom.btnShowBreatheMenu.title = getText('tooltip_breathe'); 
+        updateBreatheEvoButtonUI();
         dom.btnTutorial.title = getText('tooltip_tutorial');
         updateGameOfLifeButtonUI();
         updateChiFlowButtonUI();
@@ -3131,35 +3133,35 @@ function cycleGravitationalSortMode() {
 
 // --- NEW: Breathe Simulation UI and Cycling ---
 function updateBreatheEvoButtonUI() {
-    const modes = ['solo', 'group', 'random-cell', 'random-color'];
-    const icons = ['iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
+    const modes = ['islands', 'solo', 'group', 'random-cell', 'random-color'];
+    const icons = ['iconBreatheIslands', 'iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
+    const selectedMode = armedSimulation === 'islands' ? 'islands' : breatheEvoMode;
     dom.btnShowBreatheMenu.classList.remove(...modes.map(mode => 'mode-' + mode), 'simulation-active');
     modes.forEach((mode, index) => {
-        document.getElementById(icons[index]).style.display = mode === breatheEvoMode || (breatheEvoMode === 'off' && index === 0) ? 'block' : 'none';
+        document.getElementById(icons[index]).style.display = mode === selectedMode || (selectedMode === 'off' && index === 0) ? 'block' : 'none';
     });
-    if (modes.includes(breatheEvoMode)) dom.btnShowBreatheMenu.classList.add('mode-' + breatheEvoMode);
-    if (armedSimulation === 'breathe') dom.btnShowBreatheMenu.classList.add('simulation-active');
+    if (modes.includes(selectedMode)) dom.btnShowBreatheMenu.classList.add('mode-' + selectedMode);
+    if (armedSimulation === 'breathe' || armedSimulation === 'islands') dom.btnShowBreatheMenu.classList.add('simulation-active');
+    dom.btnShowBreatheMenu.title = getText(selectedMode === 'islands' ? 'tooltip_islands' : 'tooltip_breathe');
+    dom.btnShowBreatheMenu.setAttribute('aria-label', dom.btnShowBreatheMenu.title);
 }
 
 function cycleBreatheEvoMode() {
-    if (isLifePlaying) {
-        pauseLife();
-    }
+    if (isLifePlaying) pauseLife();
 
-    const oldMode = breatheEvoMode;
-    const sequence = ['off', 'solo', 'group', 'random-cell', 'random-color'];
-    const currentIndex = sequence.indexOf(breatheEvoMode);
-    const nextIndex = (currentIndex + 1) % sequence.length;
-    breatheEvoMode = sequence[nextIndex];
+    const currentMode = armedSimulation === 'islands' ? 'islands' : breatheEvoMode;
+    const sequence = ['off', 'islands', 'solo', 'group', 'random-cell', 'random-color'];
+    const nextMode = sequence[(sequence.indexOf(currentMode) + 1) % sequence.length];
 
-    if (oldMode === 'off' && breatheEvoMode !== 'off') {
-        armSimulation('breathe');
-    } else if (oldMode !== 'off' && breatheEvoMode === 'off') {
-        if (armedSimulation === 'breathe') {
-            armSimulation(null);
-        }
+    // This button selects two independent engines; the breathing modes keep their own state.
+    if (nextMode === 'islands') {
+        armSimulation('islands');
+    } else if (nextMode === 'off') {
+        armSimulation(null);
+    } else {
+        if (armedSimulation !== 'breathe') armSimulation('breathe');
+        breatheEvoMode = nextMode;
     }
-    
     updateBreatheEvoButtonUI();
 }
 // --- END: New Breathe Functions ---
@@ -4650,7 +4652,7 @@ bindPickerGestures(dom.btnColorPicker, {
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap, onOpen,
-                onHold: () => evolutionExplanation.show(button, simulation),
+                onHold: () => evolutionExplanation.show(button, simulation === 'breathe' && armedSimulation === 'islands' ? 'islands' : simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && !evolutionExplanation.isOpen() && !isLifePlaying && armedSimulation === simulation,
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
