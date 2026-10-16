@@ -1332,9 +1332,14 @@ export function initializeModals(appContext) {
         closeRecipeResetPrompt();
         app.dom.btnResetLogger.focus();
     });
-    app.dom.btnConfirmResetLogger.addEventListener('click', () => {
-        app.resetArtRecipeLog();
-        app.dom.btnSave.focus();
+    app.dom.btnConfirmResetLogger.addEventListener('click', async () => {
+        app.dom.btnConfirmResetLogger.disabled = true;
+        try {
+            await app.resetArtRecipeLog();
+            app.dom.btnSave.focus();
+        } finally {
+            app.dom.btnConfirmResetLogger.disabled = false;
+        }
     });
     app.dom.saveResetConfirmation.addEventListener('cancel', e => {
         e.preventDefault();

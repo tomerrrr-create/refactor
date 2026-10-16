@@ -3209,19 +3209,16 @@ function selectSortMethod(nextMethod) {
 // --- Art Logger: Export Functionality ---
 
 
-function resetArtRecipeLog() {
+async function resetArtRecipeLog() {
+    // Use the existing macro save flow before replacing the journey.
+    if (!await saveArtRecipeFile(createArtRecipeFile('backup_'))) return;
     artRecipeLog = [];
     historyRecipeCursor = 0;
     logCurrentStateAsInit();
     modals.closeModalSlowly();
 }
 
-async function exportArtRecipeLog() {
-    if (artRecipeLog.length === 0) {
-        modals.showSaveStatus('saveModal_logEmpty', true);
-        return;
-    }
-
+function createArtRecipeFile(prefix = '') {
     // 1. חיפוש הפלטה ההתחלתית
     let paletteName = "Unknown";
     try {
@@ -3247,14 +3244,19 @@ async function exportArtRecipeLog() {
     const linesCount = artRecipeLog.length;
 
     // 4. הרכבת השם החדש בדיוק בתבנית שביקשת!
-    const fileName = `Intuition_Path_${cleanPaletteName}_${linesCount}.txt`;
+    const fileName = `${prefix}Intuition_Path_${cleanPaletteName}_${linesCount}.txt`;
 
-    const file = new File([artRecipeLog.join('\n')], fileName, { type: 'text/plain' });
+    return new File([artRecipeLog.join('\n')], fileName, { type: 'text/plain' });
+}
+
+async function saveArtRecipeFile(file) {
+    const fileName = file.name;
     const shareData = { files: [file], title: fileName.replace(/\.txt$/, '') };
     if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
         try {
             await navigator.share(shareData);
         } catch (err) {
+            if (err.name === 'AbortError') return false;
             if (err.name !== 'AbortError') {
                 console.error('Macro share API error:', err);
                 triggerDownload(file);
@@ -3263,6 +3265,17 @@ async function exportArtRecipeLog() {
     } else {
         triggerDownload(file);
     }
+    return true;
+}
+
+async function exportArtRecipeLog() {
+    if (artRecipeLog.length === 0) {
+        modals.showSaveStatus('saveModal_logEmpty', true);
+        return;
+    }
+
+    const file = createArtRecipeFile();
+    await saveArtRecipeFile(file);
     modals.closeModal();
 }
 
