@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '82f3af8273c9fc32ef8a';
+const VERSION = '607bfdebd2e9ab3f0b70';
 const ASSETS = [
     "./",
     "./index.html",
@@ -25,6 +25,7 @@ const ASSETS = [
     "./js/profile-state.js",
     "./js/pwa.js",
     "./js/rainbow-frame.js",
+    "./js/relative-separators.js",
     "./js/separator-cycle-modal.js",
     "./js/separator-cycle.js",
     "./js/settings-import-transition.js",

@@ -9,6 +9,12 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  separator_relative: { en: "Relative spacing", he: "מפרידים יחסיים", ru: "Относительные разделители", nl: "Relatieve tussenruimte" },
+  separator_relative_note: { en: "Three widths that adapt to the board size.", he: "שלושה עוביים שמתאימים את עצמם לגודל הלוח.", ru: "Три толщины, адаптирующиеся к размеру поля.", nl: "Drie diktes die zich aanpassen aan het raster." },
+  separator_thick: { en: "Thick", he: "עבה", ru: "Толстые", nl: "Dik" },
+  separator_medium: { en: "Medium", he: "בינוני", ru: "Средние", nl: "Gemiddeld" },
+  separator_thin: { en: "Thin", he: "דק", ru: "Тонкие", nl: "Dun" },
+  separator_none: { en: "None", he: "ללא", ru: "Нет", nl: "Geen" },
   separator_cycle_title: { en: "Separator cycle", he: "סייקל מפרידים", ru: "Цикл разделителей", nl: "Cyclus van tussenruimtes" },
   separator_cycle_note: { en: "Choose widths in pixels. 0 removes separators.", he: "בחרו עוביים בפיקסלים. 0 מבטל את המפרידים.", ru: "Выберите толщину в пикселях. 0 убирает разделители.", nl: "Kies breedtes in pixels. 0 verwijdert de tussenruimtes." },
   separator_cycle_required: { en: "Choose at least one width.", he: "בחרו לפחות עובי אחד.", ru: "Выберите хотя бы одну толщину.", nl: "Kies minstens één breedte." },

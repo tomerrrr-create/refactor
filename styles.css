@@ -1786,3 +1786,15 @@ button, .ctrl {
 #resizeInput::-webkit-inner-spin-button, #resizeInput::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
 .separator-cycle-options button:disabled { opacity: .35; cursor: default; }
+
+.relative-separator-toggle { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 18px 0; color: #e3c677; cursor: pointer; }
+.relative-separator-toggle input { appearance: none; flex: 0 0 42px; width: 42px; height: 26px; border: 1px solid #d5aa4860; border-radius: 20px; padding: 3px; background: #111; cursor: pointer; }
+.relative-separator-toggle input::before { content: ''; display: block; width: 18px; height: 18px; border-radius: 50%; background: #777; }
+.relative-separator-toggle input:checked { border-color: #d5aa48; background: #d5aa4822; }
+.relative-separator-toggle input:checked::before { transform: translateX(16px); background: #e3c677; }
+.relative-separator-toggle input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.relative-separator-toggle input { direction: ltr; }
+.relative-separator-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.relative-separator-options button { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 17px; }
+.relative-separator-options small { font: 12px monospace; opacity: .7; }
+.separator-cycle-options[hidden] { display: none; }

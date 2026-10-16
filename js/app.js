@@ -1,3 +1,4 @@
+import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
 import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
@@ -291,6 +292,11 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let n = 7;
       let separatorPx = 2;
       let separatorCycle = [...DEFAULT_SEPARATOR_CYCLE];
+      let isRelativeSeparatorMode = false, relativeRenderedSeparatorPx = 0;
+      let separatorBeforeRelative = separatorPx;
+      function getRenderedSeparatorWidth() {
+          return isRelativeSeparatorMode ? relativeRenderedSeparatorPx : separatorPx;
+      }
       let isSmoothRendering = DEFAULT_SMOOTH_RENDERING;
       let isSoftBloom = DEFAULT_SOFT_BLOOM, softBloomIntensity = DEFAULT_BLOOM_INTENSITY, softBloom;
       let isBrushModeOn = true; 
@@ -569,7 +575,7 @@ let offscreenRenderCanvas = null;
 let offscreenRenderCtx = null;
 let cachedImgData = null; // משתנה למניעת דליפת זיכרון!
 
-function renderBoard(targetCtx, width, height, timestamp = performance.now(), smooth = false, renderSeparatorPx = separatorPx) {
+function renderBoard(targetCtx, width, height, timestamp = performance.now(), smooth = false, renderSeparatorPx = getRenderedSeparatorWidth()) {
     if (isLifePlaying && armedSimulation === 'breathe' && randomBreatheSession) {
         randomBreatheSession.update(Math.max(0, (timestamp ?? performance.now()) - breatheStartTime));
     }
@@ -724,10 +730,14 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
       }
       
       function updateSeparatorButtonUI() {
-          const label = `${getText('tooltip_gap')}: ${separatorPx}`;
+          const level = relativeSeparatorLevel(separatorPx);
+          const relativeName = { 5: 'separator_thick', 3: 'separator_medium', 1: 'separator_thin', 0: 'separator_none' }[level];
+          const label = isRelativeSeparatorMode
+              ? `${getText('tooltip_gap')}: ${getText(relativeName)} (${Number(getRenderedSeparatorWidth().toFixed(2))} px)`
+              : `${getText('tooltip_gap')}: ${separatorPx}`;
           dom.btnGap.title = label;
           dom.btnGap.setAttribute('aria-label', label);
-          dom.gapValue.textContent = String(separatorPx);
+          dom.gapValue.textContent = isRelativeSeparatorMode ? ({ 5: 'III', 3: 'II', 1: 'I', 0: '0' }[level]) : String(separatorPx);
       }
 
       let separatorAvailabilityCache = { key: '', cycle: [], widths: [] };
@@ -745,7 +755,9 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
       }
       function fitCurrentSeparator() {
           // Never run from the animation loop or modify the saved preferred cycle.
-          if (separatorPx > 0) separatorPx = fitStartupSeparator(n, separatorPx, dom.boardCanvas.clientWidth, separatorAvailability().cycle);
+          if (isRelativeSeparatorMode) {
+              relativeRenderedSeparatorPx = relativeSeparatorWidth(n, dom.boardCanvas.clientWidth, separatorPx);
+          } else if (separatorPx > 0) separatorPx = fitStartupSeparator(n, separatorPx, dom.boardCanvas.clientWidth, separatorAvailability().cycle);
           updateSeparatorButtonUI();
       }
       function applySeparator() {
@@ -779,7 +791,9 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
       function cycleSeparator() {
           performAction(() => {
-            separatorPx = nextSeparatorWidth(separatorPx, separatorAvailability().cycle);
+            separatorPx = isRelativeSeparatorMode
+                ? nextSeparatorWidth(relativeSeparatorLevel(separatorPx), RELATIVE_SEPARATOR_LEVELS)
+                : nextSeparatorWidth(separatorPx, separatorAvailability().cycle);
             window.logArtEvent('SEPARATOR_CHANGE', separatorPx);
             applySeparator();
           });
@@ -1770,8 +1784,9 @@ if (simulationName === 'magnet') {
             offscreenCtx.translate(borderSize, borderSize);
             // Match the on-screen proportions only for separated PNG exports.
             // Pass a local width: never alter the board's stored separator value.
-            const exportSeparatorPx = separatorPx > 0 && canvas.clientWidth > 0
-                ? separatorPx * drawingAreaSize / canvas.clientWidth : separatorPx;
+            const displaySeparatorPx = getRenderedSeparatorWidth();
+            const exportSeparatorPx = displaySeparatorPx > 0 && canvas.clientWidth > 0
+                ? displaySeparatorPx * drawingAreaSize / canvas.clientWidth : displaySeparatorPx;
             renderBoard(offscreenCtx, drawingAreaSize, drawingAreaSize, null, smoothExport, exportSeparatorPx);
             offscreenCtx.restore();
             resolve();
@@ -2306,9 +2321,10 @@ gsMode = 'off';
         const rect = canvas.getBoundingClientRect();
         const canvasX = x - rect.left;
         const canvasY = y - rect.top;
-        const totalGapSize = (n - 1) * separatorPx;
+        const renderedGap = getRenderedSeparatorWidth();
+        const totalGapSize = (n - 1) * renderedGap;
         const tileSize = (canvas.clientWidth - totalGapSize) / n;
-        const effectiveTileSize = tileSize + separatorPx;
+        const effectiveTileSize = tileSize + renderedGap;
         const col = Math.floor(canvasX / effectiveTileSize);
         const row = Math.floor(canvasY / effectiveTileSize);
         const xInTile = canvasX % effectiveTileSize;
@@ -4161,6 +4177,22 @@ else if (action.eventName === 'Invert Colors') {
             refreshProfiles: () => settingsProfiles?.refresh(),
             isSimulationMode: () => isSimModeActive,
             SORT_MODES,
+            getRelativeSeparatorMode: () => isRelativeSeparatorMode,
+            getRelativeSeparatorLevel: () => relativeSeparatorLevel(separatorPx),
+            getRelativeSeparatorWidths: () => RELATIVE_SEPARATOR_LEVELS.map(level => relativeSeparatorWidth(n, dom.boardCanvas.clientWidth, level)),
+            setRelativeSeparatorMode: (enabled, level = relativeSeparatorLevel(separatorPx)) => {
+                if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || !RELATIVE_SEPARATOR_LEVELS.includes(level)) return false;
+                if (enabled) {
+                    if (!isRelativeSeparatorMode) separatorBeforeRelative = separatorPx;
+                    isRelativeSeparatorMode = true;
+                    separatorPx = level;
+                } else if (isRelativeSeparatorMode) {
+                    isRelativeSeparatorMode = false;
+                    separatorPx = separatorBeforeRelative;
+                } else return true;
+                applySeparator();
+                return true;
+            },
             getSeparatorCycle: () => [...separatorCycle],
             getAvailableSeparatorWidths: () => [...separatorAvailability().widths],
             setSeparatorCycle: values => {
