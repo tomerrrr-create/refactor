@@ -1739,3 +1739,8 @@ button, .ctrl {
 /* Keep the new breathing symbols delicate even while the simulation is armed. */
 #btnShowBreatheMenu #iconBreatheRandomCell,
 #btnShowBreatheMenu #iconBreatheRandomColor { stroke-width: 1.2; }
+
+/* Init and startup share a card, preserving the existing expandable forms. */
+.technician-start-settings { margin-bottom: 20px; padding: 20px; border: 1px solid #b28b3645; border-radius: 12px; background: linear-gradient(135deg, #1c1a12, #0d0e0c); text-align: start; }
+.technician-start-settings .technician-option { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.technician-start-settings .startup-entry { margin-top: 18px; padding-top: 18px; border-top: 1px solid #b28b3630; }
