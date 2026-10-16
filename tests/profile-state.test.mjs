@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
-const initial = () => { const settings = defaultWorkspaceSettings(); settings.simulationInit.brushSize = 1; return { settings: { ...settings, simulationTheme: 'blue' } }; };
+const initial = () => { const settings = defaultWorkspaceSettings(); settings.simulationInit.brushSize = 1; settings.rules.erosion.erosionStages = { 'channels-solid': 0, channels: 0 }; return { settings: { ...settings, simulationTheme: 'blue' } }; };
 const storage = () => {
     const data = new Map();
     return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
@@ -130,7 +130,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
         assert.equal(settings.startup.interfaceMode, 'simulation');
         assert.deepEqual(settings.cycles.chiFlow.map(r => r.flow), [[1], [3, 5, 7], [4, 5, 6, 7, 8]]);
         assert(settings.cycles.chiFlow.every(r => r.reachPercent === 400));
-        assert.deepEqual(settings.rules, one.rules);
+        assert.deepEqual({ ...settings.rules, erosion: one.rules.erosion }, one.rules);
         assert.equal(settings.simulationInit.boardSize, one.simulationInit.boardSize);
         assert.deepEqual(settings.smoothing, one.smoothing);
         assert.deepEqual(settings.cycles.gameOfLife, one.cycles.gameOfLife);
@@ -228,4 +228,28 @@ test('existing default brushes update once while saved personal sizes survive', 
     assert.equal(state.dirty(0), false); assert.equal(state.dirty(1), false); assert.equal(state.dirty(2), true);
     state.persist();
     assert.deepEqual(createProfileState(initial(), disk).draft(2), state.draft(2));
+});
+
+test('factory erosion defaults map UI stages I/I, III/IV and IV/V to both carving modes', () => {
+    assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.rules.erosion.erosionStages), [
+        { 'channels-solid': 0, channels: 0 },
+        { 'channels-solid': 2, channels: 3 },
+        { 'channels-solid': 3, channels: 4 }
+    ]);
+});
+
+test('erosion defaults migrate once and retain personal per-mode and legacy acceleration values', () => {
+    const disk = storage();
+    const profiles = [0, 1, 2].map(index => ({ saved: factoryProfileSnapshot(index), draft: factoryProfileSnapshot(index) }));
+    for (const profile of profiles) for (const kind of ['saved', 'draft']) delete profile[kind].settings.rules.erosion.erosionStages;
+    profiles[1].draft.settings.rules.erosion.erosionStages = { channels: 1 };
+    profiles[2].draft.settings.rules.erosion.erosionEvents = 7;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 2, selected: 1, profiles }));
+    const state = createProfileState(initial(), disk);
+    assert.deepEqual(state.draft(0).settings.rules.erosion.erosionStages, { 'channels-solid': 0, channels: 0 });
+    assert.deepEqual(state.draft(1).settings.rules.erosion.erosionStages, { 'channels-solid': 2, channels: 1 });
+    assert.equal(state.draft(2).settings.rules.erosion.erosionEvents, 7);
+    assert.equal(state.draft(2).settings.rules.erosion.erosionStages, undefined);
+    state.persist();
+    assert.deepEqual(createProfileState(initial(), disk).draft(1), state.draft(1));
 });

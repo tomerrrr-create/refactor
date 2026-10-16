@@ -52,7 +52,7 @@ export function initializeErosionModal(app) {
     reset.addEventListener('click', () => {
         if (!draft) return;
         // Reset both channel rates in the draft, retaining the selected mode.
-        draft = { ...app.C.defaultErosionRules, mode: draft.mode };
+        draft = { ...app.getDefaultErosionRules(), mode: draft.mode };
         render();
     });
     modeButtons.forEach(button => button.addEventListener('click', () => {

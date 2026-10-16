@@ -4388,6 +4388,7 @@ syncGsModeFromModal: (direction) => {
             getErosionRules: () => ({ ...erosionRules }),
             canEditErosion: () => !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             getPaletteLength: () => palette().length,
+            getDefaultErosionRules: () => settingsProfiles.defaults().settings.rules.erosion,
             saveErosionRules: rules => {
                 if (isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
                 erosionRules = restoreErosionRules(rules);

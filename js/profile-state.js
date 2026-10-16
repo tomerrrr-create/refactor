@@ -36,6 +36,13 @@ export function validateProfileSnapshot(value) {
     return snapshot;
 }
 
+// Slider stations I–V use zero-based indices internally.
+const PROFILE_EROSION_STAGES = [
+    { 'channels-solid': 0, channels: 0 },
+    { 'channels-solid': 2, channels: 3 },
+    { 'channels-solid': 3, channels: 4 }
+];
+
 // Profile 1 supplies every unspecified setting; named rules remain snapshots.
 export function defaultProfileSnapshots(initial) {
     const first = validateProfileSnapshot(initial);
@@ -71,6 +78,11 @@ export function defaultProfileSnapshots(initial) {
     profiles[1].settings.startup.brushColor = 'first';
     profiles[2].settings.simulationInit.brushColor = 'lightest';
     profiles[2].settings.startup.brushColor = 'lightest';
+    profiles.forEach((snapshot, index) => {
+        snapshot.settings.rules.erosion.erosionStages = { ...PROFILE_EROSION_STAGES[index] };
+        delete snapshot.settings.rules.erosion.erosionEvents;
+        delete snapshot.settings.rules.erosion.erosionPace;
+    });
     return profiles.map(validateProfileSnapshot);
 }
 
@@ -106,7 +118,7 @@ function mergeChanges(draft, previous, current) {
 
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
-    let state = { version: 1, defaultsVersion: 2, selected: 0,
+    let state = { version: 1, defaultsVersion: 3, selected: 0,
         profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
@@ -117,7 +129,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 2, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 3, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -153,6 +165,17 @@ export function createProfileState(initial, storage) {
                         if (index === 2) settings.simulationInit.brushColor ??= 'lightest';
                         if (index > 0 && settings.startup.brushColor === 'none') {
                             settings.startup.brushColor = index === 1 ? 'first' : 'lightest';
+                        }
+                    }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 3) {
+                for (const [index, profile] of state.profiles.entries()) {
+                    for (const kind of ['saved', 'draft']) {
+                        const rules = profile[kind].settings.rules.erosion;
+                        // Shared/absolute legacy rates and explicit per-mode edits stay exact.
+                        if (!Object.hasOwn(rules, 'erosionEvents') && !Object.hasOwn(rules, 'erosionPace')) {
+                            rules.erosionStages = { ...PROFILE_EROSION_STAGES[index], ...rules.erosionStages };
                         }
                     }
                 }

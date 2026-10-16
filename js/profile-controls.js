@@ -117,6 +117,7 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
     return {
         refresh() { captureNow(); closeActions(); refresh(); },
         scheduleCapture,
+        defaults() { return factoryProfileSnapshot(state.selected); },
         resetToDefaults() {
             if (busy || !canUse()) throw Error('Profiles are busy');
             busy = true;
