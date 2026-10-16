@@ -737,7 +737,12 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
               : `${getText('tooltip_gap')}: ${separatorPx}`;
           dom.btnGap.title = label;
           dom.btnGap.setAttribute('aria-label', label);
-          dom.gapValue.textContent = isRelativeSeparatorMode ? ({ 5: 'III', 3: 'II', 1: 'I', 0: '0' }[level]) : String(separatorPx);
+          dom.gapValue.hidden = isRelativeSeparatorMode;
+          dom.gapValue.textContent = String(separatorPx);
+          const noSeparators = isRelativeSeparatorMode && level === 0;
+          dom.gapHashIcon.style.display = noSeparators ? 'none' : '';
+          dom.gapHashIcon.setAttribute('stroke-width', isRelativeSeparatorMode ? ({ 5: 3.2, 3: 1.8, 1: .8, 0: 2 }[level]) : 2);
+          dom.gapNoSeparatorIcon.style.display = noSeparators ? '' : 'none';
       }
 
       let separatorAvailabilityCache = { key: '', cycle: [], widths: [] };

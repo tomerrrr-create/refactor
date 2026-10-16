@@ -20,6 +20,8 @@ export const dom = {
   btnPalette: document.getElementById('btnPalette'),
   btnGap: document.getElementById('btnGap'),
   gapValue: document.getElementById('gapValue'),
+  gapHashIcon: document.getElementById('gapHashIcon'),
+  gapNoSeparatorIcon: document.getElementById('gapNoSeparatorIcon'),
   btnUndo: document.getElementById('btnUndo'),
   btnRedo: document.getElementById('btnRedo'),
   btnInvert: document.getElementById('btnInvert'),
