@@ -200,7 +200,7 @@ function updateChiReachDisplay() {
     const paletteSize = app.C.PALETTES[app.getActivePaletteIndex()].colors.length;
     const percent = tempChiReachPercent;
     const auto = app.getText('chi_reach_auto');
-    const label = percent !== null ? (percent === 100 ? `${auto} · 100%` : `${percent}%`) :
+    const label = percent !== null ? (percent === 100 ? auto : `×${percent / 100}`) :
         tempChiReachOffset === null ? `${app.getText('chi_reach_fixed')}: ${tempChiReach}` :
         tempChiReachOffset === 0 ? auto : `${auto} ${tempChiReachOffset > 0 ? '+' : '−'}${Math.abs(tempChiReachOffset)}`;
     // Old fixed/offset settings remain untouched until the user moves the slider.
@@ -208,7 +208,7 @@ function updateChiReachDisplay() {
     const nearest = CHI_REACH_SLIDER_PERCENTAGES.reduce((best, value, index) =>
         Math.abs(value - displayedPercent) < Math.abs(CHI_REACH_SLIDER_PERCENTAGES[best] - displayedPercent) ? index : best, 0);
     app.dom.chiReachSlider.value = nearest;
-    document.getElementById('chiReachAutoTick').textContent = `${auto} · 100%`;
+    document.getElementById('chiReachAutoTick').textContent = auto;
     app.dom.chiReachValue.textContent = label;
     app.dom.chiReachSlider.setAttribute('aria-valuetext', label);
     app.dom.chiReachDesc.textContent = app.getText(percent === null ? 'chi_reach_legacy_note' : 'chi_reach_desc');
