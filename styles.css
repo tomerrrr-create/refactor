@@ -304,10 +304,10 @@ body {
 }
 
 
-/* --- Easter Egg: Hidden Breathe Button --- */
+/* --- Easter Egg: Turing is revealed only while selected. --- */
 /* מעלים את הכפתור לחלוטין כל עוד הוא לא פעיל, אבל שומר אותו לחיץ */
-.sim-mode-active #btnShowBreatheMenu:not(.simulation-active) {
-    opacity: 0;
+.sim-mode-active #btnTuring:not(.simulation-active) {
+    opacity: 0 !important;
 }
 
 /* Left Panel (Col 1) */
