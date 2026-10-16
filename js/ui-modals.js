@@ -1577,18 +1577,33 @@ export function initializeModals(appContext) {
     const workspaceResetStatus = document.getElementById('workspaceResetStatus');
     const confirmWorkspaceReset = document.getElementById('btnConfirmWorkspaceReset');
     function hideWorkspaceResetConfirmation() {
-        resetWorkspaceConfirmation.hidden = true;
+        if (resetWorkspaceConfirmation.open) resetWorkspaceConfirmation.close();
         resetWorkspaceButton.setAttribute('aria-expanded', 'false');
     }
     resetWorkspaceButton.addEventListener('click', () => {
-        resetWorkspaceConfirmation.hidden = !resetWorkspaceConfirmation.hidden;
-        resetWorkspaceButton.setAttribute('aria-expanded', String(!resetWorkspaceConfirmation.hidden));
+        resetWorkspaceConfirmation.showModal();
+        resetWorkspaceButton.setAttribute('aria-expanded', 'true');
+        document.getElementById('btnCancelWorkspaceReset').focus();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
     });
     document.getElementById('btnCancelWorkspaceReset').addEventListener('click', () => {
         hideWorkspaceResetConfirmation();
         resetWorkspaceButton.focus();
+    });
+    document.getElementById('btnWorkspaceResetCloseTop').addEventListener('click', hideWorkspaceResetConfirmation);
+    resetWorkspaceConfirmation.addEventListener('cancel', event => {
+        event.preventDefault();
+        hideWorkspaceResetConfirmation();
+    });
+    resetWorkspaceConfirmation.addEventListener('click', event => {
+        if (event.target !== resetWorkspaceConfirmation) return;
+        const box = resetWorkspaceConfirmation.getBoundingClientRect();
+        if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) hideWorkspaceResetConfirmation();
+    });
+    resetWorkspaceConfirmation.addEventListener('close', () => {
+        resetWorkspaceButton.setAttribute('aria-expanded', 'false');
+        if (app.dom.technicianDialog.open) resetWorkspaceButton.focus();
     });
     confirmWorkspaceReset.addEventListener('click', () => {
         confirmWorkspaceReset.disabled = true;
@@ -1606,6 +1621,7 @@ export function initializeModals(appContext) {
             requestAnimationFrame(() => resetWorkspaceButton.classList.add('reset-complete'));
             resetWorkspaceButton.focus();
         } catch (error) {
+            hideWorkspaceResetConfirmation();
             workspaceResetStatus.dataset.debugText = 'workspace_reset_error';
             workspaceResetStatus.textContent = app.getText('workspace_reset_error');
         } finally { confirmWorkspaceReset.disabled = false; }
@@ -1630,6 +1646,7 @@ export function initializeModals(appContext) {
         }
     });
     app.dom.technicianDialog.addEventListener('close', () => {
+        hideWorkspaceResetConfirmation();
         app.resetWasLongPress();
         technicianReturnFocus.focus();
     });
