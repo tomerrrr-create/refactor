@@ -1,3 +1,4 @@
+import { runIslandsPreview } from './simulations/islands-preview.js';
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
@@ -1198,7 +1199,7 @@ case 'brightnessEvo':
     boardState = nextState;
     break;
 
-            case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration(context); boardState = nextState; break;
+            case 'gravitationalSort': nextState = runGravityPreviewOrGeneration(context); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
        case 'contour': 
                 nextState = Simulations.runContourGeneration(context); 
@@ -1329,7 +1330,7 @@ case 'brightnessEvo':
     break;
 
                 case 'gravitationalSort': 
-                    boardState = Simulations.runGravitationalSortGeneration(context); 
+                    boardState = runGravityPreviewOrGeneration(context);
                     break;
                 case 'erosion': 
                     boardState = Simulations.runErosionGeneration(context); 
@@ -3048,9 +3049,14 @@ function cycleDlaMode() {
 }
 
 
+// The experimental mode stays outside the persisted gravity rules.
+function runGravityPreviewOrGeneration(context) {
+    return gsMode === 'islands' ? runIslandsPreview(context) : Simulations.runGravitationalSortGeneration(context);
+}
+
 // --- NEW: Gravitational Sort UI and Cycling ---
 function updateGravitationalSortButtonUI() {
-    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'simulation-active');
+    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'mode-islands', 'simulation-active');
 
     if (gsMode !== 'off') {
         dom.btnGravitationalSort.classList.add('mode-' + gsMode);
@@ -3062,7 +3068,7 @@ function updateGravitationalSortButtonUI() {
 
 function cycleGravitationalSortMode() {
     const oldMode = gsMode;
-    const sequence = ['off', 'up', 'right', 'center_x' ];
+    const sequence = ['off', 'up', 'right', 'center_x', 'islands'];
 
 
 
@@ -3074,7 +3080,7 @@ function cycleGravitationalSortMode() {
 
     gsMode = nextEvolutionMode(gsMode, sequence);
 
-    if (gsMode !== 'off') {
+    if (gsMode !== 'off' && gsMode !== 'islands') {
         gravitationalSortRules.direction = gsMode; // מעדכן את חוקי הסימולציה בפועל
     }
     
