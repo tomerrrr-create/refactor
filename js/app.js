@@ -1,4 +1,4 @@
-import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, recordIslandsBoard, restoreIslandsBoard } from './simulations/islands.js';
+import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
 import { runIslandsPreview } from './simulations/islands-preview.js';
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
@@ -3072,10 +3072,9 @@ function cycleDlaMode() {
 
 function logIslandsSessionStart() {
     window.logArtEvent('ISLANDS_INIT', JSON.stringify({
-        ...islandsSession, n, activePaletteIndex, separatorPx, currentSortMethod,
-        board: recordIslandsBoard(boardState)
+        recordingVersion: 2, ...islandsSession
     }));
-    // The starting board survives undoing the first step/run.
+    // Keep the initial random cursor when undoing the first step/run.
     historyRecipeCursor = artRecipeLog.length;
 }
 
@@ -3524,8 +3523,12 @@ function validateIslandsMacroAction(action) {
     if (action.eventName === 'ISLANDS_INIT') {
         const snapshot = JSON.parse(action.details);
         restoreIslandsSession(snapshot);
-        restoreIslandsBoard(snapshot.n, snapshot.board);
-        validateHistorySettings(snapshot);
+        if (snapshot.recordingVersion === undefined) {
+            restoreIslandsBoard(snapshot.n, snapshot.board);
+            validateHistorySettings(snapshot);
+        } else if (snapshot.recordingVersion !== 2) {
+            throw new Error('Unsupported Islands recording version');
+        }
     } else if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
         const match = action.details.match(/^Armed: islands\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
         if (match) restoreIslandsSession(JSON.parse(match[1]));
@@ -4021,14 +4024,16 @@ function executeMacroAction(action) {
     else if (action.eventName === 'ISLANDS_INIT') {
         const snapshot = JSON.parse(action.details);
         const session = restoreIslandsSession(snapshot);
-        const tiles = restoreIslandsBoard(snapshot.n, snapshot.board);
-        validateHistorySettings(snapshot);
-        if (!C.PALETTES[snapshot.activePaletteIndex]) throw new Error('Invalid Islands palette');
         if (isLifePlaying) pauseLife();
         if (armedSimulation !== 'islands') armSimulation('islands', { recordIslandsStart: false });
-        applyState({ ...snapshot, activePaletteIndex: pendingMacroPalette ?? snapshot.activePaletteIndex, tiles, islandsState: session });
+        // Old recipes retain their recorded starting board; new ones use the live board.
+        if (snapshot.recordingVersion === undefined) {
+            const tiles = restoreIslandsBoard(snapshot.n, snapshot.board);
+            if (!C.PALETTES[snapshot.activePaletteIndex]) throw new Error('Invalid Islands palette');
+            applyState({ ...snapshot, activePaletteIndex: pendingMacroPalette ?? snapshot.activePaletteIndex, tiles, islandsState: session });
+            renderToScreen(null);
+        }
         islandsSession = session;
-        renderToScreen(null);
     }
     else if (action.eventName === 'HISTORY_SETTINGS') {
         if (isLifePlaying) pauseLife();

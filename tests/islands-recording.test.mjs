@@ -54,3 +54,35 @@ test('macro import validates Islands version and board before scheduling playbac
     assert.throws(()=>c.parseMacroText(recipe.replaceAll('"islandsVersion":1','"islandsVersion":2')),/Unsupported/);
     assert.throws(()=>c.parseMacroText(recipe.replace('"board":[[4,0,0,0]]','"board":[]')),/Incomplete Islands board/);
 });
+
+test('new Islands start is constant-size seed metadata and never reads or encodes the board',()=>{
+    const c=vm.createContext({islandsSession:createIslandsSession(123),historyRecipeCursor:0,artRecipeLog:[]});
+    Object.defineProperty(c,'boardState',{get(){throw Error('must not read board');}});
+    c.window={logArtEvent:(event,details)=>c.artRecipeLog.push({event,details})};
+    vm.runInContext(source.slice(source.indexOf('function logIslandsSessionStart('),source.indexOf('// The experimental mode stays outside')),c);
+    c.logIslandsSessionStart();
+    assert.deepEqual(JSON.parse(c.artRecipeLog[0].details),{recordingVersion:2,...createIslandsSession(123)});
+    assert(c.artRecipeLog[0].details.length<150);assert.equal(c.historyRecipeCursor,1);
+});
+
+test('new seed-only recipe imports without board data and rejects unknown recording versions',()=>{
+    const c=vm.createContext({restoreIslandsSession,restoreIslandsBoard});
+    vm.runInContext(source.slice(source.indexOf('function getHistorySettings('),source.indexOf('function toggleMacroFullScreen(')),c);
+    const text=`[12:00:00.000] ISLANDS_INIT -> ${JSON.stringify({recordingVersion:2,...createIslandsSession(7)})}`;
+    assert.equal(c.parseMacroText(text).length,1);
+    assert.throws(()=>c.parseMacroText(text.replace('"recordingVersion":2','"recordingVersion":3')),/Unsupported Islands recording version/);
+});
+
+test('new replay keeps existing board while old replay still restores its snapshot',()=>{
+    const original=[{k:7,v:7,isGold:false}], logs=[];
+    const c=vm.createContext({restoreIslandsSession,restoreIslandsBoard,armedSimulation:'islands',isLifePlaying:false,
+        boardState:original,islandsSession:null,isExecutingMacroCommand:false,pendingMacroPalette:null,
+        C:{PALETTES:[{}]},window:{logArtEvent:(...args)=>logs.push(args)},renderToScreen(){},
+        applyState(state){c.boardState=state.tiles;},console});
+    for(const [start,end] of [['function getHistorySettings(','function toggleMacroFullScreen('],['function executeMacroAction(','async function initializeApp(']])
+        vm.runInContext(source.slice(source.indexOf(start),source.indexOf(end)),c);
+    c.executeMacroAction({eventName:'ISLANDS_INIT',details:JSON.stringify({recordingVersion:2,...createIslandsSession(7)})});
+    assert.equal(c.boardState,original);assert.equal(c.islandsSession.seed,7);
+    c.executeMacroAction({eventName:'ISLANDS_INIT',details:JSON.stringify({...createIslandsSession(9),n:1,activePaletteIndex:0,separatorPx:0,currentSortMethod:'luminance',board:[[1,3,3,0]]})});
+    assert.equal(c.boardState[0].k,3);assert.equal(c.islandsSession.seed,9);
+});
