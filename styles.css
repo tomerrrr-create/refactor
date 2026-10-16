@@ -1709,3 +1709,29 @@ button, .ctrl {
 .erosion-pace-stops span { flex: 1; text-align: center; }
 .erosion-settings-dialog .init-settings-actions { justify-content: flex-end; margin-top: 22px; padding-top: 18px; border-top: 1px solid #ffffff12; }
 @media (prefers-reduced-motion: reduce) { .erosion-settings-dialog[open] { animation: none; } }
+
+/* Soft Bloom is composited on screen only; image export uses the original canvas. */
+.soft-bloom { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 4px; pointer-events: none; mix-blend-mode: screen; filter: blur(6px); opacity: .22; }
+.soft-bloom[hidden] { display: none; }
+.bloom-rendering-option { margin-bottom: 12px; }
+#softBloomToggle { appearance: none; position: relative; width: 40px; height: 24px; flex-shrink: 0; border: 1px solid #b28b3645; border-radius: 20px; background: #080a09; cursor: pointer; transition: background .3s, border-color .3s; }
+#softBloomToggle::before { content: ''; position: absolute; top: 4px; left: 4px; width: 14px; height: 14px; border-radius: 50%; background: #786443; transition: transform .3s, background .3s; }
+#softBloomToggle:checked { background: #d5aa4822; border-color: #d5aa48; }
+#softBloomToggle:checked::before { transform: translateX(16px); background: #e3c677; }
+#softBloomToggle:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { #softBloomToggle, #softBloomToggle::before { transition: none; } }
+
+.bloom-intensity-control { margin: 0 0 20px; padding: 4px 8px 0; text-align: start; }
+.bloom-intensity-control label { font-size: 13px; color: #c3b99e; }
+.bloom-intensity-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+#softBloomIntensity { flex: 1; min-width: 0; accent-color: #e3c677; direction: ltr; }
+#softBloomIntensityValue { min-width: 42px; color: #e3c677; font-size: 13px; }
+.bloom-intensity-control:has(input:disabled) { opacity: .4; }
+
+/* Display effects share one card while keeping independent controls. */
+.technician-display-settings { margin-bottom: 20px; padding: 20px; border: 1px solid #b28b3645; border-radius: 12px; background: linear-gradient(135deg, #1c1a12, #0d0e0c); text-align: start; }
+.technician-display-settings h3 { margin: 0 0 18px; color: #e3c677; font-size: 16px; font-weight: 500; }
+.technician-display-settings .technician-option { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.technician-display-settings .smooth-rendering-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
+.technician-display-settings .bloom-rendering-option { margin-bottom: 14px; }
+.technician-display-settings .bloom-intensity-control { margin: 0; padding: 0; }

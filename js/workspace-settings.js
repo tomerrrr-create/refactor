@@ -29,6 +29,7 @@ function mergeKnown(defaults, overrides, path = '') {
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
         // Optional extension; V1’s original baseline stays unchanged.
+        if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
         if (!Object.hasOwn(defaults, key)) throw new Error('Unknown settings field: ' + key);
         result[key] = object(defaults[key]) ? mergeKnown(defaults[key], value, path ? path + '.' + key : key) : clone(value);
@@ -56,6 +57,8 @@ export function validateWorkspaceSettings(value) {
     const valid = equal(normalizeStartup(settings.startup), settings.startup) && validateSimInit(settings.simulationInit) &&
         equal(normalizeSortCycle(settings.sortCycle), settings.sortCycle) && integer(settings.nudgeIntervalMs, 0, 200) &&
         typeof settings.smoothing.display === 'boolean' && typeof settings.smoothing.export === 'boolean' &&
+        (!Object.hasOwn(settings.smoothing, 'bloom') || typeof settings.smoothing.bloom === 'boolean') &&
+        (!Object.hasOwn(settings.smoothing, 'bloomIntensity') || integer(settings.smoothing.bloomIntensity, 0, 100)) &&
         integer(settings.brush.size, 1, 15) && settings.brush.size % 2 === 1 &&
         ['paint', 'continuous', 'copy'].includes(settings.brush.mode) && C.SYMMETRY_MODES.includes(settings.brush.symmetry) &&
         validCycle(settings.cycles.gameOfLife, false) && validCycle(settings.cycles.chiFlow, true) &&

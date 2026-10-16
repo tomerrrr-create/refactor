@@ -7,7 +7,7 @@ import { hexToRgb, lerp } from '../js/colors.js';
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function harness() {
     const screen = { drawImage() {}, fillRect() {} };
-    const h = vm.createContext({ n: 2, separatorPx: 0, isSmoothRendering: false, isLifePlaying: false,
+    const h = vm.createContext({ n: 2, separatorPx: 0, isSmoothRendering: false, softBloom: null, isLifePlaying: false,
         boardState: [0, 1, 1, 0].map(k => ({ k, v: k, isGold: false, prevK: null })),
         palette: () => ['#000000', '#ffffff'], norm: k => k % 2,
         hexToRgb, lerp, performance: { now: () => 0 }, C: {}, ctx: screen,
