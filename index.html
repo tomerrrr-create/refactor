@@ -575,27 +575,21 @@
         <input id="profileSettingsFile" type="file" accept=".txt,text/plain" hidden>
         <p id="profileStatus" class="init-settings-note" role="status" aria-live="polite"></p>
       </section>
-      <section class="technician-display-settings" aria-labelledby="displaySettingsTitle">
-        <h3 id="displaySettingsTitle" data-debug-text="display_settings_title"></h3>
+      <section class="technician-display-settings">
       <label class="technician-option smooth-rendering-option">
-        <span class="technician-option-heading"><bdi>smooth /</bdi><input id="smoothRenderingToggle" type="checkbox" role="switch" checked aria-describedby="smoothRenderingNote"></span>
-        <span class="technician-option-title" data-debug-text="smooth_rendering"></span>
-        <span id="smoothRenderingNote" class="init-settings-note" data-debug-text="smooth_rendering_note"></span>
+        <span class="technician-option-heading"><bdi>smooth /</bdi><input id="smoothRenderingToggle" type="checkbox" role="switch" checked></span>
       </label>
       <label class="technician-option bloom-rendering-option">
-        <span class="technician-option-heading"><bdi>bloom /</bdi><input id="softBloomToggle" type="checkbox" role="switch" aria-describedby="softBloomNote"></span>
-        <span class="technician-option-title" data-debug-text="soft_bloom_title"></span>
-        <span id="softBloomNote" class="init-settings-note" data-debug-text="soft_bloom_note"></span>
+        <span class="technician-option-heading"><bdi>bloom /</bdi><input id="softBloomToggle" type="checkbox" role="switch"></span>
       </label>
       <div class="bloom-intensity-control">
         <label for="softBloomIntensity" data-debug-text="soft_bloom_intensity"></label>
         <div class="bloom-intensity-row"><input id="softBloomIntensity" type="range" min="0" max="100" step="1" value="35" disabled><output id="softBloomIntensityValue" for="softBloomIntensity">35%</output></div>
       </div>
       </section>
-      <button id="btnConfigureInit" type="button" class="technician-option" aria-describedby="initDescription" aria-expanded="false" aria-controls="initSettingsForm">
-        <span class="technician-option-heading"><bdi>init /</bdi><span class="technician-badge" aria-hidden="true">⚙</span></span>
-        <span class="technician-option-title" data-debug-text="debug_init"></span>
-        <span id="initDescription" data-debug-text="debug_init_description"></span>
+      <section class="technician-start-settings">
+      <button id="btnConfigureInit" type="button" class="technician-option" aria-expanded="false" aria-controls="initSettingsForm">
+        <span class="technician-option-heading"><bdi>init button /</bdi><span class="technician-badge" aria-hidden="true">⚙</span></span>
       </button>
       <form id="initSettingsForm" class="init-settings" hidden>
         <p class="init-settings-note" data-debug-text="init_note"></p>
@@ -609,10 +603,8 @@
         </div>
         <p id="initSettingsStatus" role="status" aria-live="polite"></p>
       </form>
-      <button id="btnConfigureStartup" type="button" class="technician-option startup-entry" aria-describedby="startupDescription" aria-expanded="false" aria-controls="startupSettingsForm">
+      <button id="btnConfigureStartup" type="button" class="technician-option startup-entry" aria-expanded="false" aria-controls="startupSettingsForm">
         <span class="technician-option-heading"><bdi>startup /</bdi><span class="technician-badge" aria-hidden="true">◇</span></span>
-        <span class="technician-option-title" data-debug-text="startup_title"></span>
-        <span id="startupDescription" class="init-settings-note" data-debug-text="startup_description"></span>
       </button>
       <form id="startupSettingsForm" class="init-settings" hidden>
         <p class="init-settings-note" data-debug-text="startup_note"></p>
@@ -648,6 +640,7 @@
         </div>
         <p id="startupSettingsStatus" role="status" aria-live="polite"></p>
       </form>
+      </section>
       <div class="technician-reset-section">
         <button id="btnResetWorkspace" type="button" class="technician-reset-button" aria-expanded="false" aria-controls="workspaceResetConfirmation" data-i18n-title="workspace_reset_title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -665,7 +658,6 @@
         </div>
         <p id="workspaceResetStatus" class="init-settings-note" role="status" aria-live="polite"></p>
       </div>
-      <button id="btnCloseDebug" type="button" class="technician-back" data-debug-text="debug_back" autofocus></button>
     </div>
   </dialog>
 

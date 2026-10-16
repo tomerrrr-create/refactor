@@ -1722,7 +1722,7 @@ button, .ctrl {
 @media (prefers-reduced-motion: reduce) { #softBloomToggle, #softBloomToggle::before { transition: none; } }
 
 .bloom-intensity-control { margin: 0 0 20px; padding: 4px 8px 0; text-align: start; }
-.bloom-intensity-control label { font-size: 13px; color: #c3b99e; }
+.bloom-intensity-control label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .bloom-intensity-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
 #softBloomIntensity { flex: 1; min-width: 0; accent-color: #e3c677; direction: ltr; }
 #softBloomIntensityValue { min-width: 42px; color: #e3c677; font-size: 13px; }
@@ -1739,3 +1739,8 @@ button, .ctrl {
 /* Keep the new breathing symbols delicate even while the simulation is armed. */
 #btnShowBreatheMenu #iconBreatheRandomCell,
 #btnShowBreatheMenu #iconBreatheRandomColor { stroke-width: 1.2; }
+
+/* Init and startup share a card, preserving the existing expandable forms. */
+.technician-start-settings { margin-bottom: 20px; padding: 20px; border: 1px solid #b28b3645; border-radius: 12px; background: linear-gradient(135deg, #1c1a12, #0d0e0c); text-align: start; }
+.technician-start-settings .technician-option { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.technician-start-settings .startup-entry { margin-top: 18px; padding-top: 18px; border-top: 1px solid #b28b3630; }

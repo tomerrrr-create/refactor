@@ -1477,7 +1477,6 @@ export function initializeModals(appContext) {
         startupToggle.setAttribute('aria-expanded', 'false');
         initForm.hidden = !initForm.hidden;
         initToggle.setAttribute('aria-expanded', String(!initForm.hidden));
-        if (!initForm.hidden) initBoard.focus();
     });
     initBrush.addEventListener('input', () => {
         initBrushValue.value = initBrush.value;
@@ -1611,7 +1610,6 @@ export function initializeModals(appContext) {
             workspaceResetStatus.textContent = app.getText('workspace_reset_error');
         } finally { confirmWorkspaceReset.disabled = false; }
     });
-    app.dom.btnCloseDebug.addEventListener('click', () => app.dom.technicianDialog.close());
     app.dom.technicianDialog.addEventListener('keydown', (event) => {
         if (event.key !== 'Tab') return;
         const controls = [...app.dom.technicianDialog.querySelectorAll('button:not([disabled]), select, input')]
