@@ -31,6 +31,10 @@ export function initializeSeparatorCycleModal(app) {
     form.addEventListener('submit', event => {
         event.preventDefault();
         if (app.setSeparatorCycle(draft)) close();
+        else {
+            status.dataset.debugText = draft.length ? 'profile_replay_busy' : 'separator_cycle_required';
+            status.textContent = app.getText(status.dataset.debugText);
+        }
     });
     dialog.addEventListener('click', event => {
         if (event.target !== dialog) return;

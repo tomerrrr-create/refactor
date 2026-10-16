@@ -1796,6 +1796,7 @@ if (simulationName === 'magnet') {
         return {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
+            ...(separatorCycle.join() === DEFAULT_SEPARATOR_CYCLE.join() ? {} : { separatorCycle: [...separatorCycle] }),
             smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked,
                 bloom: isSoftBloom, bloomIntensity: softBloomIntensity },
             brush: { size: brushSize, mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
@@ -1807,6 +1808,7 @@ if (simulationName === 'magnet') {
 
       // Applies preferences only. No board, palette, sort, history or macro state is restored.
       function applyWorkspacePreferences(settings) {
+        separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
         spiralRules = { ...settings.rules.spiral };
         magnetRules = { ...settings.rules.magnet };
@@ -4137,8 +4139,9 @@ else if (action.eventName === 'Invert Colors') {
             getSeparatorCycle: () => [...separatorCycle],
             setSeparatorCycle: values => {
                 const normalized = normalizeSeparatorCycle(values);
-                if (!normalized) return false;
+                if (!normalized || isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
                 separatorCycle = normalized;
+                settingsProfiles?.scheduleCapture();
                 return true;
             },
             getSortCycleMethods: () => [...sortCycleMethods],
