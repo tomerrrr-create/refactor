@@ -53,3 +53,31 @@ test('profiles persist independent cycles and support returning to the omitted d
     assert.equal(Object.hasOwn(restored.draft().settings, 'separatorCycle'), false);
     assert.deepEqual(createProfileState(initial, storage).draft(0).settings.separatorCycle, [4, 1, 0]);
 });
+
+
+import { availableSeparatorCycle, maximumSeparatorWidth } from '../js/separator-cycle.js';
+import { fitStartupSeparator } from '../js/startup-settings.js';
+test('one-pixel rule preserves small boards and filters dense cycles by actual display width', () => {
+    assert.deepEqual(availableSeparatorCycle(9, 327), [6, 5, 3, 2, 0]);
+    assert.deepEqual(availableSeparatorCycle(55, 379), [6, 5, 3, 2, 0]);
+    assert.deepEqual(availableSeparatorCycle(55, 378), [5, 3, 2, 0]);
+    assert.deepEqual(availableSeparatorCycle(101, 327), [2, 0]);
+    assert.deepEqual(availableSeparatorCycle(101, 720), [6, 5, 3, 2, 0]);
+    assert.deepEqual(availableSeparatorCycle(299, 327, [6, 4, 1]), [0]);
+    assert.deepEqual(availableSeparatorCycle(101, 327, [6, 4, 1]), [1]);
+    assert.deepEqual(availableSeparatorCycle(1, 327), [6, 5, 3, 2, 0]);
+});
+test('fitting keeps valid absolute values outside the personal cycle and selects only safe lower fallbacks', () => {
+    assert.equal(fitStartupSeparator(9, 4, 327, [6, 2, 0]), 4);
+    assert.equal(fitStartupSeparator(101, 6, 327, [6, 4, 1]), 1);
+    assert.equal(fitStartupSeparator(299, 6, 327, [6]), 0);
+    for (const size of [1, 3, 9, 21, 55, 101, 149, 299]) for (const width of [300, 327, 379, 720]) {
+        for (const gap of [0, 1, 2, 3, 4, 5, 6]) {
+            const fitted = fitStartupSeparator(size, gap, width, [6, 5, 4, 3, 2, 1, 0]);
+            assert(fitted <= gap);
+            assert.equal(fitted === 0 || (width - (size - 1) * fitted) / size >= 1, true);
+            if (gap === 0) assert.equal(fitted, 0);
+        }
+        assert(availableSeparatorCycle(size, width).every(gap => gap <= maximumSeparatorWidth(size, width)));
+    }
+});

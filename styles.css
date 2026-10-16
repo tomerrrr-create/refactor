@@ -1784,3 +1784,5 @@ button, .ctrl {
 .resize-size-step:disabled { opacity: .35; cursor: default; }
 #resizeInput { min-width: 0; appearance: textfield; -moz-appearance: textfield; }
 #resizeInput::-webkit-inner-spin-button, #resizeInput::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+.separator-cycle-options button:disabled { opacity: .35; cursor: default; }

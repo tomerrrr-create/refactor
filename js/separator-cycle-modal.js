@@ -8,7 +8,9 @@ export function initializeSeparatorCycleModal(app) {
     const save = document.getElementById('btnSaveSeparatorCycle');
     let draft = [];
     function render() {
+        const available = app.getAvailableSeparatorWidths();
         options.querySelectorAll('button').forEach(button => {
+            button.disabled = !available.includes(Number(button.dataset.width));
             button.setAttribute('aria-pressed', String(draft.includes(Number(button.dataset.width))));
         });
         save.disabled = draft.length === 0;
@@ -41,9 +43,10 @@ export function initializeSeparatorCycleModal(app) {
         const box = dialog.getBoundingClientRect();
         if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close();
     });
+    window.addEventListener('resize', () => { if (dialog.open) requestAnimationFrame(render); });
     dialog.addEventListener('close', () => { app.resetWasLongPress(); app.dom.btnGap.focus(); });
     return function openSeparatorCycleModal() {
         draft = app.getSeparatorCycle(); render(); dialog.showModal();
-        options.querySelector('[aria-pressed="true"]')?.focus();
+        (options.querySelector('[aria-pressed="true"]:not(:disabled)') ?? options.querySelector('button:not(:disabled)'))?.focus();
     };
 }
