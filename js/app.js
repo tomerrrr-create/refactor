@@ -1,4 +1,4 @@
-import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth } from './separator-cycle.js';
+import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
 import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
@@ -425,7 +425,6 @@ activePaletteIndex = paletteIdx >= 0 && paletteIdx < C.PALETTES.length ? palette
 
         syncSelectedColorWithPalette();
         updatePaletteHeader();
-        applySeparator();
         updateSymmetryUI();
 
         if (n !== state.n) {
@@ -455,7 +454,7 @@ k: tileState.k,
             erosionRules.mode = state.erosionMode;
         }
         updateErosionButtonUI();
-        renderToScreen(null); 
+        applySeparator();
       }
 
       function pushHistory(state) {
@@ -530,6 +529,7 @@ boardState = new Array(n * n).fill(null).map(() => ({
                 startDelay: 0}));
             hasPerformedInitialAutofill = false;
           }
+          fitCurrentSeparator();
           renderToScreen(null);
       }
 
@@ -730,8 +730,26 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           dom.gapValue.textContent = String(separatorPx);
       }
 
-      function applySeparator() {
+      let separatorAvailabilityCache = { key: '', cycle: [], widths: [] };
+      function separatorAvailability() {
+          const width = dom.boardCanvas.clientWidth;
+          const key = `${n}:${width}:${separatorCycle.join(',')}`;
+          if (separatorAvailabilityCache.key !== key) {
+              separatorAvailabilityCache = {
+                  key,
+                  cycle: availableSeparatorCycle(n, width, separatorCycle),
+                  widths: availableSeparatorCycle(n, width, [6, 5, 4, 3, 2, 1, 0])
+              };
+          }
+          return separatorAvailabilityCache;
+      }
+      function fitCurrentSeparator() {
+          // Never run from the animation loop or modify the saved preferred cycle.
+          if (separatorPx > 0) separatorPx = fitStartupSeparator(n, separatorPx, dom.boardCanvas.clientWidth, separatorAvailability().cycle);
           updateSeparatorButtonUI();
+      }
+      function applySeparator() {
+          fitCurrentSeparator();
           renderToScreen(null); 
       }
 
@@ -761,7 +779,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
       function cycleSeparator() {
           performAction(() => {
-            separatorPx = nextSeparatorWidth(separatorPx, separatorCycle);
+            separatorPx = nextSeparatorWidth(separatorPx, separatorAvailability().cycle);
             window.logArtEvent('SEPARATOR_CHANGE', separatorPx);
             applySeparator();
           });
@@ -1053,6 +1071,7 @@ function handlePaletteSwitch(backwards = false) {
       function _performResize(newSize) {
         const oldTiles = [...boardState];
         const oldSize = n;
+        const oldSeparator = separatorPx;
         n = newSize;
         initializeBoardAndCanvas(true);
         const diff = oldSize - newSize;
@@ -1082,6 +1101,7 @@ function handlePaletteSwitch(backwards = false) {
             }
         }
         renderToScreen(null);
+        if (separatorPx !== oldSeparator) window.logArtEvent('SEPARATOR_CHANGE', separatorPx);
       }
 
       function resizeGrid(increase = false) {
@@ -2566,6 +2586,7 @@ function updateLayout() {
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
         ctx.scale(dpr, dpr);
+        fitCurrentSeparator();
         renderToScreen(null);
     }, 50);
   }      
@@ -3331,7 +3352,7 @@ function applyHistorySettings(settings) {
     }
     if (separatorPx !== settings.separatorPx) {
         separatorPx = settings.separatorPx;
-        updateSeparatorButtonUI();
+        fitCurrentSeparator();
         changed = true;
     }
     if (changed) {
@@ -4141,6 +4162,7 @@ else if (action.eventName === 'Invert Colors') {
             isSimulationMode: () => isSimModeActive,
             SORT_MODES,
             getSeparatorCycle: () => [...separatorCycle],
+            getAvailableSeparatorWidths: () => [...separatorAvailability().widths],
             setSeparatorCycle: values => {
                 const normalized = normalizeSeparatorCycle(values);
                 if (!normalized || isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;

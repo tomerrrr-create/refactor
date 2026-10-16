@@ -1,3 +1,4 @@
+import { maximumSeparatorWidth } from './separator-cycle.js';
 import { PALETTES, SIZES, SEPARATORS, SYMMETRY_MODES } from './constants.js';
 import { SORT_MODES } from './colors.js';
 
@@ -45,7 +46,8 @@ export function persistStartup(settings, storage) {
 }
 
 // Preserve at least one pixel per tile when opening on a narrower screen.
-export function fitStartupSeparator(boardSize, separatorPx, width) {
-    const maximum = Math.max(0, (width - boardSize) / (boardSize - 1));
-    return Math.max(...SEPARATORS.filter(gap => gap <= separatorPx && gap <= maximum));
+export function fitStartupSeparator(boardSize, separatorPx, width, candidates = SEPARATORS) {
+    const maximum = maximumSeparatorWidth(boardSize, width);
+    if (separatorPx === 0 || separatorPx <= maximum) return separatorPx;
+    return Math.max(0, ...candidates.filter(gap => gap <= separatorPx && gap <= maximum));
 }
