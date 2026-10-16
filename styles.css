@@ -533,6 +533,16 @@ body {
     z-index: 1001;
     position: relative;
 }
+#btnPalette.splash-palette-reveal {
+    position: relative;
+    z-index: 1001;
+    pointer-events: none;
+    animation: splashPaletteReveal 1.5s linear 2.5s both;
+}
+@keyframes splashPaletteReveal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
 @keyframes fadeInText {
   0%   { color: black; opacity: 0; }
