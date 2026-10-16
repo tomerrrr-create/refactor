@@ -1,5 +1,5 @@
 export const DEFAULT_SOFT_BLOOM = true;
-export const DEFAULT_BLOOM_INTENSITY = 22;
+export const DEFAULT_BLOOM_INTENSITY = 32;
 const LEGACY_BLOOM_INTENSITY = 35;
 export const normalizeBloomIntensity = value => Number.isFinite(value)
     ? Math.max(0, Math.min(100, Math.round(value))) : DEFAULT_BLOOM_INTENSITY;
