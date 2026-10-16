@@ -22,7 +22,7 @@ test('bloom copies only to a bounded overlay and performs no rendering while dis
     effect.setIntensity(0); effect.draw(); assert.equal(draws, 2); assert(overlay.hidden);
     effect.setEnabled(false); effect.draw(); assert.equal(contexts, 1);
     assert.equal(overlay.width, 1); assert.equal(overlay.height, 1);
-    assert.equal(normalizeBloomIntensity(undefined), 22);
+    assert.equal(normalizeBloomIntensity(undefined), 32);
     assert.equal(normalizeBloomIntensity(150), 100);
 });
 
@@ -49,9 +49,9 @@ test('bloom settings round-trip and persist per profile without changing V1 defa
     assert.equal(restored.draft(0).settings.smoothing.bloom, true);
 });
 
-test('new Bloom default is on at 22%, while old V1 settings retain off at 35%', () => {
+test('new Bloom default is on at 32%, while old V1 settings retain off at 35%', () => {
     assert.equal(DEFAULT_SOFT_BLOOM, true);
-    assert.equal(DEFAULT_BLOOM_INTENSITY, 22);
+    assert.equal(DEFAULT_BLOOM_INTENSITY, 32);
     assert.deepEqual(resolveSavedBloom({}), { enabled: false, intensity: 35 });
     assert.deepEqual(resolveSavedBloom({ bloom: true }), { enabled: true, intensity: 35 });
     for (const enabled of [true, false]) {
