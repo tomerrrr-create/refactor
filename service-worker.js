@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '9e42c5114bd102709012';
+const VERSION = '4ecdbb2124328290569f';
 const ASSETS = [
     "./",
     "./index.html",
