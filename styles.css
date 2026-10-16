@@ -306,9 +306,10 @@ body {
 }
 
 
-/* --- Easter Egg: Turing is revealed only while selected. --- */
+/* Outside the simulation overlay, Breathe and Turing reveal only when selected. */
 /* מעלים את הכפתור לחלוטין כל עוד הוא לא פעיל, אבל שומר אותו לחיץ */
-.sim-mode-active #btnTuring:not(.simulation-active) {
+.sim-mode-active #btnTuring:not(.simulation-active),
+.sim-mode-active #btnShowBreatheMenu:not(.simulation-active) {
     opacity: 0 !important;
 }
 
