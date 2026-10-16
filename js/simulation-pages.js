@@ -1,5 +1,5 @@
 // Presentation only: page changes never arm, pause, log or mutate a simulation.
-export function createSimulationPages({ container, button, pages, getSelected, getText, reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches }) {
+export function createSimulationPages({ container, button, pages, getSelected, isRunning, getText, reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches }) {
     let page = 0, changing = false;
     const entries = pages.flatMap((items, index) => items.map(([simulation, element], slot) => {
         element.dataset.simPage = String(index);
@@ -8,7 +8,7 @@ export function createSimulationPages({ container, button, pages, getSelected, g
     }));
     function refresh() {
         const selected = entries.find(item => item.simulation === getSelected());
-        const elsewhere = !!selected && selected.page !== page;
+        const elsewhere = isRunning() && !!selected && selected.page !== page;
         button.toggleAttribute('data-active-elsewhere', elsewhere);
         const label = `${getText(page === 0 ? 'sim_page_next' : 'sim_page_previous')} · ${page + 1}/${pages.length}` +
             (elsewhere ? ` · ${getText('sim_page_active_elsewhere')}` : '');

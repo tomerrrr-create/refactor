@@ -1402,6 +1402,7 @@ function pauseLife() {
           if (!isLifePlaying) return;
           window.logArtEvent('PAUSE', '---');
           isLifePlaying = false;
+          simulationPages?.refresh();
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
           animationFrameId = null;
           // animationLoop will stop itself on its next frame because isLifePlaying is false
@@ -1483,6 +1484,7 @@ function pauseLife() {
                   ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode) : null;
               breatheStartTime = performance.now();
               isLifePlaying = true;
+              simulationPages?.refresh();
               
               dom.iconPlay.style.display = 'none';
               dom.iconPause.style.display = 'block';
@@ -1511,6 +1513,7 @@ function pauseLife() {
           simulationStartState = getCurrentState();
 
           isLifePlaying = true;
+          simulationPages?.refresh();
           dom.iconPlay.style.display = 'none';
           dom.iconPause.style.display = 'block';
           dom.btnStepForward.disabled = true;
@@ -4482,7 +4485,7 @@ applySortMethod,
                 [['dla', dom.btnDla], ['turing', dom.btnTuring], ['spiral', dom.btnSpiral],
                  ['erosion', dom.btnErosion], ['breathe', dom.btnShowBreatheMenu], ['islands', dom.btnIslands]]
             ],
-            getSelected: () => armedSimulation, getText
+            getSelected: () => armedSimulation, isRunning: () => isLifePlaying, getText
         });
         
         activePaletteIndex = C.PALETTES.findIndex(p => p.originalName === startupSettings.paletteName);

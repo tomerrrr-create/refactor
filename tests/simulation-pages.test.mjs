@@ -5,10 +5,10 @@ function element(){return {dataset:{},hidden:false,disabled:false,attrs:new Map(
 function harness(reducedMotion=true){
  const nodes=Array.from({length:12},element),arrow=element(),dots=[element(),element()],button=element();
  button.querySelector=()=>arrow;button.querySelectorAll=()=>dots;button.addEventListener=(_,fn)=>button.click=fn;
- let selected=null;const document={activeElement:null},container={dataset:{},ownerDocument:document};
+ let selected=null,running=false;const document={activeElement:null},container={dataset:{},ownerDocument:document};
  button.focus=()=>document.activeElement=button;
- const pager=createSimulationPages({container,button,pages:[nodes.slice(0,6).map((el,i)=>['sim'+i,el]),nodes.slice(6).map((el,i)=>['sim'+(i+6),el])],getSelected:()=>selected,getText:k=>k,reducedMotion:()=>reducedMotion});
- return {nodes,button,container,pager,select:value=>{selected=value;pager.refresh();}};
+ const pager=createSimulationPages({container,button,pages:[nodes.slice(0,6).map((el,i)=>['sim'+i,el]),nodes.slice(6).map((el,i)=>['sim'+(i+6),el])],getSelected:()=>selected,isRunning:()=>running,getText:k=>k,reducedMotion:()=>reducedMotion});
+ return {nodes,button,container,pager,run:value=>{running=value;pager.refresh();},select:value=>{selected=value;pager.refresh();}};
 }
 test('six existing nodes per page, stable slots and untouched simulation/button state',async()=>{
  const h=harness();h.nodes[0].disabled=true;
@@ -18,7 +18,10 @@ test('six existing nodes per page, stable slots and untouched simulation/button 
 });
 test('other-page selection indicator follows navigation and refresh without moving selection',async()=>{
  const h=harness();h.select('sim2');assert(!h.button.attrs.has('data-active-elsewhere'));
- await h.button.click();assert(h.button.attrs.has('data-active-elsewhere'));assert(h.button.title.includes('sim_page_active_elsewhere'));
+ await h.button.click();assert(!h.button.attrs.has('data-active-elsewhere'));
+ h.run(true);assert(h.button.attrs.has('data-active-elsewhere'));assert(h.button.title.includes('sim_page_active_elsewhere'));
+ h.run(false);assert(!h.button.attrs.has('data-active-elsewhere'));assert(!h.button.title.includes('sim_page_active_elsewhere'));
+ h.run(true);assert(h.button.attrs.has('data-active-elsewhere'));
  h.select('sim9');assert(!h.button.attrs.has('data-active-elsewhere'));h.select(null);assert(!h.button.attrs.has('data-active-elsewhere'));
  h.pager.reset();assert.equal(h.pager.page,0);
 });
