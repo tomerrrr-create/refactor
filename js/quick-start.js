@@ -1,7 +1,7 @@
 import { getCurrentLang, onLanguageChange } from './i18n.js';
 const COPY = {
   "en": {
-    "entry": "Quick start · 12 steps",
+    "entry": "Quick start · 13 steps",
     "label": "Follow your intuition",
     "back": "Back",
     "next": "Next",
@@ -60,6 +60,11 @@ const COPY = {
         "Explore gradually: change one setting, then watch what happens."
       ],
       [
+        "Color order is their DNA",
+        "Sorting methods define the inner order of colors. In simulations that follow this order, the same board and the same simulation can become worlds apart simply by changing the sorting method.",
+        "Tap the sort button to change methods, or swipe it upward to choose the methods in your cycle. Try the same board in two orders."
+      ],
+      [
         "Save the image. Keep the idea.",
         "Open Save for a PNG you can share. Check the smoothing option before exporting. Save an Idea file too if you want to reopen the board and continue editing later.",
         "A PNG is an image. An Idea file keeps an editable board."
@@ -72,7 +77,7 @@ const COPY = {
     ]
   },
   "he": {
-    "entry": "מתחילים כאן · 12 צעדים",
+    "entry": "מתחילים כאן · 13 צעדים",
     "label": "לכו עם האינטואיציה",
     "back": "הקודם",
     "next": "הבא",
@@ -131,6 +136,11 @@ const COPY = {
         "גלו בהדרגה: שנו הגדרה אחת והתבוננו בתוצאה."
       ],
       [
+        "סדר הצבעים הוא ה־DNA שלהם",
+        "שיטות המיון קובעות את הסדר הפנימי של הצבעים. בסימולציות שנשענות עליו, אותו לוח ואותה סימולציה יכולים להפוך לעולמות רחוקים כשמשנים רק את שיטת המיון.",
+        "לחצו על כפתור המיון להחלפת שיטה, או החליקו אותו למעלה לבחירת השיטות בסייקל. נסו את אותו לוח בשני סדרים."
+      ],
+      [
         "שומרים תמונה. שומרים רעיון.",
         "פתחו שמירה לתמונת PNG שאפשר לשתף. בדקו את אפשרות ההחלקה לפני הייצוא. שמרו גם קובץ רעיון כדי לפתוח את הלוח ולהמשיך לערוך בהמשך.",
         "PNG הוא תמונה. קובץ רעיון שומר לוח שאפשר לערוך."
@@ -143,7 +153,7 @@ const COPY = {
     ]
   },
   "ru": {
-    "entry": "Быстрый старт · 12 шагов",
+    "entry": "Быстрый старт · 13 шагов",
     "label": "Следуйте интуиции",
     "back": "Назад",
     "next": "Далее",
@@ -202,6 +212,11 @@ const COPY = {
         "Меняйте одну настройку и наблюдайте за результатом."
       ],
       [
+        "Порядок — это ДНК цветов",
+        "Методы сортировки задают внутренний порядок цветов. В симуляциях, зависящих от него, одно и то же поле с той же симуляцией может стать совершенно другим миром при смене сортировки.",
+        "Нажмите кнопку сортировки для смены метода или проведите вверх для выбора методов цикла. Сравните два порядка на одном поле."
+      ],
+      [
         "Сохраните изображение и идею",
         "Откройте сохранение для PNG, которым можно поделиться. Проверьте сглаживание перед экспортом. Сохраните файл идеи, чтобы позже открыть поле и продолжить редактирование.",
         "PNG — изображение. Идея — редактируемое поле."
@@ -214,7 +229,7 @@ const COPY = {
     ]
   },
   "nl": {
-    "entry": "Snel beginnen · 12 stappen",
+    "entry": "Snel beginnen · 13 stappen",
     "label": "Volg je intuïtie",
     "back": "Vorige",
     "next": "Volgende",
@@ -273,6 +288,11 @@ const COPY = {
         "Verander één instelling en bekijk het resultaat."
       ],
       [
+        "Kleurvolgorde is hun DNA",
+        "Sorteermethoden bepalen de innerlijke volgorde van kleuren. Bij simulaties die deze volgorde volgen, kunnen hetzelfde raster en dezelfde simulatie totaal andere werelden worden door alleen de sorteermethode te veranderen.",
+        "Tik op de sorteerknop voor een andere methode, of veeg omhoog om de methoden in je cyclus te kiezen. Probeer hetzelfde raster met twee volgordes."
+      ],
+      [
         "Bewaar beeld én idee",
         "Open Opslaan voor een PNG om te delen. Controleer de optie voor vloeiend maken voor het exporteren. Bewaar ook een idee-bestand om later verder te bewerken.",
         "Een PNG is een afbeelding. Een idee-bestand blijft bewerkbaar."
@@ -293,7 +313,7 @@ export function initializeQuickStart() {
   const back = dialog.querySelector('[data-guide-back]'), next = dialog.querySelector('[data-guide-next]');
   const close = dialog.querySelector('[data-guide-close]'), panel = dialog.querySelector('[data-guide-slide]');
   const entries = [...document.querySelectorAll('[data-open-guide]')];
-  const icons = ['btnPalette','btnPalette','btnColorPicker','btnSymmetry','btnResizeUp','btnToggleSimMode','btnGameOfLife','btnSandpile','btnGravitationalSort','btnContour','btnSave','btnMacroPlay'];
+  const icons = ['btnPalette','btnPalette','btnColorPicker','btnSymmetry','btnResizeUp','btnToggleSimMode','btnGameOfLife','btnSandpile','btnGravitationalSort','btnContour','btnCycleSort','btnSave','btnMacroPlay'];
   let index = 0, trigger = null, gesture = null;
   const copy = () => COPY[getCurrentLang()] || COPY.en;
   const buttons = Array.from({length:COPY.en.slides.length}, (_, i) => {
