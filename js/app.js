@@ -293,7 +293,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let n = 7;
       let separatorPx = 2;
       let separatorCycle = [...DEFAULT_SEPARATOR_CYCLE];
-      let isRelativeSeparatorMode = false;
+      let isRelativeSeparatorMode = true;
       let selectedRelativeSeparator = relativeSeparatorLevel(separatorPx);
       let separatorIsSnapshot = false;
       let separatorBeforeRelative = { width: separatorPx, snapshot: false };
@@ -4380,6 +4380,8 @@ applySortMethod,
         n = startupSettings.boardSize;
         updateLayout();
         separatorPx = fitStartupSeparator(n, startupSettings.separatorPx, dom.boardCanvas.clientWidth);
+        separatorBeforeRelative = { width: separatorPx, snapshot: false };
+        selectedRelativeSeparator = relativeSeparatorLevel(startupSettings.separatorPx);
         currentSortMethod = startupSettings.sortMethod;
         C.PALETTES.forEach(p => { p.colors = sortColorsArray(p.originalColors, currentSortMethod); });
         updateSortButtonUI();
