@@ -1,3 +1,4 @@
+import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
 import { runIslandsPreview } from './simulations/islands-preview.js';
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
@@ -32,6 +33,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
       let canvas, ctx;
       let boardState = []; 
       let simulationStartState = null; // For saving simulation history
+      let islandsSession = null;
       
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
@@ -381,6 +383,7 @@ function compressBoardState() {
 currentSortMethod, 
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
+            ...(armedSimulation === 'islands' && islandsSession ? { islandsState: { ...islandsSession } } : {}),
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
                 isGold: tile.isGold,
@@ -468,6 +471,10 @@ k: tileState.k,
             erosionRules.mode = state.erosionMode;
         }
         updateErosionButtonUI();
+        if (state.islandsState) {
+            if (armedSimulation !== 'islands') armSimulation('islands', { recordIslandsStart: false });
+            islandsSession = restoreIslandsSession(state.islandsState);
+        }
         applySeparator();
       }
 
@@ -1199,6 +1206,7 @@ case 'brightnessEvo':
     boardState = nextState;
     break;
 
+            case 'islands': boardState = runIslandsGeneration(context, islandsSession); break;
             case 'gravitationalSort': nextState = runGravityPreviewOrGeneration(context); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
        case 'contour': 
@@ -1297,6 +1305,7 @@ break;
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
@@ -1329,6 +1338,9 @@ case 'brightnessEvo':
     }
     break;
 
+                case 'islands':
+                    boardState = runIslandsGeneration(context, islandsSession);
+                    break;
                 case 'gravitationalSort': 
                     boardState = runGravityPreviewOrGeneration(context);
                     break;
@@ -1431,6 +1443,7 @@ function pauseLife() {
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
@@ -1502,13 +1515,14 @@ function pauseLife() {
           
           // מכבים את כל הכפתורים למעט הכפתור של הסימולציה הפעילה!
           simButtons.forEach(btn => {
-              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase())) {
+              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase()) &&
+                  !(armedSimulation === 'islands' && btn === dom.btnShowBreatheMenu)) {
                   btn.disabled = true;
               }
           });
 
           // Install queued generation-one commands before the macro's first frame.
-          if (isExecutingMacroCommand && (armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile')) {
+          if (isExecutingMacroCommand && (armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands')) {
               animationFrameId = requestAnimationFrame(gameLoop);
           } else {
               gameLoop();
@@ -1590,7 +1604,7 @@ function initializeDla() {
 
 
 
-function armSimulation(simulationName) {
+function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     if (isLifePlaying) return;
 
     // --- MACRO KILL SWITCH ---
@@ -1637,6 +1651,12 @@ if (dom.btnSimSettings) dom.btnSimSettings.classList.add('hide-settings');
 // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
 if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
+    if (simulationName === 'islands') {
+        islandsSession = createIslandsSession();
+        if (!isExecutingMacroCommand && recordIslandsStart) {
+            logIslandsSessionStart();
+        }
+    }
 
         // === MINIMAL FIX: איפוס caches של מגנט אחרי כל החלפה של סימולציה ===
         if (typeof Simulations.resetMagnetCaches === 'function') {
@@ -1687,7 +1707,8 @@ if (simulationName === 'magnet') {
 
 
         // צביעת הכפתור הנבחר במסגרת פעילה (זהב)
-        const buttonToActivate = simButtons.find(btn => btn.id.toLowerCase().includes(simulationName.toLowerCase()));
+        const buttonToActivate = simulationName === 'islands' ? dom.btnShowBreatheMenu
+            : simButtons.find(btn => btn.id.toLowerCase().includes(simulationName.toLowerCase()));
         if (buttonToActivate) {
             buttonToActivate.classList.add('simulation-active');
         }
@@ -2227,7 +2248,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnResizeUp.title = getText('tooltip_resizeUp');
         dom.btnResizeDown.title = getText('tooltip_resizeDown'); 
         dom.btnSave.title = getText('tooltip_save');
-        dom.btnShowBreatheMenu.title = getText('tooltip_breathe'); 
+        updateBreatheEvoButtonUI();
         dom.btnTutorial.title = getText('tooltip_tutorial');
         updateGameOfLifeButtonUI();
         updateChiFlowButtonUI();
@@ -3049,6 +3070,14 @@ function cycleDlaMode() {
 }
 
 
+function logIslandsSessionStart() {
+    window.logArtEvent('ISLANDS_INIT', JSON.stringify({
+        recordingVersion: 2, ...islandsSession
+    }));
+    // Keep the initial random cursor when undoing the first step/run.
+    historyRecipeCursor = artRecipeLog.length;
+}
+
 // The experimental mode stays outside the persisted gravity rules.
 function runGravityPreviewOrGeneration(context) {
     return gsMode === 'islands' ? runIslandsPreview(context) : Simulations.runGravitationalSortGeneration(context);
@@ -3103,35 +3132,35 @@ function cycleGravitationalSortMode() {
 
 // --- NEW: Breathe Simulation UI and Cycling ---
 function updateBreatheEvoButtonUI() {
-    const modes = ['solo', 'group', 'random-cell', 'random-color'];
-    const icons = ['iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
+    const modes = ['islands', 'solo', 'group', 'random-cell', 'random-color'];
+    const icons = ['iconBreatheIslands', 'iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
+    const selectedMode = armedSimulation === 'islands' ? 'islands' : breatheEvoMode;
     dom.btnShowBreatheMenu.classList.remove(...modes.map(mode => 'mode-' + mode), 'simulation-active');
     modes.forEach((mode, index) => {
-        document.getElementById(icons[index]).style.display = mode === breatheEvoMode || (breatheEvoMode === 'off' && index === 0) ? 'block' : 'none';
+        document.getElementById(icons[index]).style.display = mode === selectedMode || (selectedMode === 'off' && index === 0) ? 'block' : 'none';
     });
-    if (modes.includes(breatheEvoMode)) dom.btnShowBreatheMenu.classList.add('mode-' + breatheEvoMode);
-    if (armedSimulation === 'breathe') dom.btnShowBreatheMenu.classList.add('simulation-active');
+    if (modes.includes(selectedMode)) dom.btnShowBreatheMenu.classList.add('mode-' + selectedMode);
+    if (armedSimulation === 'breathe' || armedSimulation === 'islands') dom.btnShowBreatheMenu.classList.add('simulation-active');
+    dom.btnShowBreatheMenu.title = getText(selectedMode === 'islands' ? 'tooltip_islands' : 'tooltip_breathe');
+    dom.btnShowBreatheMenu.setAttribute('aria-label', dom.btnShowBreatheMenu.title);
 }
 
 function cycleBreatheEvoMode() {
-    if (isLifePlaying) {
-        pauseLife();
-    }
+    if (isLifePlaying) pauseLife();
 
-    const oldMode = breatheEvoMode;
-    const sequence = ['off', 'solo', 'group', 'random-cell', 'random-color'];
-    const currentIndex = sequence.indexOf(breatheEvoMode);
-    const nextIndex = (currentIndex + 1) % sequence.length;
-    breatheEvoMode = sequence[nextIndex];
+    const currentMode = armedSimulation === 'islands' ? 'islands' : breatheEvoMode;
+    const sequence = ['off', 'islands', 'solo', 'group', 'random-cell', 'random-color'];
+    const nextMode = sequence[(sequence.indexOf(currentMode) + 1) % sequence.length];
 
-    if (oldMode === 'off' && breatheEvoMode !== 'off') {
-        armSimulation('breathe');
-    } else if (oldMode !== 'off' && breatheEvoMode === 'off') {
-        if (armedSimulation === 'breathe') {
-            armSimulation(null);
-        }
+    // This button selects two independent engines; the breathing modes keep their own state.
+    if (nextMode === 'islands') {
+        armSimulation('islands');
+    } else if (nextMode === 'off') {
+        armSimulation(null);
+    } else {
+        if (armedSimulation !== 'breathe') armSimulation('breathe');
+        breatheEvoMode = nextMode;
     }
-    
     updateBreatheEvoButtonUI();
 }
 // --- END: New Breathe Functions ---
@@ -3294,13 +3323,23 @@ function selectSortMethod(nextMethod) {
 async function resetArtRecipeLog() {
     // Use the existing macro save flow before replacing the journey.
     if (!await saveArtRecipeFile(createArtRecipeFile('backup_'))) return;
+    const resumeIslands = armedSimulation === 'islands' && isLifePlaying;
+    if (resumeIslands) pauseLife();
     artRecipeLog = [];
     historyRecipeCursor = 0;
     logCurrentStateAsInit();
+    if (armedSimulation === 'islands') logIslandsSessionStart();
+    if (resumeIslands) togglePlayPauseLife();
     modals.closeModalSlowly();
 }
 
 function createArtRecipeFile(prefix = '') {
+    const exportedLog = [...artRecipeLog];
+    if (armedSimulation === 'islands' && isLifePlaying) {
+        const now = new Date();
+        const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+        exportedLog.push(`[${timestamp}] [GEN:${currentGenerationCount}] PAUSE -> ---`);
+    }
     // 1. חיפוש הפלטה ההתחלתית
     let paletteName = "Unknown";
     try {
@@ -3323,12 +3362,12 @@ function createArtRecipeFile(prefix = '') {
     const cleanPaletteName = paletteName.replace(/\s+/g, '_').replace(/[<>:"/\\|?*]/g, '');
 
     // 3. ספירת מספר השורות/פקודות
-    const linesCount = artRecipeLog.length;
+    const linesCount = exportedLog.length;
 
     // 4. הרכבת השם החדש בדיוק בתבנית שביקשת!
     const fileName = `${prefix}Intuition_Path_${cleanPaletteName}_${linesCount}.txt`;
 
-    return new File([artRecipeLog.join('\n')], fileName, { type: 'text/plain' });
+    return new File([exportedLog.join('\n')], fileName, { type: 'text/plain' });
 }
 
 async function saveArtRecipeFile(file) {
@@ -3369,10 +3408,12 @@ async function exportArtRecipeLog() {
 // History logging reads only fixed-size settings; it never serializes board tiles.
 function getHistorySettings(state) {
     return { n: state.n, activePaletteIndex: state.activePaletteIndex,
-        separatorPx: state.separatorPx, currentSortMethod: state.currentSortMethod };
+        separatorPx: state.separatorPx, currentSortMethod: state.currentSortMethod,
+        ...(state.islandsState ? { islandsState: state.islandsState } : {}) };
 }
 
 function validateHistorySettings(settings) {
+    if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
     if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 300 ||
         !Number.isInteger(settings.activePaletteIndex) || settings.activePaletteIndex < 0 ||
         !Number.isFinite(settings.separatorPx) || settings.separatorPx < 0 ||
@@ -3383,6 +3424,11 @@ function validateHistorySettings(settings) {
 
 function applyHistorySettings(settings) {
     validateHistorySettings(settings);
+    if (settings.islandsState) {
+        const restored = restoreIslandsSession(settings.islandsState);
+        if (armedSimulation !== 'islands') armSimulation('islands', { recordIslandsStart: false });
+        islandsSession = restored;
+    }
     let changed = false;
     if (currentSortMethod !== settings.currentSortMethod) {
         applySortMethod(settings.currentSortMethod);
@@ -3473,6 +3519,22 @@ function parseHistoryMacro(lines) {
     });
 }
 
+function validateIslandsMacroAction(action) {
+    if (action.eventName === 'ISLANDS_INIT') {
+        const snapshot = JSON.parse(action.details);
+        restoreIslandsSession(snapshot);
+        if (snapshot.recordingVersion === undefined) {
+            restoreIslandsBoard(snapshot.n, snapshot.board);
+            validateHistorySettings(snapshot);
+        } else if (snapshot.recordingVersion !== 2) {
+            throw new Error('Unsupported Islands recording version');
+        }
+    } else if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
+        const match = action.details.match(/^Armed: islands\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
+        if (match) restoreIslandsSession(JSON.parse(match[1]));
+    }
+}
+
 function parseMacroText(text) {
     const recipeLines = text.split('\n').filter(line => line.trim() !== '');
     const isHistoryRecipe = recipeLines.some(line => {
@@ -3480,8 +3542,9 @@ function parseMacroText(text) {
         if (!match) return false;
         try { return JSON.parse(match[2]).recipeVersion === 2; } catch { return false; }
     });
-    if (isHistoryRecipe) return parseHistoryMacro(recipeLines);
-    return parseLegacyMacroText(text);
+    const actions = isHistoryRecipe ? parseHistoryMacro(recipeLines) : parseLegacyMacroText(text);
+    actions.forEach(validateIslandsMacroAction);
+    return actions;
 }
 
 function parseLegacyMacroText(text) {
@@ -3722,7 +3785,12 @@ function stopMacro() {
     macroQueue = [];
     isMacroLoaded = false;
     isMacroPlaying = false;
-    if (typeof settingsProfiles !== 'undefined') settingsProfiles?.endReplay();
+    try {
+        if (typeof settingsProfiles !== 'undefined') settingsProfiles?.endReplay();
+    } catch (error) {
+        // Profile validation must never leave the macro overlay blocking the board.
+        console.error('Failed to finish macro profile capture:', error);
+    }
     replayNudgeTiming = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
@@ -3810,6 +3878,8 @@ function applyMacroRules(details) {
         rulesStr = match[2];
     }
 
+    const restoredIslands = sim === 'islands' ? restoreIslandsSession(JSON.parse(rulesStr)) : null;
+
 // כופה את שיטת המיון אם היא קיימת ואינה תואמת למה שמוגדר כרגע בקנבס
 if (sortMethod && currentSortMethod !== sortMethod) {
     applySortMethod(sortMethod);
@@ -3819,6 +3889,11 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
     // מוודאים שהסימולציה הנכונה חמושה בממשק
     if (armedSimulation !== sim) armSimulation(sim);
+
+    if (sim === 'islands') {
+        islandsSession = restoredIslands;
+        return sim;
+    }
 
     if (sim === 'nudgeBrighter' || sim === 'nudgeDarker') {
         applyNudgeTiming(rulesStr);
@@ -3853,7 +3928,10 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 }
                 else if (sim === 'dla') {
                     if (parsedRules.mode) dlaMode = parsedRules.mode;
-                    Object.assign(dlaRules, parsedRules);
+                    // `mode` belongs to playback/UI, not to the persisted DLA rules.
+                    for (const key of ['colorGenetics', 'injectFromEdges', 'fastMode']) {
+                        if (typeof parsedRules[key] === 'boolean') dlaRules[key] = parsedRules[key];
+                    }
                     if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
                 }
                 else if (sim === 'contour') Object.assign(contourRules, parsedRules);
@@ -3880,6 +3958,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
 
 function executeMacroAction(action) {
+    validateIslandsMacroAction(action);
     //console.log("Macro Execution:", action.eventName, "->", action.details);
     isExecutingMacroCommand = true; // מדליקים דגל כדי לא להפעיל את ה-Kill Switch
 
@@ -3942,6 +4021,20 @@ function executeMacroAction(action) {
     // ==================================
     
 
+    else if (action.eventName === 'ISLANDS_INIT') {
+        const snapshot = JSON.parse(action.details);
+        const session = restoreIslandsSession(snapshot);
+        if (isLifePlaying) pauseLife();
+        if (armedSimulation !== 'islands') armSimulation('islands', { recordIslandsStart: false });
+        // Old recipes retain their recorded starting board; new ones use the live board.
+        if (snapshot.recordingVersion === undefined) {
+            const tiles = restoreIslandsBoard(snapshot.n, snapshot.board);
+            if (!C.PALETTES[snapshot.activePaletteIndex]) throw new Error('Invalid Islands palette');
+            applyState({ ...snapshot, activePaletteIndex: pendingMacroPalette ?? snapshot.activePaletteIndex, tiles, islandsState: session });
+            renderToScreen(null);
+        }
+        islandsSession = session;
+    }
     else if (action.eventName === 'HISTORY_SETTINGS') {
         if (isLifePlaying) pauseLife();
         applyHistorySettings(JSON.parse(action.details));
@@ -4572,7 +4665,7 @@ bindPickerGestures(dom.btnColorPicker, {
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap, onOpen,
-                onHold: () => evolutionExplanation.show(button, simulation),
+                onHold: () => evolutionExplanation.show(button, simulation === 'breathe' && armedSimulation === 'islands' ? 'islands' : simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && !evolutionExplanation.isOpen() && !isLifePlaying && armedSimulation === simulation,
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS

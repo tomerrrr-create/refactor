@@ -119,6 +119,10 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
         refresh() { captureNow(); closeActions(); refresh(); },
         scheduleCapture,
         beginReplay() { state.beginReplay(capture()); refresh(); },
-        endReplay() { state.endReplay(capture()); refresh(); }
+        endReplay() {
+            // Capture lazily so failures also release the profile replay lock.
+            try { state.endReplay(capture); }
+            finally { refresh(); }
+        }
     };
 }

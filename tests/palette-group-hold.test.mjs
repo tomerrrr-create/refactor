@@ -36,6 +36,7 @@ function harness(index = 2) {
         ['function performAction(', 'function undo('],
         ['function adaptColors(', 'function applyNudgeLogic('],
         ['function switchToPalette(', 'function _performResize('],
+        ['function validateIslandsMacroAction(', 'function parseMacroText('],
         ['function executeMacroAction(', 'async function initializeApp('],
         ['bindPickerGestures(dom.btnPalette,', "dom.btnResetBoard.addEventListener('click'"]
     ]) vm.runInContext(excerpt(start, end), h);

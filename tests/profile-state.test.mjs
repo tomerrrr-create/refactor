@@ -103,3 +103,14 @@ test('personal rules and cycle source identity remain independent from named pre
     state.capture(snapshot);
     assert.equal(state.dirty(0), false);
 });
+
+test('failed replay completion resumes normal profile capture without accepting invalid settings',()=>{
+    for(const throwsDuringCapture of [false,true]){
+        const state=createProfileState(initial(),storage());state.beginReplay(initial());
+        const invalid=change(initial(),s=>{s.rules.dla.mode='genetics';});
+        assert.throws(()=>state.endReplay(throwsDuringCapture?()=>{throw Error('capture failed');}:invalid));
+        assert.deepEqual(state.draft(),initial());
+        const edited=change(initial(),s=>{s.brush.size=5;});
+        assert.equal(state.capture(edited),true);assert.equal(state.draft().settings.brush.size,5);
+    }
+});
