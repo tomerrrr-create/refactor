@@ -1,3 +1,4 @@
+import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
 import { runIslandsPreview } from './simulations/islands-preview.js';
@@ -4469,6 +4470,7 @@ downloadImage: shareOrDownloadImage,
 applySortMethod,
         };
         modals = initializeModals(contextForModals);
+        initializeQuickStart();
         
         activePaletteIndex = C.PALETTES.findIndex(p => p.originalName === startupSettings.paletteName);
         n = startupSettings.boardSize;
@@ -4697,12 +4699,14 @@ if (brushSizeSlider) {
         window.addEventListener('contextmenu', e => e.preventDefault());
         
         splashText.style.animation = 'fadeInText 2.5s linear forwards';
+        dom.btnPalette.classList.add('splash-palette-reveal');
         await new Promise(r => setTimeout(r, 5000));
         splashText.style.animation = 'fadeOutText 1.5s linear forwards';
         await new Promise(r => setTimeout(r, 1500));
         splashScreen.style.opacity = '0';
         await new Promise(r => setTimeout(r, 2000));
         splashScreen.remove();
+        dom.btnPalette.classList.remove('splash-palette-reveal');
       }
 
       initializeApp();
