@@ -1811,7 +1811,7 @@ button, .ctrl {
 #btnGravitationalSort.mode-islands svg:not(#iconGsIslands) { display: none !important; }
 
 /* Keep the Islands leaves fine-lined, including the active simulation state. */
-#btnIslands #iconIslands { stroke: var(--gold); stroke-width: 1.5; }
+#btnIslands #iconIslands { stroke: var(--sim-color); stroke-width: 1.5; }
 
 /* The existing nine-column control grid stays fixed; only its central six slots page. */
 #btnIslands, #btnSimulationPage, #simulationArrangeSlot { display: none; }
@@ -1828,7 +1828,7 @@ button, .ctrl {
     display: inline-flex; opacity: 1; visibility: visible; pointer-events: auto; transform: scale(1);
 }
 #btnIslands svg { width: var(--icon-size); height: var(--icon-size); }
-.sim-mode-active #btnIslands.simulation-active svg { stroke: var(--gold); }
+.sim-mode-active #btnIslands.simulation-active #iconIslands { stroke: var(--gold); }
 #controlsContainer.sim-mode-active #btnSimulationPage {
     display: inline-flex; grid-area: 3 / 3; align-items: center; justify-content: center;
 }
@@ -1844,5 +1844,3 @@ button, .ctrl {
 @media (hover: hover) { .simulation-page-switch:hover { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { [data-sim-page] { transition: none; } }
 
-/* The selected leaf stays gold; a quieter outline distinguishes its idle state. */
-#btnIslands:not(.simulation-active) #iconIslands { opacity: .55; }
