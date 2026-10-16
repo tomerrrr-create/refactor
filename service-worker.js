@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = 'e243f4bc120624a09767';
+const VERSION = '36c9fd0af1a03913fdeb';
 const ASSETS = [
     "./",
     "./index.html",
@@ -32,6 +32,9 @@ const ASSETS = [
     "./js/separator-recording.js",
     "./js/settings-import-transition.js",
     "./js/sim-init-settings.js",
+    "./js/simulation-layout-modal.js",
+    "./js/simulation-layout.js",
+    "./js/simulation-pages.js",
     "./js/simulations.js",
     "./js/simulations/breathe.js",
     "./js/simulations/brightness.js",
