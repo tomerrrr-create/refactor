@@ -10,6 +10,23 @@ const LABELS = {
 };
 export function initializeSimulationTheme() {
   const section = document.getElementById('simulationThemeSettings');
+  const toggle = document.getElementById('btnConfigureThemes');
+  const options = document.getElementById('simulationThemeOptions');
+  const siblings = ['btnConfigureInit', 'btnConfigureStartup'].map(id => document.getElementById(id));
+  function expand(open) {
+    toggle.setAttribute('aria-expanded', String(open));
+    options.hidden = !open;
+  }
+  toggle.addEventListener('click', () => {
+    const open = options.hidden;
+    if (open) siblings.forEach(button => {
+      document.getElementById(button.getAttribute('aria-controls')).hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    });
+    expand(open);
+  });
+  siblings.forEach(button => button.addEventListener('click', () => expand(false)));
+  document.getElementById('technicianDialog').addEventListener('close', () => expand(false));
   const inputs = [...section.querySelectorAll('input[name="simulationTheme"]')];
   function apply(value) {
     const theme = value === 'gold' ? 'gold' : 'blue';
