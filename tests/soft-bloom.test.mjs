@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSoftBloom, normalizeBloomIntensity } from '../js/soft-bloom.js';
+import { createSoftBloom, normalizeBloomIntensity, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, resolveSavedBloom } from '../js/soft-bloom.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { createProfileState } from '../js/profile-state.js';
 
@@ -22,7 +22,7 @@ test('bloom copies only to a bounded overlay and performs no rendering while dis
     effect.setIntensity(0); effect.draw(); assert.equal(draws, 2); assert(overlay.hidden);
     effect.setEnabled(false); effect.draw(); assert.equal(contexts, 1);
     assert.equal(overlay.width, 1); assert.equal(overlay.height, 1);
-    assert.equal(normalizeBloomIntensity(undefined), 35);
+    assert.equal(normalizeBloomIntensity(undefined), 22);
     assert.equal(normalizeBloomIntensity(150), 100);
 });
 
@@ -47,4 +47,18 @@ test('bloom settings round-trip and persist per profile without changing V1 defa
     const restored = createProfileState({ settings: initial }, storage);
     assert.equal(restored.draft(0).settings.smoothing.bloomIntensity, 65);
     assert.equal(restored.draft(0).settings.smoothing.bloom, true);
+});
+
+test('new Bloom default is on at 22%, while old V1 settings retain off at 35%', () => {
+    assert.equal(DEFAULT_SOFT_BLOOM, true);
+    assert.equal(DEFAULT_BLOOM_INTENSITY, 22);
+    assert.deepEqual(resolveSavedBloom({}), { enabled: false, intensity: 35 });
+    assert.deepEqual(resolveSavedBloom({ bloom: true }), { enabled: true, intensity: 35 });
+    for (const enabled of [true, false]) {
+        const settings = defaultWorkspaceSettings();
+        settings.smoothing.bloom = enabled;
+        settings.smoothing.bloomIntensity = 22;
+        const restored = deserializeWorkspaceSettings(serializeWorkspaceSettings(settings));
+        assert.deepEqual(resolveSavedBloom(restored.smoothing), { enabled, intensity: 22 });
+    }
 });

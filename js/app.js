@@ -1,4 +1,4 @@
-import { createSoftBloom, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity } from './soft-bloom.js';
+import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering } from './smooth-rendering-settings.js';
@@ -290,7 +290,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let n = 7;
       let separatorPx = 2;
       let isSmoothRendering = DEFAULT_SMOOTH_RENDERING;
-      let isSoftBloom = false, softBloomIntensity = DEFAULT_BLOOM_INTENSITY, softBloom;
+      let isSoftBloom = DEFAULT_SOFT_BLOOM, softBloomIntensity = DEFAULT_BLOOM_INTENSITY, softBloom;
       let isBrushModeOn = true; 
       let isContinuousBrushOn = false;
       let hasPerformedInitialAutofill = false; 
@@ -1791,8 +1791,8 @@ if (simulationName === 'magnet') {
         return {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
-            smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked, ...(isSoftBloom ? { bloom: true } : {}),
-                ...(softBloomIntensity !== DEFAULT_BLOOM_INTENSITY ? { bloomIntensity: softBloomIntensity } : {}) },
+            smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked,
+                bloom: isSoftBloom, bloomIntensity: softBloomIntensity },
             brush: { size: brushSize, mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
@@ -1816,8 +1816,9 @@ if (simulationName === 'magnet') {
         updateGravitationalSortButtonUI(); updateSpiralButtonUI();
         updateMagnetButtonUI(); updateDlaButtonUI(); updateErosionButtonUI();
         isSmoothRendering = settings.smoothing.display;
-        isSoftBloom = Boolean(settings.smoothing.bloom);
-        softBloomIntensity = normalizeBloomIntensity(settings.smoothing.bloomIntensity);
+        const savedBloom = resolveSavedBloom(settings.smoothing);
+        isSoftBloom = savedBloom.enabled;
+        softBloomIntensity = savedBloom.intensity;
         softBloom?.setIntensity(softBloomIntensity);
         softBloom?.setEnabled(isSoftBloom);
         document.getElementById('softBloomToggle').checked = isSoftBloom;
@@ -4122,6 +4123,8 @@ else if (action.eventName === 'Invert Colors') {
         
         // Phase 1 Addition: Add adaptColors to the context for modals
         softBloom = createSoftBloom(dom.boardCanvas, document.getElementById('boardBloom'));
+        softBloom.setIntensity(softBloomIntensity);
+        softBloom.setEnabled(isSoftBloom);
         const contextForModals = {
             refreshProfiles: () => settingsProfiles?.refresh(),
             isSimulationMode: () => isSimModeActive,
@@ -4139,6 +4142,8 @@ else if (action.eventName === 'Invert Colors') {
                 const settings = defaultWorkspaceSettings();
                 // Keep the settings-file V1 baseline intact; the current display default is on.
                 settings.smoothing.display = DEFAULT_SMOOTH_RENDERING;
+                settings.smoothing.bloom = DEFAULT_SOFT_BLOOM;
+                settings.smoothing.bloomIntensity = DEFAULT_BLOOM_INTENSITY;
                 return importWorkspaceSettings(settings);
             },
             getStartupSettings: () => ({ ...startupSettings }),
