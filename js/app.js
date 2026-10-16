@@ -1,5 +1,6 @@
 import { createSimulationPages } from './simulation-pages.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
+import { initializeSimulationLayout } from './simulation-layout-modal.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
 import { runIslandsPreview } from './simulations/islands-preview.js';
 import { parseSeparatorWidth } from './separator-recording.js';
@@ -37,6 +38,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
       let simulationStartState = null; // For saving simulation history
       let islandsSession = null;
       let simulationPages = null;
+      let simulationLayout = null;
       
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
@@ -2255,6 +2257,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnIslands.title = getText('tooltip_islands');
         dom.btnIslands.setAttribute('aria-label', dom.btnIslands.title);
         simulationPages?.refresh();
+        simulationLayout?.refresh();
         dom.btnTutorial.title = getText('tooltip_tutorial');
         updateGameOfLifeButtonUI();
         updateChiFlowButtonUI();
@@ -4480,6 +4483,7 @@ applySortMethod,
             ],
             getSelected: () => armedSimulation, isRunning: () => isLifePlaying, getText
         });
+        simulationLayout = initializeSimulationLayout({ pager: simulationPages, button: dom.btnSimulationArrange, getText });
         
         activePaletteIndex = C.PALETTES.findIndex(p => p.originalName === startupSettings.paletteName);
         n = startupSettings.boardSize;

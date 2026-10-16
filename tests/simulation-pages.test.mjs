@@ -29,3 +29,19 @@ test('rapid clicks cannot overlap animations and reduced motion supports keyboar
  const h=harness(false);await Promise.all([h.button.click(),h.button.click()]);assert.equal(h.pager.page,1);assert(!h.button.attrs.has('aria-busy'));
  const reduced=harness();reduced.container.ownerDocument.activeElement=reduced.nodes[0];await reduced.button.click();assert.equal(reduced.container.ownerDocument.activeElement,reduced.button);
 });
+
+test('reordering moves existing buttons and the running indicator without changing disabled state',async()=>{
+ const h=harness();const order=h.pager.getLayout();h.select('sim0');h.run(true);h.nodes[0].disabled=true;
+ [order[0],order[11]]=[order[11],order[0]];
+ assert(h.pager.setLayout(order));assert.deepEqual(h.pager.getLayout(),order);
+ assert.equal(h.nodes[0].dataset.simPage,'1');assert.equal(h.nodes[0].dataset.simSlot,'5');assert.equal(h.nodes[0].disabled,true);
+ assert(h.nodes[0].hidden);assert(h.button.attrs.has('data-active-elsewhere'));
+ await h.button.click();assert(!h.nodes[0].hidden);assert(!h.button.attrs.has('data-active-elsewhere'));
+ const invalid=[...order];invalid[0]=invalid[1];assert.equal(h.pager.setLayout(invalid),false);assert.deepEqual(h.pager.getLayout(),order);
+});
+
+test('reordering is rejected during a page transition',async()=>{
+ const h=harness(false),order=h.pager.getLayout();const transition=h.button.click();
+ assert(h.pager.isChanging);assert.equal(h.pager.setLayout([...order].reverse()),false);
+ await transition;assert.deepEqual(h.pager.getLayout(),order);
+});

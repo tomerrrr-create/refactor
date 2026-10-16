@@ -1,7 +1,7 @@
 // Presentation only: page changes never arm, pause, log or mutate a simulation.
 export function createSimulationPages({ container, button, pages, getSelected, isRunning, getText, reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches }) {
     let page = 0, changing = false;
-    const entries = pages.flatMap((items, index) => items.map(([simulation, element], slot) => {
+    let entries = pages.flatMap((items, index) => items.map(([simulation, element], slot) => {
         element.dataset.simPage = String(index);
         element.dataset.simSlot = String(slot);
         return { simulation, element, page: index };
@@ -52,5 +52,25 @@ export function createSimulationPages({ container, button, pages, getSelected, i
     }
     button.addEventListener('click', toggle);
     render();
-    return { refresh, reset() { if (!changing) { page = 0; render(); } }, get page() { return page; } };
+    return {
+        refresh, reset() { if (!changing) { page = 0; render(); } },
+        getEntries: () => entries.map(({simulation, element}) => ({simulation, element})),
+        getLayout: () => entries.map(item => item.simulation),
+        setLayout(order) {
+            if (changing || !Array.isArray(order) || order.length !== entries.length ||
+                new Set(order).size !== entries.length || order.some(id => !entries.some(item => item.simulation === id))) return false;
+            const byId = new Map(entries.map(item => [item.simulation, item]));
+            entries = order.map(id => byId.get(id));
+            let index = 0;
+            pages.forEach((items, pageIndex) => items.forEach((_, slot) => {
+                const item = entries[index++];
+                item.page = pageIndex;
+                item.element.dataset.simPage = String(pageIndex);
+                item.element.dataset.simSlot = String(slot);
+            }));
+            render();
+            return true;
+        },
+        get isChanging() { return changing; }, get page() { return page; }
+    };
 }
