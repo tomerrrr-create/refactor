@@ -99,13 +99,8 @@ body {
   .ctrl.palette:hover:not(:disabled):not(.picker-swipe-glow):not(.glow-animation):not(:has(svg)) {
     filter: drop-shadow(0 0 2px #ffd700) drop-shadow(0 0 7px #ffd700b3);
   }
-  .simulation-control::before {
-    content: ''; position: absolute; inset: 4px; pointer-events: none;
-    border: 1px solid #b28b3666; border-radius: 10px;
-    background: #d5aa4812; opacity: 0; transition: opacity .18s ease;
-  }
-  .simulation-control:hover:not(:disabled):not(.picker-swipe-glow):not(.glow-animation)::before {
-    opacity: 1;
+  .simulation-control:hover:not(:disabled):not(.picker-swipe-glow):not(.glow-animation) > svg {
+    filter: drop-shadow(0 0 3px #ffd70059);
   }
 }
 .ctrl:disabled {
