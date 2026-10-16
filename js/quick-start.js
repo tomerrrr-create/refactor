@@ -307,10 +307,10 @@ const COPY = {
   }
 };
 const WELCOME = {
-  en: ['A little touch. A world of color.', 'Before we begin, follow your intuition.', 'Touch here', 'Touch anywhere. Every touch starts a new ripple.', 'Let’s begin'],
-  he: ['נגיעה קטנה. עולם של צבע.', 'לפני שמתחילים, הולכים עם האינטואיציה.', 'געו כאן', 'געו בכל מקום באריח. כל נגיעה יוצרת אדווה חדשה.', 'מתחילים'],
-  ru: ['Одно касание. Мир цвета.', 'Прежде чем начать, доверьтесь интуиции.', 'Коснитесь здесь', 'Коснитесь любой точки плитки. Каждое касание создаёт новую волну.', 'Начнём'],
-  nl: ['Een kleine aanraking. Een wereld van kleur.', 'Volg je intuïtie, nog voor we beginnen.', 'Raak hier aan', 'Raak de tegel ergens aan. Elke aanraking maakt een nieuwe golf.', 'Laten we beginnen']
+  en: ['Before we begin,', 'follow your intuition', 'Let’s begin', 'Touch to create golden ripples'],
+  he: ['לפני שמתחילים,', 'הולכים עם האינטואיציה', 'מתחילים', 'געו ליצירת אדוות זהובות'],
+  ru: ['Прежде чем начать,', 'доверьтесь интуиции', 'Начнём', 'Коснитесь, чтобы создать золотые волны'],
+  nl: ['Voor we beginnen,', 'volg je intuïtie', 'Laten we beginnen', 'Raak aan om gouden golven te maken']
 };
 export function initializeQuickStart() {
   const dialog = document.getElementById('quickStartDialog');
@@ -327,7 +327,8 @@ export function initializeQuickStart() {
     welcome.hidden = !welcoming; content.hidden = welcoming;
     dialog.classList.toggle('is-welcome', welcoming);
     dialog.setAttribute('aria-labelledby', welcoming ? 'guideWelcomeTitle' : 'quickStartTitle');
-    dialog.setAttribute('aria-describedby', welcoming ? 'guideWelcomeNote' : 'quickStartBody');
+    if (welcoming) dialog.removeAttribute('aria-describedby');
+    else dialog.setAttribute('aria-describedby', 'quickStartBody');
     dialog.scrollTop = 0;
     if (welcoming) requestAnimationFrame(() => { if (dialog.open && welcoming) ripples.draw(); });
   }
@@ -350,8 +351,8 @@ export function initializeQuickStart() {
   });
   function render() {
     const w = WELCOME[getCurrentLang()] || WELCOME.en;
-    ['[data-guide-welcome-title]', '[data-guide-welcome-note]', '[data-guide-touch]', '[data-guide-welcome-hint]', '[data-guide-begin]'].forEach((selector, i) => dialog.querySelector(selector).textContent = w[i]);
-    tile.setAttribute('aria-label', `${w[2]}. ${w[3]}`);
+    ['[data-guide-before]', '[data-guide-intuition]', '[data-guide-begin]'].forEach((selector, i) => dialog.querySelector(selector).textContent = w[i]);
+    tile.setAttribute('aria-label', w[3]);
     const c = copy(); dots.setAttribute('aria-label', c.entry); dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
     dialog.querySelector('[data-guide-label]').textContent = c.label;
     [title.textContent, body.textContent, tip.textContent] = c.slides[index];

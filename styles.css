@@ -1854,15 +1854,17 @@ button, .ctrl {
 .quick-start-dialog.is-welcome { width:min(600px,calc(100vw - 24px)); }
 .guide-welcome { text-align:center; }
 .guide-welcome[hidden], [data-guide-content][hidden] { display:none; }
-.guide-welcome h2 { margin:16px 0 12px; color:#f3dfab; font-size:clamp(25px,5vw,34px); line-height:1.3; }
-.guide-welcome > p { margin:0 0 24px; color:#c3b99e; font-size:14px; line-height:1.7; }
+.is-welcome [data-guide-label] { display:none; }
+.is-welcome .quick-start-header button { margin-inline-start:auto; }
+.guide-welcome h2 { display:table; max-width:100%; margin:24px auto 32px; color:#c3b99e; font-size:clamp(16px,4vw,20px); font-weight:400; line-height:1.9; text-align:start; }
+.guide-welcome h2 span { display:block; }
+.guide-welcome [data-guide-intuition] { margin-inline-start:1.4em; color:#f3dfab; }
 .guide-ripple-tile { position:relative; display:grid; place-items:center; width:100%; height:clamp(210px,42dvh,380px); padding:0; overflow:hidden; border:1px solid #b28b3659; border-radius:18px; background:#100e09; color:#f3dfab; font:inherit; cursor:crosshair; touch-action:manipulation; }
 .guide-ripple-tile canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-.guide-ripple-tile span { position:relative; padding:12px 24px; border:1px solid #e3c67750; border-radius:100px; background:#100e09c9; font-size:18px; pointer-events:none; }
-.guide-welcome .guide-welcome-hint { margin:18px 0 24px; font-size:12px; color:#a79872; }
-.guide-welcome .quick-start-footer { min-height:46px; }
-.guide-welcome .quick-start-footer [data-guide-begin] { background:#191811; border-color:#b28b3659; color:#c3b99e; animation:guideBeginReveal .8s ease-out both; }
+.guide-welcome .quick-start-footer { min-height:46px; margin-top:24px; }
+.guide-welcome .quick-start-footer [data-guide-begin] { background:#191811; border-color:#b28b3659; color:var(--gold); animation:guideBeginReveal .8s ease-out both, guideBeginPulse 8s ease-in-out .8s infinite; }
 .guide-welcome .quick-start-footer [data-guide-begin][hidden] { display:none; }
+@keyframes guideBeginPulse { 0%,100% { color:var(--gold); text-shadow:0 0 8px #ffd70030; } 50% { color:#bba431; text-shadow:0 0 0 transparent; } }
 @keyframes guideBeginReveal { from { opacity:0; } to { opacity:1; } }
 @media (prefers-reduced-motion:reduce) { .guide-welcome .quick-start-footer [data-guide-begin] { animation:none; } }
-@media (max-height:650px) { .guide-welcome h2 { margin-top:6px; font-size:23px; } .guide-welcome > p { margin-bottom:14px; } .guide-ripple-tile { height:clamp(160px,32dvh,220px); } .guide-welcome .guide-welcome-hint { margin:12px 0; } }
+@media (max-height:650px) { .guide-welcome h2 { margin:12px auto 20px; } .guide-ripple-tile { height:clamp(160px,32dvh,220px); } }
