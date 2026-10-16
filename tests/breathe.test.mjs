@@ -13,36 +13,54 @@ test('legacy solo and group brightness retain their existing formulas', () => {
         }
     }
 });
-test('random cells rest unchanged except the selected cell and choose anew after each onset', () => {
-    const tiles = board(), before = JSON.stringify(tiles);
-    const session = createRandomBreatheSession(tiles, 'random-cell', () => 0);
-    session.update(0); assert.equal(session.factor(0), 1);
-    session.update(2000);
-    assert.equal(session.factor(0), .65);
-    assert.equal(session.factor(1), 1); assert.equal(session.factor(2), 1);
-    session.update(2900); // A fresh cell starts, with a soft overlap.
-    session.update(4900);
-    assert.equal(session.factor(0), 1); assert.equal(session.factor(1), .65);
-    assert.equal(session.factor(3), 1);
+test('all cells join within four seconds and continue breathing without changing the board', () => {
+    let seed = 27;
+    const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+    const tiles = Array.from({ length: 4096 }, (_, k) => ({ k: k % 264, isGold: false }));
+    const before = JSON.stringify(tiles), seen = new Set();
+    const session = createRandomBreatheSession(tiles, 'random-cell', random);
+    session.update(0);
+    assert(tiles.every((_, i) => session.factor(i) === 1));
+    for (let t = 25; t <= 4000; t += 25) {
+        session.update(t);
+        tiles.forEach((_, i) => { if (session.factor(i) !== 1) seen.add(i); });
+    }
+    assert.equal(seen.size, tiles.length);
+    for (let t = 4025; t <= 6000; t += 25) session.update(t);
+    assert(tiles.filter((_, i) => session.factor(i) !== 1).length > tiles.length * .7);
+    assert(new Set(tiles.map((_, i) => session.factor(i))).size > 1000);
     assert.equal(JSON.stringify(tiles), before);
 });
-test('random colors breathe together by actual board color, excluding gold', () => {
-    const session = createRandomBreatheSession(board(), 'random-color', () => 0);
-    session.update(0); session.update(2000);
-    assert.equal(session.factor(0), .65); assert.equal(session.factor(2), .65);
-    assert.equal(session.factor(1), 1); assert.equal(session.factor(3), 1);
-    session.update(2900); session.update(4900);
-    assert.equal(session.factor(1), .65); assert.equal(session.factor(0), 1);
+test('pulse lifts to 105%, smoothly darkens, and returns to the original color', () => {
+    const session = createRandomBreatheSession(board(), 'random-cell', () => 0);
+    session.update(0); assert.equal(session.factor(0), 1);
+    session.update(900); assert.equal(session.factor(0), 1.05);
+    session.update(2100); assert.equal(session.factor(0), .65);
+    session.update(3000); assert.equal(session.factor(0), 1);
+    session.update(3900); assert.equal(session.factor(0), 1.05);
+    assert.equal(session.factor(3), 1);
 });
-test('empty or gold-only boards stay still and stalled frames do not accumulate pulses', () => {
-    for (const tiles of [[], [{ k: 1, isGold: true }]]) {
-        const session = createRandomBreatheSession(tiles, 'random-cell', () => 0);
-        session.update(0); session.update(1000000); assert.equal(session.factor(0), 1);
-    }
-    const session = createRandomBreatheSession([{ k: 1 }], 'random-color', () => .5);
-    session.update(0);
-    for (let t = 0; t < 50000; t += 50) {
+test('duration, rest and depth are chosen again for every new pulse', () => {
+    let calls = 0;
+    const random = () => { calls++; return calls <= 3 ? 0 : .8; };
+    const session = createRandomBreatheSession([{ k: 1 }], 'random-cell', random);
+    session.update(2100); assert.equal(session.factor(0), .65);
+    session.update(3000); assert.equal(calls, 6);
+    session.update(3700); assert.equal(session.factor(0), 1); // New rest interval.
+    session.update(3800 + 5400 * .7);
+    assert(Math.abs(session.factor(0) - .45) < 1e-12);
+});
+test('color groups share one rhythm, gold stays untouched and empty boards are safe', () => {
+    let value = 0;
+    const session = createRandomBreatheSession(board(), 'random-color', () => (value = (value + .17) % 1));
+    for (let t = 0; t < 15000; t += 25) {
         session.update(t);
-        assert(session.factor(0) >= .65 && session.factor(0) <= 1);
+        assert.equal(session.factor(0), session.factor(2));
+        assert.equal(session.factor(3), 1);
+        for (const i of [0, 1, 2]) assert(session.factor(i) >= .4 && session.factor(i) <= 1.05);
+    }
+    for (const tiles of [[], [{ k: 1, isGold: true }]]) {
+        const empty = createRandomBreatheSession(tiles, 'random-cell');
+        empty.update(1000000); assert.equal(empty.factor(0), 1);
     }
 });

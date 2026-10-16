@@ -22,34 +22,39 @@ export function getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime
     
     return (1.0 * (1 - fadeInProgress)) + (animatedFactor * fadeInProgress);
 }
-// A small display-only schedule: prepare candidates once, then track at most two pulses.
+// Each cell/color joins within four seconds and keeps an independent, changing rhythm.
+// All animation state stays outside the board and is discarded on the next Play.
 export function createRandomBreatheSession(board, mode, random = Math.random) {
-    const candidates = mode === 'random-color'
-        ? [...new Set(board.filter(tile => !tile.isGold).map(tile => tile.k))]
-        : board.flatMap((tile, index) => tile.isGold ? [] : [index]);
-    let pulses = [], nextAt = 0, previous, currentElapsed = 0;
+    const rhythms = new Map();
+    const newPulse = start => ({ start, duration: 3000 + random() * 3000,
+        depth: 0.35 + random() * 0.25, brightness: 1 });
+    board.forEach((tile, index) => {
+        if (tile.isGold) return;
+        const key = mode === 'random-color' ? tile.k : index;
+        if (!rhythms.has(key)) rhythms.set(key, newPulse(random() * 4000));
+    });
+    const ease = (from, to, progress) => from + (to - from) * (1 - Math.cos(Math.PI * progress)) / 2;
     return {
         update(elapsed) {
-            currentElapsed = elapsed;
-            pulses = pulses.filter(pulse => elapsed < pulse.start + pulse.duration);
-            if (elapsed < nextAt || !candidates.length) return;
-            let index = Math.floor(random() * candidates.length);
-            if (candidates.length > 1 && candidates[index] === previous) index = (index + 1) % candidates.length;
-            previous = candidates[index];
-            pulses.push({ key: previous, start: elapsed, duration: 4000 + random() * 1200 });
-            nextAt = elapsed + 2900 + random() * 1000;
+            for (const [key, pulse] of rhythms) {
+                const progress = (elapsed - pulse.start) / pulse.duration;
+                if (progress < 0) continue;
+                if (progress >= 1) {
+                    rhythms.set(key, newPulse(elapsed + random() * 1000));
+                    continue;
+                }
+                // Smooth lift to 105%, exhale to the varying low point, then return to rest.
+                pulse.brightness = progress < 0.3
+                    ? ease(1, 1.05, progress / 0.3)
+                    : progress < 0.7
+                        ? ease(1.05, 1 - pulse.depth, (progress - 0.3) / 0.4)
+                        : ease(1 - pulse.depth, 1, (progress - 0.7) / 0.3);
+            }
         },
         factor(index) {
             const tile = board[index];
             if (!tile || tile.isGold) return 1;
-            const key = mode === 'random-color' ? tile.k : index;
-            let brightness = 1;
-            for (const pulse of pulses) {
-                if (pulse.key !== key) continue;
-                const progress = (currentElapsed - pulse.start) / pulse.duration;
-                if (progress >= 0 && progress < 1) brightness -= 0.35 * Math.sin(Math.PI * progress) ** 2;
-            }
-            return brightness;
+            return rhythms.get(mode === 'random-color' ? tile.k : index)?.brightness ?? 1;
         }
     };
 }
