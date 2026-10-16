@@ -27,6 +27,7 @@ function harness() {
         getText: key => key, spiralMode: 'off', spiralRules: {}
     });
     vm.runInContext('function palette() { return C.PALETTES[activePaletteIndex].colors; }', ctx);
+    vm.runInContext('function restoreSeparatorWidth(value) { separatorPx = value; } function fitCurrentSeparator() {}', ctx);
     vm.runInContext(excerpt('function applySortMethod(', '// ------------------------------------------'), ctx);
     vm.runInContext(excerpt('function syncSelectedColorWithPalette(', 'function resetSelectedColor('), ctx);
     vm.runInContext(excerpt('function applyState(', 'function pushHistory('), ctx);

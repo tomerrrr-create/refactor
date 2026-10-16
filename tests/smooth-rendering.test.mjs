@@ -17,6 +17,7 @@ function harness(size = 149) {
             createImageData: (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }), putImageData() {}
         }) }) }
     });
+    vm.runInContext('function getRenderedSeparatorWidth() { return separatorPx; }', h);
     vm.runInContext(source.slice(source.indexOf('let offscreenRenderCanvas = null;'), source.indexOf('// --- startBreatheAnimation')), h);
     return h;
 }
