@@ -1802,6 +1802,7 @@ button, .ctrl {
 
 /* Preserve the approved leaf geometry; its color follows simulation selection. */
 #btnIslands svg { stroke-width: 1.5; }
+#btnIslands.simulation-active svg { stroke-width: 1.8; }
 
 /* A manual, read-only introduction: no workspace settings or board mutations. */
 .quick-start-entry { display:block; width:100%; min-height:44px; padding:10px 16px; margin:0 0 18px; border:1px solid #b28b3659; border-radius:10px; background:linear-gradient(135deg,#1c1a12,#0d0e0c); color:#e3c677; font:inherit; cursor:pointer; }
