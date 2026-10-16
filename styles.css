@@ -1757,3 +1757,6 @@ button, .ctrl {
 .technician-effect-heading svg { width: 18px; height: 18px; }
 .technician-start-settings .technician-badge,
 .technician-effect-heading .technician-badge { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex: 0 0 36px; width: 36px; min-height: 28px; }
+
+/* Align the Bloom intensity control with the text after the 36px icon and 12px gap. */
+.technician-display-settings .bloom-intensity-control { padding-inline-start: 48px; }
