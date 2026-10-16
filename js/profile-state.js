@@ -62,6 +62,9 @@ export function defaultProfileSnapshots(initial) {
                 yoursRules: clone(snapshot.settings.cycles.chiFlow[0]) };
         }
     }
+    profiles[2].settings.startup.separatorPx = 2; // Keep profile 3 at its existing Small default.
+    profiles[0].settings.startup.separatorPx = 5; // Relative Large.
+    Object.assign(profiles[1].settings.startup, { boardSize: 11, separatorPx: 2 }); // Legacy value 2 maps to relative Small.
     profiles[1].settings.sortCycle = first.settings.sortCycle
         .filter(method => !['outside-in', 'temperature'].includes(method));
     for (const method of ['rainbow-fold', 'zig-zag']) {
@@ -118,7 +121,7 @@ function mergeChanges(draft, previous, current) {
 
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
-    let state = { version: 1, defaultsVersion: 3, selected: 0,
+    let state = { version: 1, defaultsVersion: 4, selected: 0,
         profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
@@ -129,7 +132,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 3, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 4, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -176,6 +179,17 @@ export function createProfileState(initial, storage) {
                         // Shared/absolute legacy rates and explicit per-mode edits stay exact.
                         if (!Object.hasOwn(rules, 'erosionEvents') && !Object.hasOwn(rules, 'erosionPace')) {
                             rules.erosionStages = { ...PROFILE_EROSION_STAGES[index], ...rules.erosionStages };
+                        }
+                    }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 4) {
+                for (const [index, profile] of state.profiles.entries()) {
+                    for (const kind of ['saved', 'draft']) {
+                        const startup = profile[kind].settings.startup;
+                        if (index === 0 && startup.separatorPx === 2) startup.separatorPx = 5;
+                        if (index === 1) {
+                            if (startup.boardSize === 7) startup.boardSize = 11;
                         }
                     }
                 }
@@ -227,4 +241,11 @@ export function createProfileState(initial, storage) {
 
 export function readProfileFile(text) {
     return { settings: deserializeWorkspaceSettings(text) };
+}
+
+// Resolve the selected profile before drawing the first frame, including migrations.
+// This read does not write preferences or replace the other runtime settings.
+export function loadProfileStartup(fallback, storage) {
+    return createProfileState({ settings: { ...defaultWorkspaceSettings(), startup: fallback } }, storage)
+        .draft().settings.startup;
 }

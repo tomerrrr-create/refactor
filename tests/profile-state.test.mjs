@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
+import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, loadProfileStartup, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
-const initial = () => { const settings = defaultWorkspaceSettings(); settings.simulationInit.brushSize = 1; settings.rules.erosion.erosionStages = { 'channels-solid': 0, channels: 0 }; return { settings: { ...settings, simulationTheme: 'blue' } }; };
+const initial = () => { const settings = defaultWorkspaceSettings(); settings.simulationInit.brushSize = 1; settings.startup.separatorPx = 5; settings.rules.erosion.erosionStages = { 'channels-solid': 0, channels: 0 }; return { settings: { ...settings, simulationTheme: 'blue' } }; };
 const storage = () => {
     const data = new Map();
     return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
@@ -252,4 +252,27 @@ test('erosion defaults migrate once and retain personal per-mode and legacy acce
     assert.equal(state.draft(2).settings.rules.erosion.erosionStages, undefined);
     state.persist();
     assert.deepEqual(createProfileState(initial(), disk).draft(1), state.draft(1));
+});
+
+test('startup resolves profile separators and board size before rendering, including old saved defaults', () => {
+    const disk = storage();
+    const profiles = [0, 1, 2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));
+    for (const profile of profiles) for (const kind of ['saved', 'draft']) {
+        profile[kind].settings.startup.separatorPx = 2;
+        profile[kind].settings.startup.boardSize = 7;
+    }
+    for (const selected of [0, 1, 2]) {
+        disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected, profiles }));
+        const startup = loadProfileStartup(initial().settings.startup, disk);
+        assert.equal(startup.separatorPx, [5, 2, 2][selected]);
+        assert.equal(startup.boardSize, [7, 11, 7][selected]);
+    }
+    profiles[1].draft.settings.startup.boardSize = 21;
+    profiles[1].draft.settings.startup.separatorPx = 3;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected: 1, profiles }));
+    const personal = loadProfileStartup(initial().settings.startup, disk);
+    assert.equal(personal.boardSize, 21); assert.equal(personal.separatorPx, 3);
+    assert.equal(defaultProfileSnapshots(initial())[2].settings.startup.separatorPx, 2);
+    assert.equal(factoryProfileSnapshot(0).settings.startup.separatorPx, 5);
+    assert.equal(factoryProfileSnapshot(1).settings.startup.separatorPx, 2);
 });

@@ -8,6 +8,7 @@ import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, a
 import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
+import { loadProfileStartup } from './profile-state.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, isSmoothDisplayAvailable } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
@@ -325,7 +326,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let colorPickerPage = 0;
       let longPressTimer = null;
       let wasLongPress = false;
-      let startupSettings = loadStartup();
+      let startupSettings = loadProfileStartup(loadStartup());
       let simulationInitSettings = loadSimInit();
       let brushSize = 1; 
       let isLifePlaying = false;
