@@ -4,11 +4,12 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { isSmoothDisplayAvailable } from '../js/smooth-rendering-settings.js';
 import { hexToRgb, lerp } from '../js/colors.js';
+import { prepareDisplayCanvas } from '../js/display-canvas.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function harness(size = 149) {
-    const screen = { drawImage() {}, fillRect() {} };
-    const h = vm.createContext({ isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, isLifePlaying: false,
+    const screen = { drawImage() {}, fillRect() {}, setTransform() {} };
+    const h = vm.createContext({ prepareDisplayCanvas, window: { devicePixelRatio: 1 }, isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, isLifePlaying: false,
         boardState: Array.from({ length: size * size }, (_, i) => i % 2).map(k => ({ k, v: k, isGold: false, prevK: null })),
         palette: () => ['#000000', '#ffffff'], norm: k => k % 2,
         hexToRgb, lerp, performance: { now: () => 0 }, C: {}, ctx: screen,
