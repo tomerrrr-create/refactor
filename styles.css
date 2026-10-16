@@ -1542,6 +1542,8 @@ button, .ctrl {
 .technician-sigil { color: #d5aa48; font-size: 48px; line-height: 1; }
 .technician-eyebrow { color: #a58b54; font: 11px monospace; letter-spacing: 3px; margin: 16px 0 10px; }
 #technicianTitle { font-size: 24px; font-weight: 500; margin: 0 0 10px; }
+.technician-guide-title { padding:0; border:0; background:transparent; color:inherit; font:inherit; text-align:inherit; cursor:pointer; }
+.technician-guide-title:focus-visible { outline:2px solid #ffe7a0; outline-offset:4px; }
 #technicianSubtitle { color: #95958b; font-size: 14px; margin: 0 0 28px; }
 .technician-option {
   display: flex; flex-direction: column; gap: 12px; width: 100%; padding: 20px;

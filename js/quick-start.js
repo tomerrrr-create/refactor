@@ -337,7 +337,7 @@ export function initializeQuickStart() {
   }
   function move(delta) { index = Math.max(0, Math.min(copy().slides.length - 1, index + delta)); render(); }
   entries.forEach(button => button.addEventListener('click', () => { trigger = button; index = 0; render(); dialog.showModal(); next.focus({preventScroll:true}); }));
-  function refresh() { entries.forEach(b => b.textContent = copy().entry); if (dialog.open) render(); }
+  function refresh() { entries.filter(b => !b.hasAttribute('data-debug-text')).forEach(b => b.textContent = copy().entry); if (dialog.open) render(); }
   back.addEventListener('click', () => move(-1));
   next.addEventListener('click', () => index === copy().slides.length - 1 ? dialog.close() : move(1));
   close.addEventListener('click', () => dialog.close());
