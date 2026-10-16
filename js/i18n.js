@@ -384,7 +384,7 @@ export const translations = {
   chi_flow_label: { en: "Flow Rules", he: "חוקי זרימה", ru: "Правила потока", nl: "Stroomregels" },
   chi_flow_desc: { en: "An active cell flows to the next color if pulled by:", he: "תא פעיל מתקדם לצבע הבא אם הוא נמשך על ידי:", ru: "Активная клетка перетекает в следующий цвет, если ее тянут:", nl: "Een active cel stroomt naar de volgende kleur als deze wordt getrokken door:" },
   chi_reach_label: { en: "Magnetic Reach", he: "טווח משיכה (מגנטיות)", ru: "Магнитный охват", nl: "Magnetisch bereik" },
-  chi_reach_desc: { en: "100% is Auto. Adjust the color pull range for the current palette.", he: "100% הם אוטומטי. כוונון טווח המשיכה לפי הפלטה הנוכחית.", ru: "100% — Авто. Настройте диапазон притяжения для текущей палитры.", nl: "100% is Auto. Pas het kleurbereik aan voor het huidige palet." },
+  chi_reach_desc: { en: "The range of colors that can attract each other.", he: "טווח הצבעים שיכולים למשוך זה את זה.", ru: "Диапазон цветов, которые могут притягивать друг друга.", nl: "Het bereik van kleuren die elkaar kunnen aantrekken." },
   chi_preset_topography: { en: "Topography", he: "טופוגרפיה", ru: "Топография", nl: "Topografie" },
   chi_preset_wildfire: { en: "Wildfire", he: "אש פראית", ru: "Лесной пожар", nl: "Natuurbrand" },
   chi_preset_crystals: { en: "Crystals", he: "גבישים", ru: "Кристаллы", nl: "Kristallen" },
