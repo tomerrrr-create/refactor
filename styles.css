@@ -1702,12 +1702,12 @@ button, .ctrl {
 .soft-bloom { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 4px; pointer-events: none; mix-blend-mode: screen; filter: blur(6px); opacity: .22; }
 .soft-bloom[hidden] { display: none; }
 .bloom-rendering-option { margin-bottom: 12px; }
-#softBloomToggle { appearance: none; position: relative; width: 40px; height: 24px; flex-shrink: 0; border: 1px solid #b28b3645; border-radius: 20px; background: #080a09; cursor: pointer; transition: background .3s, border-color .3s; }
-#softBloomToggle::before { content: ''; position: absolute; top: 4px; left: 4px; width: 14px; height: 14px; border-radius: 50%; background: #786443; transition: transform .3s, background .3s; }
-#softBloomToggle:checked { background: #d5aa4822; border-color: #d5aa48; }
-#softBloomToggle:checked::before { transform: translateX(16px); background: #e3c677; }
-#softBloomToggle:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 4px; }
-@media (prefers-reduced-motion: reduce) { #softBloomToggle, #softBloomToggle::before { transition: none; } }
+#simulationThemeToggle, #softBloomToggle { appearance: none; position: relative; width: 40px; height: 24px; flex-shrink: 0; border: 1px solid #b28b3645; border-radius: 20px; background: #080a09; cursor: pointer; transition: background .3s, border-color .3s; }
+#simulationThemeToggle::before, #softBloomToggle::before { content: ''; position: absolute; top: 4px; left: 4px; width: 14px; height: 14px; border-radius: 50%; background: #786443; transition: transform .3s, background .3s; }
+#simulationThemeToggle:checked, #softBloomToggle:checked { background: #d5aa4822; border-color: #d5aa48; }
+#simulationThemeToggle:checked::before, #softBloomToggle:checked::before { transform: translateX(16px); background: #e3c677; }
+#simulationThemeToggle:focus-visible, #softBloomToggle:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { #simulationThemeToggle, #softBloomToggle, #simulationThemeToggle::before, #softBloomToggle::before { transition: none; } }
 
 .bloom-intensity-control { margin: 0 0 20px; padding: 4px 8px 0; text-align: start; }
 .bloom-intensity-control label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -1802,6 +1802,7 @@ button, .ctrl {
 
 /* Preserve the approved leaf geometry; its color follows simulation selection. */
 #btnIslands svg { stroke-width: 1.5; }
+#btnIslands.simulation-active svg { stroke-width: 1.8; }
 
 /* A manual, read-only introduction: no workspace settings or board mutations. */
 .quick-start-entry { display:block; width:100%; min-height:44px; padding:10px 16px; margin:0 0 18px; border:1px solid #b28b3659; border-radius:10px; background:linear-gradient(135deg,#1c1a12,#0d0e0c); color:#e3c677; font:inherit; cursor:pointer; }
@@ -1853,13 +1854,4 @@ button, .ctrl {
   background:linear-gradient(135deg,#1c1a12,#0d0e0c);
   border-color:#b28b3645;
 }
-.simulation-theme-settings { min-width:0; margin:0 0 20px; padding:12px 16px 16px; border:1px solid #b28b3645; border-radius:12px; background:linear-gradient(135deg,#1c1a12,#0d0e0c); }
-.simulation-theme-settings legend { padding:0 6px; color:#e3c677; font-size:14px; }
-.simulation-theme-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-.simulation-theme-choice { position:relative; display:flex; align-items:center; justify-content:center; gap:10px; min-height:46px; padding:8px; border:1px solid #b28b3633; border-radius:8px; color:#a79872; cursor:pointer; }
-.simulation-theme-choice input { position:absolute; width:1px; height:1px; margin:-1px; padding:0; clip-path:inset(50%); overflow:hidden; }
-.simulation-theme-choice:has(input:checked) { border-color:#d5aa4890; background:#d5aa4810; color:#e3c677; }
-.simulation-theme-choice:has(input:focus-visible) { outline:2px solid #ffe7a0; outline-offset:3px; }
-.simulation-theme-swatch { width:12px; height:12px; flex-shrink:0; border-radius:50%; }
-.theme-swatch-gold { background:#a58b54; }
-.theme-swatch-blue { background:#3f51b5; }
+.technician-display-settings .simulation-theme-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
