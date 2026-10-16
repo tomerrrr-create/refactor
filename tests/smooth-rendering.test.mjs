@@ -82,3 +82,24 @@ test('small boards stay sharp without overwriting preference or changing smooth 
         assert.equal(JSON.stringify(h.boardState), before);
     }
 });
+
+
+for (const size of [9, 21]) for (const gap of [6, 5, 3, 2]) test(`PNG export ${size}×${size} scales gap ${gap} while retaining screen and board values`, async () => {
+    const h = harness(size), rectangles = [];
+    h.separatorPx = gap;
+    h.getPaletteColor = k => h.palette()[h.norm(k)];
+    const board = JSON.stringify(h.boardState);
+    const exported = { fillRect: (...args) => rectangles.push(args), save() {}, translate() {}, restore() {} };
+    h.document.createElement = () => ({ getContext: () => exported, toBlob: cb => cb({}) });
+    h.dom = { btnSaveImage: { innerHTML: 'icon' }, saveSmoothImage: { checked: false } };
+    h.setTimeout = fn => fn(); h.navigator = {}; h.getSanitizedFileName = () => 'test.png';
+    h.File = class {}; h.triggerDownload = () => {}; h.modals = { closeModal() {} };
+    const start = source.indexOf('async function shareOrDownloadImage()');
+    vm.runInContext(source.slice(start, source.indexOf('async function handleSaveProject()', start)), h);
+    await h.shareOrDownloadImage();
+    const firstTile = rectangles[2], secondTile = rectangles[3];
+    const exportedGap = secondTile[0] - firstTile[0] - firstTile[2];
+    assert(Math.abs(exportedGap - gap * 4014 / 720) < 1e-9);
+    assert.equal(h.separatorPx, gap);
+    assert.equal(JSON.stringify(h.boardState), board);
+});
