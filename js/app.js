@@ -1,3 +1,4 @@
+import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
 import { runIslandsPreview } from './simulations/islands-preview.js';
@@ -4469,6 +4470,7 @@ downloadImage: shareOrDownloadImage,
 applySortMethod,
         };
         modals = initializeModals(contextForModals);
+        initializeQuickStart();
         
         activePaletteIndex = C.PALETTES.findIndex(p => p.originalName === startupSettings.paletteName);
         n = startupSettings.boardSize;

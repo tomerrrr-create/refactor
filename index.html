@@ -530,6 +530,7 @@
         <h2 id="helpModalTitle" class="text-xl font-bold text-center mb-4 text-gray-200"></h2>
         <p id="helpIntroText" class="text-base text-gray-400 italic text-center mb-6"></p>
 
+        <button type="button" class="quick-start-entry" data-open-guide aria-haspopup="dialog" aria-controls="quickStartDialog"></button>
         <div id="helpTabs" class="help-tabs" role="tablist" aria-label="Help topics">
           <button id="helpTabCreation" type="button" role="tab" data-help-tab="creation" aria-controls="helpPanelCreation" aria-selected="true" data-debug-text="help_tab_creation"></button>
           <button id="helpTabEvolution" type="button" role="tab" data-help-tab="evolution" aria-controls="helpPanelEvolution" aria-selected="false" tabindex="-1" data-debug-text="help_tab_evolution"></button>
@@ -551,6 +552,17 @@
     </div>
   </div>
 
+  <dialog id="quickStartDialog" class="technician-dialog quick-start-dialog" aria-labelledby="quickStartTitle" aria-describedby="quickStartBody">
+    <header class="quick-start-header"><span data-guide-label></span><button type="button" data-guide-close>×</button></header>
+    <div class="quick-start-slide" data-guide-slide>
+      <div class="quick-start-visual" data-guide-visual aria-hidden="true"></div>
+      <p class="quick-start-count" data-guide-count></p>
+      <div aria-live="polite" aria-atomic="true"><h2 id="quickStartTitle"></h2><p id="quickStartBody" data-guide-body></p><p class="quick-start-tip" data-guide-tip></p></div>
+    </div>
+    <nav class="quick-start-dots" data-guide-dots aria-label="Steps"></nav>
+    <footer class="quick-start-footer"><button type="button" data-guide-back></button><button type="button" data-guide-next></button></footer>
+  </dialog>
+
   <dialog id="technicianDialog" class="technician-dialog" aria-labelledby="technicianTitle" aria-describedby="technicianSubtitle">
     <div class="modal-dismiss-bar"><button id="btnTechnicianCloseTop" type="button" class="modal-dismiss" data-i18n-title="saveModal_close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
@@ -560,6 +572,7 @@
       <p class="technician-eyebrow">DEBUG / 001</p>
       <h2 id="technicianTitle" data-debug-text="debug_title"></h2>
       <p id="technicianSubtitle" data-debug-text="debug_subtitle"></p>
+      <button type="button" class="quick-start-entry" data-open-guide aria-haspopup="dialog" aria-controls="quickStartDialog"></button>
       <section id="profileControls" class="profile-controls" aria-label="Profiles" data-i18n-label="profiles_title">
         <div class="profile-buttons">
           <div class="profile-slot">
