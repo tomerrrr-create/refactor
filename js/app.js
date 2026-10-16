@@ -1,3 +1,4 @@
+import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
 import { runIslandsPreview } from './simulations/islands-preview.js';
 import { parseSeparatorWidth } from './separator-recording.js';
@@ -534,11 +535,6 @@ k: tileState.k,
           canvas = dom.boardCanvas;
           if (!canvas) { return; }
           ctx = canvas.getContext('2d');
-          const dpr = window.devicePixelRatio || 1;
-          const rect = canvas.getBoundingClientRect();
-          canvas.width = rect.width * dpr;
-          canvas.height = rect.height * dpr;
-          ctx.scale(dpr, dpr);
           
           if (createEmptyState) {
 boardState = new Array(n * n).fill(null).map(() => ({
@@ -728,7 +724,9 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
       function renderToScreen(timestamp) {
         if (!ctx || !canvas) return;
-        renderBoard(ctx, canvas.clientWidth, canvas.clientHeight, timestamp, isSmoothRendering && isSmoothDisplayAvailable(n, separatorPx));
+        const width = canvas.clientWidth, height = canvas.clientHeight;
+        if (!prepareDisplayCanvas(canvas, ctx, width, height, window.devicePixelRatio)) return;
+        renderBoard(ctx, width, height, timestamp, isSmoothRendering && isSmoothDisplayAvailable(n, separatorPx));
         softBloom?.draw();
       }
 
@@ -2643,11 +2641,6 @@ function updateLayout() {
 
     if (!canvas) return;
     setTimeout(() => {
-        const dpr = window.devicePixelRatio || 1;
-        const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        ctx.scale(dpr, dpr);
         const oldSeparator = separatorPx;
         fitCurrentSeparator();
         if (separatorPx !== oldSeparator && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand) window.logArtEvent('SEPARATOR_CHANGE', separatorPx);
