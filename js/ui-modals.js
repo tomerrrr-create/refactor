@@ -1477,7 +1477,6 @@ export function initializeModals(appContext) {
         startupToggle.setAttribute('aria-expanded', 'false');
         initForm.hidden = !initForm.hidden;
         initToggle.setAttribute('aria-expanded', String(!initForm.hidden));
-        if (!initForm.hidden) initBoard.focus();
     });
     initBrush.addEventListener('input', () => {
         initBrushValue.value = initBrush.value;
