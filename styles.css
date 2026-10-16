@@ -1802,10 +1802,5 @@ button, .ctrl {
 #gapValue.fractional-gap { width: 24px; margin-left: -12px; font-size: 8px; }
 
 
-#btnGap .gap-off-slash { display: none; }
-#btnGap[data-relative-gap="none"] .gap-off-slash { display: inline; }
 
 #btnGap[data-relative-gap] > svg { filter: none; }
-#btnGap[data-relative-gap="thick"] .gap-hash { stroke-width: 3.2; }
-#btnGap[data-relative-gap="medium"] .gap-hash { stroke-width: 1.8; }
-#btnGap[data-relative-gap="thin"] .gap-hash { stroke-width: .8; }

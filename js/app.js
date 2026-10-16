@@ -744,9 +744,11 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
               : `${getText('tooltip_gap')}: ${separatorPx}`;
           dom.btnGap.title = label;
           dom.btnGap.setAttribute('aria-label', label);
-          dom.gapValue.hidden = isRelativeSeparatorMode;
-          dom.gapValue.textContent = String(Number(separatorPx.toFixed(2)));
-          dom.gapValue.classList.toggle('fractional-gap', !Number.isInteger(separatorPx));
+          dom.gapValue.hidden = isRelativeSeparatorMode && level === 0;
+          dom.gapValue.textContent = isRelativeSeparatorMode
+              ? ({ 5: 'L', 3: 'M', 1: 'S', 0: '' }[level])
+              : String(Number(separatorPx.toFixed(2)));
+          dom.gapValue.classList.toggle('fractional-gap', !isRelativeSeparatorMode && !Number.isInteger(separatorPx));
           if (isRelativeSeparatorMode) dom.btnGap.dataset.relativeGap = ({ 5: 'thick', 3: 'medium', 1: 'thin', 0: 'none' }[level]);
           else delete dom.btnGap.dataset.relativeGap;
       }
