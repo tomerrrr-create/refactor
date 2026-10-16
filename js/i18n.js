@@ -97,7 +97,7 @@ export const translations = {
   gol_preset_coral: {"en": "Coral", "he": "אלמוג", "ru": "Коралл", "nl": "Koraal"},
   gol_preset_space: {"en": "Space", "he": "חלל", "ru": "Космос", "nl": "Ruimte"},
   gol_preset_amoeba: {"en": "Amoeba", "he": "אמבה", "ru": "Амёба", "nl": "Amoebe"},
-  gol_preset_hive: {"en": "Hive", "he": "כוורת", "ru": "Улей", "nl": "Bijenkorf"},
+  gol_preset_hive: {"en": "Bees", "he": "דבורים", "ru": "Пчёлы", "nl": "Bijen"},
   gol_preset_livingtexture: {"en": "Alive", "he": "חי", "ru": "Живой", "nl": "Levend"},
   gol_preset_joelson: {"en": "Joel", "he": "ג׳ואל", "ru": "Джоэл", "nl": "Joel"},
   gol_preset_charlie: {"en": "Charlie", "he": "צ׳ארלי", "ru": "Чарли", "nl": "Charlie"},
