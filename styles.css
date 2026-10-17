@@ -1876,3 +1876,21 @@ button, .ctrl {
 .simulation-theme-preview:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 @media (hover: hover) { .simulation-theme-preview:hover { opacity: 1; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .simulation-theme-preview { transition: none; } }
+
+/* Evolution tuning uses the same bronze dialog and gold controls as erosion. */
+.evolution-tuning-dialog { width: min(440px, calc(100vw - 32px)); }
+.tuning-heading-icon { display:flex; justify-content:center; height:32px; margin-bottom:12px; color:var(--gold); }
+.tuning-heading-icon svg { width:30px; height:30px; }
+.tuning-modes { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:24px; }
+.tuning-modes[hidden] { display:none; }
+.tuning-modes button { padding:8px 12px; border:1px solid #b28b3645; border-radius:20px; background:#101110; color:#bcb7ab; font:inherit; font-size:12px; cursor:pointer; }
+.tuning-modes button[aria-pressed="true"] { border-color:#d4b865; background:#b28b3620; color:#e3c677; }
+.tuning-field { margin:20px 0; }
+.tuning-field output { display:block; text-align:center; margin:10px 0; color:#e3c677; font-size:21px; font-variant-numeric:tabular-nums; direction:ltr; }
+.tuning-field input { display:block; width:100%; margin:0; direction:ltr; accent-color:#e3c677; }
+.tuning-field p { margin:10px 0 0; text-align:center; color:#aaa99e; font-size:12px; line-height:1.6; }
+.evolution-tuning-dialog .init-settings-actions { flex-wrap:wrap; gap:8px; }
+.evolution-tuning-dialog button:focus-visible, .evolution-tuning-dialog input:focus-visible { outline:2px solid #e3c677; outline-offset:4px; }
+
+.evolution-tuning-dialog .init-settings-actions button { flex:1; min-width:0; padding:10px 8px; border:1px solid #b28b3645; background:#121310; color:#c3b99e; font-size:12px; }
+.evolution-tuning-dialog .init-settings-actions .save-btn { border-color:#d4b865; background:#b28b3624; color:#ffe7a0; }

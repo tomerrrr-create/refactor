@@ -4,9 +4,9 @@
  * מחשב את פקטור הבהירות עבור אנימציית הנשימה.
  * מוציא את החישוב המתמטי מתוך פונקציית הרינדור לביצועים טובים יותר.
  */
-export function getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode) {
+export function getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode, rules = {}) {
     const BREATHE_SPEED = 0.0015;
-    const elapsed = timestamp - breatheStartTime;
+    const elapsed = (timestamp - breatheStartTime) * (rules.speed ?? 1);
     let wave;
 
     if (breatheEvoMode === 'solo') {
@@ -20,11 +20,12 @@ export function getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime
     const fadeInProgress = Math.min(elapsed / 2000, 1.0);
     const animatedFactor = 0.7 + wave * 0.3; 
     
-    return (1.0 * (1 - fadeInProgress)) + (animatedFactor * fadeInProgress);
+    const factor = (1.0 * (1 - fadeInProgress)) + (animatedFactor * fadeInProgress);
+    return (rules.depth ?? 1) === 1 ? factor : Math.max(0, 1 + (factor - 1) * rules.depth);
 }
 // Each cell/color joins within four seconds and keeps an independent, changing rhythm.
 // All animation state stays outside the board and is discarded on the next Play.
-export function createRandomBreatheSession(board, mode, random = Math.random) {
+export function createRandomBreatheSession(board, mode, random = Math.random, rules = {}) {
     const rhythms = new Map();
     const newPulse = start => ({ start, duration: 3000 + random() * 3000,
         depth: 0.35 + random() * 0.25, brightness: 1 });
@@ -36,6 +37,7 @@ export function createRandomBreatheSession(board, mode, random = Math.random) {
     const ease = (from, to, progress) => from + (to - from) * (1 - Math.cos(Math.PI * progress)) / 2;
     return {
         update(elapsed) {
+            elapsed *= rules.speed ?? 1;
             for (const [key, pulse] of rhythms) {
                 const progress = (elapsed - pulse.start) / pulse.duration;
                 if (progress < 0) continue;
@@ -54,7 +56,8 @@ export function createRandomBreatheSession(board, mode, random = Math.random) {
         factor(index) {
             const tile = board[index];
             if (!tile || tile.isGold) return 1;
-            return rhythms.get(mode === 'random-color' ? tile.k : index)?.brightness ?? 1;
+            const factor = rhythms.get(mode === 'random-color' ? tile.k : index)?.brightness ?? 1;
+            return (rules.depth ?? 1) === 1 ? factor : Math.max(0, 1 + (factor - 1) * rules.depth);
         }
     };
 }

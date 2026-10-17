@@ -47,7 +47,7 @@ function getRandomEdgePosition(n) {
 
 
 
-export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaState, dlaRules }) {
+export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaState, dlaRules, dlaTuning }) {
 
     if (dlaRules.fastMode) {
         // Fast mode logic is separate and remains unchanged.
@@ -57,7 +57,7 @@ export function runDlaGeneration({ n, currentBoardState, currentPalette, dlaStat
         if (!dlaState || !dlaState.isInitialized) return { nextBoardState: currentBoardState, nextDlaState: dlaState };
 
         const pLen = currentPalette.length;
-        const batchSize = 100;
+        const batchSize = dlaTuning?.batchSize ?? 100;
         let processedCount = 0;
 
         const nextBoardState = currentBoardState.map(tile => ({...tile}));

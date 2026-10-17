@@ -1,3 +1,4 @@
+import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
 import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
@@ -1192,6 +1193,7 @@ export function initializeModals(appContext) {
     app = appContext;
     const openSeparatorCycleModal = initializeSeparatorCycleModal(app);
     const openErosionSettingsModal = initializeErosionModal(app);
+    const evolutionTuningModals = initializeEvolutionTuningModals(app);
     const helpTabs = [...document.querySelectorAll('[data-help-tab]')];
     helpTabs.forEach((button, index) => {
         button.addEventListener('click', () => selectHelpTab(button.dataset.helpTab));
@@ -2096,6 +2098,7 @@ return {
         openResizeModal,
         openNudgeSettingsModal,
         openErosionSettingsModal,
+        ...evolutionTuningModals,
         openColorPickerModal,
         openHelpModal,
         openPaletteModal,
