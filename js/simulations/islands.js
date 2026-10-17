@@ -6,12 +6,12 @@ const isUint32 = value => Number.isInteger(value) && value >= 0 && value <= UINT
 export function createIslandsSession(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0], mode = 'classic') {
     if (!isUint32(seed)) throw new Error('Invalid Islands seed');
     if (!['classic', 'proximity'].includes(mode)) throw new Error('Invalid Islands mode');
-    return { islandsVersion: mode === 'proximity' ? 3 : VERSION, seed, state: seed, steps: 0,
+    return { islandsVersion: mode === 'proximity' ? 4 : VERSION, seed, state: seed, steps: 0,
         ...(mode === 'proximity' ? { mode } : {}) };
 }
 
 export function restoreIslandsSession(snapshot) {
-    if (!snapshot || ![VERSION, 2, 3].includes(snapshot.islandsVersion) ||
+    if (!snapshot || ![VERSION, 2, 3, 4].includes(snapshot.islandsVersion) ||
         (snapshot.islandsVersion >= 2 && snapshot.mode !== 'proximity') ||
         (snapshot.islandsVersion === VERSION && snapshot.mode !== undefined && snapshot.mode !== 'classic') || !isUint32(snapshot.seed) ||
         !isUint32(snapshot.state) || !Number.isSafeInteger(snapshot.steps) || snapshot.steps < 0) {
@@ -33,7 +33,9 @@ function random(session) {
 export function runIslandsGeneration({ n, currentBoardState, currentPalette }, session) {
     if (!session) throw new Error('Islands session is missing');
     const proximity = session.islandsVersion >= 2;
-    const weighted = session.islandsVersion === 3;
+    const weighted = session.islandsVersion >= 3;
+    // Version 3 replays strength 4; new sessions use strength 12 (version 4).
+    const strength = session.islandsVersion === 4 ? 12 : 4;
     if (proximity && (!currentPalette || currentPalette.length < 1)) throw new Error('Islands proximity needs a palette');
     const paletteLength = currentPalette?.length || 1;
     const span = Math.max(1, paletteLength - 1);
@@ -59,7 +61,7 @@ export function runIslandsGeneration({ n, currentBoardState, currentPalette }, s
                     weights[direction] = 0;
                     if (!source || source.isGold) continue;
                     const sourceRank = ((source.k % paletteLength) + paletteLength) % paletteLength;
-                    weights[direction] = span / (span + 4 * Math.abs(rank - sourceRank));
+                    weights[direction] = span / (span + strength * Math.abs(rank - sourceRank));
                     total += weights[direction];
                 }
                 if (!total) continue;

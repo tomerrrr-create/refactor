@@ -83,7 +83,7 @@ test('weighted proximity favors nearby neighbors without discarding eligible att
         return counts;
     }
     const near=outcomes(1,263,264),equal=outcomes(263,263,264);
-    assert(near.near>near.far*4);assert(near.near<near.far*6);
+    assert(near.near>near.far*10);assert(near.near<near.far*15);
     assert.equal(near.unchanged,equal.unchanged); // Same target choices; no rejection step.
     assert.deepEqual(outcomes(1,22,23),outcomes(2,44,45));
 });
@@ -118,4 +118,16 @@ test('weighted copying respects gold, single neighbors and board boundaries',()=
     const tile={k:7};const session=createIslandsSession(42,'proximity');
     runIslandsGeneration({n:1,currentBoardState:[tile],currentPalette:Array(1)},session);
     assert.equal(tile.k,7);assert.equal(session.steps,1);
+});
+
+test('version-three weighted recordings retain strength-four evolution',()=>{
+    const tiles=board(21),session=restoreIslandsSession({islandsVersion:3,seed:42,state:42,steps:0,mode:'proximity'});
+    for(let i=0;i<100;i++)runIslandsGeneration({n:21,currentBoardState:tiles,currentPalette:Array(23)},session);
+    assert.equal(session.state,331199803);
+    assert.equal(createHash('sha256').update(JSON.stringify(tiles)).digest('hex'),
+        '101e221b949684c064ba8c951ac38fb3c32604f181c1c0ef459c2ab51ac773d6');
+    const stronger=board(21),fresh=createIslandsSession(42,'proximity');
+    assert.equal(fresh.islandsVersion,4);
+    for(let i=0;i<100;i++)runIslandsGeneration({n:21,currentBoardState:stronger,currentPalette:Array(23)},fresh);
+    assert.notDeepEqual(stronger,tiles);
 });
