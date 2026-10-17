@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, loadProfileStartup, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
+import { CHI_FLOW_PRESETS } from '../js/constants.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
 const initial = () => { const settings = defaultWorkspaceSettings(); settings.simulationInit.brushSize = 1; settings.startup.separatorPx = 5; settings.rules.erosion.erosionStages = { 'channels-solid': 0, channels: 0 }; return { settings: { ...settings, simulationTheme: 'blue' } }; };
@@ -94,6 +95,7 @@ test('personal rules and cycle source identity remain independent from named pre
         chiFlow: { index: 2, sources: ['custom-0', 'custom-1', 'yours'], yoursRules: { awakening: [2], flow: [3], reach: 4 } }
     };
     const state = createProfileState(snapshot, disk);
+    state.replace(snapshot);
     state.persist();
     const reopened = createProfileState(initial(), disk);
     assert.deepEqual(reopened.draft().identity, snapshot.identity);
@@ -109,7 +111,7 @@ test('failed replay completion resumes normal profile capture without accepting 
         const state=createProfileState(initial(),storage());state.beginReplay(initial());
         const invalid=change(initial(),s=>{s.rules.dla.mode='genetics';});
         assert.throws(()=>state.endReplay(throwsDuringCapture?()=>{throw Error('capture failed');}:invalid));
-        assert.deepEqual(state.draft(),initial());
+        assert.deepEqual(state.draft(),defaultProfileSnapshots(initial())[0]);
         const edited=change(initial(),s=>{s.brush.size=5;});
         assert.equal(state.capture(edited),true);assert.equal(state.draft().settings.brush.size,5);
     }
@@ -118,7 +120,10 @@ test('failed replay completion resumes normal profile capture without accepting 
 test('factory profiles keep unspecified settings and have distinct startup, sort, theme and Chi Flow defaults', () => {
     const snapshots = defaultProfileSnapshots(initial());
     const [one, two, three] = snapshots.map(snapshot => snapshot.settings);
-    assert.deepEqual(one, initial().settings);
+    const expected = initial().settings;
+    Object.assign(expected.startup, { paletteName: 'Autumn into Winter 264', fill: 'dark', brushColor: 'rainbow' });
+    expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
+    assert.deepEqual(one, expected);
     assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
     assert.equal(two.startup.fill, 'random');
     assert.equal(three.startup.paletteName, 'Ancient 264');
@@ -326,4 +331,31 @@ test('opening brushes update to 1 without changing long-press sizes or personal 
     assert.deepEqual([0, 1, 2].map(i => state.draft(i).settings.simulationInit.brushSize), [1, 11, 1]);
     assert.equal(state.draft(2).settings.brush.size, 9);
     assert.equal(loadProfileStartup(initial().settings.startup, disk).brushSize, 1);
+});
+
+test('profile 1 default upgrade preserves personal choices and other profiles and persists once', () => {
+    const disk = storage();
+    const profiles = defaultProfileSnapshots(initial()).map(snapshot => ({saved: structuredClone(snapshot), draft: structuredClone(snapshot)}));
+    for (const kind of ['saved', 'draft']) {
+        profiles[0][kind].settings.startup = structuredClone(initial().settings.startup);
+        profiles[0][kind].settings.cycles.chiFlow = defaultWorkspaceSettings().cycles.chiFlow;
+    }
+    profiles[0].draft.settings.startup.paletteName = 'Ancient 264';
+    profiles[0].draft.settings.cycles.chiFlow[1].reach = 3;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({version:1, defaultsVersion:6, selected:0, profiles}));
+    const state = createProfileState(initial(), disk);
+    state.persist();
+    assert.equal(JSON.parse(disk.getItem(PROFILE_STORAGE_KEY)).profiles[0].saved.settings.startup.paletteName, 'Autumn into Winter 264');
+    assert.equal(state.draft().settings.startup.paletteName, 'Ancient 264');
+    assert.equal(state.draft().settings.startup.brushColor, 'rainbow');
+    assert.equal(state.draft().settings.cycles.chiFlow[1].reach, 3);
+    assert.deepEqual(state.draft(1), profiles[1].draft);
+    assert.deepEqual(state.draft(2), profiles[2].draft);
+    state.persist();
+    assert.deepEqual(createProfileState(initial(), disk).draft(), state.draft());
+    const factory = factoryProfileSnapshot(0);
+    assert.deepEqual(factory.identity.chiFlow.sources, ['Harmony','Nova','Alexis']);
+    assert.equal(factory.identity.chiFlow.index, 0);
+    assert.deepEqual(factory.identity.chiFlow.yoursRules, CHI_FLOW_PRESETS.Harmony);
+    assert.equal(loadProfileStartup(initial().settings.startup, storage()).paletteName, 'Autumn into Winter 264');
 });
