@@ -38,6 +38,12 @@ Hold the paint-color control for **600 ms** to select index zero in the current 
 
 Changing the sorting method remaps tile indices and the selected brush color to preserve their visible colors. Changing palettes clears the ordinary paint-color selection. Palette positions named “darkest” or “lightest” in several engine controls mean the first or last entry of the current ordering; custom sorting can change their physical brightness.
 
+### Portrait layout
+
+When the viewport is taller than it is wide, both interfaces place their existing controls in a rail to the right of the square board. All 18 creation controls or 28 simulation controls remain visible without scrolling, including the idle Turing control in portrait. The rail uses the fewest 44-pixel columns that fit the available height; a shorter screen can require three columns. The board fills the remaining width, with 8-pixel spacing and safe-area padding. On narrow portrait phones this trades some board width for having every control beside it.
+
+Rotation and browser viewport changes recalculate the display size and separators without rebuilding the board, changing palette, stopping an evolution or resetting Breathe. Pointer coordinates follow the resized canvas. Landscape keeps its existing layout; macro fullscreen temporarily hides the rail and restores it on exit. The implementation is in `js/portrait-layout.js` and `updateLayout()` in `js/app.js`.
+
 ### Evolutions, play and cycles
 
 Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Ordinary editing is disabled while the evolution runs. Breathe is an independent display effect: it starts directly from its own button and can accompany any evolution. Play/Pause and Single step control only the selected evolution.
