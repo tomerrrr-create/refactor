@@ -1876,3 +1876,9 @@ button, .ctrl {
 .simulation-theme-preview:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 @media (hover: hover) { .simulation-theme-preview:hover { opacity: 1; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .simulation-theme-preview { transition: none; } }
+
+/* A temporary drawing surface; the normal workspace remains intact underneath. */
+#babyModeDialog { position:fixed; inset:0; width:100vw; height:100dvh; max-width:none; max-height:none; margin:0; padding:32px; border:0; background:#000; color:#fff; overflow:hidden; touch-action:none; overscroll-behavior:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+#babyModeDialog[open] { display:flex; align-items:center; justify-content:center; }
+#babyModeDialog::backdrop { background:#000; }
+#babyModeCanvas { display:block; flex:none; width:min(calc(100vw - 64px),calc(100dvh - 64px),720px); height:min(calc(100vw - 64px),calc(100dvh - 64px),720px); background:#000; outline:1px solid #151515; image-rendering:pixelated; touch-action:none; }

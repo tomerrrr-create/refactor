@@ -1,3 +1,4 @@
+import { initializeBabyMode } from './baby-mode.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
@@ -4555,7 +4556,19 @@ bindPickerGestures(dom.btnPalette, {
                 event.preventDefault(); modals.openSeparatorCycleModal();
             }
         });
-        dom.btnBrushMode.addEventListener('click', (e) => handleCtrlClick(e, toggleBrushMode));
+        const babyMode = initializeBabyMode({
+            getColors: () => {
+                const ancient = C.PALETTES.find(palette => palette.originalName === 'Ancient 264');
+                return ancient.originalColors || ancient.colors;
+            },
+            getLabel: () => getText('baby_mode_label')
+        });
+        bindPickerGestures(dom.btnBrushMode, {
+            onTap: toggleBrushMode,
+            onHold: () => { if (!isLifePlaying && !isMacroLoaded && !isAnimating) babyMode.open(); },
+            canInteract: () => !isBreathing,
+            beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
+        });
         dom.btnUndo.addEventListener('click', (e) => handleCtrlClick(e, undo));
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
@@ -4645,7 +4658,7 @@ bindPickerGestures(dom.btnColorPicker, {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnBrushMode || btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
