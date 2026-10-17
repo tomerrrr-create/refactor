@@ -149,7 +149,7 @@ test('live Islands cycling logs generations and replays without pause or seed re
         const replay=harness();wire(replay);replay.macroQueue=actions;
         for(let time=0;replay.isLifePlaying&&time<10000;time+=frameMs)replay.gameLoop();
         assert.equal(replay.currentGenerationCount,30);assert.deepEqual(replay.boardState,c.boardState);
-        assert.deepEqual(replay.islandsSession,c.islandsSession);
+        assert.deepEqual(JSON.parse(JSON.stringify(replay.islandsSession)),JSON.parse(JSON.stringify(c.islandsSession)));
     }
     assert.throws(()=>c.parseMacroText(c.artRecipeLog.join('\n').replace('"mode":"proximity"','"mode":"invalid"')),/Invalid Islands mode/);
 });

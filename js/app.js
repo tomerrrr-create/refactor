@@ -3133,8 +3133,8 @@ function cycleIslandsMode() {
         armSimulation('islands');
     } else {
         // Keep the board, generation counter and random cursor across live mode changes.
-        islandsSession = restoreIslandsSession({ ...islandsSession,
-            islandsVersion: next === 'proximity' ? 2 : 1, mode: next });
+        islandsSession = { ...createIslandsSession(islandsSession.seed, next),
+            state: islandsSession.state, steps: islandsSession.steps };
     }
     updateIslandsButtonUI();
     window.logArtEvent('Islands Mode Changed', JSON.stringify(next === 'off' ? { mode: next }
