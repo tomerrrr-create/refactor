@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from '../js/evolution-tuning.js';
+import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning, breatheTuningKey } from '../js/evolution-tuning.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration } from '../js/simulations/islands.js';
 import { runBrightnessEvolution, runContrastGeneration } from '../js/simulations/brightness.js';
@@ -83,7 +83,7 @@ test('old and new macro rule formats restore resolved values instead of inheriti
     const {readFileSync} = await import('node:fs');
     const vm = await import('node:vm');
     const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-    const c=vm.createContext({validateEvolutionTuning,evolutionTuning:validateEvolutionTuning({brightnessEvo:{smoothing:1},breathe:{speed:3},dla:{batchSize:1000}}),
+    const c=vm.createContext({validateEvolutionTuning,breatheTuningKey,paletteLen:()=>23,evolutionTuning:validateEvolutionTuning({brightnessEvo:{smoothing:1},breathe:{speed:3},dla:{batchSize:1000}}),
         armedSimulation:'brightnessEvo',currentSortMethod:'luminance',replayNudgeTiming:null,console,
         armSimulation(sim){c.armedSimulation=sim;},
         updateBrightnessEvoButtonUI(){},updateBreatheEvoButtonUI(){},
@@ -96,4 +96,35 @@ test('old and new macro rule formats restore resolved values instead of inheriti
     play('brightnessEvo','{"mode":"contrast","tuning":{"smoothing":0.8,"contrast":0.6}}');assert.equal(c.evolutionTuning.brightnessEvo.contrast,.6);
     play('breathe','{"mode":"random-cell","tuning":{"speed":2,"depth":0.5}}');assert.equal(c.evolutionTuning.breathe.depth,.5);
     play('dla','{"mode":"no-genetics","tuning":{"batchSize":500}}');assert.equal(c.evolutionTuning.dla.batchSize,500);
+    c.paletteLen=()=>264;
+    play('breathe','Mode: group');assert.equal(c.breatheEvoMode,'group');
+    assert.equal(c.evolutionTuning.breatheLargePalette.speed,1);assert.equal(c.evolutionTuning.breatheLargePalette.depth,1);
+    play('breathe','{"mode":"random-color","tuning":{"speed":2.4,"depth":2.3}}');
+    assert.equal(c.evolutionTuning.breatheLargePalette.speed,2.4);assert.equal(c.evolutionTuning.breatheLargePalette.depth,2.3);
+    assert.equal(c.evolutionTuning.breathe.speed,2);assert.equal(c.evolutionTuning.breathe.depth,.5);
+
+});
+
+test('breathing defaults switch exactly at 64 colors and independent settings round trip', () => {
+    const tuning = validateEvolutionTuning();
+    for (const length of [2, 32, 63]) assert.deepEqual(tuning[breatheTuningKey(length)], {speed:1,depth:1});
+    for (const length of [64, 65, 264]) assert.deepEqual(tuning[breatheTuningKey(length)], {speed:2.4,depth:2.3});
+    tuning.breathe = {speed:.75,depth:.5};
+    tuning.breatheLargePalette = {speed:2,depth:2.3};
+    const settings = {...defaultWorkspaceSettings(),evolutionTuning:tuning};
+    const restored = deserializeWorkspaceSettings(serializeWorkspaceSettings(settings));
+    assert.deepEqual(restored.evolutionTuning,tuning);
+    assert.deepEqual(validateProfileSnapshot({settings}).settings.evolutionTuning,tuning);
+    assert.throws(()=>validateEvolutionTuning({breatheLargePalette:{depth:3.1}}));
+});
+
+test('230% breathing depth remains bounded and never changes underlying board colors', () => {
+    const tiles=board(),before=structuredClone(tiles);
+    const session=createRandomBreatheSession(tiles,'random-cell',()=>0,{speed:2.4,depth:2.3});
+    for(let elapsed=0;elapsed<12000;elapsed+=20){
+        session.update(elapsed);
+        for(let i=0;i<tiles.length;i++)assert(session.factor(i)>=0 && session.factor(i)<=1.12);
+        for(const mode of ['solo','group'])assert(getBreatheBrightnessFactor({k:3,startDelay:0},elapsed,0,mode,{speed:2.4,depth:2.3})>=0);
+    }
+    assert.deepEqual(tiles,before);
 });

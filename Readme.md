@@ -87,12 +87,16 @@ Swipe/drag up on the **selected, paused** evolution to open its settings. The sh
 | --- | --- | --- | --- |
 | Brightness | Smoothing strength (Brightness mode) | 5–100% of the distance to the local average per generation | 50% |
 | Brightness | Contrast strength (Contrast mode) | 1–100% of one palette-index step per generation | 10% |
-| Breathe | Rate | 25–300% of the original rhythm | 100% |
-| Breathe | Depth | 25–150% of the original brightness deviation | 100% |
+| Breathe | Rate | 25–300% of the original rhythm | 100%; 240% with 64+ colors |
+| Breathe | Depth | 25–300% of the original brightness deviation | 100%; 230% with 64+ colors |
 | Islands | Copy attempts per generation | 1–50% of the board cell count | 5% |
 | DLA | Particle steps per generation | 10–1,000 | 100 |
 
-Brightness, Breathe and DLA also allow selection among their existing modes. Islands cycles Classic → Sort proximity → Off when paused; while running it alternates the two active modes without pausing or resetting its board, generation counter, random cursor or activity. The dotted leaf marks Sort proximity. Both modes use the same copy-attempt setting. Classic remains unchanged. Sort proximity chooses a random cell and a random cardinal neighbor, then accepts the copy with probability `1 / (1 + 4 × distance / span)`, where distance is the absolute difference in the current palette ranks and span is palette length minus one (at least one). Nearby ranks are copied more often; the farthest pair still has a 20% chance. This is the original acceptance rule, without weighted neighbor selection or an adjustable proximity strength. Changing sort order changes the ranks used by this rule, while preserving visible board colors. Failed attempts and copying the same color do not necessarily change a cell. Increasing activity or DLA steps increases computational work as well as potential movement.
+Breathe cycles Random cells → Individual cells → Random colors → Off, with no change to the control layout. Color groups is no longer selectable; legacy recipes can still replay it. Its settings modal follows the same three-mode order. Palettes with fewer than 64 colors and palettes with 64 or more colors retain separate rate/depth preferences; Reset uses the defaults for the current palette size. Recipes store the resolved values so old recordings retain their original breathing rate and depth.
+
+Brightness and DLA also allow selection among their existing modes.
+
+Islands cycles Classic → Sort proximity → Off when paused; while running it alternates the two active modes without pausing or resetting its board, generation counter, random cursor or activity. The dotted leaf marks Sort proximity. Both modes use the same copy-attempt setting. Classic remains unchanged. Sort proximity chooses a random cell and a random cardinal neighbor, then accepts the copy with probability `1 / (1 + 4 × distance / span)`, where distance is the absolute difference in the current palette ranks and span is palette length minus one (at least one). Nearby ranks are copied more often; the farthest pair still has a 20% chance. This is the original acceptance rule, without weighted neighbor selection or an adjustable proximity strength. Changing sort order changes the ranks used by this rule, while preserving visible board colors. Failed attempts and copying the same color do not necessarily change a cell. Increasing activity or DLA steps increases computational work as well as potential movement.
 
 Old settings and recipes use the original values when tuning is absent. Islands recipes retain their seed, random cursor, mode and activity for exact replay. Classic uses engine version 1 and Sort proximity uses version 2; legacy version-1 recordings remain Classic. Live mode changes are recorded at their generation and do not restart the run. Project snapshots and Undo/Redo retain the mode and random cursor. Brightness/Breathe recipes retain both mode and tuning; old `Mode:` records remain readable. Breathe still uses its existing random rhythms; this change records its parameters, without adding deterministic rhythm replay. DLA's existing randomness is likewise unchanged. New tuning is an optional extension of the V1 settings format; its original defaults remain intact.
 
@@ -283,7 +287,9 @@ Unlike other simulations that update discrete states per generation, `Breathe` o
 * **Mathematical Model:** Uses a continuous sine wave (`Math.sin()`) tied to the global `timestamp` to calculate a luminosity multiplier.
 * **Modes (`breatheEvoMode`):**
     * `solo`: Each tile pulses individually. The sine wave's phase is offset by an initial `startDelay` assigned to the tile when the simulation arms.
-    * `group`: A synchronized organic pulse. The sine phase is offset by the tile's current color index (`tileData.k * 0.8`), causing adjacent colors to breathe in localized "waves".
+    * `random-cell`: Independent changing rhythms per tile; first in the control cycle.
+    * `random-color`: Independent changing rhythms per color; third in the control cycle.
+    * `group` (legacy playback only): A synchronized organic pulse. The sine phase is offset by the tile's current color index (`tileData.k * 0.8`), causing adjacent colors to breathe in localized "waves".
 * **Performance:** Extracts the calculation into `getBreatheBrightnessFactor()` without changing the board's underlying color indices.
 
 ---

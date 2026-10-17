@@ -1,4 +1,4 @@
-import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
+import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning, breatheTuningKey } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
@@ -611,6 +611,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
     if (boardState.length === 0) return;
 
     const currentPalette = palette();
+    const breatheRules = isLifePlaying && armedSimulation === 'breathe' ? getBreatheTuning() : null;
     const paletteAsRgb = currentPalette.map(hexToRgb);
 
     // ---------------------------------------------------------
@@ -643,7 +644,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
             if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
                 const brightnessFactor = randomBreatheSession
                     ? randomBreatheSession.factor(i)
-                    : Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode, evolutionTuning.breathe);
+                    : Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode, breatheRules);
                 const baseRgb = paletteAsRgb[norm(tileData.k)];
                 rgb = [
                     Math.round(baseRgb[0] * brightnessFactor),
@@ -705,7 +706,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
             const brightnessFactor = randomBreatheSession
                     ? randomBreatheSession.factor(i)
-                    : Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode, evolutionTuning.breathe);
+                    : Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode, breatheRules);
             const originalColor = getPaletteColor(tileData.k);
             finalColor = adjustBrightness(originalColor, brightnessFactor);
         }
@@ -1470,7 +1471,7 @@ function pauseLife() {
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
         else if (armedSimulation === 'brightnessEvo') simDetails = JSON.stringify({ mode: brightnessEvoMode, tuning: evolutionTuning.brightnessEvo });
-        else if (armedSimulation === 'breathe') simDetails = JSON.stringify({ mode: breatheEvoMode, tuning: evolutionTuning.breathe });
+        else if (armedSimulation === 'breathe') simDetails = JSON.stringify({ mode: breatheEvoMode, tuning: getBreatheTuning() });
         
         window.logArtEvent('PLAY', `Armed: ${armedSimulation} | Sort: ${currentSortMethod} | Rules: ${simDetails}`);        // ------------------------------------------------
 
@@ -1495,7 +1496,7 @@ function pauseLife() {
               }
 
               randomBreatheSession = ['random-cell', 'random-color'].includes(breatheEvoMode)
-                  ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode, Math.random, evolutionTuning.breathe) : null;
+                  ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode, Math.random, getBreatheTuning()) : null;
               breatheStartTime = performance.now();
               isLifePlaying = true;
               
@@ -1702,7 +1703,7 @@ if (!isTogglingOff && simulationName !== null) {
             initializeDla();
         }
         if (simulationName === 'breathe') {
-            breatheEvoMode = 'solo';
+            breatheEvoMode = 'random-cell';
         }
         if (simulationName === 'gravitationalSort') {
             gsMode = 'up';
@@ -1904,10 +1905,15 @@ if (simulationName === 'magnet') {
         }
       }
 
+      function getBreatheTuning() {
+        return evolutionTuning[breatheTuningKey(paletteLen())];
+      }
+
       function saveEvolutionTuning(simulation, rules, mode) {
         if (armedSimulation !== simulation || isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
-        const next = validateEvolutionTuning({ ...evolutionTuning, [simulation]: rules });
-        const modes = { brightnessEvo: ['brightness', 'contrast'], breathe: ['solo', 'group', 'random-cell', 'random-color'], dla: ['genetics', 'no-genetics'] };
+        const key = simulation === 'breathe' ? breatheTuningKey(paletteLen()) : simulation;
+        const next = validateEvolutionTuning({ ...evolutionTuning, [key]: rules });
+        const modes = { brightnessEvo: ['brightness', 'contrast'], breathe: ['random-cell', 'solo', 'random-color'], dla: ['genetics', 'no-genetics'] };
         if (modes[simulation] && !modes[simulation].includes(mode)) return false;
         const currentMode = ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation];
         if (JSON.stringify(next) === JSON.stringify(evolutionTuning) && currentMode === mode) return true;
@@ -3197,10 +3203,10 @@ function cycleIslandsMode() {
 
 function updateBreatheEvoButtonUI() {
     updateIslandsButtonUI();
-    const modes = ['solo', 'group', 'random-cell', 'random-color'];
-    const icons = ['iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
-    const selectedMode = armedSimulation === 'breathe' ? breatheEvoMode : 'off';
-    dom.btnShowBreatheMenu.classList.remove(...modes.map(mode => 'mode-' + mode), 'simulation-active');
+    const modes = ['random-cell', 'solo', 'random-color'];
+    const icons = ['iconBreatheRandomCell', 'iconBreatheSolo', 'iconBreatheRandomColor'];
+    const selectedMode = armedSimulation === 'breathe' ? (breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode) : 'off';
+    dom.btnShowBreatheMenu.classList.remove('mode-group', ...modes.map(mode => 'mode-' + mode), 'simulation-active');
     modes.forEach((mode, index) => {
         document.getElementById(icons[index]).style.display = mode === selectedMode || (selectedMode === 'off' && index === 0) ? 'block' : 'none';
     });
@@ -3213,8 +3219,8 @@ function updateBreatheEvoButtonUI() {
 function cycleBreatheEvoMode() {
     if (isLifePlaying && armedSimulation !== 'breathe') return;
     if (isLifePlaying) pauseLife();
-    const currentMode = armedSimulation === 'breathe' ? breatheEvoMode : 'off';
-    const sequence = ['off', 'solo', 'group', 'random-cell', 'random-color'];
+    const currentMode = armedSimulation === 'breathe' ? (breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode) : 'off';
+    const sequence = ['off', 'random-cell', 'solo', 'random-color'];
     const nextMode = sequence[(sequence.indexOf(currentMode) + 1) % sequence.length];
     if (nextMode === 'off') {
         armSimulation(null);
@@ -3976,7 +3982,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 if (typeof updateBrightnessEvoButtonUI === 'function') updateBrightnessEvoButtonUI();
             } else if (sim === 'breathe') {
                 const saved = rulesStr.startsWith('Mode: ') ? { mode: rulesStr.slice(6) } : JSON.parse(rulesStr);
-                evolutionTuning.breathe = validateEvolutionTuning({ breathe: saved.tuning ?? {} }).breathe;
+                evolutionTuning[breatheTuningKey(paletteLen())] = validateEvolutionTuning({ breathe: saved.tuning ?? {} }).breathe;
                 breatheEvoMode = saved.mode;
                 if (typeof updateBreatheEvoButtonUI === 'function') updateBreatheEvoButtonUI();
             } else {
@@ -4519,8 +4525,9 @@ syncGsModeFromModal: (direction) => {
                 settingsProfiles?.scheduleCapture();
                 return true;
             },
-            getEvolutionTuning: () => structuredClone(evolutionTuning),
-            getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation],
+            getDefaultEvolutionTuning: simulation => DEFAULT_EVOLUTION_TUNING[simulation === 'breathe' ? breatheTuningKey(paletteLen()) : simulation],
+            getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), breathe: { ...getBreatheTuning() } }),
+            getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode, dla: dlaMode })[simulation],
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning,
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
