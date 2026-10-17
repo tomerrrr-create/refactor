@@ -72,8 +72,8 @@ export function defaultProfileSnapshots(initial) {
     }
     for (const [index, size] of [1, 11, 3].entries()) {
         profiles[index].settings.simulationInit.brushSize = size;
-        profiles[index].settings.startup.brushSize = size;
-        profiles[index].settings.brush.size = size;
+        profiles[index].settings.startup.brushSize = 1;
+        profiles[index].settings.brush.size = 1;
     }
     Object.assign(profiles[1].settings.simulationInit, { symmetry: 'off', brushColor: 'first' });
     profiles[1].settings.startup.symmetry = 'off';
@@ -128,7 +128,7 @@ function mergeChanges(draft, previous, current) {
 
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
-    let state = { version: 1, defaultsVersion: 5, selected: 0,
+    let state = { version: 1, defaultsVersion: 6, selected: 0,
         profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
@@ -139,7 +139,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 5, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 6, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -219,6 +219,16 @@ export function createProfileState(initial, storage) {
                                 snapshot.identity.gameOfLife.yoursRules = clone(GAME_OF_LIFE_PRESETS.btnGolPresetPaint2);
                             }
                         }
+                    }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 6) {
+                for (const [index, profile] of state.profiles.entries()) {
+                    const formerSize = [1, 11, 3][index];
+                    for (const kind of ['saved', 'draft']) {
+                        const settings = profile[kind].settings;
+                        if (settings.startup.brushSize === formerSize) settings.startup.brushSize = 1;
+                        if (settings.brush.size === formerSize) settings.brush.size = 1;
                     }
                 }
             }

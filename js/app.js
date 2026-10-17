@@ -1886,7 +1886,7 @@ if (simulationName === 'magnet') {
       }
 
       // Applies preferences only. No board, palette, sort, history or macro state is restored.
-      function applyWorkspacePreferences(settings) {
+      function applyWorkspacePreferences(settings, { startup = false } = {}) {
         if (settings.simulationTheme) applySimulationTheme(settings.simulationTheme);
         separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
@@ -1914,7 +1914,7 @@ if (simulationName === 'magnet') {
         document.getElementById('softBloomIntensityValue').value = softBloomIntensity + '%';
         dom.saveSmoothImage.checked = settings.smoothing.export;
         document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
-        brushSize = settings.brush.size;
+        if (!startup) brushSize = settings.brush.size;
         document.getElementById('brushSizeSlider').value = brushSize;
         document.getElementById('brushSizeValue').textContent = brushSize;
         setBrushMode(settings.brush.mode !== 'copy', settings.brush.mode === 'continuous');
@@ -1932,7 +1932,7 @@ if (simulationName === 'magnet') {
         } };
       }
 
-      function importWorkspaceSettings(settings, identity = null) {
+      function importWorkspaceSettings(settings, identity = null, options = {}) {
         // The file has been fully validated before any state or preferences change.
         if (isMacroPlaying) throw new Error('Cannot import settings during macro playback');
         pauseLife();
@@ -1949,7 +1949,7 @@ if (simulationName === 'magnet') {
         setChiFlowCycle(settings.cycles.chiFlow, identity?.chiFlow.index ?? ['personal', 'ripples', 'nova'].indexOf(chiFlowMode),
             identity?.chiFlow.sources ?? sources(settings.cycles.chiFlow, C.CHI_FLOW_PRESETS),
             identity?.chiFlow.yoursRules ?? settings.cycles.chiFlow[0]);
-        applyWorkspacePreferences(settings);
+        applyWorkspacePreferences(settings, options);
         const storedStartup = persistStartup(startupSettings);
         const storedInit = persistSimInit(simulationInitSettings);
         const storedSort = persistSortCycle(sortCycleMethods);
@@ -4483,13 +4483,13 @@ updateBrightnessEvoButtonUI();
         updateLayout();
         updateAllUIText();
         const importedPreferences = loadWorkspaceSettings();
-        if (importedPreferences) applyWorkspacePreferences(importedPreferences);
+        if (importedPreferences) applyWorkspacePreferences(importedPreferences, { startup: true });
         isSmoothRendering = loadSmoothRendering(importedPreferences?.smoothing.display ?? DEFAULT_SMOOTH_RENDERING);
         document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
         renderToScreen(null);
         settingsProfiles = initializeProfileControls({
             capture: captureProfileSettings,
-            apply: snapshot => importWorkspaceSettings(snapshot.settings, snapshot.identity),
+            apply: (snapshot, options) => importWorkspaceSettings(snapshot.settings, snapshot.identity, options),
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
         });

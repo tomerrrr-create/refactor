@@ -109,7 +109,7 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
     window.addEventListener('pagehide', captureNow);
     document.addEventListener('visibilitychange', () => { if (document.hidden) captureNow(); });
     busy = true;
-    try { apply(state.draft()); state.observe(capture()); }
+    try { apply(state.draft(), { startup: true }); state.observe(capture()); }
     catch { message('settings_load_error'); }
     finally { busy = false; }
     if (!state.storageError) state.persist();
