@@ -42,7 +42,7 @@ Changing the sorting method remaps tile indices and the selected brush color to 
 
 Hold the brush-mode button for 600 ms to open a drawing-only surface. It starts with a black 249 × 249 board, no separators, Ancient 264 colors, and a one-cell rainbow brush. Taps and drags paint immediately, including multiple fingers; holding the board does not clear the brush or open settings. Only the board and its black surroundings are visible.
 
-Exit by holding one pointer still outside the board for five seconds. Releasing early, moving onto the board, a second pointer, or losing focus cancels that exit gesture. The exit release does not activate the controls underneath. The normal artwork, selected profile, settings, undo history and action recipe stay unchanged; baby drawings are temporary and start blank on each entry.
+Exit with a normal long press (600 ms) outside the board. Releasing early, moving onto the board, a second pointer, or losing focus cancels that exit gesture. The exit release does not activate the controls underneath. The normal artwork, selected profile, settings, undo history and action recipe stay unchanged; baby drawings are temporary and start blank on each entry.
 
 ### Evolutions, play and cycles
 

@@ -1,5 +1,5 @@
 export const BABY_GRID_SIZE = 249;
-export const BABY_EXIT_HOLD_MS = 5000;
+export const BABY_EXIT_HOLD_MS = 600;
 
 // A one-cell brush with interpolation so fast finger movements leave no gaps.
 export function paintBabyStroke(ctx, from, to, colors, random = Math.random) {
