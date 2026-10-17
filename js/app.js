@@ -3382,7 +3382,7 @@ function getHistorySettings(state) {
 
 function validateHistorySettings(settings) {
     if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
-    if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 300 ||
+    if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 327 ||
         !Number.isInteger(settings.activePaletteIndex) || settings.activePaletteIndex < 0 ||
         !Number.isFinite(settings.separatorPx) || settings.separatorPx < 0 ||
         typeof settings.currentSortMethod !== 'string') {

@@ -89,7 +89,7 @@ test('cancelled simulation has no PLAY, PAUSE or stranded generation waits', () 
 });
 
 test('history settings never read or serialize tiles, regardless of board size', () => {
-    for (const n of [7, 249, 300]) {
+    for (const n of [7, 249, 300, 327]) {
         const state = { n, activePaletteIndex: 3, separatorPx: 2, currentSortMethod: 'reversed',
             get tiles() { throw new Error('History logging must not access tiles'); } };
         const settings = context.getHistorySettings(state);

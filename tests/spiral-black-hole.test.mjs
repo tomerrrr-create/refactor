@@ -45,7 +45,7 @@ function settle(board, n) {
     assert.fail(`Did not converge for ${n} x ${n}`);
 }
 
-for (const n of [1, 2, 3, 16, 31, 64, 100, 300]) {
+for (const n of [1, 2, 3, 16, 31, 64, 100, 300, 327]) {
     test(`converges to circular shells and preserves every tile: ${n} x ${n}`, () => {
         const board = boardFor(n, n >= 64 ? 264 : 23);
         const tiles = [...board];

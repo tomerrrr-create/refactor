@@ -483,7 +483,7 @@ function openTuringSettingsModal() {
 function refreshResizeSteps() {
     const value = Number(app.dom.resizeInput.value);
     document.getElementById('btnResizeValueDown').disabled = app.dom.resizeInput.value !== '' && value <= 1;
-    document.getElementById('btnResizeValueUp').disabled = app.dom.resizeInput.value !== '' && value >= 300;
+    document.getElementById('btnResizeValueUp').disabled = app.dom.resizeInput.value !== '' && value >= 327;
 }
 
 function openResizeModal() {
@@ -507,7 +507,7 @@ function openAdvancedColorMappingModal() {
 
 function handleConfirmResize() {
     let newSize = parseInt(app.dom.resizeInput.value, 10);
-    if (isNaN(newSize) || newSize < 1 || newSize > 300) {
+    if (isNaN(newSize) || newSize < 1 || newSize > 327) {
         app.dom.resizeInput.style.borderColor = 'red';
         setTimeout(() => { app.dom.resizeInput.style.borderColor = ''; }, 1000);
         return;
@@ -1370,7 +1370,7 @@ export function initializeModals(appContext) {
     for (const [id, delta] of [['btnResizeValueDown', -1], ['btnResizeValueUp', 1]]) {
         document.getElementById(id).addEventListener('click', () => {
             const value = parseInt(app.dom.resizeInput.value, 10);
-            app.dom.resizeInput.value = Math.max(1, Math.min(300, (Number.isFinite(value) ? value : app.getN()) + delta));
+            app.dom.resizeInput.value = Math.max(1, Math.min(327, (Number.isFinite(value) ? value : app.getN()) + delta));
             app.dom.resizeInput.style.borderColor = '';
             refreshResizeSteps();
         });

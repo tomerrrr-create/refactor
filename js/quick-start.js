@@ -1,3 +1,4 @@
+import { PALETTES } from './data/palettes.js';
 import { createGuideRipples } from './guide-ripples.js';
 import { getCurrentLang, onLanguageChange } from './i18n.js';
 const COPY = {
@@ -307,10 +308,10 @@ const COPY = {
   }
 };
 const WELCOME = {
-  en: ['Before we begin,', 'follow your intuition', 'Let’s begin', 'Touch to create golden ripples'],
-  he: ['לפני שמתחילים,', 'הולכים עם האינטואיציה', 'מתחילים', 'געו ליצירת אדוות זהובות'],
-  ru: ['Прежде чем начать,', 'доверьтесь интуиции', 'Начнём', 'Коснитесь, чтобы создать золотые волны'],
-  nl: ['Voor we beginnen,', 'volg je intuïtie', 'Laten we beginnen', 'Raak aan om gouden golven te maken']
+  en: ['Before we begin,', 'follow your intuition', 'Touch to create golden ripples'],
+  he: ['לפני שמתחילים,', 'הולכים עם האינטואיציה', 'געו ליצירת אדוות זהובות'],
+  ru: ['Прежде чем начать,', 'доверьтесь интуиции', 'Коснитесь, чтобы создать золотые волны'],
+  nl: ['Voor we beginnen,', 'volg je intuïtie', 'Raak aan om gouden golven te maken']
 };
 export function initializeQuickStart() {
   const dialog = document.getElementById('quickStartDialog');
@@ -320,9 +321,27 @@ export function initializeQuickStart() {
   const back = dialog.querySelector('[data-guide-back]'), next = dialog.querySelector('[data-guide-next]');
   const close = dialog.querySelector('[data-guide-close]'), panel = dialog.querySelector('[data-guide-slide]');
   const welcome = dialog.querySelector('[data-guide-welcome]'), content = dialog.querySelector('[data-guide-content]');
-  const tile = dialog.querySelector('[data-guide-tile]'), begin = dialog.querySelector('[data-guide-begin]');
+  const tile = dialog.querySelector('[data-guide-tile]');
   const ripples = createGuideRipples(dialog.querySelector('[data-guide-canvas]'));
-  let welcoming = true, touches = 0;
+  let welcoming = true, touches = 0, transition = null;
+  function cancelTransition() {
+    transition?.cancel();
+    transition = null;
+  }
+  async function enterGuide() {
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reducedMotion) {
+      transition = dialog.animate([{opacity:1}, {opacity:0}], {duration:300, fill:'forwards'});
+      try { await transition.finished; } catch { return; }
+    }
+    if (!dialog.open) return;
+    welcoming = false;
+    ripples.stop();
+    showPage();
+    cancelTransition();
+    next.focus({preventScroll:true});
+    if (!reducedMotion) transition = dialog.animate([{opacity:0}, {opacity:1}], {duration:220});
+  }
   function showPage() {
     welcome.hidden = !welcoming; content.hidden = welcoming;
     dialog.classList.toggle('is-welcome', welcoming);
@@ -333,15 +352,25 @@ export function initializeQuickStart() {
     if (welcoming) requestAnimationFrame(() => { if (dialog.open && welcoming) ripples.draw(); });
   }
   tile.addEventListener('click', event => {
-    if (!welcoming || !dialog.open) return;
+    if (!welcoming || !dialog.open || touches >= 3) return;
     touches++;
-    if (touches === 2) begin.hidden = false;
     const r = tile.getBoundingClientRect();
     ripples.burst(event.detail ? Math.max(0, Math.min(1, (event.clientX - r.left) / r.width)) : .5,
       event.detail ? Math.max(0, Math.min(1, (event.clientY - r.top) / r.height)) : .5);
+    if (touches === 3) enterGuide();
   });
-  begin.addEventListener('click', () => { if (touches < 2) return; welcoming = false; ripples.stop(); showPage(); next.focus({preventScroll:true}); });
   const entries = [...document.querySelectorAll('[data-open-guide]')];
+  function paletteSymbol(name) {
+    const template = document.createElement('template');
+    template.innerHTML = PALETTES.find(palette => palette.originalName === name).iconHTML;
+    const svg = template.content.querySelector('svg');
+    svg.querySelectorAll('text').forEach(text => {
+      if (/^(HD|HQ)$/.test(text.textContent.trim())) text.remove();
+    });
+    return svg;
+  }
+  const openingIcon = paletteSymbol('Golden Midnight Extended');
+  const paletteFallback = paletteSymbol('Ancient 264');
   const icons = ['btnPalette','btnPalette','btnColorPicker','btnSymmetry','btnResizeUp','btnToggleSimMode','btnGameOfLife','btnSandpile','btnGravitationalSort','btnContour','btnCycleSort','btnSave','btnMacroPlay'];
   let index = 0, trigger = null, gesture = null;
   const copy = () => COPY[getCurrentLang()] || COPY.en;
@@ -351,8 +380,8 @@ export function initializeQuickStart() {
   });
   function render() {
     const w = WELCOME[getCurrentLang()] || WELCOME.en;
-    ['[data-guide-before]', '[data-guide-intuition]', '[data-guide-begin]'].forEach((selector, i) => dialog.querySelector(selector).textContent = w[i]);
-    tile.setAttribute('aria-label', w[3]);
+    ['[data-guide-before]', '[data-guide-intuition]'].forEach((selector, i) => dialog.querySelector(selector).textContent = w[i]);
+    tile.setAttribute('aria-label', w[2]);
     const c = copy(); dots.setAttribute('aria-label', c.entry); dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
     dialog.querySelector('[data-guide-label]').textContent = c.label;
     [title.textContent, body.textContent, tip.textContent] = c.slides[index];
@@ -361,19 +390,20 @@ export function initializeQuickStart() {
     next.textContent = index === copy().slides.length - 1 ? c.done : c.next; close.setAttribute('aria-label', c.close);
     buttons.forEach((b,i) => { b.setAttribute('aria-label', `${c.slide} ${i+1}: ${c.slides[i][0]}`); b.setAttribute('aria-current', i === index ? 'step' : 'false'); });
     visual.replaceChildren();
-    const icon = document.getElementById(icons[index])?.querySelector('svg');
+    const icon = index === 0 ? openingIcon
+      : document.getElementById(icons[index])?.querySelector('svg') || (index === 1 ? paletteFallback : null);
     if (icon) { const clone = icon.cloneNode(true); clone.removeAttribute('id'); clone.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); visual.append(clone); }
     else visual.textContent = '◇';
     panel.getAnimations().forEach(a => a.cancel());
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) panel.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}], {duration:220,easing:'ease-out'});
   }
   function move(delta) { index = Math.max(0, Math.min(copy().slides.length - 1, index + delta)); render(); }
-  entries.forEach(button => button.addEventListener('click', () => { trigger = button; index = 0; welcoming = true; touches = 0; begin.hidden = true; ripples.stop(); render(); showPage(); dialog.showModal(); tile.focus({preventScroll:true}); }));
+  entries.forEach(button => button.addEventListener('click', () => { trigger = button; index = 0; welcoming = true; touches = 0; cancelTransition(); ripples.stop(); render(); showPage(); dialog.showModal(); tile.focus({preventScroll:true}); }));
   function refresh() { entries.filter(b => !b.hasAttribute('data-debug-text')).forEach(b => b.textContent = copy().entry); if (dialog.open) render(); }
   back.addEventListener('click', () => move(-1));
   next.addEventListener('click', () => index === copy().slides.length - 1 ? dialog.close() : move(1));
   close.addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => { gesture = null; ripples.stop(); trigger?.focus({preventScroll:true}); });
+  dialog.addEventListener('close', () => { gesture = null; cancelTransition(); ripples.stop(); trigger?.focus({preventScroll:true}); });
   dialog.addEventListener('click', e => { if (e.target !== dialog) return; const r=dialog.getBoundingClientRect(); if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom) dialog.close(); });
   dialog.addEventListener('keydown', e => { if(!welcoming && (e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();move((e.key==='ArrowRight'?1:-1)*(dialog.dir==='rtl'?-1:1));} });
   panel.addEventListener('pointerdown', e => { if(!e.isPrimary || e.button!==0) return; gesture={id:e.pointerId,x:e.clientX,y:e.clientY}; panel.setPointerCapture(e.pointerId); });
