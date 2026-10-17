@@ -1,3 +1,4 @@
+import { createIslandsSession } from '../js/simulations/islands.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -7,11 +8,11 @@ function harness(){
  const classes=new Set(), islandClasses=new Set(), icons=new Map();
  for(const id of ['iconBreatheSolo','iconBreatheGroup','iconBreatheRandomCell','iconBreatheRandomColor'])icons.set(id,{style:{}});
  const button = set => ({classList:{remove:(...names)=>names.forEach(n=>set.delete(n)),add:n=>set.add(n),toggle(n,on){if(on)set.add(n);else set.delete(n);}},setAttribute(){}});
- const c=vm.createContext({breatheEvoMode:'off',armedSimulation:null,isLifePlaying:false,
+ const c=vm.createContext({breatheEvoMode:'off',armedSimulation:null,isLifePlaying:false,islandsSession:null,createIslandsSession,isExecutingMacroCommand:false,isMacroLoaded:false,starts:0,logIslandsSessionStart(){c.starts++;},
   dom:{btnShowBreatheMenu:button(classes),btnIslands:button(islandClasses)},
   document:{getElementById:id=>icons.get(id)},getText:key=>key,
   pauseLife(){c.isLifePlaying=false;c.pauses++;},pauses:0,
-  armSimulation(sim){c.armedSimulation=sim;c.breatheEvoMode=sim==='breathe'?'solo':'off';}
+  armSimulation(sim){c.armedSimulation=sim;if(sim==='islands')c.islandsSession=createIslandsSession(123);c.breatheEvoMode=sim==='breathe'?'solo':'off';}
  });
  vm.runInContext(source.slice(source.indexOf('function updateIslandsButtonUI('),source.indexOf('// --- END: New Breathe Functions ---')),c);
  return {c,classes,islandClasses,icons};
@@ -40,4 +41,15 @@ test('macro-selected Islands highlights only its independent control and leaves 
  assert.equal(icons.get('iconBreatheSolo').style.display,'block');
  c.armedSimulation='erosion';c.updateBreatheEvoButtonUI();assert(!islandClasses.has('simulation-active'));
  c.cycleBreatheEvoMode();assert.equal(c.armedSimulation,'breathe');
+});
+
+test('Islands cycles classic, proximity, off and pauses its own running simulation',()=>{
+    const {c,islandClasses}=harness();
+    c.cycleIslandsMode();assert.equal(c.armedSimulation,'islands');assert.equal(c.islandsSession.islandsVersion,1);
+    c.isLifePlaying=true;c.cycleIslandsMode();assert.equal(c.pauses,1);assert.equal(c.islandsSession.mode,'proximity');
+    assert.equal(c.starts,1);assert(islandClasses.has('mode-proximity'));
+    assert.equal(c.dom.btnIslands.title,'tooltip_islands_proximity');
+    c.cycleIslandsMode();assert.equal(c.armedSimulation,null);assert(!islandClasses.has('mode-proximity'));
+    c.cycleIslandsMode();assert.equal(c.islandsSession.islandsVersion,1);
+    c.armedSimulation='erosion';c.isLifePlaying=true;c.cycleIslandsMode();assert.equal(c.armedSimulation,'erosion');
 });

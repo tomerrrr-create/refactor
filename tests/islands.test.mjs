@@ -54,3 +54,44 @@ test('327-square Islands recording restores fully and rejects oversized boards',
         tiles.map(({k, v, isGold}) => ({k, v, isGold})));
     assert.throws(() => restoreIslandsBoard(328, [[328 * 328, 0, 0, 0]]), /Invalid Islands board/);
 });
+
+test('proximity restores seeded evolution without changing gold or allocating new cells',()=>{
+    const n=21, tiles=board(n), session=createIslandsSession(123,'proximity'), palette=Array(23);
+    const context={n,currentBoardState:tiles,currentPalette:palette},first=tiles[0];
+    for(let i=0;i<50;i++)runIslandsGeneration(context,session);
+    const restored=restoreIslandsSession(JSON.parse(JSON.stringify(session))), copy=structuredClone(tiles);
+    for(let i=0;i<50;i++){
+        runIslandsGeneration(context,session);
+        runIslandsGeneration({...context,currentBoardState:copy},restored);
+    }
+    assert.deepEqual(tiles,copy);assert.deepEqual(session,restored);assert.equal(tiles[0],first);
+    assert.equal(tiles[220].isGold,true);assert.equal(tiles[220].k,13);
+    assert.throws(()=>runIslandsGeneration({n,currentBoardState:tiles},session),/palette/);
+});
+
+test('rank proximity favors near colors and uses the full palette span',()=>{
+    function moved(distance,length){
+        let changes=0;
+        for(let seed=0;seed<4000;seed++){
+            const tiles=[{k:0},{k:distance},{k:distance},{k:distance}];
+            runIslandsGeneration({n:2,currentBoardState:tiles,currentPalette:Array(length)},createIslandsSession(seed,'proximity'));
+            if(tiles[0].k!==0)changes++;
+        }
+        return changes;
+    }
+    const near=moved(1,264),far=moved(263,264);
+    assert(near>far*3);
+    assert.equal(moved(1,24),moved(2,47)); // Same relative distance, exact same seeded choices.
+});
+
+test('proximity follows displayed ranks after switching to a shorter palette',()=>{
+    const n=21,palette=Array(23),a=board(n),b=board(n);
+    for(const tile of b){tile.k+=23*4;tile.v=tile.k;}
+    const sa=createIslandsSession(73,'proximity'),sb=createIslandsSession(73,'proximity');
+    for(let i=0;i<40;i++){
+        runIslandsGeneration({n,currentBoardState:a,currentPalette:palette},sa);
+        runIslandsGeneration({n,currentBoardState:b,currentPalette:palette},sb);
+    }
+    assert.deepEqual(a.map(t=>t.k%23),b.map(t=>t.k%23));
+    assert.deepEqual(sa,sb);
+});

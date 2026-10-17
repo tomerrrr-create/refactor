@@ -7,7 +7,7 @@ import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, rest
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 function harness(seed=123){
     const context=vm.createContext({
-        restoreIslandsSession, runIslandsGeneration, islandsSession:createIslandsSession(seed),
+        restoreIslandsSession, runIslandsGeneration, updateIslandsButtonUI(){}, islandsSession:createIslandsSession(seed),
         armedSimulation:'islands', isLifePlaying:true, isMacroPlaying:true,
         n:21, boardState:Array.from({length:441},(_,i)=>({k:i%23,v:i%23,isGold:i===220})),
         palette:()=>Array(23), gameOfLifeRules:{}, gravitationalSortRules:{}, erosionRules:{}, dlaState:null,dlaRules:{},contourRules:{},
@@ -76,7 +76,7 @@ test('new seed-only recipe imports without board data and rejects unknown record
 test('new replay keeps existing board while old replay still restores its snapshot',()=>{
     const original=[{k:7,v:7,isGold:false}], logs=[];
     const c=vm.createContext({restoreIslandsSession,restoreIslandsBoard,armedSimulation:'islands',isLifePlaying:false,
-        boardState:original,islandsSession:null,isExecutingMacroCommand:false,pendingMacroPalette:null,
+        boardState:original,islandsSession:null,updateIslandsButtonUI(){},isExecutingMacroCommand:false,pendingMacroPalette:null,
         C:{PALETTES:[{}]},window:{logArtEvent:(...args)=>logs.push(args)},renderToScreen(){},
         applyState(state){c.boardState=state.tiles;},console});
     for(const [start,end] of [['function getHistorySettings(','function toggleMacroFullScreen('],['function executeMacroAction(','async function initializeApp(']])
@@ -85,4 +85,32 @@ test('new replay keeps existing board while old replay still restores its snapsh
     assert.equal(c.boardState,original);assert.equal(c.islandsSession.seed,7);
     c.executeMacroAction({eventName:'ISLANDS_INIT',details:JSON.stringify({...createIslandsSession(9),n:1,activePaletteIndex:0,separatorPx:0,currentSortMethod:'luminance',board:[[1,3,3,0]]})});
     assert.equal(c.boardState[0].k,3);assert.equal(c.islandsSession.seed,9);
+});
+
+for (const mode of ['classic', 'proximity']) {
+    test(`${mode} replays exact generations and edits at different frame rates`, () => {
+        let expected;
+        for (const frameMs of [8, 33, 100]) {
+            const c = harness();
+            c.applyMacroRules(rules(createIslandsSession(42, mode)));
+            c.macroQueue = [{eventName:'DRAW_STROKE', details:'[{"i":0,"k":7}]', isGenBased:true, targetGen:3},
+                {eventName:'PAUSE',details:'---',isGenBased:true,targetGen:25}];
+            for (let time=0; c.isLifePlaying && time<10000; time+=frameMs) c.gameLoop();
+            assert.equal(c.currentGenerationCount,25);
+            if (expected) assert.deepEqual(c.boardState,expected); else expected=structuredClone(c.boardState);
+            const snapshot=structuredClone(c.islandsSession), tiles=structuredClone(c.boardState);
+            c.isLifePlaying=true;c.gameLoop();const next=structuredClone(c.boardState);
+            c.boardState=tiles;c.applyMacroRules(rules(snapshot));c.gameLoop();
+            assert.deepEqual(c.boardState,next);
+        }
+    });
+}
+
+test('proximity seed metadata is accepted by the actual recipe parser',()=>{
+    const c=vm.createContext({restoreIslandsSession,restoreIslandsBoard});
+    vm.runInContext(source.slice(source.indexOf('function getHistorySettings('),source.indexOf('function toggleMacroFullScreen(')),c);
+    const session=createIslandsSession(7,'proximity');
+    const recipe=`[12:00:00.000] ISLANDS_INIT -> ${JSON.stringify({recordingVersion:2,...session})}\n[12:00:00.001] PLAY -> ${rules(session)}\n[12:00:00.002] [GEN:10] PAUSE -> ---`;
+    assert.equal(c.parseMacroText(recipe).length,3);
+    assert.throws(()=>c.parseMacroText(recipe.replaceAll('"mode":"proximity"','"mode":"invalid"')),/Unsupported/);
 });

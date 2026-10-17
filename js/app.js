@@ -477,6 +477,7 @@ k: tileState.k,
         if (state.islandsState) {
             if (armedSimulation !== 'islands') armSimulation('islands', { recordIslandsStart: false });
             islandsSession = restoreIslandsSession(state.islandsState);
+            updateIslandsButtonUI();
         }
         applySeparator();
       }
@@ -3114,9 +3115,26 @@ function cycleGravitationalSortMode() {
 function updateIslandsButtonUI() {
     const active = armedSimulation === 'islands';
     dom.btnIslands.classList.toggle('simulation-active', active);
-    dom.btnIslands.title = getText('tooltip_islands');
+    const proximity = active && islandsSession?.mode === 'proximity';
+    dom.btnIslands.classList.toggle('mode-proximity', proximity);
+    dom.btnIslands.title = getText(proximity ? 'tooltip_islands_proximity' : 'tooltip_islands');
     dom.btnIslands.setAttribute('aria-label', dom.btnIslands.title);
     dom.btnIslands.setAttribute('aria-pressed', String(active));
+}
+
+function cycleIslandsMode() {
+    if (isLifePlaying && armedSimulation !== 'islands') return;
+    if (isLifePlaying) pauseLife();
+    if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
+    if (armedSimulation !== 'islands') {
+        armSimulation('islands');
+    } else if (islandsSession?.mode === 'proximity') {
+        armSimulation(null);
+    } else {
+        islandsSession = createIslandsSession(undefined, 'proximity');
+        if (!isExecutingMacroCommand) logIslandsSessionStart();
+    }
+    updateIslandsButtonUI();
 }
 
 function updateBreatheEvoButtonUI() {
@@ -3396,6 +3414,7 @@ function applyHistorySettings(settings) {
         const restored = restoreIslandsSession(settings.islandsState);
         if (armedSimulation !== 'islands') armSimulation('islands', { recordIslandsStart: false });
         islandsSession = restored;
+        updateIslandsButtonUI();
     }
     let changed = false;
     if (currentSortMethod !== settings.currentSortMethod) {
@@ -3860,6 +3879,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
     if (sim === 'islands') {
         islandsSession = restoredIslands;
+        updateIslandsButtonUI();
         return sim;
     }
 
@@ -4002,6 +4022,7 @@ function executeMacroAction(action) {
             renderToScreen(null);
         }
         islandsSession = session;
+        updateIslandsButtonUI();
     }
     else if (action.eventName === 'HISTORY_SETTINGS') {
         if (isLifePlaying) pauseLife();
@@ -4622,7 +4643,7 @@ bindPickerGestures(dom.btnColorPicker, {
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, null],
             [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, null],
-            [dom.btnIslands, 'islands', () => armSimulation('islands'), null],
+            [dom.btnIslands, 'islands', cycleIslandsMode, null],
             [dom.btnErosion, 'erosion', cycleErosionMode, modals.openErosionSettingsModal],
             [dom.btnDla, 'dla', cycleDlaMode, null]
         ].filter(([button]) => button);
