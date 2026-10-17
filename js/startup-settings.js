@@ -20,7 +20,7 @@ export function normalizeStartup(settings) {
         fill: ['random', 'dark', 'light', 'seed'],
         brushSize: [1, 3, 5, 7, 9, 11, 13, 15],
         brushMode: ['paint', 'continuous', 'copy'],
-        brushColor: ['none', 'darkest', 'lightest', 'rainbow'],
+        brushColor: ['first', 'none', 'darkest', 'lightest', 'rainbow'],
         symmetry: SYMMETRY_MODES, interfaceMode: ['creative', 'simulation']
     };
     return Object.fromEntries(Object.entries(allowed).map(([key, options]) =>

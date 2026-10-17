@@ -1534,7 +1534,7 @@ export function initializeModals(appContext) {
     initForm.addEventListener('submit', (event) => {
         event.preventDefault();
         const persisted = app.saveSimulationInit({
-            boardSize: Number(initBoard.value), brushSize: Number(initBrush.value)
+            ...app.getSimulationInit(), boardSize: Number(initBoard.value), brushSize: Number(initBrush.value)
         });
         initStatus.textContent = app.getText(persisted ? 'init_saved' : 'init_saved_session');
     });
@@ -1579,7 +1579,7 @@ export function initializeModals(appContext) {
     addStartupOptions('startupSort', app.SORT_MODES.map(mode => [mode.method, '', 'startup_sort_' + mode.method]));
     addStartupOptions('startupFill', ['random', 'dark', 'light', 'seed'].map(value => [value, '', 'startup_fill_' + value]));
     addStartupOptions('startupBrushMode', ['paint', 'continuous', 'copy'].map(value => [value, '', 'brushMode_' + value]));
-    addStartupOptions('startupBrushColor', ['none', 'darkest', 'lightest', 'rainbow'].map(value => [value, '', 'startup_color_' + value]));
+    addStartupOptions('startupBrushColor', ['none', 'first', 'darkest', 'lightest', 'rainbow'].map(value => [value, '', 'startup_color_' + value]));
     addStartupOptions('startupSymmetry', app.C.SYMMETRY_MODES.map(value => [value, '', 'symmetry_' + value]));
     addStartupOptions('startupInterface', ['creative', 'simulation'].map(value => [value, '', 'startup_mode_' + value]));
     function fillStartupForm(settings) {

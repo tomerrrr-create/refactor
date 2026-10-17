@@ -59,7 +59,7 @@ test('new Islands start is constant-size seed metadata and never reads or encode
     const c=vm.createContext({islandsSession:createIslandsSession(123),historyRecipeCursor:0,artRecipeLog:[]});
     Object.defineProperty(c,'boardState',{get(){throw Error('must not read board');}});
     c.window={logArtEvent:(event,details)=>c.artRecipeLog.push({event,details})};
-    vm.runInContext(source.slice(source.indexOf('function logIslandsSessionStart('),source.indexOf('// The experimental mode stays outside')),c);
+    vm.runInContext(source.slice(source.indexOf('function logIslandsSessionStart('),source.indexOf('// --- NEW: Gravitational Sort UI and Cycling ---')),c);
     c.logIslandsSessionStart();
     assert.deepEqual(JSON.parse(c.artRecipeLog[0].details),{recordingVersion:2,...createIslandsSession(123)});
     assert(c.artRecipeLog[0].details.length<150);assert.equal(c.historyRecipeCursor,1);

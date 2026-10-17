@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProfileState, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
+import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, loadProfileStartup, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
-const initial = () => ({ settings: defaultWorkspaceSettings() });
+const initial = () => { const settings = defaultWorkspaceSettings(); settings.simulationInit.brushSize = 1; settings.startup.separatorPx = 5; settings.rules.erosion.erosionStages = { 'channels-solid': 0, channels: 0 }; return { settings: { ...settings, simulationTheme: 'blue' } }; };
 const storage = () => {
     const data = new Map();
     return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
@@ -113,4 +113,217 @@ test('failed replay completion resumes normal profile capture without accepting 
         const edited=change(initial(),s=>{s.brush.size=5;});
         assert.equal(state.capture(edited),true);assert.equal(state.draft().settings.brush.size,5);
     }
+});
+
+test('factory profiles keep unspecified settings and have distinct startup, sort, theme and Chi Flow defaults', () => {
+    const snapshots = defaultProfileSnapshots(initial());
+    const [one, two, three] = snapshots.map(snapshot => snapshot.settings);
+    assert.deepEqual(one, initial().settings);
+    assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
+    assert.equal(two.startup.fill, 'random');
+    assert.equal(three.startup.paletteName, 'Ancient 264');
+    assert.equal(three.startup.fill, 'random');
+    assert.equal(three.startup.boardSize, 15);
+    assert.equal(three.startup.separatorPx, 0);
+    assert.equal(three.startup.brushSize, 1);
+    assert.equal(three.brush.size, 1);
+    assert.deepEqual(snapshots.map(s => s.settings.simulationTheme), ['blue', 'gold', 'teal']);
+    for (const settings of [two, three]) {
+        assert.equal(settings.startup.interfaceMode, 'simulation');
+        assert.deepEqual(settings.cycles.chiFlow.map(r => r.flow), [[1], [3, 5, 7], [4, 5, 6, 7, 8]]);
+        assert(settings.cycles.chiFlow.every(r => r.reachPercent === 400));
+        assert.deepEqual({ ...settings.rules, erosion: one.rules.erosion }, one.rules);
+        assert.equal(settings.simulationInit.boardSize, one.simulationInit.boardSize);
+        assert.deepEqual(settings.smoothing, one.smoothing);
+        assert.deepEqual(settings.cycles.gameOfLife.slice(1), one.cycles.gameOfLife.slice(1));
+        if (settings === two) assert.deepEqual(settings.cycles.gameOfLife[0], one.cycles.gameOfLife[0]);
+    }
+    assert.deepEqual(three.sortCycle, one.sortCycle);
+    assert.deepEqual(two.sortCycle, ['luminance', 'dark-rainbow', 'reversed', 'center-out', 'rainbow-fold', 'zig-zag']);
+});
+
+test('legacy untouched copies receive new defaults once, while edited profiles and drafts survive', () => {
+    const disk = storage();
+    const old = initial(); delete old.settings.simulationTheme;
+    const legacy = { version: 1, selected: 1, profiles: [0, 1, 2].map(() => ({ saved: structuredClone(old), draft: structuredClone(old) })) };
+    legacy.profiles[2].draft.settings.brush.size = 9;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify(legacy));
+    const state = createProfileState(initial(), disk);
+    assert.equal(state.selected, 1);
+    assert.equal(state.draft(1).settings.startup.paletteName, 'Golden Midnight Extended');
+    assert.equal(state.dirty(1), false);
+    assert.equal(state.draft(2).settings.brush.size, 9);
+    assert.equal(state.dirty(2), true);
+    assert.equal(state.draft(2).settings.simulationTheme, 'teal');
+    state.persist();
+    const reopened = createProfileState(initial(), disk);
+    assert.deepEqual(reopened.draft(2), state.draft(2));
+});
+
+test('profile themes survive switching, saving and reopening independently', () => {
+    const disk = storage();
+    const state = createProfileState(initial(), disk);
+    for (let i = 0; i < 3; i++) {
+        state.select(i); state.observe(state.draft());
+        state.capture(change(state.draft(), s => { s.simulationTheme = ['teal', 'blue', 'gold'][i]; }));
+        state.save();
+    }
+    const reopened = createProfileState(initial(), disk);
+    assert.deepEqual([0, 1, 2].map(i => reopened.draft(i).settings.simulationTheme), ['teal', 'blue', 'gold']);
+    assert.deepEqual([0, 1, 2].map(i => reopened.dirty(i)), [false, false, false]);
+});
+
+test('factory reset restores the selected profile independently of personal saved settings', () => {
+    const disk = storage();
+    const custom = change(initial(), s => {
+        s.brush.size = 9;
+        s.nudgeIntervalMs = 20;
+        s.smoothing.display = false;
+    });
+    // Existing personal baselines must never become factory reset defaults.
+    const state = createProfileState(custom, disk);
+    for (const index of [1, 2, 0]) {
+        const otherProfiles = [0, 1, 2].map(i => state.draft(i));
+        state.select(index);
+        state.replace(factoryProfileSnapshot(index));
+        assert.equal(state.dirty(index), false);
+        assert.equal(state.draft().settings.brush.size, 1);
+        assert.equal(state.draft().settings.nudgeIntervalMs, 100);
+        assert.equal(state.draft().settings.smoothing.display, true);
+        for (const other of [0, 1, 2].filter(i => i !== index)) assert.deepEqual(state.draft(other), otherProfiles[other]);
+        assert.deepEqual(createProfileState(initial(), disk).draft(), factoryProfileSnapshot(index));
+    }
+    assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.simulationTheme), ['blue', 'gold', 'teal']);
+    assert.equal(factoryProfileSnapshot(1).settings.startup.paletteName, 'Golden Midnight Extended');
+    assert.equal(factoryProfileSnapshot(2).settings.startup.paletteName, 'Ancient 264');
+    assert.throws(() => factoryProfileSnapshot(3));
+});
+
+test('profile initialization and opening use the requested brushes, color meanings and symmetry', () => {
+    const snapshots = [0, 1, 2].map(factoryProfileSnapshot);
+    assert.deepEqual(snapshots.map(s => s.settings.simulationInit.brushSize), [1, 11, 1]);
+    assert.deepEqual(snapshots.map(s => s.settings.startup.brushSize), [1, 1, 1]);
+    assert.deepEqual(snapshots.map(s => s.settings.brush.size), [1, 1, 1]);
+    const second = snapshots[1].settings;
+    assert.equal(second.simulationInit.symmetry, 'off');
+    assert.equal(second.simulationInit.brushColor, 'first');
+    assert.equal(second.startup.brushColor, 'first');
+    assert.equal(second.brush.symmetry, 'off');
+    assert.equal(snapshots[2].settings.simulationInit.brushColor, 'rainbow');
+    assert.equal(snapshots[2].settings.startup.brushColor, 'lightest');
+});
+
+test('existing default brushes update once while saved personal sizes survive', () => {
+    const disk = storage();
+    const profiles = [0, 1, 2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));
+    for (const profile of profiles) for (const kind of ['saved', 'draft']) {
+        const settings = profile[kind].settings;
+        settings.simulationInit = { boardSize: 249, brushSize: 7 };
+        settings.startup.brushSize = 1; settings.startup.brushColor = 'none';
+        settings.brush.size = 1;
+    }
+    profiles[2].draft.settings.simulationInit.brushSize = 9;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 1, selected: 1, profiles }));
+    const state = createProfileState(initial(), disk);
+    assert.equal(state.draft(0).settings.simulationInit.brushSize, 1);
+    assert.equal(state.draft(1).settings.simulationInit.brushSize, 11);
+    assert.equal(state.draft(2).settings.simulationInit.brushSize, 9);
+    assert.equal(state.dirty(0), false); assert.equal(state.dirty(1), false); assert.equal(state.dirty(2), true);
+    state.persist();
+    assert.deepEqual(createProfileState(initial(), disk).draft(2), state.draft(2));
+});
+
+test('factory erosion defaults map UI stages I/I, III/IV and IV/V to both carving modes', () => {
+    assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.rules.erosion.erosionStages), [
+        { 'channels-solid': 0, channels: 0 },
+        { 'channels-solid': 2, channels: 3 },
+        { 'channels-solid': 3, channels: 4 }
+    ]);
+});
+
+test('erosion defaults migrate once and retain personal per-mode and legacy acceleration values', () => {
+    const disk = storage();
+    const profiles = [0, 1, 2].map(index => ({ saved: factoryProfileSnapshot(index), draft: factoryProfileSnapshot(index) }));
+    for (const profile of profiles) for (const kind of ['saved', 'draft']) delete profile[kind].settings.rules.erosion.erosionStages;
+    profiles[1].draft.settings.rules.erosion.erosionStages = { channels: 1 };
+    profiles[2].draft.settings.rules.erosion.erosionEvents = 7;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 2, selected: 1, profiles }));
+    const state = createProfileState(initial(), disk);
+    assert.deepEqual(state.draft(0).settings.rules.erosion.erosionStages, { 'channels-solid': 0, channels: 0 });
+    assert.deepEqual(state.draft(1).settings.rules.erosion.erosionStages, { 'channels-solid': 2, channels: 1 });
+    assert.equal(state.draft(2).settings.rules.erosion.erosionEvents, 7);
+    assert.equal(state.draft(2).settings.rules.erosion.erosionStages, undefined);
+    state.persist();
+    assert.deepEqual(createProfileState(initial(), disk).draft(1), state.draft(1));
+});
+
+test('startup resolves profile separators and board size before rendering, including old saved defaults', () => {
+    const disk = storage();
+    const profiles = [0, 1, 2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));
+    for (const profile of profiles) for (const kind of ['saved', 'draft']) {
+        profile[kind].settings.startup.separatorPx = 2;
+        profile[kind].settings.startup.boardSize = 7;
+    }
+    for (const selected of [0, 1, 2]) {
+        disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected, profiles }));
+        const startup = loadProfileStartup(initial().settings.startup, disk);
+        assert.equal(startup.separatorPx, [5, 2, 0][selected]);
+        assert.equal(startup.boardSize, [7, 11, 15][selected]);
+    }
+    profiles[1].draft.settings.startup.boardSize = 21;
+    profiles[1].draft.settings.startup.separatorPx = 3;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected: 1, profiles }));
+    const personal = loadProfileStartup(initial().settings.startup, disk);
+    assert.equal(personal.boardSize, 21); assert.equal(personal.separatorPx, 3);
+    assert.equal(defaultProfileSnapshots(initial())[2].settings.startup.separatorPx, 0);
+    assert.equal(factoryProfileSnapshot(0).settings.startup.separatorPx, 5);
+    assert.equal(factoryProfileSnapshot(1).settings.startup.separatorPx, 2);
+});
+
+test('profile 3 defaults use a random 15x15 board, rainbow hold and Paint 1 in the first Life slot', () => {
+    const profile = factoryProfileSnapshot(2);
+    assert.equal(profile.settings.startup.boardSize, 15);
+    assert.equal(profile.settings.startup.fill, 'random');
+    assert.equal(profile.settings.startup.separatorPx, 0);
+    assert.deepEqual(profile.settings.simulationInit, { boardSize: 249, brushSize: 1, brushColor: 'rainbow', symmetry: 'horizontal' });
+    assert.deepEqual(profile.settings.cycles.gameOfLife[0], { survival: [0,1,2,3,4,5,6,7,8], birth: [1,2,3,4,5,6,7,8] });
+    assert.equal(profile.identity.gameOfLife.index, 0);
+    assert.equal(profile.identity.gameOfLife.sources[0], 'btnGolPresetPaint2');
+    assert.deepEqual(profile.identity.gameOfLife.yoursRules, profile.settings.cycles.gameOfLife[0]);
+});
+
+test('profile 3 update preserves other profiles and explicit personal initialization choices', () => {
+    const disk = storage();
+    const profiles = [0, 1, 2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));
+    Object.assign(profiles[2].saved.settings.startup, { boardSize: 7, fill: 'dark', separatorPx: 2 });
+    Object.assign(profiles[2].saved.settings.simulationInit, { brushSize: 3, brushColor: 'lightest' });
+    delete profiles[2].saved.settings.simulationInit.symmetry;
+    Object.assign(profiles[2].draft.settings.simulationInit, { brushSize: 9, brushColor: 'first', symmetry: 'off' });
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 4, selected: 2, profiles }));
+    const state = createProfileState(initial(), disk);
+    assert.equal(state.draft(2).settings.simulationInit.brushSize, 9);
+    assert.equal(state.draft(2).settings.simulationInit.brushColor, 'first');
+    assert.equal(state.draft(2).settings.simulationInit.symmetry, 'off');
+    assert.deepEqual(state.draft(0), profiles[0].draft); assert.deepEqual(state.draft(1), profiles[1].draft);
+    state.persist(); const stored = JSON.parse(disk.getItem(PROFILE_STORAGE_KEY));
+    assert.equal(stored.profiles[2].saved.settings.startup.boardSize, 15);
+    assert.equal(stored.profiles[2].saved.settings.startup.separatorPx, 0);
+    assert.equal(stored.profiles[2].saved.settings.simulationInit.brushColor, 'rainbow');
+    assert.equal(stored.profiles[2].saved.settings.simulationInit.symmetry, 'horizontal');
+});
+
+test('opening brushes update to 1 without changing long-press sizes or personal overrides', () => {
+    const disk = storage();
+    const profiles = [0, 1, 2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));
+    for (const [i, oldSize] of [1, 11, 3].entries()) for (const kind of ['saved', 'draft']) {
+        profiles[i][kind].settings.startup.brushSize = oldSize;
+        profiles[i][kind].settings.brush.size = oldSize;
+    }
+    profiles[2].draft.settings.brush.size = 9;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 5, selected: 2, profiles }));
+    const state = createProfileState(initial(), disk);
+    assert.deepEqual([0, 1, 2].map(i => state.draft(i).settings.startup.brushSize), [1, 1, 1]);
+    assert.deepEqual([0, 1, 2].map(i => state.draft(i).settings.simulationInit.brushSize), [1, 11, 1]);
+    assert.equal(state.draft(2).settings.brush.size, 9);
+    assert.equal(loadProfileStartup(initial().settings.startup, disk).brushSize, 1);
 });

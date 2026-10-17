@@ -38,10 +38,18 @@ export function persistEvolutionCycle(key, slots) {
     try { localStorage.setItem(key, JSON.stringify(slots)); } catch { /* Session changes still work. */ }
 }
 
+// Magnetic Reach can vary without changing a Chi Flow preset's neighbor pattern.
+function matchesCyclePreset(preset, rules) {
+    if (JSON.stringify(preset) === JSON.stringify(rules)) return true;
+    if (!preset.awakening || !rules.awakening) return false;
+    const pattern = value => ({ awakening: value.awakening, flow: value.flow });
+    return JSON.stringify(pattern(preset)) === JSON.stringify(pattern(rules));
+}
+
 // Source identity only controls preset/Yours labels; playback still uses rule snapshots.
 export function inferCycleSources(slots, presets) {
     return slots.map((rules, index) => index === 0 ? 'yours'
-        : Object.entries(presets).find(([, preset]) => JSON.stringify(preset) === JSON.stringify(rules))?.[0] || 'custom-' + index);
+        : Object.entries(presets).find(([, preset]) => matchesCyclePreset(preset, rules))?.[0] || 'custom-' + index);
 }
 
 export function normalizeCycleSources(sources, slots, presets) {
@@ -49,7 +57,7 @@ export function normalizeCycleSources(sources, slots, presets) {
     return slots.map((rules, index) => {
         const source = sources?.[index];
         if (source === 'yours' || /^custom-[0-2]$/.test(source)) return source;
-        if (presets[source] && JSON.stringify(presets[source]) === JSON.stringify(rules)) return source;
+        if (presets[source] && matchesCyclePreset(presets[source], rules)) return source;
         return fallback[index];
     });
 }

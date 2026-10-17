@@ -1,19 +1,19 @@
-import { initializeSimulationTheme } from './simulation-theme.js';
+import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
-import { runIslandsPreview } from './simulations/islands-preview.js';
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
 import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
+import { loadProfileStartup } from './profile-state.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, isSmoothDisplayAvailable } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
 import { updateRainbowFrame } from './rainbow-frame.js';
-import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
+import { serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
 import { resolveChiReach } from './chi-reach.js';
 // js/app.js
 
@@ -326,7 +326,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let colorPickerPage = 0;
       let longPressTimer = null;
       let wasLongPress = false;
-      let startupSettings = loadStartup();
+      let startupSettings = loadProfileStartup(loadStartup());
       let simulationInitSettings = loadSimInit();
       let brushSize = 1; 
       let isLifePlaying = false;
@@ -1207,7 +1207,7 @@ case 'brightnessEvo':
     break;
 
             case 'islands': boardState = runIslandsGeneration(context, islandsSession); break;
-            case 'gravitationalSort': nextState = runGravityPreviewOrGeneration(context); boardState = nextState; break;
+            case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration(context); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
        case 'contour': 
                 nextState = Simulations.runContourGeneration(context); 
@@ -1342,7 +1342,7 @@ case 'brightnessEvo':
                     boardState = runIslandsGeneration(context, islandsSession);
                     break;
                 case 'gravitationalSort': 
-                    boardState = runGravityPreviewOrGeneration(context);
+                    boardState = Simulations.runGravitationalSortGeneration(context);
                     break;
                 case 'erosion': 
                     boardState = Simulations.runErosionGeneration(context); 
@@ -1873,6 +1873,7 @@ if (simulationName === 'magnet') {
       function getWorkspaceSettings() {
         return {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
+            simulationTheme: getSimulationTheme(),
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
             ...(separatorCycle.join() === DEFAULT_SEPARATOR_CYCLE.join() ? {} : { separatorCycle: [...separatorCycle] }),
             smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked,
@@ -1885,7 +1886,8 @@ if (simulationName === 'magnet') {
       }
 
       // Applies preferences only. No board, palette, sort, history or macro state is restored.
-      function applyWorkspacePreferences(settings) {
+      function applyWorkspacePreferences(settings, { startup = false } = {}) {
+        if (settings.simulationTheme) applySimulationTheme(settings.simulationTheme);
         separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
         spiralRules = { ...settings.rules.spiral };
@@ -1912,7 +1914,7 @@ if (simulationName === 'magnet') {
         document.getElementById('softBloomIntensityValue').value = softBloomIntensity + '%';
         dom.saveSmoothImage.checked = settings.smoothing.export;
         document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
-        brushSize = settings.brush.size;
+        if (!startup) brushSize = settings.brush.size;
         document.getElementById('brushSizeSlider').value = brushSize;
         document.getElementById('brushSizeValue').textContent = brushSize;
         setBrushMode(settings.brush.mode !== 'copy', settings.brush.mode === 'continuous');
@@ -1930,7 +1932,7 @@ if (simulationName === 'magnet') {
         } };
       }
 
-      function importWorkspaceSettings(settings, identity = null) {
+      function importWorkspaceSettings(settings, identity = null, options = {}) {
         // The file has been fully validated before any state or preferences change.
         if (isMacroPlaying) throw new Error('Cannot import settings during macro playback');
         pauseLife();
@@ -1947,7 +1949,7 @@ if (simulationName === 'magnet') {
         setChiFlowCycle(settings.cycles.chiFlow, identity?.chiFlow.index ?? ['personal', 'ripples', 'nova'].indexOf(chiFlowMode),
             identity?.chiFlow.sources ?? sources(settings.cycles.chiFlow, C.CHI_FLOW_PRESETS),
             identity?.chiFlow.yoursRules ?? settings.cycles.chiFlow[0]);
-        applyWorkspacePreferences(settings);
+        applyWorkspacePreferences(settings, options);
         const storedStartup = persistStartup(startupSettings);
         const storedInit = persistSimInit(simulationInitSettings);
         const storedSort = persistSortCycle(sortCycleMethods);
@@ -2112,9 +2114,10 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 applySeparator();
                 goDark();
                 const currentPalette = palette();
-                const lightestIndex = currentPalette.length - 1;
-                selectedColor = currentPalette[lightestIndex];
-                selectedColorIndex = lightestIndex;
+                const colorChoice = simulationInitSettings.brushColor || 'last';
+                selectedColorIndex = colorChoice === 'rainbow' ? -1 : colorChoice === 'first' ? 0 : colorChoice === 'lightest'
+                    ? currentPalette.indexOf(sortColorsArray(currentPalette, 'luminance').at(-1)) : currentPalette.length - 1;
+                selectedColor = selectedColorIndex >= 0 ? currentPalette[selectedColorIndex] : null;
 
                 brushSize = simulationInitSettings.brushSize;
                 const brushSizeSlider = document.getElementById('brushSizeSlider');
@@ -2124,8 +2127,8 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
 
 
-                isRainbowModeActive = false;
-                symmetryMode = 'kaleidoscope';
+                isRainbowModeActive = colorChoice === 'rainbow';
+                symmetryMode = simulationInitSettings.symmetry || 'kaleidoscope';
                 updateSymmetryUI();
                 updateColorPickerButtonUI();
                 updateGlowEffect();
@@ -2911,7 +2914,9 @@ function updateChiFlowButtonUI() {
     dom.btnSandpile.querySelectorAll('[data-chi-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
-    const preset = Object.entries(C.CHI_FLOW_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(chiFlowRules))?.[0];
+    const source = chiFlowSources[['personal', 'ripples', 'nova'].indexOf(chiFlowMode)];
+    const preset = C.CHI_FLOW_PRESETS[source] ? source :
+        Object.entries(C.CHI_FLOW_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(chiFlowRules))?.[0];
     const name = preset ? getText('chi_preset_' + preset.toLowerCase()) : getText('cycle_custom');
     dom.btnSandpile.title = getText('chi_modal_title') + (active ? ': ' + name : '');
     dom.btnSandpile.setAttribute('aria-label', dom.btnSandpile.title);
@@ -3066,14 +3071,9 @@ function logIslandsSessionStart() {
     historyRecipeCursor = artRecipeLog.length;
 }
 
-// The experimental mode stays outside the persisted gravity rules.
-function runGravityPreviewOrGeneration(context) {
-    return gsMode === 'islands' ? runIslandsPreview(context) : Simulations.runGravitationalSortGeneration(context);
-}
-
 // --- NEW: Gravitational Sort UI and Cycling ---
 function updateGravitationalSortButtonUI() {
-    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'mode-islands', 'simulation-active');
+    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'simulation-active');
 
     if (gsMode !== 'off') {
         dom.btnGravitationalSort.classList.add('mode-' + gsMode);
@@ -3085,19 +3085,11 @@ function updateGravitationalSortButtonUI() {
 
 function cycleGravitationalSortMode() {
     const oldMode = gsMode;
-    const sequence = ['off', 'up', 'right', 'center_x', 'islands'];
-
-
-
- //   const sequence = ['off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'];
-
-
-
-
+    const sequence = ['off', 'up', 'right', 'center_x'];
 
     gsMode = nextEvolutionMode(gsMode, sequence);
 
-    if (gsMode !== 'off' && gsMode !== 'islands') {
+    if (gsMode !== 'off') {
         gravitationalSortRules.direction = gsMode; // מעדכן את חוקי הסימולציה בפועל
     }
     
@@ -4319,14 +4311,7 @@ else if (action.eventName === 'Invert Colors') {
             getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
             isNudgeReplayActive: () => isMacroLoaded,
             setNudgeInterval, persistNudgeSettings,
-            resetWorkspaceSettings: () => {
-                const settings = defaultWorkspaceSettings();
-                // Keep the settings-file V1 baseline intact; the current display default is on.
-                settings.smoothing.display = DEFAULT_SMOOTH_RENDERING;
-                settings.smoothing.bloom = DEFAULT_SOFT_BLOOM;
-                settings.smoothing.bloomIntensity = DEFAULT_BLOOM_INTENSITY;
-                return importWorkspaceSettings(settings);
-            },
+            resetWorkspaceSettings: () => settingsProfiles.resetToDefaults(),
             getStartupSettings: () => ({ ...startupSettings }),
             saveStartupSettings: (settings) => {
                 const normalized = normalizeStartup(settings);
@@ -4404,6 +4389,7 @@ syncGsModeFromModal: (direction) => {
             getErosionRules: () => ({ ...erosionRules }),
             canEditErosion: () => !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             getPaletteLength: () => palette().length,
+            getDefaultErosionRules: () => settingsProfiles.defaults().settings.rules.erosion,
             saveErosionRules: rules => {
                 if (isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
                 erosionRules = restoreErosionRules(rules);
@@ -4472,7 +4458,7 @@ applySortMethod,
         const brightnessOrder = sortColorsArray(palette(), 'luminance');
         const darkestIndex = palette().indexOf(brightnessOrder[0]);
         const lightestIndex = palette().indexOf(brightnessOrder.at(-1));
-        selectedColorIndex = startupSettings.brushColor === 'darkest' ? darkestIndex :
+        selectedColorIndex = startupSettings.brushColor === 'first' ? 0 : startupSettings.brushColor === 'darkest' ? darkestIndex :
             startupSettings.brushColor === 'lightest' ? lightestIndex : -1;
         selectedColor = selectedColorIndex >= 0 ? palette()[selectedColorIndex] : null;
         initializeBoardAndCanvas(true);
@@ -4497,13 +4483,13 @@ updateBrightnessEvoButtonUI();
         updateLayout();
         updateAllUIText();
         const importedPreferences = loadWorkspaceSettings();
-        if (importedPreferences) applyWorkspacePreferences(importedPreferences);
+        if (importedPreferences) applyWorkspacePreferences(importedPreferences, { startup: true });
         isSmoothRendering = loadSmoothRendering(importedPreferences?.smoothing.display ?? DEFAULT_SMOOTH_RENDERING);
         document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
         renderToScreen(null);
         settingsProfiles = initializeProfileControls({
             capture: captureProfileSettings,
-            apply: snapshot => importWorkspaceSettings(snapshot.settings, snapshot.identity),
+            apply: (snapshot, options) => importWorkspaceSettings(snapshot.settings, snapshot.identity, options),
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
         });

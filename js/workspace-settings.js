@@ -30,7 +30,8 @@ function mergeKnown(defaults, overrides, path = '') {
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
         // Optional extension; V1’s original baseline stays unchanged.
-        if (path === '' && key === 'separatorCycle') { result[key] = clone(value); continue; }
+        if (path === '' && ['separatorCycle', 'simulationTheme'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
         if (!Object.hasOwn(defaults, key)) throw new Error('Unknown settings field: ' + key);
@@ -59,6 +60,7 @@ export function validateWorkspaceSettings(value) {
     const valid = equal(normalizeStartup(settings.startup), settings.startup) && validateSimInit(settings.simulationInit) &&
         equal(normalizeSortCycle(settings.sortCycle), settings.sortCycle) && integer(settings.nudgeIntervalMs, 0, 200) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&
+        (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationTheme)) &&
         typeof settings.smoothing.display === 'boolean' && typeof settings.smoothing.export === 'boolean' &&
         (!Object.hasOwn(settings.smoothing, 'bloom') || typeof settings.smoothing.bloom === 'boolean') &&
         (!Object.hasOwn(settings.smoothing, 'bloomIntensity') || integer(settings.smoothing.bloomIntensity, 0, 100)) &&

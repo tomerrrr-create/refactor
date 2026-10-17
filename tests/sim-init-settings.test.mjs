@@ -22,3 +22,16 @@ test('invalid values are rejected and blocked storage is reported', () => {
     assert.throws(() => persistSimInit({ boardSize: 999, brushSize: 7 }, {}), RangeError);
     assert.equal(persistSimInit(DEFAULT_SIM_INIT, { setItem() { throw Error('Quota exceeded'); } }), false);
 });
+
+test('initialization colors and symmetry persist and invalid extensions cannot enter preferences', () => {
+    let stored;
+    const storage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
+    for (const brushColor of ['first', 'last', 'lightest', 'rainbow']) {
+        const settings = { boardSize: 249, brushSize: 11, brushColor, symmetry: 'off' };
+        assert(persistSimInit(settings, storage));
+        assert.deepEqual(loadSimInit(storage), settings);
+    }
+    for (const extra of [{ brushColor: 'invalid' }, { symmetry: 'invalid' }]) {
+        assert.equal(validateSimInit({ ...DEFAULT_SIM_INIT, ...extra }), false);
+    }
+});

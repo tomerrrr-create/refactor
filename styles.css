@@ -1796,9 +1796,6 @@ button, .ctrl {
 #btnGap[data-relative-gap] > svg { filter: none; }
 #btnGap[data-relative-gap] #gapValue { font-size: 9px; font-weight: 400; }
 
-/* Separate pixel islands distinguish the preview from the circular gravity mode. */
-#btnGravitationalSort.mode-islands #iconGsIslands { display: block !important; }
-#btnGravitationalSort.mode-islands svg:not(#iconGsIslands) { display: none !important; }
 
 /* Preserve the approved leaf geometry; its color follows simulation selection. */
 #btnIslands svg { stroke-width: 1.5; }
