@@ -121,7 +121,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     const snapshots = defaultProfileSnapshots(initial());
     const [one, two, three] = snapshots.map(snapshot => snapshot.settings);
     const expected = initial().settings;
-    Object.assign(expected.startup, { paletteName: 'Autumn into Winter 264', fill: 'dark', brushColor: 'rainbow' });
+    Object.assign(expected.startup, { paletteName: 'Autumn into Winter 264', fill: 'dark', brushColor: 'rainbow', separatorPx: 0 });
     expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
     assert.deepEqual(one, expected);
     assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
@@ -272,7 +272,7 @@ test('startup resolves profile separators and board size before rendering, inclu
     for (const selected of [0, 1, 2]) {
         disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected, profiles }));
         const startup = loadProfileStartup(initial().settings.startup, disk);
-        assert.equal(startup.separatorPx, [5, 2, 0][selected]);
+        assert.equal(startup.separatorPx, [0, 2, 0][selected]);
         assert.equal(startup.boardSize, [7, 11, 15][selected]);
     }
     profiles[1].draft.settings.startup.boardSize = 21;
@@ -281,7 +281,7 @@ test('startup resolves profile separators and board size before rendering, inclu
     const personal = loadProfileStartup(initial().settings.startup, disk);
     assert.equal(personal.boardSize, 21); assert.equal(personal.separatorPx, 3);
     assert.equal(defaultProfileSnapshots(initial())[2].settings.startup.separatorPx, 0);
-    assert.equal(factoryProfileSnapshot(0).settings.startup.separatorPx, 5);
+    assert.equal(factoryProfileSnapshot(0).settings.startup.separatorPx, 0);
     assert.equal(factoryProfileSnapshot(1).settings.startup.separatorPx, 2);
 });
 
