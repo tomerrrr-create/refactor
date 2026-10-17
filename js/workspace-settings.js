@@ -1,3 +1,4 @@
+import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
 import * as C from './constants.js';
 import { EROSION_MODES, validErosionStages } from './erosion-settings.js';
@@ -30,7 +31,7 @@ function mergeKnown(defaults, overrides, path = '') {
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
         // Optional extension; V1’s original baseline stays unchanged.
-        if (path === '' && ['separatorCycle', 'simulationTheme'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === '' && ['separatorCycle', 'simulationTheme', 'evolutionTuning'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
@@ -57,6 +58,7 @@ function validCycle(slots, chi) {
 export function validateWorkspaceSettings(value) {
     const settings = mergeKnown(defaultWorkspaceSettings(), value);
     const r = settings.rules;
+    if (Object.hasOwn(settings, 'evolutionTuning')) settings.evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
     const valid = equal(normalizeStartup(settings.startup), settings.startup) && validateSimInit(settings.simulationInit) &&
         equal(normalizeSortCycle(settings.sortCycle), settings.sortCycle) && integer(settings.nudgeIntervalMs, 0, 200) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&

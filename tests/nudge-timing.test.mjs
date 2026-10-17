@@ -1,3 +1,4 @@
+import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -7,7 +8,7 @@ const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function harness({direction = 'nudgeBrighter', stored = null, blockedStorage = false} = {}) {
     let now = 0;
     const logs = [], storage = new Map([['colorGridNudge', stored]]);
-    const context = vm.createContext({
+    const context = vm.createContext({ evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning,
         localStorage: {getItem:k=>{if(blockedStorage) throw Error('blocked');return storage.get(k);},
             setItem:(k,v)=>{if(blockedStorage) throw Error('blocked');storage.set(k,v);}},
         performance: {now:()=>now}, window: {logArtEvent:(...args)=>logs.push(args)},

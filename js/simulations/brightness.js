@@ -1,5 +1,5 @@
-export function runBrightnessEvolution({ n, currentBoardState, currentPalette }) {
-    const smoothingFactor = 0.5;
+export function runBrightnessEvolution({ n, currentBoardState, currentPalette, brightnessRules }) {
+    const smoothingFactor = brightnessRules?.smoothing ?? 0.5;
     const nextBoardState = currentBoardState.map(tile => ({ ...tile })); // Create a mutable copy
     const maxIndex = currentPalette.length - 1; // קביעת האינדקס המקסימלי המותר
 
@@ -46,9 +46,9 @@ export function runBrightnessEvolution({ n, currentBoardState, currentPalette })
 }
 
 
-export function runContrastGeneration({ n, currentBoardState, currentPalette }) {
+export function runContrastGeneration({ n, currentBoardState, currentPalette, brightnessRules }) {
     const nextBoardState = currentBoardState.map(tile => ({...tile}));
-    const strength = 0.1; // אפשר להפוך את זה להגדרה שהמשתמש יכול לשלוט בה בעתיד
+    const strength = brightnessRules?.contrast ?? 0.1; // אפשר להפוך את זה להגדרה שהמשתמש יכול לשלוט בה בעתיד
     const maxIndex = currentPalette.length - 1;
 
     for (let i = 0; i < n * n; i++) {

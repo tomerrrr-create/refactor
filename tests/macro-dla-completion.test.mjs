@@ -1,3 +1,4 @@
+import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -6,7 +7,7 @@ import {defaultWorkspaceSettings,validateWorkspaceSettings} from '../js/workspac
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 
 test('DLA recorded mode stays separate from persisted boolean rules',()=>{
- const c=vm.createContext({armedSimulation:'dla',currentSortMethod:'dark-rainbow',dlaMode:'off',
+ const c=vm.createContext({ evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning,armedSimulation:'dla',currentSortMethod:'dark-rainbow',dlaMode:'off',
   dlaRules:{colorGenetics:true,injectFromEdges:false,fastMode:false},console});
  vm.runInContext(source.slice(source.indexOf('function applyMacroRules('),source.indexOf('function executeMacroAction(')),c);
  for(const [mode,colorGenetics] of [['genetics',true],['no-genetics',false]]){
@@ -22,7 +23,7 @@ test('DLA recorded mode stays separate from persisted boolean rules',()=>{
 
 for(const fullscreen of [false,true])test(`macro cleanup releases overlay despite profile capture failure (fullscreen=${fullscreen})`,()=>{
  const errors=[],removed=[];let full=fullscreen;
- const c=vm.createContext({clearTimeout(){},macroTimerId:1,macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
+ const c=vm.createContext({ evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning,clearTimeout(){},macroTimerId:1,macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
   settingsProfiles:{endReplay(){throw Error('profile capture failed');}},
   replayNudgeTiming:{},currentMacroStep:12,pendingMacroPalette:3,isSelectingMacroPalette:true,isMacroFullscreen:fullscreen,
   animateBoardTransition:fn=>fn(),toggleMacroFullScreen(){full=false;},console:{error:(...args)=>errors.push(args)},

@@ -1,11 +1,13 @@
+import { validateEvolutionTuning } from '../evolution-tuning.js';
 // Version 1: asynchronous voter model. Keep old versions stable for recipe replay.
 const VERSION = 1;
 const UINT32_MAX = 0xffffffff;
 const isUint32 = value => Number.isInteger(value) && value >= 0 && value <= UINT32_MAX;
 
-export function createIslandsSession(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0]) {
+export function createIslandsSession(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0], rules = {}) {
     if (!isUint32(seed)) throw new Error('Invalid Islands seed');
-    return { islandsVersion: VERSION, seed, state: seed, steps: 0 };
+    const { activity } = validateEvolutionTuning({ islands: rules }).islands;
+    return { islandsVersion: VERSION, seed, state: seed, steps: 0, ...(activity === .05 ? {} : { activity }) };
 }
 
 export function restoreIslandsSession(snapshot) {
@@ -13,7 +15,9 @@ export function restoreIslandsSession(snapshot) {
         !isUint32(snapshot.state) || !Number.isSafeInteger(snapshot.steps) || snapshot.steps < 0) {
         throw new Error('Unsupported or invalid Islands recording');
     }
-    return { islandsVersion: VERSION, seed: snapshot.seed, state: snapshot.state, steps: snapshot.steps };
+    if (Object.hasOwn(snapshot, 'activity')) validateEvolutionTuning({ islands: { activity: snapshot.activity } });
+    return { islandsVersion: VERSION, seed: snapshot.seed, state: snapshot.state, steps: snapshot.steps,
+        ...(Object.hasOwn(snapshot, 'activity') ? { activity: snapshot.activity } : {}) };
 }
 
 // Mulberry32: explicit 32-bit arithmetic gives the same sequence on every device.
@@ -28,7 +32,7 @@ function random(session) {
 export function runIslandsGeneration({ n, currentBoardState }, session) {
     if (!session) throw new Error('Islands session is missing');
     if (n >= 2 && currentBoardState.length) {
-        const count = Math.max(1, Math.floor(currentBoardState.length * .05));
+        const count = Math.max(1, Math.floor(currentBoardState.length * (session.activity ?? .05)));
         for (let attempt = 0; attempt < count; attempt++) {
             const index = Math.floor(random(session) * currentBoardState.length);
             const row = Math.floor(index / n), col = index % n;

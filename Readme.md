@@ -79,6 +79,23 @@ Initialization defaults are a 249×249 board and size-7 brush. The hold also rem
 
 Nudge's interval defaults to 100 ms and can be set from 0 to 200 ms. Its selected, paused settings can be opened like the other supported evolution settings.
 
+### Brightness, Breathe, Islands and DLA settings
+
+Swipe/drag up on the **selected, paused** evolution to open its settings. The shared gold swipe glow appears only when opening is available. Save commits the draft; Cancel, Escape and outside dismissal discard it. Reset restores the original parameter values in the draft and retains the selected mode. Settings are stored per profile, in settings exports and project JSON; saved edits support Undo/Redo and recipe replay. Opening or saving never starts playback or changes the live button cycle rules.
+
+| Evolution | Parameter | Range | Original default |
+| --- | --- | --- | --- |
+| Brightness | Smoothing strength (Brightness mode) | 5–100% of the distance to the local average per generation | 50% |
+| Brightness | Contrast strength (Contrast mode) | 1–100% of one palette-index step per generation | 10% |
+| Breathe | Rate | 25–300% of the original rhythm | 100% |
+| Breathe | Depth | 25–150% of the original brightness deviation | 100% |
+| Islands | Copy attempts per generation | 1–50% of the board cell count | 5% |
+| DLA | Particle steps per generation | 10–1,000 | 100 |
+
+Brightness, Breathe and DLA also allow selection among their existing modes. Islands retains its single original neighbor-copy rule; activity changes the attempt count, without color-proximity weighting. Failed attempts and copying the same color do not necessarily change a cell. Increasing activity or DLA steps increases computational work as well as potential movement.
+
+Old settings and recipes use the original values when tuning is absent. Islands recipes retain their seed, random cursor and activity for exact replay. Brightness/Breathe recipes retain both mode and tuning; old `Mode:` records remain readable. Breathe still uses its existing random rhythms; this change records its parameters, without adding deterministic rhythm replay. DLA's existing randomness is likewise unchanged. New tuning is an optional extension of the V1 settings format; its original defaults remain intact.
+
 ### Save, load and help
 
 All export and recipe-reset actions are in the save modal:
