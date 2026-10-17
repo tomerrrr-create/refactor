@@ -3124,17 +3124,21 @@ function updateIslandsButtonUI() {
 
 function cycleIslandsMode() {
     if (isLifePlaying && armedSimulation !== 'islands') return;
-    if (isLifePlaying) pauseLife();
     if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
-    if (armedSimulation !== 'islands') {
-        armSimulation('islands');
-    } else if (islandsSession?.mode === 'proximity') {
+    const current = armedSimulation === 'islands' ? islandsSession?.mode || 'classic' : 'off';
+    const next = nextEvolutionMode(current, ['off', 'classic', 'proximity']);
+    if (next === 'off') {
         armSimulation(null);
+    } else if (current === 'off') {
+        armSimulation('islands');
     } else {
-        islandsSession = createIslandsSession(undefined, 'proximity');
-        if (!isExecutingMacroCommand) logIslandsSessionStart();
+        // Keep the board, generation counter and random cursor across live mode changes.
+        islandsSession = restoreIslandsSession({ ...islandsSession,
+            islandsVersion: next === 'proximity' ? 2 : 1, mode: next });
     }
     updateIslandsButtonUI();
+    window.logArtEvent('Islands Mode Changed', JSON.stringify(next === 'off' ? { mode: next }
+        : { ...islandsSession, mode: next }));
 }
 
 function updateBreatheEvoButtonUI() {
@@ -3516,6 +3520,10 @@ function validateIslandsMacroAction(action) {
         } else if (snapshot.recordingVersion !== 2) {
             throw new Error('Unsupported Islands recording version');
         }
+    } else if (action.eventName === 'Islands Mode Changed') {
+        const snapshot = JSON.parse(action.details);
+        if (!['off', 'classic', 'proximity'].includes(snapshot.mode)) throw new Error('Invalid Islands mode');
+        if (snapshot.mode !== 'off') restoreIslandsSession(snapshot);
     } else if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
         const match = action.details.match(/^Armed: islands\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
         if (match) restoreIslandsSession(JSON.parse(match[1]));
@@ -3568,13 +3576,13 @@ function parseLegacyMacroText(text) {
     const uiEvents = [
         'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
     ];
 
     // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
     const simulationEvents = [
         'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
     ];
 
 
@@ -4088,6 +4096,20 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'GRID_RESIZE') {
         _performResize(parseInt(action.details, 10));
+    }
+    else if (action.eventName === 'Islands Mode Changed') {
+        const snapshot = JSON.parse(action.details);
+        if (snapshot.mode === 'off') {
+            if (armedSimulation === 'islands') {
+                if (isLifePlaying) pauseLife();
+                armSimulation(null);
+            }
+        } else {
+            const session = restoreIslandsSession(snapshot);
+            if (armedSimulation !== 'islands') armSimulation('islands', { recordIslandsStart: false });
+            islandsSession = session;
+        }
+        updateIslandsButtonUI();
     }
     else if (action.eventName === 'Game of Life Mode Changed') {
         const snapshot = JSON.parse(action.details);

@@ -114,3 +114,42 @@ test('proximity seed metadata is accepted by the actual recipe parser',()=>{
     assert.equal(c.parseMacroText(recipe).length,3);
     assert.throws(()=>c.parseMacroText(recipe.replaceAll('"mode":"proximity"','"mode":"invalid"')),/Unsupported/);
 });
+
+test('live Islands cycling logs generations and replays without pause or seed reset',()=>{
+    function wire(c){
+        c.window={logArtEvent(){}};c.isExecutingMacroCommand=false;c.isMacroLoaded=false;
+        c.artRecipeLog=[];c.createIslandsSession=createIslandsSession;
+        const start=source.indexOf('window.logArtEvent = function');
+        vm.runInContext(source.slice(start,source.indexOf('// ------------------------------------------',start)),c);
+        vm.runInContext(source.slice(source.indexOf('function getHistorySettings('),source.indexOf('function toggleMacroFullScreen(')),c);
+        vm.runInContext(source.slice(source.indexOf('function nextEvolutionMode('),source.indexOf('function cycleBrightnessEvoMode(')),c);
+        const cycle=source.match(/function cycleIslandsMode\([^)]*\) \{[\s\S]*?^\}/m)[0];
+        vm.runInContext(cycle,c);
+        const other=c.executeMacroAction;
+        vm.runInContext(source.slice(source.indexOf('function executeMacroAction('),source.indexOf('async function initializeApp(')),c);
+        const actual=c.executeMacroAction;
+        c.executeMacroAction=action=>action.eventName==='Islands Mode Changed' ? actual(action) : other(action);
+    }
+    const c=harness();wire(c);c.isMacroPlaying=false;c.isLifePlaying=false;
+    c.window.logArtEvent('INIT_STATE',JSON.stringify({recipeVersion:2,n:21,pal:0,sep:0,sort:'luminance',board:'441x0'}));
+    c.isLifePlaying=true;
+    for(let gen=1;gen<=30;gen++){
+        c.gameLoop();
+        if([5,12,19,24].includes(gen)){
+            const before={...c.islandsSession};c.cycleIslandsMode();
+            assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,gen);
+            for(const key of ['seed','state','steps'])assert.equal(c.islandsSession[key],before[key]);
+        }
+    }
+    c.window.logArtEvent('PAUSE','---');
+    const actions=c.parseMacroText(c.artRecipeLog.join('\n')).filter(a=>a.eventName!=='INIT_STATE');
+    assert.deepEqual(JSON.parse(JSON.stringify(actions.filter(a=>a.eventName==='Islands Mode Changed').map(a=>[a.targetGen,JSON.parse(a.details).mode]))),
+        [[5,'proximity'],[12,'classic'],[19,'proximity'],[24,'classic']]);
+    for(const frameMs of [8,33,100]){
+        const replay=harness();wire(replay);replay.macroQueue=actions;
+        for(let time=0;replay.isLifePlaying&&time<10000;time+=frameMs)replay.gameLoop();
+        assert.equal(replay.currentGenerationCount,30);assert.deepEqual(replay.boardState,c.boardState);
+        assert.deepEqual(replay.islandsSession,c.islandsSession);
+    }
+    assert.throws(()=>c.parseMacroText(c.artRecipeLog.join('\n').replace('"mode":"proximity"','"mode":"invalid"')),/Invalid Islands mode/);
+});
