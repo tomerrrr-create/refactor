@@ -45,8 +45,9 @@ const PROFILE_EROSION_STAGES = [
 
 function applyProfileOneDefaults(snapshot) {
     Object.assign(snapshot.settings.startup, {
-        paletteName: 'Autumn into Winter 264', fill: 'dark', brushColor: 'rainbow', brushSize: 1, separatorPx: 0
+        paletteName: 'Autumn into Winter 264', fill: 'dark', brushColor: 'rainbow', brushSize: 1, separatorPx: 0, boardSize: 249, symmetry: 'off'
     });
+    snapshot.settings.brush.symmetry = 'off';
     snapshot.settings.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => clone(CHI_FLOW_PRESETS[name]));
     if (snapshot.identity) snapshot.identity.chiFlow = {
         index: 0, sources: ['Harmony', 'Nova', 'Alexis'],
@@ -140,7 +141,7 @@ function mergeChanges(draft, previous, current) {
 
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
-    let state = { version: 1, defaultsVersion: 8, selected: 0,
+    let state = { version: 1, defaultsVersion: 9, selected: 0,
         profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
@@ -151,7 +152,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 8, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 9, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -265,6 +266,12 @@ export function createProfileState(initial, storage) {
                 for (const kind of ['saved', 'draft']) {
                     const startup = state.profiles[0][kind].settings.startup;
                     if (startup.separatorPx === 5) startup.separatorPx = 0;
+                }
+            }
+            if ((value.defaultsVersion || 0) < 9) {
+                for (const kind of ['saved', 'draft']) {
+                    const startup = state.profiles[0][kind].settings.startup;
+                    if (startup.boardSize === 7) startup.boardSize = 249;
                 }
             }
             restored = true;

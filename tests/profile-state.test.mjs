@@ -121,7 +121,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     const snapshots = defaultProfileSnapshots(initial());
     const [one, two, three] = snapshots.map(snapshot => snapshot.settings);
     const expected = initial().settings;
-    Object.assign(expected.startup, { paletteName: 'Autumn into Winter 264', fill: 'dark', brushColor: 'rainbow', separatorPx: 0 });
+    Object.assign(expected.startup, { paletteName: 'Autumn into Winter 264', fill: 'dark', brushColor: 'rainbow', separatorPx: 0, boardSize: 249, symmetry: 'off' });
     expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
     assert.deepEqual(one, expected);
     assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
@@ -273,7 +273,7 @@ test('startup resolves profile separators and board size before rendering, inclu
         disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected, profiles }));
         const startup = loadProfileStartup(initial().settings.startup, disk);
         assert.equal(startup.separatorPx, [0, 2, 0][selected]);
-        assert.equal(startup.boardSize, [7, 11, 15][selected]);
+        assert.equal(startup.boardSize, [249, 11, 15][selected]);
     }
     profiles[1].draft.settings.startup.boardSize = 21;
     profiles[1].draft.settings.startup.separatorPx = 3;
@@ -358,4 +358,23 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
     assert.equal(factory.identity.chiFlow.index, 0);
     assert.deepEqual(factory.identity.chiFlow.yoursRules, CHI_FLOW_PRESETS.Harmony);
     assert.equal(loadProfileStartup(initial().settings.startup, storage()).paletteName, 'Autumn into Winter 264');
+});
+
+test('profile one opens at 249 with zero separators and symmetry off without changing other profiles', () => {
+    const first = factoryProfileSnapshot(0);
+    assert.equal(first.settings.startup.boardSize, 249);
+    assert.equal(first.settings.startup.separatorPx, 0);
+    assert.equal(first.settings.startup.symmetry, 'off');
+    assert.equal(first.settings.brush.symmetry, 'off');
+    const disk = storage();
+    const profiles = [0,1,2].map(index => ({saved:factoryProfileSnapshot(index),draft:factoryProfileSnapshot(index)}));
+    profiles[0].saved.settings.startup.boardSize = 7;
+    profiles[0].draft.settings.startup.boardSize = 21;
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({version:1, defaultsVersion:8, selected:0, profiles}));
+    const state = createProfileState(initial(), disk);
+    state.persist();
+    assert.equal(JSON.parse(disk.getItem(PROFILE_STORAGE_KEY)).profiles[0].saved.settings.startup.boardSize,249);
+    assert.equal(state.draft().settings.startup.boardSize,21);
+    assert.deepEqual(state.draft(1),profiles[1].draft);
+    assert.deepEqual(state.draft(2),profiles[2].draft);
 });
