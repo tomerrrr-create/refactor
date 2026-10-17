@@ -42,7 +42,7 @@ Changing the sorting method remaps tile indices and the selected brush color to 
 
 Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Ordinary editing is disabled while the evolution runs. Breathe animates the rendering rather than discrete generations, so Single step is disabled for it.
 
-For Game of Life, Chi Flow, erosion, gravity, magnet, spiral, brightness and DLA, switching a mode during playback changes the running rules without reinitializing the board. The cycle wraps between active modes and skips Off. When paused, Off remains part of the cycle and disarms the evolution. Breathe is different: changing its mode pauses it.
+For Game of Life, Chi Flow, Islands, erosion, gravity, magnet, spiral, brightness and DLA, the simulation buttons in the evolution overlay (blue by default) follow the same cycle rules. During playback, tapping the active simulation button changes its mode without stopping playback, reinitializing the board or resetting the generation counter. The cycle wraps between active modes and skips Off; use **Pause** to stop playback. When paused, Off remains part of the cycle and disarms the evolution. Islands cycles Classic → Color proximity → Off while paused, and Classic ↔ Color proximity while running. Breathe is different: changing its mode pauses it.
 
 Button cycles intentionally expose a subset of the modes available in settings. For example, magnet cycles Cosmic → Regular → Time; Expand remains in its modal. Spiral cycles Pinwheel → Turbine → Circle; the other modes remain in its modal.
 
