@@ -1899,3 +1899,6 @@ button, .ctrl {
 #btnIslands.mode-proximity .islands-proximity-mark { display:block; fill:var(--gold); }
 .tuning-heading-icon .islands-proximity-mark { display:none; }
 .tuning-heading-icon[data-islands-mode="proximity"] .islands-proximity-mark { display:block; fill:var(--gold); }
+
+/* A single bounded snapshot fades over the live board and its bloom. */
+.breathe-transition-frame { position:absolute; inset:0; width:100%; height:100%; border-radius:inherit; pointer-events:none; }

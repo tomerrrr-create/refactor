@@ -1,3 +1,4 @@
+import { createBreatheTransition } from './breathe-transition.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning, breatheTuningKey } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
@@ -142,6 +143,7 @@ window.logArtEvent = function(eventName, details, forceLog = false) {
       let isBreathing = false; // This variable is now effectively replaced by (isLifePlaying && armedSimulation === 'breathe')
       let breatheStartTime = 0;
       let randomBreatheSession = null;
+      let breatheTransition = null;
       let breatheEvoMode = 'off'; // 'off', 'solo' or 'group'
 
 
@@ -1414,8 +1416,11 @@ break;
         });
       }
       
-function pauseLife() {
+function pauseLife({ fade = true } = {}) {
           if (!isLifePlaying) return;
+          if (fade && armedSimulation === 'breathe' && breatheTransition) {
+              return breatheTransition.run(() => pauseLife({ fade: false }));
+          }
           window.logArtEvent('PAUSE', '---');
           isLifePlaying = false;
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
@@ -1443,12 +1448,13 @@ function pauseLife() {
           ].filter(Boolean);
           
           simButtons.forEach(btn => btn.disabled = false);
+          if (armedSimulation === 'breathe') renderToScreen(performance.now());
       }
 
 
 
       
-      function togglePlayPauseLife() {
+      function togglePlayPauseLife({ fade = true } = {}) {
 //        if (isMacroPlaying) return; // לא מאפשרים לגעת בסימולציות כשהמאקרו רץ
 
         if (isLifePlaying) {
@@ -1456,6 +1462,9 @@ function pauseLife() {
             return;
         }
         if (!armedSimulation) return;
+        if (fade && armedSimulation === 'breathe' && breatheTransition?.isActive()) {
+            return breatheTransition.run(() => togglePlayPauseLife({ fade: false }));
+        }
 
         // --- Art Logger: Snapshoting Simulation State ---
         let simDetails = "No specific rules mapping";
@@ -1485,34 +1494,10 @@ function pauseLife() {
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
           ].filter(Boolean);
 
-          // --- Handle Breathe Simulation (uses animationLoop) ---
+          // Breathe is display-only; the shared starter also handles live mode changes.
           if (armedSimulation === 'breathe') {
-              const BREATHE_SPEED = 0.0015;
-              const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;            
-              if (!['random-cell', 'random-color'].includes(breatheEvoMode)) {
-                  boardState.forEach(tile => {
-                      tile.startDelay = Math.random() * cycleDuration;
-                  });
-              }
-
-              randomBreatheSession = ['random-cell', 'random-color'].includes(breatheEvoMode)
-                  ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode, Math.random, getBreatheTuning()) : null;
-              breatheStartTime = performance.now();
-              isLifePlaying = true;
-              
-              dom.iconPlay.style.display = 'none';
-              dom.iconPause.style.display = 'block';
-              dom.btnStepForward.disabled = true;
-              
-              // מכבים את כל הכפתורים למעט הכפתור של הנשימה
-              simButtons.forEach(btn => {
-                  if (btn.id !== 'btnShowBreatheMenu') {
-                      btn.disabled = true;
-                  }
-              });
-
-              startAnimationLoop(); // Start the smooth animation loop
-              return; // Exit here, don't start gameLoop
+              startBreatheSession();
+              return;
           }
 
           // --- Handle Discrete Simulations (uses gameLoop) ---
@@ -3201,6 +3186,26 @@ function cycleIslandsMode() {
         : { ...islandsSession, mode: next }));
 }
 
+function startBreatheSession() {
+    const cycleDuration = (2 * Math.PI) / .0015;
+    if (!['random-cell', 'random-color'].includes(breatheEvoMode)) {
+        boardState.forEach(tile => { tile.startDelay = Math.random() * cycleDuration; });
+    }
+    randomBreatheSession = ['random-cell', 'random-color'].includes(breatheEvoMode)
+        ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode, Math.random, getBreatheTuning()) : null;
+    breatheStartTime = performance.now();
+    isLifePlaying = true;
+    dom.iconPlay.style.display = 'none';
+    dom.iconPause.style.display = 'block';
+    dom.btnStepForward.disabled = true;
+    const buttons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
+        dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile,
+        dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+    buttons.forEach(button => { button.disabled = button !== dom.btnShowBreatheMenu; });
+    startAnimationLoop();
+    renderToScreen(performance.now());
+}
+
 function updateBreatheEvoButtonUI() {
     updateIslandsButtonUI();
     const modes = ['random-cell', 'solo', 'random-color'];
@@ -3218,17 +3223,23 @@ function updateBreatheEvoButtonUI() {
 
 function cycleBreatheEvoMode() {
     if (isLifePlaying && armedSimulation !== 'breathe') return;
-    if (isLifePlaying) pauseLife();
+    const running = isLifePlaying && armedSimulation === 'breathe';
     const currentMode = armedSimulation === 'breathe' ? (breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode) : 'off';
-    const sequence = ['off', 'random-cell', 'solo', 'random-color'];
-    const nextMode = sequence[(sequence.indexOf(currentMode) + 1) % sequence.length];
-    if (nextMode === 'off') {
-        armSimulation(null);
-    } else {
-        if (armedSimulation !== 'breathe') armSimulation('breathe');
-        breatheEvoMode = nextMode;
-    }
-    updateBreatheEvoButtonUI();
+    const nextMode = nextEvolutionMode(currentMode, ['off', 'random-cell', 'solo', 'random-color']);
+    const applyMode = () => {
+        if (nextMode === 'off') {
+            armSimulation(null);
+        } else {
+            if (armedSimulation !== 'breathe') armSimulation('breathe');
+            breatheEvoMode = nextMode;
+        }
+        updateBreatheEvoButtonUI();
+        window.logArtEvent('Breathe Mode Changed', JSON.stringify({ mode: nextMode, running,
+            ...(nextMode !== 'off' ? { tuning: getBreatheTuning() } : {}) }));
+        if (running) startBreatheSession();
+    };
+    if (breatheTransition && (running || breatheTransition.isActive())) breatheTransition.run(applyMode);
+    else applyMode();
 }
 // --- END: New Breathe Functions ---
 
@@ -3594,6 +3605,11 @@ function validateIslandsMacroAction(action) {
         const snapshot = JSON.parse(action.details);
         if (!['off', 'classic', 'proximity'].includes(snapshot.mode)) throw new Error('Invalid Islands mode');
         if (snapshot.mode !== 'off') restoreIslandsSession(snapshot);
+    } else if (action.eventName === 'Breathe Mode Changed') {
+        const snapshot = JSON.parse(action.details);
+        if (!['off', 'random-cell', 'solo', 'random-color', 'group'].includes(snapshot.mode) ||
+            typeof snapshot.running !== 'boolean' || (snapshot.mode === 'off' && snapshot.running)) throw new Error('Invalid Breathe mode');
+        if (snapshot.mode !== 'off') validateEvolutionTuning({ breathe: snapshot.tuning ?? {} });
     } else if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
         const match = action.details.match(/^Armed: islands\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
         if (match) restoreIslandsSession(JSON.parse(match[1]));
@@ -3646,13 +3662,13 @@ function parseLegacyMacroText(text) {
     const uiEvents = [
         'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed', 'Breathe Mode Changed'
     ];
 
     // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
     const simulationEvents = [
         'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed', 'Breathe Mode Changed'
     ];
 
 
@@ -4123,6 +4139,29 @@ function executeMacroAction(action) {
         }
         updateIslandsButtonUI();
     }
+    else if (action.eventName === 'Breathe Mode Changed') {
+        const snapshot = JSON.parse(action.details);
+        const applyMode = () => {
+            if (snapshot.mode === 'off') {
+                if (armedSimulation === 'breathe') {
+                    pauseLife({ fade: false });
+                    armSimulation(null);
+                }
+            } else {
+                if (armedSimulation !== 'breathe') {
+                    if (isLifePlaying) pauseLife();
+                    armSimulation('breathe');
+                }
+                if (isLifePlaying && !snapshot.running) pauseLife({ fade: false });
+                evolutionTuning[breatheTuningKey(paletteLen())] = validateEvolutionTuning({ breathe: snapshot.tuning ?? {} }).breathe;
+                breatheEvoMode = snapshot.mode;
+                if (snapshot.running) startBreatheSession();
+            }
+            updateBreatheEvoButtonUI();
+        };
+        if (breatheTransition && isLifePlaying && armedSimulation === 'breathe') breatheTransition.run(applyMode);
+        else applyMode();
+    }
     else if (action.eventName === 'EVOLUTION_TUNING') {
         const state = JSON.parse(action.details);
         if (armedSimulation !== state.simulation) armSimulation(state.simulation, { recordIslandsStart: false });
@@ -4390,6 +4429,7 @@ else if (action.eventName === 'Invert Colors') {
         
         // Phase 1 Addition: Add adaptColors to the context for modals
         softBloom = createSoftBloom(dom.boardCanvas, document.getElementById('boardBloom'));
+        breatheTransition = createBreatheTransition(dom.board);
         softBloom.setIntensity(softBloomIntensity);
         softBloom.setEnabled(isSoftBloom);
         const contextForModals = {

@@ -42,7 +42,7 @@ Changing the sorting method remaps tile indices and the selected brush color to 
 
 Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Ordinary editing is disabled while the evolution runs. Breathe animates the rendering rather than discrete generations, so Single step is disabled for it.
 
-For Game of Life, Chi Flow, erosion, gravity, magnet, spiral, brightness, Islands and DLA, switching a mode during playback changes the running rules without reinitializing the board. The cycle wraps between active modes and skips Off. When paused, Off remains part of the cycle and disarms the evolution. Breathe is different: changing its mode pauses it.
+For Game of Life, Chi Flow, erosion, gravity, magnet, spiral, brightness, Islands, Breathe and DLA, switching a mode during playback changes the running rules without reinitializing the board. The cycle wraps between active modes and skips Off. When paused, Off remains part of the cycle and disarms the evolution. Breathe switches its display rhythm with a 600 ms crossfade; Pause fades its last visible frame back to the unchanged board.
 
 Button cycles intentionally expose a subset of the modes available in settings. For example, magnet cycles Cosmic → Regular → Time; Expand remains in its modal. Spiral cycles Pinwheel → Turbine → Circle; the other modes remain in its modal.
 
@@ -92,7 +92,7 @@ Swipe/drag up on the **selected, paused** evolution to open its settings. The sh
 | Islands | Copy attempts per generation | 1–50% of the board cell count | 5% |
 | DLA | Particle steps per generation | 10–1,000 | 100 |
 
-Breathe cycles Random cells → Individual cells → Random colors → Off, with no change to the control layout. Color groups is no longer selectable; legacy recipes can still replay it. Its settings modal follows the same three-mode order. Palettes with fewer than 64 colors and palettes with 64 or more colors retain separate rate/depth preferences; Reset uses the defaults for the current palette size. Recipes store the resolved values so old recordings retain their original breathing rate and depth.
+While paused, breathe cycles Random cells → Individual cells → Random colors → Off, with no change to the control layout. While playing, the three active modes cycle continuously and skip Off; use Pause to stop. Each live change and stop uses a display-only 600 ms crossfade that includes Soft Bloom. Rapid actions retarget from the current composite and do not queue or lock controls. The overlay is bounded to 1,024 pixels per side, is excluded from project/PNG export, and is removed after completion, resize or backgrounding. Reduced-motion preferences apply changes immediately. The logical state and recipe timestamps remain synchronous; live rhythm changes are recorded as `Breathe Mode Changed` with mode, running state and resolved tuning. Color groups is no longer selectable; legacy recipes can still replay it. Its settings modal follows the same three-mode order. Palettes with fewer than 64 colors and palettes with 64 or more colors retain separate rate/depth preferences; Reset uses the defaults for the current palette size. Recipes store the resolved values so old recordings retain their original breathing rate and depth.
 
 Brightness and DLA also allow selection among their existing modes.
 
