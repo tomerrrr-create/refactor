@@ -1876,6 +1876,3 @@ button, .ctrl {
 .simulation-theme-preview:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 @media (hover: hover) { .simulation-theme-preview:hover { opacity: 1; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .simulation-theme-preview { transition: none; } }
-
-#btnIslands .islands-proximity-mark { display:none; }
-#btnIslands.mode-proximity .islands-proximity-mark { display:block; fill:var(--gold); }

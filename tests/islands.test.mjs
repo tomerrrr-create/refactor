@@ -1,4 +1,3 @@
-import {createHash} from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, recordIslandsBoard, restoreIslandsBoard } from '../js/simulations/islands.js';
@@ -54,80 +53,4 @@ test('327-square Islands recording restores fully and rejects oversized boards',
     assert.deepEqual(restored.map(({k, v, isGold}) => ({k, v, isGold})),
         tiles.map(({k, v, isGold}) => ({k, v, isGold})));
     assert.throws(() => restoreIslandsBoard(328, [[328 * 328, 0, 0, 0]]), /Invalid Islands board/);
-});
-
-test('proximity restores seeded evolution without changing gold or allocating new cells',()=>{
-    const n=21, tiles=board(n), session=createIslandsSession(123,'proximity'), palette=Array(23);
-    const context={n,currentBoardState:tiles,currentPalette:palette},first=tiles[0];
-    for(let i=0;i<50;i++)runIslandsGeneration(context,session);
-    const restored=restoreIslandsSession(JSON.parse(JSON.stringify(session))), copy=structuredClone(tiles);
-    for(let i=0;i<50;i++){
-        runIslandsGeneration(context,session);
-        runIslandsGeneration({...context,currentBoardState:copy},restored);
-    }
-    assert.deepEqual(tiles,copy);assert.deepEqual(session,restored);assert.equal(tiles[0],first);
-    assert.equal(tiles[220].isGold,true);assert.equal(tiles[220].k,13);
-    assert.throws(()=>runIslandsGeneration({n,currentBoardState:tiles},session),/palette/);
-});
-
-test('weighted proximity favors nearby neighbors without discarding eligible attempts',()=>{
-    function outcomes(near,far,length){
-        const counts={near:0,far:0,unchanged:0};
-        for(let seed=0;seed<6000;seed++){
-            const tiles=[{k:0},{k:near},{k:far},{k:far,isGold:true}];
-            runIslandsGeneration({n:2,currentBoardState:tiles,currentPalette:Array(length)},createIslandsSession(seed,'proximity'));
-            if(tiles[0].k===near)counts.near++;
-            else if(tiles[0].k===far)counts.far++;
-            else counts.unchanged++;
-        }
-        return counts;
-    }
-    const near=outcomes(1,263,264),equal=outcomes(263,263,264);
-    assert(near.near>near.far*10);assert(near.near<near.far*15);
-    assert.equal(near.unchanged,equal.unchanged); // Same target choices; no rejection step.
-    assert.deepEqual(outcomes(1,22,23),outcomes(2,44,45));
-});
-
-test('proximity follows displayed ranks after switching to a shorter palette',()=>{
-    const n=21,palette=Array(23),a=board(n),b=board(n);
-    for(const tile of b){tile.k+=23*4;tile.v=tile.k;}
-    const sa=createIslandsSession(73,'proximity'),sb=createIslandsSession(73,'proximity');
-    for(let i=0;i<40;i++){
-        runIslandsGeneration({n,currentBoardState:a,currentPalette:palette},sa);
-        runIslandsGeneration({n,currentBoardState:b,currentPalette:palette},sb);
-    }
-    assert.deepEqual(a.map(t=>t.k%23),b.map(t=>t.k%23));
-    assert.deepEqual(sa,sb);
-});
-
-test('version-two rejection recordings retain their original fingerprint',()=>{
-    const tiles=board(21),session=restoreIslandsSession({islandsVersion:2,seed:42,state:42,steps:0,mode:'proximity'});
-    for(let i=0;i<100;i++)runIslandsGeneration({n:21,currentBoardState:tiles,currentPalette:Array(23)},session);
-    assert.equal(session.state,3447336444);
-    assert.equal(createHash('sha256').update(JSON.stringify(tiles)).digest('hex'),
-        '25e0ece947be8dc55d1a40a8dfca3d529d4a3771fe5183ba8ec5272ca620f1c5');
-});
-
-test('weighted copying respects gold, single neighbors and board boundaries',()=>{
-    for(let seed=0;seed<200;seed++){
-        const tiles=[{k:0},{k:7},{k:0,isGold:true},{k:0,isGold:true}];
-        runIslandsGeneration({n:2,currentBoardState:tiles,currentPalette:Array(23)},createIslandsSession(seed,'proximity'));
-        assert(tiles[0].k===0||tiles[0].k===7);assert(tiles[1].k===0||tiles[1].k===7);
-        assert.equal(tiles[2].k,0);assert.equal(tiles[3].k,0);
-    }
-    const tile={k:7};const session=createIslandsSession(42,'proximity');
-    runIslandsGeneration({n:1,currentBoardState:[tile],currentPalette:Array(1)},session);
-    assert.equal(tile.k,7);assert.equal(session.steps,1);
-});
-
-test('version-three weighted recordings retain strength-four evolution',()=>{
-    const tiles=board(21),session=restoreIslandsSession({islandsVersion:3,seed:42,state:42,steps:0,mode:'proximity'});
-    for(let i=0;i<100;i++)runIslandsGeneration({n:21,currentBoardState:tiles,currentPalette:Array(23)},session);
-    assert.equal(session.state,331199803);
-    assert.equal(createHash('sha256').update(JSON.stringify(tiles)).digest('hex'),
-        '101e221b949684c064ba8c951ac38fb3c32604f181c1c0ef459c2ab51ac773d6');
-    const stronger=board(21),fresh=createIslandsSession(42,'proximity');
-    assert.equal(fresh.islandsVersion,4);
-    for(let i=0;i<100;i++)runIslandsGeneration({n:21,currentBoardState:stronger,currentPalette:Array(23)},fresh);
-    assert.notDeepEqual(stronger,tiles);
 });
