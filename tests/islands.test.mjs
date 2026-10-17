@@ -44,3 +44,13 @@ test('unknown versions and malformed random states fail explicitly',()=>{
     for(const bad of [null,{}, {...createIslandsSession(1),islandsVersion:2}, {...createIslandsSession(1),state:-1}, {...createIslandsSession(1),steps:.5}]) assert.throws(()=>restoreIslandsSession(bad));
     for(const seed of [-1,1.5,2**32,'42']) assert.throws(()=>createIslandsSession(seed));
 });
+
+// The largest supported board must also survive recording and replay.
+test('327-square Islands recording restores fully and rejects oversized boards', () => {
+    const tiles = board(327);
+    const restored = restoreIslandsBoard(327, recordIslandsBoard(tiles));
+    assert.equal(restored.length, 327 * 327);
+    assert.deepEqual(restored.map(({k, v, isGold}) => ({k, v, isGold})),
+        tiles.map(({k, v, isGold}) => ({k, v, isGold})));
+    assert.throws(() => restoreIslandsBoard(328, [[328 * 328, 0, 0, 0]]), /Invalid Islands board/);
+});

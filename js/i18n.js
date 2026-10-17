@@ -266,7 +266,7 @@ export const translations = {
   resize_decrease_one: { en: "Decrease size by one", he: "הקטנת הגודל באחד", ru: "Уменьшить размер на один", nl: "Formaat met één verkleinen" },
   resize_increase_one: { en: "Increase size by one", he: "הגדלת הגודל באחד", ru: "Увеличить размер на один", nl: "Formaat met één vergroten" },
   resizeModal_title: { en: "Set Grid Size", he: "גודל הלוח החדש:", ru: "Установить размер сетки", nl: "Rasterformaat instellen" },
-  resizeModal_prompt: { en: "Enter a number between 1 and 300.", he: "בין 1 ל-300", ru: "Введите число от 1 до 300.", nl: "Voer een getal in tussen 1 en 300." },  resizeModal_confirm: { en: "Set Size", he: "קבע גודל", ru: "Установить", nl: "Instellen" },
+  resizeModal_prompt: { en: "Enter a number between 1 and 327.", he: "בין 1 ל-327", ru: "Введите число от 1 до 327.", nl: "Voer een getal in tussen 1 en 327." },  resizeModal_confirm: { en: "Set Size", he: "קבע גודל", ru: "Установить", nl: "Instellen" },
   paletteModal_title: { en: "Choose a Path", he: "בחירת נתיב", ru: "Выберите путь", nl: "Kies een pad" },
   colorPicker_rainbow: { en: "Select rainbow brush", he: "מברשת קשת", ru: "Выбрать радужную кисть", nl: "Selecteer regenboogpenseel" },
   colorPicker_select: { en: "Select color:", he: "בחר צבע:", ru: "Выбрать цвет:", nl: "Selecteer kleur:" },

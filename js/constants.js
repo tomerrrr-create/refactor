@@ -44,7 +44,7 @@ export const LONG_PRESS_SHOW_MS = 600;
 // --- Grid Configuration ---
 export const SYMMETRY_MODES = ['off', 'vertical', 'horizontal', 'mandala', 'kaleidoscope'];
 export const SEPARATORS = [6, 5, 3, 2, 0];
-export const SIZES = [299, 249, 199, 149, 101, 75, 65, 55, 49, 35, 27, 21, 15, 11, 9, 7, 5, 3];
+export const SIZES = [327, 299, 249, 199, 149, 101, 75, 65, 55, 49, 35, 27, 21, 15, 11, 9, 7, 5, 3];
 
 // --- Default Simulation Rules ---
 export const defaultGameOfLifeRules = {

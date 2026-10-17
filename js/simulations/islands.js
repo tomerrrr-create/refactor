@@ -63,7 +63,7 @@ export function recordIslandsBoard(tiles) {
 }
 
 export function restoreIslandsBoard(n, runs) {
-    if (!Number.isInteger(n) || n < 1 || n > 300 || !Array.isArray(runs)) throw new Error('Invalid Islands board');
+    if (!Number.isInteger(n) || n < 1 || n > 327 || !Array.isArray(runs)) throw new Error('Invalid Islands board');
     const tiles = [];
     for (const run of runs) {
         if (!Array.isArray(run) || run.length !== 4 || !Number.isInteger(run[0]) || run[0] < 1 ||
