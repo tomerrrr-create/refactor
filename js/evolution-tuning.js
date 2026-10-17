@@ -1,16 +1,14 @@
-// Optional V1 settings extension. Recipe readers restore original values for legacy recordings.
+// Optional V1 settings extension. Missing options always mean the original engines.
 export const DEFAULT_EVOLUTION_TUNING = Object.freeze({
     brightnessEvo: Object.freeze({ smoothing: .5, contrast: .1 }),
     breathe: Object.freeze({ speed: 1, depth: 1 }),
-    breatheLargePalette: Object.freeze({ speed: 2.4, depth: 2.3 }),
     islands: Object.freeze({ activity: .05 }),
     dla: Object.freeze({ batchSize: 100 })
 });
 
 export const EVOLUTION_TUNING_LIMITS = {
     brightnessEvo: { smoothing: [.05, 1, .05], contrast: [.01, 1, .01] },
-    breathe: { speed: [.25, 3, .05], depth: [.25, 3, .05] },
-    breatheLargePalette: { speed: [.25, 3, .05], depth: [.25, 3, .05] },
+    breathe: { speed: [.25, 3, .05], depth: [.25, 1.5, .05] },
     islands: { activity: [.01, .5, .01] },
     dla: { batchSize: [10, 1000, 10] }
 };
@@ -29,9 +27,4 @@ export function validateEvolutionTuning(value = {}) {
         }
     }
     return result;
-}
-
-// Palette-specific preferences stay independent; recipes record the resolved pair.
-export function breatheTuningKey(paletteLength) {
-    return paletteLength >= 64 ? 'breatheLargePalette' : 'breathe';
 }

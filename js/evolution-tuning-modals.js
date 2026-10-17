@@ -1,11 +1,11 @@
-import { EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
+import { DEFAULT_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
 
 const definitions = {
     brightnessEvo: { title: 'tuning_brightness_title', button: 'btnBrightnessEvo',
         modes: ['brightness', 'contrast'], fields: ['smoothing', 'contrast'] },
     breathe: { title: 'tuning_breathe_title', button: 'btnShowBreatheMenu',
-        modes: ['random-cell', 'solo', 'random-color'], fields: ['speed', 'depth'] },
+        modes: ['solo', 'group', 'random-cell', 'random-color'], fields: ['speed', 'depth'] },
     islands: { title: 'tuning_islands_title', button: 'btnIslands', fields: ['activity'] },
     dla: { title: 'dla_modal_title', button: 'btnDla', modes: ['genetics', 'no-genetics'], fields: ['batchSize'] }
 };
@@ -77,7 +77,7 @@ export function initializeEvolutionTuningModals(app) {
         dialog.querySelector('[data-close]').addEventListener('click', close);
         dialog.querySelector('[data-cancel]').addEventListener('click', close);
         dialog.querySelector('[data-reset]').addEventListener('click', () => {
-            draft = { ...app.getDefaultEvolutionTuning(simulation) }; render();
+            draft = { ...DEFAULT_EVOLUTION_TUNING[simulation] }; render();
         });
         dialog.querySelector('form').addEventListener('submit', event => {
             event.preventDefault();
@@ -99,15 +99,13 @@ export function initializeEvolutionTuningModals(app) {
             if (!app.canEditEvolutionTuning(simulation) || dialog.open) return;
             draft = { ...app.getEvolutionTuning()[simulation] };
             mode = app.getEvolutionTuningMode(simulation);
-            const sourceButton = document.getElementById(definition.button);
-            const iconSource = [...sourceButton.querySelectorAll('svg')].find(svg => getComputedStyle(svg).display !== 'none');
-            const icon = iconSource?.cloneNode(true);
+            const icon = document.getElementById(definition.button)?.querySelector('svg')?.cloneNode(true);
             // Strip IDs to avoid duplicate SVG references in the document.
             if (icon) {
                 icon.removeAttribute('id');
                 icon.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
             }
-            dialog.querySelector('.tuning-heading-icon').dataset.islandsMode = sourceButton.classList.contains('mode-proximity') ? 'proximity' : 'classic';
+            dialog.querySelector('.tuning-heading-icon').dataset.islandsMode = document.getElementById(definition.button).classList.contains('mode-proximity') ? 'proximity' : 'classic';
             dialog.querySelector('.tuning-heading-icon').replaceChildren(...(icon ? [icon] : []));
             render(); dialog.showModal();
             dialog.querySelector('input').focus();
