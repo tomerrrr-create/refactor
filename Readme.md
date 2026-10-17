@@ -38,6 +38,12 @@ Hold the paint-color control for **600 ms** to select index zero in the current 
 
 Changing the sorting method remaps tile indices and the selected brush color to preserve their visible colors. Changing palettes clears the ordinary paint-color selection. Palette positions named “darkest” or “lightest” in several engine controls mean the first or last entry of the current ordering; custom sorting can change their physical brightness.
 
+### Landscape layout
+
+Rotating to a viewport wider than it is tall places the board and controls side by side. The square board is as large as the available height and remaining width permit, and the pair is centered. The rail shows all 18 creation controls or 28 simulation controls without scrolling, including the idle Turing control in landscape. It uses the fewest columns of 44-pixel targets that fit the height, with safe-area padding. Portrait retains its original board-above-controls layout.
+
+Rotation and viewport changes resize the display and separators without rebuilding tiles, changing palette or stopping the evolution or Breathe. Drawing coordinates follow the canvas. Macro fullscreen temporarily hides the rail and restores it on exit. See `js/landscape-layout.js` and `updateLayout()` in `js/app.js`.
+
 ### Evolutions, play and cycles
 
 Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Ordinary editing is disabled while the evolution runs. Breathe is an independent display effect: it starts directly from its own button and can accompany any evolution. Play/Pause and Single step control only the selected evolution.

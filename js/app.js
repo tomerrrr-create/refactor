@@ -1,3 +1,4 @@
+import { updateLandscapeLayout } from './landscape-layout.js';
 import { createBreatheDisplay, validateBreatheDisplay } from './breathe-display.js';
 import { createBreatheTransition } from './breathe-transition.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning, breatheTuningKey } from './evolution-tuning.js';
@@ -2333,6 +2334,7 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
 
             dom.btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
             dom.btnToggleSimMode.classList.toggle('active', isSimModeActive);
+            updateLayout();
             dom.controlsContainer.style.opacity = '1';
         }, duration);
       }
@@ -2624,6 +2626,8 @@ function onPointerUp(e) {
 
 function updateLayout() {
     const shell = dom.appShell;
+    const landscape = updateLandscapeLayout({ container: dom.appContainer, shell, controls: dom.controlsContainer,
+        width: window.innerWidth, height: window.innerHeight, simulation: isSimModeActive, fullscreen: isMacroFullscreen });
     
     // --- תוספת: חישוב מיוחד למסך מלא ---
     if (typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen) {
@@ -2636,7 +2640,9 @@ function updateLayout() {
 
 
     // --- מצב רגיל ---
-    else if (window.innerWidth < 768) { 
+    else if (landscape) {
+        // The board fills the available height beside the complete controls rail.
+    } else if (window.innerWidth < 768) {
         shell.style.width = ''; 
     } else {
       const controlsHeight = dom.controlsContainer.offsetHeight;
@@ -4831,6 +4837,7 @@ if (brushSizeSlider) {
 
 
         window.addEventListener('resize', updateLayout);
+        window.visualViewport?.addEventListener('resize', updateLayout);
         window.addEventListener('contextmenu', e => e.preventDefault());
         
         splashText.style.animation = 'fadeInText 2.5s linear forwards';
