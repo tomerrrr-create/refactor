@@ -40,9 +40,9 @@ Changing the sorting method remaps tile indices and the selected brush color to 
 
 ### Evolutions, play and cycles
 
-Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Ordinary editing is disabled while the evolution runs. Breathe animates the rendering rather than discrete generations, so Single step is disabled for it.
+Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Ordinary editing is disabled while the evolution runs. Breathe is an independent display effect: it starts directly from its own button and can accompany any evolution. Play/Pause and Single step control only the selected evolution.
 
-For Game of Life, Chi Flow, erosion, gravity, magnet, spiral, brightness, Islands, Breathe and DLA, switching a mode during playback changes the running rules without reinitializing the board. The cycle wraps between active modes and skips Off. When paused, Off remains part of the cycle and disarms the evolution. Breathe switches its display rhythm with a 600 ms crossfade; Pause fades its last visible frame back to the unchanged board.
+For Game of Life, Chi Flow, erosion, gravity, magnet, spiral, brightness, Islands and DLA, switching a mode during playback changes the running rules without reinitializing the board. The cycle wraps between active modes and skips Off. When paused, Off remains part of the cycle and disarms the evolution. Breathe always includes Off in its separate cycle; mode changes and Off use a 600 ms crossfade. Pause leaves breathing active.
 
 Button cycles intentionally expose a subset of the modes available in settings. For example, magnet cycles Cosmic → Regular → Time; Expand remains in its modal. Spiral cycles Pinwheel → Turbine → Circle; the other modes remain in its modal.
 
@@ -81,7 +81,7 @@ Nudge's interval defaults to 100 ms and can be set from 0 to 200 ms. Its selecte
 
 ### Brightness, Breathe, Islands and DLA settings
 
-Swipe/drag up on the **selected, paused** evolution to open its settings. The shared gold swipe glow appears only when opening is available. Save commits the draft; Cancel, Escape and outside dismissal discard it. Reset restores the original parameter values in the draft and retains the selected mode. Settings are stored per profile, in settings exports and project JSON; saved edits support Undo/Redo and recipe replay. Opening or saving never starts playback or changes the live button cycle rules.
+Swipe/drag up on the **selected, paused** evolution to open its settings. The shared gold swipe glow appears only when opening is available. Save commits the draft; Cancel, Escape and outside dismissal discard it. Reset restores the original parameter values in the draft and retains the selected mode. Settings are stored per profile, in settings exports and project JSON; saved edits support Undo/Redo and recipe replay. Opening or saving never starts simulation playback or changes its live button cycle rules. Breathe settings are available even while an evolution runs or breathing is Off; saving activates the chosen display mode.
 
 | Evolution | Parameter | Range | Original default |
 | --- | --- | --- | --- |
@@ -92,7 +92,11 @@ Swipe/drag up on the **selected, paused** evolution to open its settings. The sh
 | Islands | Copy attempts per generation | 1–50% of the board cell count | 5% |
 | DLA | Particle steps per generation | 10–1,000 | 100 |
 
-While paused, breathe cycles Random cells → Individual cells → Random colors → Off, with no change to the control layout. While playing, the three active modes cycle continuously and skip Off; use Pause to stop. Each live change and stop uses a display-only 600 ms crossfade that includes Soft Bloom. Rapid actions retarget from the current composite and do not queue or lock controls. The overlay is bounded to 1,024 pixels per side, is excluded from project/PNG export, and is removed after completion, resize or backgrounding. Reduced-motion preferences apply changes immediately. The logical state and recipe timestamps remain synchronous; live rhythm changes are recorded as `Breathe Mode Changed` with mode, running state and resolved tuning. Color groups is no longer selectable; legacy recipes can still replay it. Its settings modal follows the same three-mode order. Palettes with fewer than 64 colors and palettes with 64 or more colors retain separate rate/depth preferences; Reset uses the defaults for the current palette size. Recipes store the resolved values so old recordings retain their original breathing rate and depth.
+Breathe always cycles Random cells → Individual cells → Random colors → Off, independently of simulation playback. A mode starts immediately; selecting Off fades breathing away without stopping the evolution. Pause stops only the evolution, so breathing continues over the paused board. While no evolution runs, drawing, sorting, palette changes, resizing and stepping remain available. The button keeps its simulation-panel position and also appears between Undo and Redo in the creation interface.
+
+Each display change uses a 600 ms crossfade including Soft Bloom. Rapid actions retarget from the current composite and do not queue or lock controls. The overlay is bounded to 1,024 pixels per side, excluded from project/PNG export, and removed after completion, resize or backgrounding. Reduced-motion preferences apply changes immediately. Logical state and recipe timestamps remain synchronous. `BREATHE_DISPLAY` records version, mode and resolved tuning separately from simulation `PLAY`/`PAUSE`. Project JSON and Undo/Redo include `breatheDisplay`; profile settings store the display mode and both palette-size tuning buckets. Old `PLAY` records for Breathe and `Breathe Mode Changed` events remain readable with their original pause behavior. Rhythm randomness is still visual and is not seeded for pixel-identical replay.
+
+Color groups remains legacy playback only. Settings follow the same three-mode order. Palettes below 64 colors and palettes of 64 or more colors retain separate rate/depth preferences; Reset uses the current palette size. Recipes store resolved values. `js/breathe-display.js` owns private animation state and reads the current board each render without modifying tiles or the simulation random cursor. Cell rhythms follow grid positions; color rhythms follow palette color identities, including after sorting.
 
 Brightness and DLA also allow selection among their existing modes.
 
@@ -280,13 +284,13 @@ Engine contracts differ. Game of Life, Chi Flow, erosion, contours and brightnes
 ---
 
 ### 1. Breathe (Animation Engine)
-**File:** `js/simulations/breathe.js`
+**Files:** `js/breathe-display.js`, `js/simulations/breathe.js`, `js/breathe-transition.js`
 
 Unlike other simulations that update discrete states per generation, `Breathe` operates directly inside the `animationLoop` to manipulate pixel brightness dynamically.
 
 * **Mathematical Model:** Uses a continuous sine wave (`Math.sin()`) tied to the global `timestamp` to calculate a luminosity multiplier.
 * **Modes (`breatheEvoMode`):**
-    * `solo`: Each tile pulses individually. The sine wave's phase is offset by an initial `startDelay` assigned to the tile when the simulation arms.
+    * `solo`: Each tile pulses individually. The sine wave's phase is offset by an initial phase delay stored privately in the display controller.
     * `random-cell`: Independent changing rhythms per tile; first in the control cycle.
     * `random-color`: Independent changing rhythms per color; third in the control cycle.
     * `group` (legacy playback only): A synchronized organic pulse. The sine phase is offset by the tile's current color index (`tileData.k * 0.8`), causing adjacent colors to breathe in localized "waves".
