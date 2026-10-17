@@ -1,3 +1,4 @@
+import { PALETTES } from './data/palettes.js';
 import { createGuideRipples } from './guide-ripples.js';
 import { getCurrentLang, onLanguageChange } from './i18n.js';
 const COPY = {
@@ -342,6 +343,17 @@ export function initializeQuickStart() {
   });
   begin.addEventListener('click', () => { if (touches < 2) return; welcoming = false; ripples.stop(); showPage(); next.focus({preventScroll:true}); });
   const entries = [...document.querySelectorAll('[data-open-guide]')];
+  function paletteSymbol(name) {
+    const template = document.createElement('template');
+    template.innerHTML = PALETTES.find(palette => palette.originalName === name).iconHTML;
+    const svg = template.content.querySelector('svg');
+    svg.querySelectorAll('text').forEach(text => {
+      if (/^(HD|HQ)$/.test(text.textContent.trim())) text.remove();
+    });
+    return svg;
+  }
+  const openingIcon = paletteSymbol('Golden Midnight Extended');
+  const paletteFallback = paletteSymbol('Ancient 264');
   const icons = ['btnPalette','btnPalette','btnColorPicker','btnSymmetry','btnResizeUp','btnToggleSimMode','btnGameOfLife','btnSandpile','btnGravitationalSort','btnContour','btnCycleSort','btnSave','btnMacroPlay'];
   let index = 0, trigger = null, gesture = null;
   const copy = () => COPY[getCurrentLang()] || COPY.en;
@@ -361,7 +373,8 @@ export function initializeQuickStart() {
     next.textContent = index === copy().slides.length - 1 ? c.done : c.next; close.setAttribute('aria-label', c.close);
     buttons.forEach((b,i) => { b.setAttribute('aria-label', `${c.slide} ${i+1}: ${c.slides[i][0]}`); b.setAttribute('aria-current', i === index ? 'step' : 'false'); });
     visual.replaceChildren();
-    const icon = document.getElementById(icons[index])?.querySelector('svg');
+    const icon = index === 0 ? openingIcon
+      : document.getElementById(icons[index])?.querySelector('svg') || (index === 1 ? paletteFallback : null);
     if (icon) { const clone = icon.cloneNode(true); clone.removeAttribute('id'); clone.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); visual.append(clone); }
     else visual.textContent = '◇';
     panel.getAnimations().forEach(a => a.cancel());
