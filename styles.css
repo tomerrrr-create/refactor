@@ -1894,3 +1894,8 @@ button, .ctrl {
 
 .evolution-tuning-dialog .init-settings-actions button { flex:1; min-width:0; padding:10px 8px; border:1px solid #b28b3645; background:#121310; color:#c3b99e; font-size:12px; }
 .evolution-tuning-dialog .init-settings-actions .save-btn { border-color:#d4b865; background:#b28b3624; color:#ffe7a0; }
+
+#btnIslands .islands-proximity-mark { display:none; }
+#btnIslands.mode-proximity .islands-proximity-mark { display:block; fill:var(--gold); }
+.tuning-heading-icon .islands-proximity-mark { display:none; }
+.tuning-heading-icon[data-islands-mode="proximity"] .islands-proximity-mark { display:block; fill:var(--gold); }

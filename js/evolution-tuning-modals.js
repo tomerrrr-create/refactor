@@ -105,6 +105,7 @@ export function initializeEvolutionTuningModals(app) {
                 icon.removeAttribute('id');
                 icon.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
             }
+            dialog.querySelector('.tuning-heading-icon').dataset.islandsMode = document.getElementById(definition.button).classList.contains('mode-proximity') ? 'proximity' : 'classic';
             dialog.querySelector('.tuning-heading-icon').replaceChildren(...(icon ? [icon] : []));
             render(); dialog.showModal();
             dialog.querySelector('input').focus();

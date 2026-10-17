@@ -1,22 +1,28 @@
 import { validateEvolutionTuning } from '../evolution-tuning.js';
 // Version 1: asynchronous voter model. Keep old versions stable for recipe replay.
 const VERSION = 1;
+const PROXIMITY_VERSION = 2;
 const UINT32_MAX = 0xffffffff;
 const isUint32 = value => Number.isInteger(value) && value >= 0 && value <= UINT32_MAX;
 
-export function createIslandsSession(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0], rules = {}) {
+export function createIslandsSession(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0], rules = {}, mode = 'classic') {
     if (!isUint32(seed)) throw new Error('Invalid Islands seed');
+    if (!['classic', 'proximity'].includes(mode)) throw new Error('Invalid Islands mode');
     const { activity } = validateEvolutionTuning({ islands: rules }).islands;
-    return { islandsVersion: VERSION, seed, state: seed, steps: 0, ...(activity === .05 ? {} : { activity }) };
+    return { islandsVersion: mode === 'proximity' ? PROXIMITY_VERSION : VERSION, seed, state: seed, steps: 0,
+        ...(mode === 'proximity' ? { mode } : {}), ...(activity === .05 ? {} : { activity }) };
 }
 
 export function restoreIslandsSession(snapshot) {
-    if (!snapshot || snapshot.islandsVersion !== VERSION || !isUint32(snapshot.seed) ||
+    if (!snapshot || ![VERSION, PROXIMITY_VERSION].includes(snapshot.islandsVersion) ||
+        (snapshot.islandsVersion === PROXIMITY_VERSION && snapshot.mode !== 'proximity') ||
+        (snapshot.islandsVersion === VERSION && snapshot.mode !== undefined && snapshot.mode !== 'classic') || !isUint32(snapshot.seed) ||
         !isUint32(snapshot.state) || !Number.isSafeInteger(snapshot.steps) || snapshot.steps < 0) {
         throw new Error('Unsupported or invalid Islands recording');
     }
     if (Object.hasOwn(snapshot, 'activity')) validateEvolutionTuning({ islands: { activity: snapshot.activity } });
-    return { islandsVersion: VERSION, seed: snapshot.seed, state: snapshot.state, steps: snapshot.steps,
+    return { islandsVersion: snapshot.islandsVersion, seed: snapshot.seed, state: snapshot.state, steps: snapshot.steps,
+        ...(snapshot.islandsVersion === PROXIMITY_VERSION ? { mode: 'proximity' } : {}),
         ...(Object.hasOwn(snapshot, 'activity') ? { activity: snapshot.activity } : {}) };
 }
 
@@ -29,8 +35,12 @@ function random(session) {
     return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
 }
 
-export function runIslandsGeneration({ n, currentBoardState }, session) {
+export function runIslandsGeneration({ n, currentBoardState, currentPalette }, session) {
     if (!session) throw new Error('Islands session is missing');
+    const proximity = session.islandsVersion === PROXIMITY_VERSION;
+    if (proximity && !currentPalette?.length) throw new Error('Islands proximity needs a palette');
+    const paletteLength = currentPalette?.length || 1;
+    const span = Math.max(1, paletteLength - 1);
     if (n >= 2 && currentBoardState.length) {
         const count = Math.max(1, Math.floor(currentBoardState.length * (session.activity ?? .05)));
         for (let attempt = 0; attempt < count; attempt++) {
@@ -45,6 +55,14 @@ export function runIslandsGeneration({ n, currentBoardState }, session) {
             else continue;
             const target = currentBoardState[index], source = currentBoardState[neighbor];
             if (!target || !source || target.isGold || source.isGold) continue;
+            // Original proximity rule: choose a random neighbor, then accept by
+            // normalized rank distance. No weighted neighbor selection or strength setting.
+            // Keep classic's random sequence completely unchanged.
+            if (proximity) {
+                const targetRank = ((target.k % paletteLength) + paletteLength) % paletteLength;
+                const sourceRank = ((source.k % paletteLength) + paletteLength) % paletteLength;
+                if (random(session) >= span / (span + 4 * Math.abs(targetRank - sourceRank))) continue;
+            }
             target.k = source.k;
             target.v = source.k;
             target.prevK = null;
