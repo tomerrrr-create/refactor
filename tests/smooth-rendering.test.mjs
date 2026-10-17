@@ -9,7 +9,7 @@ import { prepareDisplayCanvas } from '../js/display-canvas.js';
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function harness(size = 149) {
     const screen = { drawImage() {}, fillRect() {}, setTransform() {} };
-    const h = vm.createContext({ prepareDisplayCanvas, window: { devicePixelRatio: 1 }, isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, breatheDisplay: {isActive:()=>false}, isLifePlaying: false,
+    const h = vm.createContext({ prepareDisplayCanvas, window: { devicePixelRatio: 1 }, isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, isLifePlaying: false,
         boardState: Array.from({ length: size * size }, (_, i) => i % 2).map(k => ({ k, v: k, isGold: false, prevK: null })),
         palette: () => ['#000000', '#ffffff'], norm: k => k % 2,
         hexToRgb, lerp, performance: { now: () => 0 }, C: {}, ctx: screen,
@@ -19,7 +19,7 @@ function harness(size = 149) {
         }) }) }
     });
     vm.runInContext('function getRenderedSeparatorWidth() { return separatorPx; }', h);
-    vm.runInContext(source.slice(source.indexOf('let offscreenRenderCanvas = null;'), source.indexOf('function updatePaletteHeader()')), h);
+    vm.runInContext(source.slice(source.indexOf('let offscreenRenderCanvas = null;'), source.indexOf('// --- startBreatheAnimation')), h);
     return h;
 }
 test('screen smoothing toggles without modifying the grid or cached pixel data', () => {

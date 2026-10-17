@@ -488,6 +488,7 @@ function refreshResizeSteps() {
 }
 
 function openResizeModal() {
+    if (app.isBreathing()) return;
     app.dom.resizeInput.value = app.getN();
     refreshResizeSteps();
     app.dom.resizeModal.classList.add('modal-visible');
@@ -497,7 +498,7 @@ function openResizeModal() {
 
 // Phase 1 Addition
 function openAdvancedColorMappingModal() {
-    if (app.isLifePlaying()) return;
+    if (app.isBreathing() || app.isLifePlaying()) return;
     app.dom.adaptModalTitle.textContent = app.getText('adaptModal_title');
     app.dom.adaptModalDesc.textContent = app.getText('adaptModal_desc');
     app.dom.btnAdaptColors.textContent = app.getText('adaptModal_confirmBtn');
@@ -659,6 +660,7 @@ function renderColorPickerContent() {
 }
 
 function openColorPickerModal(targetTileIndex = null) {
+    if (app.isBreathing()) return;
     app.pointerState.longPressTarget = targetTileIndex;
     const selectedColorIndex = app.getSelectedColorIndex();
     app.setColorPickerPage(!app.isRainbowModeActive() && selectedColorIndex >= 0
@@ -674,6 +676,7 @@ function openHelpModal() {
 }
 
 function openPaletteModal() {
+    if (app.isBreathing()) return;
     populatePaletteModal();
     app.dom.paletteModal.classList.add('modal-visible');
 
@@ -1063,7 +1066,7 @@ function applyGolPreset(survivalArray, birthArray) {
 
 
 function openGolSettingsModal() {
-    if (app.isLifePlaying()) return;
+    if (app.isBreathing() || app.isLifePlaying()) return;
     
     // --- START: MODIFICATION ---
     // במקום להגדיר טקסט, נפעיל את הפונקציה שמעדכנת את הכפתורים
@@ -1107,7 +1110,7 @@ function resetGolSettings() {
 }
 
 function openGravitationalSortSettingsModal() {
-    if (app.isLifePlaying()) return;
+    if (app.isBreathing() || app.isLifePlaying()) return;
     const rules = app.getGravitationalSortRules();
     app.dom.gsDirectionButtons.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.direction === rules.direction);
@@ -1136,7 +1139,7 @@ function saveGravitationalSortSettings() {
 }
 // --- START: Added for Contour Settings ---
 function openContourSettingsModal() {
-    if (app.isLifePlaying()) return;
+    if (app.isBreathing() || app.isLifePlaying()) return;
 
     // 1. Set all texts from i18n
     app.dom.contourSettingsTitle.textContent = app.getText('contour_modal_title');
@@ -1270,6 +1273,7 @@ export function initializeModals(appContext) {
         updateSortSelection();
     }
     function openSortCycleModal() {
+        if (app.isBreathing()) return;
         sortStatus.textContent = '';
         draftSortMethods = app.getSortCycleMethods();
         isOrderingSort = false;

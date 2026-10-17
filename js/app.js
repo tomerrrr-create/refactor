@@ -1,5 +1,3 @@
-import { createBreatheDisplay, validateBreatheDisplay } from './breathe-display.js';
-import { createBreatheTransition } from './breathe-transition.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning, breatheTuningKey } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
@@ -118,7 +116,7 @@ window.logArtEvent = function(eventName, details, forceLog = false) {
     
         // מערכת היברידית: אם אנחנו בסימולציה רצה (ולא Breathe), נוסיף חותמת דור
         let genTag = "";
-        if (isLifePlaying && armedSimulation) {
+        if (isLifePlaying && armedSimulation && armedSimulation !== 'breathe') {
             genTag = ` [GEN:${currentGenerationCount}]`;
         }
     
@@ -141,11 +139,10 @@ window.logArtEvent = function(eventName, details, forceLog = false) {
 
 
       // --- Breathe Animation State ---
-      const breatheDisplay = createBreatheDisplay();
-      let legacyBreatheMode = 'off';
-      let legacyBreathePlayback = false;
-      let breatheTransition = null;
-      let breatheEvoMode = 'off'; // Independent display effect; never an armed simulation.
+      let isBreathing = false; // This variable is now effectively replaced by (isLifePlaying && armedSimulation === 'breathe')
+      let breatheStartTime = 0;
+      let randomBreatheSession = null;
+      let breatheEvoMode = 'off'; // 'off', 'solo' or 'group'
 
 
 
@@ -323,6 +320,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let hasTriggeredFirstNudge = false;
       let hasUsedRandomize = false;
       let isAnimating = false;
+      // isBreathing is now defined globally at the top
       let isSimModeActive = false;
       let selectedColor = null;
       let isRainbowModeActive = false;
@@ -390,8 +388,7 @@ function compressBoardState() {
 currentSortMethod, 
             evolutionTuning: structuredClone(evolutionTuning),
             brightnessEvoMode, breatheEvoMode, dlaMode,
-            breatheDisplay: getBreatheDisplayState(),
-            ...(['brightnessEvo', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
+            ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'islands' && islandsSession ? { islandsState: { ...islandsSession } } : {}),
@@ -410,8 +407,7 @@ currentSortMethod,
             pal: activePaletteIndex,
             sort: currentSortMethod,
             sep: separatorPx,
-            board: compressBoardState(),
-            breatheDisplay: getBreatheDisplayState()
+            board: compressBoardState()
         };
         window.logArtEvent('INIT_STATE', JSON.stringify(stateSnapshot));
     }
@@ -431,7 +427,7 @@ currentSortMethod,
       function applyState(state) {
         if (state.evolutionTuning) {
             validateEvolutionTuning(state.evolutionTuning);
-            if (['brightnessEvo', 'islands', 'dla'].includes(state.tuningSimulation) && armedSimulation !== state.tuningSimulation) {
+            if (['brightnessEvo', 'breathe', 'islands', 'dla'].includes(state.tuningSimulation) && armedSimulation !== state.tuningSimulation) {
                 armSimulation(state.tuningSimulation, { recordIslandsStart: false });
             }
             restoreEvolutionTuningState(state);
@@ -497,8 +493,6 @@ k: tileState.k,
             islandsSession = restoreIslandsSession(state.islandsState);
             updateIslandsButtonUI();
         }
-        if (state.breatheDisplay) restoreBreatheDisplay(state.breatheDisplay);
-        else if (state.tuningSimulation === 'breathe') setBreatheDisplayMode(state.breatheEvoMode ?? 'off', { record: false });
         applySeparator();
       }
 
@@ -590,7 +584,7 @@ boardState = new Array(n * n).fill(null).map(() => ({
 
           renderToScreen(now);
 
-          if (isStillAnimating || breatheDisplay.isActive()) {
+          if (isStillAnimating || (isLifePlaying && armedSimulation === 'breathe')) {
               animationLoopId = requestAnimationFrame(animationLoop);
           } else {
               animationLoopId = null; 
@@ -610,12 +604,14 @@ let offscreenRenderCtx = null;
 let cachedImgData = null; // משתנה למניעת דליפת זיכרון!
 
 function renderBoard(targetCtx, width, height, timestamp = performance.now(), smooth = false, renderSeparatorPx = getRenderedSeparatorWidth()) {
+    if (isLifePlaying && armedSimulation === 'breathe' && randomBreatheSession) {
+        randomBreatheSession.update(Math.max(0, (timestamp ?? performance.now()) - breatheStartTime));
+    }
     if (!targetCtx) return;
     if (boardState.length === 0) return;
 
     const currentPalette = palette();
-    const breatheActive = breatheDisplay.isActive();
-    if (breatheActive) breatheDisplay.prepare(boardState, currentPalette, timestamp ?? performance.now(), getBreatheTuning());
+    const breatheRules = isLifePlaying && armedSimulation === 'breathe' ? getBreatheTuning() : null;
     const paletteAsRgb = currentPalette.map(hexToRgb);
 
     // ---------------------------------------------------------
@@ -645,7 +641,19 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
             if (!tileData) continue;
 
             let rgb;
-            if (tileData.isGold) {
+            if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
+                const brightnessFactor = randomBreatheSession
+                    ? randomBreatheSession.factor(i)
+                    : Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode, breatheRules);
+                const baseRgb = paletteAsRgb[norm(tileData.k)];
+                rgb = [
+                    Math.round(baseRgb[0] * brightnessFactor),
+                    Math.round(baseRgb[1] * brightnessFactor),
+                    Math.round(baseRgb[2] * brightnessFactor)
+                ];
+            }
+            
+         else if (tileData.isGold) {
                 rgb = goldRgb;
             } else if (tileData.prevK !== null && timestamp) {
                 const elapsed = timestamp - tileData.animStart;
@@ -659,11 +667,6 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
                 ];
             } else {
                 rgb = paletteAsRgb[norm(tileData.k)];
-            }
-
-            if (breatheActive && !tileData.isGold) {
-                const factor = breatheDisplay.factor(i);
-                rgb = rgb.map(channel => Math.round(channel * factor));
             }
 
             // כתיבה ישירה לזיכרון התמונה (4 תאים לכל פיקסל: R, G, B, Alpha)
@@ -700,8 +703,14 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
         let finalColor;
 
-        const brightnessFactor = breatheActive && !tileData.isGold ? breatheDisplay.factor(i) : 1;
-        if (tileData.isGold) {
+        if (isLifePlaying && armedSimulation === 'breathe' && !tileData.isGold) {
+            const brightnessFactor = randomBreatheSession
+                    ? randomBreatheSession.factor(i)
+                    : Simulations.getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime, breatheEvoMode, breatheRules);
+            const originalColor = getPaletteColor(tileData.k);
+            finalColor = adjustBrightness(originalColor, brightnessFactor);
+        }
+        else if (tileData.isGold) {
             finalColor = C.GOLD || '#FFD700'; 
         } else if (tileData.prevK !== null && timestamp) {
             const elapsed = timestamp - tileData.animStart;
@@ -714,9 +723,9 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
             const g = Math.round(lerp(fromRgb[1], toRgb[1], progress));
             const b = Math.round(lerp(fromRgb[2], toRgb[2], progress));
             
-            finalColor = `rgb(${Math.round(r * brightnessFactor)},${Math.round(g * brightnessFactor)},${Math.round(b * brightnessFactor)})`;
+            finalColor = `rgb(${r},${g},${b})`;
         } else {
-            finalColor = brightnessFactor === 1 ? getPaletteColor(tileData.k) : adjustBrightness(getPaletteColor(tileData.k), brightnessFactor);
+            finalColor = getPaletteColor(tileData.k);
         }
 
         targetCtx.fillStyle = finalColor;
@@ -739,6 +748,8 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         softBloom?.draw();
       }
 
+      // --- startBreatheAnimation and stopBreatheAnimation are now removed. ---
+      // Logic is merged into togglePlayPauseLife.
       
       function updatePaletteHeader() {
         const pal = C.PALETTES[activePaletteIndex];
@@ -1264,10 +1275,11 @@ const { nextBoardState, nextDlaState } = Simulations.runDlaGeneration(dlaContext
 boardState = nextBoardState;
 dlaState = nextDlaState;
 break;
+            case 'breathe': break; // This loop only handles discrete simulations. Breathe uses animationLoop.
 
         }
         if (armedSimulation !== 'nudgeBrighter' && armedSimulation !== 'nudgeDarker') {
-                        if (!breatheDisplay.isActive()) renderToScreen(null);
+                        renderToScreen(null);
                     }
             
                     if (didAdvance) currentGenerationCount++; // Count actual Nudge shifts; other simulations are unchanged.
@@ -1304,7 +1316,7 @@ break;
 
 
       function stepForward() {
-        if (isLifePlaying) return;
+        if (isLifePlaying || armedSimulation === 'breathe') return;
         
         // --- תוספת: תיעוד מורחב ב-Art Logger כולל מצב וחוקים ---
         let simDetails = "No specific rules mapping";
@@ -1408,7 +1420,7 @@ function pauseLife() {
           isLifePlaying = false;
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
           animationFrameId = null;
-          // The display loop keeps running independently while Breathe is enabled.
+          // animationLoop will stop itself on its next frame because isLifePlaying is false
 
           if (simulationStartState) {
               const simulationEndState = getCurrentState();
@@ -1420,11 +1432,11 @@ function pauseLife() {
 
           dom.iconPlay.style.display = 'block';
           dom.iconPause.style.display = 'none';
-          if (armedSimulation) dom.btnStepForward.disabled = false;
+          if (armedSimulation && armedSimulation !== 'breathe') dom.btnStepForward.disabled = false;
           
           // מחזירים לפעולה את כל כפתורי הסימולציה
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnIslands,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1459,6 +1471,7 @@ function pauseLife() {
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
         else if (armedSimulation === 'brightnessEvo') simDetails = JSON.stringify({ mode: brightnessEvoMode, tuning: evolutionTuning.brightnessEvo });
+        else if (armedSimulation === 'breathe') simDetails = JSON.stringify({ mode: breatheEvoMode, tuning: getBreatheTuning() });
         
         window.logArtEvent('PLAY', `Armed: ${armedSimulation} | Sort: ${currentSortMethod} | Rules: ${simDetails}`);        // ------------------------------------------------
 
@@ -1466,11 +1479,41 @@ function pauseLife() {
 
        
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnIslands,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
           ].filter(Boolean);
+
+          // --- Handle Breathe Simulation (uses animationLoop) ---
+          if (armedSimulation === 'breathe') {
+              const BREATHE_SPEED = 0.0015;
+              const cycleDuration = (2 * Math.PI) / BREATHE_SPEED;            
+              if (!['random-cell', 'random-color'].includes(breatheEvoMode)) {
+                  boardState.forEach(tile => {
+                      tile.startDelay = Math.random() * cycleDuration;
+                  });
+              }
+
+              randomBreatheSession = ['random-cell', 'random-color'].includes(breatheEvoMode)
+                  ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode, Math.random, getBreatheTuning()) : null;
+              breatheStartTime = performance.now();
+              isLifePlaying = true;
+              
+              dom.iconPlay.style.display = 'none';
+              dom.iconPause.style.display = 'block';
+              dom.btnStepForward.disabled = true;
+              
+              // מכבים את כל הכפתורים למעט הכפתור של הנשימה
+              simButtons.forEach(btn => {
+                  if (btn.id !== 'btnShowBreatheMenu') {
+                      btn.disabled = true;
+                  }
+              });
+
+              startAnimationLoop(); // Start the smooth animation loop
+              return; // Exit here, don't start gameLoop
+          }
 
           // --- Handle Discrete Simulations (uses gameLoop) ---
           currentGenerationCount = 0; // איפוס מונה הדורות בכל פעם שלוחצים Play
@@ -1579,7 +1622,7 @@ function initializeDla() {
 
 
 function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
-    if (isLifePlaying || simulationName === 'breathe') return;
+    if (isLifePlaying) return;
 
     // --- MACRO KILL SWITCH ---
     // אם לחצו על כפתור סימולציה באופן ידני (ולא מתוך פקודת מאקרו), אנחנו משמידים את המאקרו הטעון
@@ -1596,13 +1639,14 @@ function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     armedSimulation = null;
     brightnessEvoMode = 'off';
     dlaMode = 'off';
+    breatheEvoMode = 'off';
     turingState = null;
     gsMode = 'off'; // איפוס הגרביטציה
     spiralMode = 'off'; // איפוס הספירלה (התיקון לבאג)
 magnetMode = 'off';
 if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnIslands, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     
@@ -1658,6 +1702,9 @@ if (!isTogglingOff && simulationName !== null) {
             dlaMode = 'genetics';
             initializeDla();
         }
+        if (simulationName === 'breathe') {
+            breatheEvoMode = 'random-cell';
+        }
         if (simulationName === 'gravitationalSort') {
             gsMode = 'up';
             if (typeof gravitationalSortRules !== 'undefined') gravitationalSortRules.direction = 'up';
@@ -1693,6 +1740,10 @@ if (simulationName === 'magnet') {
         dom.btnStepForward.disabled = false;
 
 
+// מניעת כפתור 'צעד קדימה' בנשימה (שעובדת על אנימציה רציפה)
+        if (simulationName === 'breathe') {
+            dom.btnStepForward.disabled = true;
+        }
 
     
     }
@@ -1841,6 +1892,7 @@ if (simulationName === 'magnet') {
         if (!state.evolutionTuning) return;
         evolutionTuning = validateEvolutionTuning(state.evolutionTuning);
         if (['off', 'brightness', 'contrast'].includes(state.brightnessEvoMode)) brightnessEvoMode = state.brightnessEvoMode;
+        if (['off', 'solo', 'group', 'random-cell', 'random-color'].includes(state.breatheEvoMode)) breatheEvoMode = state.breatheEvoMode;
         if (['off', 'genetics', 'no-genetics'].includes(state.dlaMode)) {
             dlaMode = state.dlaMode;
             if (dlaMode !== 'off') dlaRules.colorGenetics = dlaMode === 'genetics';
@@ -1858,7 +1910,7 @@ if (simulationName === 'magnet') {
       }
 
       function saveEvolutionTuning(simulation, rules, mode) {
-        if ((simulation !== 'breathe' && (armedSimulation !== simulation || isLifePlaying)) || isMacroLoaded || isMacroPlaying) return false;
+        if (armedSimulation !== simulation || isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
         const key = simulation === 'breathe' ? breatheTuningKey(paletteLen()) : simulation;
         const next = validateEvolutionTuning({ ...evolutionTuning, [key]: rules });
         const modes = { brightnessEvo: ['brightness', 'contrast'], breathe: ['random-cell', 'solo', 'random-color'], dla: ['genetics', 'no-genetics'] };
@@ -1871,10 +1923,6 @@ if (simulationName === 'magnet') {
                 breatheEvoMode: simulation === 'breathe' ? mode : breatheEvoMode,
                 dlaMode: simulation === 'dla' ? mode : dlaMode };
             restoreEvolutionTuningState(state);
-            if (simulation === 'breathe') {
-                setBreatheDisplayMode(mode, { record: false });
-                state.breatheDisplay = getBreatheDisplayState();
-            }
             window.logArtEvent('EVOLUTION_TUNING', JSON.stringify({ simulation, ...state }));
         });
         return true;
@@ -1884,7 +1932,6 @@ if (simulationName === 'magnet') {
         return {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
-            ...(breatheEvoMode !== 'off' ? { breatheDisplayMode: breatheEvoMode } : {}),
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
             ...(JSON.stringify(evolutionTuning) === JSON.stringify(DEFAULT_EVOLUTION_TUNING) ? {} : { evolutionTuning: structuredClone(evolutionTuning) }),
             ...(separatorCycle.join() === DEFAULT_SEPARATOR_CYCLE.join() ? {} : { separatorCycle: [...separatorCycle] }),
@@ -1934,7 +1981,6 @@ if (simulationName === 'magnet') {
         setBrushMode(settings.brush.mode !== 'copy', settings.brush.mode === 'continuous');
         symmetryMode = settings.brush.symmetry;
         updateSymmetryUI();
-        setBreatheDisplayMode(settings.breatheDisplayMode ?? 'off', { fade: !startup, record: !startup });
         renderToScreen(null);
       }
 
@@ -2157,8 +2203,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                     pal: activePaletteIndex,
                     sort: currentSortMethod,
                     sep: separatorPx,
-                    board: compressBoardState(),
-                    breatheDisplay: getBreatheDisplayState()
+                    board: compressBoardState()
                 };
                 window.logArtEvent('INIT_STATE', JSON.stringify(simState));
                 // =========================================================================
@@ -2168,6 +2213,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
 
 function handlePointerDownCtrl(e) {
+        if (isBreathing) return;
         clearTimeout(longPressTimer);
         const btn = e.currentTarget;
         if (btn === dom.btnSave || btn === dom.btnPlayPauseLife) return;
@@ -2184,6 +2230,7 @@ function handlePointerDownCtrl(e) {
 
       
       function handleCtrlClick(e, actionFn) {
+        if (isBreathing && e.currentTarget.id !== 'btnPlayPauseLife') return;
         if (wasLongPress) { wasLongPress = false; return; }
         actionFn();
       }
@@ -2342,7 +2389,7 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.bt
         dlaState = null;
 turingState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnIslands, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
@@ -2354,6 +2401,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnIslands, dom
    dlaMode = 'off';
     updateDlaButtonUI();
     updateErosionButtonUI();
+    breatheEvoMode = 'off';
     updateBreatheEvoButtonUI();
 spiralMode = 'off';
     updateSpiralButtonUI();
@@ -2497,7 +2545,7 @@ function onPointerDown(e) {
     }
     // -----------------------------------------------------------
     
-    if (isLifePlaying) return;
+    if (isLifePlaying || isBreathing) return;
 
     
     const index = getTileIndexFromCoords(e.clientX, e.clientY);
@@ -3153,58 +3201,34 @@ function cycleIslandsMode() {
         : { ...islandsSession, mode: next }));
 }
 
-function getBreatheDisplayState() {
-    return { version: 1, mode: breatheEvoMode,
-        ...(breatheEvoMode !== 'off' ? { tuning: { ...getBreatheTuning() } } : {}) };
-}
-
-function setBreatheDisplayMode(mode, { fade = true, record = true, rules = getBreatheTuning() } = {}) {
-    const snapshot = validateBreatheDisplay({ version: 1, mode, ...(mode !== 'off' ? { tuning: rules } : {}) });
-    const apply = () => {
-        if (mode !== 'off') evolutionTuning[breatheTuningKey(paletteLen())] = snapshot.tuning;
-        breatheEvoMode = snapshot.mode;
-        breatheDisplay.setMode(snapshot.mode, { now: performance.now(), rules });
-        updateBreatheEvoButtonUI();
-        if (breatheDisplay.isActive()) startAnimationLoop();
-        renderToScreen(performance.now());
-        if (record) window.logArtEvent('BREATHE_DISPLAY', JSON.stringify(snapshot));
-        if (!isMacroLoaded && !isExecutingMacroCommand && settingsProfiles) {
-            persistWorkspaceSettings(getWorkspaceSettings());
-            settingsProfiles.scheduleCapture();
-        }
-    };
-    if (fade && breatheTransition) breatheTransition.run(apply);
-    else apply();
-}
-
-function restoreBreatheDisplay(snapshot, options = {}) {
-    const value = validateBreatheDisplay(snapshot);
-    setBreatheDisplayMode(value.mode, { ...options, record: false, rules: value.tuning ?? getBreatheTuning() });
-}
-
 function updateBreatheEvoButtonUI() {
     updateIslandsButtonUI();
     const modes = ['random-cell', 'solo', 'random-color'];
     const icons = ['iconBreatheRandomCell', 'iconBreatheSolo', 'iconBreatheRandomColor'];
-    const selectedMode = breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode;
+    const selectedMode = armedSimulation === 'breathe' ? (breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode) : 'off';
     dom.btnShowBreatheMenu.classList.remove('mode-group', ...modes.map(mode => 'mode-' + mode), 'simulation-active');
     modes.forEach((mode, index) => {
         document.getElementById(icons[index]).style.display = mode === selectedMode || (selectedMode === 'off' && index === 0) ? 'block' : 'none';
     });
     if (modes.includes(selectedMode)) dom.btnShowBreatheMenu.classList.add('mode-' + selectedMode);
-    if (breatheEvoMode !== 'off') dom.btnShowBreatheMenu.classList.add('simulation-active');
-    dom.btnShowBreatheMenu.setAttribute('aria-pressed', String(breatheEvoMode !== 'off'));
+    if (armedSimulation === 'breathe') dom.btnShowBreatheMenu.classList.add('simulation-active');
     dom.btnShowBreatheMenu.title = getText('tooltip_breathe');
     dom.btnShowBreatheMenu.setAttribute('aria-label', dom.btnShowBreatheMenu.title);
 }
 
 function cycleBreatheEvoMode() {
-    if (isMacroLoaded && !isExecutingMacroCommand) return;
-    const current = breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode;
-    const modes = ['off', 'random-cell', 'solo', 'random-color'];
-    const next = modes[(modes.indexOf(current) + 1) % modes.length];
-    if (isLifePlaying) setBreatheDisplayMode(next);
-    else performAction(() => setBreatheDisplayMode(next));
+    if (isLifePlaying && armedSimulation !== 'breathe') return;
+    if (isLifePlaying) pauseLife();
+    const currentMode = armedSimulation === 'breathe' ? (breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode) : 'off';
+    const sequence = ['off', 'random-cell', 'solo', 'random-color'];
+    const nextMode = sequence[(sequence.indexOf(currentMode) + 1) % sequence.length];
+    if (nextMode === 'off') {
+        armSimulation(null);
+    } else {
+        if (armedSimulation !== 'breathe') armSimulation('breathe');
+        breatheEvoMode = nextMode;
+    }
+    updateBreatheEvoButtonUI();
 }
 // --- END: New Breathe Functions ---
 
@@ -3438,12 +3462,10 @@ function getHistorySettings(state) {
         ...(state.evolutionTuning ? { evolutionTuning: state.evolutionTuning, brightnessEvoMode: state.brightnessEvoMode,
             breatheEvoMode: state.breatheEvoMode, dlaMode: state.dlaMode,
             ...(state.tuningSimulation ? { tuningSimulation: state.tuningSimulation } : {}) } : {}),
-        ...(state.islandsState ? { islandsState: state.islandsState } : {}),
-        ...(state.breatheDisplay ? { breatheDisplay: state.breatheDisplay } : {}) };
+        ...(state.islandsState ? { islandsState: state.islandsState } : {}) };
 }
 
 function validateHistorySettings(settings) {
-    if (settings?.breatheDisplay) validateBreatheDisplay(settings.breatheDisplay);
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);
     if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
     if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 327 ||
@@ -3457,7 +3479,7 @@ function validateHistorySettings(settings) {
 function applyHistorySettings(settings) {
     validateHistorySettings(settings);
     if (settings.evolutionTuning) {
-        if (['brightnessEvo', 'islands', 'dla'].includes(settings.tuningSimulation) && armedSimulation !== settings.tuningSimulation) {
+        if (['brightnessEvo', 'breathe', 'islands', 'dla'].includes(settings.tuningSimulation) && armedSimulation !== settings.tuningSimulation) {
             armSimulation(settings.tuningSimulation, { recordIslandsStart: false });
         }
         restoreEvolutionTuningState(settings);
@@ -3486,7 +3508,6 @@ function applyHistorySettings(settings) {
     if (separatorPx !== settings.separatorPx) changed = true;
     restoreSeparatorWidth(settings.separatorPx);
     fitCurrentSeparator();
-    if (settings.breatheDisplay) restoreBreatheDisplay(settings.breatheDisplay);
     if (changed) {
         syncSelectedColorWithPalette();
         renderToScreen(null);
@@ -3544,31 +3565,22 @@ function parseHistoryMacro(lines) {
 
     let delta = 0;
     let previousTime = null;
-    let simulationRunning = false, displayRunning = false;
+    let simulationRunning = false;
     return visible.filter(event => event.eventName !== 'HISTORY_ACTION').map(event => {
         if (previousTime !== null) {
             let gap = event.time - previousTime;
             if (gap < 0) gap += 86400000;
-            const cap = (simulationRunning || displayRunning) && event.eventName !== 'STEP FORWARD' ? 600000 : 1000;
+            const cap = simulationRunning && event.eventName !== 'STEP FORWARD' ? 600000 : 1000;
             delta += Math.min(gap, cap);
         }
         previousTime = event.time;
-        if (event.eventName === 'EVOLUTION_TUNING' && JSON.parse(event.details).breatheDisplay) displayRunning = JSON.parse(event.details).breatheDisplay.mode !== 'off';
-        if (event.eventName === 'BREATHE_DISPLAY') displayRunning = JSON.parse(event.details).mode !== 'off';
-        if (event.eventName === 'INIT_STATE') displayRunning = (JSON.parse(event.details).breatheDisplay?.mode ?? 'off') !== 'off';
         if (event.eventName === 'PLAY') simulationRunning = true;
         if (event.eventName === 'PAUSE' || event.eventName === 'HISTORY_SETTINGS') simulationRunning = false;
-        if (event.eventName === 'HISTORY_SETTINGS' && JSON.parse(event.details).breatheDisplay) displayRunning = JSON.parse(event.details).breatheDisplay.mode !== 'off';
         return { ...event, delta };
     });
 }
 
 function validateIslandsMacroAction(action) {
-    if (action.eventName === 'BREATHE_DISPLAY') validateBreatheDisplay(JSON.parse(action.details));
-    if (action.eventName === 'INIT_STATE' || action.eventName === 'EVOLUTION_TUNING') {
-        const snapshot = JSON.parse(action.details);
-        if (snapshot.breatheDisplay) validateBreatheDisplay(snapshot.breatheDisplay);
-    }
     if (action.eventName === 'ISLANDS_INIT') {
         const snapshot = JSON.parse(action.details);
         restoreIslandsSession(snapshot);
@@ -3582,11 +3594,6 @@ function validateIslandsMacroAction(action) {
         const snapshot = JSON.parse(action.details);
         if (!['off', 'classic', 'proximity'].includes(snapshot.mode)) throw new Error('Invalid Islands mode');
         if (snapshot.mode !== 'off') restoreIslandsSession(snapshot);
-    } else if (action.eventName === 'Breathe Mode Changed') {
-        const snapshot = JSON.parse(action.details);
-        if (!['off', 'random-cell', 'solo', 'random-color', 'group'].includes(snapshot.mode) ||
-            typeof snapshot.running !== 'boolean' || (snapshot.mode === 'off' && snapshot.running)) throw new Error('Invalid Breathe mode');
-        if (snapshot.mode !== 'off') validateEvolutionTuning({ breathe: snapshot.tuning ?? {} });
     } else if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
         const match = action.details.match(/^Armed: islands\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
         if (match) restoreIslandsSession(JSON.parse(match[1]));
@@ -3631,8 +3638,7 @@ function parseLegacyMacroText(text) {
     // --- משתני עזר למנגנון דחיסת הזמן ---
     let lastTimestampMs = null; 
     let cumulativeDelta = 0; 
-    let isSimulationRunning = false;
-    let isDisplayRunning = false;
+    let isSimulationRunning = false; 
     
     // --- משתני המנגנון החכם (Squashing & Undo) ---
     let pendingUIState = []; // ישמור פעולות הגדרה זמניות
@@ -3640,13 +3646,13 @@ function parseLegacyMacroText(text) {
     const uiEvents = [
         'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed', 'Breathe Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
     ];
 
     // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
     const simulationEvents = [
         'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed', 'Breathe Mode Changed'
+        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
     ];
 
 
@@ -3698,16 +3704,13 @@ cleanLines.forEach(line => {
                                 lastTimestampMs = timeMs;
                                 parsed.push({ delta: 0, eventName, details, isUndoable: false, isGenBased, targetGen });
                 
-                if (eventName === 'EVOLUTION_TUNING' && JSON.parse(details).breatheDisplay) isDisplayRunning = JSON.parse(details).breatheDisplay.mode !== 'off';
-                if (eventName === 'BREATHE_DISPLAY') isDisplayRunning = JSON.parse(details).mode !== 'off';
-                if (eventName === 'INIT_STATE') isDisplayRunning = (JSON.parse(details).breatheDisplay?.mode ?? 'off') !== 'off';
                 if (eventName === 'PLAY') isSimulationRunning = true;
                 if (eventName === 'PAUSE') isSimulationRunning = false;
                 return;
             }
 
             const originalGap = timeMs - lastTimestampMs;
-            let currentCap = (isSimulationRunning || isDisplayRunning) ? MAX_ACTIVE_WAIT : MAX_STATIC_WAIT;
+            let currentCap = isSimulationRunning ? MAX_ACTIVE_WAIT : MAX_STATIC_WAIT;
             if (eventName === 'STEP FORWARD') currentCap = MAX_STEP_WAIT;
 
             const compressedGap = Math.min(originalGap, currentCap);
@@ -3792,9 +3795,6 @@ if (eventName === 'UNDO') {
             // קודם נשחרר את כל שינויי הממשק שהמתינו (אם היו כאלו) אל התור.
             flushPendingUI();
 
-            if (eventName === 'EVOLUTION_TUNING' && JSON.parse(details).breatheDisplay) isDisplayRunning = JSON.parse(details).breatheDisplay.mode !== 'off';
-            if (eventName === 'BREATHE_DISPLAY') isDisplayRunning = JSON.parse(details).mode !== 'off';
-            if (eventName === 'INIT_STATE') isDisplayRunning = (JSON.parse(details).breatheDisplay?.mode ?? 'off') !== 'off';
             if (eventName === 'PLAY') isSimulationRunning = true;
             if (eventName === 'PAUSE') isSimulationRunning = false;
 
@@ -3846,8 +3846,6 @@ document.addEventListener('fullscreenchange', () => {
 
 
 function stopMacro() {
-    if (legacyBreathePlayback) setBreatheDisplayMode('off', { record: false });
-    legacyBreathePlayback = false;
     clearTimeout(macroTimerId);
     macroQueue = [];
     isMacroLoaded = false;
@@ -3954,14 +3952,6 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 }
 
 
-    if (sim === 'breathe') {
-        const saved = rulesStr.startsWith('Mode: ') ? { mode: rulesStr.slice(6) } : JSON.parse(rulesStr);
-        const snapshot = validateBreatheDisplay({ version: 1, mode: saved.mode, tuning: saved.tuning ?? {} });
-        legacyBreatheMode = snapshot.mode;
-        if (snapshot.tuning) evolutionTuning[breatheTuningKey(paletteLen())] = snapshot.tuning;
-        return sim;
-    }
-
     // מוודאים שהסימולציה הנכונה חמושה בממשק
     if (armedSimulation !== sim) armSimulation(sim);
 
@@ -3990,6 +3980,11 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 evolutionTuning.brightnessEvo = validateEvolutionTuning({ brightnessEvo: saved.tuning ?? {} }).brightnessEvo;
                 brightnessEvoMode = saved.mode;
                 if (typeof updateBrightnessEvoButtonUI === 'function') updateBrightnessEvoButtonUI();
+            } else if (sim === 'breathe') {
+                const saved = rulesStr.startsWith('Mode: ') ? { mode: rulesStr.slice(6) } : JSON.parse(rulesStr);
+                evolutionTuning[breatheTuningKey(paletteLen())] = validateEvolutionTuning({ breathe: saved.tuning ?? {} }).breathe;
+                breatheEvoMode = saved.mode;
+                if (typeof updateBreatheEvoButtonUI === 'function') updateBreatheEvoButtonUI();
             } else {
                 const parsedRules = JSON.parse(rulesStr);
                 if (sim === 'gameOfLife') restoreGameOfLifeRules(parsedRules);
@@ -4049,8 +4044,6 @@ function executeMacroAction(action) {
     if (action.eventName === 'INIT_STATE') {
         try {
             const initState = JSON.parse(action.details);
-            breatheTransition?.clear();
-            legacyBreathePlayback = false;
             
 
             // 1. הגדרת משתני הסביבה ההתחלתיים
@@ -4086,7 +4079,6 @@ function executeMacroAction(action) {
                 }
             });
 
-            restoreBreatheDisplay(initState.breatheDisplay ?? { version: 1, mode: 'off' }, { fade: false });
             // 3. עדכון הממשק (UI)
             updatePaletteHeader();
             applySeparator();
@@ -4131,25 +4123,10 @@ function executeMacroAction(action) {
         }
         updateIslandsButtonUI();
     }
-    else if (action.eventName === 'BREATHE_DISPLAY') {
-        legacyBreathePlayback = false;
-        restoreBreatheDisplay(JSON.parse(action.details));
-    }
-    else if (action.eventName === 'Breathe Mode Changed') {
-        const snapshot = JSON.parse(action.details);
-        legacyBreatheMode = snapshot.mode;
-        legacyBreathePlayback = snapshot.running && snapshot.mode !== 'off';
-        setBreatheDisplayMode(legacyBreathePlayback ? snapshot.mode : 'off', { record: false, rules: snapshot.tuning ?? { speed: 1, depth: 1 } });
-    }
     else if (action.eventName === 'EVOLUTION_TUNING') {
         const state = JSON.parse(action.details);
-        if (state.simulation !== 'breathe' && armedSimulation !== state.simulation) armSimulation(state.simulation, { recordIslandsStart: false });
+        if (armedSimulation !== state.simulation) armSimulation(state.simulation, { recordIslandsStart: false });
         restoreEvolutionTuningState(state);
-        if (state.breatheDisplay) restoreBreatheDisplay(state.breatheDisplay);
-        else if (state.simulation === 'breathe') {
-            legacyBreatheMode = state.breatheEvoMode;
-            if (legacyBreathePlayback) setBreatheDisplayMode(legacyBreatheMode, { record: false });
-        }
         if (islandsSession && state.simulation === 'islands') islandsSession.activity = evolutionTuning.islands.activity;
     }
     else if (action.eventName === 'HISTORY_SETTINGS') {
@@ -4192,24 +4169,15 @@ function executeMacroAction(action) {
         applyNudgeTiming(action.details);
     }
     else if (action.eventName === 'PAUSE') {
-        if (legacyBreathePlayback) {
-            setBreatheDisplayMode('off', { record: false });
-            legacyBreathePlayback = false;
-        } else pauseLife();
+        pauseLife();
     } 
     else if (action.eventName === 'PLAY') {
         const sim = applyMacroRules(action.details);
-        if (sim === 'breathe') {
-            if (isLifePlaying) pauseLife();
-            legacyBreathePlayback = true;
-            setBreatheDisplayMode(legacyBreatheMode, { record: false });
-        } else if (sim) {
-            legacyBreathePlayback = false;
-            if (!isLifePlaying) togglePlayPauseLife();
-        }
+        if (sim && !isLifePlaying) togglePlayPauseLife();
     } 
     else if (action.eventName === 'STEP FORWARD') {
-        if (applyMacroRules(action.details) !== 'breathe') stepForward();
+        applyMacroRules(action.details);
+        stepForward();
     }
     else if (action.eventName === 'UNDO') {
         undo();
@@ -4422,7 +4390,6 @@ else if (action.eventName === 'Invert Colors') {
         
         // Phase 1 Addition: Add adaptColors to the context for modals
         softBloom = createSoftBloom(dom.boardCanvas, document.getElementById('boardBloom'));
-        breatheTransition = createBreatheTransition(dom.board);
         softBloom.setIntensity(softBloomIntensity);
         softBloom.setEnabled(isSoftBloom);
         const contextForModals = {
@@ -4518,7 +4485,7 @@ else if (action.eventName === 'Invert Colors') {
                 simulationInitSettings = { ...settings };
                 return persisted;
             },
-            getN: () => n, isLifePlaying: () => isLifePlaying,
+            getN: () => n, isBreathing: () => isBreathing, isLifePlaying: () => isLifePlaying,
             _performResize, animateBoardTransition,
             setColorPickerPage: (p) => { colorPickerPage = p; }, getColorPickerPage: () => colorPickerPage,
             getActivePaletteIndex: () => activePaletteIndex, createRainbowIconSVG, navigateColorPages,
@@ -4546,11 +4513,11 @@ syncGsModeFromModal: (direction) => {
             },
 
             getErosionRules: () => ({ ...erosionRules }),
-            canEditErosion: () => !isLifePlaying && !isMacroLoaded && !isMacroPlaying,
+            canEditErosion: () => !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             getPaletteLength: () => palette().length,
             getDefaultErosionRules: () => settingsProfiles.defaults().settings.rules.erosion,
             saveErosionRules: rules => {
-                if (isLifePlaying || isMacroLoaded || isMacroPlaying) return false;
+                if (isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
                 erosionRules = restoreErosionRules(rules);
                 updateErosionButtonUI();
                 persistWorkspaceSettings(getWorkspaceSettings());
@@ -4560,8 +4527,8 @@ syncGsModeFromModal: (direction) => {
             },
             getDefaultEvolutionTuning: simulation => DEFAULT_EVOLUTION_TUNING[simulation === 'breathe' ? breatheTuningKey(paletteLen()) : simulation],
             getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), breathe: { ...getBreatheTuning() } }),
-            getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode === 'off' ? 'random-cell' : breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode, dla: dlaMode })[simulation],
-            canEditEvolutionTuning: simulation => (simulation === 'breathe' || (armedSimulation === simulation && !isLifePlaying)) && !isMacroLoaded && !isMacroPlaying,
+            getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode === 'group' ? 'random-color' : breatheEvoMode, dla: dlaMode })[simulation],
+            canEditEvolutionTuning: simulation => armedSimulation === simulation && !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning,
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
@@ -4597,6 +4564,7 @@ setMagnetRules: (r) => { magnetRules = r; },
             pointerState,
             resetWasLongPress,
 downloadImage: shareOrDownloadImage,
+            // startBreatheAnimation is removed
             adaptColors, 
 applySortMethod,
         };
@@ -4694,7 +4662,7 @@ updateBrightnessEvoButtonUI();
 bindPickerGestures(dom.btnPalette, {
     onTap: switchPalette, onOpen: modals.openPaletteModal,
     onHold: switchPaletteGroup,
-    canInteract: () => true, beforeStart: hideLongPressDisplay,
+    canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
 
@@ -4703,14 +4671,14 @@ bindPickerGestures(dom.btnPalette, {
         for (const [button, increase] of [[dom.btnResizeUp, true], [dom.btnResizeDown, false]]) {
             bindPickerGestures(button, {
                 onTap: () => resizeGrid(increase), onOpen: modals.openResizeModal,
-                canInteract: () => true,
+                canInteract: () => !isBreathing,
                 beforeStart: hideLongPressDisplay
             });
         }
         dom.btnSave.addEventListener('click', (e) => handleCtrlClick(e, openSaveModalWithPreview));
         bindPickerGestures(dom.btnGap, {
             onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
-            canInteract: () => true,
+            canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'),
             beforeStart: hideLongPressDisplay
         });
         dom.btnGap.addEventListener('keydown', event => {
@@ -4728,13 +4696,13 @@ bindPickerGestures(dom.btnPalette, {
                 symmetryMode = 'off';
                 updateSymmetryUI();
             },
-            canInteract: () => true, beforeStart: hideLongPressDisplay,
+            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
             holdMs: C.LONG_PRESS_SHOW_MS
         });
 bindPickerGestures(dom.btnCycleSort, {
     onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
     onHold: () => selectSortMethod(sortCycleMethods[0]),
-    canInteract: () => true, beforeStart: hideLongPressDisplay,
+    canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
 dom.btnCycleSort.addEventListener('keydown', e => {
@@ -4756,7 +4724,7 @@ bindPickerGestures(dom.btnColorPicker, {
         isRainbowModeActive = true;
         updateGlowEffect(); updateColorPickerButtonUI();
     },
-    canInteract: () => true, beforeStart: hideLongPressDisplay,
+    canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
@@ -4767,19 +4735,12 @@ bindPickerGestures(dom.btnColorPicker, {
                 if (!isSimModeActive) toggleSimMode();
                 prepareBoardForSimMode();
             },
-            canInteract: () => true, beforeStart: hideLongPressDisplay,
+            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
             holdMs: C.LONG_PRESS_SHOW_MS
         });
         // A swipe opens settings only for the selected, paused evolution.
         // Tap actions stay independent of that restriction.
         const evolutionExplanation = createEvolutionExplanation(dom.boardCanvas.parentElement.parentElement, { onHelp: modals.openHelpModal });
-        bindPickerGestures(dom.btnShowBreatheMenu, {
-            onTap: cycleBreatheEvoMode, onOpen: modals.openBreatheSettingsModal,
-            onHold: () => evolutionExplanation.show(dom.btnShowBreatheMenu, 'breathe'),
-            canInteract: () => !isMacroLoaded,
-            canOpen: () => !isMacroLoaded && !evolutionExplanation.isOpen(),
-            beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
-        });
         const evolutionPickers = [
             [dom.btnGameOfLife, 'gameOfLife', cycleGameOfLifeMode, modals.openGolSettingsModal],
             [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
@@ -4791,6 +4752,7 @@ bindPickerGestures(dom.btnColorPicker, {
             [dom.btnNudgeBrighter, 'nudgeBrighter', handleNudgeBrighterClick, modals.openNudgeSettingsModal],
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, modals.openBrightnessSettingsModal],
+            [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, modals.openBreatheSettingsModal],
             [dom.btnIslands, 'islands', cycleIslandsMode, modals.openIslandsSettingsModal],
             [dom.btnErosion, 'erosion', cycleErosionMode, modals.openErosionSettingsModal],
             [dom.btnDla, 'dla', cycleDlaMode, modals.openDlaSettingsModal]
@@ -4800,8 +4762,8 @@ bindPickerGestures(dom.btnColorPicker, {
             bindPickerGestures(button, {
                 onTap, onOpen,
                 onHold: () => evolutionExplanation.show(button, simulation),
-                canInteract: () => true,
-                canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && !isLifePlaying && armedSimulation === simulation,
+                canInteract: () => !isBreathing,
+                canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && !isLifePlaying && armedSimulation === simulation,
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });
@@ -4811,9 +4773,10 @@ bindPickerGestures(dom.btnColorPicker, {
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
 
         dom.btnLangToggle.addEventListener('click', toggleLanguage);
+        // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnShowBreatheMenu || btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 

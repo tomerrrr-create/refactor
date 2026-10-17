@@ -308,7 +308,8 @@ body {
 
 /* Outside the simulation overlay, Breathe and Turing reveal only when selected. */
 /* מעלים את הכפתור לחלוטין כל עוד הוא לא פעיל, אבל שומר אותו לחיץ */
-.sim-mode-active #btnTuring:not(.simulation-active) {
+.sim-mode-active #btnTuring:not(.simulation-active),
+.sim-mode-active #btnShowBreatheMenu:not(.simulation-active) {
     opacity: 0 !important;
 }
 
@@ -1898,9 +1899,3 @@ button, .ctrl {
 #btnIslands.mode-proximity .islands-proximity-mark { display:block; fill:var(--gold); }
 .tuning-heading-icon .islands-proximity-mark { display:none; }
 .tuning-heading-icon[data-islands-mode="proximity"] .islands-proximity-mark { display:block; fill:var(--gold); }
-
-/* A single bounded snapshot fades over the live board and its bloom. */
-.breathe-transition-frame { position:absolute; inset:0; width:100%; height:100%; border-radius:inherit; pointer-events:none; }
-
-/* Breathing is an independent display tool, accessible in both interfaces. */
-#controlsContainer:not(.sim-mode-active) #btnShowBreatheMenu { grid-area:3 / 4; display:inline-flex; visibility:visible; opacity:1; pointer-events:auto; transform:scale(1); }

@@ -5,7 +5,6 @@ import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorksp
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration } from '../js/simulations/islands.js';
 import { runBrightnessEvolution, runContrastGeneration } from '../js/simulations/brightness.js';
 import { getBreatheBrightnessFactor, createRandomBreatheSession } from '../js/simulations/breathe.js';
-import { validateBreatheDisplay } from '../js/breathe-display.js';
 import { runDlaGeneration } from '../js/simulations/dla.js';
 import { factoryProfileSnapshot, validateProfileSnapshot } from '../js/profile-state.js';
 
@@ -84,7 +83,7 @@ test('old and new macro rule formats restore resolved values instead of inheriti
     const {readFileSync} = await import('node:fs');
     const vm = await import('node:vm');
     const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-    const c=vm.createContext({validateBreatheDisplay,validateEvolutionTuning,breatheTuningKey,paletteLen:()=>23,evolutionTuning:validateEvolutionTuning({brightnessEvo:{smoothing:1},breathe:{speed:3},dla:{batchSize:1000}}),
+    const c=vm.createContext({validateEvolutionTuning,breatheTuningKey,paletteLen:()=>23,evolutionTuning:validateEvolutionTuning({brightnessEvo:{smoothing:1},breathe:{speed:3},dla:{batchSize:1000}}),
         armedSimulation:'brightnessEvo',currentSortMethod:'luminance',replayNudgeTiming:null,console,
         armSimulation(sim){c.armedSimulation=sim;},
         updateBrightnessEvoButtonUI(){},updateBreatheEvoButtonUI(){},
@@ -92,13 +91,13 @@ test('old and new macro rule formats restore resolved values instead of inheriti
     vm.runInContext(source.slice(source.indexOf('function applyMacroRules('),source.indexOf('function executeMacroAction(')),c);
     const play=(sim,rules)=>c.applyMacroRules(`Armed: ${sim} | Sort: luminance | Rules: ${rules}`);
     play('brightnessEvo','Mode: contrast');assert.equal(c.brightnessEvoMode,'contrast');assert.equal(c.evolutionTuning.brightnessEvo.smoothing,.5);
-    play('breathe','Mode: group');assert.equal(c.legacyBreatheMode,'group');assert.equal(c.evolutionTuning.breathe.speed,1);
+    play('breathe','Mode: group');assert.equal(c.breatheEvoMode,'group');assert.equal(c.evolutionTuning.breathe.speed,1);
     play('dla','{"mode":"genetics","colorGenetics":true}');assert.equal(c.evolutionTuning.dla.batchSize,100);
     play('brightnessEvo','{"mode":"contrast","tuning":{"smoothing":0.8,"contrast":0.6}}');assert.equal(c.evolutionTuning.brightnessEvo.contrast,.6);
     play('breathe','{"mode":"random-cell","tuning":{"speed":2,"depth":0.5}}');assert.equal(c.evolutionTuning.breathe.depth,.5);
     play('dla','{"mode":"no-genetics","tuning":{"batchSize":500}}');assert.equal(c.evolutionTuning.dla.batchSize,500);
     c.paletteLen=()=>264;
-    play('breathe','Mode: group');assert.equal(c.legacyBreatheMode,'group');
+    play('breathe','Mode: group');assert.equal(c.breatheEvoMode,'group');
     assert.equal(c.evolutionTuning.breatheLargePalette.speed,1);assert.equal(c.evolutionTuning.breatheLargePalette.depth,1);
     play('breathe','{"mode":"random-color","tuning":{"speed":2.4,"depth":2.3}}');
     assert.equal(c.evolutionTuning.breatheLargePalette.speed,2.4);assert.equal(c.evolutionTuning.breatheLargePalette.depth,2.3);
