@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { paintBabyStroke } from '../js/baby-mode.js';
+import { paintBabyStroke, babyDrawingToTiles } from '../js/baby-mode.js';
 
 function draw(from, to, colors = ['#ff0000', '#00ff00', '#0000ff']) {
     const pixels = [];
@@ -33,4 +33,20 @@ test('rainbow strokes use fresh palette selections without altering the palette'
     const colors = Object.freeze(['#123456', '#abcdef', '#654321']);
     assert.deepEqual(draw({x: 0, y: 0}, {x: 5, y: 0}, colors).map(p => p.color),
         ['#123456', '#abcdef', '#654321', '#123456', '#abcdef', '#654321']);
+});
+
+test('baby drawing preserves exact painted colors and black cells in any palette order', () => {
+    const pixels = new Uint8ClampedArray([0,0,0,255, 255,0,0,255, 0,255,0,255, 0,0,0,255]);
+    const original = pixels.slice();
+    for (const colors of [['#ff0000','#000000','#00ff00'], ['#00ff00','#ff0000','#000000']]) {
+        const tiles = babyDrawingToTiles(pixels, colors);
+        assert.deepEqual(tiles.map(tile => colors[tile.k]), ['#000000','#ff0000','#00ff00','#000000']);
+        assert(tiles.every(tile => tile.v === tile.k && tile.isGold === false));
+    }
+    assert.deepEqual(pixels, original);
+});
+
+test('invalid or unmapped pixels cannot silently change the baby drawing colors', () => {
+    assert.throws(() => babyDrawingToTiles([0,0,0], ['#000000']), /Invalid/);
+    assert.throws(() => babyDrawingToTiles([255,0,0,255], ['#000000']), /missing/);
 });

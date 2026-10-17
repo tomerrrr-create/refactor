@@ -17,8 +17,26 @@ export function paintBabyStroke(ctx, from, to, colors, random = Math.random) {
     }
 }
 
-// The temporary canvas never changes the artwork, profiles, undo history or recipe.
-export function initializeBabyMode({ getColors, getLabel }) {
+// Match the painted RGB values to the workspace's current ordering of the palette.
+export function babyDrawingToTiles(pixels, colors) {
+    if (pixels.length % 4) throw new Error('Invalid baby drawing pixels');
+    const ranks = new Map();
+    colors.forEach((hex, index) => {
+        const rgb = Number.parseInt(hex.slice(1), 16);
+        if (!ranks.has(rgb)) ranks.set(rgb, index);
+    });
+    const tiles = [];
+    for (let i = 0; i < pixels.length; i += 4) {
+        const rgb = (pixels[i] << 16) | (pixels[i + 1] << 8) | pixels[i + 2];
+        if (!ranks.has(rgb)) throw new Error('Baby drawing color is missing from the palette');
+        const k = ranks.get(rgb);
+        tiles.push({ k, v: k, isGold: false });
+    }
+    return tiles;
+}
+
+// Drawing stays isolated while open; exit hands its exact pixels to the workspace.
+export function initializeBabyMode({ getColors, getLabel, onExit }) {
     const dialog = document.createElement('dialog');
     dialog.id = 'babyModeDialog';
     const canvas = document.createElement('canvas');
@@ -60,6 +78,7 @@ export function initializeBabyMode({ getColors, getLabel }) {
     }
     function closeAfterHold(id) {
         if (!dialog.open || exitPointer !== id || pointers.size !== 1) return;
+        onExit({ size: BABY_GRID_SIZE, pixels: ctx.getImageData(0, 0, BABY_GRID_SIZE, BABY_GRID_SIZE).data });
         // Consume the release and compatibility click so exiting cannot press a control.
         const blockClick = event => { event.preventDefault(); event.stopImmediatePropagation(); };
         document.addEventListener('click', blockClick, true);
