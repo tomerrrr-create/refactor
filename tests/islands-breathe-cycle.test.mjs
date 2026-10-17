@@ -7,7 +7,7 @@ function harness(){
  const classes=new Set(), islandClasses=new Set(), icons=new Map();
  for(const id of ['iconBreatheSolo','iconBreatheGroup','iconBreatheRandomCell','iconBreatheRandomColor'])icons.set(id,{style:{}});
  const button = set => ({classList:{remove:(...names)=>names.forEach(n=>set.delete(n)),add:n=>set.add(n),toggle(n,on){if(on)set.add(n);else set.delete(n);}},setAttribute(){}});
- const c=vm.createContext({breatheEvoMode:'off',armedSimulation:null,isLifePlaying:false,
+ const c=vm.createContext({breatheEvoMode:'off',islandsSession:null,armedSimulation:null,isLifePlaying:false,
   dom:{btnShowBreatheMenu:button(classes),btnIslands:button(islandClasses)},
   document:{getElementById:id=>icons.get(id)},getText:key=>key,
   pauseLife(){c.isLifePlaying=false;c.pauses++;},pauses:0,
