@@ -1,4 +1,3 @@
-import { initializeBabyMode, babyDrawingToTiles } from './baby-mode.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
@@ -4556,41 +4555,7 @@ bindPickerGestures(dom.btnPalette, {
                 event.preventDefault(); modals.openSeparatorCycleModal();
             }
         });
-        const babyMode = initializeBabyMode({
-            getColors: () => {
-                const ancient = C.PALETTES.find(palette => palette.originalName === 'Ancient 264');
-                return ancient.originalColors || ancient.colors;
-            },
-            getLabel: () => getText('baby_mode_label'),
-            onExit: ({ size, pixels }) => {
-                const ancientIndex = C.PALETTES.findIndex(palette => palette.originalName === 'Ancient 264');
-                const tiles = babyDrawingToTiles(pixels, C.PALETTES[ancientIndex].colors);
-                performAction(() => {
-                    resetArmedState();
-                    applyState({ n: size, activePaletteIndex: ancientIndex, paletteName: 'Ancient 264',
-                        currentSortMethod, separatorPx: 0, tiles });
-                    brushSize = 1;
-                    document.getElementById('brushSizeSlider').value = brushSize;
-                    document.getElementById('brushSizeValue').textContent = brushSize;
-                    symmetryMode = 'off';
-                    selectedColor = null;
-                    selectedColorIndex = -1;
-                    isRainbowModeActive = true;
-                    setBrushMode(true);
-                    updateSymmetryUI();
-                    updateColorPickerButtonUI();
-                    updateGlowEffect();
-                    // The resolved pixels replay without re-rolling the rainbow brush.
-                    logCurrentStateAsInit();
-                });
-            }
-        });
-        bindPickerGestures(dom.btnBrushMode, {
-            onTap: toggleBrushMode,
-            onHold: () => { if (!isLifePlaying && !isMacroLoaded && !isAnimating) babyMode.open(); },
-            canInteract: () => !isBreathing,
-            beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
-        });
+        dom.btnBrushMode.addEventListener('click', (e) => handleCtrlClick(e, toggleBrushMode));
         dom.btnUndo.addEventListener('click', (e) => handleCtrlClick(e, undo));
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
@@ -4680,7 +4645,7 @@ bindPickerGestures(dom.btnColorPicker, {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnBrushMode || btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
