@@ -2363,7 +2363,6 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         const duration = 500;
         dom.controlsContainer.style.opacity = '0';
         setTimeout(() => {
-            if (windMode) setWindMode(false);
             isSimModeActive = !isSimModeActive;
             dom.controlsContainer.classList.toggle('sim-mode-active', isSimModeActive);
             if (isSimModeActive) {

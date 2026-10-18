@@ -26,3 +26,14 @@ test('ordinary panel events commit pending ripples without consuming or blocking
  listeners.get('pointerdown')(event);listeners.get('click')(event);listeners.get('keydown')(event);assert.equal(events.length,3);
  c.windMode=false;listeners.get('click')(event);assert.equal(events.length,3);
 });
+
+test('switching interfaces preserves active Wind in both directions',()=>{
+ const control=()=>({style:{},classList:{toggle(){}}});
+ const dom=Object.fromEntries(['controlsContainer','btnBrushMode','btnGap','btnResetBoard','btnTutorial','btnSpecialReset','btnPlayPauseLife','btnToggleSimMode'].map(key=>[key,control()]));
+ let pauses=0,resets=0;
+ const c=vm.createContext({dom,windMode:true,isSimModeActive:false,setTimeout:callback=>callback(),
+  setWindMode(){throw Error('interface changes must not toggle Wind');},pauseLife(){pauses++;},resetArmedState(){resets++;}});
+ vm.runInContext(source.slice(source.indexOf('      function toggleSimMode()'),source.indexOf('      function resetArmedState()')),c);
+ c.toggleSimMode();assert.equal(c.isSimModeActive,true);assert.equal(c.windMode,true);assert.equal(dom.controlsContainer.style.opacity,'1');
+ c.toggleSimMode();assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,true);assert.equal(pauses,2);assert.equal(resets,2);
+});
