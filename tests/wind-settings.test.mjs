@@ -30,3 +30,28 @@ test('new and legacy wind settings default to displacement while an explicit pai
  assert.equal(normalizeWindSettings({mode:'invalid',strength:Infinity}).mode,'displace');
  assert.equal(normalizeWindSettings({strength:3}).strength,3);
 });
+
+test('local ripple preference round-trips without changing old modes or defaults',()=>{
+ let text;const storage={getItem:()=>text,setItem:(_,value)=>{text=value;}};
+ assert(saveWindSettings({...DEFAULT_WIND_SETTINGS,mode:'ripple',strength:2},storage));
+ assert.equal(loadWindSettings(storage).mode,'ripple');assert.equal(loadWindSettings(storage).strength,2);
+ for(const mode of ['displace','paint'])assert.equal(normalizeWindSettings({mode}).mode,mode);
+ assert.equal(normalizeWindSettings().mode,'displace');
+});
+
+test('each Wind mode retains independent settings, with legacy settings preserved for the original two',async()=>{
+ const {selectWindMode}=await import('../js/wind-settings.js');
+ let draft=selectWindMode({mode:'paint',speed:2,strength:2,range:.3,trail:false});
+ assert.equal(draft.speed,2);
+ draft.speed=3;draft.modes.paint.speed=3;
+ draft=selectWindMode(draft,'displace');assert.equal(draft.speed,2);assert.equal(draft.range,.3);
+ draft.strength=.25;draft.modes.displace.strength=.25;
+ draft=selectWindMode(draft,'ripple');assert.equal(draft.speed,1);assert.equal(draft.trail,true);
+ draft.speed=.5;draft.modes.ripple.speed=.5;
+ draft=selectWindMode(draft,'paint');assert.equal(draft.speed,3);
+ const text=JSON.stringify(draft),restored=normalizeWindSettings(JSON.parse(text));
+ assert.equal(selectWindMode(restored,'ripple').speed,.5);assert.equal(selectWindMode(restored,'displace').strength,.25);
+ assert.equal(selectWindMode(restored,'paint').speed,3);
+ const wave=createWindWave(21,220,264,0,0,selectWindMode(restored,'ripple'));
+ assert.equal(wave.duration,WIND_DURATION/.5);assert.equal(wave.mode,'ripple');
+});

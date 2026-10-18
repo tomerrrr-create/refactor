@@ -100,3 +100,47 @@ test('initial recipe gold metadata round-trips through the actual logger and mac
  assert.deepEqual(Array.from(c.boardState,t=>t.isGold),[false,false,false,false]);
  assert.throws(()=>c.validateIslandsMacroAction({eventName:'INIT_STATE',details:JSON.stringify({...legacy,gold:[4]})}),/Invalid initial gold/);
 });
+
+test('local ripple limits color travel, returns most pairs, preserves inventory and protects gold',()=>{
+ for(const n of [7,51,249,327]){
+  const board=Array.from({length:n*n},(_,k)=>({k,v:k,isGold:k%97===0})),before=structuredClone(board);
+  const wave=createWindWave(n,Math.floor(n*n/2),n*n,0,0,{mode:'ripple',strength:3});
+  let maxTravel=0,peakMoved=0;
+  for(let t=0;t<=WIND_DURATION;t+=40){
+   advanceWindWave(wave,t,(i,k)=>applyWindCell(board,i,k,wave,t));
+   let moved=0;
+   for(let i=0;i<board.length;i++){
+    const origin=board[i].k;
+    maxTravel=Math.max(maxTravel,Math.hypot(i%n-origin%n,Math.floor(i/n)-Math.floor(origin/n)));
+    if(origin!==i)moved++;
+   }
+   peakMoved=Math.max(peakMoved,moved);
+  }
+  assert(maxTravel<=n*.015*3+Math.SQRT2,'colors must not repeatedly ride the front');
+  const finalMoved=board.filter((tile,i)=>tile.k!==i).length;
+  assert(finalMoved>0);assert(finalMoved<peakMoved,'the trailing wave must return some colors');
+  assert.deepEqual(histogram(board),histogram(before));assert.equal(wave.returnCursor,wave.returns.length);
+  for(let i=0;i<board.length;i++)if(before[i].isGold)assert.deepEqual(board[i],before[i]);
+ }
+});
+test('local ripple is independent of palette rank and stops moving after it settles',()=>{
+ const run=base=>{
+  const n=31,board=Array.from({length:n*n},(_,k)=>({k:k%17,v:k%17,isGold:false}));
+  const wave=createWindWave(n,300,264,base,0,{mode:'ripple'});
+  for(let t=0;t<=WIND_DURATION;t+=40)advanceWindWave(wave,t,(i,k)=>applyWindCell(board,i,k,wave,t));
+  const final=board.map(t=>t.k);
+  advanceWindWave(wave,WIND_DURATION+500,(i,k)=>applyWindCell(board,i,k,wave,WIND_DURATION+500));
+  assert.deepEqual(board.map(t=>t.k),final);return final;
+ };
+ assert.deepEqual(run(0),run(150));
+});
+test('local ripples settle on a single reduced-motion frame and leave uniform boards unchanged',()=>{
+ const n=21,board=Array.from({length:n*n},()=>({k:2,v:2,isGold:false})),before=structuredClone(board);
+ const wave=createWindWave(n,220,264,0,0,{mode:'ripple'});
+ assert(advanceWindWave(wave,WIND_DURATION,(i,k)=>applyWindCell(board,i,k,wave,0)));
+ assert.deepEqual(board,before);
+ const mixed=Array.from({length:n*n},(_,k)=>({k,v:k,isGold:false}));
+ const wave2=createWindWave(n,220,n*n,0,0,{mode:'ripple'});
+ advanceWindWave(wave2,WIND_DURATION,(i,k)=>applyWindCell(mixed,i,k,wave2,0));
+ assert.equal(wave2.returnCursor,wave2.returns.length);assert.deepEqual(histogram(mixed),histogram(Array.from({length:n*n},(_,k)=>({k}))));
+});
