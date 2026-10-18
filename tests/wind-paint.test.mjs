@@ -102,9 +102,9 @@ test('initial recipe gold metadata round-trips through the actual logger and mac
 });
 
 test('local ripple limits color travel, returns most pairs, preserves inventory and protects gold',()=>{
- for(const n of [7,51,249,327]){
+ for(const strength of [3,10]) for(const n of [7,51,249,327]){
   const board=Array.from({length:n*n},(_,k)=>({k,v:k,isGold:k%97===0})),before=structuredClone(board);
-  const wave=createWindWave(n,Math.floor(n*n/2),n*n,0,0,{mode:'ripple',strength:3});
+  const wave=createWindWave(n,Math.floor(n*n/2),n*n,0,0,{mode:'ripple',strength});
   let maxTravel=0,peakMoved=0;
   for(let t=0;t<=WIND_DURATION;t+=40){
    advanceWindWave(wave,t,(i,k)=>applyWindCell(board,i,k,wave,t));
@@ -116,7 +116,7 @@ test('local ripple limits color travel, returns most pairs, preserves inventory 
    }
    peakMoved=Math.max(peakMoved,moved);
   }
-  assert(maxTravel<=n*.015*3+Math.SQRT2,'colors must not repeatedly ride the front');
+  assert(maxTravel<=n*.015*strength+Math.SQRT2,'colors must not repeatedly ride the front');
   const finalMoved=board.filter((tile,i)=>tile.k!==i).length;
   assert(finalMoved>0);assert(finalMoved<peakMoved,'the trailing wave must return some colors');
   assert.deepEqual(histogram(board),histogram(before));assert.equal(wave.returnCursor,wave.returns.length);

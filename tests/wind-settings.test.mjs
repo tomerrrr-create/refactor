@@ -55,3 +55,22 @@ test('each Wind mode retains independent settings, with legacy settings preserve
  const wave=createWindWave(21,220,264,0,0,selectWindMode(restored,'ripple'));
  assert.equal(wave.duration,WIND_DURATION/.5);assert.equal(wave.mode,'ripple');
 });
+
+
+test('only Local ripple accepts 1000% strength and defaults to 300%, preserving explicit saved values',async()=>{
+ const {selectWindMode}=await import('../js/wind-settings.js');
+ assert.equal(normalizeWindSettings({mode:'ripple'}).strength,3);
+ assert.equal(selectWindMode(undefined,'ripple').strength,3);
+ assert.equal(normalizeWindSettings({mode:'ripple',strength:10}).strength,10);
+ assert.equal(normalizeWindSettings({mode:'ripple',strength:10.25}).strength,3);
+ assert.equal(normalizeWindSettings({mode:'ripple',strength:1}).strength,1);
+ for(const mode of ['displace','paint']){
+  assert.equal(normalizeWindSettings({mode}).strength,1);
+  assert.equal(normalizeWindSettings({mode,strength:10}).strength,1);
+ }
+ const settings=selectWindMode(undefined,'ripple');settings.strength=10;settings.modes.ripple.strength=10;
+ let text;const storage={getItem:()=>text,setItem:(_,value)=>{text=value;}};
+ assert(saveWindSettings(settings,storage));const restored=loadWindSettings(storage);
+ assert.equal(restored.strength,10);assert.equal(selectWindMode(restored,'displace').strength,1);
+ assert.equal(selectWindMode(restored,'ripple').strength,10);
+});

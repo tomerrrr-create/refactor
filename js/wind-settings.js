@@ -2,8 +2,9 @@ export const WIND_SETTINGS_KEY = 'colorGridWindSettingsV1';
 export const DEFAULT_WIND_SETTINGS = Object.freeze({ mode: 'displace', strength: 1, speed: 1, range: 1, colorSpan: 1.25, trail: true });
 const WIND_MODES = ['displace', 'paint', 'ripple'];
 function normalizeFlatSettings(value) {
-    const result = { ...DEFAULT_WIND_SETTINGS };
-    for (const [field, min, max, step] of [['speed', .25, 3, .25], ['range', .15, 1, .05], ['colorSpan', .25, 3, .25], ['strength', .25, 3, .25]]) {
+    const mode = WIND_MODES.includes(value?.mode) ? value.mode : DEFAULT_WIND_SETTINGS.mode;
+    const result = { ...DEFAULT_WIND_SETTINGS, mode, strength: mode === 'ripple' ? 3 : 1 };
+    for (const [field, min, max, step] of [['speed', .25, 3, .25], ['range', .15, 1, .05], ['colorSpan', .25, 3, .25], ['strength', .25, mode === 'ripple' ? 10 : 3, .25]]) {
         const item = value?.[field];
         if (typeof item === 'number' && Number.isFinite(item) && item >= min && item <= max &&
             Math.abs(item / step - Math.round(item / step)) < 1e-7) result[field] = item;
@@ -12,21 +13,21 @@ function normalizeFlatSettings(value) {
     if (typeof value?.trail === 'boolean') result.trail = value.trail;
     return result;
 }
-function modeValues(value) {
-    const { mode, ...fields } = normalizeFlatSettings(value);
+function modeValues(value, selectedMode) {
+    const { mode, ...fields } = normalizeFlatSettings({ ...value, ...(selectedMode ? { mode: selectedMode } : {}) });
     return fields;
 }
 export function normalizeWindSettings(value) {
     const flat = normalizeFlatSettings(value);
     if (!value?.modes || typeof value.modes !== 'object') return flat;
-    const modes = Object.fromEntries(WIND_MODES.map(mode => [mode, modeValues(value.modes[mode] ?? (mode === 'ripple' && flat.mode !== 'ripple' ? undefined : flat))]));
+    const modes = Object.fromEntries(WIND_MODES.map(mode => [mode, modeValues(value.modes[mode] ?? (mode === 'ripple' && flat.mode !== 'ripple' ? undefined : flat), mode)]));
     return { ...modes[flat.mode], mode: flat.mode, modes };
 }
 // Migrate old shared settings once, preserving both original modes. New local
 // ripples start at defaults. Subsequent edits belong only to the selected mode.
 export function selectWindMode(value, mode) {
     const current = normalizeWindSettings(value);
-    const modes = current.modes ?? Object.fromEntries(WIND_MODES.map(key => [key, modeValues(key === 'ripple' && current.mode !== 'ripple' ? undefined : current)]));
+    const modes = current.modes ?? Object.fromEntries(WIND_MODES.map(key => [key, modeValues(key === 'ripple' && current.mode !== 'ripple' ? undefined : current, key)]));
     const selected = WIND_MODES.includes(mode) ? mode : current.mode;
     return { ...modes[selected], mode: selected, modes };
 }
@@ -81,6 +82,7 @@ export function createWindSettingsDialog({ getText, getLang, onLanguageChange, g
             if (!draft) continue;
             if (field === 'trail') { input.checked = draft.trail; row.querySelector('output').hidden = true; }
             else {
+                if (field === 'strength') input.max = draft.mode === 'ripple' ? '10' : '3';
                 input.value = draft[field];
                 const text = field === 'colorSpan' ? `${draft[field]}×` : `${Math.round(draft[field] * 100)}%`;
                 row.querySelector('output').value = text; input.setAttribute('aria-valuetext', text);
@@ -90,7 +92,7 @@ export function createWindSettingsDialog({ getText, getLang, onLanguageChange, g
     const close = () => dialog.close();
     dialog.querySelector('[data-close]').addEventListener('click', close);
     dialog.querySelector('[data-cancel]').addEventListener('click', close);
-    dialog.querySelector('[data-reset]').addEventListener('click', () => { draft.modes[draft.mode] = modeValues(DEFAULT_WIND_SETTINGS); Object.assign(draft, draft.modes[draft.mode]); render(); });
+    dialog.querySelector('[data-reset]').addEventListener('click', () => { draft.modes[draft.mode] = modeValues(undefined, draft.mode); Object.assign(draft, draft.modes[draft.mode]); render(); });
     dialog.querySelector('form').addEventListener('submit', event => { event.preventDefault(); onSave(normalizeWindSettings(draft)); close(); });
     dialog.addEventListener('close', () => { if (!dialog.open) { draft = null; if (trigger.isConnected) trigger.focus({ preventScroll: true }); } });
     const outside = event => { const r = dialog.getBoundingClientRect(); return event.target === dialog && (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom); };
