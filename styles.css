@@ -1911,3 +1911,16 @@ body.wind-mode #board { cursor: crosshair; }
 .wind-toolbar button:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 3px; }
 @keyframes wind-arrive { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (prefers-reduced-motion: reduce) { .wind-toolbar { animation: none; } body.wind-mode #controlsContainer { transition: none; } }
+
+.wind-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+.wind-toolbar > div { min-width: 0; }
+.wind-toolbar-actions { display: flex; gap: 8px; align-items: center; }
+.wind-settings-dialog h2 { color: var(--gold); font-size: 20px; text-align: center; margin-bottom: 22px; }
+.wind-settings-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 22px 0; }
+.wind-settings-field label { font-size: 14px; color: #eaeaea; }
+.wind-settings-field output { color: var(--gold); font-size: 14px; direction: ltr; }
+.wind-settings-field input[type=range], .wind-settings-field p { grid-column: 1 / -1; width: 100%; }
+.wind-settings-field input { accent-color: #d5aa48; }
+.wind-settings-field input[type=checkbox] { width: 22px; height: 22px; }
+.wind-settings-field p { color: #b7b2a8; font-size: 12px; line-height: 1.6; }
+@media (max-width: 440px) { .wind-toolbar { grid-template-columns: 1fr; gap: 10px; } .wind-toolbar-actions { justify-content: flex-end; } }

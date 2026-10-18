@@ -1,17 +1,19 @@
+import { DEFAULT_WIND_SETTINGS, normalizeWindSettings } from './wind-settings.js';
 // Painting in palette-rank space: the app supplies the currently sorted palette.
 // Each wave visits a tile once, as its expanding front crosses that tile.
 export const WIND_DURATION = 2200;
 export const WIND_MAX_WAVES = 6;
 const wrap = (value, size) => ((value % size) + size) % size;
 
-export function createWindWave(n, index, paletteLength, base, time) {
+export function createWindWave(n, index, paletteLength, base, time, settings = DEFAULT_WIND_SETTINGS) {
     const x = index % n, y = Math.floor(index / n);
-    return { x, y, n, paletteLength, base: wrap(base, paletteLength), time, radius: -1,
-        maxRadius: Math.max(...[[0,0],[n-1,0],[0,n-1],[n-1,n-1]].map(([cx,cy]) => Math.hypot(cx-x,cy-y))) };
+    const config = normalizeWindSettings(settings);
+    return { x, y, n, paletteLength, base: wrap(base, paletteLength), time, radius: -1, duration: WIND_DURATION / config.speed, colorSpan: config.colorSpan,
+        maxRadius: Math.max(...[[0,0],[n-1,0],[0,n-1],[n-1,n-1]].map(([cx,cy]) => Math.hypot(cx-x,cy-y))) * config.range };
 }
 
 export function advanceWindWave(wave, elapsed, paint) {
-    const progress = Math.min(1, Math.max(0, elapsed / WIND_DURATION));
+    const progress = Math.min(1, Math.max(0, elapsed / wave.duration));
     const radius = wave.maxRadius * progress, previous = wave.radius;
     if (radius <= previous) return progress === 1;
     const { n, x: cx, y: cy, paletteLength, base } = wave;
@@ -26,7 +28,7 @@ export function advanceWindWave(wave, elapsed, paint) {
         for (const [start, end] of spans) for (let x = start; x <= end; x++) {
             const distance = Math.hypot(x - cx, dy);
             if (distance > radius + 1e-9 || distance <= previous + 1e-9) continue;
-            const rank = wrap(base + Math.round(distance / Math.max(1, n - 1) * paletteLength * 1.25), paletteLength);
+            const rank = wrap(base + Math.round(distance / Math.max(1, n - 1) * paletteLength * wave.colorSpan), paletteLength);
             paint(y * n + x, rank);
         }
     }
@@ -34,15 +36,16 @@ export function advanceWindWave(wave, elapsed, paint) {
     return progress === 1;
 }
 
-export function createWindPainter({ context, paint, onStart, onCommit, onFrame,
+export function createWindPainter({ context, paint, onStart, onCommit, onFrame, settings = () => DEFAULT_WIND_SETTINGS, onRunningChange = () => {},
     now = () => performance.now(), requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame,
     reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches }) {
-    let waves = [], frame = null, batch = false, pointer = null, lastIndex = -1, lastTime = -Infinity, serial = 0;
+    let waves = [], frame = null, batch = false, pointer = null, lastIndex = -1, lastTime = -Infinity, serial = 0, stoppingGesture = false;
     function commit() { if (batch) { batch = false; onCommit(); } }
     function tick(time) {
         frame = null;
-        waves = waves.filter(wave => !advanceWindWave(wave, reducedMotion() ? WIND_DURATION : time - wave.time, paint));
+        waves = waves.filter(wave => !advanceWindWave(wave, reducedMotion() ? wave.duration : time - wave.time, paint));
         onFrame();
+        if (!waves.length) onRunningChange(false);
         if (waves.length) frame = requestFrame(tick);
         else if (pointer === null) commit();
     }
@@ -54,15 +57,26 @@ export function createWindPainter({ context, paint, onStart, onCommit, onFrame,
         if (!batch) { onStart(); batch = true; }
         // Replace the oldest front when dragging quickly; never accumulate unbounded work.
         if (waves.length === WIND_MAX_WAVES) waves.shift();
-        waves.push(createWindWave(n, index, paletteLength, base + Math.round(serial++ * paletteLength * .11), time));
+        waves.push(createWindWave(n, index, paletteLength, base + Math.round(serial++ * paletteLength * .11), time, settings()));
+        onRunningChange(true);
         lastIndex = index; lastTime = time;
         if (frame === null) frame = requestFrame(tick);
     }
+    function stop() {
+        if (frame !== null) cancelFrame(frame);
+        frame = null; waves = []; pointer = null; stoppingGesture = false; lastIndex = -1; lastTime = -Infinity;
+        commit(); onRunningChange(false);
+    }
     return {
-        down(id, index) { if (pointer !== null || index < 0) return false; pointer = id; emit(index, true); return true; },
-        move(id, index) { if (pointer === id && index >= 0) emit(index); },
-        up(id) { if (pointer !== id) return; pointer = null; if (!waves.length) commit(); },
-        stop() { if (frame !== null) cancelFrame(frame); frame = null; waves = []; pointer = null; lastIndex = -1; lastTime = -Infinity; commit(); },
+        down(id, index) {
+            if (pointer !== null || index < 0) return false;
+            if (waves.length) { stop(); pointer = id; stoppingGesture = true; }
+            else { pointer = id; stoppingGesture = false; emit(index, true); }
+            return true;
+        },
+        move(id, index) { if (pointer === id && !stoppingGesture && settings().trail && index >= 0) emit(index); },
+        up(id) { if (pointer !== id) return; pointer = null; stoppingGesture = false; if (!waves.length) commit(); },
+        stop,
         get activeWaves() { return waves.length; }
     };
 }

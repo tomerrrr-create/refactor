@@ -9,6 +9,16 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  wind_stop_hint: {"en": "Touch again to stop the ripples", "he": "מגע נוסף עוצר את האדוות", "ru": "Коснитесь ещё раз, чтобы остановить волны", "nl": "Raak opnieuw aan om de rimpelingen te stoppen"},
+  wind_settings: {"en": "Settings", "he": "הגדרות", "ru": "Настройки", "nl": "Instellingen"},
+  wind_speed: {"en": "Ripple speed", "he": "מהירות האדווה", "ru": "Скорость волн", "nl": "Snelheid van rimpelingen"},
+  wind_speed_note: {"en": "Higher values spread the ripple faster.", "he": "ערך גבוה יותר מפיץ את האדווה מהר יותר.", "ru": "Большие значения ускоряют распространение волны.", "nl": "Hogere waarden laten de rimpeling sneller verspreiden."},
+  wind_range: {"en": "Ripple range", "he": "טווח התפשטות", "ru": "Дальность волны", "nl": "Bereik van rimpelingen"},
+  wind_range_note: {"en": "Limit how far each ripple travels from your touch.", "he": "מגביל כמה רחוק האדווה מתפשטת מנקודת המגע.", "ru": "Ограничивает расстояние от точки касания.", "nl": "Beperk hoe ver elke rimpeling vanaf je aanraking gaat."},
+  wind_colorSpan: {"en": "Color density", "he": "צפיפות צבעים", "ru": "Плотность цветов", "nl": "Kleurdichtheid"},
+  wind_colorSpan_note: {"en": "Higher values cycle through the sorted palette more often.", "he": "ערך גבוה יותר יוצר יותר מעברי צבע לפי סדר הפלטה.", "ru": "Большие значения чаще повторяют отсортированную палитру.", "nl": "Hogere waarden doorlopen de gesorteerde kleuren vaker."},
+  wind_trail: {"en": "Ripples while dragging", "he": "אדוות בזמן גרירה", "ru": "Волны при перетаскивании", "nl": "Rimpelingen tijdens slepen"},
+  wind_trail_note: {"en": "Dragging sends a trail of ripples. Touching again stops them.", "he": "גרירה יוצרת רצף אדוות. מגע נוסף עוצר אותן.", "ru": "Перетаскивание создаёт след волн. Повторное касание останавливает их.", "nl": "Slepen maakt een spoor van rimpelingen. Opnieuw aanraken stopt ze."},
   wind_hint: {en: "Touch or drag to paint ripples", he: "געו או גררו כדי לצייר אדוות", ru: "Коснитесь или проведите, чтобы рисовать волны", nl: "Raak aan of sleep om rimpelingen te schilderen"},
   wind_exit: {en: "Exit wind", he: "יציאה ממצב רוח", ru: "Выйти из режима ветра", nl: "Windmodus verlaten"},
   "tuning_brightness_title": {"en": "Brightness evolution settings", "he": "הגדרות אבולוציית בהירות", "ru": "Настройки эволюции яркости", "nl": "Instellingen helderheidsevolutie"},

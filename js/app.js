@@ -1,3 +1,4 @@
+import { createWindSettingsDialog, loadWindSettings, saveWindSettings } from './wind-settings.js';
 import { createWindPainter } from './wind-paint.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
@@ -2528,7 +2529,8 @@ function handleContinuousDrag(targetIndex, e) {
     pointerState.lineRestartPending = false;
 }
 
-let windMode = false, windPainter = null, windBefore = null, windExitFocus = null;
+let windMode = false, windPainter = null, windBefore = null, windExitFocus = null, windSettingsUI = null;
+let windSettings = loadWindSettings();
 function commitWindPainting() {
     if (!windBefore) return;
     const before = windBefore; windBefore = null;
@@ -2548,6 +2550,7 @@ function setWindMode(enabled) {
         pauseLife();
         windExitFocus = document.activeElement;
     } else {
+        if (windSettingsUI?.dialog.open) windSettingsUI.dialog.close();
         windPainter?.stop();
         if (windPointerId !== null && canvas.hasPointerCapture(windPointerId)) canvas.releasePointerCapture(windPointerId);
         windPointerId = null;
@@ -2567,17 +2570,26 @@ function initializeWindMode() {
     title.textContent = 'You are the wind'; title.lang = 'en';
     hint.id = 'windHint'; text.append(title, hint);
     const exit = document.createElement('button'); exit.id = 'btnExitWind'; exit.type = 'button';
-    toolbar.append(text, exit); document.body.append(toolbar);
-    const translate = () => { hint.textContent = getText('wind_hint'); exit.textContent = getText('wind_exit'); toolbar.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr'; };
+    const settingsButton = document.createElement('button'); settingsButton.id = 'btnWindSettings'; settingsButton.type = 'button';
+    settingsButton.setAttribute('aria-haspopup', 'dialog'); settingsButton.setAttribute('aria-controls', 'windSettingsDialog');
+    const actions = document.createElement('div'); actions.className = 'wind-toolbar-actions'; actions.append(settingsButton, exit);
+    toolbar.append(text, actions); document.body.append(toolbar);
+    const translate = () => { hint.textContent = getText(windPainter?.activeWaves ? 'wind_stop_hint' : 'wind_hint'); settingsButton.textContent = getText('wind_settings'); exit.textContent = getText('wind_exit'); toolbar.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr'; };
     translate(); onLanguageChange(translate);
     exit.addEventListener('click', () => setWindMode(false));
     document.addEventListener('keydown', event => {
-        if (!windMode || event.key !== 'Escape') return;
+        if (!windMode || event.key !== 'Escape' || windSettingsUI?.dialog.open) return;
         event.preventDefault(); event.stopPropagation(); setWindMode(false);
     }, true);
     document.addEventListener('visibilitychange', () => { if (document.hidden && windMode) setWindMode(false); });
     window.addEventListener('blur', () => { if (windMode) setWindMode(false); });
+    windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
+        getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); },
+        onOpen: () => windPainter.stop(), trigger: settingsButton });
+    settingsButton.addEventListener('click', () => windSettingsUI.open());
     windPainter = createWindPainter({
+        settings: () => windSettings,
+        onRunningChange: running => { hint.textContent = getText(running ? 'wind_stop_hint' : 'wind_hint'); },
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
         onStart: () => { windBefore = getCurrentState(); },
         paint: (index, rank) => {

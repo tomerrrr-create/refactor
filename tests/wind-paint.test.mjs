@@ -49,3 +49,11 @@ test('exit cancels pending frames and commits current artwork, and reduced motio
  assert.equal(before.commits,1);assert.equal(before.frames,0);assert.equal(h.p.activeWaves,0);h.tick(5000);assert.deepEqual(h.stats(),before);
  const reduced=painter(true);reduced.p.down(1,300);reduced.p.up(1);reduced.tick(16);assert.equal(reduced.stats().commits,1);assert.equal(reduced.stats().frames,0);
 });
+
+test('second touch stops active ripples, does not paint on its drag or release, and the next touch starts again',()=>{
+ const h=painter();h.p.down(1,300);h.p.up(1);h.tick(150);const count=h.stats().painted;
+ assert(h.p.activeWaves>0);assert(h.p.down(2,900));assert.equal(h.p.activeWaves,0);
+ h.p.move(2,7000);h.p.up(2);h.tick(5000);
+ assert.equal(h.stats().painted,count);assert.equal(h.stats().commits,1);assert.equal(h.stats().starts,1);assert.equal(h.stats().frames,0);
+ h.p.down(3,900);h.p.up(3);assert(h.p.activeWaves>0);assert.equal(h.stats().starts,2);
+});
