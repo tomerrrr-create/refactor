@@ -9,6 +9,13 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  wind_mode: {"en": "Ripple mode", "he": "סוג האדווה", "ru": "Режим волны", "nl": "Soort rimpeling"},
+  wind_mode_displace: {"en": "Move existing colors", "he": "הזזת הצבעים הקיימים", "ru": "Перемещение существующих цветов", "nl": "Bestaande kleuren verplaatsen"},
+  wind_mode_paint: {"en": "Paint color rings", "he": "ציור טבעות צבע", "ru": "Рисование цветных колец", "nl": "Gekleurde ringen schilderen"},
+  wind_mode_displace_note: {"en": "Pushes the colors already on the board. Try it on a drawing or a shuffled board.", "he": "מזיז את הצבעים שכבר נמצאים בלוח. נסו על ציור או לוח מעורבב.", "ru": "Сдвигает цвета на доске. Попробуйте на рисунке или перемешанной доске.", "nl": "Verplaatst kleuren op het bord. Probeer het op een tekening of geschud bord."},
+  wind_mode_paint_note: {"en": "Paints new rings from the active palette and sorting order.", "he": "מצייר טבעות חדשות לפי הפלטה וסדר המיון הפעילים.", "ru": "Рисует новые кольца из активной палитры в текущем порядке сортировки.", "nl": "Schildert nieuwe ringen volgens het actieve palet en de sorteervolgorde."},
+  wind_strength: {"en": "Displacement strength", "he": "עוצמת התזוזה", "ru": "Сила смещения", "nl": "Sterkte van verplaatsing"},
+  wind_strength_note: {"en": "Higher values move existing colors further.", "he": "ערך גבוה יותר מזיז את הצבעים הקיימים רחוק יותר.", "ru": "Большие значения перемещают цвета дальше.", "nl": "Hogere waarden verplaatsen bestaande kleuren verder."},
   wind_stop_hint: {"en": "Touch again to stop the ripples", "he": "מגע נוסף עוצר את האדוות", "ru": "Коснитесь ещё раз, чтобы остановить волны", "nl": "Raak opnieuw aan om de rimpelingen te stoppen"},
   wind_settings: {"en": "Settings", "he": "הגדרות", "ru": "Настройки", "nl": "Instellingen"},
   wind_speed: {"en": "Ripple speed", "he": "מהירות האדווה", "ru": "Скорость волн", "nl": "Snelheid van rimpelingen"},

@@ -1,5 +1,5 @@
 import { DEFAULT_WIND_SETTINGS, normalizeWindSettings } from './wind-settings.js';
-// Painting in palette-rank space: the app supplies the currently sorted palette.
+// Wind can exchange existing colors or paint ranks from the currently sorted palette.
 // Each wave visits a tile once, as its expanding front crosses that tile.
 export const WIND_DURATION = 2200;
 export const WIND_MAX_WAVES = 6;
@@ -8,7 +8,7 @@ const wrap = (value, size) => ((value % size) + size) % size;
 export function createWindWave(n, index, paletteLength, base, time, settings = DEFAULT_WIND_SETTINGS) {
     const x = index % n, y = Math.floor(index / n);
     const config = normalizeWindSettings(settings);
-    return { x, y, n, paletteLength, base: wrap(base, paletteLength), time, radius: -1, duration: WIND_DURATION / config.speed, colorSpan: config.colorSpan,
+    return { x, y, n, paletteLength, base: wrap(base, paletteLength), time, radius: -1, duration: WIND_DURATION / config.speed, colorSpan: config.colorSpan, mode: config.mode, strength: config.strength,
         maxRadius: Math.max(...[[0,0],[n-1,0],[0,n-1],[n-1,n-1]].map(([cx,cy]) => Math.hypot(cx-x,cy-y))) * config.range };
 }
 
@@ -36,6 +36,32 @@ export function advanceWindWave(wave, elapsed, paint) {
     return progress === 1;
 }
 
+// Exchange existing colors across the moving front. Gold cells remain protected.
+// Swaps preserve the complete color histogram; no palette colors are generated.
+export function applyWindCell(board, index, rank, wave, now) {
+    const tile = board[index];
+    if (!tile) return false;
+    if (wave.mode === 'displace') {
+        const x = index % wave.n, y = Math.floor(index / wave.n);
+        const dx = x - wave.x, dy = y - wave.y, distance = Math.hypot(dx, dy);
+        if (!distance || tile.isGold) return false;
+        const shift = Math.max(1, wave.n * .015 * wave.strength);
+        const tx = Math.max(0, Math.min(wave.n - 1, x + Math.round(dx / distance * shift)));
+        const ty = Math.max(0, Math.min(wave.n - 1, y + Math.round(dy / distance * shift)));
+        const neighbor = board[ty * wave.n + tx];
+        if (!neighbor || neighbor === tile || neighbor.isGold || neighbor.k === tile.k) return false;
+        const old = tile.k;
+        tile.prevK = tile.k; neighbor.prevK = neighbor.k;
+        tile.k = tile.v = neighbor.k; neighbor.k = neighbor.v = old;
+        tile.animStart = neighbor.animStart = now;
+        return true;
+    }
+    if (tile.k === rank && !tile.isGold && tile.v === rank) return false;
+    tile.prevK = tile.k; tile.animStart = now;
+    tile.k = tile.v = rank; tile.isGold = false;
+    return true;
+}
+
 export function createWindPainter({ context, paint, onStart, onCommit, onFrame, settings = () => DEFAULT_WIND_SETTINGS, onRunningChange = () => {},
     now = () => performance.now(), requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame,
     reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches }) {
@@ -43,7 +69,7 @@ export function createWindPainter({ context, paint, onStart, onCommit, onFrame, 
     function commit() { if (batch) { batch = false; onCommit(); } }
     function tick(time) {
         frame = null;
-        waves = waves.filter(wave => !advanceWindWave(wave, reducedMotion() ? wave.duration : time - wave.time, paint));
+        waves = waves.filter(wave => !advanceWindWave(wave, reducedMotion() ? wave.duration : time - wave.time, (index, rank) => paint(index, rank, wave)));
         onFrame();
         if (!waves.length) onRunningChange(false);
         if (waves.length) frame = requestFrame(tick);

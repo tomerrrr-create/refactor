@@ -1,5 +1,5 @@
 import { createWindSettingsDialog, loadWindSettings, saveWindSettings } from './wind-settings.js';
-import { createWindPainter } from './wind-paint.js';
+import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
@@ -409,7 +409,8 @@ currentSortMethod,
             pal: activePaletteIndex,
             sort: currentSortMethod,
             sep: separatorPx,
-            board: compressBoardState()
+            board: compressBoardState(),
+            ...(boardState.some(tile => tile.isGold) ? { gold: boardState.flatMap((tile, i) => tile.isGold ? [i] : []) } : {})
         };
         window.logArtEvent('INIT_STATE', JSON.stringify(stateSnapshot));
     }
@@ -2199,7 +2200,8 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                     pal: activePaletteIndex,
                     sort: currentSortMethod,
                     sep: separatorPx,
-                    board: compressBoardState()
+                    board: compressBoardState(),
+                    ...(boardState.some(tile => tile.isGold) ? { gold: boardState.flatMap((tile, i) => tile.isGold ? [i] : []) } : {})
                 };
                 window.logArtEvent('INIT_STATE', JSON.stringify(simState));
                 // =========================================================================
@@ -2592,12 +2594,7 @@ function initializeWindMode() {
         onRunningChange: running => { hint.textContent = getText(running ? 'wind_stop_hint' : 'wind_hint'); },
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
         onStart: () => { windBefore = getCurrentState(); },
-        paint: (index, rank) => {
-            const tile = boardState[index];
-            if (!tile || (tile.k === rank && !tile.isGold && tile.v === rank)) return;
-            tile.prevK = tile.k; tile.animStart = performance.now();
-            tile.k = tile.v = rank; tile.isGold = false;
-        },
+        paint: (index, rank, wave) => applyWindCell(boardState, index, rank, wave, performance.now()),
         onFrame: startAnimationLoop,
         onCommit: commitWindPainting
     });
@@ -3659,7 +3656,13 @@ function parseHistoryMacro(lines) {
 }
 
 function validateIslandsMacroAction(action) {
-    if (action.eventName === 'ISLANDS_INIT') {
+    if (action.eventName === 'INIT_STATE') {
+        const snapshot = JSON.parse(action.details);
+        if (snapshot.gold !== undefined && (!Array.isArray(snapshot.gold) || snapshot.gold.length > snapshot.n * snapshot.n ||
+            snapshot.gold.some(index => !Number.isInteger(index) || index < 0 || index >= snapshot.n * snapshot.n))) {
+            throw new Error('Invalid initial gold cells');
+        }
+    } else if (action.eventName === 'ISLANDS_INIT') {
         const snapshot = JSON.parse(action.details);
         restoreIslandsSession(snapshot);
         if (snapshot.recordingVersion === undefined) {
@@ -4151,11 +4154,13 @@ function executeMacroAction(action) {
                     if (boardState[tileIndex]) {
                         boardState[tileIndex].k = kVal;
                         boardState[tileIndex].v = kVal;
-                        boardState[tileIndex].isGold = false; // ויתרנו על הזהב במאקרו
+                        boardState[tileIndex].isGold = false; // Legacy recordings have no gold metadata.
                     }
                     tileIndex++;
                 }
             });
+
+            for (const index of initState.gold ?? []) boardState[index].isGold = true;
 
             // 3. עדכון הממשק (UI)
             updatePaletteHeader();

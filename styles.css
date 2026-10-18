@@ -1924,3 +1924,8 @@ body.wind-mode #board { cursor: crosshair; }
 .wind-settings-field input[type=checkbox] { width: 22px; height: 22px; }
 .wind-settings-field p { color: #b7b2a8; font-size: 12px; line-height: 1.6; }
 @media (max-width: 440px) { .wind-toolbar { grid-template-columns: 1fr; gap: 10px; } .wind-toolbar-actions { justify-content: flex-end; } }
+
+.wind-settings-field[hidden] { display: none; }
+.wind-mode-field label { margin-bottom: 10px; }
+.wind-mode-field select { width: 100%; min-height: 44px; padding: 10px; border: 1px solid #b28b3660; border-radius: 8px; background: #121310; color: #ffe7a0; font: inherit; font-size: 14px; }
+.wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }
