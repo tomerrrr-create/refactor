@@ -1,5 +1,5 @@
 export const WIND_SETTINGS_KEY = 'colorGridWindSettingsV1';
-export const DEFAULT_WIND_SETTINGS = Object.freeze({ mode: 'displace', strength: 1, speed: 1, range: 1, colorSpan: 1.25, trail: true });
+export const DEFAULT_WIND_SETTINGS = Object.freeze({ mode: 'ripple', strength: 3, speed: 1, range: 1, colorSpan: 1.25, trail: true });
 const WIND_MODES = ['displace', 'paint', 'ripple'];
 function normalizeFlatSettings(value) {
     const mode = WIND_MODES.includes(value?.mode) ? value.mode : DEFAULT_WIND_SETTINGS.mode;
@@ -17,17 +17,20 @@ function modeValues(value, selectedMode) {
     const { mode, ...fields } = normalizeFlatSettings({ ...value, ...(selectedMode ? { mode: selectedMode } : {}) });
     return fields;
 }
+// Only the original two modes inherit legacy shared preferences from each other.
+// Local ripple keeps its own defaults and must not change the other modes.
+const modeFallback = (value, mode) => mode === value.mode || (mode !== 'ripple' && value.mode !== 'ripple') ? value : undefined;
 export function normalizeWindSettings(value) {
     const flat = normalizeFlatSettings(value);
     if (!value?.modes || typeof value.modes !== 'object') return flat;
-    const modes = Object.fromEntries(WIND_MODES.map(mode => [mode, modeValues(value.modes[mode] ?? (mode === 'ripple' && flat.mode !== 'ripple' ? undefined : flat), mode)]));
+    const modes = Object.fromEntries(WIND_MODES.map(mode => [mode, modeValues(value.modes[mode] ?? modeFallback(flat, mode), mode)]));
     return { ...modes[flat.mode], mode: flat.mode, modes };
 }
 // Migrate old shared settings once, preserving both original modes. New local
 // ripples start at defaults. Subsequent edits belong only to the selected mode.
 export function selectWindMode(value, mode) {
     const current = normalizeWindSettings(value);
-    const modes = current.modes ?? Object.fromEntries(WIND_MODES.map(key => [key, modeValues(key === 'ripple' && current.mode !== 'ripple' ? undefined : current, key)]));
+    const modes = current.modes ?? Object.fromEntries(WIND_MODES.map(key => [key, modeValues(modeFallback(current, key), key)]));
     const selected = WIND_MODES.includes(mode) ? mode : current.mode;
     return { ...modes[selected], mode: selected, modes };
 }

@@ -23,11 +23,11 @@ test('disabling trails paints the initial ripple without emitting more while dra
  p.down(1,100);time=200;p.move(1,300);assert.equal(p.activeWaves,1);p.up(1);fn(3000);assert.equal(p.activeWaves,0);
 });
 
-test('new and legacy wind settings default to displacement while an explicit paint choice survives reopening',()=>{
- assert.equal(normalizeWindSettings().mode,'displace');
- assert.equal(normalizeWindSettings({speed:2,trail:false}).mode,'displace');
+test('new wind settings default to Local ripple while explicit legacy mode choices survive reopening',()=>{
+ assert.equal(normalizeWindSettings().mode,'ripple');
+ assert.equal(normalizeWindSettings({speed:2,trail:false}).mode,'ripple');
  assert.equal(normalizeWindSettings({mode:'paint'}).mode,'paint');
- assert.equal(normalizeWindSettings({mode:'invalid',strength:Infinity}).mode,'displace');
+ assert.equal(normalizeWindSettings({mode:'invalid',strength:Infinity}).mode,'ripple');
  assert.equal(normalizeWindSettings({strength:3}).strength,3);
 });
 
@@ -36,7 +36,7 @@ test('local ripple preference round-trips without changing old modes or defaults
  assert(saveWindSettings({...DEFAULT_WIND_SETTINGS,mode:'ripple',strength:2},storage));
  assert.equal(loadWindSettings(storage).mode,'ripple');assert.equal(loadWindSettings(storage).strength,2);
  for(const mode of ['displace','paint'])assert.equal(normalizeWindSettings({mode}).mode,mode);
- assert.equal(normalizeWindSettings().mode,'displace');
+ assert.equal(normalizeWindSettings().mode,'ripple');
 });
 
 test('each Wind mode retains independent settings, with legacy settings preserved for the original two',async()=>{
@@ -73,4 +73,15 @@ test('only Local ripple accepts 1000% strength and defaults to 300%, preserving 
  assert(saveWindSettings(settings,storage));const restored=loadWindSettings(storage);
  assert.equal(restored.strength,10);assert.equal(selectWindMode(restored,'displace').strength,1);
  assert.equal(selectWindMode(restored,'ripple').strength,10);
+});
+
+test('fresh Wind starts in Local ripple at 300% without carrying those defaults to other modes',async()=>{
+ const {selectWindMode}=await import('../js/wind-settings.js');
+ const fresh=loadWindSettings({getItem:()=>null});assert.equal(fresh.mode,'ripple');assert.equal(fresh.strength,3);
+ assert.equal(createWindWave(249,31000,264,0,0,fresh).mode,'ripple');
+ for(const mode of ['displace','paint'])assert.equal(selectWindMode(fresh,mode).strength,1);
+ assert.equal(loadWindSettings({getItem:()=>JSON.stringify({mode:'displace',strength:2})}).mode,'displace');
+ const fallback=normalizeWindSettings({mode:'ripple',modes:{ripple:{strength:10}}});
+ assert.equal(selectWindMode(fallback,'displace').strength,1);
+ assert.equal(selectWindMode(fallback,'paint').strength,1);
 });
