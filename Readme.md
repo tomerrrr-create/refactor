@@ -38,6 +38,14 @@ Hold the paint-color control for **600 ms** to select index zero in the current 
 
 Changing the sorting method remaps tile indices and the selected brush color to preserve their visible colors. Changing palettes clears the ordinary paint-color selection. Palette positions named “darkest” or “lightest” in several engine controls mean the first or last entry of the current ordering; custom sorting can change their physical brightness.
 
+### You are the wind (experiment)
+
+Hold **Symmetry** for 600 ms to enter Wind painting. The current board, palette, sorting, brush preferences and symmetry selection are retained; running evolution is paused. Controls dim and are unavailable while painting. Touch/click the board to send an expanding colored ripple; drag to emit a trail. Colors follow ranks in the active sorted palette, rather than a fixed rainbow. Wind paints the touched areas, including gold cells, independently of the ordinary brush size and symmetry.
+
+Use **Exit wind** or **Escape** to return to the same drawing and controls. Losing window focus or hiding the page also exits safely. Exiting keeps the artwork painted so far and stops pending fronts. No simulation restarts automatically. Each continuous group of overlapping ripples becomes one Undo/Redo action when the fronts settle; exit commits a group still in progress. Recipe export uses ordinary `DRAW_STROKE` cell changes and existing history metadata, so macro playback restores the resulting artwork without needing a new recording format. Wind mode itself is temporary and is not saved as a startup/profile preference.
+
+At most six fronts run concurrently; dragging is sampled at 100 ms or longer with a minimum spatial interval. Idle Wind requests no animation frames. Reduced-motion mode applies each ripple without an expanding animation. Existing Symmetry tap and swipe-up-to-Off remain unchanged.
+
 ### Evolutions, play and cycles
 
 Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Ordinary editing is disabled while the evolution runs. Breathe animates the rendering rather than discrete generations, so Single step is disabled for it.

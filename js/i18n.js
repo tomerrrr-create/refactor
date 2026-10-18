@@ -9,6 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  wind_hint: {en: "Touch or drag to paint ripples", he: "געו או גררו כדי לצייר אדוות", ru: "Коснитесь или проведите, чтобы рисовать волны", nl: "Raak aan of sleep om rimpelingen te schilderen"},
+  wind_exit: {en: "Exit wind", he: "יציאה ממצב רוח", ru: "Выйти из режима ветра", nl: "Windmodus verlaten"},
   "tuning_brightness_title": {"en": "Brightness evolution settings", "he": "הגדרות אבולוציית בהירות", "ru": "Настройки эволюции яркости", "nl": "Instellingen helderheidsevolutie"},
   "tuning_breathe_title": {"en": "Breathing settings", "he": "הגדרות נשימה", "ru": "Настройки дыхания", "nl": "Ademhalingsinstellingen"},
   "tuning_islands_title": {"en": "Islands settings", "he": "הגדרות איים", "ru": "Настройки островов", "nl": "Eilandinstellingen"},

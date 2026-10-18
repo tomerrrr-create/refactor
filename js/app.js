@@ -1,3 +1,4 @@
+import { createWindPainter } from './wind-paint.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
@@ -2527,9 +2528,78 @@ function handleContinuousDrag(targetIndex, e) {
     pointerState.lineRestartPending = false;
 }
 
+let windMode = false, windPainter = null, windBefore = null, windExitFocus = null;
+function commitWindPainting() {
+    if (!windBefore) return;
+    const before = windBefore; windBefore = null;
+    const after = getCurrentState();
+    const diff = after.tiles.flatMap((tile, i) => {
+        const old = before.tiles[i];
+        return old.k !== tile.k || old.isGold !== tile.isGold || old.v !== tile.v ? [{ i, k: tile.k }] : [];
+    });
+    if (!diff.length) return;
+    window.logArtEvent('DRAW_STROKE', JSON.stringify(diff));
+    pushHistory({ before, after });
+    hasPerformedInitialAutofill = true;
+}
+function setWindMode(enabled) {
+    if (enabled === windMode || (enabled && (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
+    if (enabled) {
+        pauseLife();
+        windExitFocus = document.activeElement;
+    } else {
+        windPainter?.stop();
+        if (windPointerId !== null && canvas.hasPointerCapture(windPointerId)) canvas.releasePointerCapture(windPointerId);
+        windPointerId = null;
+    }
+    windMode = enabled;
+    document.body.classList.toggle('wind-mode', enabled);
+    dom.controlsContainer.inert = enabled;
+    document.getElementById('windToolbar').hidden = !enabled;
+    if (enabled) document.getElementById('btnExitWind').focus({ preventScroll: true });
+    else (windExitFocus?.isConnected ? windExitFocus : dom.btnSymmetry).focus({ preventScroll: true });
+}
+let windPointerId = null;
+function initializeWindMode() {
+    const toolbar = document.createElement('div');
+    toolbar.id = 'windToolbar'; toolbar.className = 'wind-toolbar'; toolbar.hidden = true;
+    const text = document.createElement('div'), title = document.createElement('strong'), hint = document.createElement('span');
+    title.textContent = 'You are the wind'; title.lang = 'en';
+    hint.id = 'windHint'; text.append(title, hint);
+    const exit = document.createElement('button'); exit.id = 'btnExitWind'; exit.type = 'button';
+    toolbar.append(text, exit); document.body.append(toolbar);
+    const translate = () => { hint.textContent = getText('wind_hint'); exit.textContent = getText('wind_exit'); toolbar.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr'; };
+    translate(); onLanguageChange(translate);
+    exit.addEventListener('click', () => setWindMode(false));
+    document.addEventListener('keydown', event => {
+        if (!windMode || event.key !== 'Escape') return;
+        event.preventDefault(); event.stopPropagation(); setWindMode(false);
+    }, true);
+    document.addEventListener('visibilitychange', () => { if (document.hidden && windMode) setWindMode(false); });
+    window.addEventListener('blur', () => { if (windMode) setWindMode(false); });
+    windPainter = createWindPainter({
+        context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
+        onStart: () => { windBefore = getCurrentState(); },
+        paint: (index, rank) => {
+            const tile = boardState[index];
+            if (!tile || (tile.k === rank && !tile.isGold && tile.v === rank)) return;
+            tile.prevK = tile.k; tile.animStart = performance.now();
+            tile.k = tile.v = rank; tile.isGold = false;
+        },
+        onFrame: startAnimationLoop,
+        onCommit: commitWindPainting
+    });
+}
+
 const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null };
 
 function onPointerDown(e) {
+    if (windMode) {
+        if (e.button !== 0 || e.isPrimary === false) return;
+        const index = getTileIndexFromCoords(e.clientX, e.clientY);
+        if (windPainter.down(e.pointerId, index)) { windPointerId = e.pointerId; e.target.setPointerCapture(e.pointerId); e.preventDefault(); }
+        return;
+    }
 
     if (isMacroPlaying) {
         animateBoardTransition(() => {
@@ -2559,6 +2629,7 @@ function onPointerDown(e) {
 }
 
 function onPointerMove(e) {
+    if (windMode) { windPainter.move(e.pointerId, getTileIndexFromCoords(e.clientX, e.clientY)); return; }
     if (pointerState.id !== e.pointerId) return;
     const currentIndex = getTileIndexFromCoords(e.clientX, e.clientY);
     if (!pointerState.isDragging) {
@@ -2582,6 +2653,7 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
+    if (windMode) { windPainter.up(e.pointerId); if (windPointerId === e.pointerId) windPointerId = null; return; }
     if (pointerState.id !== e.pointerId) return;
     clearTimeout(pointerState.longPressTimer);
     const upIndex = getTileIndexFromCoords(e.clientX, e.clientY);
@@ -4626,7 +4698,7 @@ updateBrightnessEvoButtonUI();
         boardCanvas.addEventListener('pointerup', onPointerUp);
         boardCanvas.addEventListener('pointercancel', onPointerUp);
         boardCanvas.addEventListener('lostpointercapture', e => {
-            if (isContinuousBrushOn) onPointerUp(e);
+            if (windMode || isContinuousBrushOn) onPointerUp(e);
         });
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));
@@ -4683,8 +4755,10 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnUndo.addEventListener('click', (e) => handleCtrlClick(e, undo));
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
+        initializeWindMode();
         bindPickerGestures(dom.btnSymmetry, {
             onTap: cycleSymmetryMode,
+            onHold: () => setWindMode(true),
             onOpen: () => {
                 symmetryMode = 'off';
                 updateSymmetryUI();
