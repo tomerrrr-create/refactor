@@ -3472,9 +3472,9 @@ function createArtRecipeFile(prefix = '') {
     // 1. חיפוש הפלטה ההתחלתית
     let paletteName = "Unknown";
     try {
-        // לוקחים את השורה הראשונה (שמכילה את ה-INIT_STATE)
-        const firstLog = artRecipeLog[0];
-        const match = firstLog.match(/INIT_STATE -> (.*)/);
+        // Startup settings can be logged before the initial board snapshot.
+        const initLog = artRecipeLog.find(line => line.includes('INIT_STATE -> '));
+        const match = initLog?.match(/INIT_STATE -> (.*)/);
         if (match) {
             const initState = JSON.parse(match[1]);
             const palIndex = initState.pal;

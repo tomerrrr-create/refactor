@@ -78,3 +78,22 @@ test('resetting a running Islands recipe captures a new start and continues only
     h.navigator.share=async()=>{};await h.resetArtRecipeLog();
     assert.deepEqual(Array.from(h.artRecipeLog),['INIT_STATE -> current board','ISLANDS_INIT -> current board and cursor','PLAY -> fresh cursor']);assert.equal(h.isLifePlaying,true);
 });
+
+
+test('export names the first INIT_STATE palette even when startup settings precede it, without changing the recipe', async () => {
+    const { h } = harness();
+    h.C.PALETTES.push({ name: 'Later Palette' });
+    const lines = [
+        '[21:28:44.971] Game of Life Mode Changed -> {}',
+        '[21:28:44.971] Chi Flow Mode Changed -> {}',
+        '[21:28:44.982] INIT_STATE -> {"pal":0}',
+        '[21:30:00.000] INIT_STATE -> {"pal":1}'
+    ];
+    h.artRecipeLog = [...lines];
+    for (const prefix of ['', 'backup_']) {
+        const file = h.createArtRecipeFile(prefix);
+        assert.equal(file.name, prefix + 'Intuition_Path_Test_Palette_4.txt');
+        assert.equal(await file.text(), lines.join('\n'));
+        assert.deepEqual(Array.from(h.artRecipeLog), lines);
+    }
+});
