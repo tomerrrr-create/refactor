@@ -2548,7 +2548,7 @@ function commitWindPainting() {
     hasPerformedInitialAutofill = true;
 }
 function setWindMode(enabled) {
-    if (enabled === windMode || (enabled && (isSimModeActive || isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
+    if (enabled === windMode || (enabled && (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
     if (enabled) {
         pauseLife();
     } else {
@@ -2559,7 +2559,6 @@ function setWindMode(enabled) {
     }
     windMode = enabled;
     document.body.classList.toggle('wind-mode', enabled);
-    dom.btnWind.setAttribute('aria-pressed', String(enabled));
     showWindToast(enabled);
 }
 let windPointerId = null;
@@ -2574,8 +2573,6 @@ function initializeWindMode() {
     const toast = document.createElement('div'); toast.id = 'windModeToast'; toast.className = 'wind-mode-toast';
     toast.hidden = true; toast.setAttribute('role', 'status'); toast.setAttribute('aria-live', 'polite');
     document.body.append(toast);
-    const translate = () => { dom.btnWind.title = getText('tooltip_wind'); dom.btnWind.setAttribute('aria-label', dom.btnWind.title); };
-    translate(); onLanguageChange(translate);
     // Commit the current ripple batch before other controls edit/replace the board.
     // No event is prevented and no control is disabled by Wind.
     const finishPainting = () => { if (windMode) windPainter.stop(); };
@@ -2596,7 +2593,7 @@ function initializeWindMode() {
     window.addEventListener('blur', () => { if (windMode) setWindMode(false); });
     windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
         getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); },
-        onOpen: () => windPainter.stop(), trigger: dom.btnWind });
+        onOpen: () => windPainter.stop(), trigger: dom.btnSymmetry });
     windPainter = createWindPainter({
         settings: () => windSettings,
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
@@ -4780,13 +4777,11 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         initializeWindMode();
-        bindPickerGestures(dom.btnWind, {
-            onTap: () => setWindMode(!windMode), onOpen: () => windSettingsUI.open(),
-            canInteract: () => !isSimModeActive, beforeStart: hideLongPressDisplay
-        });
         bindPickerGestures(dom.btnSymmetry, {
             onTap: cycleSymmetryMode,
+            onHold: () => setWindMode(!windMode),
             onOpen: () => {
+                if (windMode) { windSettingsUI.open(); return; }
                 symmetryMode = 'off';
                 updateSymmetryUI();
             },
@@ -4870,7 +4865,7 @@ bindPickerGestures(dom.btnColorPicker, {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnWind || btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 

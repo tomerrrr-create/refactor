@@ -7,16 +7,22 @@ test('Wind toggle updates its state without making panel buttons inert or disabl
  const button={pressed:'false',inert:false,disabled:false,setAttribute(name,value){if(name==='aria-pressed')this.pressed=value;}},events=[];
  const c=vm.createContext({windMode:false,isSimModeActive:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
  pointerState:{id:null},windSettingsUI:null,windPointerId:null,windPainter:{stop:()=>events.push('commit')},pauseLife:()=>events.push('pause'),
- document:{body:{classList:{toggle(){}}}},dom:{btnWind:button},showWindToast:value=>events.push(value)});
+ document:{body:{classList:{toggle(){}}}},dom:{},showWindToast:value=>events.push(value)});
  vm.runInContext(source.slice(source.indexOf('function setWindMode('),source.indexOf('let windPointerId =')),c);
- c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(button.pressed,'true');assert.equal(button.inert,false);assert.equal(button.disabled,false);
- c.setWindMode(false);assert.equal(c.windMode,false);assert.equal(button.pressed,'false');assert.deepEqual(events,['pause',true,'commit',false]);
- c.isSimModeActive=true;c.setWindMode(true);assert.equal(c.windMode,false);
+ c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(button.inert,false);assert.equal(button.disabled,false);
+ c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['pause',true,'commit',false]);
+ c.isSimModeActive=true;c.setWindMode(true);assert.equal(c.windMode,true);
 });
-test('new Wind button taps toggle and swipes open settings without changing mode',()=>{
- let gestures;const events=[],c=vm.createContext({dom:{btnWind:{}},windMode:false,isSimModeActive:false,hideLongPressDisplay(){},windSettingsUI:{open:()=>events.push('settings')},setWindMode:value=>{c.windMode=value;events.push(value);},bindPickerGestures:(button,options)=>{gestures=options;}});
- vm.runInContext(source.slice(source.indexOf('        bindPickerGestures(dom.btnWind,'),source.indexOf('        bindPickerGestures(dom.btnSymmetry,')),c);
- gestures.onOpen();assert.equal(c.windMode,false);gestures.onTap();assert(c.windMode);gestures.onTap();assert.equal(c.windMode,false);assert.deepEqual(events,['settings',true,false]);assert(gestures.canInteract());c.isSimModeActive=true;assert.equal(gestures.canInteract(),false);
+test('Symmetry hold toggles Wind and swipe opens settings only while active',()=>{
+ let gestures;const events=[],c=vm.createContext({dom:{btnSymmetry:{}},windMode:false,isBreathing:false,symmetryMode:'vertical',
+ hideLongPressDisplay(){},C:{LONG_PRESS_SHOW_MS:600},windSettingsUI:{open:()=>events.push('settings')},
+ cycleSymmetryMode:()=>events.push('cycle'),updateSymmetryUI:()=>events.push('symmetry'),setWindMode:value=>{c.windMode=value;events.push(value);},
+ bindPickerGestures:(button,options)=>{gestures=options;}});
+ const start=source.indexOf('        bindPickerGestures(dom.btnSymmetry,');
+ vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnCycleSort,',start)),c);
+ gestures.onTap();gestures.onHold();assert.equal(c.windMode,true);gestures.onOpen();assert.equal(c.symmetryMode,'vertical');
+ gestures.onHold();assert.equal(c.windMode,false);gestures.onOpen();assert.equal(c.symmetryMode,'off');
+ assert.deepEqual(events,['cycle',true,'settings',false,'symmetry']);
 });
 test('ordinary panel events commit pending ripples without consuming or blocking the event',()=>{
  const listeners=new Map(),events=[],c=vm.createContext({windMode:true,windPainter:{stop:()=>events.push('commit')},dom:{controlsContainer:{addEventListener:(name,handler)=>listeners.set(name,handler)}}});

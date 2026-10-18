@@ -1901,10 +1901,6 @@ button, .ctrl {
 .tuning-heading-icon[data-islands-mode="proximity"] .islands-proximity-mark { display:block; fill:var(--gold); }
 
 /* Wind is a creation-mode tool. It never dims or locks the control panel. */
-#btnWind { grid-area: 3 / 4; }
-.sim-mode-active #btnWind { display: none; }
-#btnWind[aria-pressed="true"] { color: var(--gold); }
-#btnWind[aria-pressed="true"] svg { stroke: var(--gold); }
 body.wind-mode #board { cursor: crosshair; }
 .wind-mode-toast { position: fixed; z-index: 90; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 10px 18px; border: 1px solid #b28b3659; border-radius: 14px; background: #100e09ed; color: #e3c677; font-size: 13px; letter-spacing: .04em; pointer-events: none; }
 .wind-mode-toast[hidden] { display: none; }

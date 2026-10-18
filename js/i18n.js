@@ -9,7 +9,6 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  tooltip_wind: {"en": "Wind: tap to toggle; swipe up for settings", "he": "רוח: לחיצה להפעלה או כיבוי; החלקה למעלה להגדרות", "ru": "Ветер: нажмите для включения или выключения; проведите вверх для настроек", "nl": "Wind: tik om te schakelen; veeg omhoog voor instellingen"},
   wind_on: {"en": "WIND MODE ON", "he": "מצב WIND פעיל", "ru": "РЕЖИМ ВЕТРА ВКЛЮЧЁН", "nl": "WINDMODUS AAN"},
   wind_off: {"en": "WIND MODE OFF", "he": "מצב WIND כבוי", "ru": "РЕЖИМ ВЕТРА ВЫКЛЮЧЕН", "nl": "WINDMODUS UIT"},
   wind_mode: {"en": "Ripple mode", "he": "סוג האדווה", "ru": "Режим волны", "nl": "Soort rimpeling"},
@@ -320,7 +319,7 @@ export const translations = {
   tooltip_palette: { en: "Switch palette", he: "עבור לפלטת הצבעים הבאה", ru: "Сменить палитру", nl: "Wissel palet" },
   tooltip_random: { en: "Explore Mood", he: "ערבוב כל פלטת הצבעים", ru: "Исследовать настроение", nl: "Ontdek sfeer" },
   tooltip_colorPicker: { en: "Choose Color", he: "בחירת צבע", ru: "Выбрать цвет", nl: "Kies kleur" },
-  tooltip_symmetry: { en: "Symmetry Mode", he: "סימטריה", ru: "Режим симметрии", nl: "Symmetriemodus" },
+  tooltip_symmetry: { en: "Symmetry; hold to toggle Wind; swipe up for Wind settings while active", he: "סימטריה; לחיצה ארוכה להפעלה או כיבוי של Wind; כשהוא פעיל, החלקה למעלה להגדרות", ru: "Симметрия; удерживайте для включения или выключения ветра; смахните вверх для его настроек, пока он включён", nl: "Symmetrie; houd ingedrukt om Wind te schakelen; veeg omhoog voor instellingen als Wind actief is" },
   tooltip_brushMode: { en: "Mode: Drag to Copy", he: "גרירה והעתקה", ru: "Режим: Перетащить для копирования", nl: "Modus: Sleep om te kopiëren" },
   tooltip_redo: { en: "Redo", he: "בצע שוב", ru: "Повторить", nl: "Opnieuw" },
   tooltip_undo: { en: "Undo", he: "בטל", ru: "Отменить", nl: "Ongedaan maken" },
