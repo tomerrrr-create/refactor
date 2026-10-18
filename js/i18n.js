@@ -9,6 +9,9 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  tooltip_wind: {"en": "Wind: tap to toggle; swipe up for settings", "he": "רוח: לחיצה להפעלה או כיבוי; החלקה למעלה להגדרות", "ru": "Ветер: нажмите для включения или выключения; проведите вверх для настроек", "nl": "Wind: tik om te schakelen; veeg omhoog voor instellingen"},
+  wind_on: {"en": "WIND MODE ON", "he": "מצב WIND פעיל", "ru": "РЕЖИМ ВЕТРА ВКЛЮЧЁН", "nl": "WINDMODUS AAN"},
+  wind_off: {"en": "WIND MODE OFF", "he": "מצב WIND כבוי", "ru": "РЕЖИМ ВЕТРА ВЫКЛЮЧЕН", "nl": "WINDMODUS UIT"},
   wind_mode: {"en": "Ripple mode", "he": "סוג האדווה", "ru": "Режим волны", "nl": "Soort rimpeling"},
   wind_mode_displace: {"en": "Move existing colors", "he": "הזזת הצבעים הקיימים", "ru": "Перемещение существующих цветов", "nl": "Bestaande kleuren verplaatsen"},
   wind_mode_paint: {"en": "Paint color rings", "he": "ציור טבעות צבע", "ru": "Рисование цветных колец", "nl": "Gekleurde ringen schilderen"},

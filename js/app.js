@@ -2109,6 +2109,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
      
 
             if (macroQueue.length > 0) {
+                if (typeof windMode !== 'undefined' && windMode) setWindMode(false);
                 settingsProfiles?.beginReplay();
                 isMacroLoaded = true;
                 currentMacroStep = 0;
@@ -2362,6 +2363,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         const duration = 500;
         dom.controlsContainer.style.opacity = '0';
         setTimeout(() => {
+            if (windMode) setWindMode(false);
             isSimModeActive = !isSimModeActive;
             dom.controlsContainer.classList.toggle('sim-mode-active', isSimModeActive);
             if (isSimModeActive) {
@@ -2531,20 +2533,8 @@ function handleContinuousDrag(targetIndex, e) {
     pointerState.lineRestartPending = false;
 }
 
-let windMode = false, windPainter = null, windBefore = null, windExitFocus = null, windSettingsUI = null;
+let windMode = false, windPainter = null, windBefore = null, windSettingsUI = null;
 let windSettings = loadWindSettings();
-const windControlLocks = new Map();
-function updateWindControls(enabled) {
-    if (enabled) {
-        for (const button of dom.controlsContainer.querySelectorAll('button')) {
-            if (button === dom.btnPalette || button === dom.btnCycleSort) continue;
-            windControlLocks.set(button, button.inert); button.inert = true;
-        }
-    } else {
-        for (const [button, inert] of windControlLocks) button.inert = inert;
-        windControlLocks.clear();
-    }
-}
 function commitWindPainting() {
     if (!windBefore) return;
     const before = windBefore; windBefore = null;
@@ -2559,10 +2549,9 @@ function commitWindPainting() {
     hasPerformedInitialAutofill = true;
 }
 function setWindMode(enabled) {
-    if (enabled === windMode || (enabled && (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
+    if (enabled === windMode || (enabled && (isSimModeActive || isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
     if (enabled) {
         pauseLife();
-        windExitFocus = document.activeElement;
     } else {
         if (windSettingsUI?.dialog.open) windSettingsUI.dialog.close();
         windPainter?.stop();
@@ -2571,51 +2560,46 @@ function setWindMode(enabled) {
     }
     windMode = enabled;
     document.body.classList.toggle('wind-mode', enabled);
-    updateWindControls(enabled);
-    document.getElementById('windToolbar').hidden = !enabled;
-    if (enabled) document.getElementById('btnExitWind').focus({ preventScroll: true });
-    else (windExitFocus?.isConnected ? windExitFocus : dom.btnSymmetry).focus({ preventScroll: true });
+    dom.btnWind.setAttribute('aria-pressed', String(enabled));
+    showWindToast(enabled);
 }
 let windPointerId = null;
-function windControlAction(action) {
-    return (...args) => {
-        if (typeof windMode !== 'undefined' && windMode) windPainter.stop();
-        return action(...args);
-    };
+let windToastTimer = null;
+function showWindToast(enabled) {
+    const toast = document.getElementById('windModeToast');
+    clearTimeout(windToastTimer);
+    toast.textContent = getText(enabled ? 'wind_on' : 'wind_off'); toast.hidden = false;
+    windToastTimer = setTimeout(() => { toast.hidden = true; }, 1000);
 }
 function initializeWindMode() {
-    const shade = document.createElement('div'); shade.className = 'wind-controls-shade';
-    shade.setAttribute('aria-hidden', 'true'); dom.controlsContainer.append(shade);
-    const toolbar = document.createElement('div');
-    toolbar.id = 'windToolbar'; toolbar.className = 'wind-toolbar'; toolbar.hidden = true;
-    const text = document.createElement('div'), title = document.createElement('strong'), hint = document.createElement('span');
-    title.textContent = 'You are the wind'; title.lang = 'en';
-    hint.id = 'windHint'; text.append(title, hint);
-    const exit = document.createElement('button'); exit.id = 'btnExitWind'; exit.type = 'button';
-    const settingsButton = document.createElement('button'); settingsButton.id = 'btnWindSettings'; settingsButton.type = 'button';
-    settingsButton.setAttribute('aria-haspopup', 'dialog'); settingsButton.setAttribute('aria-controls', 'windSettingsDialog');
-    const actions = document.createElement('div'); actions.className = 'wind-toolbar-actions'; actions.append(settingsButton, exit);
-    toolbar.append(text, actions); document.body.append(toolbar);
-    const translate = () => { hint.textContent = getText(windPainter?.activeWaves ? 'wind_stop_hint' : 'wind_hint'); settingsButton.textContent = getText('wind_settings'); exit.textContent = getText('wind_exit'); toolbar.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr'; };
+    const toast = document.createElement('div'); toast.id = 'windModeToast'; toast.className = 'wind-mode-toast';
+    toast.hidden = true; toast.setAttribute('role', 'status'); toast.setAttribute('aria-live', 'polite');
+    document.body.append(toast);
+    const translate = () => { dom.btnWind.title = getText('tooltip_wind'); dom.btnWind.setAttribute('aria-label', dom.btnWind.title); };
     translate(); onLanguageChange(translate);
-    exit.addEventListener('click', () => setWindMode(false));
+    // Commit the current ripple batch before other controls edit/replace the board.
+    // No event is prevented and no control is disabled by Wind.
+    const finishPainting = () => { if (windMode) windPainter.stop(); };
+    for (const type of ['pointerdown', 'click']) dom.controlsContainer.addEventListener(type, finishPainting, true);
+    dom.controlsContainer.addEventListener('keydown', event => {
+        if (['Enter', ' '].includes(event.key) || event.altKey) finishPainting();
+    }, true);
     document.addEventListener('keydown', event => {
         if (!windMode || event.key !== 'Escape' || document.querySelector('dialog[open]')) return;
         if (dom.paletteModal.classList.contains('modal-visible')) {
             event.preventDefault(); event.stopPropagation(); dom.btnPaletteModalClose.click();
             dom.btnPalette.focus({ preventScroll: true }); return;
         }
+        if (document.querySelector('.modal-visible')) return;
         event.preventDefault(); event.stopPropagation(); setWindMode(false);
     }, true);
     document.addEventListener('visibilitychange', () => { if (document.hidden && windMode) setWindMode(false); });
     window.addEventListener('blur', () => { if (windMode) setWindMode(false); });
     windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
         getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); },
-        onOpen: () => windPainter.stop(), trigger: settingsButton });
-    settingsButton.addEventListener('click', () => windSettingsUI.open());
+        onOpen: () => windPainter.stop(), trigger: dom.btnWind });
     windPainter = createWindPainter({
         settings: () => windSettings,
-        onRunningChange: running => { hint.textContent = getText(running ? 'wind_stop_hint' : 'wind_hint'); },
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
         onStart: () => { windBefore = getCurrentState(); },
         paint: (index, rank, wave) => applyWindCell(boardState, index, rank, wave, performance.now()),
@@ -4766,8 +4750,8 @@ updateBrightnessEvoButtonUI();
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
 
 bindPickerGestures(dom.btnPalette, {
-    onTap: windControlAction(switchPalette), onOpen: windControlAction(modals.openPaletteModal),
-    onHold: windControlAction(switchPaletteGroup),
+    onTap: switchPalette, onOpen: modals.openPaletteModal,
+    onHold: switchPaletteGroup,
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
@@ -4797,9 +4781,12 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         initializeWindMode();
+        bindPickerGestures(dom.btnWind, {
+            onTap: () => setWindMode(!windMode), onOpen: () => windSettingsUI.open(),
+            canInteract: () => !isSimModeActive, beforeStart: hideLongPressDisplay
+        });
         bindPickerGestures(dom.btnSymmetry, {
             onTap: cycleSymmetryMode,
-            onHold: () => setWindMode(true),
             onOpen: () => {
                 symmetryMode = 'off';
                 updateSymmetryUI();
@@ -4808,14 +4795,14 @@ bindPickerGestures(dom.btnPalette, {
             holdMs: C.LONG_PRESS_SHOW_MS
         });
 bindPickerGestures(dom.btnCycleSort, {
-    onTap: windControlAction(cycleSortMethod), onOpen: windControlAction(modals.openSortCycleModal),
-    onHold: windControlAction(() => selectSortMethod(sortCycleMethods[0])),
+    onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
+    onHold: () => selectSortMethod(sortCycleMethods[0]),
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
 dom.btnCycleSort.addEventListener('keydown', e => {
     if (e.altKey && e.key === 'ArrowDown') {
-        e.preventDefault(); windControlAction(modals.openSortCycleModal)();
+        e.preventDefault(); modals.openSortCycleModal();
     }
 });
 bindPickerGestures(dom.btnColorPicker, {
@@ -4884,7 +4871,7 @@ bindPickerGestures(dom.btnColorPicker, {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnWind || btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 

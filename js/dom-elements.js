@@ -28,6 +28,7 @@ export const dom = {
   btnTutorial: document.getElementById('btnTutorial'),
   btnDark: document.getElementById('btnDark'),
   btnSymmetry: document.getElementById('btnSymmetry'),
+  btnWind: document.getElementById('btnWind'),
   btnColorPicker: document.getElementById('btnColorPicker'),
   btnResetBoard: document.getElementById('btnResetBoard'),
   btnResizeUp: document.getElementById('btnResizeUp'),

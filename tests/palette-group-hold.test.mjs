@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
-const windWrapper = source.slice(source.indexOf('function windControlAction('), source.indexOf('function initializeWindMode('));
 const excerpt = (start, end) => source.slice(source.indexOf(start), source.indexOf(end, source.indexOf(start)));
 const plain = value => JSON.parse(JSON.stringify(value));
 function harness(index = 2) {
@@ -32,7 +31,6 @@ function harness(index = 2) {
     } };
     h.bindPickerGestures = (_button, options) => { h.gestures = options; };
     vm.runInContext('function paletteLen() { return C.PALETTES[activePaletteIndex].colors.length; } const norm = k => ((k % paletteLen()) + paletteLen()) % paletteLen();', h);
-    vm.runInContext(windWrapper, h);
     for (const [start, end] of [
         ['function getNextPaletteGroupIndex(', '// --- מערכת מיון'],
         ['function performAction(', 'function undo('],
