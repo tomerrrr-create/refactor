@@ -1,4 +1,4 @@
-import { createWindSettingsDialog, loadWindSettings, saveWindSettings } from './wind-settings.js';
+import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, nextWindEffect, createWindModeIcon } from './wind-settings.js';
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
@@ -2294,7 +2294,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnRandom.title = getText('tooltip_random');
         dom.btnColorPicker.title = getText('tooltip_colorPicker'); 
         dom.btnCycleSort.title = getText('tooltip_sort_cycle');
-        dom.btnSymmetry.title = getText('tooltip_symmetry');
+        updateSymmetryUI();
         dom.btnRedo.title = getText('tooltip_redo'); 
         dom.btnUndo.title = getText('tooltip_undo');
         dom.btnDark.title = getText('tooltip_dark'); 
@@ -2550,6 +2550,8 @@ function commitWindPainting() {
 function setWindMode(enabled) {
     if (enabled === windMode || (enabled && (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
     if (enabled) {
+        windSettings = selectWindMode(windSettings, 'ripple');
+        saveWindSettings(windSettings);
         pauseLife();
     } else {
         if (windSettingsUI?.dialog.open) windSettingsUI.dialog.close();
@@ -2559,7 +2561,15 @@ function setWindMode(enabled) {
     }
     windMode = enabled;
     document.body.classList.toggle('wind-mode', enabled);
+    updateSymmetryUI();
     showWindToast(enabled);
+}
+function cycleWindEffect() {
+    if (!windMode) return;
+    windPainter?.stop();
+    windSettings = selectWindMode(windSettings, nextWindEffect(windSettings.mode));
+    saveWindSettings(windSettings);
+    updateSymmetryUI();
 }
 let windPointerId = null;
 let windToastTimer = null;
@@ -2592,7 +2602,7 @@ function initializeWindMode() {
     document.addEventListener('visibilitychange', () => { if (document.hidden && windMode) setWindMode(false); });
     window.addEventListener('blur', () => { if (windMode) setWindMode(false); });
     windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
-        getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); },
+        getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); updateSymmetryUI(); },
         onOpen: () => windPainter.stop(), trigger: dom.btnSymmetry });
     windPainter = createWindPainter({
         settings: () => windSettings,
@@ -2936,6 +2946,20 @@ function getTilesInRadius(centerIndex, radius) {
           }
           dom.btnSymmetry.setAttribute('aria-label', getText(titleKey));
           dom.btnSymmetry.title = getText('tooltip_symmetry');
+          const symmetryIcon = dom.btnSymmetry.querySelector('[data-symmetry-icon]');
+          const windIcon = dom.btnSymmetry.querySelector('.wind-control-icon');
+          symmetryIcon.style.display = windMode ? 'none' : '';
+          windIcon.hidden = !windMode;
+          dom.btnSymmetry.classList.toggle('wind-active', windMode);
+          if (windMode) {
+              windIcon.replaceChildren(createWindModeIcon(windSettings.mode));
+              dom.btnSymmetry.dataset.windMode = windSettings.mode;
+              dom.btnSymmetry.title = `${getText('wind_mode_' + windSettings.mode)} — ${getText('tooltip_wind_cycle')}`;
+              dom.btnSymmetry.setAttribute('aria-label', dom.btnSymmetry.title);
+          } else {
+              windIcon.replaceChildren();
+              delete dom.btnSymmetry.dataset.windMode;
+          }
       }
     
 
@@ -4778,7 +4802,7 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         initializeWindMode();
         bindPickerGestures(dom.btnSymmetry, {
-            onTap: cycleSymmetryMode,
+            onTap: () => windMode ? cycleWindEffect() : cycleSymmetryMode(),
             onHold: () => setWindMode(!windMode),
             onOpen: () => {
                 if (windMode) { windSettingsUI.open(); return; }

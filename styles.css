@@ -1900,7 +1900,7 @@ button, .ctrl {
 .tuning-heading-icon .islands-proximity-mark { display:none; }
 .tuning-heading-icon[data-islands-mode="proximity"] .islands-proximity-mark { display:block; fill:var(--gold); }
 
-/* Wind is a creation-mode tool. It never dims or locks the control panel. */
+/* Wind never dims or locks the control panel. */
 body.wind-mode #board { cursor: crosshair; }
 .wind-mode-toast { position: fixed; z-index: 90; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 10px 18px; border: 1px solid #b28b3659; border-radius: 14px; background: #100e09ed; color: #e3c677; font-size: 13px; letter-spacing: .04em; pointer-events: none; }
 .wind-mode-toast[hidden] { display: none; }
@@ -1914,6 +1914,12 @@ body.wind-mode #board { cursor: crosshair; }
 .wind-settings-field p { color: #b7b2a8; font-size: 12px; line-height: 1.6; }
 
 .wind-settings-field[hidden] { display: none; }
-.wind-mode-field label { margin-bottom: 10px; }
-.wind-mode-field select { width: 100%; min-height: 44px; padding: 10px; border: 1px solid #b28b3660; border-radius: 8px; background: #121310; color: #ffe7a0; font: inherit; font-size: 14px; }
+#windModeLabel { display: block; margin-bottom: 12px; text-align: center; }
+.wind-mode-buttons { gap: 16px; flex-wrap: nowrap; margin-bottom: 12px; }
+.tuning-modes.wind-mode-buttons button { display: grid; place-items: center; width: 52px; height: 52px; padding: 10px; border-radius: 50%; flex-shrink: 0; }
+.wind-mode-buttons svg { width: 28px; height: 28px; }
+.wind-control-icon { display: inline-flex; }
+.wind-control-icon svg { width: var(--side-icon-size); height: var(--side-icon-size); }
+.wind-control-icon[hidden] { display: none; }
+#btnSymmetry.wind-active { color: var(--gold); }
 .wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }

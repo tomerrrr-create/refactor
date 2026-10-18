@@ -1,5 +1,23 @@
 export const WIND_SETTINGS_KEY = 'colorGridWindSettingsV1';
 export const DEFAULT_WIND_SETTINGS = Object.freeze({ mode: 'ripple', strength: 3, speed: 1, range: 1, colorSpan: 1.25, trail: true });
+export const WIND_MODE_SEQUENCE = Object.freeze(['ripple', 'paint', 'displace']);
+export function nextWindEffect(mode) {
+    return WIND_MODE_SEQUENCE[(WIND_MODE_SEQUENCE.indexOf(mode) + 1) % WIND_MODE_SEQUENCE.length];
+}
+// Use the actual breathing symbols, keeping geometry and stroke widths identical.
+export function createWindModeIcon(mode) {
+    const sourceId = mode === 'ripple' ? 'iconBreatheSolo' : mode === 'paint' ? 'iconBreatheRandomColor' : null;
+    if (sourceId) {
+        const icon = document.getElementById(sourceId).cloneNode(true);
+        icon.removeAttribute('id'); icon.style.display = 'block';
+        icon.setAttribute('aria-hidden', 'true');
+        return icon;
+    }
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    for (const [key, value] of Object.entries({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) icon.setAttribute(key, value);
+    icon.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="12" cy="12" r="5.5"/>';
+    return icon;
+}
 const WIND_MODES = ['displace', 'paint', 'ripple'];
 function normalizeFlatSettings(value) {
     const mode = WIND_MODES.includes(value?.mode) ? value.mode : DEFAULT_WIND_SETTINGS.mode;
@@ -48,12 +66,18 @@ export function createWindSettingsDialog({ getText, getLang, onLanguageChange, g
     dialog.id = 'windSettingsDialog'; dialog.className = 'erosion-settings-dialog evolution-tuning-dialog wind-settings-dialog';
     dialog.setAttribute('aria-labelledby', 'windSettingsTitle');
     dialog.innerHTML = `<form><button type="button" class="modal-dismiss" data-close>×</button>
-        <h2 id="windSettingsTitle"></h2><div class="wind-mode-field"><label for="wind_mode"></label><select id="wind_mode"><option value="displace"></option><option value="paint"></option><option value="ripple"></option></select><p></p></div><div class="wind-settings-fields"></div>
+        <h2 id="windSettingsTitle"></h2><div class="wind-mode-field"><span id="windModeLabel"></span><div id="windModeButtons" class="tuning-modes wind-mode-buttons" role="group" aria-labelledby="windModeLabel"></div><p></p></div><div class="wind-settings-fields"></div>
         <div class="init-settings-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></div></form>`;
     document.body.append(dialog);
     let draft = null;
-    const modeInput = dialog.querySelector('#wind_mode');
-    modeInput.addEventListener('change', () => { if (draft) { draft = selectWindMode(draft, modeInput.value); render(); } });
+    const modeGroup = dialog.querySelector('#windModeButtons');
+    for (const mode of WIND_MODE_SEQUENCE) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.dataset.mode = mode;
+        button.append(createWindModeIcon(mode));
+        button.addEventListener('click', () => { if (draft) { draft = selectWindMode(draft, mode); render(); } });
+        modeGroup.append(button);
+    }
     const fields = new Map();
     for (const [field, min, max, step] of [['speed', .25, 3, .25], ['range', .15, 1, .05], ['colorSpan', .25, 3, .25], ['strength', .25, 3, .25], ['trail']]) {
         const row = document.createElement('div'); row.className = 'wind-settings-field';
@@ -71,10 +95,13 @@ export function createWindSettingsDialog({ getText, getLang, onLanguageChange, g
         dialog.querySelector('[data-reset]').textContent = getText('evolution_reset_default');
         dialog.querySelector('[data-cancel]').textContent = getText('gs_modal_cancel');
         dialog.querySelector('[type=submit]').textContent = getText('gs_modal_save_close');
-        dialog.querySelector('.wind-mode-field label').textContent = getText('wind_mode');
-        for (const option of modeInput.options) option.textContent = getText('wind_mode_' + option.value);
+        dialog.querySelector('#windModeLabel').textContent = getText('wind_mode');
+        for (const button of modeGroup.children) {
+            const label = getText('wind_mode_' + button.dataset.mode);
+            button.title = label; button.setAttribute('aria-label', label);
+            button.setAttribute('aria-pressed', String(button.dataset.mode === draft?.mode));
+        }
         if (draft) {
-            modeInput.value = draft.mode;
             dialog.querySelector('.wind-mode-field p').textContent = getText('wind_mode_' + draft.mode + '_note') + ' ' + getText('wind_mode_settings_note');
         }
         for (const [field, { row, input }] of fields) {

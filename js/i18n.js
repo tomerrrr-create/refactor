@@ -9,6 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  tooltip_wind_cycle: { en: "Wind: tap to change mode; hold to return to symmetry; swipe up for settings", he: "רוח: לחיצה להחלפת מצב; לחיצה ארוכה לחזרה לסימטריה; החלקה למעלה להגדרות", ru: "Ветер: нажмите для смены режима; удерживайте для возврата к симметрии; смахните вверх для настроек", nl: "Wind: tik om van modus te wisselen; houd ingedrukt voor symmetrie; veeg omhoog voor instellingen" },
   wind_on: {"en": "WIND MODE ON", "he": "מצב WIND פעיל", "ru": "РЕЖИМ ВЕТРА ВКЛЮЧЁН", "nl": "WINDMODUS AAN"},
   wind_off: {"en": "WIND MODE OFF", "he": "מצב WIND כבוי", "ru": "РЕЖИМ ВЕТРА ВЫКЛЮЧЕН", "nl": "WINDMODUS UIT"},
   wind_mode: {"en": "Ripple mode", "he": "סוג האדווה", "ru": "Режим волны", "nl": "Soort rimpeling"},
