@@ -2533,6 +2533,18 @@ function handleContinuousDrag(targetIndex, e) {
 
 let windMode = false, windPainter = null, windBefore = null, windExitFocus = null, windSettingsUI = null;
 let windSettings = loadWindSettings();
+const windControlLocks = new Map();
+function updateWindControls(enabled) {
+    if (enabled) {
+        for (const button of dom.controlsContainer.querySelectorAll('button')) {
+            if (button === dom.btnPalette || button === dom.btnCycleSort) continue;
+            windControlLocks.set(button, button.inert); button.inert = true;
+        }
+    } else {
+        for (const [button, inert] of windControlLocks) button.inert = inert;
+        windControlLocks.clear();
+    }
+}
 function commitWindPainting() {
     if (!windBefore) return;
     const before = windBefore; windBefore = null;
@@ -2559,13 +2571,21 @@ function setWindMode(enabled) {
     }
     windMode = enabled;
     document.body.classList.toggle('wind-mode', enabled);
-    dom.controlsContainer.inert = enabled;
+    updateWindControls(enabled);
     document.getElementById('windToolbar').hidden = !enabled;
     if (enabled) document.getElementById('btnExitWind').focus({ preventScroll: true });
     else (windExitFocus?.isConnected ? windExitFocus : dom.btnSymmetry).focus({ preventScroll: true });
 }
 let windPointerId = null;
+function windControlAction(action) {
+    return (...args) => {
+        if (typeof windMode !== 'undefined' && windMode) windPainter.stop();
+        return action(...args);
+    };
+}
 function initializeWindMode() {
+    const shade = document.createElement('div'); shade.className = 'wind-controls-shade';
+    shade.setAttribute('aria-hidden', 'true'); dom.controlsContainer.append(shade);
     const toolbar = document.createElement('div');
     toolbar.id = 'windToolbar'; toolbar.className = 'wind-toolbar'; toolbar.hidden = true;
     const text = document.createElement('div'), title = document.createElement('strong'), hint = document.createElement('span');
@@ -2580,7 +2600,11 @@ function initializeWindMode() {
     translate(); onLanguageChange(translate);
     exit.addEventListener('click', () => setWindMode(false));
     document.addEventListener('keydown', event => {
-        if (!windMode || event.key !== 'Escape' || windSettingsUI?.dialog.open) return;
+        if (!windMode || event.key !== 'Escape' || document.querySelector('dialog[open]')) return;
+        if (dom.paletteModal.classList.contains('modal-visible')) {
+            event.preventDefault(); event.stopPropagation(); dom.btnPaletteModalClose.click();
+            dom.btnPalette.focus({ preventScroll: true }); return;
+        }
         event.preventDefault(); event.stopPropagation(); setWindMode(false);
     }, true);
     document.addEventListener('visibilitychange', () => { if (document.hidden && windMode) setWindMode(false); });
@@ -4742,8 +4766,8 @@ updateBrightnessEvoButtonUI();
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
 
 bindPickerGestures(dom.btnPalette, {
-    onTap: switchPalette, onOpen: modals.openPaletteModal,
-    onHold: switchPaletteGroup,
+    onTap: windControlAction(switchPalette), onOpen: windControlAction(modals.openPaletteModal),
+    onHold: windControlAction(switchPaletteGroup),
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
@@ -4784,14 +4808,14 @@ bindPickerGestures(dom.btnPalette, {
             holdMs: C.LONG_PRESS_SHOW_MS
         });
 bindPickerGestures(dom.btnCycleSort, {
-    onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
-    onHold: () => selectSortMethod(sortCycleMethods[0]),
+    onTap: windControlAction(cycleSortMethod), onOpen: windControlAction(modals.openSortCycleModal),
+    onHold: windControlAction(() => selectSortMethod(sortCycleMethods[0])),
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
 dom.btnCycleSort.addEventListener('keydown', e => {
     if (e.altKey && e.key === 'ArrowDown') {
-        e.preventDefault(); modals.openSortCycleModal();
+        e.preventDefault(); windControlAction(modals.openSortCycleModal)();
     }
 });
 bindPickerGestures(dom.btnColorPicker, {

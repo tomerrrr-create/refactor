@@ -1901,7 +1901,11 @@ button, .ctrl {
 .tuning-heading-icon[data-islands-mode="proximity"] .islands-proximity-mark { display:block; fill:var(--gold); }
 
 /* Wind is a temporary painting mode: keep the board and its layout in place. */
-body.wind-mode #controlsContainer { opacity: .1 !important; pointer-events: none; transition: opacity 450ms ease; }
+body.wind-mode #controlsContainer { opacity: 1 !important; isolation: isolate; }
+.wind-controls-shade { position: absolute; inset: -8px; left: min(-8px, calc((100% - 100vw) / 2)); right: min(-8px, calc((100% - 100vw) / 2)); z-index: 20; border-radius: 16px; background: #0009; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 450ms ease, visibility 450ms; }
+body.wind-mode .wind-controls-shade { opacity: 1; visibility: visible; pointer-events: auto; }
+body.wind-mode #btnPalette, body.wind-mode #btnCycleSort { z-index: 21; pointer-events: auto; }
+body.wind-mode #controlsContainer:not(.sim-mode-active) #btnCycleSort { grid-area: 4 / 5; display: inline-flex; visibility: visible; opacity: 1; transform: scale(1); }
 body.wind-mode #board { cursor: crosshair; }
 .wind-toolbar { position: fixed; z-index: 80; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(420px, calc(100vw - 32px)); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; box-sizing: border-box; border: 1px solid #b28b364d; border-radius: 18px; background: #100e09f2; color: #e3c677; box-shadow: 0 0 30px #0008; animation: wind-arrive 450ms ease; }
 .wind-toolbar[hidden] { display: none; }
@@ -1910,7 +1914,7 @@ body.wind-mode #board { cursor: crosshair; }
 .wind-toolbar button { flex: 0 0 auto; min-height: 44px; padding: 8px 12px; border: 1px solid #b28b3670; border-radius: 12px; color: #e3c677; background: #b28b3612; font-size: 13px; }
 .wind-toolbar button:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 3px; }
 @keyframes wind-arrive { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
-@media (prefers-reduced-motion: reduce) { .wind-toolbar { animation: none; } body.wind-mode #controlsContainer { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .wind-toolbar { animation: none; } .wind-controls-shade { transition: none; } }
 
 .wind-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
 .wind-toolbar > div { min-width: 0; }
@@ -1929,3 +1933,10 @@ body.wind-mode #board { cursor: crosshair; }
 .wind-mode-field label { margin-bottom: 10px; }
 .wind-mode-field select { width: 100%; min-height: 44px; padding: 10px; border: 1px solid #b28b3660; border-radius: 8px; background: #121310; color: #ffe7a0; font: inherit; font-size: 14px; }
 .wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }
+@media (max-height: 700px) {
+  .wind-toolbar { top: 2px; bottom: auto; width: min(420px, calc(100vw - 32px)); padding: 2px 8px; border-radius: 10px; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .wind-toolbar strong { font-size: 11px; white-space: nowrap; letter-spacing: 0; }
+  .wind-toolbar #windHint { display: none; }
+  .wind-toolbar-actions { gap: 6px; }
+  .wind-toolbar button { min-height: 32px; padding: 4px 8px; font-size: 11px; border-radius: 7px; }
+}
