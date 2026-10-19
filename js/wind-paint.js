@@ -95,11 +95,11 @@ function exchangeWindColors(tile, neighbor, now) {
     return true;
 }
 
-export function createWindPainter({ context, paint, onStart, onCommit, onFrame, settings = () => DEFAULT_WIND_SETTINGS, onRunningChange = () => {},
+export function createWindPainter({ context, paint, onStart, onCommit, onFrame, onWave = () => {}, settings = () => DEFAULT_WIND_SETTINGS, onRunningChange = () => {},
     now = () => performance.now(), requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame,
     reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches }) {
     let waves = [], frame = null, batch = false, pointer = null, lastIndex = -1, lastTime = -Infinity, serial = 0, stoppingGesture = false;
-    function commit() { if (batch) { batch = false; onCommit(); } }
+    function commit(reason = 'complete') { if (batch) { batch = false; onCommit(reason); } }
     function tick(time) {
         frame = null;
         waves = waves.filter(wave => !advanceWindWave(wave, reducedMotion() ? wave.duration : time - wave.time, (index, rank) => paint(index, rank, wave)));
@@ -116,7 +116,10 @@ export function createWindPainter({ context, paint, onStart, onCommit, onFrame, 
         if (!batch) { onStart(); batch = true; }
         // Replace the oldest front when dragging quickly; never accumulate unbounded work.
         if (waves.length === WIND_MAX_WAVES) waves.shift();
-        waves.push(createWindWave(n, index, paletteLength, base + Math.round(serial++ * paletteLength * .11), time, settings()));
+        const config = settings();
+        const wave = createWindWave(n, index, paletteLength, base + Math.round(serial++ * paletteLength * .11), time, config);
+        waves.push(wave);
+        onWave(wave, config);
         onRunningChange(true);
         lastIndex = index; lastTime = time;
         if (frame === null) frame = requestFrame(tick);
@@ -124,7 +127,7 @@ export function createWindPainter({ context, paint, onStart, onCommit, onFrame, 
     function stop() {
         if (frame !== null) cancelFrame(frame);
         frame = null; waves = []; pointer = null; stoppingGesture = false; lastIndex = -1; lastTime = -Infinity;
-        commit(); onRunningChange(false);
+        commit('stop'); onRunningChange(false);
     }
     return {
         down(id, index) {

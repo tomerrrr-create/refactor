@@ -1,5 +1,6 @@
 import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, nextWindEffect, createWindModeIcon } from './wind-settings.js';
 import { createWindPainter, applyWindCell } from './wind-paint.js';
+import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
@@ -1289,12 +1290,11 @@ break;
                     // --- MACRO INTERCEPTOR: בדיקה אם המאקרו ממתין לדור הזה ---
                     if (isMacroPlaying && currentMacroStep < macroQueue.length) {
                         let nextAction = macroQueue[currentMacroStep];
-                        while (nextAction && nextAction.isGenBased && currentGenerationCount >= nextAction.targetGen) {
+                        while (nextAction && nextAction.isGenBased && currentGenerationCount >= nextAction.targetGen && !replayWindBatch?.ending) {
                             executeMacroAction(nextAction);
                             currentMacroStep++;
                             if (currentMacroStep >= macroQueue.length) {
-                                stopMacro();
-                                if (isLifePlaying) pauseLife();
+                                finishMacroPlayback();
                                 break;
                             }
                             nextAction = macroQueue[currentMacroStep];
@@ -2533,18 +2533,29 @@ function handleContinuousDrag(targetIndex, e) {
 }
 
 let windMode = false, windPainter = null, windBefore = null, windSettingsUI = null;
+let windBatch = null, windBatchSerial = 0;
+let windReplay = null, replayWindBatch = null;
+const replayWindClocks = new Map();
+const windRecordingEpoch = Date.now().toString(36);
+const nextWindBatchId = () => `wind-${windRecordingEpoch}-${++windBatchSerial}`;
 let windSettings = loadWindSettings();
-function commitWindPainting() {
+function recordLiveWindWave(wave, config) {
+    if (!windBatch) windBatch = { id: nextWindBatchId(), time: wave.time };
+    window.logArtEvent('WIND_WAVE', JSON.stringify(recordWindWave(wave, config, windBatch.id,
+        Math.max(0, wave.time - windBatch.time))));
+}
+function commitWindPainting(reason = 'complete') {
     if (!windBefore) return;
     const before = windBefore; windBefore = null;
+    if (windBatch) {
+        window.logArtEvent('WIND_END', JSON.stringify({ windVersion: 1, batch: windBatch.id,
+            elapsed: Math.max(0, performance.now() - windBatch.time), reason }));
+        windBatch = null;
+    }
     const after = getCurrentState();
-    const diff = after.tiles.flatMap((tile, i) => {
-        const old = before.tiles[i];
-        return old.k !== tile.k || old.isGold !== tile.isGold || old.v !== tile.v ? [{ i, k: tile.k }] : [];
-    });
-    if (!diff.length) return;
-    window.logArtEvent('DRAW_STROKE', JSON.stringify(diff));
-    pushHistory({ before, after });
+    // A concurrent run owns the whole combined action. A second overlapping
+    // history snapshot would restore simulation generations twice on undo.
+    if (!isLifePlaying || !simulationStartState) pushHistory({ before, after });
     hasPerformedInitialAutofill = true;
 }
 function setWindMode(enabled) {
@@ -2608,6 +2619,7 @@ function initializeWindMode() {
         settings: () => windSettings,
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
         onStart: () => { windBefore = getCurrentState(); },
+        onWave: recordLiveWindWave,
         paint: (index, rank, wave) => applyWindCell(boardState, index, rank, wave, performance.now()),
         onFrame: startAnimationLoop,
         onCommit: commitWindPainting
@@ -3488,6 +3500,14 @@ async function resetArtRecipeLog() {
 
 function createArtRecipeFile(prefix = '') {
     const exportedLog = [...artRecipeLog];
+    // Export can happen while a front is still moving. Terminate the copy at
+    // this instant without stopping or otherwise changing the live drawing.
+    if (windBatch) {
+        const now = new Date();
+        const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+        exportedLog.push(`[${timestamp}] WIND_END -> ${JSON.stringify({ windVersion: 1,
+            batch: windBatch.id, elapsed: Math.max(0, performance.now() - windBatch.time), reason: 'stop' })}`);
+    }
     if (armedSimulation === 'islands' && isLifePlaying) {
         const now = new Date();
         const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
@@ -3718,7 +3738,7 @@ function parseMacroText(text) {
     });
     const actions = isHistoryRecipe ? parseHistoryMacro(recipeLines) : parseLegacyMacroText(text);
     actions.forEach(validateIslandsMacroAction);
-    return actions;
+    return actions.some(action => ['WIND_WAVE', 'WIND_END'].includes(action.eventName)) ? prepareWindMacro(actions) : actions;
 }
 
 function parseLegacyMacroText(text) {
@@ -3954,11 +3974,69 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 
+function getWindReplay() {
+    if (!windReplay) windReplay = createWindReplay({
+        context: () => ({ n, paletteLength: paletteLen() }),
+        paint: (index, rank, wave) => applyWindCell(boardState, index, rank, wave, performance.now()),
+        onFrame: startAnimationLoop,
+        onIdle: () => {
+            if (!isMacroPlaying) return;
+            const waiting = replayWindBatch?.ending;
+            if (waiting) finishWindReplay();
+            if (currentMacroStep >= macroQueue.length) finishMacroPlayback();
+            else if (waiting) scheduleNextMacroStep();
+        }
+    });
+    return windReplay;
+}
+
+function finishWindReplay(reason = 'complete', elapsed = null) {
+    if (!replayWindBatch) return;
+    const batch = replayWindBatch; replayWindBatch = null;
+    window.logArtEvent('WIND_END', JSON.stringify({ windVersion: 1, batch: batch.id,
+        elapsed: elapsed ?? Math.max(0, performance.now() - batch.time), reason }), true);
+    if (!isLifePlaying || !simulationStartState) pushHistory({ before: batch.before, after: getCurrentState() });
+}
+
+function executeWindMacro(action) {
+    const record = validateWindCommand(action);
+    if (action.eventName === 'WIND_WAVE') {
+        if (!replayWindBatch) {
+            const time = performance.now();
+            replayWindClocks.set(action.windGroup, time);
+            replayWindBatch = { id: nextWindBatchId(), time, before: getCurrentState() };
+        }
+        window.logArtEvent('WIND_WAVE', JSON.stringify({ ...record, batch: replayWindBatch.id }), true);
+        getWindReplay().emit(record, replayWindBatch.time + record.elapsed);
+    } else {
+        if (record.reason === 'stop') windReplay?.stop();
+        else windReplay?.advance();
+        // A reduced-motion capture may finish sooner than animated playback.
+        // Let the viewer's fronts settle before later board edits or history.
+        if (record.reason === 'complete' && windReplay?.activeWaves && replayWindBatch) {
+            replayWindBatch.ending = true;
+            return;
+        }
+        finishWindReplay(record.reason, record.elapsed);
+    }
+}
+
+function finishMacroPlayback() {
+    // A file without a final END still lets its last wave settle naturally.
+    if (windReplay?.activeWaves) return;
+    finishWindReplay();
+    stopMacro();
+    if (isLifePlaying) pauseLife();
+}
+
 function stopMacro() {
     clearTimeout(macroTimerId);
     macroQueue = [];
     isMacroLoaded = false;
     isMacroPlaying = false;
+    windReplay?.stop();
+    finishWindReplay('stop');
+    replayWindClocks.clear();
     try {
         if (typeof settingsProfiles !== 'undefined') settingsProfiles?.endReplay();
     } catch (error) {
@@ -4009,14 +4087,17 @@ function pauseMacro() {
 
 function scheduleNextMacroStep() {
         if (!isMacroPlaying || currentMacroStep >= macroQueue.length) return;
+    if (replayWindBatch?.ending) return;
     
         const nextAction = macroQueue[currentMacroStep];
     
         // אם הפעולה הבאה מבוססת על מספר דורות בסימולציה שרצה כרגע,
         // אנחנו לא מתזמנים טיימר! gameLoop יקרא לפעולה הזו באופן טבעי.
-        if (nextAction.isGenBased) return;
+    if (nextAction.isGenBased && !(nextAction.eventName === 'WIND_WAVE' &&
+        isLifePlaying && currentGenerationCount >= nextAction.targetGen)) return;
     
-        const targetTime = macroStartTime + nextAction.delta;
+    const windClock = replayWindClocks.get(nextAction.windGroup);
+    const targetTime = windClock === undefined ? macroStartTime + nextAction.delta : windClock + nextAction.windElapsed;
         const delay = Math.max(0, targetTime - performance.now());
     
         macroTimerId = setTimeout(() => {
@@ -4027,8 +4108,7 @@ function scheduleNextMacroStep() {
         currentMacroStep++;
 
         if (currentMacroStep >= macroQueue.length) {
-            stopMacro(); // סיום מבוקר של המאקרו
-            if (isLifePlaying) pauseLife(); // אם נשארה סימולציה רצה, נעצור אותה
+            finishMacroPlayback();
         } else {
             scheduleNextMacroStep(); // מכין את הפקודה הבאה בתור
         }
@@ -4142,6 +4222,11 @@ function executeMacroAction(action) {
     validateIslandsMacroAction(action);
     //console.log("Macro Execution:", action.eventName, "->", action.details);
     isExecutingMacroCommand = true; // מדליקים דגל כדי לא להפעיל את ה-Kill Switch
+    if (['WIND_WAVE', 'WIND_END'].includes(action.eventName)) {
+        try { executeWindMacro(action); }
+        finally { isExecutingMacroCommand = false; }
+        return;
+    }
 
     // הזרקה אקטיבית: המאקרו מדווח באופן יזום ומוחלט על כל פעולה שהוא מנגן, ומונע כפילויות!
         // Undo/redo log their resolved target below, including when replaying an old recipe.

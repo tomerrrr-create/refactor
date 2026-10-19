@@ -12,9 +12,9 @@ function harness(seed=123){
         armedSimulation:'islands', isLifePlaying:true, isMacroPlaying:true,
         n:21, boardState:Array.from({length:441},(_,i)=>({k:i%23,v:i%23,isGold:i===220})),
         palette:()=>Array(23), gameOfLifeRules:{}, gravitationalSortRules:{}, erosionRules:{}, dlaState:null,dlaRules:{},contourRules:{},
-        currentGenerationCount:0,currentMacroStep:0,macroQueue:[], currentSortMethod:'luminance',
+        replayWindBatch:null,currentGenerationCount:0,currentMacroStep:0,macroQueue:[], currentSortMethod:'luminance',
         renderToScreen(){},requestAnimationFrame(){},scheduleNextMacroStep(){},
-        stopMacro(){context.isMacroPlaying=false;},pauseLife(){context.isLifePlaying=false;},
+        finishMacroPlayback(){context.isMacroPlaying=false;context.isLifePlaying=false;},stopMacro(){context.isMacroPlaying=false;},pauseLife(){context.isLifePlaying=false;},
         armSimulation(sim){context.armedSimulation=sim;},console
     });
     context.executeMacroAction=action=>{

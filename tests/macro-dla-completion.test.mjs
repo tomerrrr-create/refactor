@@ -23,7 +23,7 @@ test('DLA recorded mode stays separate from persisted boolean rules',()=>{
 
 for(const fullscreen of [false,true])test(`macro cleanup releases overlay despite profile capture failure (fullscreen=${fullscreen})`,()=>{
  const errors=[],removed=[];let full=fullscreen;
- const c=vm.createContext({ evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning,clearTimeout(){},macroTimerId:1,macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
+ const c=vm.createContext({ evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning,clearTimeout(){},windReplay:null,finishWindReplay(){},replayWindClocks:new Map(),macroTimerId:1,macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
   settingsProfiles:{endReplay(){throw Error('profile capture failed');}},
   replayNudgeTiming:{},currentMacroStep:12,pendingMacroPalette:3,isSelectingMacroPalette:true,isMacroFullscreen:fullscreen,
   animateBoardTransition:fn=>fn(),toggleMacroFullScreen(){full=false;},console:{error:(...args)=>errors.push(args)},

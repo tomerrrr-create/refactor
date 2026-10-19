@@ -8,7 +8,7 @@ const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function harness(failDownload = false) {
     const original = ['INIT_STATE -> {"pal":0}', 'STEP -> erosion', 'GEN -> 12'];
     const downloads = [];
-    const h = vm.createContext({ File, armedSimulation: null, isLifePlaying: false, currentGenerationCount: 0, navigator: {}, artRecipeLog: [...original], historyRecipeCursor: 3,
+    const h = vm.createContext({ File, windBatch: null, armedSimulation: null, isLifePlaying: false, currentGenerationCount: 0, navigator: {}, artRecipeLog: [...original], historyRecipeCursor: 3,
         C: { PALETTES: [{ name: 'Test Palette' }] }, console,
         triggerDownload(file) { if (failDownload) throw Error('Download failed'); downloads.push(file); },
         logCurrentStateAsInit() { h.artRecipeLog.push('INIT_STATE -> current board'); },
@@ -96,4 +96,11 @@ test('export names the first INIT_STATE palette even when startup settings prece
         assert.equal(await file.text(), lines.join('\n'));
         assert.deepEqual(Array.from(h.artRecipeLog), lines);
     }
+});
+
+test('exporting an in-flight Wind batch closes only the export copy at the current elapsed time',async()=>{
+ const {h,original}=harness();h.windBatch={id:'live-wind',time:100};h.performance={now:()=>650};
+ const exported=await h.createArtRecipeFile().text();const line=exported.split('\n').at(-1);
+ assert(line.includes(' WIND_END -> '));assert.deepEqual(JSON.parse(line.split(' -> ')[1]),{windVersion:1,batch:'live-wind',elapsed:550,reason:'stop'});
+ assert.deepEqual(Array.from(h.artRecipeLog),original);assert.equal(h.windBatch.id,'live-wind');
 });
