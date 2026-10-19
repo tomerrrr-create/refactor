@@ -2098,8 +2098,9 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 return;
             }
             modals.closeModal();
+            let parsedQueue;
             try {
-                macroQueue = parseMacroText(text);
+                parsedQueue = parseMacroText(text);
             } catch (error) {
                 console.error('Failed to parse macro history:', error);
                 alert('Invalid macro file format.');
@@ -2108,7 +2109,12 @@ function updateMacroPaletteButtonUI(paletteIndex) {
             
      
 
-            if (macroQueue.length > 0) {
+            if (parsedQueue.length > 0) {
+                // Validate first, then cancel all work belonging to the old file.
+                // Its pending timer must not advance the replacement queue, and
+                // its wave fronts must never paint on the replacement board.
+                if (isMacroLoaded || isMacroPlaying) stopMacro();
+                macroQueue = parsedQueue;
                 if (typeof windMode !== 'undefined' && windMode) setWindMode(false);
                 settingsProfiles?.beginReplay();
                 isMacroLoaded = true;
@@ -4036,6 +4042,7 @@ function stopMacro() {
     isMacroPlaying = false;
     windReplay?.stop();
     finishWindReplay('stop');
+    if (isLifePlaying) pauseLife();
     replayWindClocks.clear();
     try {
         if (typeof settingsProfiles !== 'undefined') settingsProfiles?.endReplay();

@@ -125,10 +125,27 @@ test('a reduced-motion recording cannot let later actions overtake its animated 
 });
 
 test('macro cancellation cancels pending wave frames, closes history once and clears timing anchors',()=>{
- let stopped=0,ended=0;const c=vm.createContext({macroTimerId:1,clearTimeout(){},macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
+ let stopped=0,ended=0,paused=0;const c=vm.createContext({isLifePlaying:true,pauseLife(){paused++;c.isLifePlaying=false;},macroTimerId:1,clearTimeout(){},macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
   windReplay:{stop:()=>stopped++},finishWindReplay:reason=>{assert.equal(reason,'stop');ended++;},replayWindClocks:new Map([[1,123]]),
   replayNudgeTiming:null,currentMacroStep:1,pendingMacroPalette:null,isSelectingMacroPalette:false,isMacroFullscreen:false,
   dom:{macroOverlay:{classList:{remove(){}}},boardOverlay:{style:{}}},console});
  vm.runInContext(source.slice(source.indexOf('function stopMacro('),source.indexOf('function playMacro(')),c);c.stopMacro();
- assert.equal(stopped,1);assert.equal(ended,1);assert.equal(c.replayWindClocks.size,0);assert.equal(c.isMacroPlaying,false);assert.equal(c.macroQueue.length,0);
+ assert.equal(stopped,1);assert.equal(ended,1);assert.equal(paused,1);assert.equal(c.isLifePlaying,false);assert.equal(c.replayWindClocks.size,0);assert.equal(c.isMacroPlaying,false);assert.equal(c.macroQueue.length,0);
+});
+
+test('file import validates a replacement before cancelling the old macro, then installs only the new queue',()=>{
+ const old=[{eventName:'OLD'}],replacement=[{eventName:'DRAW_STROKE',details:'[{"i":0,"k":1}]'}],order=[],alerts=[];
+ const c=vm.createContext({isMacroLoaded:true,isMacroPlaying:true,isLifePlaying:true,windMode:false,macroQueue:old,
+  currentMacroStep:10,pendingMacroPalette:2,isSelectingMacroPalette:true,
+  isWorkspaceSettingsText:()=>false,modals:{closeModal(){}},
+  parseMacroText:text=>{order.push('parse');if(text==='bad')throw Error('bad file');return replacement;},
+  stopMacro(){order.push('stop');c.macroQueue=[];c.isMacroLoaded=false;c.isMacroPlaying=false;c.isLifePlaying=false;},
+  settingsProfiles:{beginReplay:()=>order.push('begin')},pauseLife(){throw Error('old simulation must already be cancelled');},
+  FileReader:class{readAsText(file){this.onload({target:{result:file.text}});}},
+  dom:{macroOverlay:{classList:{add(){},remove(){}}},boardOverlay:{style:{}}},console:{error(){}},alert:text=>alerts.push(text)});
+ vm.runInContext(source.slice(source.indexOf('      function onProjectFileSelected('),source.indexOf('      function hideLongPressDisplay(')),c);
+ const event=text=>({target:{files:[{name:'replacement.txt',text}],value:'file'}});
+ c.onProjectFileSelected(event('bad'));assert.deepEqual(order,['parse']);assert.equal(c.macroQueue,old);assert.equal(c.isMacroPlaying,true);assert.equal(alerts.length,1);
+ order.length=0;c.onProjectFileSelected(event('valid'));assert.deepEqual(order,['parse','stop','begin']);assert.equal(c.macroQueue,replacement);
+ assert.equal(c.currentMacroStep,0);assert.equal(c.isMacroLoaded,true);assert.equal(c.isMacroPlaying,false);assert.equal(c.pendingMacroPalette,null);
 });
