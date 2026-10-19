@@ -1923,3 +1923,8 @@ body.wind-mode #board { cursor: crosshair; }
 .wind-control-icon[hidden] { display: none; }
 #btnSymmetry.wind-active { color: var(--gold); }
 .wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }
+
+/* Breathing mode pickers reuse the control panel's four original symbols. */
+.tuning-modes.breathe-mode-icons { flex-wrap: nowrap; gap: 10px; }
+.tuning-modes.breathe-mode-icons button { display: grid; place-items: center; width: 48px; height: 48px; padding: 10px; border-radius: 50%; flex: 0 0 48px; }
+.breathe-mode-icons svg { width: 28px; height: 28px; }

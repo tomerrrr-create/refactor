@@ -9,6 +9,7 @@ const definitions = {
     islands: { title: 'tuning_islands_title', button: 'btnIslands', fields: ['activity'] },
     dla: { title: 'dla_modal_title', button: 'btnDla', modes: ['genetics', 'no-genetics'], fields: ['batchSize'] }
 };
+const breatheModeIcons = { solo: 'iconBreatheSolo', group: 'iconBreatheGroup', 'random-cell': 'iconBreatheRandomCell', 'random-color': 'iconBreatheRandomColor' };
 const percentage = value => `${Math.round(value * 100)}%`;
 const format = (field, value) => field === 'batchSize' ? String(value) : percentage(value);
 
@@ -41,7 +42,10 @@ export function initializeEvolutionTuningModals(app) {
             dialog.querySelector('[type=submit]').textContent = app.getText('gs_modal_save_close');
             modeGroup.setAttribute('aria-label', app.getText('tuning_mode'));
             for (const button of modeGroup.children) {
-                button.textContent = app.getText('tuning_mode_' + button.dataset.mode);
+                const label = app.getText('tuning_mode_' + button.dataset.mode);
+                if (simulation === 'breathe') {
+                    button.title = label; button.setAttribute('aria-label', label);
+                } else button.textContent = label;
                 button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
             }
             for (const [field, { label, note, input, output }] of fields) {
@@ -56,9 +60,16 @@ export function initializeEvolutionTuningModals(app) {
         for (const value of definition.modes ?? []) {
             const button = document.createElement('button');
             button.type = 'button'; button.dataset.mode = value;
+            if (simulation === 'breathe') {
+                const icon = document.getElementById(breatheModeIcons[value]).cloneNode(true);
+                icon.removeAttribute('id'); icon.style.display = 'block';
+                icon.setAttribute('aria-hidden', 'true');
+                button.append(icon);
+            }
             button.addEventListener('click', () => { mode = value; render(); });
             modeGroup.append(button);
         }
+        modeGroup.classList.toggle('breathe-mode-icons', simulation === 'breathe');
         modeGroup.hidden = !definition.modes;
         for (const field of definition.fields) {
             const row = document.createElement('div'); row.className = 'tuning-field';
