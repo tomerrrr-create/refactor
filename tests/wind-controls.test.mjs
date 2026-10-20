@@ -25,11 +25,13 @@ test('Symmetry stays independent and has no Wind hold trigger',()=>{
 });
 test('dedicated Wind button delegates taps to the mode cycle; settings open while off too',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnWind:{}},windMode:false,isBreathing:false,
- hideLongPressDisplay(){},windSettingsUI:{open:()=>events.push('settings')},cycleWindMode:()=>events.push('cycle'),
+ hideLongPressDisplay(){},windSettingsUI:{open:()=>events.push('settings')},cycleWindMode:()=>events.push('cycle'),setWindMode:value=>{c.windMode=value;events.push(value);},
  bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('        bindPickerGestures(dom.btnWind,');
  vm.runInContext(source.slice(start,source.indexOf('        bindPickerGestures(dom.btnSymmetry,',start)),c);
  gestures.onOpen();assert.equal(c.windMode,false);gestures.onTap();gestures.onTap();assert.deepEqual(events,['settings','cycle','cycle']);
+ for(const mode of WIND_MODE_SEQUENCE){c.windMode=true;gestures.onHold();assert.equal(c.windMode,false);}
+ gestures.onHold();assert.equal(c.windMode,false);
 });
 test('ordinary panel events commit pending ripples without consuming or blocking the event',()=>{
  const listeners=new Map(),events=[],c=vm.createContext({windMode:true,windPainter:{stop:()=>events.push('commit')},dom:{controlsContainer:{addEventListener:(name,handler)=>listeners.set(name,handler)}}});
@@ -51,13 +53,19 @@ test('switching interfaces preserves active Wind in both directions',()=>{
  c.toggleSimMode();assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,true);assert.equal(pauses,2);assert.equal(resets,2);
 });
 
-test('Wind button reflects the selected mode and leaves the symmetry icon untouched',()=>{
- const attrs={},button={dataset:{},classList:{toggle:(key,value)=>attrs[key]=value},setAttribute:(key,value)=>attrs[key]=value,replaceChildren:icon=>attrs.icon=icon};
- const c=vm.createContext({dom:{btnWind:button},windMode:false,windSettings:{mode:'paint'},getText:key=>key,createWindModeIcon:mode=>mode});
+test('Wind keeps three stable SVGs with only one visible through full cycles and Off',()=>{
+ const attrs={},icons=[],button={dataset:{},children:icons,get childElementCount(){return icons.length;},
+  classList:{toggle:(key,value)=>attrs[key]=value},setAttribute:(key,value)=>attrs[key]=value,append:icon=>icons.push(icon)};
+ const c=vm.createContext({WIND_MODE_SEQUENCE,dom:{btnWind:button},windMode:false,windSettings:{mode:'paint'},getText:key=>key,
+  createWindModeIcon:mode=>({mode,dataset:{},style:{}})});
  vm.runInContext(source.slice(source.indexOf('function updateWindButtonUI('),source.indexOf('let windPointerId =')),c);
- c.updateWindButtonUI();assert.equal(attrs.icon,'ripple');assert.equal(attrs['aria-pressed'],'false');
- c.windMode=true;c.updateWindButtonUI();assert.equal(attrs.icon,'paint');assert.equal(attrs['aria-pressed'],'true');assert.equal(attrs['wind-active'],true);
- assert.equal(button.dataset.windMode,'paint');
+ c.updateWindButtonUI();const original=[...icons];
+ for(let i=0;i<3;i++)for(const mode of ['ripple','paint','displace','off']){
+  c.windMode=mode!=='off';if(c.windMode)c.windSettings.mode=mode;c.updateWindButtonUI();
+  assert.deepEqual(icons,original);assert.equal(icons.length,3);
+  assert.deepEqual(icons.filter(icon=>icon.style.display==='block').map(icon=>icon.mode),[mode==='off'?'ripple':mode]);
+  assert.equal(attrs['aria-pressed'],String(c.windMode));assert.equal(attrs['wind-active'],c.windMode);
+ }
 });
 
 test('Wind cycles Off → ripple → paint → displace → Off, preserving per-mode preferences',()=>{

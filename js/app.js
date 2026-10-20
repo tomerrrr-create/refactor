@@ -2595,7 +2595,19 @@ function cycleWindMode() {
     updateWindButtonUI();
 }
 function updateWindButtonUI() {
-    dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : 'ripple'));
+    // Keep SVG nodes stable across cycles, including displace → Off. Replacing
+    // a painted SVG can leave stale strokes in mobile browser compositing.
+    if (!dom.btnWind.childElementCount) {
+        for (const mode of WIND_MODE_SEQUENCE) {
+            const icon = createWindModeIcon(mode);
+            icon.dataset.windEffect = mode;
+            dom.btnWind.append(icon);
+        }
+    }
+    const visibleMode = windMode ? windSettings.mode : 'ripple';
+    for (const icon of dom.btnWind.children) {
+        icon.style.display = icon.dataset.windEffect === visibleMode ? 'block' : 'none';
+    }
     dom.btnWind.classList.toggle('wind-active', windMode);
     dom.btnWind.setAttribute('aria-pressed', String(windMode));
     dom.btnWind.dataset.windMode = windSettings.mode;
@@ -4895,7 +4907,8 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         initializeWindMode();
         bindPickerGestures(dom.btnWind, {
-            onTap: cycleWindMode, onOpen: () => windSettingsUI.open(),
+            onTap: cycleWindMode, onHold: () => setWindMode(false),
+            onOpen: () => windSettingsUI.open(),
             canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
         });
         bindPickerGestures(dom.btnSymmetry, {
