@@ -13,6 +13,7 @@ import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalize
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
 import { loadProfileStartup } from './profile-state.js';
+import { loadBrushMotionRecording, persistBrushMotionRecording } from './brush-recording-settings.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, isSmoothDisplayAvailable } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
@@ -41,6 +42,8 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
       let boardState = []; 
       let simulationStartState = null; // For saving simulation history
       let simulationHasBrushInput = false;
+      let recordPausedBrushMotion = loadBrushMotionRecording();
+      let replayBrushBefore = null;
       let islandsSession = null;
       let evolutionTuning = validateEvolutionTuning();
       
@@ -2654,13 +2657,17 @@ function initializeWindMode() {
     });
 }
 
-const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null, changes: null, liveRecording: false };
+const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null, changes: null, liveRecording: false, pausedMotion: false, motionStarted: false };
 
 // Only brush targets enter this map. Simulation generations are never diffed
 // against a pointer-down snapshot or serialized as part of a brush sample.
 function flushLiveBrushChanges() {
     if (!pointerState.liveRecording || !pointerState.changes?.size) return;
     if (isLifePlaying && simulationStartState) simulationHasBrushInput = true;
+    if (pointerState.pausedMotion && !pointerState.motionStarted) {
+        window.logArtEvent('BRUSH_START', '{"version":1}');
+        pointerState.motionStarted = true;
+    }
     window.logArtEvent('DRAW_STROKE', JSON.stringify([...pointerState.changes.values()]));
     pointerState.changes.clear();
     if (armedSimulation === 'dla' && dlaState) syncDlaCrystalState();
@@ -2695,7 +2702,8 @@ function onPointerDown(e) {
     e.target.setPointerCapture(e.pointerId);
     Object.assign(pointerState, { id: e.pointerId, downIndex: index, downX: e.clientX, downY: e.clientY, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false,
         beforeState: isLifePlaying && simulationStartState ? null : getCurrentState(),
-        changes: new Map(), liveRecording: isLifePlaying });
+        changes: new Map(), liveRecording: isLifePlaying || recordPausedBrushMotion,
+        pausedMotion: !isLifePlaying && recordPausedBrushMotion, motionStarted: false });
     pointerState.longPressTimer = isLifePlaying ? null : setTimeout(() => {
         if (pointerState.isDragging) return;
         pointerState.suppressClick = true;
@@ -2793,10 +2801,11 @@ function onPointerUp(e) {
     // A standalone brush stroke still creates exactly one Undo entry.
     if (pointerState.beforeState) {
         const afterState = getCurrentState();
-        if (pointerState.changes.size || !areStatesEqual(pointerState.beforeState, afterState)) {
+        if (pointerState.motionStarted || pointerState.changes.size || !areStatesEqual(pointerState.beforeState, afterState)) {
             if (!pointerState.liveRecording && pointerState.changes.size) {
                 window.logArtEvent('DRAW_STROKE', JSON.stringify([...pointerState.changes.values()]));
             }
+            if (pointerState.motionStarted) window.logArtEvent('BRUSH_END', '{"version":1}');
             pushHistory({ before: pointerState.beforeState, after: afterState });
             hasPerformedInitialAutofill = true;
         }
@@ -2806,7 +2815,7 @@ function onPointerUp(e) {
     const pointerId = pointerState.id;
     Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null,
         lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null,
-        changes: null, liveRecording: false });
+        changes: null, liveRecording: false, pausedMotion: false, motionStarted: false });
     if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
 }
 
@@ -3684,6 +3693,15 @@ function parseHistoryMacro(lines) {
         return { time: Date.parse(`1970-01-01T${match[1]}Z`), eventName: match[3], details: match[4],
             isGenBased: match[2] !== undefined, targetGen: match[2] === undefined ? null : Number(match[2]) };
     });
+    // Keep stroke-relative time separate from wall time: Redo relocates the
+    // stroke, but must retain the pauses and rhythm within the gesture.
+    let brushStartTime = null;
+    for (const event of events) {
+        if (!event) continue;
+        if (event.eventName === 'BRUSH_START') brushStartTime = event.time;
+        if (brushStartTime !== null) event.brushElapsed = (event.time - brushStartTime + 86400000) % 86400000;
+        if (event.eventName === 'BRUSH_END') brushStartTime = null;
+    }
     // Metadata refers to raw log positions, not positions in the filtered playback.
     events.forEach((event, position) => {
         if (!event || event.eventName !== 'HISTORY_ACTION') return;
@@ -3728,14 +3746,22 @@ function parseHistoryMacro(lines) {
     let delta = 0;
     let previousTime = null;
     let simulationRunning = false;
+    let brushMotion = false;
+    let previousBrushElapsed = null;
     return visible.filter(event => event.eventName !== 'HISTORY_ACTION').map(event => {
         if (previousTime !== null) {
             let gap = event.time - previousTime;
             if (gap < 0) gap += 86400000;
-            const cap = simulationRunning && event.eventName !== 'STEP FORWARD' ? 600000 : 1000;
+            if (brushMotion && event.brushElapsed !== undefined && previousBrushElapsed !== null) {
+                gap = Math.max(0, event.brushElapsed - previousBrushElapsed);
+            }
+            const cap = (brushMotion || simulationRunning) && event.eventName !== 'STEP FORWARD' ? 600000 : 1000;
             delta += Math.min(gap, cap);
         }
         previousTime = event.time;
+        if (event.eventName === 'BRUSH_START') brushMotion = true;
+        if (event.eventName === 'BRUSH_END') brushMotion = false;
+        previousBrushElapsed = brushMotion ? event.brushElapsed : null;
         if (event.eventName === 'PLAY') simulationRunning = true;
         if (event.eventName === 'PAUSE' || event.eventName === 'HISTORY_SETTINGS') simulationRunning = false;
         return { ...event, delta };
@@ -3777,6 +3803,21 @@ function parseMacroText(text) {
     });
     const actions = isHistoryRecipe ? parseHistoryMacro(recipeLines) : parseLegacyMacroText(text);
     actions.forEach(validateIslandsMacroAction);
+    let brushOpen = false;
+    for (const action of actions) {
+        if (action.eventName === 'BRUSH_START') {
+            if (brushOpen || JSON.parse(action.details).version !== 1 || action.isGenBased) throw new Error('Invalid brush motion start');
+            brushOpen = true;
+        } else if (action.eventName === 'BRUSH_END') {
+            if (!brushOpen || JSON.parse(action.details).version !== 1) throw new Error('Invalid brush motion end');
+            brushOpen = false;
+        } else if (brushOpen && action.eventName !== 'DRAW_STROKE') {
+            throw new Error('Unexpected action inside brush motion');
+        }
+    }
+    // An interrupted/exported stroke may end at the end of the recording.
+    if (brushOpen) actions.push({ eventName: 'BRUSH_END', details: '{"version":1}',
+        delta: actions.at(-1).delta, isGenBased: false, targetGen: null });
     return actions.some(action => ['WIND_WAVE', 'WIND_END'].includes(action.eventName)) ? prepareWindMacro(actions) : actions;
 }
 
@@ -4068,7 +4109,18 @@ function finishMacroPlayback() {
     if (isLifePlaying) pauseLife();
 }
 
+function finishBrushReplay() {
+    if (!replayBrushBefore) return;
+    const before = replayBrushBefore;
+    replayBrushBefore = null;
+    pushHistory({ before, after: getCurrentState() });
+}
+
 function stopMacro() {
+    if (replayBrushBefore) {
+        window.logArtEvent('BRUSH_END', '{"version":1}', true);
+        finishBrushReplay();
+    }
     clearTimeout(macroTimerId);
     macroQueue = [];
     isMacroLoaded = false;
@@ -4565,6 +4617,12 @@ else if (action.eventName === 'Invert Colors') {
         }
 
 
+        else if (action.eventName === 'BRUSH_START') {
+            replayBrushBefore = getCurrentState();
+        }
+        else if (action.eventName === 'BRUSH_END') {
+            finishBrushReplay();
+        }
         else if (action.eventName === 'DRAW_STROKE' || action.eventName === 'SHUFFLE_COLORS') {
             try {
                 const diff = JSON.parse(action.details);
@@ -4572,7 +4630,7 @@ else if (action.eventName === 'Invert Colors') {
                 let changed = action.eventName === 'SHUFFLE_COLORS';
                 
                 // === תיקון באג ה-Undo: שמירת מצב *לפני* שהמאקרו מצייר ===
-                const beforeState = isLifePlaying && simulationStartState ? null : getCurrentState();
+                const beforeState = replayBrushBefore || (isLifePlaying && simulationStartState) ? null : getCurrentState();
 
                 diff.forEach(change => {
                     const tile = boardState[change.i];
@@ -4709,6 +4767,12 @@ else if (action.eventName === 'Invert Colors') {
                 softBloom.setEnabled(isSoftBloom);
                 renderToScreen(null);
                 settingsProfiles?.scheduleCapture();
+            },
+            getBrushMotionRecording: () => recordPausedBrushMotion,
+            setBrushMotionRecording: value => {
+                finishBrushGesture();
+                recordPausedBrushMotion = Boolean(value);
+                persistBrushMotionRecording(recordPausedBrushMotion);
             },
             getSmoothRendering: () => isSmoothRendering,
             isSmoothDisplayAvailable: () => isSmoothDisplayAvailable(n, separatorPx),

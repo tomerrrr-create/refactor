@@ -125,7 +125,7 @@ test('a reduced-motion recording cannot let later actions overtake its animated 
 });
 
 test('macro cancellation cancels pending wave frames, closes history once and clears timing anchors',()=>{
- let stopped=0,ended=0,paused=0;const c=vm.createContext({isLifePlaying:true,pauseLife(){paused++;c.isLifePlaying=false;},macroTimerId:1,clearTimeout(){},macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
+ let stopped=0,ended=0,paused=0;const c=vm.createContext({isLifePlaying:true,pauseLife(){paused++;c.isLifePlaying=false;},replayBrushBefore:null,macroTimerId:1,clearTimeout(){},macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
   windReplay:{stop:()=>stopped++},finishWindReplay:reason=>{assert.equal(reason,'stop');ended++;},replayWindClocks:new Map([[1,123]]),
   replayNudgeTiming:null,currentMacroStep:1,pendingMacroPalette:null,isSelectingMacroPalette:false,isMacroFullscreen:false,
   dom:{macroOverlay:{classList:{remove(){}}},boardOverlay:{style:{}}},console});

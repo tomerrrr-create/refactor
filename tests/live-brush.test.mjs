@@ -4,12 +4,12 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 const copy=value=>JSON.parse(JSON.stringify(value));
-function harness({live=true,continuous=false,brush=1,symmetry='off'}={}){
+function harness({live=true,continuous=false,brush=1,symmetry='off',progressive=false}={}){
  const logs=[],history=[],captures=new Set(),timers=new Map();let snapshots=0,serial=0,syncs=0;
  const rng=Object.create(Math);rng.random=()=>.75;
  const canvas={setPointerCapture:id=>captures.add(id),hasPointerCapture:id=>captures.has(id),releasePointerCapture:id=>captures.delete(id),getBoundingClientRect:()=>({left:0,top:0,right:90,bottom:90})};
  const c=vm.createContext({n:9,boardState:Array.from({length:81},()=>({k:3,v:3,isGold:false})),isLifePlaying:live,
-  simulationStartState:live?{}:null,simulationHasBrushInput:false,isBreathing:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
+  recordPausedBrushMotion:progressive,replayBrushBefore:null,simulationStartState:live?{}:null,simulationHasBrushInput:false,isBreathing:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
   windMode:false,windPainter:{down:()=>true,move(){},up(){}},windPointerId:null,canvas,brushSize:brush,symmetryMode:symmetry,
   isBrushModeOn:true,isContinuousBrushOn:continuous,isRainbowModeActive:false,selectedColorIndex:0,selectedColor:'#000000',
   armedSimulation:'gravitationalSort',dlaState:null,performance:{now:()=>100},Math:rng,Map,Set,
@@ -83,7 +83,7 @@ test('state equality checks corresponding tiles, so an unchanged breathing sessi
 test('macro brush packets edit the live board without taking per-packet snapshots; old arrays and gold copies remain readable',()=>{
  let snapshots=0,syncs=0;const entries=[];
  const c=vm.createContext({boardState:[{k:3,v:3,isGold:true},{k:2,v:2,isGold:false}],isLifePlaying:true,simulationStartState:{},
-  performance:{now:()=>100},getCurrentState:()=>{snapshots++;return {};},renderToScreen(){},startAnimationLoop(){},pushHistory:e=>entries.push(e),
+  replayBrushBefore:null,performance:{now:()=>100},getCurrentState:()=>{snapshots++;return {};},renderToScreen(){},startAnimationLoop(){},pushHistory:e=>entries.push(e),
   armedSimulation:'dla',dlaState:{},syncDlaCrystalState:()=>syncs++,console:{error:(label,error)=>{throw error;}}});
  const start=source.indexOf("        else if (action.eventName === 'DRAW_STROKE'");
  const end=source.indexOf('        isExecutingMacroCommand = false;',start);
@@ -148,4 +148,33 @@ for(const tool of ['rainbow','copy'])test(`${tool} also records an unchanged-col
  h.down(15,15);if(tool==='copy')h.move(35,15);h.up(tool==='copy'?35:15,15);
  assert.equal(h.logs.length,1);assert.deepEqual(h.logs[0].data,[{i:tool==='copy'?12:10,k:color}]);
  assert(h.c.boardState.every(t=>t.k===color));assert.equal(h.history.length,1);
+});
+
+for (const cancelled of [false,true]) test('paused progressive stroke records motion with one undo, including cancellation='+cancelled,()=>{
+ const h=harness({live:false,progressive:true,continuous:true});
+ h.c.boardState.forEach(t=>{t.k=t.v=0;});
+ h.down(15,15);h.move(35,15);h.move(55,15);
+ assert.equal(h.history.length,0);assert.equal(h.logs[0].name,'BRUSH_START');
+ assert.equal(h.logs.filter(e=>e.name==='DRAW_STROKE').length,2);
+ h.up(55,15,1,cancelled?'pointercancel':'pointerup');
+ assert.equal(h.logs.at(-1).name,'BRUSH_END');assert.equal(h.history.length,1);
+ assert.equal(h.logs.filter(e=>e.name==='BRUSH_START').length,1);
+ const writes=h.logs.filter(e=>e.name==='DRAW_STROKE').flatMap(e=>e.data);
+ assert(writes.every(t=>t.k===0));assert(writes.length>=5);assert.equal(h.c.pointer.id,null);
+});
+test('cancelled paused tap emits no empty motion group',()=>{
+ const h=harness({live:false,progressive:true});h.down(15,15);h.up(15,15,1,'pointercancel');
+ assert.equal(h.logs.length,0);assert.equal(h.history.length,0);
+});
+
+test('macro groups paused motion into one undo action, independently of the recording preference',()=>{
+ const h=harness({live:false});h.c.renderToScreen=()=>{};
+ const start=source.indexOf("        else if (action.eventName === 'BRUSH_START'");
+ const end=source.indexOf('        isExecutingMacroCommand = false;',start);
+ vm.runInContext(source.slice(source.indexOf('function finishBrushReplay()'),source.indexOf('function stopMacro()'))+'function replay(action){'+source.slice(start,end).replace('else if','if')+'}',h.c);
+ h.c.replay({eventName:'BRUSH_START',details:'{"version":1}'});
+ for(const i of [0,1,2])h.c.replay({eventName:'DRAW_STROKE',details:JSON.stringify([{i,k:0}])});
+ assert.equal(h.history.length,0);h.c.replay({eventName:'BRUSH_END',details:'{"version":1}'});
+ assert.equal(h.history.length,1);assert.equal(h.history[0].before.tiles[0].k,3);assert.equal(h.history[0].after.tiles[2].k,0);
+ assert.equal(h.c.replayBrushBefore,null);
 });

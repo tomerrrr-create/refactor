@@ -1471,6 +1471,9 @@ export function initializeModals(appContext) {
         app.previewSoftBloomIntensity(Number(bloomIntensity.value));
     });
     bloomIntensity.addEventListener('change', () => app.setSoftBloomIntensity(Number(bloomIntensity.value)));
+    const brushMotionToggle = document.getElementById('brushMotionRecordingToggle');
+    brushMotionToggle.checked = app.getBrushMotionRecording();
+    brushMotionToggle.addEventListener('change', () => app.setBrushMotionRecording(brushMotionToggle.checked));
     const smoothRenderingToggle = document.getElementById('smoothRenderingToggle');
     const smoothOption = smoothRenderingToggle.closest('label');
     const smoothNotice = document.getElementById('smoothUnavailableDialog');
@@ -1505,6 +1508,7 @@ export function initializeModals(appContext) {
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
+        brushMotionToggle.checked = app.getBrushMotionRecording();
         refreshSmoothControl();
         refreshBloomControls();
         fillInitForm(app.getSimulationInit());

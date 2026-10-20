@@ -116,3 +116,25 @@ test('undo predating a logger reset retains only settings, never fabricates boar
     assert.equal(JSON.parse(r.parse().at(-1).details).n, 1);
     assert.ok(!r.parse().some(e => e.eventName === 'DRAW_STROKE'));
 });
+
+test('paused motion preserves long intra-stroke pauses and Redo timing, while gaps between strokes are capped',()=>{
+ const lines=[
+ '[12:00:00.000] INIT_STATE -> '+JSON.stringify(init),
+ '[12:00:10.000] BRUSH_START -> {"version":1}',
+ '[12:00:10.000] DRAW_STROKE -> [{"i":0,"k":1}]',
+ '[12:00:12.500] DRAW_STROKE -> [{"i":0,"k":2}]',
+ '[12:00:12.600] BRUSH_END -> {"version":1}',
+ '[12:00:12.600] HISTORY_ACTION -> {"recipeVersion":2,"id":1,"from":1,"to":5}'
+ ];
+ const original=parse(lines.join('\n'));assert.deepEqual(original.filter(a=>a.eventName==='DRAW_STROKE').map(a=>a.delta),[1000,3500]);
+ const undo='[12:00:13.000] UNDO -> '+JSON.stringify({recipeVersion:2,id:1,settings:settings()});
+ assert(!parse([...lines,undo].join('\n')).some(a=>a.eventName==='BRUSH_START'));
+ const redo='[12:00:14.000] REDO -> '+JSON.stringify({recipeVersion:2,id:1,settings:settings()});
+ const restored=parse([...lines,undo,redo].join('\n')).filter(a=>a.eventName==='DRAW_STROKE');
+ assert.equal(restored.length,2);assert.equal(restored[1].delta-restored[0].delta,2500);
+});
+test('invalid nested motion is rejected and an exported partial stroke gets a closing action',()=>{
+ const base='[12:00:00.000] INIT_STATE -> '+JSON.stringify(init)+'\n[12:00:00.100] BRUSH_START -> {"version":1}';
+ assert.throws(()=>parse(base+'\n[12:00:00.200] BRUSH_START -> {"version":1}'));
+ assert.equal(parse(base+'\n[12:00:00.200] DRAW_STROKE -> [{"i":0,"k":1}]').at(-1).eventName,'BRUSH_END');
+});
