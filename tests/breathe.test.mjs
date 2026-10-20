@@ -64,3 +64,19 @@ test('color groups share one rhythm, gold stays untouched and empty boards are s
         empty.update(1000000); assert.equal(empty.factor(0), 1);
     }
 });
+
+test('newly painted colors and previously gold cells join a running breathing session', () => {
+    for (const mode of ['random-cell', 'random-color']) {
+        const tiles = [{ k: 1, isGold: false }, { k: 1, isGold: false }, { k: 3, isGold: true }];
+        const session = createRandomBreatheSession(tiles, mode, () => 0);
+        session.update(10000);
+        const oldFactor = session.factor(0);
+        tiles[1].k = 7; tiles[2].k = 7; tiles[2].isGold = false;
+        assert.equal(session.factor(1), mode === 'random-cell' ? oldFactor : 1);
+        assert.equal(session.factor(2), 1);
+        assert.equal(session.factor(0), oldFactor);
+        session.update(10900);
+        assert.equal(session.factor(2), 1.05);
+        if (mode === 'random-color') assert.equal(session.factor(1), session.factor(2));
+    }
+});

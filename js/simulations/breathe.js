@@ -27,6 +27,7 @@ export function getBreatheBrightnessFactor(tileData, timestamp, breatheStartTime
 // All animation state stays outside the board and is discarded on the next Play.
 export function createRandomBreatheSession(board, mode, random = Math.random, rules = {}) {
     const rhythms = new Map();
+    let currentElapsed = 0;
     const newPulse = start => ({ start, duration: 3000 + random() * 3000,
         depth: 0.35 + random() * 0.25, brightness: 1 });
     board.forEach((tile, index) => {
@@ -38,6 +39,7 @@ export function createRandomBreatheSession(board, mode, random = Math.random, ru
     return {
         update(elapsed) {
             elapsed *= rules.speed ?? 1;
+            currentElapsed = elapsed;
             for (const [key, pulse] of rhythms) {
                 const progress = (elapsed - pulse.start) / pulse.duration;
                 if (progress < 0) continue;
@@ -56,7 +58,11 @@ export function createRandomBreatheSession(board, mode, random = Math.random, ru
         factor(index) {
             const tile = board[index];
             if (!tile || tile.isGold) return 1;
-            const factor = rhythms.get(mode === 'random-color' ? tile.k : index)?.brightness ?? 1;
+            const key = mode === 'random-color' ? tile.k : index;
+            // Newly painted colors (or formerly protected cells) join the live
+            // rhythm without restarting the other cells' breathing session.
+            if (!rhythms.has(key)) rhythms.set(key, newPulse(currentElapsed));
+            const factor = rhythms.get(key).brightness;
             return (rules.depth ?? 1) === 1 ? factor : Math.max(0, 1 + (factor - 1) * rules.depth);
         }
     };

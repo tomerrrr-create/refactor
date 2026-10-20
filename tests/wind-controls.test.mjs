@@ -26,7 +26,7 @@ test('Symmetry hold toggles Wind and swipe opens settings only while active',()=
  assert.deepEqual(events,['cycle',true,'wind-cycle','settings',false,'symmetry']);
 });
 test('ordinary panel events commit pending ripples without consuming or blocking the event',()=>{
- const listeners=new Map(),events=[],c=vm.createContext({windMode:true,windPainter:{stop:()=>events.push('commit')},dom:{controlsContainer:{addEventListener:(name,handler)=>listeners.set(name,handler)}}});
+ const listeners=new Map(),events=[],c=vm.createContext({finishBrushGesture(){},windMode:true,windPainter:{stop:()=>events.push('commit')},dom:{controlsContainer:{addEventListener:(name,handler)=>listeners.set(name,handler)}}});
  const start=source.indexOf('    const finishPainting = () =>');
  vm.runInContext(source.slice(start,source.indexOf("    document.addEventListener('keydown', event => {",start)),c);
  const event={key:'Enter',preventDefault(){throw Error('must not block');},stopPropagation(){throw Error('must not consume');}};

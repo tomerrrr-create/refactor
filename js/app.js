@@ -423,7 +423,7 @@ currentSortMethod,
             stateA.brightnessEvoMode !== stateB.brightnessEvoMode || stateA.breatheEvoMode !== stateB.breatheEvoMode || stateA.dlaMode !== stateB.dlaMode) return false;
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
         for (let i = 0; i < stateA.tiles.length; i++) {
-          if (stateA.tiles[i].k !== stateB.k || stateA.tiles[i].isGold !== stateB.isGold) return false;
+          if (stateA.tiles[i].k !== stateB.tiles[i].k || stateA.tiles[i].isGold !== stateB.tiles[i].isGold) return false;
         }
         return true;
       }
@@ -526,6 +526,9 @@ k: tileState.k,
       }
 
       function undo() {
+        finishBrushGesture();
+        windPainter?.stop();
+        if (isLifePlaying) pauseLife();
         if (history.length === 0) return;
         const lastAction = history.pop();
         future.push(lastAction);
@@ -536,6 +539,9 @@ k: tileState.k,
       }
 
       function redo() {
+        finishBrushGesture();
+        windPainter?.stop();
+        if (isLifePlaying) pauseLife();
         if (future.length === 0) return;
         const nextAction = future.pop();
         history.push(nextAction);
@@ -546,8 +552,8 @@ k: tileState.k,
       }
 
       function updateUndoRedoButtons() {
-        dom.btnUndo.disabled = history.length === 0;
-        dom.btnRedo.disabled = future.length === 0;
+        dom.btnUndo.disabled = history.length === 0 && !(isLifePlaying && simulationStartState);
+        dom.btnRedo.disabled = future.length === 0 || isLifePlaying;
       }
 
       function getPaletteColor(k) { return palette()[norm(k)]; }
@@ -1418,6 +1424,7 @@ break;
       
 function pauseLife() {
           if (!isLifePlaying) return;
+          finishBrushGesture();
           window.logArtEvent('PAUSE', '---');
           isLifePlaying = false;
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
@@ -1445,6 +1452,7 @@ function pauseLife() {
           ].filter(Boolean);
           
           simButtons.forEach(btn => btn.disabled = false);
+          updateUndoRedoButtons();
       }
 
 
@@ -1500,7 +1508,9 @@ function pauseLife() {
               randomBreatheSession = ['random-cell', 'random-color'].includes(breatheEvoMode)
                   ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode, Math.random, evolutionTuning.breathe) : null;
               breatheStartTime = performance.now();
+              simulationStartState = getCurrentState();
               isLifePlaying = true;
+              updateUndoRedoButtons();
               
               dom.iconPlay.style.display = 'none';
               dom.iconPause.style.display = 'block';
@@ -1529,6 +1539,7 @@ function pauseLife() {
           simulationStartState = getCurrentState();
 
           isLifePlaying = true;
+          updateUndoRedoButtons();
           dom.iconPlay.style.display = 'none';
           dom.iconPause.style.display = 'block';
           dom.btnStepForward.disabled = true;
@@ -2462,7 +2473,9 @@ function applyActionToTiles(indices, actionFn) {
                 if (boardState[idx].k !== oldK || boardState[idx].isGold !== oldGold) {
                     boardState[idx].prevK = oldK;
                     boardState[idx].animStart = now;
-                    changed = true; 
+                    changed = true;
+                    pointerState.changes?.set(idx, { i: idx, k: boardState[idx].k,
+                        ...(boardState[idx].isGold ? { isGold: true } : {}) });
                 }
             }
         });
@@ -2602,7 +2615,10 @@ function initializeWindMode() {
     document.body.append(toast);
     // Commit the current ripple batch before other controls edit/replace the board.
     // No event is prevented and no control is disabled by Wind.
-    const finishPainting = () => { if (windMode) windPainter.stop(); };
+    const finishPainting = () => {
+        finishBrushGesture();
+        if (windMode) windPainter.stop();
+    };
     for (const type of ['pointerdown', 'click']) dom.controlsContainer.addEventListener(type, finishPainting, true);
     dom.controlsContainer.addEventListener('keydown', event => {
         if (['Enter', ' '].includes(event.key) || event.altKey) finishPainting();
@@ -2616,8 +2632,8 @@ function initializeWindMode() {
         if (document.querySelector('.modal-visible')) return;
         event.preventDefault(); event.stopPropagation(); setWindMode(false);
     }, true);
-    document.addEventListener('visibilitychange', () => { if (document.hidden && windMode) setWindMode(false); });
-    window.addEventListener('blur', () => { if (windMode) setWindMode(false); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { finishBrushGesture(); if (windMode) setWindMode(false); } });
+    window.addEventListener('blur', () => { finishBrushGesture(); if (windMode) setWindMode(false); });
     windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
         getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); updateSymmetryUI(); },
         onOpen: () => windPainter.stop(), trigger: dom.btnSymmetry });
@@ -2632,7 +2648,22 @@ function initializeWindMode() {
     });
 }
 
-const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null };
+const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null, changes: null, liveRecording: false };
+
+// Only brush writes enter this map. Simulation generations are never diffed
+// against a pointer-down snapshot or serialized as part of a brush sample.
+function flushLiveBrushChanges() {
+    if (!pointerState.liveRecording || !pointerState.changes?.size) return;
+    window.logArtEvent('DRAW_STROKE', JSON.stringify([...pointerState.changes.values()]));
+    pointerState.changes.clear();
+    if (armedSimulation === 'dla' && dlaState) syncDlaCrystalState();
+}
+
+function finishBrushGesture() {
+    if (pointerState.id === null) return;
+    onPointerUp({ type: 'pointercancel', pointerId: pointerState.id,
+        clientX: pointerState.downX, clientY: pointerState.downY });
+}
 
 function onPointerDown(e) {
     if (windMode) {
@@ -2650,14 +2681,15 @@ function onPointerDown(e) {
     }
     // -----------------------------------------------------------
     
-    if (isLifePlaying || isBreathing) return;
+    if (isBreathing || isMacroLoaded || e.button !== 0 || e.isPrimary === false || pointerState.id !== null) return;
 
-    
     const index = getTileIndexFromCoords(e.clientX, e.clientY);
     if (index === -1) return;
     e.target.setPointerCapture(e.pointerId);
-    Object.assign(pointerState, { id: e.pointerId, downIndex: index, downX: e.clientX, downY: e.clientY, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: getCurrentState() });
-    pointerState.longPressTimer = setTimeout(() => {
+    Object.assign(pointerState, { id: e.pointerId, downIndex: index, downX: e.clientX, downY: e.clientY, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false,
+        beforeState: isLifePlaying && simulationStartState ? null : getCurrentState(),
+        changes: new Map(), liveRecording: isLifePlaying });
+    pointerState.longPressTimer = isLifePlaying ? null : setTimeout(() => {
         if (pointerState.isDragging) return;
         pointerState.suppressClick = true;
         if (selectedColor || isRainbowModeActive) {
@@ -2691,6 +2723,7 @@ function onPointerMove(e) {
         if (isContinuousBrushOn) handleContinuousDrag(currentIndex, e);
         else handleDragPaint(currentIndex);
     }
+    flushLiveBrushChanges();
 }
 
 function onPointerUp(e) {
@@ -2699,7 +2732,7 @@ function onPointerUp(e) {
     clearTimeout(pointerState.longPressTimer);
     const upIndex = getTileIndexFromCoords(e.clientX, e.clientY);
     const isCancelled = e.type === 'pointercancel' || e.type === 'lostpointercapture';
-    if (isContinuousBrushOn && isCancelled) pointerState.suppressClick = true;
+    if (isCancelled) pointerState.suppressClick = true;
     if (isContinuousBrushOn && !isCancelled && !pointerState.isDragging && !pointerState.suppressClick) {
         // A fast gesture may deliver its first displaced position only at pointerup.
         onPointerMove(e);
@@ -2707,7 +2740,7 @@ function onPointerUp(e) {
 
     if (pointerState.isDragging) {
         if (isContinuousBrushOn && !isCancelled) handleContinuousDrag(upIndex, e);
-        if (!isBrushModeOn && pointerState.dragSourceIndex !== null && upIndex !== -1) {
+        if (!isCancelled && !isBrushModeOn && pointerState.dragSourceIndex !== null && upIndex !== -1) {
             const sourceData = { ...boardState[pointerState.dragSourceIndex] };
             const baseTiles = getTilesInRadius(upIndex, brushSize);
             const finalTiles = new Set();
@@ -2748,33 +2781,26 @@ function onPointerUp(e) {
             });
         }
     }
-    const afterState = getCurrentState();
-    // יצירת Diff של השינויים שקרו במשיחת המברשת הזו
-    const diff = [];
-    for (let i = 0; i < afterState.tiles.length; i++) {
-        const beforeTile = pointerState.beforeState.tiles[i];
-        const afterTile = afterState.tiles[i];
-        
-        // בודקים אך ורק אם הצבע (k) השתנה
-        if (beforeTile.k !== afterTile.k) {
-            diff.push({
-                i: i, // אינדקס התא
-                k: afterTile.k // האינדקס של הצבע החדש
-            });
+    flushLiveBrushChanges();
+    // A running simulation owns its complete combined action, just as with Wind.
+    // A standalone brush stroke still creates exactly one Undo entry.
+    if (pointerState.beforeState) {
+        const afterState = getCurrentState();
+        if (!areStatesEqual(pointerState.beforeState, afterState)) {
+            if (!pointerState.liveRecording && pointerState.changes.size) {
+                window.logArtEvent('DRAW_STROKE', JSON.stringify([...pointerState.changes.values()]));
+            }
+            pushHistory({ before: pointerState.beforeState, after: afterState });
+            hasPerformedInitialAutofill = true;
         }
+    } else if (pointerState.liveRecording) {
+        hasPerformedInitialAutofill = true;
     }
-    
-    // אם היו שינויים, שולחים ללוגר
-    if (diff.length > 0) {
-        window.logArtEvent('DRAW_STROKE', JSON.stringify(diff));
-    }
-    // Commit after logging the stroke so its history ID covers the complete action.
-    if (pointerState.beforeState && !areStatesEqual(pointerState.beforeState, afterState)) {
-         pushHistory({ before: pointerState.beforeState, after: afterState });
-         hasPerformedInitialAutofill = true;
-    }
-
-    Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null });
+    const pointerId = pointerState.id;
+    Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null,
+        lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null,
+        changes: null, liveRecording: false });
+    if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
 }
 
 function updateLayout() {
@@ -4539,7 +4565,7 @@ else if (action.eventName === 'Invert Colors') {
                 let changed = action.eventName === 'SHUFFLE_COLORS';
                 
                 // === תיקון באג ה-Undo: שמירת מצב *לפני* שהמאקרו מצייר ===
-                const beforeState = getCurrentState();
+                const beforeState = isLifePlaying && simulationStartState ? null : getCurrentState();
 
                 diff.forEach(change => {
                     const tile = boardState[change.i];
@@ -4548,7 +4574,7 @@ else if (action.eventName === 'Invert Colors') {
                         tile.animStart = now;
                         tile.k = change.k;
                         tile.v = change.k; 
-                        tile.isGold = false; 
+                        tile.isGold = change.isGold === true;
                         changed = true;
                     }
                 });
@@ -4558,8 +4584,8 @@ else if (action.eventName === 'Invert Colors') {
                     startAnimationLoop(); 
                     
                     // === תיקון באג ה-Undo: דחיפת המצבים להיסטוריה *אחרי* שהמאקרו צייר ===
-                    const afterState = getCurrentState();
-                    pushHistory({ before: beforeState, after: afterState });
+                    if (armedSimulation === 'dla' && dlaState) syncDlaCrystalState();
+                    if (beforeState) pushHistory({ before: beforeState, after: getCurrentState() });
                     hasPerformedInitialAutofill = true;
                 }
             } catch(e) { 
@@ -4835,7 +4861,7 @@ updateBrightnessEvoButtonUI();
         boardCanvas.addEventListener('pointerup', onPointerUp);
         boardCanvas.addEventListener('pointercancel', onPointerUp);
         boardCanvas.addEventListener('lostpointercapture', e => {
-            if (windMode || isContinuousBrushOn) onPointerUp(e);
+            onPointerUp(e);
         });
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));

@@ -22,7 +22,7 @@ Start with [README-QUICK.md](README-QUICK.md) for a short overview and code map.
 
 ### Creation and color selection
 
-The brush cycles between painting, gold line completion and copying. Gold line completion connects successive points; copying starts from a dragged source tile. The startup default is line completion. Brush size, grid size, separators and symmetry control the composition.
+The brush cycles between painting, gold line completion and copying. Gold line completion connects successive points; copying starts from a dragged source tile. The startup default is line completion. Brush size, grid size, separators and symmetry control the composition. Brushes also work while a simulation runs: taps and drags change the current board, and the simulation continues from those edits. Wind and brushes are mutually exclusive touch tools; turn Wind off to return to the brush.
 
 | Control | Tap/click | Additional interaction |
 | --- | --- | --- |
@@ -482,6 +482,9 @@ Input is handled via a unified Pointer Event system supporting mouse and touch:
 * **`pointerState`**: Tracks dragging, source indices for copying, and timers.
 * **Brush Mode**: `isBrushModeOn` selects painting; `isContinuousBrushOn` adds line completion between successive anchors. Copy mode tracks a dragged source and applies it at the destination. Gesture cancellation and suppressed compatibility clicks prevent duplicate actions.
 * **Symmetry**: All manual interactions automatically trigger the `getSymmetricIndices` helper to apply changes across the Vertical, Horizontal, Mandala, or Kaleidoscope axes.
+* **Live brushes**: Painting, continuous lines, copying, rainbow, brush radius and symmetry work during simulation playback. A running simulation is not paused by drawing. Brush holds while running do not reset the selected color or open a picker; those shortcuts remain available when paused. Macro playback retains its existing full-screen tap behavior and accepts no live painting.
+* **Gesture boundaries**: A control action, Pause, pointer cancellation/capture loss, blur or hiding the page finalizes an active brush gesture without adding a release tap. Secondary pointers cannot replace its owner. Wind exclusively receives board input while enabled; disabling it stops and commits every pending front before brush input resumes.
+* **Combined Undo**: As with Wind, a running simulation owns its complete action including brush edits. Pause commits it once. Undo during a run first finalizes input and pauses, then restores the combined action's starting state; Redo restores its saved result. This applies to breathing as well. Standalone strokes keep one Undo entry per gesture. DLA's crystal/empty-cell indexes are synchronized after live brush samples and replayed strokes.
 
 
 ---
@@ -499,6 +502,8 @@ The app utilizes Tailwind CSS for utility classes, heavily customized with vanil
 ### Recording and exports
 
 `window.logArtEvent(eventName, details, forceLog)` appends session recipe events. A recipe begins with `INIT_STATE` containing board dimensions, palette, sorting, separators and compressed color indices. This compression is not a complete JSON project backup: it does not carry every tile field.
+
+Live brush input emits `DRAW_STROKE` packets as pointer events paint, using the existing generation tags during discrete simulations and timestamps during breathing. Each packet contains only cells actually changed by the brush, not simulation changes between pointer-down and pointer-up. The recording path takes no full-board snapshot and scans only the brush writes per sample; DLA separately rebuilds its crystal indexes after a sample. The existing array format is retained; copied protected cells may additionally specify `isGold: true`. Missing `isGold` retains the legacy unprotected-cell behavior. Paused strokes emit one packet at completion. Replay applies packets to the evolving board and shares the simulation history boundary instead of creating overlapping per-packet entries.
 
 Events carry timestamps, and generation-based actions include `[GEN:n]`. The logger records board strokes/diffs, palette and sorting changes, play, pause, single steps, live mode changes, Nudge timing and history metadata. Logging has some overhead and does not make the entire application allocation-free.
 
