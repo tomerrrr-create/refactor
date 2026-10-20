@@ -1,7 +1,7 @@
 // Shared interaction for cycling controls with a picker. Mouse drags and touch
 // swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
-    onTap, onOpen, onHold, onExtendedHold, canInteract, canOpen = () => true,
+    onTap, onOpen, onSwipeDown, onHold, onExtendedHold, canInteract, canOpen = () => true,
     beforeStart = () => {}, onEnd = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
 }) {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
@@ -13,9 +13,10 @@ export function bindPickerGestures(button, {
     }
 
     function clearGlow() { button.classList.remove('picker-swipe-glow'); }
-    function swipeReady(state) {
-        return !state.held && state.y - state.currentY >= SWIPE_DISTANCE &&
-            state.y - state.currentY >= Math.abs(state.currentX - state.x) * VERTICAL_RATIO;
+    function swipeReady(state, direction = -1) {
+        const distance = (state.currentY - state.y) * direction;
+        return !state.held && distance >= SWIPE_DISTANCE &&
+            distance >= Math.abs(state.currentX - state.x) * VERTICAL_RATIO;
     }
     function releaseCapture(id) {
         if (button.hasPointerCapture(id)) button.releasePointerCapture(id);
@@ -33,7 +34,8 @@ export function bindPickerGestures(button, {
         if (Math.hypot(state.currentX - state.x, state.currentY - state.y) >= TAP_SLOP) {
             state.moved = true; clearHoldTimers();
         }
-        button.classList.toggle('picker-swipe-glow', swipeReady(state) && !button.disabled && canInteract() && canOpen());
+        button.classList.toggle('picker-swipe-glow', !button.disabled && canInteract() &&
+            ((swipeReady(state) && canOpen()) || (onSwipeDown && swipeReady(state, 1))));
     }
     button.addEventListener('pointerdown', event => {
         if (event.isPrimary === false || event.button !== 0 || active) return;
@@ -69,6 +71,7 @@ export function bindPickerGestures(button, {
         if (!active || active.id !== event.pointerId) return;
         updatePosition(event);
         const state = active, open = swipeReady(state) && canOpen();
+        const down = onSwipeDown && swipeReady(state, 1);
         const inside = state.currentX >= state.bounds.left && state.currentX <= state.bounds.right &&
             state.currentY >= state.bounds.top && state.currentY <= state.bounds.bottom;
         const tap = !state.moved && !state.held && inside;
@@ -77,6 +80,7 @@ export function bindPickerGestures(button, {
         suppressClick = state.touch || !tap;
         if (button.disabled || !canInteract()) return;
         if (open) onOpen();
+        else if (down) onSwipeDown();
         else if (state.touch && tap) onTap();
     });
     button.addEventListener('click', event => {

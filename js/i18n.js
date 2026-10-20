@@ -9,9 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  tooltip_wind_cycle: { en: "Wind: tap to change mode; hold to return to symmetry; swipe up for settings", he: "רוח: לחיצה להחלפת מצב; לחיצה ארוכה לחזרה לסימטריה; החלקה למעלה להגדרות", ru: "Ветер: нажмите для смены режима; удерживайте для возврата к симметрии; смахните вверх для настроек", nl: "Wind: tik om van modus te wisselen; houd ingedrukt voor symmetrie; veeg omhoog voor instellingen" },
-  wind_on: {"en": "WIND MODE ON", "he": "מצב WIND פעיל", "ru": "РЕЖИМ ВЕТРА ВКЛЮЧЁН", "nl": "WINDMODUS AAN"},
-  wind_off: {"en": "WIND MODE OFF", "he": "מצב WIND כבוי", "ru": "РЕЖИМ ВЕТРА ВЫКЛЮЧЕН", "nl": "WINDMODUS UIT"},
+  tooltip_wind_cycle: {"en": "Wind: tap to change mode; swipe up for settings; swipe down to return to the brush", "he": "רוח: לחיצה להחלפת מצב; החלקה למעלה להגדרות; החלקה למטה לחזרה למברשת", "ru": "Ветер: нажмите для смены режима; смахните вверх для настроек; вниз — вернуться к кисти", "nl": "Wind: tik om van modus te wisselen; veeg omhoog voor instellingen; omlaag om terug te gaan naar het penseel"},
   wind_mode: {"en": "Ripple mode", "he": "סוג האדווה", "ru": "Режим волны", "nl": "Soort rimpeling"},
   wind_mode_displace: {"en": "Move existing colors", "he": "הזזת הצבעים הקיימים", "ru": "Перемещение существующих цветов", "nl": "Bestaande kleuren verplaatsen"},
   wind_mode_paint: {"en": "Paint color rings", "he": "ציור טבעות צבע", "ru": "Рисование цветных колец", "nl": "Gekleurde ringen schilderen"},
@@ -324,8 +322,8 @@ export const translations = {
   tooltip_invert: { en: "Invert Colors", he: "היפוך צבעים", ru: "Инвертировать цвета", nl: "Kleuren omkeren" },
   tooltip_palette: { en: "Switch palette", he: "עבור לפלטת הצבעים הבאה", ru: "Сменить палитру", nl: "Wissel palet" },
   tooltip_random: { en: "Explore Mood", he: "ערבוב כל פלטת הצבעים", ru: "Исследовать настроение", nl: "Ontdek sfeer" },
-  tooltip_colorPicker: { en: "Choose Color", he: "בחירת צבע", ru: "Выбрать цвет", nl: "Kies kleur" },
-  tooltip_symmetry: { en: "Symmetry; hold to toggle Wind; swipe up for Wind settings while active", he: "סימטריה; לחיצה ארוכה להפעלה או כיבוי של Wind; כשהוא פעיל, החלקה למעלה להגדרות", ru: "Симметрия; удерживайте для включения или выключения ветра; смахните вверх для его настроек, пока он включён", nl: "Symmetrie; houd ingedrukt om Wind te schakelen; veeg omhoog voor instellingen als Wind actief is" },
+  tooltip_colorPicker: {"en": "Brush: tap to cycle colors; swipe up to choose color and size; swipe down for Wind", "he": "מברשת: לחיצה להחלפת צבע; החלקה למעלה לבחירת צבע וגודל; החלקה למטה לרוח", "ru": "Кисть: нажмите для смены цвета; смахните вверх для выбора цвета и размера; вниз — режим ветра", "nl": "Penseel: tik om van kleur te wisselen; veeg omhoog voor kleur en grootte; omlaag voor Wind"},
+  tooltip_symmetry: {"en": "Symmetry: tap to change mode; swipe up to turn off", "he": "סימטריה: לחיצה להחלפת מצב; החלקה למעלה לכיבוי", "ru": "Симметрия: нажмите для смены режима; смахните вверх для выключения", "nl": "Symmetrie: tik om van modus te wisselen; veeg omhoog om uit te schakelen"},
   tooltip_brushMode: { en: "Mode: Drag to Copy", he: "גרירה והעתקה", ru: "Режим: Перетащить для копирования", nl: "Modus: Sleep om te kopiëren" },
   tooltip_redo: { en: "Redo", he: "בצע שוב", ru: "Повторить", nl: "Opnieuw" },
   tooltip_undo: { en: "Undo", he: "בטל", ru: "Отменить", nl: "Ongedaan maken" },

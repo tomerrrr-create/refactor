@@ -1902,8 +1902,6 @@ button, .ctrl {
 
 /* Wind never dims or locks the control panel. */
 body.wind-mode #board { cursor: crosshair; }
-.wind-mode-toast { position: fixed; z-index: 90; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 10px 18px; border: 1px solid #b28b3659; border-radius: 14px; background: #100e09ed; color: #e3c677; font-size: 13px; letter-spacing: .04em; pointer-events: none; }
-.wind-mode-toast[hidden] { display: none; }
 .wind-settings-dialog h2 { color: var(--gold); font-size: 20px; text-align: center; margin-bottom: 22px; }
 .wind-settings-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 22px 0; }
 .wind-settings-field label { font-size: 14px; color: #eaeaea; }
@@ -1918,10 +1916,8 @@ body.wind-mode #board { cursor: crosshair; }
 .wind-mode-buttons { gap: 16px; flex-wrap: nowrap; margin-bottom: 12px; }
 .tuning-modes.wind-mode-buttons button { display: grid; place-items: center; width: 52px; height: 52px; padding: 10px; border-radius: 50%; flex-shrink: 0; }
 .wind-mode-buttons svg { width: 28px; height: 28px; }
-.wind-control-icon { display: inline-flex; }
-.wind-control-icon svg { width: var(--side-icon-size); height: var(--side-icon-size); }
-.wind-control-icon[hidden] { display: none; }
-#btnSymmetry.wind-active { color: var(--gold); }
+#btnColorPicker { border-radius: 50%; }
+#btnColorPicker.wind-active { color: var(--gold); }
 .wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }
 
 /* Breathing mode pickers reuse the control panel's four original symbols. */

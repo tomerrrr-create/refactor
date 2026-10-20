@@ -7,7 +7,7 @@ class Target {
     addEventListener(type, handler) { const list = this.listeners.get(type) || []; list.push(handler); this.listeners.set(type, list); }
     emit(type, event = {}) { for (const handler of this.listeners.get(type) || []) handler(event); }
 }
-function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, canOpen = () => true } = {}) {
+function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, swipeDown = false, canOpen = () => true } = {}) {
     const original = { document: globalThis.document, window: globalThis.window, setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
     t.after(() => Object.assign(globalThis, original));
     const doc = new Target(), win = new Target(), button = new Target();
@@ -23,6 +23,7 @@ function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, 
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, { fn, at: now + ms }); return id; },
         clearTimeout: id => timers.delete(id) });
     bindPickerGestures(button, { onTap: () => actions.push('tap'), onOpen: () => actions.push('open'),
+        onSwipeDown: swipeDown ? () => actions.push('down') : undefined,
         onHold: hold ? () => actions.push('hold') : undefined,
         onExtendedHold: extendedHold ? () => actions.push('extendedHold') : undefined, canInteract: () => allowed, canOpen });
     return { actions, button, doc, win, classes, captured,
@@ -159,3 +160,19 @@ test('an upward swipe cancels both hold stages and still opens the picker', t =>
     h.advance(1500); h.event('pointerup', 25, -10); h.event('click');
     assert.deepEqual(h.actions, ['open']);
 });
+
+for(const pointerType of ['touch','mouse']) {
+ test(pointerType+' downward swipe is opt-in, commits on release once, and cancels both hold stages',t=>{
+  const h=harness(t,{pointerType,swipeDown:true,extendedHold:true});
+  h.event('pointerdown');h.advance(100);h.event('pointermove',25,55);assert(h.classes.has('picker-swipe-glow'));assert.deepEqual(h.actions,[]);
+  h.advance(1400);h.event('pointerup',25,55);h.event('click');assert.deepEqual(h.actions,['down']);assert.equal(h.classes.size,0);assert.equal(h.captured.size,0);
+ });
+ test(pointerType+' down swipe return, sideways drag, cancellation, and completed hold cannot change tools',t=>{
+  const h=harness(t,{pointerType,swipeDown:true});
+  h.event('pointerdown');h.event('pointermove',25,60);h.event('pointermove');h.event('pointerup');h.event('click');
+  h.event('pointerdown');h.event('pointermove',65,55);h.event('pointerup',65,55);h.event('click');
+  h.event('pointerdown');h.event('pointermove',25,60);h.event('pointercancel');h.event('pointerup',25,60);h.event('click');
+  h.event('pointerdown');h.advance(600);h.event('pointermove',25,60);h.event('pointerup',25,60);h.event('click');
+  assert.deepEqual(h.actions,['hold']);assert.equal(h.classes.size,0);
+ });
+}
