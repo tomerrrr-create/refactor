@@ -40,6 +40,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
       let canvas, ctx;
       let boardState = []; 
       let simulationStartState = null; // For saving simulation history
+      let simulationHasBrushInput = false;
       let islandsSession = null;
       let evolutionTuning = validateEvolutionTuning();
       
@@ -1433,11 +1434,12 @@ function pauseLife() {
 
           if (simulationStartState) {
               const simulationEndState = getCurrentState();
-              if (!areStatesEqual(simulationStartState, simulationEndState)) {
+              if (simulationHasBrushInput || !areStatesEqual(simulationStartState, simulationEndState)) {
                   pushHistory({ before: simulationStartState, after: simulationEndState });
               }
               simulationStartState = null; // Reset for the next session
           }
+          simulationHasBrushInput = false;
 
           dom.iconPlay.style.display = 'block';
           dom.iconPause.style.display = 'none';
@@ -1509,6 +1511,7 @@ function pauseLife() {
                   ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode, Math.random, evolutionTuning.breathe) : null;
               breatheStartTime = performance.now();
               simulationStartState = getCurrentState();
+              simulationHasBrushInput = false;
               isLifePlaying = true;
               updateUndoRedoButtons();
               
@@ -1537,6 +1540,7 @@ function pauseLife() {
           }
 
           simulationStartState = getCurrentState();
+          simulationHasBrushInput = false;
 
           isLifePlaying = true;
           updateUndoRedoButtons();
@@ -2474,9 +2478,11 @@ function applyActionToTiles(indices, actionFn) {
                     boardState[idx].prevK = oldK;
                     boardState[idx].animStart = now;
                     changed = true;
-                    pointerState.changes?.set(idx, { i: idx, k: boardState[idx].k,
-                        ...(boardState[idx].isGold ? { isGold: true } : {}) });
                 }
+                // Record every brush target, even when its color already matches.
+                // A random simulation can leave a different color here on replay.
+                pointerState.changes?.set(idx, { i: idx, k: boardState[idx].k,
+                    ...(boardState[idx].isGold ? { isGold: true } : {}) });
             }
         });
         if (changed) startAnimationLoop();
@@ -2650,10 +2656,11 @@ function initializeWindMode() {
 
 const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null, changes: null, liveRecording: false };
 
-// Only brush writes enter this map. Simulation generations are never diffed
+// Only brush targets enter this map. Simulation generations are never diffed
 // against a pointer-down snapshot or serialized as part of a brush sample.
 function flushLiveBrushChanges() {
     if (!pointerState.liveRecording || !pointerState.changes?.size) return;
+    if (isLifePlaying && simulationStartState) simulationHasBrushInput = true;
     window.logArtEvent('DRAW_STROKE', JSON.stringify([...pointerState.changes.values()]));
     pointerState.changes.clear();
     if (armedSimulation === 'dla' && dlaState) syncDlaCrystalState();
@@ -2786,7 +2793,7 @@ function onPointerUp(e) {
     // A standalone brush stroke still creates exactly one Undo entry.
     if (pointerState.beforeState) {
         const afterState = getCurrentState();
-        if (!areStatesEqual(pointerState.beforeState, afterState)) {
+        if (pointerState.changes.size || !areStatesEqual(pointerState.beforeState, afterState)) {
             if (!pointerState.liveRecording && pointerState.changes.size) {
                 window.logArtEvent('DRAW_STROKE', JSON.stringify([...pointerState.changes.values()]));
             }
@@ -4584,6 +4591,7 @@ else if (action.eventName === 'Invert Colors') {
                     startAnimationLoop(); 
                     
                     // === תיקון באג ה-Undo: דחיפת המצבים להיסטוריה *אחרי* שהמאקרו צייר ===
+                    if (action.eventName === 'DRAW_STROKE' && isLifePlaying && simulationStartState) simulationHasBrushInput = true;
                     if (armedSimulation === 'dla' && dlaState) syncDlaCrystalState();
                     if (beforeState) pushHistory({ before: beforeState, after: getCurrentState() });
                     hasPerformedInitialAutofill = true;
