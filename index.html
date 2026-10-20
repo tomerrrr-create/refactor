@@ -628,12 +628,11 @@
         <label for="softBloomIntensity" data-debug-text="soft_bloom_intensity"></label>
         <div class="bloom-intensity-row"><input id="softBloomIntensity" type="range" min="0" max="100" step="1" value="32"><output id="softBloomIntensityValue" for="softBloomIntensity">32%</output></div>
       </div>
-      </section>
-      <section class="technician-recording-settings">
-        <label class="technician-option brush-motion-option">
-          <span class="technician-option-heading"><span class="technician-option-title" data-debug-text="brush_motion_recording"></span><input id="brushMotionRecordingToggle" type="checkbox" role="switch" aria-describedby="brushMotionRecordingNote"></span>
-          <span id="brushMotionRecordingNote" data-debug-text="brush_motion_recording_note"></span>
-        </label>
+      <label class="technician-option brush-motion-option">
+        <span class="technician-option-heading"><span class="technician-effect-heading" aria-hidden="true"><span class="technician-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M6 13l10-10 5 5-10 10-6 1zM3 22c2-3 5 1 8-2"/></svg></span><bdi>draw /</bdi></span><input id="brushMotionRecordingToggle" type="checkbox" role="switch" checked aria-labelledby="brushMotionRecordingLabel" aria-describedby="brushMotionRecordingNote"></span>
+        <span id="brushMotionRecordingLabel" hidden data-debug-text="brush_motion_recording"></span>
+        <span id="brushMotionRecordingNote" data-debug-text="brush_motion_recording_note"></span>
+      </label>
       </section>
       <section class="technician-start-settings">
       <button id="btnConfigureInit" type="button" class="technician-option" aria-expanded="false" aria-controls="initSettingsForm">

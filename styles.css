@@ -1925,5 +1925,5 @@ body.wind-mode #board { cursor: crosshair; }
 .tuning-modes.breathe-mode-icons button { display: grid; place-items: center; width: 48px; height: 48px; padding: 10px; border-radius: 50%; flex: 0 0 48px; }
 .breathe-mode-icons svg { width: 28px; height: 28px; }
 
-.technician-recording-settings { margin-bottom: 20px; }
-#brushMotionRecordingNote { font-size: 13px; line-height: 1.6; }
+.technician-display-settings .brush-motion-option { margin-top: 18px; padding-top: 18px; border-top: 1px solid #b28b3630; gap: 8px; }
+#brushMotionRecordingNote { padding-inline-start: 48px; font-size: 12px; line-height: 1.5; color: #95958b; }
