@@ -33,7 +33,7 @@ const COPY = {
       ],
       [
         "Change the scale",
-        "Tap the grid-size button to enlarge. Swipe it down to shrink, or up to enter an exact size. Tap the separators button to cycle spacing.",
+        "Use + and − to change the grid size. Swipe either upward to enter an exact size. Tap the separators button to cycle spacing.",
         "Fewer cells feel bold. More cells reveal detail."
       ],
       [
@@ -109,7 +109,7 @@ const COPY = {
       ],
       [
         "משנים קנה מידה",
-        "לחצו על כפתור הגריד להגדלה. החליקו אותו למטה להקטנה, או למעלה להזנת גודל מדויק. כפתור המפרידים מדפדף בין עוביי ההפרדה.",
+        "פלוס ומינוס משנים את גודל הגריד. החליקו אחד מהם למעלה להזנת גודל מדויק. כפתור המפרידים מדפדף בין עוביי ההפרדה.",
         "מעט תאים יוצרים מראה נועז. הרבה תאים חושפים פרטים."
       ],
       [
@@ -185,7 +185,7 @@ const COPY = {
       ],
       [
         "Измените масштаб",
-        "Нажмите кнопку сетки для увеличения. Смахните вниз для уменьшения, вверх — для точного размера. Кнопка разделителей меняет расстояния между ячейками.",
+        "Кнопки + и − меняют размер сетки. Проведите любую вверх для точного размера. Кнопка разделителей меняет расстояния между ячейками.",
         "Меньше ячеек — крупнее формы. Больше — тоньше детали."
       ],
       [
@@ -261,7 +261,7 @@ const COPY = {
       ],
       [
         "Verander de schaal",
-        "Tik op de rasterknop om te vergroten. Veeg omlaag om te verkleinen of omhoog voor een exact formaat. Tik op de scheidingsknop voor andere tussenruimtes.",
+        "Met + en − verander je het rasterformaat. Veeg een van beide omhoog voor een exact formaat. Tik op de scheidingsknop voor andere tussenruimtes.",
         "Minder cellen geven grote vormen. Meer cellen tonen details."
       ],
       [

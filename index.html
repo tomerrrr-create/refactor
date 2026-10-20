@@ -116,6 +116,7 @@
                   <path class="part right" d="M21 3 V 21" stroke="transparent" />
                   <circle class="part center-dot" cx="12" cy="12" r="2" fill="transparent" />
               </svg>
+            <span class="wind-control-icon" hidden aria-hidden="true"></span>
           </button>
           <button id="btnBrushMode" class="ctrl">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -323,19 +324,15 @@
 </button>
 
           <button id="btnResizeUp" class="ctrl">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <rect x="3" y="3" width="4" height="4" rx="0.4"/>
-                  <rect x="10" y="3" width="4" height="4" rx="0.4"/>
-                  <rect x="17" y="3" width="4" height="4" rx="0.4"/>
-                  <rect x="3" y="10" width="4" height="4" rx="0.4"/>
-                  <rect x="10" y="10" width="4" height="4" rx="0.4"/>
-                  <rect x="17" y="10" width="4" height="4" rx="0.4"/>
-                  <rect x="3" y="17" width="4" height="4" rx="0.4"/>
-                  <rect x="10" y="17" width="4" height="4" rx="0.4"/>
-                  <rect x="17" y="17" width="4" height="4" rx="0.4"/>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
               </svg>
           </button>
-          <button id="btnWind" class="ctrl" aria-pressed="false"></button>
+          <button id="btnResizeDown" class="ctrl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6" />
+              </svg>
+          </button>
           <button id="btnGap" class="ctrl">
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true">
                 <path d="M8 3v18M16 3v18M3 8h18M3 16h18"/>
