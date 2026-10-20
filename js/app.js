@@ -1,4 +1,4 @@
-import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, WIND_MODE_SEQUENCE, createWindModeIcon } from './wind-settings.js';
+import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, WIND_MODE_SEQUENCE, updateWindButtonIcon } from './wind-settings.js';
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
@@ -2595,19 +2595,7 @@ function cycleWindMode() {
     updateWindButtonUI();
 }
 function updateWindButtonUI() {
-    // Keep SVG nodes stable across cycles, including displace → Off. Replacing
-    // a painted SVG can leave stale strokes in mobile browser compositing.
-    if (!dom.btnWind.childElementCount) {
-        for (const mode of WIND_MODE_SEQUENCE) {
-            const icon = createWindModeIcon(mode);
-            icon.dataset.windEffect = mode;
-            dom.btnWind.append(icon);
-        }
-    }
-    const visibleMode = windMode ? windSettings.mode : 'ripple';
-    for (const icon of dom.btnWind.children) {
-        icon.style.display = icon.dataset.windEffect === visibleMode ? 'block' : 'none';
-    }
+    updateWindButtonIcon(dom.btnWind, windMode ? windSettings.mode : 'ripple');
     dom.btnWind.classList.toggle('wind-active', windMode);
     dom.btnWind.setAttribute('aria-pressed', String(windMode));
     dom.btnWind.dataset.windMode = windSettings.mode;

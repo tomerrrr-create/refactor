@@ -53,17 +53,14 @@ test('switching interfaces preserves active Wind in both directions',()=>{
  c.toggleSimMode();assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,true);assert.equal(pauses,2);assert.equal(resets,2);
 });
 
-test('Wind keeps three stable SVGs with only one visible through full cycles and Off',()=>{
- const attrs={},icons=[],button={dataset:{},children:icons,get childElementCount(){return icons.length;},
-  classList:{toggle:(key,value)=>attrs[key]=value},setAttribute:(key,value)=>attrs[key]=value,append:icon=>icons.push(icon)};
- const c=vm.createContext({WIND_MODE_SEQUENCE,dom:{btnWind:button},windMode:false,windSettings:{mode:'paint'},getText:key=>key,
-  createWindModeIcon:mode=>({mode,dataset:{},style:{}})});
+test('Wind shows the wave when Off and the selected icon while active',()=>{
+ const attrs={},button={dataset:{},classList:{toggle:(key,value)=>attrs[key]=value},setAttribute:(key,value)=>attrs[key]=value};
+ const c=vm.createContext({dom:{btnWind:button},windMode:false,windSettings:{mode:'paint'},getText:key=>key,
+  updateWindButtonIcon:(node,mode)=>{assert.equal(node,button);attrs.icon=mode;}});
  vm.runInContext(source.slice(source.indexOf('function updateWindButtonUI('),source.indexOf('let windPointerId =')),c);
- c.updateWindButtonUI();const original=[...icons];
  for(let i=0;i<3;i++)for(const mode of ['ripple','paint','displace','off']){
   c.windMode=mode!=='off';if(c.windMode)c.windSettings.mode=mode;c.updateWindButtonUI();
-  assert.deepEqual(icons,original);assert.equal(icons.length,3);
-  assert.deepEqual(icons.filter(icon=>icon.style.display==='block').map(icon=>icon.mode),[mode==='off'?'ripple':mode]);
+  assert.equal(attrs.icon,mode==='off'?'ripple':mode);
   assert.equal(attrs['aria-pressed'],String(c.windMode));assert.equal(attrs['wind-active'],c.windMode);
  }
 });

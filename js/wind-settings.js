@@ -18,6 +18,32 @@ export function createWindModeIcon(mode) {
     icon.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="12" cy="12" r="5.5"/>';
     return icon;
 }
+// The control has a single SVG and a single path for its entire lifetime.
+// In particular, Off contains no hidden rectangle from the previous effect.
+export function updateWindButtonIcon(button, mode) {
+    let icon = button.firstElementChild;
+    if (!icon) {
+        icon = createWindModeIcon('ripple');
+        button.append(icon);
+    }
+    let d, width;
+    if (mode === 'paint') {
+        const ellipse = document.getElementById('iconBreatheRandomColor').querySelector('ellipse');
+        const [cx, cy, rx, ry] = ['cx', 'cy', 'rx', 'ry'].map(key => Number(ellipse.getAttribute(key)));
+        d = `M${cx} ${cy - ry}a${rx} ${ry} 0 1 0 0 ${2 * ry}a${rx} ${ry} 0 1 0 0 ${-2 * ry}`;
+        width = document.getElementById('iconBreatheRandomColor').getAttribute('stroke-width');
+    } else if (mode === 'displace') {
+        d = 'M4 3H20A1 1 0 0 1 21 4V20A1 1 0 0 1 20 21H4A1 1 0 0 1 3 20V4A1 1 0 0 1 4 3Z M12 6.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 1 0 0 -11';
+        width = '1.5';
+    } else {
+        const source = document.getElementById('iconBreatheSolo');
+        d = source.querySelector('path').getAttribute('d');
+        width = source.getAttribute('stroke-width');
+    }
+    icon.firstElementChild.setAttribute('d', d);
+    icon.setAttribute('stroke-width', width);
+    return icon;
+}
 const WIND_MODES = ['displace', 'paint', 'ripple'];
 function normalizeFlatSettings(value) {
     const mode = WIND_MODES.includes(value?.mode) ? value.mode : DEFAULT_WIND_SETTINGS.mode;
