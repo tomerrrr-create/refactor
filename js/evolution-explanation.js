@@ -88,9 +88,18 @@ export const evolutionExplanations = {
     ]
 };
 
+export const controlExplanations = {
+    gridSize: [
+        ['Grid size', 'Tap to enlarge. Swipe down to shrink through the same sizes. Swipe up to enter an exact size.'],
+        ['גודל הלוח', 'לחיצה מגדילה. החלקה למטה מקטינה באותם שלבים. החלקה למעלה פותחת הזנת גודל מדויק.'],
+        ['Размер сетки', 'Нажмите для увеличения. Смахните вниз для уменьшения по тем же шагам, вверх — для точного размера.'],
+        ['Rasterformaat', 'Tik om te vergroten. Veeg omlaag om in dezelfde stappen te verkleinen. Veeg omhoog voor een exact formaat.']
+    ]
+};
+
 export function getEvolutionExplanation(simulation, lang) {
-    return evolutionExplanations[simulation]?.[['en', 'he', 'ru', 'nl'].indexOf(lang)] ||
-        evolutionExplanations[simulation]?.[0];
+    const copy = evolutionExplanations[simulation] || controlExplanations[simulation];
+    return copy?.[['en', 'he', 'ru', 'nl'].indexOf(lang)] || copy?.[0];
 }
 
 export function createEvolutionExplanation(host, { onHelp } = {}) {
@@ -196,7 +205,7 @@ export function createEvolutionExplanation(host, { onHelp } = {}) {
     return {
         isOpen: () => active,
         show(button, id) {
-            if (active || !evolutionExplanations[id]) return;
+            if (active || !getEvolutionExplanation(id, getCurrentLang())) return;
             simulation = id; opener = button;
             active = true; closing = faded = false;
             helpPointer = null; openHelpAfterFade = false;

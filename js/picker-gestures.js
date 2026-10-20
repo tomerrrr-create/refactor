@@ -1,7 +1,7 @@
 // Shared interaction for cycling controls with a picker. Mouse drags and touch
 // swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
-    onTap, onOpen, onHold, onExtendedHold, canInteract, canOpen = () => true,
+    onTap, onOpen, onHold, onExtendedHold, onSwipeDown, canInteract, canOpen = () => true,
     beforeStart = () => {}, onEnd = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
 }) {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
@@ -16,6 +16,10 @@ export function bindPickerGestures(button, {
     function swipeReady(state) {
         return !state.held && state.y - state.currentY >= SWIPE_DISTANCE &&
             state.y - state.currentY >= Math.abs(state.currentX - state.x) * VERTICAL_RATIO;
+    }
+    function swipeDownReady(state) {
+        return onSwipeDown && !state.held && state.currentY - state.y >= SWIPE_DISTANCE &&
+            state.currentY - state.y >= Math.abs(state.currentX - state.x) * VERTICAL_RATIO;
     }
     function releaseCapture(id) {
         if (button.hasPointerCapture(id)) button.releasePointerCapture(id);
@@ -68,7 +72,7 @@ export function bindPickerGestures(button, {
     button.addEventListener('pointerup', event => {
         if (!active || active.id !== event.pointerId) return;
         updatePosition(event);
-        const state = active, open = swipeReady(state) && canOpen();
+        const state = active, open = swipeReady(state) && canOpen(), down = swipeDownReady(state);
         const inside = state.currentX >= state.bounds.left && state.currentX <= state.bounds.right &&
             state.currentY >= state.bounds.top && state.currentY <= state.bounds.bottom;
         const tap = !state.moved && !state.held && inside;
@@ -77,6 +81,7 @@ export function bindPickerGestures(button, {
         suppressClick = state.touch || !tap;
         if (button.disabled || !canInteract()) return;
         if (open) onOpen();
+        else if (down) onSwipeDown();
         else if (state.touch && tap) onTap();
     });
     button.addEventListener('click', event => {

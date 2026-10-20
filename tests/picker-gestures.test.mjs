@@ -7,7 +7,7 @@ class Target {
     addEventListener(type, handler) { const list = this.listeners.get(type) || []; list.push(handler); this.listeners.set(type, list); }
     emit(type, event = {}) { for (const handler of this.listeners.get(type) || []) handler(event); }
 }
-function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, canOpen = () => true } = {}) {
+function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, canOpen = () => true, swipeDown = false } = {}) {
     const original = { document: globalThis.document, window: globalThis.window, setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
     t.after(() => Object.assign(globalThis, original));
     const doc = new Target(), win = new Target(), button = new Target();
@@ -24,6 +24,7 @@ function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, 
         clearTimeout: id => timers.delete(id) });
     bindPickerGestures(button, { onTap: () => actions.push('tap'), onOpen: () => actions.push('open'),
         onHold: hold ? () => actions.push('hold') : undefined,
+        onSwipeDown: swipeDown ? () => actions.push('down') : undefined,
         onExtendedHold: extendedHold ? () => actions.push('extendedHold') : undefined, canInteract: () => allowed, canOpen });
     return { actions, button, doc, win, classes, captured,
         block() { allowed = false; },
@@ -158,4 +159,22 @@ test('an upward swipe cancels both hold stages and still opens the picker', t =>
     h.event('pointerdown'); h.advance(200); h.event('pointermove', 25, -10);
     h.advance(1500); h.event('pointerup', 25, -10); h.event('click');
     assert.deepEqual(h.actions, ['open']);
+});
+
+for (const pointerType of ['touch', 'mouse']) test(`grid-size downward swipe fires once on release (${pointerType})`, t => {
+    const h = harness(t, {pointerType, swipeDown:true});
+    h.event('pointerdown'); h.event('pointermove',25,60); assert.deepEqual(h.actions,[]);
+    assert(!h.classes.has('picker-swipe-glow')); h.event('pointerup',25,60); h.event('click');
+    assert.deepEqual(h.actions,['down']); h.advance(1200); assert.deepEqual(h.actions,['down']);
+});
+test('downward size swipes retain hold, diagonal, disabled and cancellation protections', t => {
+    const h = harness(t, {swipeDown:true});
+    h.event('pointerdown'); h.advance(600); h.event('pointerup',25,60); h.event('click');
+    assert.deepEqual(h.actions,['hold']);
+    h.event('pointerdown'); h.event('pointermove',60,50); h.event('pointerup',60,50); h.event('click');
+    assert.deepEqual(h.actions,['hold']);
+    h.event('pointerdown'); h.event('pointermove',25,60); h.event('pointercancel'); h.event('pointerup',25,60); h.event('click');
+    assert.deepEqual(h.actions,['hold']);
+    h.event('pointerdown'); h.event('pointermove',25,60); h.block(); h.event('pointerup',25,60); h.event('click');
+    assert.deepEqual(h.actions,['hold']);
 });

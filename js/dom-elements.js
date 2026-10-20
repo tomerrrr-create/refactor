@@ -31,7 +31,7 @@ export const dom = {
   btnColorPicker: document.getElementById('btnColorPicker'),
   btnResetBoard: document.getElementById('btnResetBoard'),
   btnResizeUp: document.getElementById('btnResizeUp'),
-  btnResizeDown: document.getElementById('btnResizeDown'),
+  btnWind: document.getElementById('btnWind'),
   btnSave: document.getElementById('btnSave'),
   btnLangToggle: document.getElementById('btnLangToggle'),
 

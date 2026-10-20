@@ -116,7 +116,7 @@ body {
     width: var(--icon-size);
     height: var(--icon-size);
 }
-#btnResizeUp svg, #btnResizeDown svg, #btnShowBreatheMenu svg, #btnGap svg, #btnBrushMode svg {
+#btnResizeUp svg, #btnWind svg, #btnShowBreatheMenu svg, #btnGap svg, #btnBrushMode svg {
     width: var(--side-icon-size);
     height: var(--side-icon-size);
 }
@@ -232,7 +232,7 @@ body {
 
 /* Right Panel */
 #btnResizeUp       { grid-area: 1 / 7; }
-#btnResizeDown     { grid-area: 2 / 7; }
+#btnWind     { grid-area: 2 / 7; }
 #btnGap            { grid-area: 3 / 7; }
 #btnDark { grid-area: 4 / 7; }
 
@@ -336,7 +336,7 @@ body {
 .sim-mode-active #btnNudgeBrighter     { grid-area: 2 / 1; }
 
 /* שורה 3 - (משמאל לימין) */
-.sim-mode-active #btnResizeDown        { grid-area: 3 / 1; }
+.sim-mode-active #btnWind        { grid-area: 3 / 1; }
 .sim-mode-active #btnSpiral            { grid-area: 3 / 3; }
 .sim-mode-active #btnMagnetModes       { grid-area: 3 / 4; }
 .sim-mode-active #btnGravitationalSort { grid-area: 3 / 5; }
@@ -717,7 +717,7 @@ body {
 }
 .help-item-icon-wrapper .palette { font-size: var(--icon-size); }
 .help-item-icon-wrapper #btnResizeUp svg,
-.help-item-icon-wrapper #btnResizeDown svg,
+.help-item-icon-wrapper #btnWind svg,
 .help-item-icon-wrapper #btnShowBreatheMenu svg,
 .help-item-icon-wrapper #btnGap svg,
 .help-item-icon-wrapper #btnBrushMode svg {
@@ -1321,7 +1321,7 @@ button, .ctrl {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
 }
-#btnPalette, #btnColorPicker, #btnCycleSort, #btnResizeUp, #btnResizeDown,
+#btnPalette, #btnColorPicker, #btnCycleSort, #btnResizeUp, #btnWind,
 #btnGameOfLife, #btnGravitationalSort, #btnContour, #btnSpiral,
 #btnMagnetModes, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker {
   touch-action: none !important;
@@ -1918,10 +1918,7 @@ body.wind-mode #board { cursor: crosshair; }
 .wind-mode-buttons { gap: 16px; flex-wrap: nowrap; margin-bottom: 12px; }
 .tuning-modes.wind-mode-buttons button { display: grid; place-items: center; width: 52px; height: 52px; padding: 10px; border-radius: 50%; flex-shrink: 0; }
 .wind-mode-buttons svg { width: 28px; height: 28px; }
-.wind-control-icon { display: inline-flex; }
-.wind-control-icon svg { width: var(--side-icon-size); height: var(--side-icon-size); }
-.wind-control-icon[hidden] { display: none; }
-#btnSymmetry.wind-active { color: var(--gold); }
+#btnWind.wind-active { color: var(--gold); }
 .wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }
 
 /* Breathing mode pickers reuse the control panel's four original symbols. */

@@ -2,28 +2,35 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {selectWindMode,nextWindEffect,DEFAULT_WIND_SETTINGS} from '../js/wind-settings.js';
+import {DEFAULT_WIND_SETTINGS} from '../js/wind-settings.js';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 test('Wind toggle updates its state without making panel buttons inert or disabled',()=>{
  const button={pressed:'false',inert:false,disabled:false,setAttribute(name,value){if(name==='aria-pressed')this.pressed=value;}},events=[];
- const c=vm.createContext({windSettings:{...DEFAULT_WIND_SETTINGS,mode:'paint'},selectWindMode,saveWindSettings(){},updateSymmetryUI(){},windMode:false,isSimModeActive:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
+ const c=vm.createContext({windSettings:{...DEFAULT_WIND_SETTINGS,mode:'paint'},saveWindSettings(){},updateWindButtonUI(){},windMode:false,isSimModeActive:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
  pointerState:{id:null},windSettingsUI:null,windPointerId:null,windPainter:{stop:()=>events.push('commit')},pauseLife:()=>events.push('pause'),
  document:{body:{classList:{toggle(){}}}},dom:{},showWindToast:value=>events.push(value)});
- vm.runInContext(source.slice(source.indexOf('function setWindMode('),source.indexOf('let windPointerId =')),c);
- c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.windSettings.mode,'ripple');assert.equal(button.inert,false);assert.equal(button.disabled,false);
+ vm.runInContext(source.slice(source.indexOf('function setWindMode('),source.indexOf('function updateWindButtonUI(')),c);
+ c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.windSettings.mode,'paint');assert.equal(button.inert,false);assert.equal(button.disabled,false);
  c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['pause',true,'commit',false]);
  c.isSimModeActive=true;c.setWindMode(true);assert.equal(c.windMode,true);
 });
-test('Symmetry hold toggles Wind and swipe opens settings only while active',()=>{
- let gestures;const events=[],c=vm.createContext({dom:{btnSymmetry:{}},windMode:false,isBreathing:false,symmetryMode:'vertical',
- hideLongPressDisplay(){},C:{LONG_PRESS_SHOW_MS:600},windSettingsUI:{open:()=>events.push('settings')},
- cycleSymmetryMode:()=>events.push('cycle'),cycleWindEffect:()=>events.push('wind-cycle'),updateSymmetryUI:()=>events.push('symmetry'),setWindMode:value=>{c.windMode=value;events.push(value);},
+test('Symmetry stays independent and has no Wind hold trigger',()=>{
+ let gestures;const events=[],c=vm.createContext({dom:{btnSymmetry:{}},windMode:true,isBreathing:false,symmetryMode:'vertical',
+ hideLongPressDisplay(){},cycleSymmetryMode:()=>events.push('cycle'),updateSymmetryUI:()=>events.push('symmetry'),
  bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('        bindPickerGestures(dom.btnSymmetry,');
  vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnCycleSort,',start)),c);
- gestures.onTap();gestures.onHold();assert.equal(c.windMode,true);gestures.onTap();gestures.onOpen();assert.equal(c.symmetryMode,'vertical');
- gestures.onHold();assert.equal(c.windMode,false);gestures.onOpen();assert.equal(c.symmetryMode,'off');
- assert.deepEqual(events,['cycle',true,'wind-cycle','settings',false,'symmetry']);
+ gestures.onTap();assert.equal(gestures.onHold,undefined);gestures.onOpen();
+ assert.equal(c.symmetryMode,'off');assert.equal(c.windMode,true);assert.deepEqual(events,['cycle','symmetry']);
+});
+test('dedicated Wind button toggles instead of cycling; settings open while off too',()=>{
+ let gestures;const events=[],c=vm.createContext({dom:{btnWind:{}},windMode:false,isBreathing:false,
+ hideLongPressDisplay(){},windSettingsUI:{open:()=>events.push('settings')},setWindMode:value=>{c.windMode=value;events.push(value);},
+ bindPickerGestures:(button,options)=>{gestures=options;}});
+ const start=source.indexOf('        bindPickerGestures(dom.btnWind,');
+ vm.runInContext(source.slice(start,source.indexOf('        bindPickerGestures(dom.btnSymmetry,',start)),c);
+ gestures.onOpen();assert.equal(c.windMode,false);gestures.onTap();assert.equal(c.windMode,true);
+ gestures.onTap();assert.equal(c.windMode,false);assert.deepEqual(events,['settings',true,false]);
 });
 test('ordinary panel events commit pending ripples without consuming or blocking the event',()=>{
  const listeners=new Map(),events=[],c=vm.createContext({windMode:true,windPainter:{stop:()=>events.push('commit')},dom:{controlsContainer:{addEventListener:(name,handler)=>listeners.set(name,handler)}}});
@@ -45,17 +52,11 @@ test('switching interfaces preserves active Wind in both directions',()=>{
  c.toggleSimMode();assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,true);assert.equal(pauses,2);assert.equal(resets,2);
 });
 
-test('Wind cycles through three active effects with separate preferences, without pausing a concurrent simulation or changing symmetry',()=>{
- const events=[];
- let settings=selectWindMode(undefined,'ripple');settings.modes.ripple.strength=5;settings.strength=5;
- settings.modes.paint.colorSpan=2.5;settings.modes.displace.strength=2;
- const c=vm.createContext({windMode:true,windSettings:settings,symmetryMode:'horizontal',isLifePlaying:true,
- windPainter:{stop:()=>events.push('commit')},selectWindMode,nextWindEffect,
- saveWindSettings:()=>events.push('save'),updateSymmetryUI:()=>events.push('ui'),pauseLife(){throw Error('must keep playing');}});
- vm.runInContext(source.slice(source.indexOf('function cycleWindEffect('),source.indexOf('let windPointerId =')),c);
- c.cycleWindEffect();assert.equal(c.windSettings.mode,'paint');assert.equal(c.windSettings.colorSpan,2.5);
- c.cycleWindEffect();assert.equal(c.windSettings.mode,'displace');assert.equal(c.windSettings.strength,2);
- c.cycleWindEffect();assert.equal(c.windSettings.mode,'ripple');assert.equal(c.windSettings.strength,5);
- assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);assert.equal(c.symmetryMode,'horizontal');
- assert.deepEqual(events,['commit','save','ui','commit','save','ui','commit','save','ui']);
+test('Wind button reflects the selected mode and leaves the symmetry icon untouched',()=>{
+ const attrs={},button={dataset:{},classList:{toggle:(key,value)=>attrs[key]=value},setAttribute:(key,value)=>attrs[key]=value,replaceChildren:icon=>attrs.icon=icon};
+ const c=vm.createContext({dom:{btnWind:button},windMode:false,windSettings:{mode:'paint'},getText:key=>key,createWindModeIcon:mode=>mode});
+ vm.runInContext(source.slice(source.indexOf('function updateWindButtonUI('),source.indexOf('let windPointerId =')),c);
+ c.updateWindButtonUI();assert.equal(attrs.icon,'ripple');assert.equal(attrs['aria-pressed'],'false');
+ c.windMode=true;c.updateWindButtonUI();assert.equal(attrs.icon,'paint');assert.equal(attrs['aria-pressed'],'true');assert.equal(attrs['wind-active'],true);
+ assert.equal(button.dataset.windMode,'paint');
 });

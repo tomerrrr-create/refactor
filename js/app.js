@@ -1,4 +1,4 @@
-import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, nextWindEffect, createWindModeIcon } from './wind-settings.js';
+import { createWindSettingsDialog, loadWindSettings, saveWindSettings, createWindModeIcon } from './wind-settings.js';
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
@@ -2306,8 +2306,9 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnDark.title = getText('tooltip_dark'); 
         dom.btnSpecialReset.title = getText('tooltip_specialReset');
         dom.btnResetBoard.title = getText('tooltip_resetBoard'); 
-        dom.btnResizeUp.title = getText('tooltip_resizeUp');
-        dom.btnResizeDown.title = getText('tooltip_resizeDown'); 
+        dom.btnResizeUp.title = getText('tooltip_grid_size');
+        dom.btnResizeUp.setAttribute('aria-label', dom.btnResizeUp.title);
+        updateWindButtonUI();
         dom.btnSave.title = getText('tooltip_save');
         updateBreatheEvoButtonUI();
         dom.btnTutorial.title = getText('tooltip_tutorial');
@@ -2567,8 +2568,6 @@ function commitWindPainting(reason = 'complete') {
 function setWindMode(enabled) {
     if (enabled === windMode || (enabled && (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
     if (enabled) {
-        windSettings = selectWindMode(windSettings, 'ripple');
-        saveWindSettings(windSettings);
         pauseLife();
     } else {
         if (windSettingsUI?.dialog.open) windSettingsUI.dialog.close();
@@ -2578,15 +2577,16 @@ function setWindMode(enabled) {
     }
     windMode = enabled;
     document.body.classList.toggle('wind-mode', enabled);
-    updateSymmetryUI();
+    updateWindButtonUI();
     showWindToast(enabled);
 }
-function cycleWindEffect() {
-    if (!windMode) return;
-    windPainter?.stop();
-    windSettings = selectWindMode(windSettings, nextWindEffect(windSettings.mode));
-    saveWindSettings(windSettings);
-    updateSymmetryUI();
+function updateWindButtonUI() {
+    dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : 'ripple'));
+    dom.btnWind.classList.toggle('wind-active', windMode);
+    dom.btnWind.setAttribute('aria-pressed', String(windMode));
+    dom.btnWind.dataset.windMode = windSettings.mode;
+    dom.btnWind.title = `${getText(windMode ? 'wind_on' : 'wind_off')} — ${getText('tooltip_wind')}`;
+    dom.btnWind.setAttribute('aria-label', dom.btnWind.title);
 }
 let windPointerId = null;
 let windToastTimer = null;
@@ -2619,8 +2619,8 @@ function initializeWindMode() {
     document.addEventListener('visibilitychange', () => { if (document.hidden && windMode) setWindMode(false); });
     window.addEventListener('blur', () => { if (windMode) setWindMode(false); });
     windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
-        getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); updateSymmetryUI(); },
-        onOpen: () => windPainter.stop(), trigger: dom.btnSymmetry });
+        getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); updateWindButtonUI(); },
+        onOpen: () => windPainter.stop(), trigger: dom.btnWind });
     windPainter = createWindPainter({
         settings: () => windSettings,
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
@@ -2964,20 +2964,7 @@ function getTilesInRadius(centerIndex, radius) {
           }
           dom.btnSymmetry.setAttribute('aria-label', getText(titleKey));
           dom.btnSymmetry.title = getText('tooltip_symmetry');
-          const symmetryIcon = dom.btnSymmetry.querySelector('[data-symmetry-icon]');
-          const windIcon = dom.btnSymmetry.querySelector('.wind-control-icon');
-          symmetryIcon.style.display = windMode ? 'none' : '';
-          windIcon.hidden = !windMode;
-          dom.btnSymmetry.classList.toggle('wind-active', windMode);
-          if (windMode) {
-              windIcon.replaceChildren(createWindModeIcon(windSettings.mode));
-              dom.btnSymmetry.dataset.windMode = windSettings.mode;
-              dom.btnSymmetry.title = `${getText('wind_mode_' + windSettings.mode)} — ${getText('tooltip_wind_cycle')}`;
-              dom.btnSymmetry.setAttribute('aria-label', dom.btnSymmetry.title);
-          } else {
-              windIcon.replaceChildren();
-              delete dom.btnSymmetry.dataset.windMode;
-          }
+
       }
     
 
@@ -4870,13 +4857,13 @@ bindPickerGestures(dom.btnPalette, {
 
         dom.btnResetBoard.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(resetToGoldAndDefaultPalette)));
         dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
-        for (const [button, increase] of [[dom.btnResizeUp, true], [dom.btnResizeDown, false]]) {
-            bindPickerGestures(button, {
-                onTap: () => resizeGrid(increase), onOpen: modals.openResizeModal,
-                canInteract: () => !isBreathing,
-                beforeStart: hideLongPressDisplay
-            });
-        }
+        bindPickerGestures(dom.btnResizeUp, {
+            onTap: () => resizeGrid(true), onSwipeDown: () => resizeGrid(false),
+            onOpen: modals.openResizeModal,
+            onHold: () => evolutionExplanation.show(dom.btnResizeUp, 'gridSize'),
+            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
+            holdMs: C.LONG_PRESS_SHOW_MS
+        });
         dom.btnSave.addEventListener('click', (e) => handleCtrlClick(e, openSaveModalWithPreview));
         bindPickerGestures(dom.btnGap, {
             onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
@@ -4893,16 +4880,14 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         initializeWindMode();
+        bindPickerGestures(dom.btnWind, {
+            onTap: () => setWindMode(!windMode), onOpen: () => windSettingsUI.open(),
+            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
+        });
         bindPickerGestures(dom.btnSymmetry, {
-            onTap: () => windMode ? cycleWindEffect() : cycleSymmetryMode(),
-            onHold: () => setWindMode(!windMode),
-            onOpen: () => {
-                if (windMode) { windSettingsUI.open(); return; }
-                symmetryMode = 'off';
-                updateSymmetryUI();
-            },
-            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
-            holdMs: C.LONG_PRESS_SHOW_MS
+            onTap: cycleSymmetryMode,
+            onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
+            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
         });
 bindPickerGestures(dom.btnCycleSort, {
     onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
@@ -4981,7 +4966,7 @@ bindPickerGestures(dom.btnColorPicker, {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnResizeUp || btn === dom.btnWind || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
