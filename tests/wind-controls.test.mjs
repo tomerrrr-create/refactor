@@ -4,15 +4,15 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {selectWindMode,nextWindEffect,DEFAULT_WIND_SETTINGS} from '../js/wind-settings.js';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-test('Wind toggle updates its state without making panel buttons inert or disabled',()=>{
+test('Wind toggle preserves a running simulation without disabling panel buttons',()=>{
  const button={pressed:'false',inert:false,disabled:false,setAttribute(name,value){if(name==='aria-pressed')this.pressed=value;}},events=[];
- const c=vm.createContext({windSettings:{...DEFAULT_WIND_SETTINGS,mode:'paint'},selectWindMode,saveWindSettings(){},updateColorPickerButtonUI(){},windMode:false,isSimModeActive:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
- pointerState:{id:null},windSettingsUI:null,windPointerId:null,windPainter:{stop:()=>events.push('commit')},pauseLife:()=>events.push('pause'),
+ const c=vm.createContext({windSettings:{...DEFAULT_WIND_SETTINGS,mode:'paint'},selectWindMode,saveWindSettings(){},updateColorPickerButtonUI(){},windMode:false,isLifePlaying:true,isSimModeActive:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
+ pointerState:{id:null},windSettingsUI:null,windPointerId:null,windPainter:{stop:()=>events.push('commit')},pauseLife(){throw Error('tool changes must not pause the simulation');},
  document:{body:{classList:{toggle(){}}}},dom:{btnColorPicker:button},flashToolMode:()=>events.push('flash')});
  vm.runInContext(source.slice(source.indexOf('function setWindMode('),source.indexOf('let windPointerId =')),c);
  c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.windSettings.mode,'ripple');assert.equal(button.inert,false);assert.equal(button.disabled,false);
- c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['pause','flash','commit','flash']);
- c.isSimModeActive=true;c.setWindMode(true);assert.equal(c.windMode,true);
+ c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['flash','commit','flash']);
+ assert.equal(c.isLifePlaying,true);c.isSimModeActive=true;c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);
 });
 test('Symmetry stays independent of Wind and has no hold trigger',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnSymmetry:{}},windMode:true,isBreathing:false,symmetryMode:'vertical',

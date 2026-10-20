@@ -2592,7 +2592,6 @@ function setWindMode(enabled) {
     if (enabled) {
         windSettings = selectWindMode(windSettings, 'ripple');
         saveWindSettings(windSettings);
-        pauseLife();
     } else {
         if (windSettingsUI?.dialog.open) windSettingsUI.dialog.close();
         windPainter?.stop();

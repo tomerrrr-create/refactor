@@ -9,7 +9,7 @@ export function flashToolMode(button) {
         { offset: .18, boxShadow: '0 0 7px 3px #fff3c4cc, 0 0 25px 10px #e6b94c99', backgroundColor: '#ffe7a033' },
         { offset: .48, boxShadow: '0 0 9px 6px #fff3c455, 0 0 30px 15px #e6b94c44', backgroundColor: '#ffe7a011' },
         { offset: 1, boxShadow: '0 0 14px 10px #fff0, 0 0 35px 18px #d5aa4800', backgroundColor: 'transparent' }
-    ], { duration: reduced ? 180 : 800, easing: 'ease-out' });
+    ], { duration: reduced ? 180 : 1100, easing: 'ease-out' });
     flashes.set(button, animation);
     const clear = () => { if (flashes.get(button) === animation) flashes.delete(button); };
     animation.finished.then(clear, clear);
