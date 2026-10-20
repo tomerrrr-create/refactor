@@ -1,4 +1,4 @@
-import { createWindSettingsDialog, loadWindSettings, saveWindSettings, createWindModeIcon } from './wind-settings.js';
+import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, WIND_MODE_SEQUENCE, createWindModeIcon } from './wind-settings.js';
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
@@ -2580,6 +2580,20 @@ function setWindMode(enabled) {
     updateWindButtonUI();
     showWindToast(enabled);
 }
+function cycleWindMode() {
+    if (!windMode) {
+        setWindMode(true);
+        if (!windMode) return;
+        windSettings = selectWindMode(windSettings, WIND_MODE_SEQUENCE[0]);
+    } else {
+        const next = WIND_MODE_SEQUENCE.indexOf(windSettings.mode) + 1;
+        if (next === WIND_MODE_SEQUENCE.length) { setWindMode(false); return; }
+        windPainter?.stop();
+        windSettings = selectWindMode(windSettings, WIND_MODE_SEQUENCE[next]);
+    }
+    saveWindSettings(windSettings);
+    updateWindButtonUI();
+}
 function updateWindButtonUI() {
     dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : 'ripple'));
     dom.btnWind.classList.toggle('wind-active', windMode);
@@ -4881,7 +4895,7 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         initializeWindMode();
         bindPickerGestures(dom.btnWind, {
-            onTap: () => setWindMode(!windMode), onOpen: () => windSettingsUI.open(),
+            onTap: cycleWindMode, onOpen: () => windSettingsUI.open(),
             canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
         });
         bindPickerGestures(dom.btnSymmetry, {

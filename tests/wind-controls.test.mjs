@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {DEFAULT_WIND_SETTINGS} from '../js/wind-settings.js';
+import {DEFAULT_WIND_SETTINGS,selectWindMode,WIND_MODE_SEQUENCE} from '../js/wind-settings.js';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 test('Wind toggle updates its state without making panel buttons inert or disabled',()=>{
  const button={pressed:'false',inert:false,disabled:false,setAttribute(name,value){if(name==='aria-pressed')this.pressed=value;}},events=[];
@@ -23,14 +23,13 @@ test('Symmetry stays independent and has no Wind hold trigger',()=>{
  gestures.onTap();assert.equal(gestures.onHold,undefined);gestures.onOpen();
  assert.equal(c.symmetryMode,'off');assert.equal(c.windMode,true);assert.deepEqual(events,['cycle','symmetry']);
 });
-test('dedicated Wind button toggles instead of cycling; settings open while off too',()=>{
+test('dedicated Wind button delegates taps to the mode cycle; settings open while off too',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnWind:{}},windMode:false,isBreathing:false,
- hideLongPressDisplay(){},windSettingsUI:{open:()=>events.push('settings')},setWindMode:value=>{c.windMode=value;events.push(value);},
+ hideLongPressDisplay(){},windSettingsUI:{open:()=>events.push('settings')},cycleWindMode:()=>events.push('cycle'),
  bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('        bindPickerGestures(dom.btnWind,');
  vm.runInContext(source.slice(start,source.indexOf('        bindPickerGestures(dom.btnSymmetry,',start)),c);
- gestures.onOpen();assert.equal(c.windMode,false);gestures.onTap();assert.equal(c.windMode,true);
- gestures.onTap();assert.equal(c.windMode,false);assert.deepEqual(events,['settings',true,false]);
+ gestures.onOpen();assert.equal(c.windMode,false);gestures.onTap();gestures.onTap();assert.deepEqual(events,['settings','cycle','cycle']);
 });
 test('ordinary panel events commit pending ripples without consuming or blocking the event',()=>{
  const listeners=new Map(),events=[],c=vm.createContext({windMode:true,windPainter:{stop:()=>events.push('commit')},dom:{controlsContainer:{addEventListener:(name,handler)=>listeners.set(name,handler)}}});
@@ -59,4 +58,19 @@ test('Wind button reflects the selected mode and leaves the symmetry icon untouc
  c.updateWindButtonUI();assert.equal(attrs.icon,'ripple');assert.equal(attrs['aria-pressed'],'false');
  c.windMode=true;c.updateWindButtonUI();assert.equal(attrs.icon,'paint');assert.equal(attrs['aria-pressed'],'true');assert.equal(attrs['wind-active'],true);
  assert.equal(button.dataset.windMode,'paint');
+});
+
+test('Wind cycles Off → ripple → paint → displace → Off, preserving per-mode preferences',()=>{
+ const events=[],saved=[];
+ const prefs=selectWindMode(DEFAULT_WIND_SETTINGS,'paint');prefs.strength=2;prefs.modes.paint.speed=2;
+ const c=vm.createContext({WIND_MODE_SEQUENCE,selectWindMode,windSettings:prefs,windMode:false,
+  isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,pointerState:{id:null},windPointerId:null,windSettingsUI:null,
+  pauseLife:()=>events.push('pause'),windPainter:{stop:()=>events.push('stop')},saveWindSettings:settings=>saved.push(settings.mode),
+  updateWindButtonUI:()=>events.push(c.windMode?'gold':'off'),showWindToast:()=>{},document:{body:{classList:{toggle(){}}}}});
+ vm.runInContext(source.slice(source.indexOf('function setWindMode('),source.indexOf('function updateWindButtonUI(')),c);
+ const modes=[];for(let i=0;i<4;i++){c.cycleWindMode();modes.push(c.windMode?c.windSettings.mode:'off');}
+ assert.deepEqual(modes,['ripple','paint','displace','off']);assert.equal(events.filter(e=>e==='pause').length,1);
+ assert.deepEqual(saved,['ripple','paint','displace']);assert.equal(c.windSettings.modes.paint.speed,2);assert.equal(events.at(-1),'off');
+ c.cycleWindMode();assert.equal(c.windSettings.mode,'ripple');assert(c.windMode);
+ c.setWindMode(false);c.isMacroLoaded=true;c.cycleWindMode();assert(!c.windMode);
 });
