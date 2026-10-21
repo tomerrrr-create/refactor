@@ -7,7 +7,7 @@ class Target {
     addEventListener(type, handler) { const list = this.listeners.get(type) || []; list.push(handler); this.listeners.set(type, list); }
     emit(type, event = {}) { for (const handler of this.listeners.get(type) || []) handler(event); }
 }
-function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, swipeDown = false, canOpen = () => true } = {}) {
+function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, swipeDown = false, swipeSide = false, canSwipeSide = () => true, canOpen = () => true } = {}) {
     const original = { document: globalThis.document, window: globalThis.window, setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
     t.after(() => Object.assign(globalThis, original));
     const doc = new Target(), win = new Target(), button = new Target();
@@ -24,6 +24,7 @@ function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, 
         clearTimeout: id => timers.delete(id) });
     bindPickerGestures(button, { onTap: () => actions.push('tap'), onOpen: () => actions.push('open'),
         onSwipeDown: swipeDown ? () => actions.push('down') : undefined,
+        onSwipeSide: swipeSide ? () => actions.push('side') : undefined, canSwipeSide,
         onHold: hold ? () => actions.push('hold') : undefined,
         onExtendedHold: extendedHold ? () => actions.push('extendedHold') : undefined, canInteract: () => allowed, canOpen });
     return { actions, button, doc, win, classes, captured,
@@ -176,3 +177,25 @@ for(const pointerType of ['touch','mouse']) {
   assert.deepEqual(h.actions,['hold']);assert.equal(h.classes.size,0);
  });
 }
+
+for (const pointerType of ['touch','mouse']) {
+ for(const dx of [-35,35])test(pointerType+' horizontal swipe '+dx+' clears once on release without tap or hold',t=>{
+  const h=harness(t,{pointerType,swipeSide:true,swipeDown:true,extendedHold:true});
+  h.event('pointerdown');h.event('pointermove',25+dx,28);assert(h.classes.has('picker-swipe-glow'));assert.deepEqual(h.actions,[]);
+  h.advance(1400);h.event('pointerup',25+dx,28);h.event('click');assert.deepEqual(h.actions,['side']);assert.equal(h.captured.size,0);assert.equal(h.classes.size,0);
+ });
+ test(pointerType+' side swipe rejects diagonals, short movement, returns, cancellations and completed holds',t=>{
+  const h=harness(t,{pointerType,swipeSide:true,swipeDown:true});
+  for(const [x,y] of [[60,60],[60,-10],[45,25],[60,45]]){h.event('pointerdown');h.event('pointermove',x,y);h.event('pointerup',x,y);h.event('click');}
+  h.event('pointerdown');h.event('pointermove',65,25);h.event('pointermove');h.event('pointerup');h.event('click');
+  h.event('pointerdown');h.event('pointermove',65,25);h.event('pointercancel');h.event('pointerup',65,25);h.event('click');
+  h.event('pointerdown');h.advance(600);h.event('pointermove',65,25);h.event('pointerup',65,25);h.event('click');
+  assert.deepEqual(h.actions,['hold']);assert.equal(h.classes.size,0);
+ });
+}
+test('side eligibility is checked during movement and release, without changing vertical gestures',t=>{
+ let allowed=false;const h=harness(t,{swipeSide:true,swipeDown:true,canSwipeSide:()=>allowed});
+ h.event('pointerdown');h.event('pointermove',65,25);assert.equal(h.classes.size,0);h.event('pointerup',65,25);h.event('click');assert.deepEqual(h.actions,[]);
+ allowed=true;h.event('pointerdown');h.event('pointermove',65,25);assert(h.classes.has('picker-swipe-glow'));allowed=false;h.event('pointerup',65,25);h.event('click');assert.deepEqual(h.actions,[]);
+ h.event('pointerdown');h.event('pointerup',25,-10);h.event('click');h.event('pointerdown');h.event('pointerup',25,60);h.event('click');assert.deepEqual(h.actions,['open','down']);
+});

@@ -5004,6 +5004,12 @@ bindPickerGestures(dom.btnColorPicker, {
     },
     onOpen: () => windMode ? windSettingsUI.open() : modals.openColorPickerModal(),
     onSwipeDown: () => setWindMode(!windMode),
+    canSwipeSide: () => !windMode,
+    onSwipeSide: () => {
+        if (windMode || (!selectedColor && !isRainbowModeActive)) return;
+        resetSelectedColor();
+        dom.btnColorPicker.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 250 });
+    },
     canOpen: () => windMode || !(isLifePlaying && armedSimulation === 'breathe'),
     onHold: () => {
         if (windMode || (isLifePlaying && armedSimulation === 'breathe')) return;

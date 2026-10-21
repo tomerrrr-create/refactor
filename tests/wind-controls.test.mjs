@@ -73,3 +73,18 @@ test('Wind cycles through three active effects with separate preferences, withou
  assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);assert.equal(c.symmetryMode,'horizontal');
  assert.deepEqual(events,['commit','save','ui','commit','save','ui','commit','save','ui']);
 });
+test('side swipe uses the existing empty-brush reset, preserving size, symmetry, board and running simulation',()=>{
+ let gestures,flashes=0;
+ const c=vm.createContext({dom:{btnColorPicker:{addEventListener(){},animate(){flashes++;}}},windMode:false,isBreathing:false,isLifePlaying:true,armedSimulation:'islands',
+ selectedColorIndex:3,selectedColor:'color3',isRainbowModeActive:false,brushSize:7,symmetryMode:'vertical',boardState:[{k:3}],
+ C:{LONG_PRESS_SHOW_MS:600},hideLongPressDisplay(){},updateGlowEffect(){},updateColorPickerButtonUI(){},
+ bindPickerGestures:(button,options)=>{gestures=options;}});
+ const start=source.indexOf('bindPickerGestures(dom.btnColorPicker,');
+ vm.runInContext(source.slice(source.indexOf('      function resetSelectedColor()'),source.indexOf('      function resetToGoldAndDefaultPalette()'))+
+ source.slice(start,source.indexOf("        dom.btnDark.addEventListener",start)),c);
+ assert(gestures.canSwipeSide());gestures.onSwipeSide();assert.equal(c.selectedColor,null);assert.equal(c.selectedColorIndex,-1);assert(!c.isRainbowModeActive);assert.equal(flashes,1);
+ gestures.onSwipeSide();assert.equal(flashes,1);
+ c.isRainbowModeActive=true;gestures.onSwipeSide();assert(!c.isRainbowModeActive);assert.equal(flashes,2);
+ c.windMode=true;c.selectedColor='color3';c.selectedColorIndex=3;assert(!gestures.canSwipeSide());gestures.onSwipeSide();assert.equal(c.selectedColor,'color3');assert.equal(flashes,2);
+ assert.equal(c.brushSize,7);assert.equal(c.symmetryMode,'vertical');assert(c.isLifePlaying);assert.equal(c.boardState[0].k,3);
+});

@@ -1,7 +1,7 @@
 // Shared interaction for cycling controls with a picker. Mouse drags and touch
 // swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
-    onTap, onOpen, onSwipeDown, onHold, onExtendedHold, canInteract, canOpen = () => true,
+    onTap, onOpen, onSwipeDown, onSwipeSide, onHold, onExtendedHold, canInteract, canOpen = () => true, canSwipeSide = () => true,
     beforeStart = () => {}, onEnd = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
 }) {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
@@ -17,6 +17,10 @@ export function bindPickerGestures(button, {
         const distance = (state.currentY - state.y) * direction;
         return !state.held && distance >= SWIPE_DISTANCE &&
             distance >= Math.abs(state.currentX - state.x) * VERTICAL_RATIO;
+    }
+    function sidewaysReady(state) {
+        const dx = Math.abs(state.currentX - state.x), dy = Math.abs(state.currentY - state.y);
+        return !state.held && dx >= SWIPE_DISTANCE && dx >= dy * 2;
     }
     function releaseCapture(id) {
         if (button.hasPointerCapture(id)) button.releasePointerCapture(id);
@@ -35,7 +39,8 @@ export function bindPickerGestures(button, {
             state.moved = true; clearHoldTimers();
         }
         button.classList.toggle('picker-swipe-glow', !button.disabled && canInteract() &&
-            ((swipeReady(state) && canOpen()) || (onSwipeDown && swipeReady(state, 1))));
+            ((swipeReady(state) && canOpen()) || (onSwipeDown && swipeReady(state, 1)) ||
+                (onSwipeSide && canSwipeSide() && sidewaysReady(state))));
     }
     button.addEventListener('pointerdown', event => {
         if (event.isPrimary === false || event.button !== 0 || active) return;
@@ -72,6 +77,7 @@ export function bindPickerGestures(button, {
         updatePosition(event);
         const state = active, open = swipeReady(state) && canOpen();
         const down = onSwipeDown && swipeReady(state, 1);
+        const side = onSwipeSide && canSwipeSide() && sidewaysReady(state);
         const inside = state.currentX >= state.bounds.left && state.currentX <= state.bounds.right &&
             state.currentY >= state.bounds.top && state.currentY <= state.bounds.bottom;
         const tap = !state.moved && !state.held && inside;
@@ -81,6 +87,7 @@ export function bindPickerGestures(button, {
         if (button.disabled || !canInteract()) return;
         if (open) onOpen();
         else if (down) onSwipeDown();
+        else if (side) onSwipeSide();
         else if (state.touch && tap) onTap();
     });
     button.addEventListener('click', event => {
