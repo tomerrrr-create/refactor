@@ -1539,4 +1539,46 @@ colors: (function() {
   ]
 },
 
+{
+  originalName: "Rose 264",
+  iconHTML: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15c-4 0-7-3-7-6 3-1 5 0 7 2 2-2 4-3 7-2 0 3-3 6-7 6Z" stroke="#EE6094"/><path d="M8 9c0-3 2-5 4-6 2 1 4 3 4 6M10 8l2 3 2-3" stroke="#B7ADF0"/><path d="M12 15v6m0-3c3 0 5-2 5-3-3 0-5 1-5 3Z" stroke="#42C9CC"/></svg>',
+  isArchived: false,
+  // Even perceptual steps through night violet, roses, blush, lilac and turquoise.
+  colors: [
+    "#090612", "#0B0715", "#0C0818", "#0E091C", "#100A1F", "#120B22", "#140C25", "#150D29",
+    "#170E2C", "#190F30", "#1B1033", "#1D1137", "#1F123A", "#22133D", "#241440", "#261644",
+    "#281747", "#2B184A", "#2D194E", "#2F1B51", "#321C54", "#341D58", "#361F5B", "#39205F",
+    "#3C2162", "#3E2265", "#412368", "#44256B", "#47266F", "#4A2772", "#4D2875", "#502978",
+    "#532B7C", "#552C7F", "#582D82", "#5B2E86", "#5E3089", "#61318C", "#65328F", "#683491",
+    "#6C3593", "#6F3796", "#733898", "#763A9A", "#7A3B9C", "#7D3D9F", "#813EA1", "#8540A3",
+    "#8841A5", "#8C43A8", "#8F44AA", "#9346AC", "#9747AF", "#9B49B0", "#9E4AAF", "#A24BAF",
+    "#A64CAE", "#AA4DAD", "#AE4FAD", "#B250AC", "#B651AB", "#BB52AB", "#BF53AA", "#C353A9",
+    "#C754A9", "#CB55A8", "#CE57A6", "#D258A4", "#D559A2", "#D95AA0", "#DD5B9E", "#E05C9C",
+    "#E45D9A", "#E85E98", "#EB5F96", "#EE5F93", "#EF5C8D", "#F05887", "#F15582", "#F2517C",
+    "#F34C76", "#F44871", "#F5436B", "#F34067", "#EF3E64", "#EC3B61", "#E8385E", "#E5365C",
+    "#E23359", "#DE3056", "#DB2E53", "#D82B50", "#D4284E", "#D1254B", "#D0254A", "#D22B4E",
+    "#D43052", "#D63456", "#D8395A", "#DA3D5E", "#DC4162", "#DE4565", "#E04969", "#E24C6D",
+    "#E45071", "#E65475", "#E85779", "#EA5B7D", "#EC5E80", "#EE6284", "#EF6588", "#F06A8C",
+    "#F06E90", "#F17293", "#F17597", "#F2799B", "#F27D9F", "#F381A3", "#F385A6", "#F388AA",
+    "#F48CAE", "#F490B2", "#F493B6", "#F597BA", "#F59ABE", "#F59EC1", "#F5A1C5", "#F6A5C7",
+    "#F6A9CA", "#F7ACCC", "#F7B0CE", "#F7B3D1", "#F8B7D3", "#F8BAD5", "#F9BED8", "#F9C2DA",
+    "#F9C5DC", "#F9C9DE", "#FACCE1", "#FAD0E3", "#FAD3E5", "#F6D4E8", "#F1D4EB", "#EBD4EE",
+    "#E6D3F1", "#E1D3F4", "#DDD1F5", "#DACEF5", "#D7CCF4", "#D4C9F4", "#D1C6F4", "#CEC3F3",
+    "#CBC1F3", "#C8BEF3", "#C6BBF2", "#C3B8F2", "#C0B6F1", "#BDB3F1", "#BAB0F1", "#B7ADF0",
+    "#B3ACEE", "#AEAAEC", "#A9A9EA", "#A4A8E8", "#9FA6E6", "#9AA5E4", "#95A3E2", "#90A2E0",
+    "#8BA0DE", "#869FDC", "#829FDB", "#81A2DC", "#80A6DD", "#7FA9DE", "#7EACDE", "#7DAFDF",
+    "#7CB2E0", "#7BB5E1", "#79B9E1", "#78BCE2", "#76BFE3", "#75C2E4", "#75C5E4", "#76C8E5",
+    "#78CBE5", "#7ACEE6", "#7CD1E7", "#7DD4E7", "#7FD7E8", "#81DAE8", "#83DDE9", "#85E0E9",
+    "#86E3EA", "#84E2E8", "#7FE0E6", "#79DEE3", "#74DCE1", "#6FD9DE", "#69D7DC", "#64D5D9",
+    "#5ED3D6", "#58D0D4", "#51CED1", "#4BCCCF", "#43C9CC", "#40C7CA", "#3FC4C8", "#3DC1C6",
+    "#3BBEC4", "#39BBC1", "#37B8BF", "#35B5BD", "#33B2BB", "#31AFB9", "#2FACB7", "#2DA9B4",
+    "#2BA7B2", "#29A4B0", "#27A1AE", "#259EAC", "#239BAA", "#2198A7", "#1F96A5", "#1C93A3",
+    "#1A90A1", "#188D9F", "#188A9D", "#19879B", "#1A849A", "#1B8298", "#1C7F96", "#1D7C95",
+    "#1E7993", "#1F7691", "#1F7390", "#20708E", "#206D8C", "#216B8B", "#216889", "#226587",
+    "#226285", "#225F84", "#225D82", "#235A80", "#23577F", "#23547D", "#23517B", "#234F7A",
+    "#234C78", "#254975", "#274672", "#29446F", "#2A416C", "#2B3E6A", "#2C3C67", "#2D3964",
+    "#2E3761", "#2E345E", "#2F315C", "#2F2F59", "#302C56", "#302953", "#302751", "#30244E"
+  ]
+},
+
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));

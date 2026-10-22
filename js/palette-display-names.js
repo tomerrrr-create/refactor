@@ -3,6 +3,7 @@ import { getCurrentLang } from './i18n.js';
 // Presentation only. Keep this table separate from the shared translations:
 // their English-name lookup also supplies names used by the logger.
 const displayNames = {
+    "Rose 264": {"en": "Rose 264", "he": "רוז 264", "ru": "Роза 264", "nl": "Roos 264"},
     "Journey": {"en": "Journey", "he": "מסע", "ru": "Путешествие", "nl": "Reis"},
     "Hearts": {"en": "Hearts", "he": "לבבות", "ru": "Сердца", "nl": "Harten"},
     "Zionism": {"en": "Zionism", "he": "ציונות", "ru": "Сионизм", "nl": "Zionisme"},
