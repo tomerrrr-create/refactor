@@ -2,7 +2,7 @@ import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWin
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
-import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme } from './simulation-theme.js';
+import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, setSimulationRunning } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
@@ -1432,6 +1432,7 @@ function pauseLife() {
           finishBrushGesture();
           window.logArtEvent('PAUSE', '---');
           isLifePlaying = false;
+          setSimulationRunning(false);
           cancelAnimationFrame(animationFrameId); // Stops gameLoop
           animationFrameId = null;
           // animationLoop will stop itself on its next frame because isLifePlaying is false
@@ -1501,6 +1502,7 @@ function pauseLife() {
               simulationStartState = getCurrentState();
               simulationHasBrushInput = false;
               isLifePlaying = true;
+              setSimulationRunning(true);
               updateUndoRedoButtons();
               
               dom.iconPlay.style.display = 'none';
@@ -1531,6 +1533,7 @@ function pauseLife() {
           simulationHasBrushInput = false;
 
           isLifePlaying = true;
+          setSimulationRunning(true);
           updateUndoRedoButtons();
           dom.iconPlay.style.display = 'none';
           dom.iconPause.style.display = 'block';

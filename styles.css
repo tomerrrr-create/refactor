@@ -1858,6 +1858,14 @@ button, .ctrl {
 }
 
 /* Each circle previews its own simulation appearance, independent of the selection. */
+/* Running feedback reuses Gold without changing the selected resting theme. */
+:root[data-simulation-running] { --sim-color: #a58b54; }
+:root[data-simulation-running] .sim-mode-active #simModeBackground {
+  background: linear-gradient(135deg, #1c1a12, #0d0e0c);
+  border-color: #b28b3645;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+}
+
 .simulation-theme-option .technician-option-heading { flex-wrap: wrap; gap: 14px; }
 .simulation-theme-option .technician-effect-heading { white-space: nowrap; }
 .simulation-theme-previews { display: flex; gap: 8px; direction: ltr; flex-shrink: 0; margin-inline-start: auto; }

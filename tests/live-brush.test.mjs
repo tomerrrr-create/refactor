@@ -133,7 +133,7 @@ for (const live of [false,true]) test(`${live?'running':'paused'}: a thick mirro
 test('an unchanged-color live stroke still owns a combined history action when the simulation pauses',()=>{
  const h=harness();h.c.armedSimulation='breathe';h.c.boardState.forEach(t=>{t.k=t.v=0;});
  h.down(15,15);h.up(15,15);assert.equal(h.c.simulationHasBrushInput,true);
- Object.assign(h.c,{animationFrameId:null,cancelAnimationFrame(){},updateUndoRedoButtons(){},
+ Object.assign(h.c,{animationFrameId:null,setSimulationRunning(){},cancelAnimationFrame(){},updateUndoRedoButtons(){},
   dom:{iconPlay:{style:{}},iconPause:{style:{}},btnStepForward:{}}});
  vm.runInContext(source.slice(source.indexOf('function pauseLife()'),source.indexOf('      function togglePlayPauseLife()')),h.c);
  h.c.pauseLife();assert.equal(h.history.length,1);assert.equal(h.c.simulationHasBrushInput,false);

@@ -16,7 +16,7 @@ function harness() {
     const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
     const c = vm.createContext({ dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
-        isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
+        setSimulationRunning(value) { c.runningAppearance = value; }, isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
         boardState: [{k: 1}, {k: 2}], simulationStartState: null, simulationHasBrushInput: false,
         animationFrameId: null, history: [], queued: [], brushFinishes: 0,
         Simulations: {resetMagnetCaches() {}, resetGravitationalSortCaches() {}},
@@ -61,7 +61,7 @@ test('all ordinary evolutions hand off on the same board with PAUSE/PLAY, indepe
     for (const sim of Object.keys(simulations).filter(sim=>!['breathe','dla','spiral'].includes(sim))) {
         c.currentGenerationCount=17; c.boardState[0].k++; const before=c.history.length;
         select(c, sim);
-        assert.equal(c.armedSimulation,sim); assert.equal(c.isLifePlaying,true); assert.equal(c.boardState,board);
+        assert.equal(c.armedSimulation,sim); assert.equal(c.isLifePlaying,true); assert.equal(c.runningAppearance,true); assert.equal(c.boardState,board);
         assert.equal(c.currentGenerationCount,1); assert.equal(c.queued.length,1);
         assert.equal(c.history.length,before+1);
         const pause=c.artRecipeLog.findLastIndex(line=>line.includes(' PAUSE ->'));

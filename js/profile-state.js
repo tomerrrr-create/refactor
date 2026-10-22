@@ -38,8 +38,8 @@ export function validateProfileSnapshot(value) {
 
 // Slider stations I–V use zero-based indices internally.
 const PROFILE_EROSION_STAGES = [
-    { 'channels-solid': 0, channels: 0 },
-    { 'channels-solid': 2, channels: 3 },
+    { 'channels-solid': 0, channels: 4 },
+    { 'channels-solid': 2, channels: 4 },
     { 'channels-solid': 3, channels: 4 }
 ];
 
@@ -141,7 +141,7 @@ function mergeChanges(draft, previous, current) {
 
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
-    let state = { version: 1, defaultsVersion: 9, selected: 0,
+    let state = { version: 1, defaultsVersion: 10, selected: 0,
         profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
@@ -152,7 +152,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 9, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 10, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -272,6 +272,18 @@ export function createProfileState(initial, storage) {
                 for (const kind of ['saved', 'draft']) {
                     const startup = state.profiles[0][kind].settings.startup;
                     if (startup.boardSize === 7) startup.boardSize = 249;
+                }
+            }
+            if ((value.defaultsVersion || 0) < 10) {
+                const previousStages = [0, 3, 4];
+                for (const [index, profile] of state.profiles.entries()) {
+                    for (const kind of ['saved', 'draft']) {
+                        const rules = profile[kind].settings.rules.erosion;
+                        if (!Object.hasOwn(rules, 'erosionEvents') && !Object.hasOwn(rules, 'erosionPace') &&
+                            rules.erosionStages?.channels === previousStages[index]) {
+                            rules.erosionStages.channels = 4;
+                        }
+                    }
                 }
             }
             restored = true;

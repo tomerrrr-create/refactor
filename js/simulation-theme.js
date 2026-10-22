@@ -12,6 +12,11 @@ export function getSimulationTheme() {
   return document.documentElement.dataset.simulationTheme || 'blue';
 }
 
+// Transient playback feedback must never become a saved profile preference.
+export function setSimulationRunning(running) {
+  document.documentElement.toggleAttribute('data-simulation-running', Boolean(running));
+}
+
 export function applySimulationTheme(value) {
   const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'blue';
   document.documentElement.dataset.simulationTheme = theme;

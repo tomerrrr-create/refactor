@@ -121,6 +121,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     const snapshots = defaultProfileSnapshots(initial());
     const [one, two, three] = snapshots.map(snapshot => snapshot.settings);
     const expected = initial().settings;
+    expected.rules.erosion.erosionStages.channels = 4;
     Object.assign(expected.startup, { paletteName: 'Autumn into Winter 264', fill: 'dark', brushColor: 'rainbow', separatorPx: 0, boardSize: 249, symmetry: 'off' });
     expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
     assert.deepEqual(one, expected);
@@ -238,10 +239,10 @@ test('existing default brushes update once while saved personal sizes survive', 
     assert.deepEqual(createProfileState(initial(), disk).draft(2), state.draft(2));
 });
 
-test('factory erosion defaults map UI stages I/I, III/IV and IV/V to both carving modes', () => {
+test('factory erosion defaults map UI stages I/V, III/V and IV/V to both carving modes', () => {
     assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.rules.erosion.erosionStages), [
-        { 'channels-solid': 0, channels: 0 },
-        { 'channels-solid': 2, channels: 3 },
+        { 'channels-solid': 0, channels: 4 },
+        { 'channels-solid': 2, channels: 4 },
         { 'channels-solid': 3, channels: 4 }
     ]);
 });
@@ -254,7 +255,7 @@ test('erosion defaults migrate once and retain personal per-mode and legacy acce
     profiles[2].draft.settings.rules.erosion.erosionEvents = 7;
     disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 2, selected: 1, profiles }));
     const state = createProfileState(initial(), disk);
-    assert.deepEqual(state.draft(0).settings.rules.erosion.erosionStages, { 'channels-solid': 0, channels: 0 });
+    assert.deepEqual(state.draft(0).settings.rules.erosion.erosionStages, { 'channels-solid': 0, channels: 4 });
     assert.deepEqual(state.draft(1).settings.rules.erosion.erosionStages, { 'channels-solid': 2, channels: 1 });
     assert.equal(state.draft(2).settings.rules.erosion.erosionEvents, 7);
     assert.equal(state.draft(2).settings.rules.erosion.erosionStages, undefined);
@@ -377,4 +378,18 @@ test('profile one opens at 249 with zero separators and symmetry off without cha
     assert.equal(state.draft().settings.startup.boardSize,21);
     assert.deepEqual(state.draft(1),profiles[1].draft);
     assert.deepEqual(state.draft(2),profiles[2].draft);
+});
+
+test('channel acceleration V upgrades previous defaults once and retains custom stages and old recordings', () => {
+    const disk=storage();
+    const profiles=[0,1,2].map(i=>({saved:factoryProfileSnapshot(i),draft:factoryProfileSnapshot(i)}));
+    for(const [i,p] of profiles.entries()) for(const kind of ['saved','draft']) p[kind].settings.rules.erosion.erosionStages.channels=[0,3,4][i];
+    profiles[1].draft.settings.rules.erosion.erosionStages.channels=1;
+    disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:9,selected:0,profiles}));
+    const state=createProfileState(initial(),disk);
+    assert.equal(state.draft(0).settings.rules.erosion.erosionStages.channels,4);
+    assert.equal(state.draft(1).settings.rules.erosion.erosionStages.channels,1);
+    assert.equal(state.draft(2).settings.rules.erosion.erosionStages.channels,4);
+    state.persist();
+    assert.deepEqual(createProfileState(initial(),disk).draft(1),state.draft(1));
 });
