@@ -1539,12 +1539,10 @@ function pauseLife() {
           dom.iconPause.style.display = 'block';
           dom.btnStepForward.disabled = true;
           
-          // Ordinary evolutions can hand off live. DLA and breathing still
-          // require a manual pause before entering or leaving their engine.
+          // All discrete evolutions can hand off live, including DLA.
+          // Breathing still requires a manual pause before entering/leaving.
           simButtons.forEach(btn => {
-              btn.disabled = armedSimulation === 'dla'
-                  ? btn !== dom.btnDla
-                  : btn === dom.btnDla || btn === dom.btnShowBreatheMenu;
+              btn.disabled = btn === dom.btnShowBreatheMenu;
           });
 
           // Install queued generation-one commands before the macro's first frame.
@@ -1606,14 +1604,8 @@ function initializeDla() {
             }
         });
 
-        if (initialCrystal.size === 0) {
-            const centerIndex = Math.floor((n * n) / 2);
-            initialCrystal.add(centerIndex);
-            const seedColorIndex = Math.floor(palette().length / 2);
-            boardState[centerIndex].k = seedColorIndex;
-            boardState[centerIndex].v = seedColorIndex;
-            boardState[centerIndex].isGold = false;
-        }
+        // Existing artwork is the only seed. An empty board remains empty
+        // until brush input supplies a crystal; entering DLA never paints it.
 
         // --- START: NEW EFFICIENT LOGIC ---
         // 1. Create a list of all empty indices by checking which ones are NOT in the crystal
@@ -1656,13 +1648,13 @@ function initializeDla() {
 
 
 // Live handoff reuses PAUSE/selection/PLAY so each run keeps its own
-// generations, rules and Undo boundary. Breathe and DLA retain manual Pause.
+// generations, rules and Undo boundary. Only breathing retains manual Pause.
 function handleEvolutionTap(simulation, onTap) {
     if (!isLifePlaying || armedSimulation === simulation) {
         onTap();
         return;
     }
-    if (['breathe', 'dla'].includes(armedSimulation) || ['breathe', 'dla'].includes(simulation)) return;
+    if (armedSimulation === 'breathe' || simulation === 'breathe') return;
     pauseLife();
     onTap();
     if (armedSimulation === simulation && !isLifePlaying) togglePlayPauseLife();

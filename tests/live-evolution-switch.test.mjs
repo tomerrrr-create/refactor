@@ -45,20 +45,20 @@ function harness() {
     vm.runInContext(section('function pauseLife()', 'function getRandomGridPosition('), c);
     vm.runInContext(section('function handleEvolutionTap(', 'function setBrushMode('), c);
     vm.runInContext(section('function nextEvolutionMode(', 'function updateErosionButtonUI('), c);
-    for (const name of ['cycleSpiralMode','cycleGravitationalSortMode','cycleMagnetMode','cycleErosionMode','cycleGameOfLifeMode','cycleChiFlowMode','cycleIslandsMode']) {
+    for (const name of ['cycleSpiralMode','cycleGravitationalSortMode','cycleMagnetMode','cycleErosionMode','cycleGameOfLifeMode','cycleChiFlowMode','cycleIslandsMode','cycleDlaMode']) {
         const fn=source.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?^\\}`, 'm'));
         vm.runInContext(fn[0], c);
     }
     return c;
 }
 const selectors = {spiral:'cycleSpiralMode', gravitationalSort:'cycleGravitationalSortMode', brightnessEvo:'cycleBrightnessEvoMode',
-    magnet:'cycleMagnetMode', erosion:'cycleErosionMode', gameOfLife:'cycleGameOfLifeMode', sandpile:'cycleChiFlowMode', islands:'cycleIslandsMode'};
+    magnet:'cycleMagnetMode', erosion:'cycleErosionMode', gameOfLife:'cycleGameOfLifeMode', sandpile:'cycleChiFlowMode', islands:'cycleIslandsMode', dla:'cycleDlaMode'};
 function select(c, sim) { c.handleEvolutionTap(sim, () => selectors[sim] ? c[selectors[sim]]() : c.armSimulation(sim)); }
 
 test('all ordinary evolutions hand off on the same board with PAUSE/PLAY, independent generations and Undo segments', () => {
     const c = harness(), board=c.boardState;
     select(c,'spiral'); c.togglePlayPauseLife();
-    for (const sim of Object.keys(simulations).filter(sim=>!['breathe','dla','spiral'].includes(sim))) {
+    for (const sim of Object.keys(simulations).filter(sim=>!['breathe','spiral'].includes(sim))) {
         c.currentGenerationCount=17; c.boardState[0].k++; const before=c.history.length;
         select(c, sim);
         assert.equal(c.armedSimulation,sim); assert.equal(c.isLifePlaying,true); assert.equal(c.runningAppearance,true); assert.equal(c.boardState,board);
@@ -68,8 +68,8 @@ test('all ordinary evolutions hand off on the same board with PAUSE/PLAY, indepe
         assert.match(c.artRecipeLog[pause],/\[GEN:17\] PAUSE/);
         assert.match(c.artRecipeLog.at(-1),new RegExp(`PLAY -> Armed: ${sim} \\|`));
         assert.doesNotMatch(c.artRecipeLog.at(-1),/\[GEN:/);
-        assert.equal(c.dom.btnDla.disabled,true); assert.equal(c.dom.btnShowBreatheMenu.disabled,true);
-        for(const other of Object.keys(simulations).filter(s=>!['breathe','dla'].includes(s))) assert.equal(c.dom[simulations[other]].disabled,false);
+        assert.equal(c.dom.btnDla.disabled,false); assert.equal(c.dom.btnShowBreatheMenu.disabled,true);
+        for(const other of Object.keys(simulations).filter(s=>s!=='breathe')) assert.equal(c.dom[simulations[other]].disabled,false);
     }
 });
 
@@ -81,8 +81,8 @@ test('current evolution cycles without a restart or new history segment', () => 
     assert.equal(c.artRecipeLog.filter(line=>line.includes(' PAUSE ->')).length,0);
 });
 
-test('breathing and DLA require manual pause in both directions; paused selection never auto-starts', () => {
-    for(const excluded of ['breathe','dla']) {
+test('breathing requires manual pause in both directions; paused selection never auto-starts', () => {
+    for(const excluded of ['breathe']) {
         const c=harness(); select(c,'spiral'); c.togglePlayPauseLife();
         let called=false; c.handleEvolutionTap(excluded,()=>{called=true;}); assert.equal(called,false);
         c.pauseLife(); c.armSimulation(excluded); assert.equal(c.isLifePlaying,false);
@@ -125,4 +125,17 @@ test('saving live tuning keeps one run and random-breathing tuning references', 
     assert.equal(c.brightnessEvoMode,'contrast');
     c.isMacroPlaying=true;
     assert.equal(c.saveEvolutionTuning('brightnessEvo',{smoothing:.2,contrast:.2},'brightness'),false);
+});
+
+test('DLA live cycling retains the current run and re-entry reinitializes its internal session', () => {
+    const c=harness(); let initializations=0;
+    c.initializeDla=()=>{initializations++;c.dlaState={session:initializations};};
+    select(c,'spiral');c.togglePlayPauseLife();select(c,'dla');
+    assert.equal(c.isLifePlaying,true);assert.equal(c.dlaMode,'genetics');assert.equal(initializations,1);
+    const state=c.dlaState, start=c.simulationStartState;c.currentGenerationCount=33;
+    select(c,'dla');assert.equal(c.dlaMode,'no-genetics');select(c,'dla');assert.equal(c.dlaMode,'genetics');
+    assert.equal(c.dlaState,state);assert.equal(c.simulationStartState,start);assert.equal(c.currentGenerationCount,33);
+    select(c,'spiral');select(c,'dla');assert.equal(initializations,2);assert.notEqual(c.dlaState,state);
+    c.pauseLife();assert.equal(c.isLifePlaying,false);assert.equal(c.runningAppearance,false);
+    assert(Object.values(simulations).every(id=>!c.dom[id].disabled));
 });
