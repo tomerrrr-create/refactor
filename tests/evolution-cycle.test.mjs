@@ -6,7 +6,7 @@ import vm from 'node:vm';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const cases = [
-    { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['legacy', 'channels-solid', 'channels'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
+    { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
     { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x'], get: c => c.gsMode },
     { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: ['magnet', 'cosmic_magnet', 'time_magnet'], get: c => c.magnetMode },
     { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['b', 'left', 'black_hole'], get: c => c.spiralMode },

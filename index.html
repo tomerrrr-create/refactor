@@ -182,14 +182,14 @@
 
 
 <button id="btnErosion" class="ctrl">
-    <svg id="iconErosionLegacy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <svg id="iconErosionLegacy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
         <path d="M6 15 L12 9 L18 15"></path>
     </svg>
-    <svg id="iconErosionChannels" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+    <svg id="iconErosionChannels" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round">
         <path d="M10 3c-9 5 10 7-1 12-4 2-5 4-5 6"/><path d="M14 3c-9 5 10 7-1 12-4 2-5 4-5 6"/>
     </svg>
-    <svg id="iconErosionSolid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-        <path d="M3 6h8v11 M14 6v10 M17 9v7 M7 20c3-2 7 2 10 0"></path>
+    <svg id="iconErosionSolid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+        <path d="M2 18l5-9 3 4 5-9 7 14"/><path d="M5 18l3-5 2 3"/><path d="M13 14l2-5 3 5"/><path d="M3 21q8-2 18-1"/>
     </svg>
 </button>
 
@@ -1266,14 +1266,14 @@
     <h2 id="erosionSettingsTitle" data-erosion-text="erosion_settings_title"></h2>
     <div class="erosion-mode-toolbar">
     <div id="erosionMode" class="erosion-mode-icons" role="group">
-      <button type="button" class="cycle-slot-button" data-erosion-mode="legacy" data-erosion-label="erosion_legacy" aria-pressed="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15 L12 9 L18 15"/></svg>
-      </button>
-      <button type="button" class="cycle-slot-button" data-erosion-mode="channels-solid" data-erosion-label="erosion_solid" aria-pressed="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h8v11 M14 6v10 M17 9v7 M7 20c3-2 7 2 10 0"/></svg>
-      </button>
       <button type="button" class="cycle-slot-button" data-erosion-mode="channels" data-erosion-label="erosion_channels" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3c-9 5 10 7-1 12-4 2-5 4-5 6"/><path d="M14 3c-9 5 10 7-1 12-4 2-5 4-5 6"/></svg>
+      </button>
+      <button type="button" class="cycle-slot-button" data-erosion-mode="channels-solid" data-erosion-label="erosion_solid" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18l5-9 3 4 5-9 7 14"/><path d="M5 18l3-5 2 3"/><path d="M13 14l2-5 3 5"/><path d="M3 21q8-2 18-1"/></svg>
+      </button>
+      <button type="button" class="cycle-slot-button" data-erosion-mode="legacy" data-erosion-label="erosion_legacy" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15 L12 9 L18 15"/></svg>
       </button>
     </div>
       <button type="button" id="btnErosionReset" class="cycle-reset-dot"></button>

@@ -3251,7 +3251,7 @@ function cycleBrightnessEvoMode() {
 function updateErosionButtonUI() {
     dom.btnErosion.classList.toggle('simulation-active', armedSimulation === 'erosion');
     dom.btnErosion.setAttribute('aria-pressed', String(armedSimulation === 'erosion'));
-    const channels = armedSimulation === 'erosion' && erosionRules.mode === 'channels';
+    const channels = armedSimulation !== 'erosion' || erosionRules.mode === 'channels';
     const solid = armedSimulation === 'erosion' && erosionRules.mode === 'channels-solid';
     document.getElementById('iconErosionLegacy').style.display = channels || solid ? 'none' : 'block';
     document.getElementById('iconErosionChannels').style.display = channels ? 'block' : 'none';
@@ -3263,7 +3263,7 @@ function updateErosionButtonUI() {
 
 function cycleErosionMode() {
     if (isLifePlaying && armedSimulation !== 'erosion') return;
-    const modes = ['off', 'legacy', 'channels-solid', 'channels'];
+    const modes = ['off', 'channels', 'channels-solid', 'legacy'];
     const current = armedSimulation === 'erosion' ? erosionRules.mode : 'off';
     const next = nextEvolutionMode(current, modes);
     if (next === 'off') {
