@@ -185,8 +185,8 @@
     <svg id="iconErosionLegacy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M6 15 L12 9 L18 15"></path>
     </svg>
-    <svg id="iconErosionChannels" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-        <path d="M9 21v-6L3 6 M15 21v-6l6-9 M7 4l5 8 5-8 M12 16v3"></path>
+    <svg id="iconErosionChannels" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+        <path d="M10 3c-9 5 10 7-1 12-4 2-5 4-5 6"/><path d="M14 3c-9 5 10 7-1 12-4 2-5 4-5 6"/>
     </svg>
     <svg id="iconErosionSolid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
         <path d="M3 6h8v11 M14 6v10 M17 9v7 M7 20c3-2 7 2 10 0"></path>
@@ -201,15 +201,19 @@
 </button>
 
 <button id="btnSandpile" class="ctrl">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round">
         <path data-chi-star style="display:none" d="M20 15v4m-2-2h4" stroke-width="1.2"></path>
         <path data-chi-star style="display:none" d="M4 15v4m-2-2h4" stroke-width="1.2"></path>
-        <path d="M12 21V12" />
-        <path d="M12 12V4" />
-        <path d="M12 12L6 5" />
-        <path d="M12 12L18 5" />
-        <path d="M9 8.5L4 8" />
-        <path d="M15 8.5L20 8" />
+        <path d="M12 21V10l-1-7"/>
+        <path d="M12 11 7 7 6 3"/>
+        <path d="M7 7 3 6"/>
+        <path d="M12 15 6 12 3 9"/>
+        <path d="M6 12 6 9"/>
+        <path d="M12 11 17 7 18 3"/>
+        <path d="M17 7 21 6"/>
+        <path d="M12 15 18 12 21 9"/>
+        <path d="M18 12V9"/>
+        <path d="M12 20l-4 2m4-2 4 2"/>
     </svg>
 </button>
 
@@ -1273,7 +1277,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h8v11 M14 6v10 M17 9v7 M7 20c3-2 7 2 10 0"/></svg>
       </button>
       <button type="button" class="cycle-slot-button" data-erosion-mode="channels" data-erosion-label="erosion_channels" aria-pressed="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21v-6L3 6 M15 21v-6l6-9 M7 4l5 8 5-8 M12 16v3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3c-9 5 10 7-1 12-4 2-5 4-5 6"/><path d="M14 3c-9 5 10 7-1 12-4 2-5 4-5 6"/></svg>
       </button>
     </div>
       <button type="button" id="btnErosionReset" class="cycle-reset-dot"></button>
