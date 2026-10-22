@@ -18,6 +18,7 @@ function harness(t, pointerType = 'touch') {
         bindPickerGestures, hideLongPressDisplay() {},
         toggleSimMode() { context.isSimModeActive = !context.isSimModeActive; actions.push('toggle'); },
         prepareBoardForSimMode() { actions.push('init'); },
+        goDarkAction() { actions.push('dark'); },
         modals: { openTechnicianMenu(trigger) { assert.equal(trigger, button); actions.push('technicians'); } } });
     Object.assign(globalThis, {document: {addEventListener() {}}, window: {addEventListener() {}},
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, {fn, at: now + ms}); return id; }, clearTimeout: id => timers.delete(id)});
@@ -48,4 +49,26 @@ test('active simulation mode initializes without toggling off', t => {
 for(const pointerType of ['touch','mouse']) test(`${pointerType} upward swipe opens technicians without toggle or init`, t => {
     const h=harness(t,pointerType); h.down(); h.advance(200); h.event('pointermove',25,-10); h.advance(2000); h.event('pointerup',25,-10); h.event('click');
     assert.deepEqual(h.actions,['technicians']); assert(!h.classes.has('technician-hold'));
+});
+
+for (const pointerType of ['touch', 'mouse']) {
+    for (const [direction, x, y] of [['left', -10, 25], ['right', 60, 25], ['down', 25, 60]]) {
+        test(`${pointerType} ${direction} swipe runs Go Dark once without toggling or initializing`, t => {
+            const h = harness(t, pointerType);
+            h.down(); h.advance(200); h.event('pointermove', x, y);
+            assert(h.classes.has('picker-swipe-glow'));
+            h.advance(2000); h.event('pointerup', x, y); h.event('click');
+            assert.deepEqual(h.actions, ['dark']);
+            assert.equal(h.context.isSimModeActive, false);
+            assert(!h.classes.has('picker-swipe-glow'));
+        });
+    }
+}
+test('cancelled Go Dark swipe and blocked breathing interaction do not change the board', t => {
+    const h = harness(t);
+    h.down(); h.event('pointermove', 60, 25); h.event('pointercancel'); h.event('click');
+    assert.deepEqual(h.actions, []);
+    h.context.isBreathing = true;
+    h.down(); h.event('pointermove', 25, 60); h.event('pointerup', 25, 60); h.event('click');
+    assert.deepEqual(h.actions, []);
 });

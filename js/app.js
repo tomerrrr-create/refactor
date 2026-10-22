@@ -5036,6 +5036,8 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
         bindPickerGestures(dom.btnToggleSimMode, {
             onTap: toggleSimMode,
+            onSwipeSide: goDarkAction,
+            onSwipeDown: goDarkAction,
             onOpen: () => modals.openTechnicianMenu(dom.btnToggleSimMode),
             onHold: () => {
                 if (!isSimModeActive) toggleSimMode();

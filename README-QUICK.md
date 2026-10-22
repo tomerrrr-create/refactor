@@ -48,3 +48,5 @@ Wind shares the color/brush control: swipe **down** to enter Wind, tap to cycle 
 
 
 In brush mode, a horizontal swipe in either direction on the color control clears the selected color or rainbow, using the existing empty-brush state. It preserves brush size, symmetry and the running simulation. The gesture requires at least 24 px of horizontal travel and twice as much horizontal as vertical travel; it is inactive in Wind. Cancelling the gesture or returning to its start does not clear the selection. Up/down swipes and hold stages retain their existing behavior.
+
+On the evolution-entry control, swipe left, right or down to run the existing Go Dark action (including recording and Undo). Tap still switches control panels, hold still initializes, and swipe up still opens technicians.
