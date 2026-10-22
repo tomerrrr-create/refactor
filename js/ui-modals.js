@@ -1066,7 +1066,7 @@ function applyGolPreset(survivalArray, birthArray) {
 
 
 function openGolSettingsModal() {
-    if (app.isBreathing() || app.isLifePlaying()) return;
+    if (app.isBreathing()) return;
     
     // --- START: MODIFICATION ---
     // במקום להגדיר טקסט, נפעיל את הפונקציה שמעדכנת את הכפתורים
@@ -1110,7 +1110,7 @@ function resetGolSettings() {
 }
 
 function openGravitationalSortSettingsModal() {
-    if (app.isBreathing() || app.isLifePlaying()) return;
+    if (app.isBreathing()) return;
     const rules = app.getGravitationalSortRules();
     app.dom.gsDirectionButtons.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.direction === rules.direction);
@@ -1139,7 +1139,7 @@ function saveGravitationalSortSettings() {
 }
 // --- START: Added for Contour Settings ---
 function openContourSettingsModal() {
-    if (app.isBreathing() || app.isLifePlaying()) return;
+    if (app.isBreathing()) return;
 
     // 1. Set all texts from i18n
     app.dom.contourSettingsTitle.textContent = app.getText('contour_modal_title');

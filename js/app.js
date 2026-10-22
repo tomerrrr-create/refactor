@@ -1473,23 +1473,7 @@ function pauseLife() {
         }
         if (!armedSimulation) return;
 
-        // --- Art Logger: Snapshoting Simulation State ---
-        let simDetails = "No specific rules mapping";
-        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
-        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
-        else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
-        else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
-        else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
-        else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
-        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
-        else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
-        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
-        else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
-        else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
-        else if (armedSimulation === 'brightnessEvo') simDetails = JSON.stringify({ mode: brightnessEvoMode, tuning: evolutionTuning.brightnessEvo });
-        else if (armedSimulation === 'breathe') simDetails = JSON.stringify({ mode: breatheEvoMode, tuning: evolutionTuning.breathe });
-        
-        window.logArtEvent('PLAY', `Armed: ${armedSimulation} | Sort: ${currentSortMethod} | Rules: ${simDetails}`);        // ------------------------------------------------
+        window.logArtEvent('PLAY', getSimulationRecordingDetails());
 
         // רשימת כל כפתורי הסימולציה
 
@@ -1569,6 +1553,31 @@ function pauseLife() {
       }
 
       
+function getSimulationRecordingDetails() {
+        let simDetails = "No specific rules mapping";
+        if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
+        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
+        else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
+        else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
+        else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
+        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
+        else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
+        else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
+        else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
+        else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
+        else if (armedSimulation === 'brightnessEvo') simDetails = JSON.stringify({ mode: brightnessEvoMode, tuning: evolutionTuning.brightnessEvo });
+        else if (armedSimulation === 'breathe') simDetails = JSON.stringify({ mode: breatheEvoMode, tuning: evolutionTuning.breathe });
+
+        return `Armed: ${armedSimulation} | Sort: ${currentSortMethod} | Rules: ${simDetails}`;
+}
+
+function recordLiveSimulationRules(simulation) {
+    if (isLifePlaying && armedSimulation === simulation) {
+        window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
+    }
+}
+
       function getRandomGridPosition(n) {
         return { y: Math.floor(Math.random() * n), x: Math.floor(Math.random() * n) };
       }
@@ -1925,12 +1934,21 @@ if (simulationName === 'magnet') {
       
       function restoreEvolutionTuningState(state) {
         if (!state.evolutionTuning) return;
-        evolutionTuning = validateEvolutionTuning(state.evolutionTuning);
+        const previousBreatheMode = breatheEvoMode;
+        const nextTuning = validateEvolutionTuning(state.evolutionTuning);
+        for (const simulation of Object.keys(nextTuning)) Object.assign(evolutionTuning[simulation], nextTuning[simulation]);
         if (['off', 'brightness', 'contrast'].includes(state.brightnessEvoMode)) brightnessEvoMode = state.brightnessEvoMode;
         if (['off', 'solo', 'group', 'random-cell', 'random-color'].includes(state.breatheEvoMode)) breatheEvoMode = state.breatheEvoMode;
         if (['off', 'genetics', 'no-genetics'].includes(state.dlaMode)) {
             dlaMode = state.dlaMode;
             if (dlaMode !== 'off') dlaRules.colorGenetics = dlaMode === 'genetics';
+        }
+        if (isLifePlaying && armedSimulation === 'breathe' && previousBreatheMode !== breatheEvoMode) {
+            const cycleDuration = (2 * Math.PI) / 0.0015;
+            boardState.forEach(tile => { tile.startDelay = Math.random() * cycleDuration; });
+            randomBreatheSession = ['random-cell', 'random-color'].includes(breatheEvoMode)
+                ? Simulations.createRandomBreatheSession(boardState, breatheEvoMode, Math.random, evolutionTuning.breathe) : null;
+            breatheStartTime = performance.now();
         }
         if (islandsSession) islandsSession.activity = evolutionTuning.islands.activity;
         updateBrightnessEvoButtonUI(); updateBreatheEvoButtonUI(); updateDlaButtonUI();
@@ -1941,20 +1959,23 @@ if (simulationName === 'magnet') {
       }
 
       function saveEvolutionTuning(simulation, rules, mode) {
-        if (armedSimulation !== simulation || isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
+        if (armedSimulation !== simulation || isBreathing || isMacroLoaded || isMacroPlaying) return false;
         const next = validateEvolutionTuning({ ...evolutionTuning, [simulation]: rules });
         const modes = { brightnessEvo: ['brightness', 'contrast'], breathe: ['solo', 'group', 'random-cell', 'random-color'], dla: ['genetics', 'no-genetics'] };
         if (modes[simulation] && !modes[simulation].includes(mode)) return false;
         const currentMode = ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation];
         if (JSON.stringify(next) === JSON.stringify(evolutionTuning) && currentMode === mode) return true;
-        performAction(() => {
+        const apply = () => {
             const state = { evolutionTuning: next,
                 brightnessEvoMode: simulation === 'brightnessEvo' ? mode : brightnessEvoMode,
                 breatheEvoMode: simulation === 'breathe' ? mode : breatheEvoMode,
                 dlaMode: simulation === 'dla' ? mode : dlaMode };
             restoreEvolutionTuningState(state);
             window.logArtEvent('EVOLUTION_TUNING', JSON.stringify({ simulation, ...state }));
-        });
+        };
+        // A running simulation already owns the combined history segment.
+        if (isLifePlaying) apply();
+        else performAction(apply);
         return true;
       }
 
@@ -4463,6 +4484,9 @@ function executeMacroAction(action) {
     else if (action.eventName === 'PAUSE') {
         pauseLife();
     } 
+    else if (action.eventName === 'SIMULATION_RULES') {
+        applyMacroRules(action.details);
+    }
     else if (action.eventName === 'PLAY') {
         const sim = applyMacroRules(action.details);
         if (sim && !isLifePlaying) togglePlayPauseLife();
@@ -4806,7 +4830,7 @@ else if (action.eventName === 'Invert Colors') {
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
             getGameOfLifeCycle: () => ({ slots: gameOfLifeCycle.map(cloneGameOfLifeRules), sources: [...gameOfLifeSources], yoursRules: cloneGameOfLifeRules(personalGameOfLifeRules), index: ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode) }),
             setGameOfLifeCycle,
-            getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; },
+            getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; recordLiveSimulationRules('gravitationalSort'); },
 syncGsModeFromModal: (direction) => {
                 if (armedSimulation !== 'gravitationalSort') {
                     armSimulation('gravitationalSort'); // קודם מחמשים כדי לאפס מצבים אחרים בלוח
@@ -4818,11 +4842,11 @@ syncGsModeFromModal: (direction) => {
             },
 
             getErosionRules: () => ({ ...erosionRules }),
-            canEditErosion: () => !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
+            canEditErosion: () => !isBreathing && !isMacroLoaded && !isMacroPlaying,
             getPaletteLength: () => palette().length,
             getDefaultErosionRules: () => settingsProfiles.defaults().settings.rules.erosion,
             saveErosionRules: rules => {
-                if (isLifePlaying || isBreathing || isMacroLoaded || isMacroPlaying) return false;
+                if (isBreathing || isMacroLoaded || isMacroPlaying) return false;
                 erosionRules = restoreErosionRules(rules);
                 updateErosionButtonUI();
                 persistWorkspaceSettings(getWorkspaceSettings());
@@ -4832,10 +4856,10 @@ syncGsModeFromModal: (direction) => {
             },
             getEvolutionTuning: () => structuredClone(evolutionTuning),
             getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation],
-            canEditEvolutionTuning: simulation => armedSimulation === simulation && !isLifePlaying && !isBreathing && !isMacroLoaded && !isMacroPlaying,
+            canEditEvolutionTuning: simulation => armedSimulation === simulation && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning,
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
-            getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; }, // <-- ADDED HERE
+            getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; recordLiveSimulationRules('contour'); }, // <-- ADDED HERE
 
 spiralRules,
 syncSpiralModeFromModal: (method) => {
@@ -4845,6 +4869,7 @@ syncSpiralModeFromModal: (method) => {
     spiralMode = method;
     spiralRules.method = method;
     updateSpiralButtonUI();
+    recordLiveSimulationRules('spiral');
 },
 
 syncMagnetFromModal: (method, anchorIndex) => {
@@ -4853,12 +4878,13 @@ syncMagnetFromModal: (method, anchorIndex) => {
     magnetRules.method = method;
     magnetRules.anchorColorIndex = anchorIndex;
     updateMagnetButtonUI();
+    recordLiveSimulationRules('magnet');
 },
 
 getChiFlowRules: () => chiFlowRules, setChiFlowRules: setPersonalChiFlowRules,
 getChiFlowCycle: () => ({ slots: chiFlowCycle.map(cloneChiFlowRules), sources: [...chiFlowSources], yoursRules: cloneChiFlowRules(personalChiFlowRules), index: ['personal', 'ripples', 'nova'].indexOf(chiFlowMode) }),
 setChiFlowCycle,
-getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; },
+getTuringRules: () => turingRules, setTuringRules: (r) => { turingRules = r; recordLiveSimulationRules('turing'); },
 getMagnetRules: () => magnetRules, 
 setMagnetRules: (r) => { magnetRules = r; },
 
@@ -5060,7 +5086,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
             canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
             holdMs: C.LONG_PRESS_SHOW_MS
         });
-        // A swipe opens settings only for the selected, paused evolution.
+        // A swipe opens settings for the selected evolution, including during playback.
         // Tap actions stay independent of that restriction.
         const evolutionExplanation = createEvolutionExplanation(dom.boardCanvas.parentElement.parentElement, { onHelp: modals.openHelpModal });
         const evolutionPickers = [
@@ -5085,7 +5111,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
                 onHold: () => evolutionExplanation.show(button, simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && !isLifePlaying && armedSimulation === simulation,
+                canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && armedSimulation === simulation,
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });

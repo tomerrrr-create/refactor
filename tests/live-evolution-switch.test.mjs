@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const section = (from, to) => source.slice(source.indexOf(from), source.indexOf(to, source.indexOf(from)));
@@ -15,7 +16,7 @@ function harness() {
     const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
     const c = vm.createContext({ dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
-        isLifePlaying: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
+        isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
         boardState: [{k: 1}, {k: 2}], simulationStartState: null, simulationHasBrushInput: false,
         animationFrameId: null, history: [], queued: [], brushFinishes: 0,
         Simulations: {resetMagnetCaches() {}, resetGravitationalSortCaches() {}},
@@ -88,4 +89,40 @@ test('breathing and DLA require manual pause in both directions; paused selectio
         c.isLifePlaying=true; select(c,'erosion'); assert.equal(c.armedSimulation,excluded);
         c.pauseLife(); select(c,'erosion'); assert.equal(c.armedSimulation,'erosion'); assert.equal(c.isLifePlaying,false);
     }
+});
+
+test('live rule snapshots replay at their recorded generation without restarting the engine', () => {
+    const c=harness();
+    vm.runInContext(section('function getHistorySettings(', 'function toggleMacroFullScreen('), c);
+    vm.runInContext(section('function applyMacroRules(', '        async function initializeApp('), c);
+    c.isWindCommand=()=>false;
+    select(c,'spiral'); c.togglePlayPauseLife(); c.currentGenerationCount=37;
+    c.spiralRules.method='left'; c.spiralMode='left'; c.recordLiveSimulationRules('spiral');
+    const recorded=c.artRecipeLog.at(-1);
+    assert.match(recorded,/\[GEN:37\] SIMULATION_RULES/);
+    const action=c.parseMacroText(recorded)[0];
+    assert.equal(action.targetGen,37);
+    c.spiralRules.method='b'; c.spiralMode='b';
+    const start=c.simulationStartState;
+    c.executeMacroAction(action);
+    assert.equal(c.spiralRules.method,'left'); assert.equal(c.spiralMode,'left');
+    assert.equal(c.isLifePlaying,true); assert.equal(c.currentGenerationCount,37);
+    assert.equal(c.simulationStartState,start); assert.equal(c.history.length,0);
+});
+
+test('saving live tuning keeps one run and random-breathing tuning references', () => {
+    const c=harness();
+    c.evolutionTuning=validateEvolutionTuning(); c.validateEvolutionTuning=validateEvolutionTuning; c.islandsSession=null;
+    c.persistWorkspaceSettings=()=>{};c.getWorkspaceSettings=()=>({});c.settingsProfiles={scheduleCapture(){}};
+    c.performAction=fn=>{fn();c.history.push('paused edit');};
+    vm.runInContext(section('      function restoreEvolutionTuningState(', '      function getWorkspaceSettings('), c);
+    select(c,'brightnessEvo');c.togglePlayPauseLife();c.currentGenerationCount=12;
+    const sessionRules=c.evolutionTuning.breathe;
+    assert.equal(c.saveEvolutionTuning('brightnessEvo',{smoothing:.5,contrast:.4},'contrast'),true);
+    assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,12);assert.equal(c.history.length,0);
+    assert.match(c.artRecipeLog.at(-1),/\[GEN:12\] EVOLUTION_TUNING/);
+    assert.equal(c.evolutionTuning.breathe,sessionRules);
+    assert.equal(c.brightnessEvoMode,'contrast');
+    c.isMacroPlaying=true;
+    assert.equal(c.saveEvolutionTuning('brightnessEvo',{smoothing:.2,contrast:.2},'brightness'),false);
 });
