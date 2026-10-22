@@ -1764,8 +1764,8 @@ if (simulationName === 'spiral') {
 
 
 if (simulationName === 'magnet') {
-    magnetMode = 'cosmic_magnet';
-    if (typeof magnetRules !== 'undefined') magnetRules.method = 'cosmic_magnet';
+    magnetMode = 'magnet';
+    if (typeof magnetRules !== 'undefined') magnetRules.method = 'magnet';
 }
 
 
@@ -3490,7 +3490,7 @@ function updateMagnetButtonUI() {
 
 function cycleMagnetMode() {
     const oldMode = magnetMode;
-    const sequence = ['off', 'cosmic_magnet', 'magnet', 'time_magnet'];
+    const sequence = ['off', 'magnet', 'cosmic_magnet', 'time_magnet'];
     magnetMode = nextEvolutionMode(magnetMode, sequence);
 
     if (magnetMode !== 'off') {

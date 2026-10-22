@@ -8,7 +8,7 @@ const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['legacy', 'channels-solid', 'channels'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
     { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x'], get: c => c.gsMode },
-    { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: ['cosmic_magnet', 'magnet', 'time_magnet'], get: c => c.magnetMode },
+    { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: ['magnet', 'cosmic_magnet', 'time_magnet'], get: c => c.magnetMode },
     { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['b', 'left', 'black_hole'], get: c => c.spiralMode },
     { sim: 'brightnessEvo', fn: 'cycleBrightnessEvoMode', event: 'Brightness Evo Mode Changed', modes: ['brightness', 'contrast'], get: c => c.brightnessEvoMode },
     { sim: 'dla', fn: 'cycleDlaMode', event: 'DLA Mode Changed', modes: ['genetics', 'no-genetics'], get: c => c.dlaMode }
@@ -103,7 +103,7 @@ for (const item of cases) {
 test('modes selected outside the button cycle enter its first active mode while running', () => {
     const c = harness(); c.isLifePlaying = true;
     assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x']), 'up');
-    assert.equal(c.nextEvolutionMode('expand', ['off', 'cosmic_magnet', 'magnet', 'time_magnet']), 'cosmic_magnet');
+    assert.equal(c.nextEvolutionMode('expand', ['off', 'magnet', 'cosmic_magnet', 'time_magnet']), 'magnet');
     c.isLifePlaying = false;
     assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x']), 'off');
 });
