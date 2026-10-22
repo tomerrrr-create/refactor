@@ -1552,11 +1552,12 @@ function pauseLife() {
           dom.iconPause.style.display = 'block';
           dom.btnStepForward.disabled = true;
           
-          // מכבים את כל הכפתורים למעט הכפתור של הסימולציה הפעילה!
+          // Ordinary evolutions can hand off live. DLA and breathing still
+          // require a manual pause before entering or leaving their engine.
           simButtons.forEach(btn => {
-              if (!btn.id.toLowerCase().includes(armedSimulation.toLowerCase())) {
-                  btn.disabled = true;
-              }
+              btn.disabled = armedSimulation === 'dla'
+                  ? btn !== dom.btnDla
+                  : btn === dom.btnDla || btn === dom.btnShowBreatheMenu;
           });
 
           // Install queued generation-one commands before the macro's first frame.
@@ -1641,6 +1642,19 @@ function initializeDla() {
 
 
 
+
+// Live handoff reuses PAUSE/selection/PLAY so each run keeps its own
+// generations, rules and Undo boundary. Breathe and DLA retain manual Pause.
+function handleEvolutionTap(simulation, onTap) {
+    if (!isLifePlaying || armedSimulation === simulation) {
+        onTap();
+        return;
+    }
+    if (['breathe', 'dla'].includes(armedSimulation) || ['breathe', 'dla'].includes(simulation)) return;
+    pauseLife();
+    onTap();
+    if (armedSimulation === simulation && !isLifePlaying) togglePlayPauseLife();
+}
 
 function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     if (isLifePlaying) return;
@@ -5068,7 +5082,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         const evolutionPickerButtons = new Set(evolutionPickers.map(([button]) => button));
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
-                onTap, onOpen,
+                onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
                 onHold: () => evolutionExplanation.show(button, simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && !isLifePlaying && armedSimulation === simulation,
