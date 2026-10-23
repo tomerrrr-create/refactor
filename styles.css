@@ -2056,6 +2056,7 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
 }
 .palette-choice.is-current { background: #b89a570d; border-color: #b89a5759; }
 .palette-choice-title { display: flex; align-items: center; gap: 9px; width: 100%; }
+.palette-choice-title > .palette-choice-count { width: 25px; text-align: center; }
 .palette-choice-preview { display: flex; align-items: center; gap: 9px; width: 100%; direction: ltr; }
 .palette-choice-preview .palette-color-ribbon { flex: 1; min-width: 0; width: auto; }
 .palette-choice-icon { --icon-size: 23px; display: flex; align-items: center; justify-content: center; width: 25px; height: 25px; flex-shrink: 0; font-size: 21px; }

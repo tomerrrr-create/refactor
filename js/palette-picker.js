@@ -66,9 +66,13 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         button.type = 'button';
         button.dataset.paletteIndex = index;
         button.setAttribute('aria-pressed', String(index === selectedIndex));
+        button.setAttribute('aria-label', `${getPaletteDisplayName(palette)}, ${palette.colors.length} ${getText('palette_colors')}`);
         const title = element('span', 'palette-choice-title');
-        title.append(element('span', 'palette-choice-name', getPaletteDisplayName(palette)),
-            element('span', 'palette-choice-count', `${palette.colors.length} ${getText('palette_colors')}`));
+        title.dir = 'ltr';
+        const name = element('span', 'palette-choice-name', getPaletteDisplayName(palette));
+        name.dir = rtl ? 'rtl' : 'ltr';
+        const count = element('span', 'palette-choice-count', String(palette.colors.length));
+        title.append(name, count);
         const preview = element('span', 'palette-choice-preview');
         preview.append(colorRibbon(palette.colors), paletteIcon(palette));
         button.append(title, preview);
@@ -76,7 +80,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
             const check = element('span', 'palette-choice-check', '✓');
             check.setAttribute('aria-hidden', 'true');
-            title.append(check);
+            title.insertBefore(check, count);
         }
         button.addEventListener('click', () => onSelect(index));
         return button;
