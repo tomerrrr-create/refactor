@@ -72,7 +72,9 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const name = element('span', 'palette-choice-name', getPaletteDisplayName(palette));
         name.dir = rtl ? 'rtl' : 'ltr';
         const count = element('span', 'palette-choice-count', String(palette.colors.length));
-        title.append(name, count);
+        const showCount = activeGroup.id === 'archive';
+        title.append(name);
+        if (showCount) title.append(count);
         const preview = element('span', 'palette-choice-preview');
         preview.append(colorRibbon(palette.colors), paletteIcon(palette));
         button.append(title, preview);
@@ -80,7 +82,8 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
             const check = element('span', 'palette-choice-check', '✓');
             check.setAttribute('aria-hidden', 'true');
-            title.insertBefore(check, count);
+            if (showCount) title.insertBefore(check, count);
+            else title.append(check);
         }
         button.addEventListener('click', () => onSelect(index));
         return button;
