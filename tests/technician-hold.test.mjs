@@ -72,3 +72,29 @@ test('cancelled Go Dark swipe and blocked breathing interaction do not change th
     h.down(); h.event('pointermove', 25, 60); h.event('pointerup', 25, 60); h.event('click');
     assert.deepEqual(h.actions, []);
 });
+
+test('simulation initialization preserves current symmetry by default and honors explicit settings', () => {
+    const start = app.indexOf('function prepareBoardForSimMode()');
+    const end = app.indexOf('function handlePointerDownCtrl', start);
+    for (const current of ['off', 'horizontal', 'vertical', 'mandala', 'kaleidoscope']) {
+        for (const configured of [undefined, 'off', 'horizontal', 'kaleidoscope']) {
+            const context = vm.createContext({
+                symmetryMode: current, n: 249, separatorPx: 3, selectedRelativeSeparator: 3,
+                separatorIsSnapshot: true, selectedColorIndex: -1, selectedColor: null,
+                brushSize: 1, isRainbowModeActive: false, artRecipeLog: [], historyRecipeCursor: 0,
+                activePaletteIndex: 0, currentSortMethod: 'luminance', boardState: [],
+                simulationInitSettings: { boardSize: 249, brushSize: 7,
+                    ...(configured === undefined ? {} : { symmetry: configured }) },
+                animateBoardTransition: fn => fn(), performAction: fn => fn(),
+                applySeparator() {}, goDark() {}, palette: () => ['#000', '#fff'],
+                document: { getElementById: () => null }, updateSymmetryUI() {},
+                updateColorPickerButtonUI() {}, updateGlowEffect() {}, compressBoardState: () => [],
+                window: { logArtEvent() {} }
+            });
+            vm.runInContext(app.slice(start, end) + '\nprepareBoardForSimMode();', context);
+            assert.equal(context.symmetryMode, configured ?? current);
+            assert.equal(context.brushSize, 7);
+            assert.equal(context.separatorPx, 0);
+        }
+    }
+});

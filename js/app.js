@@ -2257,7 +2257,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
 
                 isRainbowModeActive = colorChoice === 'rainbow';
-                symmetryMode = simulationInitSettings.symmetry || 'kaleidoscope';
+                symmetryMode = simulationInitSettings.symmetry || symmetryMode;
                 updateSymmetryUI();
                 updateColorPickerButtonUI();
                 updateGlowEffect();
