@@ -50,7 +50,8 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     const description = element('p', 'palette-group-description');
     description.id = 'palette-group-description';
     description.setAttribute('aria-live', 'polite');
-    const current = element('div', 'palette-current');
+    const current = element('div', 'palette-current-summary');
+    current.id = 'palette-current-summary';
     const list = element('div', 'palette-choice-list');
     list.id = 'palette-choice-panel';
     list.setAttribute('role', 'tabpanel');
@@ -69,14 +70,25 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         button.append(title, colorRibbon(palette.colors));
         if (selected) {
             button.id = 'active-palette-preview';
-            const caption = element('span', 'palette-current-caption', `✓ ${getText('palette_current')}`);
-            button.append(caption);
+            const check = element('span', 'palette-choice-check', '✓');
+            check.setAttribute('aria-hidden', 'true');
+            title.append(check);
         }
         button.addEventListener('click', () => onSelect(index));
         return button;
     }
 
-    if (palettes[selectedIndex]) current.append(choice(selectedIndex, true));
+    if (palettes[selectedIndex]) {
+        const palette = palettes[selectedIndex];
+        const name = getPaletteDisplayName(palette);
+        const dot = element('span', 'palette-current-dot');
+        dot.setAttribute('aria-hidden', 'true');
+        const label = element('span', 'palette-current-label', getText('palette_current'));
+        const nameLabel = element('span', 'palette-current-name', name);
+        nameLabel.title = name;
+        const count = element('span', 'palette-choice-count', `${palette.colors.length} ${getText('palette_colors')}`);
+        current.append(dot, label, nameLabel, count, colorRibbon(palette.colors));
+    }
     function showGroup(group) {
         activeGroup = group;
         description.textContent = getText('palette_group_description_' + group.id);
@@ -88,8 +100,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         list.setAttribute('aria-labelledby', `palette-tab-${group.id}`);
         list.replaceChildren();
         for (const index of group.indexes) {
-            // The compact current-palette card already represents this choice.
-            if (index !== selectedIndex) list.append(choice(index));
+            list.append(choice(index, index === selectedIndex));
         }
         list.scrollTop = 0;
     }
@@ -122,6 +133,6 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         });
         tabs.append(tab);
     }
-    host.append(tabs, description, current, list);
+    host.append(tabs, description, list, current);
     showGroup(activeGroup);
 }

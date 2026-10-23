@@ -1995,7 +1995,8 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
     max-width: 480px;
     max-height: 80vh;
     max-height: 80dvh;
-    padding: 24px 20px 16px;
+    --palette-panel-padding: 20px;
+    padding: 24px var(--palette-panel-padding) 16px;
     border: 1px solid rgba(196, 162, 99, .28);
     border-radius: 20px;
     background: radial-gradient(ellipse at top, #28251e 0, #171918 60%);
@@ -2013,8 +2014,19 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
 }
 .palette-group-tab[aria-selected="true"] { color: #e6cc8e; background: #b89a5712; border-color: #b89a574d; }
 .palette-group-mark, .palette-group-mark svg { display: block; width: 20px; height: 20px; }
-.palette-group-description { margin: 0; padding-inline: 3px; flex-shrink: 0; color: #a4a69c; font-size: .73rem; line-height: 1.5; }
-.palette-current { flex-shrink: 0; }
+.palette-group-description { margin: 3px 0 5px; padding-inline: 3px; flex-shrink: 0; color: #e1c78f; font-size: .86rem; line-height: 1.6; text-align: center; }
+.palette-current-summary {
+    display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+    margin: 0 calc(-1 * var(--palette-panel-padding)) -16px;
+    padding: 13px var(--palette-panel-padding);
+    border-top: 1px solid #ae955836; background: #111512;
+}
+.palette-current-dot { width: 5px; height: 5px; border-radius: 50%; background: #dfc78d; box-shadow: 0 0 9px #d2b56655; flex-shrink: 0; }
+.palette-current-label { color: #a79774; font-size: .63rem; flex-shrink: 0; }
+.palette-current-name { color: #e7d19d; font-size: .73rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.palette-current-summary .palette-choice-count { font-size: .6rem; }
+.palette-current-summary .palette-color-ribbon { width: 55px; height: 8px; flex-shrink: 0; margin-inline-start: auto; }
+.palette-choice-check { color: #d8bd82; font-size: .75rem; flex-shrink: 0; }
 .palette-choice-list { display: flex; flex-direction: column; gap: 7px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 5px; scrollbar-width: thin; scrollbar-color: #62533a transparent; }
 .palette-choice {
     display: flex; flex-direction: column; gap: 7px; flex-shrink: 0; width: 100%; padding: 10px 12px;
@@ -2029,12 +2041,11 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
 .palette-choice-count { flex-shrink: 0; font-size: .65rem; color: #96998f; white-space: nowrap; }
 .palette-color-ribbon { display: flex; direction: ltr; width: 100%; height: 13px; overflow: hidden; border-radius: 3px; }
 .palette-color-ribbon i { flex: 1; min-width: 0; }
-.palette-current-caption { font-size: .62rem; color: #c9ae75; line-height: 1; }
 .palette-group-tab:focus-visible, .palette-choice:focus-visible, .palette-choice-list:focus-visible { outline: 2px solid #e6cc8e; outline-offset: -2px; }
 @media (hover: hover) {
     .palette-choice:hover { border-color: #b89a5780; background: #b89a5710; }
     .palette-group-tab:hover { color: #e6cc8e; }
 }
 @media (max-width: 480px) {
-    #paletteModal .palette-picker-panel { padding-inline: 14px; }
+    #paletteModal .palette-picker-panel { --palette-panel-padding: 14px; }
 }
