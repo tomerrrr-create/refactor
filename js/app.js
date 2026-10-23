@@ -5084,7 +5084,7 @@ updateBrightnessEvoButtonUI();
 
 bindPickerGestures(dom.btnPalette, {
     onTap: switchPalette, onOpen: modals.openPaletteModal,
-    onHold: switchPaletteGroup,
+    onHold: () => modals.openPaletteModal({ guardOpeningClick: true }), onSwipeSide: switchPaletteGroup,
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });

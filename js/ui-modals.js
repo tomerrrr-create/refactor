@@ -138,7 +138,10 @@ function closeHelpModal() {
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
+let paletteHoldOpeningClick = false;
+
 function closePaletteModal() {
+    paletteHoldOpeningClick = false;
     app.dom.paletteModal.classList.remove('modal-visible');
     app.dom.btnPalette.focus({ preventScroll: true });
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
@@ -678,8 +681,9 @@ function openHelpModal() {
     app.dom.helpModal.classList.add('modal-visible');
 }
 
-function openPaletteModal() {
+function openPaletteModal({ guardOpeningClick = false } = {}) {
     if (app.isBreathing()) return;
+    paletteHoldOpeningClick = guardOpeningClick;
     populatePaletteModal();
     app.dom.paletteModal.classList.add('modal-visible');
     app.dom.paletteModalGrid.querySelector('[aria-selected="true"]')?.focus({ preventScroll: true });
@@ -1657,6 +1661,14 @@ export function initializeModals(appContext) {
     app.dom.btnHelpModalClose.addEventListener('click', closeHelpModal);
     app.dom.helpModal.addEventListener('click', (e) => { if (e.target === app.dom.helpModal) { closeHelpModal(); } });
 
+    // A held touch can synthesize a click on the newly opened picker. A new
+    // pointerdown is a deliberate interaction; the opening release is not.
+    app.dom.paletteModal.addEventListener('pointerdown', () => { paletteHoldOpeningClick = false; });
+    app.dom.paletteModal.addEventListener('click', event => {
+        const openingRelease = paletteHoldOpeningClick && event.detail !== 0;
+        paletteHoldOpeningClick = false;
+        if (openingRelease) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
     // Palette Modal
     app.dom.btnPaletteModalClose.addEventListener('click', closePaletteModal);
     app.dom.paletteModal.addEventListener('keydown', event => {

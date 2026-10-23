@@ -7,7 +7,7 @@ const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const excerpt = (start, end) => source.slice(source.indexOf(start), source.indexOf(end, source.indexOf(start)));
 const plain = value => JSON.parse(JSON.stringify(value));
 function harness(index = 2) {
-    const logs = [], history = [];
+    const logs = [], history = [], opened = [];
     const h = vm.createContext({
         C: { PALETTES: [23, 64, 264, 21].map((length, i) => ({ name: `Palette${i}`, colors: Array(length).fill('#000000') })),
             PALETTE_GROUPS: [
@@ -18,7 +18,7 @@ function harness(index = 2) {
         isSelectingMacroPalette: false, isMacroPlaying: false, isExecutingMacroCommand: false,
         armedSimulation: null, isBreathing: false, isLifePlaying: false, hasPerformedInitialAutofill: false,
         boardState: [{ k: 263, v: 263, isGold: false }, { k: 263, v: 263, isGold: true }],
-        performance: { now: () => 0 }, dom: {}, modals: {},
+        performance: { now: () => 0 }, dom: {}, modals: { openPaletteModal(options) { opened.push(options || {}); } },
         resetSelectedColor() {}, updatePaletteHeader() {}, renderToScreen() {}, hideLongPressDisplay() {},
         showPaletteGroupTransition() {},
         capturePaletteGroupBoard() { return null; },
@@ -40,10 +40,10 @@ function harness(index = 2) {
         ['function executeMacroAction(', 'async function initializeApp('],
         ['bindPickerGestures(dom.btnPalette,', "dom.btnResetBoard.addEventListener('click'"]
     ]) vm.runInContext(excerpt(start, end), h);
-    return { h, logs, history };
+    return { h, logs, history, opened };
 }
 
-test('palette holds cycle only active groups, wrap to Origin, and enter Origin from archive', () => {
+test('palette side swipes cycle only active groups, wrap to Origin, and enter Origin from archive', () => {
     const { h } = harness();
     assert.equal(h.getNextPaletteGroupIndex(0), 1);
     assert.equal(h.getNextPaletteGroupIndex(1), 2);
@@ -53,10 +53,10 @@ test('palette holds cycle only active groups, wrap to Origin, and enter Origin f
     assert.equal(h.getNextPaletteGroupIndex(0), 2);
 });
 
-test('hold captures palette and adaptation together; legacy macro commands reproduce the result', () => {
+test('side swipe captures palette and adaptation together; legacy macro commands reproduce the result', () => {
     const manual = harness();
     const before = plain(manual.h.getCurrentState());
-    manual.h.gestures.onHold();
+    manual.h.gestures.onSwipeSide();
     assert.equal(manual.h.activePaletteIndex, 0);
     assert.equal(manual.h.boardState[0].k, 10); // Preserve existing modulo adaptation: 263 % 23.
     assert.equal(manual.h.boardState[0].v, 10);
@@ -76,7 +76,7 @@ test('hold captures palette and adaptation together; legacy macro commands repro
 test('growing palette needs no index correction and creates no empty adaptation undo or log', () => {
     const { h, logs, history } = harness(0);
     h.boardState[0].k = h.boardState[0].v = 22;
-    h.gestures.onHold();
+    h.gestures.onSwipeSide();
     assert.equal(h.activePaletteIndex, 1);
     assert.equal(h.boardState[0].k, 22);
     assert.equal(history.length, 1);
@@ -112,4 +112,18 @@ test('choosing a macro replacement palette never changes or adapts the current b
     assert.deepEqual(plain(h.getCurrentState()), before);
     assert.equal(history.length, 0);
     assert.equal(logs.length, 0);
+});
+
+test('hold and upward swipe open the picker without changing palette, board, history or log', () => {
+    const { h, logs, history, opened } = harness();
+    const before = plain(h.getCurrentState());
+    h.gestures.onHold();
+    h.gestures.onOpen();
+    assert.deepEqual(plain(opened), [{ guardOpeningClick: true }, {}]);
+    assert.deepEqual(plain(h.getCurrentState()), before);
+    assert.deepEqual(logs, []);
+    assert.deepEqual(history, []);
+    assert.equal(h.gestures.canInteract(), true);
+    h.isBreathing = true;
+    assert.equal(h.gestures.canInteract(), false);
 });
