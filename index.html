@@ -406,7 +406,7 @@
       </div>
       
       <div class="save-actions">
-        <div class="save-action">
+        <div class="save-action save-image-action">
         <button id="btnSaveImage" class="save-tile" style="background-color: #D2691E;">
             <svg viewBox="0 0 24 24" stroke="black" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -414,14 +414,21 @@
                 <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
         </button>
-          <label class="save-smoothing" title="Soft edges · without separators">
-            <input id="saveSmoothImage" type="checkbox">
-            <span data-debug-text="save_smooth">Smooth</span>
-          </label>
-          <label class="save-smoothing" title="Include the current glow intensity">
-            <input id="saveGlowImage" type="checkbox">
-            <span data-debug-text="save_glow">Glow</span>
-          </label>
+          <details id="saveImageOptions" class="save-image-options">
+            <summary data-i18n-title="save_image_options" title="Image options" aria-label="Image options">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+            </summary>
+            <div class="save-image-options-panel">
+              <label class="save-smoothing" title="Soft edges · without separators">
+                <input id="saveSmoothImage" type="checkbox">
+                <span data-debug-text="save_smooth">Smooth</span>
+              </label>
+              <label class="save-smoothing" title="Include the current glow intensity">
+                <input id="saveGlowImage" type="checkbox">
+                <span data-debug-text="save_glow">Glow</span>
+              </label>
+            </div>
+          </details>
         </div>
         <div class="save-action">
         <button id="btnSaveLogger" type="button" class="save-tile" style="background-color: #607D8B;">

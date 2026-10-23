@@ -9,7 +9,7 @@ test('every opening resets PNG Glow to the display preference without changing i
   isSmoothDisplayAvailable:()=>true,canvas:{toBlob:cb=>cb({})},URL:{createObjectURL:()=> 'blob:preview'},
   C:{PALETTES:[{name:'Palette'}]},activePaletteIndex:0,getText:()=>'',
   dom:{btnSave:{},imagePreview:{},fileNameInput:{},saveSmoothImage:{},saveGlowImage:{checked:false},saveModal:{classList:{add(){}}}},
-  modals:{clearSaveStatus(){}}});
+  document:{getElementById:()=>({open:true})},modals:{clearSaveStatus(){}}});
  vm.runInContext(source.slice(source.indexOf('      function openSaveModalWithPreview()'),source.indexOf('      function getSanitizedFileName(')),h);
  h.openSaveModalWithPreview();assert.equal(h.dom.saveGlowImage.checked,true);
  h.dom.saveGlowImage.checked=false;h.openSaveModalWithPreview();assert.equal(h.dom.saveGlowImage.checked,true);

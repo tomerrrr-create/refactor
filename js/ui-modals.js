@@ -1329,6 +1329,17 @@ export function initializeModals(appContext) {
 
     app.dom.btnModalClose.addEventListener('click', closeModal);
     app.dom.saveModal.addEventListener('click', (e) => { if (e.target === app.dom.saveModal) { closeModal(); } });
+    const imageOptions = document.getElementById('saveImageOptions');
+    app.dom.saveModal.addEventListener('click', e => {
+        if (!imageOptions.contains(e.target)) imageOptions.open = false;
+    });
+    app.dom.saveModal.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && imageOptions.open) {
+            e.preventDefault(); e.stopPropagation();
+            imageOptions.open = false;
+            imageOptions.querySelector('summary').focus();
+        }
+    });
     app.dom.btnSaveImage.addEventListener('click', () => app.downloadImage());
     document.getElementById('btnSaveSettings').addEventListener('click', app.handleSaveSettings);
     app.dom.btnSaveProjectIdea.addEventListener('click', app.handleSaveProject);

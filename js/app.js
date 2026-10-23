@@ -1827,6 +1827,7 @@ if (simulationName === 'magnet') {
             dom.fileNameInput.value = C.PALETTES[activePaletteIndex]?.name || getText('saveModal_defaultFilename');
             dom.saveSmoothImage.checked = isSmoothRendering && isSmoothDisplayAvailable(n, separatorPx);
             dom.saveGlowImage.checked = isSoftBloom;
+            document.getElementById('saveImageOptions').open = false;
             dom.saveModal.classList.add('modal-visible');
             dom.btnSave.disabled = false;
         }, 'image/png');
@@ -2320,6 +2321,9 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.fileNameInput.placeholder = getText('saveModal_defaultFilename');
         dom.btnModalClose.title = getText('saveModal_close');
         dom.btnSaveImage.title = getText('saveModal_saveImage');
+        const imageOptions = document.querySelector('#saveImageOptions summary');
+        imageOptions.title = getText('save_image_options');
+        imageOptions.setAttribute('aria-label', imageOptions.title);
         dom.saveSmoothImage.parentElement.title = getText('save_smooth_note');
         dom.saveGlowImage.parentElement.title = getText('save_glow_note');
         const settingsButton = document.getElementById('btnSaveSettings');

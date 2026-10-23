@@ -85,7 +85,8 @@ MP4 uses H.264 WebCodecs; VP9 WebM or real-time MediaRecorder are supported
 fallbacks. No preview is copied or displayed in computed mode. Keep the device
 awake and the Studio tab open; background throttling can slow or suspend work.
 
-PNG image saving includes independent Smooth and Glow checkboxes. Each opening
+PNG image saving has a small arrow beside the image action that reveals Smooth
+and Glow options; the main image button saves immediately. Each opening
 starts from the current display preferences; export-only overrides do not change
 them. Glow uses the current intensity and the shared display formula. PNG output
 remains 4096 square, with its black frame unaffected by the glow.
