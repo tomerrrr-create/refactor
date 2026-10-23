@@ -7,7 +7,7 @@ const LAST_RANDOM_PALETTE_KEY = 'colorGridLastRandomStartupPalette';
 
 export const STARTUP_STORAGE_KEY = 'colorGridStartup';
 export const DEFAULT_STARTUP = Object.freeze({
-    paletteName: RANDOM_STARTUP_PALETTE, boardSize: 7, separatorPx: 2, sortMethod: 'luminance',
+    paletteName: 'Hearts', boardSize: 7, separatorPx: 2, sortMethod: 'luminance',
     fill: 'random', brushSize: 1, brushMode: 'continuous', brushColor: 'none',
     symmetry: 'off', interfaceMode: 'creative'
 });

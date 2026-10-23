@@ -31,7 +31,7 @@ test('dense grids adapt separators to narrower screens without losing tile space
 test('random startup round-trips as an option, without persisting a concrete palette as the preference', () => {
     let text;
     const disk = { getItem: () => text, setItem: (_, value) => { text = value; } };
-    assert.equal(DEFAULT_STARTUP.paletteName, RANDOM_STARTUP_PALETTE);
+    assert.equal(DEFAULT_STARTUP.paletteName, 'Hearts');
     assert.equal(persistStartup({ ...DEFAULT_STARTUP, paletteName: RANDOM_STARTUP_PALETTE }, disk), true);
     assert.equal(loadStartup(disk).paletteName, RANDOM_STARTUP_PALETTE);
 });
