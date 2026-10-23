@@ -42,3 +42,28 @@ test('unknown palettes and unsupported languages retain readable fallback labels
     assert.equal(getPaletteDisplayName({ originalName: 'Future palette', name: 'Future label' }, 'he'), 'Future label');
     assert.equal(getPaletteDisplayName({ originalName: 'Future palette' }, 'he'), 'Future palette');
 });
+
+test('approved family names change presentation only and remain distinct without numeric suffixes', () => {
+    const expected = {
+        'Focus 64': ['Soft Focus', 'מיקוד רך'],
+        'Focus 264': ['Deep Focus', 'מיקוד עמוק'],
+        'Ancient 264': ['Ancient Echoes', 'הדי קדם'],
+        'Night Rainbow 264': ['Midnight Rainbow', 'קשת חצות'],
+        'Zionism 64': ['Zion Light', 'אור ציון'],
+        'Zionism 264': ['Zion Spirit', 'רוח ציון']
+    };
+    for (const [id, labels] of Object.entries(expected)) {
+        const palette = PALETTES.find(p => p.originalName === id);
+        const before = JSON.stringify(palette);
+        assert.deepEqual(['en', 'he'].map(lang => getPaletteDisplayName(palette, lang)), labels);
+        for (const lang of ['en', 'he', 'ru', 'nl']) assert.doesNotMatch(getPaletteDisplayName(palette, lang), /\d/u);
+        assert.equal(JSON.stringify(palette), before, 'Display names must not alter recording identities or colors');
+    }
+    for (const family of [['Focus', 'Focus 64', 'Focus 264'], ['Ancient', 'Ancient 264'],
+        ['Night Rainbow', 'Night Rainbow 264'], ['Zionism', 'Zionism 64', 'Zionism 264']]) {
+        for (const lang of ['en', 'he', 'ru', 'nl']) {
+            const names = family.map(originalName => getPaletteDisplayName({ originalName }, lang));
+            assert.equal(new Set(names).size, family.length);
+        }
+    }
+});
