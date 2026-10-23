@@ -1463,6 +1463,14 @@ export function initializeModals(appContext) {
             nudgeDialog.close();
         }
     });
+    const interfaceZoom = document.getElementById('interfaceZoom');
+    const interfaceZoomValue = document.getElementById('interfaceZoomValue');
+    interfaceZoom.value = app.getInterfaceZoom();
+    interfaceZoomValue.value = interfaceZoom.value + '%';
+    interfaceZoom.addEventListener('input', () => {
+        interfaceZoomValue.value = interfaceZoom.value + '%';
+        app.setInterfaceZoom(Number(interfaceZoom.value));
+    });
     let technicianReturnFocus = app.dom.btnOpenDebug;
     const softBloomToggle = document.getElementById('softBloomToggle');
     const bloomIntensity = document.getElementById('softBloomIntensity');

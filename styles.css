@@ -1731,8 +1731,8 @@ button, .ctrl {
 .bloom-intensity-control { margin: 0 0 20px; padding: 4px 8px 0; text-align: start; }
 .bloom-intensity-control label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .bloom-intensity-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
-#softBloomIntensity { flex: 1; min-width: 0; accent-color: #e3c677; direction: ltr; }
-#softBloomIntensityValue { min-width: 42px; color: #e3c677; font-size: 13px; }
+#softBloomIntensity, #interfaceZoom { flex: 1; min-width: 0; accent-color: #e3c677; direction: ltr; }
+#softBloomIntensityValue, #interfaceZoomValue { min-width: 42px; color: #e3c677; font-size: 13px; }
 .bloom-intensity-control:has(input:disabled) { opacity: .4; }
 
 /* Display effects share one card while keeping independent controls. */
@@ -1954,3 +1954,28 @@ body.wind-mode #board { cursor: crosshair; }
 
 .technician-display-settings .brush-motion-option { margin-top: 18px; padding-top: 18px; border-top: 1px solid #b28b3630; gap: 8px; }
 #brushMotionRecordingNote { padding-inline-start: 48px; font-size: 12px; line-height: 1.5; color: #95958b; }
+
+/* Opt-in display zoom. At 100% all existing layout rules remain untouched. */
+#appContainer[data-ui-zoom] {
+  padding: calc(24px * var(--ui-zoom));
+  padding-top: calc(40px * var(--ui-zoom));
+}
+@media (min-width: 640px) {
+  #appContainer[data-ui-zoom] { padding-top: calc(48px * var(--ui-zoom)); }
+}
+#appContainer[data-ui-zoom] #controlsContainer {
+  zoom: var(--ui-zoom);
+  grid-template-columns: minmax(0,50px) 1fr minmax(0,50px) minmax(0,50px) minmax(0,50px) 1fr minmax(0,50px);
+}
+#appContainer[data-ui-zoom] #controlsContainer.sim-mode-active {
+  grid-template-columns: minmax(0,50px) 1fr repeat(5,minmax(0,50px)) 1fr minmax(0,50px);
+}
+#appContainer[data-ui-zoom] .ctrl { max-width: 100%; }
+@media (max-width: 480px) {
+  #appContainer[data-ui-zoom] #controlsContainer { grid-template-columns: minmax(0,44px) 1fr repeat(3,minmax(0,44px)) 1fr minmax(0,44px); }
+  #appContainer[data-ui-zoom] #controlsContainer.sim-mode-active { grid-template-columns: minmax(0,44px) 1fr repeat(5,minmax(0,44px)) 1fr minmax(0,44px); }
+}
+.interface-zoom-option { display: block; }
+.interface-zoom-option > label { color: #e3c677; margin-bottom: 10px; }
+.technician-display-settings .interface-zoom-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
+#appContainer.macro-fullscreen[data-ui-zoom] { padding: 0; }

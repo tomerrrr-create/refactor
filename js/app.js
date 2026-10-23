@@ -1,3 +1,4 @@
+import { loadInterfaceZoom, saveInterfaceZoom } from './interface-zoom.js';
 import { openStudio } from './studio-link.js';
 import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, nextWindEffect, createWindModeIcon } from './wind-settings.js';
 import { createWindPainter, applyWindCell } from './wind-paint.js';
@@ -41,6 +42,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } fr
 
 (function() {
       let canvas, ctx;
+      let interfaceZoom = loadInterfaceZoom();
       let boardState = []; 
       let simulationStartState = null; // For saving simulation history
       let simulationHasBrushInput = false;
@@ -2855,6 +2857,17 @@ function onPointerUp(e) {
 
 function updateLayout() {
     const shell = dom.appShell;
+    const container = shell.parentElement;
+    const zoom = interfaceZoom / 100;
+    if (interfaceZoom === 100 || isMacroFullscreen) {
+        container.removeAttribute('data-ui-zoom');
+        container.style.removeProperty('--ui-zoom');
+        shell.style.maxWidth = '';
+    } else {
+        container.dataset.uiZoom = String(interfaceZoom);
+        container.style.setProperty('--ui-zoom', zoom);
+        shell.style.maxWidth = `${720 / Math.min(1, zoom)}px`;
+    }
     
     // --- תוספת: חישוב מיוחד למסך מלא ---
     if (typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen) {
@@ -2867,6 +2880,16 @@ function updateLayout() {
 
 
     // --- מצב רגיל ---
+    else if (interfaceZoom !== 100) {
+        const padding = window.getComputedStyle(container);
+        const top = parseFloat(padding.paddingTop) || 0;
+        const sides = (parseFloat(padding.paddingLeft) || 0) + (parseFloat(padding.paddingRight) || 0);
+        const controlsHeight = dom.controlsContainer.getBoundingClientRect().height;
+        const controlsGap = (parseFloat(window.getComputedStyle(dom.controlsContainer).marginTop) || 0) * zoom;
+        const availableHeight = window.innerHeight - controlsHeight - Math.max(top * 2, top + controlsGap);
+        const availableWidth = window.innerWidth < 768 ? container.clientWidth - sides : window.innerWidth * .85;
+        shell.style.width = `${Math.max(1, Math.min(720 / Math.min(1, zoom), availableWidth, availableHeight))}px`;
+    }
     else if (window.innerWidth < 768) { 
         shell.style.width = ''; 
     } else {
@@ -4827,6 +4850,11 @@ else if (action.eventName === 'Invert Colors') {
                     selectedColor === sortColorsArray(palette(), 'luminance').at(-1) ? 'lightest' : 'none',
                 symmetry: symmetryMode, interfaceMode: isSimModeActive ? 'simulation' : 'creative'
             }),
+            getInterfaceZoom: () => interfaceZoom,
+            setInterfaceZoom: value => {
+                interfaceZoom = saveInterfaceZoom(value);
+                updateLayout();
+            },
             getSimulationInit: () => ({ ...simulationInitSettings }),
             getSoftBloomIntensity: () => softBloomIntensity,
             previewSoftBloomIntensity: value => {

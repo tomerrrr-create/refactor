@@ -90,3 +90,9 @@ and Glow options; the main image button saves immediately. Each opening
 starts from the current display preferences; export-only overrides do not change
 them. Glow uses the current intensity and the shared display formula. PNG output
 remains 4096 square, with its black frame unaffected by the glow.
+
+Technician Zoom ranges from 70% to 120%, with an unchanged 100% default. Lower
+values reduce controls and surrounding spacing, freeing space for the board;
+the button order and cell count are unchanged. The preference is saved locally
+per browser, independently of profiles, recordings, image/video export and macro
+fullscreen. Display zoom does not change the browser zoom setting.
