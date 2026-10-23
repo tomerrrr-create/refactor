@@ -80,10 +80,6 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         button.append(title, preview);
         if (selected) {
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
-            const check = element('span', 'palette-choice-check', '✓');
-            check.setAttribute('aria-hidden', 'true');
-            if (showCount) title.insertBefore(check, count);
-            else title.append(check);
         }
         button.addEventListener('click', () => onSelect(index));
         return button;
