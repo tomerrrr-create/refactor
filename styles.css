@@ -19,7 +19,7 @@
   --gold: #FFD700;
   --glow-color: var(--gold);
   --sim-color: #3F51B5;
-  transition: --sim-color 600ms ease-in-out;
+  transition: --sim-color 400ms ease-in-out;
 
 }
 
@@ -1856,7 +1856,7 @@ button, .ctrl {
   position: relative;
   isolation: isolate;
   border-color: #334155;
-  transition: border-color 600ms ease-in-out, box-shadow 600ms ease-in-out;
+  transition: border-color 400ms ease-in-out, box-shadow 400ms ease-in-out;
 }
 .sim-mode-active #simModeBackground::before,
 .sim-mode-active #simModeBackground::after {
@@ -1866,7 +1866,7 @@ button, .ctrl {
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 600ms ease-in-out;
+  transition: opacity 400ms ease-in-out;
 }
 .sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
 .sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
