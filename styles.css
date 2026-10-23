@@ -1854,17 +1854,11 @@ button, .ctrl {
 :root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
 :root[data-simulation-effective-theme="gold"] #simModeBackground::before,
 :root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
-.sim-mode-active .ctrl svg, .sim-mode-active .ctrl svg [stroke], .sim-mode-active .ctrl svg [fill] {
-  transition: stroke 900ms ease-in-out, fill 900ms ease-in-out;
-}
 .technician-display-settings .simulation-theme-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
 @media (prefers-reduced-motion: reduce) {
   .sim-mode-active #simModeBackground,
   .sim-mode-active #simModeBackground::before,
-  .sim-mode-active #simModeBackground::after,
-  .sim-mode-active .ctrl svg,
-  .sim-mode-active .ctrl svg [stroke],
-  .sim-mode-active .ctrl svg [fill] { transition: none; }
+  .sim-mode-active #simModeBackground::after { transition: none; }
 }
 
 .simulation-theme-option .technician-option-heading { flex-wrap: wrap; gap: 14px; }
