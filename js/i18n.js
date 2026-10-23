@@ -138,6 +138,9 @@ export const translations = {
   palette_group_extended: {"en": "Expansion ✦", "he": "התרחבות ✦", "ru": "Расширение ✦", "nl": "Uitbreiding ✦"},
   palette_group_continuous: {"en": "Resonance ♾️", "he": "תהודה ♾️", "ru": "Резонанс ♾️", "nl": "Resonantie ♾️"},
   palette_group_archive: {"en": "Basement ▽", "he": "מרתף ▽", "ru": "Подвал ▽", "nl": "Kelder ▽"},
+  palette_groups: {"en": "Palette groups", "he": "קבוצות פלטות", "ru": "Группы палитр", "nl": "Paletgroepen"},
+  palette_colors: {"en": "colors", "he": "צבעים", "ru": "цветов", "nl": "kleuren"},
+  palette_current: {"en": "Current palette", "he": "הפלטה הפעילה", "ru": "Текущая палитра", "nl": "Huidig palet"},
   palette_items: {"en": "items", "he": "פלטות", "ru": "палитр", "nl": "paletten"},
   save_image_preview: {"en": "Image Preview", "he": "תצוגה מקדימה של התמונה", "ru": "Предпросмотр изображения", "nl": "Voorbeeld van de afbeelding"},
 

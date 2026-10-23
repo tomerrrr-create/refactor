@@ -1,6 +1,7 @@
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
 import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
+import { renderPalettePicker } from './palette-picker.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
@@ -139,6 +140,7 @@ function closeHelpModal() {
 
 function closePaletteModal() {
     app.dom.paletteModal.classList.remove('modal-visible');
+    app.dom.btnPalette.focus({ preventScroll: true });
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
@@ -222,6 +224,8 @@ function refreshLocalizedModalText() {
     if (!app.dom.chiFlowSettingsModal.classList.contains('hidden')) updateChiReachDisplay();
     app.dom.chiFlowModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
     updateStartupPalettePreview();
+    app.dom.btnPaletteModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
+    if (app.dom.paletteModal.classList.contains('modal-visible')) populatePaletteModal();
     document.getElementById('btnStartupPaletteClose').setAttribute('aria-label', app.getText('saveModal_close'));
     const picker = document.getElementById('startupPaletteDialog');
     if (picker.open) {
@@ -679,15 +683,7 @@ function openPaletteModal() {
     if (app.isBreathing()) return;
     populatePaletteModal();
     app.dom.paletteModal.classList.add('modal-visible');
-
-    // --- START: גלילה אוטומטית לפלטה הפעילה ---
-    setTimeout(() => {
-        const activePreview = document.getElementById('active-palette-preview');
-        if (activePreview) {
-            activePreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, 50);
-    // --- END: גלילה אוטומטית ---
+    app.dom.paletteModalGrid.querySelector('[aria-selected="true"]')?.focus({ preventScroll: true });
 }
 
 
@@ -788,9 +784,16 @@ function populatePaletteGrid(grid, selectedIndex, onSelect, startup = false) {
 
 
 function populatePaletteModal() {
-    populatePaletteGrid(app.dom.paletteModalGrid, app.getActivePaletteIndex(), index => {
-        app.switchToPalette(index);
-        closePaletteModal();
+    renderPalettePicker(app.dom.paletteModalGrid, {
+        palettes: app.C.PALETTES,
+        groups: app.C.PALETTE_GROUPS,
+        selectedIndex: app.getActivePaletteIndex(),
+        getText: app.getText,
+        rtl: app.getCurrentLang() === 'he',
+        onSelect(index) {
+            app.switchToPalette(index);
+            closePaletteModal();
+        }
     });
 }
 
@@ -1726,6 +1729,19 @@ export function initializeModals(appContext) {
 
     // Palette Modal
     app.dom.btnPaletteModalClose.addEventListener('click', closePaletteModal);
+    app.dom.paletteModal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') { event.preventDefault(); closePaletteModal(); }
+        if (event.key === 'Tab') {
+            const targets = [...app.dom.paletteModal.querySelectorAll('button, [tabindex="0"]')]
+                .filter(node => node.tabIndex >= 0 && node.getClientRects().length);
+            const first = targets[0], last = targets[targets.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault(); last?.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault(); first?.focus();
+            }
+        }
+    });
     app.dom.paletteModal.addEventListener('click', (e) => { if (e.target === app.dom.paletteModal) { closePaletteModal(); } });
 
 

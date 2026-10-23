@@ -829,14 +829,14 @@
   </dialog>
 
   <div id="paletteModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
-    <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-lg max-h-[80vh] flex flex-col">
+    <div class="palette-picker-panel relative w-full flex flex-col" role="dialog" aria-modal="true" aria-labelledby="paletteModalTitle">
        <button id="btnPaletteModalClose" class="absolute top-2 right-2 text-gray-400 hover:text-white">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
       <h2 id="paletteModalTitle" class="text-xl font-bold text-center mb-4 text-gray-200"></h2>
 
 
-      <div id="paletteModalGrid" class="overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-4 p-2">
+      <div id="paletteModalGrid" class="palette-picker-content">
       </div>
     </div>
   </div>
