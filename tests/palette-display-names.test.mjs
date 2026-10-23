@@ -83,5 +83,19 @@ test('approved size suffix removals preserve original palette and recording name
         for (const lang of ['en', 'he', 'ru', 'nl']) assert.doesNotMatch(getPaletteDisplayName(palette, lang), /\d/u);
         assert.equal(JSON.stringify(palette), before);
     }
-    assert.equal(getPaletteDisplayName({ originalName: 'Primavera Porteña 264' }, 'en'), 'Buenos Aires Spring 264');
+    assert.equal(getPaletteDisplayName({ originalName: 'Primavera Porteña 264' }, 'en'), 'Buenos Aires');
+});
+
+test('Argentina family uses place names in every language without changing stored palette identities', () => {
+    const expected = {
+        'Argentine Spring': ['Argentina', 'ארגנטינה', 'Аргентина', 'Argentinië'],
+        'Aires de Primavera': ['Mendoza', 'מנדוסה', 'Мендоса', 'Mendoza'],
+        'Primavera Porteña 264': ['Buenos Aires', 'בואנוס איירס', 'Буэнос-Айрес', 'Buenos Aires']
+    };
+    for (const [id, names] of Object.entries(expected)) {
+        const palette = PALETTES.find(p => p.originalName === id);
+        const before = JSON.stringify(palette);
+        assert.deepEqual(['en', 'he', 'ru', 'nl'].map(lang => getPaletteDisplayName(palette, lang)), names);
+        assert.equal(JSON.stringify(palette), before);
+    }
 });
