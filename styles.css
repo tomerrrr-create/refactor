@@ -1859,7 +1859,8 @@ button, .ctrl {
   transition: border-color 400ms ease-in-out, box-shadow 400ms ease-in-out;
 }
 .sim-mode-active #simModeBackground::before,
-.sim-mode-active #simModeBackground::after {
+.sim-mode-active #simModeBackground::after,
+.sim-mode-active #simModeBackground .sim-theme-layer {
   content: '';
   position: absolute;
   inset: 0;
@@ -1870,6 +1871,14 @@ button, .ctrl {
 }
 .sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
 .sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
+.sim-mode-active #simModeBackground .sim-theme-silver { background: linear-gradient(135deg,#191b1f,#0b0c0e); }
+.sim-mode-active #simModeBackground .sim-theme-ice { background: linear-gradient(135deg,#0e1b24,#080d12); }
+:root[data-simulation-effective-theme="silver"] { --sim-color: #899099; }
+:root[data-simulation-effective-theme="ice"] { --sim-color: #91b8cb; }
+:root[data-simulation-effective-theme="silver"] .sim-mode-active #simModeBackground { border-color: #89909945; }
+:root[data-simulation-effective-theme="ice"] .sim-mode-active #simModeBackground { border-color: #91b8cb45; }
+:root[data-simulation-effective-theme="silver"] #simModeBackground .sim-theme-silver,
+:root[data-simulation-effective-theme="ice"] #simModeBackground .sim-theme-ice { opacity: 1; }
 :root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: #766741; }
 :root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }
@@ -1882,12 +1891,13 @@ button, .ctrl {
   :root,
   .sim-mode-active #simModeBackground,
   .sim-mode-active #simModeBackground::before,
-  .sim-mode-active #simModeBackground::after { transition: none; }
+  .sim-mode-active #simModeBackground::after,
+  .sim-mode-active #simModeBackground .sim-theme-layer { transition: none; }
 }
 
 .simulation-theme-option .technician-option-heading { flex-wrap: wrap; gap: 14px; }
 .simulation-theme-option .technician-effect-heading { white-space: nowrap; }
-.simulation-theme-previews { display: flex; gap: 8px; direction: ltr; flex-shrink: 0; margin-inline-start: auto; }
+.simulation-theme-previews { display: flex; flex-wrap: wrap; max-width: 100%; gap: 8px; direction: ltr; flex-shrink: 0; margin-inline-start: auto; }
 .simulation-theme-preview {
   display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 8px;
   border: 1px solid var(--preview-border); border-radius: 50%;
@@ -1897,6 +1907,8 @@ button, .ctrl {
 }
 .simulation-theme-preview[data-theme="teal"] { --preview-color: #68BDB5; --preview-border: #68bdb545; --preview-background: linear-gradient(135deg, #142724, #0a100f); }
 .simulation-theme-preview[data-theme="gold"] { --preview-color: #a58b54; --preview-border: #b28b3645; --preview-background: linear-gradient(135deg, #1c1a12, #0d0e0c); }
+.simulation-theme-preview[data-theme="silver"] { --preview-color: #899099; --preview-border: #89909945; --preview-background: linear-gradient(135deg,#191b1f,#0b0c0e); }
+.simulation-theme-preview[data-theme="ice"] { --preview-color: #91b8cb; --preview-border: #91b8cb45; --preview-background: linear-gradient(135deg,#0e1b24,#080d12); }
 .simulation-theme-preview[data-theme="blue"] { --preview-color: #3F51B5; --preview-border: #334155; --preview-background: linear-gradient(to bottom, #0f172a, #000); }
 .simulation-theme-preview svg { width: 26px; height: 26px; pointer-events: none; }
 .simulation-theme-preview[aria-pressed="true"] { opacity: 1; filter: none; border-color: var(--preview-color); box-shadow: 0 0 10px color-mix(in srgb, var(--preview-color) 25%, transparent); }

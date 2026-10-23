@@ -46,7 +46,7 @@ test('invalid nested rules cannot fall back silently or enter storage', () => {
 
 test('optional profile themes round-trip without changing legacy V1 settings semantics', () => {
     assert.equal(Object.hasOwn(defaultWorkspaceSettings(), 'simulationTheme'), false);
-    for (const simulationTheme of ['blue', 'gold', 'teal']) {
+    for (const simulationTheme of ['blue', 'gold', 'teal', 'silver', 'ice']) {
         const settings = { ...defaultWorkspaceSettings(), simulationTheme };
         assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
     }
