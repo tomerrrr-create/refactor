@@ -884,6 +884,19 @@ body {
 
 /* --- END: MODIFIED STYLE FOR "ARMED" SIMULATION BUTTON --- */
 
+/* Gold playback keeps the active evolution bright without dimming or disabling
+   available controls. Other playback themes retain their existing colors. */
+:root[data-simulation-running][data-simulation-effective-theme="gold"] .sim-mode-active :is(
+  #btnGameOfLife, #btnMagnetModes, #btnBrightnessEvo, #btnShowBreatheMenu,
+  #btnIslands, #btnGravitationalSort, #btnErosion, #btnDla, #btnContour,
+  #btnSpiral, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker
+):not(.simulation-active):not(:disabled) > svg {
+  stroke: #766741;
+}
+:root[data-simulation-running][data-simulation-effective-theme="gold"] .sim-mode-active #btnDla:not(.simulation-active):not(:disabled) > svg {
+  fill: #766741;
+}
+
 /* --- Play/Pause Button Icon Colors --- */
 
 /* צובע את אייקון ה-Play (כשהוא זמין) ואת אייקון ה-Pause בצבע זהב */
