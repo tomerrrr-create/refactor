@@ -37,7 +37,7 @@ import { dom } from './dom-elements.js';
 import { initializeModals } from './ui-modals.js';
 import { loadSimInit, persistSimInit } from './sim-init-settings.js';
 import { loadSortCycle, persistSortCycle, normalizeSortCycle, nextSortMethod } from './sort-cycle-settings.js';
-import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator } from './startup-settings.js';
+import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, resolveStartupPaletteIndex } from './startup-settings.js';
 
 
 (function() {
@@ -4995,7 +4995,7 @@ applySortMethod,
         initializeQuickStart();
         initializeSimulationTheme();
         
-        activePaletteIndex = C.PALETTES.findIndex(p => p.originalName === startupSettings.paletteName);
+        activePaletteIndex = resolveStartupPaletteIndex(startupSettings.paletteName);
         n = startupSettings.boardSize;
         updateLayout();
         separatorPx = fitStartupSeparator(n, startupSettings.separatorPx, dom.boardCanvas.clientWidth);

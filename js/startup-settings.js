@@ -2,9 +2,12 @@ import { maximumSeparatorWidth } from './separator-cycle.js';
 import { PALETTES, SIZES, SEPARATORS, SYMMETRY_MODES } from './constants.js';
 import { SORT_MODES } from './colors.js';
 
+export const RANDOM_STARTUP_PALETTE = '@random';
+const LAST_RANDOM_PALETTE_KEY = 'colorGridLastRandomStartupPalette';
+
 export const STARTUP_STORAGE_KEY = 'colorGridStartup';
 export const DEFAULT_STARTUP = Object.freeze({
-    paletteName: 'Journey', boardSize: 7, separatorPx: 2, sortMethod: 'luminance',
+    paletteName: RANDOM_STARTUP_PALETTE, boardSize: 7, separatorPx: 2, sortMethod: 'luminance',
     fill: 'random', brushSize: 1, brushMode: 'continuous', brushColor: 'none',
     symmetry: 'off', interfaceMode: 'creative'
 });
@@ -14,7 +17,7 @@ export const DEFAULT_STARTUP = Object.freeze({
 export function normalizeStartup(settings) {
     const value = settings && typeof settings === 'object' ? settings : {};
     const allowed = {
-        paletteName: PALETTES.filter(p => !p.isArchived).map(p => p.originalName),
+        paletteName: [RANDOM_STARTUP_PALETTE, ...PALETTES.filter(p => !p.isArchived).map(p => p.originalName)],
         boardSize: SIZES, separatorPx: SEPARATORS,
         sortMethod: SORT_MODES.map(mode => mode.method),
         fill: ['random', 'dark', 'light', 'seed'],
@@ -50,4 +53,20 @@ export function fitStartupSeparator(boardSize, separatorPx, width, candidates = 
     const maximum = maximumSeparatorWidth(boardSize, width);
     if (separatorPx === 0 || separatorPx <= maximum) return separatorPx;
     return Math.max(0, ...candidates.filter(gap => gap <= separatorPx && gap <= maximum));
+}
+
+// Resolve once per app opening. Keep the preference random; recordings receive
+// the concrete runtime palette index. Avoid consecutive repeats when storage works.
+export function resolveStartupPaletteIndex(paletteName, { palettes = PALETTES, storage, random = Math.random } = {}) {
+    const fixed = palettes.findIndex(p => p.originalName === paletteName && !p.isArchived);
+    if (paletteName !== RANDOM_STARTUP_PALETTE && fixed >= 0) return fixed;
+    const active = palettes.map((palette, index) => ({ palette, index })).filter(({ palette }) => !palette.isArchived);
+    if (!active.length) throw new Error('No startup palettes available');
+    let previous;
+    try { storage ??= globalThis.localStorage; previous = storage?.getItem(LAST_RANDOM_PALETTE_KEY); } catch {}
+    const alternatives = active.filter(({ palette }) => palette.originalName !== previous);
+    const pool = alternatives.length ? alternatives : active;
+    const choice = pool[Math.min(pool.length - 1, Math.max(0, Math.floor(random() * pool.length)))];
+    try { storage?.setItem(LAST_RANDOM_PALETTE_KEY, choice.palette.originalName); } catch {}
+    return choice.index;
 }

@@ -37,7 +37,7 @@ function colorRibbon(colors) {
 }
 
 // Presentation only: group navigation never changes the board or records actions.
-export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, rtl = false }) {
+export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, rtl = false, idPrefix = 'palette' }) {
     host.replaceChildren();
     host.dir = rtl ? 'rtl' : 'ltr';
     const availableGroups = groups.filter(group => group.indexes.length);
@@ -45,15 +45,17 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     if (!activeGroup) return;
 
     const tabs = element('div', 'palette-group-tabs');
+    tabs.style.gridTemplateColumns = `repeat(${availableGroups.length}, minmax(0, 1fr))`;
     tabs.setAttribute('role', 'tablist');
     tabs.setAttribute('aria-label', getText('palette_groups'));
     const description = element('p', 'palette-group-description');
-    description.id = 'palette-group-description';
+    description.id = `${idPrefix}-group-description`;
     description.setAttribute('aria-live', 'polite');
     const current = element('div', 'palette-current-summary');
-    current.id = 'palette-current-summary';
+    current.id = `${idPrefix}-current-summary`;
+    current.hidden = !palettes[selectedIndex];
     const list = element('div', 'palette-choice-list');
-    list.id = 'palette-choice-panel';
+    list.id = `${idPrefix}-choice-panel`;
     list.setAttribute('role', 'tabpanel');
     list.setAttribute('aria-describedby', description.id);
     list.tabIndex = 0;
@@ -69,7 +71,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             element('span', 'palette-choice-count', `${palette.colors.length} ${getText('palette_colors')}`));
         button.append(title, colorRibbon(palette.colors));
         if (selected) {
-            button.id = 'active-palette-preview';
+            button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
             const check = element('span', 'palette-choice-check', '✓');
             check.setAttribute('aria-hidden', 'true');
             title.append(check);
@@ -97,7 +99,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             tab.setAttribute('aria-selected', String(selected));
             tab.tabIndex = selected ? 0 : -1;
         }
-        list.setAttribute('aria-labelledby', `palette-tab-${group.id}`);
+        list.setAttribute('aria-labelledby', `${idPrefix}-tab-${group.id}`);
         list.replaceChildren();
         for (const index of group.indexes) {
             list.append(choice(index, index === selectedIndex));
@@ -108,7 +110,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     for (const group of availableGroups) {
         const tab = element('button', 'palette-group-tab');
         tab.type = 'button';
-        tab.id = `palette-tab-${group.id}`;
+        tab.id = `${idPrefix}-tab-${group.id}`;
         tab.dataset.paletteGroup = group.id;
         tab.setAttribute('role', 'tab');
         tab.setAttribute('aria-controls', list.id);

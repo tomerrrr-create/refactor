@@ -142,6 +142,8 @@ export const translations = {
   palette_group_description_extended: {"en": "64 colors. The space unfolds.", "he": "64 צבעים. המרחב נפתח.", "ru": "64 цвета. Пространство раскрывается.", "nl": "64 kleuren. De ruimte ontvouwt zich."},
   palette_group_description_continuous: {"en": "264 colors. Everything flows.", "he": "264 צבעים. הכול זורם.", "ru": "264 цвета. Всё течёт.", "nl": "264 kleuren. Alles stroomt."},
   palette_group_description_archive: {"en": "Colors waiting to be rediscovered.", "he": "צבעים שמחכים להתגלות מחדש.", "ru": "Цвета, ждущие нового открытия.", "nl": "Kleuren die wachten om herontdekt te worden."},
+  startup_palette_random: {"en": "A surprise every opening", "he": "הפתעה בכל פתיחה", "ru": "Сюрприз при каждом открытии", "nl": "Elke keer een verrassing"},
+  startup_palette_random_hint: {"en": "A new palette. A new beginning.", "he": "פלטה חדשה. התחלה חדשה.", "ru": "Новая палитра. Новое начало.", "nl": "Een nieuw palet. Een nieuw begin."},
   palette_groups: {"en": "Palette groups", "he": "קבוצות פלטות", "ru": "Группы палитр", "nl": "Paletgroepen"},
   palette_colors: {"en": "colors", "he": "צבעים", "ru": "цветов", "nl": "kleuren"},
   palette_current: {"en": "Current palette", "he": "הפלטה הפעילה", "ru": "Текущая палитра", "nl": "Huidig palet"},

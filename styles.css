@@ -836,37 +836,7 @@ body {
     transform: scale(1.1);
     background-color: #e6c200;
 }
- .palette-preview {
-    cursor: pointer;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 12px;
-    transition: background-color 0.2s ease-in-out, transform 0.2s ease-out;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-.palette-preview:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    transform: translateY(-4px);
-}
-.palette-preview-icon {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 36px;
-    line-height: 1;
-}
-.palette-preview-name {
-    font-size: 0.8rem;
-    text-align: center;
-    color: #ccc;
-}
-.kbd-key {
+ .kbd-key {
     background-color: #3a3a3a;
     border: 1px solid #555;
     border-radius: 4px;
@@ -1628,17 +1598,15 @@ button, .ctrl {
 #startupPaletteIcon svg { width: 28px !important; height: 28px !important; }
 #startupPaletteName { flex: 1; }
 .startup-palette-chevron { width: 18px; height: 18px; opacity: .6; }
-.startup-palette-dialog { position: fixed; inset: 0; margin: auto; width: min(512px, calc(100vw - 32px)); max-height: min(80dvh, 740px); box-sizing: border-box; padding: 22px; overflow: hidden; border: 1px solid #b28b3659; border-radius: 16px; color: #eaeaea; background: #1c1c1c; font-family: inherit; box-shadow: 0 0 70px #b28b3615; }
+.startup-palette-dialog { position: fixed; inset: 0; margin: auto; width: min(480px, calc(100vw - 32px)); box-sizing: border-box; color: #eaeaea; font-family: inherit; }
 .startup-palette-dialog[open] { display: flex; flex-direction: column; }
 .startup-palette-dialog::backdrop { background: #0009; }
 .startup-palette-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 12px; }
 .startup-palette-heading h2 { margin: 0; color: #e3c677; font-size: 20px; font-weight: 500; }
 #btnStartupPaletteClose { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; padding: 6px; border: 0; background: transparent; color: #aaa; cursor: pointer; }
 #btnStartupPaletteClose svg { width: 24px; height: 24px; }
-#startupPaletteGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 0 8px 8px; overflow-y: auto; min-height: 0; scrollbar-width: thin; scrollbar-color: #555 #2d2d2d; }
-#startupPaletteGrid .palette-preview { font: inherit; min-width: 0; }
-#startupPaletteGrid .palette-preview:focus-visible, .startup-palette-trigger:focus-visible, #btnStartupPaletteClose:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 2px; }
-@media (min-width: 640px) { #startupPaletteGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.startup-palette-trigger:focus-visible, #btnStartupPaletteClose:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 2px; }
+
 
 /* A reachable close control for panels that previously had only footer actions. */
 .modal-dismiss { position: absolute; top: 8px; right: 8px; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 10px; border: 0; border-radius: 50%; background: transparent; color: #aaa; cursor: pointer; z-index: 40; }
@@ -1991,7 +1959,7 @@ body[data-menu-zoom] > dialog { max-width: calc((100vw - 32px) / var(--menu-zoom
 body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
 
 /* Palette picker: load only one group into the scrollable colour catalogue. */
-#paletteModal .palette-picker-panel {
+#paletteModal .palette-picker-panel, #startupPaletteDialog.palette-picker-panel {
     max-width: 480px;
     max-height: 80vh;
     max-height: 80dvh;
@@ -2004,7 +1972,7 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
     overflow: hidden;
 }
 #paletteModalTitle { font-weight: 400; letter-spacing: .025em; }
-#paletteModalGrid.palette-picker-content { display: flex; flex-direction: column; min-height: 0; gap: 12px; }
+#paletteModalGrid.palette-picker-content, #startupPaletteGrid.palette-picker-content { display: flex; flex-direction: column; min-height: 0; gap: 12px; }
 .palette-group-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; flex-shrink: 0; }
 .palette-group-tab {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
@@ -2047,5 +2015,14 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
     .palette-group-tab:hover { color: #e6cc8e; }
 }
 @media (max-width: 480px) {
-    #paletteModal .palette-picker-panel { --palette-panel-padding: 14px; }
+    #paletteModal .palette-picker-panel, #startupPaletteDialog.palette-picker-panel { --palette-panel-padding: 14px; }
 }
+
+.palette-current-summary[hidden] { display: none; }
+.startup-random-choice { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 13px; margin-bottom: 13px; flex-shrink: 0; border: 1px solid #b89a5733; border-radius: 10px; background: #ffffff03; color: #d5c49e; text-align: start; font: inherit; font-size: .85rem; }
+.startup-random-choice[aria-pressed="true"] { border-color: #b89a5780; background: #b89a5712; }
+.startup-random-symbol { font-size: 27px; }
+.startup-random-choice small { display: block; color: #a4a69c; font-size: .7rem; margin-top: 3px; }
+.startup-random-check { margin-inline-start: auto; opacity: 0; }
+.startup-random-choice[aria-pressed="true"] .startup-random-check { opacity: 1; }
+.startup-random-choice:focus-visible { outline: 2px solid #e6cc8e; outline-offset: 2px; }
