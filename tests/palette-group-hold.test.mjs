@@ -114,12 +114,13 @@ test('choosing a macro replacement palette never changes or adapts the current b
     assert.equal(logs.length, 0);
 });
 
-test('hold and upward swipe open the picker without changing palette, board, history or log', () => {
+test('hold and upward or downward swipe open the picker without changing palette, board, history or log', () => {
     const { h, logs, history, opened } = harness();
     const before = plain(h.getCurrentState());
     h.gestures.onHold();
     h.gestures.onOpen();
-    assert.deepEqual(plain(opened), [{ guardOpeningClick: true }, {}]);
+    h.gestures.onSwipeDown();
+    assert.deepEqual(plain(opened), [{ guardOpeningClick: true }, {}, {}]);
     assert.deepEqual(plain(h.getCurrentState()), before);
     assert.deepEqual(logs, []);
     assert.deepEqual(history, []);
