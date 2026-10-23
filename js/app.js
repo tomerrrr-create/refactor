@@ -3713,6 +3713,16 @@ function parseHistoryMacro(lines) {
         return { time: Date.parse(`1970-01-01T${match[1]}Z`), eventName: match[3], details: match[4],
             isGenBased: match[2] !== undefined, targetGen: match[2] === undefined ? null : Number(match[2]) };
     });
+    // Unwrap midnight before editing the timeline. Undo can move playback
+    // backwards, but that must never be mistaken for a new calendar day.
+    let previousRawTime = null, dayOffset = 0;
+    for (const event of events) {
+        if (!event) continue;
+        const rawTime = event.time;
+        if (previousRawTime !== null && rawTime < previousRawTime) dayOffset += 86400000;
+        event.time += dayOffset;
+        previousRawTime = rawTime;
+    }
     // Keep stroke-relative time separate from wall time: Redo relocates the
     // stroke, but must retain the pauses and rhythm within the gesture.
     let brushStartTime = null;
@@ -3738,8 +3748,17 @@ function parseHistoryMacro(lines) {
 
     const visible = [];
     const cancelledActions = new Map();
+    let removedTime = 0;
+    const visibleTime = fallback => {
+        for (let i = visible.length - 1; i >= 0; i--) {
+            if (visible[i].eventName !== 'HISTORY_ACTION') return visible[i].time;
+        }
+        return fallback;
+    };
     for (const event of events) {
         if (!event) continue;
+        const rawTime = event.time;
+        event.time -= removedTime;
         if (event.eventName === 'UNDO' || event.eventName === 'REDO') {
             const target = JSON.parse(event.details);
             if (target.recipeVersion !== 2 || !Number.isInteger(target.id)) throw new Error('Invalid history target');
@@ -3753,8 +3772,17 @@ function parseHistoryMacro(lines) {
             } else {
                 // Redo reuses the recorded commands, not a fresh random result or a board snapshot.
                 const restored = cancelledActions.get(target.id) || [];
-                visible.push(...restored.map(item => ({ ...item, time: event.time })));
+                const startTime = visibleTime(event.time);
+                const originalStart = restored[0]?.time ?? startTime;
+                // Relocate the action as a block, preserving all internal
+                // offsets (including time-based simulations and Wind).
+                visible.push(...restored.map(item => ({ ...item, time: startTime + item.time - originalStart, restoredTiming: true })));
             }
+            // A checkpoint is instantaneous at the retained/restored tail.
+            // Rebase subsequent raw timestamps from here, so repeated edits
+            // cannot accumulate waits or subtract the same interval twice.
+            event.time = visibleTime(event.time);
+            removedTime = rawTime - event.time;
             visible.push({ ...event, eventName: 'HISTORY_SETTINGS', details: JSON.stringify(target.settings),
                 historyId: event.eventName === 'REDO' ? target.id : null,
                 isGenBased: false, targetGen: null });
@@ -3767,18 +3795,21 @@ function parseHistoryMacro(lines) {
     let previousTime = null;
     let simulationRunning = false;
     let brushMotion = false;
+    let windMotion = false;
     let previousBrushElapsed = null;
     return visible.filter(event => event.eventName !== 'HISTORY_ACTION').map(event => {
         if (previousTime !== null) {
-            let gap = event.time - previousTime;
-            if (gap < 0) gap += 86400000;
+            let gap = Math.max(0, event.time - previousTime);
             if (brushMotion && event.brushElapsed !== undefined && previousBrushElapsed !== null) {
                 gap = Math.max(0, event.brushElapsed - previousBrushElapsed);
             }
-            const cap = (brushMotion || simulationRunning) && event.eventName !== 'STEP FORWARD' ? 600000 : 1000;
+            // Restored Wind uses its original batch rhythm rather than idle caps.
+            const cap = (brushMotion || simulationRunning || (event.restoredTiming && windMotion)) && event.eventName !== 'STEP FORWARD' ? 600000 : 1000;
             delta += Math.min(gap, cap);
         }
         previousTime = event.time;
+        if (event.eventName === 'WIND_WAVE') windMotion = true;
+        if (event.eventName === 'WIND_END') windMotion = false;
         if (event.eventName === 'BRUSH_START') brushMotion = true;
         if (event.eventName === 'BRUSH_END') brushMotion = false;
         previousBrushElapsed = brushMotion ? event.brushElapsed : null;

@@ -56,3 +56,5 @@ While an ordinary evolution is running, tapping another evolution ends the curre
 Running simulations temporarily use the existing Gold overlay and icon colors. Pause restores the selected resting theme (Blue by default); playback feedback never changes stored themes or profile drafts. Channel carving, the first erosion mode, defaults to acceleration V in all profiles. Previous untouched default stages upgrade once; custom stages and recorded erosion counts remain unchanged.
 
 Erosion cycles through Channel carving (river), Forward carving (mountain ridges), then Lateral carving (original chevron). The settings mode buttons use the same order and icons.
+
+For version-2 history recipes, Undo removes cancelled actions and their elapsed time from the playback timeline. History-settings checkpoints are instantaneous. Redo relocates the original action while preserving its internal stroke, Wind and simulation timing; deliberation before Undo/Redo is omitted. Normal idle caps and generation targets are unchanged, the original logger file is untouched, and older non-history recipes continue through the legacy parser.
