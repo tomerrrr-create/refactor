@@ -2024,7 +2024,15 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
     background: transparent; color: #93978e; font-size: .73rem; line-height: 1.25; overflow-wrap: anywhere;
     transition: color .18s, background-color .18s, border-color .18s;
 }
-.palette-group-tab[aria-selected="true"] { color: #e6cc8e; background: #b89a5712; border-color: #b89a574d; }
+.palette-group-tab[aria-selected="true"] {
+    color: var(--gold);
+    background: linear-gradient(145deg, #b28b3642, #b28b361c);
+    border-color: #d7b44b;
+    box-shadow: inset 0 1px 0 #ffdf8b28, 0 0 14px #d8b65718;
+    text-shadow: 0 0 12px #ffd70030;
+}
+.palette-group-tab[aria-selected="true"] > span:last-child { font-weight: 600; }
+.palette-group-tab[aria-selected="true"] .palette-group-mark { filter: drop-shadow(0 0 4px #ffd70045); }
 .palette-group-mark, .palette-group-mark svg { display: block; width: 20px; height: 20px; }
 .palette-group-description { margin: 3px 0 5px; padding-inline: 3px; flex-shrink: 0; color: #e1c78f; font-size: .86rem; line-height: 1.6; text-align: center; }
 .palette-current-summary {
@@ -2057,7 +2065,7 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
 .palette-group-tab:focus-visible, .palette-choice:focus-visible, .palette-choice-list:focus-visible { outline: 2px solid #e6cc8e; outline-offset: -2px; }
 @media (hover: hover) {
     .palette-choice:hover { border-color: #b89a5780; background: #b89a5710; }
-    .palette-group-tab:hover { color: #e6cc8e; }
+    .palette-group-tab:not([aria-selected="true"]):hover { color: #e6cc8e; }
 }
 @media (max-width: 480px) {
     #paletteModal .palette-picker-panel, #startupPaletteDialog.palette-picker-panel { --palette-panel-padding: 14px; }
