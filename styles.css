@@ -2013,6 +2013,7 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
 }
 .palette-group-tab[aria-selected="true"] { color: #e6cc8e; background: #b89a5712; border-color: #b89a574d; }
 .palette-group-mark, .palette-group-mark svg { display: block; width: 20px; height: 20px; }
+.palette-group-description { margin: 0; padding-inline: 3px; flex-shrink: 0; color: #a4a69c; font-size: .73rem; line-height: 1.5; }
 .palette-current { flex-shrink: 0; }
 .palette-choice-list { display: flex; flex-direction: column; gap: 7px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 5px; scrollbar-width: thin; scrollbar-color: #62533a transparent; }
 .palette-choice {

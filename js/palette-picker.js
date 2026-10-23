@@ -47,10 +47,14 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     const tabs = element('div', 'palette-group-tabs');
     tabs.setAttribute('role', 'tablist');
     tabs.setAttribute('aria-label', getText('palette_groups'));
+    const description = element('p', 'palette-group-description');
+    description.id = 'palette-group-description';
+    description.setAttribute('aria-live', 'polite');
     const current = element('div', 'palette-current');
     const list = element('div', 'palette-choice-list');
     list.id = 'palette-choice-panel';
     list.setAttribute('role', 'tabpanel');
+    list.setAttribute('aria-describedby', description.id);
     list.tabIndex = 0;
 
     function choice(index, selected = false) {
@@ -75,6 +79,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     if (palettes[selectedIndex]) current.append(choice(selectedIndex, true));
     function showGroup(group) {
         activeGroup = group;
+        description.textContent = getText('palette_group_description_' + group.id);
         for (const tab of tabs.children) {
             const selected = tab.dataset.paletteGroup === group.id;
             tab.setAttribute('aria-selected', String(selected));
@@ -117,6 +122,6 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         });
         tabs.append(tab);
     }
-    host.append(tabs, current, list);
+    host.append(tabs, description, current, list);
     showGroup(activeGroup);
 }
