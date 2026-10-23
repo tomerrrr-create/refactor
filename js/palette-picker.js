@@ -67,9 +67,11 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         button.dataset.paletteIndex = index;
         button.setAttribute('aria-pressed', String(index === selectedIndex));
         const title = element('span', 'palette-choice-title');
-        title.append(paletteIcon(palette), element('span', 'palette-choice-name', getPaletteDisplayName(palette)),
+        title.append(element('span', 'palette-choice-name', getPaletteDisplayName(palette)),
             element('span', 'palette-choice-count', `${palette.colors.length} ${getText('palette_colors')}`));
-        button.append(title, colorRibbon(palette.colors));
+        const preview = element('span', 'palette-choice-preview');
+        preview.append(colorRibbon(palette.colors), paletteIcon(palette));
+        button.append(title, preview);
         if (selected) {
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
             const check = element('span', 'palette-choice-check', '✓');
