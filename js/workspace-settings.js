@@ -31,7 +31,7 @@ function mergeKnown(defaults, overrides, path = '') {
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
         // Optional extension; V1’s original baseline stays unchanged.
-        if (path === '' && ['separatorCycle', 'simulationTheme', 'evolutionTuning'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === '' && ['separatorCycle', 'simulationTheme', 'simulationPlaybackTheme', 'evolutionTuning'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
@@ -63,6 +63,7 @@ export function validateWorkspaceSettings(value) {
         equal(normalizeSortCycle(settings.sortCycle), settings.sortCycle) && integer(settings.nudgeIntervalMs, 0, 200) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&
         (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationTheme)) &&
+        (!Object.hasOwn(settings, 'simulationPlaybackTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationPlaybackTheme)) &&
         typeof settings.smoothing.display === 'boolean' && typeof settings.smoothing.export === 'boolean' &&
         (!Object.hasOwn(settings.smoothing, 'bloom') || typeof settings.smoothing.bloom === 'boolean') &&
         (!Object.hasOwn(settings.smoothing, 'bloomIntensity') || integer(settings.smoothing.bloomIntensity, 0, 100)) &&

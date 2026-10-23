@@ -4,7 +4,7 @@ import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWin
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
-import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, setSimulationRunning } from './simulation-theme.js';
+import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, getSimulationPlaybackTheme, applySimulationPlaybackTheme, setSimulationRunning } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard } from './simulations/islands.js';
@@ -1993,6 +1993,7 @@ if (simulationName === 'magnet') {
         return {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
+            simulationPlaybackTheme: getSimulationPlaybackTheme(),
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
             ...(JSON.stringify(evolutionTuning) === JSON.stringify(DEFAULT_EVOLUTION_TUNING) ? {} : { evolutionTuning: structuredClone(evolutionTuning) }),
             ...(separatorCycle.join() === DEFAULT_SEPARATOR_CYCLE.join() ? {} : { separatorCycle: [...separatorCycle] }),
@@ -2010,6 +2011,7 @@ if (simulationName === 'magnet') {
         evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
         if (islandsSession) islandsSession.activity = evolutionTuning.islands.activity;
         if (settings.simulationTheme) applySimulationTheme(settings.simulationTheme);
+        applySimulationPlaybackTheme(settings.simulationPlaybackTheme);
         separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
         spiralRules = { ...settings.rules.spiral };

@@ -1829,28 +1829,42 @@ button, .ctrl {
 .guide-ripple-tile canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 @media (max-height:650px) { .guide-welcome h2 { margin:12px auto 20px; } .guide-ripple-tile { height:clamp(160px,32dvh,220px); } }
 
-/* Simulation appearance uses moon_time_work's colors without its page layout. */
-:root[data-simulation-theme="gold"] { --sim-color:#a58b54; }
-:root[data-simulation-theme="gold"] .sim-mode-active #simModeBackground {
-  background:linear-gradient(135deg,#1c1a12,#0d0e0c);
-  border-color:#b28b3645;
+/* Crossfade fixed gradient layers; works without animated custom properties. */
+.sim-mode-active #simModeBackground {
+  position: relative;
+  isolation: isolate;
+  border-color: #334155;
+  transition: border-color 900ms ease-in-out, box-shadow 900ms ease-in-out;
+}
+.sim-mode-active #simModeBackground::before,
+.sim-mode-active #simModeBackground::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 900ms ease-in-out;
+}
+.sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
+.sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
+:root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
+:root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }
+:root[data-simulation-effective-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
+:root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
+:root[data-simulation-effective-theme="gold"] #simModeBackground::before,
+:root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
+.sim-mode-active .ctrl svg, .sim-mode-active .ctrl svg [stroke], .sim-mode-active .ctrl svg [fill] {
+  transition: stroke 900ms ease-in-out, fill 900ms ease-in-out;
 }
 .technician-display-settings .simulation-theme-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
-
-:root[data-simulation-theme="teal"] { --sim-color: #68BDB5; }
-:root[data-simulation-theme="teal"] .sim-mode-active #simModeBackground {
-  background: linear-gradient(135deg, #142724, #0a100f);
-  border-color: #68bdb545;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, .4), 0 0 12px #68bdb514;
-}
-
-/* Each circle previews its own simulation appearance, independent of the selection. */
-/* Running feedback reuses Gold without changing the selected resting theme. */
-:root[data-simulation-running] { --sim-color: #a58b54; }
-:root[data-simulation-running] .sim-mode-active #simModeBackground {
-  background: linear-gradient(135deg, #1c1a12, #0d0e0c);
-  border-color: #b28b3645;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+@media (prefers-reduced-motion: reduce) {
+  .sim-mode-active #simModeBackground,
+  .sim-mode-active #simModeBackground::before,
+  .sim-mode-active #simModeBackground::after,
+  .sim-mode-active .ctrl svg,
+  .sim-mode-active .ctrl svg [stroke],
+  .sim-mode-active .ctrl svg [fill] { transition: none; }
 }
 
 .simulation-theme-option .technician-option-heading { flex-wrap: wrap; gap: 14px; }

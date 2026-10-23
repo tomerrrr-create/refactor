@@ -181,6 +181,7 @@ export const translations = {
   cycle_manual: {"en": "Custom", "he": "אישי", "ru": "Свои правила", "nl": "Aangepast"},
   cycle_reset: {"en": "Reset cycle", "he": "איפוס סייקל", "ru": "Сбросить цикл", "nl": "Cyclus herstellen"},
   save_smooth: {"en": "Smooth", "he": "ריכוך", "ru": "Сгладить", "nl": "Zacht"},
+  simulation_playback_theme: { en: "Playback color", he: "צבע בזמן נגינה", ru: "Цвет при воспроизведении", nl: "Kleur tijdens afspelen" },
   interface_zoom: { en: "Zoom", he: "זום", ru: "Масштаб", nl: "Zoom" },
   save_image_options: { en: "Image options", he: "אפשרויות תמונה", ru: "Параметры изображения", nl: "Afbeeldingsopties" },
   save_glow: { en: "Glow", he: "הילה", ru: "Свечение", nl: "Gloed" },

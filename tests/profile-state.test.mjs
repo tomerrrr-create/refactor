@@ -121,6 +121,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     const snapshots = defaultProfileSnapshots(initial());
     const [one, two, three] = snapshots.map(snapshot => snapshot.settings);
     const expected = initial().settings;
+    expected.simulationPlaybackTheme = 'gold';
     expected.rules.erosion.erosionStages.channels = 4;
     Object.assign(expected.startup, { paletteName: 'Hearts', fill: 'random', brushColor: 'none', separatorPx: 3, boardSize: 21, symmetry: 'off' });
     expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));

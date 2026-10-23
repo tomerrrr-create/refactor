@@ -17,6 +17,7 @@ const equal = (a, b) => canonical(a) === canonical(b);
 export function validateProfileSnapshot(value) {
     const settings = validateWorkspaceSettings(value.settings);
     settings.simulationTheme ??= 'blue';
+    settings.simulationPlaybackTheme ??= 'gold';
     const snapshot = { settings };
     if (value.identity) {
         snapshot.identity = {};
