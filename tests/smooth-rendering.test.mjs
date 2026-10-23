@@ -9,7 +9,7 @@ import { prepareDisplayCanvas } from '../js/display-canvas.js';
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function harness(size = 149) {
     const screen = { drawImage() {}, fillRect() {}, setTransform() {} };
-    const h = vm.createContext({ prepareDisplayCanvas, window: { devicePixelRatio: 1 }, isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, isLifePlaying: false,
+    const h = vm.createContext({ prepareDisplayCanvas, window: { devicePixelRatio: 1 }, isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, softBloomIntensity: 32, isLifePlaying: false,
         boardState: Array.from({ length: size * size }, (_, i) => i % 2).map(k => ({ k, v: k, isGold: false, prevK: null })),
         palette: () => ['#000000', '#ffffff'], norm: k => k % 2,
         hexToRgb, lerp, performance: { now: () => 0 }, C: {}, ctx: screen,
@@ -54,7 +54,7 @@ for (const screenSmooth of [false, true]) for (const exportSmooth of [false, tru
         h.isSmoothRendering = screenSmooth; h.renderToScreen(null);
         const exported = { drawImage() {}, fillRect() {}, save() {}, translate() {}, restore() {} };
         h.document.createElement = () => ({ getContext: () => exported, toBlob: cb => cb({}) });
-        h.dom = { btnSaveImage: { innerHTML: 'icon', disabled: false }, saveSmoothImage: { checked: exportSmooth } };
+        h.dom = { saveGlowImage: {checked:false}, btnSaveImage: { innerHTML: 'icon', disabled: false }, saveSmoothImage: { checked: exportSmooth } };
         h.setTimeout = fn => fn(); h.navigator = {}; h.getSanitizedFileName = () => 'test.png';
         h.File = class { constructor(bytes, name) { this.name = name; } };
         let closed = false, downloaded = false;
@@ -93,7 +93,7 @@ for (const size of [9, 21]) for (const gap of [6, 5, 3, 2]) test(`PNG export ${s
     const board = JSON.stringify(h.boardState);
     const exported = { fillRect: (...args) => rectangles.push(args), save() {}, translate() {}, restore() {} };
     h.document.createElement = () => ({ getContext: () => exported, toBlob: cb => cb({}) });
-    h.dom = { btnSaveImage: { innerHTML: 'icon' }, saveSmoothImage: { checked: false } };
+    h.dom = { saveGlowImage: {checked:false}, btnSaveImage: { innerHTML: 'icon' }, saveSmoothImage: { checked: false } };
     h.setTimeout = fn => fn(); h.navigator = {}; h.getSanitizedFileName = () => 'test.png';
     h.File = class {}; h.triggerDownload = () => {}; h.modals = { closeModal() {} };
     const start = source.indexOf('async function shareOrDownloadImage()');

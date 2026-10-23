@@ -10,7 +10,7 @@ import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, rest
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
-import { createSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
+import { createSoftBloom, compositeSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
 import { loadProfileStartup } from './profile-state.js';
@@ -1826,6 +1826,7 @@ if (simulationName === 'magnet') {
             dom.imagePreview.src = URL.createObjectURL(blob);
             dom.fileNameInput.value = C.PALETTES[activePaletteIndex]?.name || getText('saveModal_defaultFilename');
             dom.saveSmoothImage.checked = isSmoothRendering && isSmoothDisplayAvailable(n, separatorPx);
+            dom.saveGlowImage.checked = isSoftBloom;
             dom.saveModal.classList.add('modal-visible');
             dom.btnSave.disabled = false;
         }, 'image/png');
@@ -1854,6 +1855,8 @@ if (simulationName === 'magnet') {
       // הפונקציה הראשית החדשה שמחליפה את הקודמת
       async function shareOrDownloadImage() {
         const smoothExport = dom.saveSmoothImage.checked;
+        const glowExport = dom.saveGlowImage.checked;
+        const glowIntensity = softBloomIntensity;
         const originalButtonText = dom.btnSaveImage.innerHTML;
         dom.btnSaveImage.innerHTML = `
             <svg class="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1884,6 +1887,10 @@ if (simulationName === 'magnet') {
             const exportSeparatorPx = displaySeparatorPx > 0 && canvas.clientWidth > 0
                 ? displaySeparatorPx * drawingAreaSize / canvas.clientWidth : displaySeparatorPx;
             renderBoard(offscreenCtx, drawingAreaSize, drawingAreaSize, null, smoothExport, exportSeparatorPx);
+            if (glowExport) compositeSoftBloom(offscreenCtx, offscreenCanvas, {
+                intensity: glowIntensity, referenceWidth: canvas.clientWidth,
+                sourceX: borderSize, sourceY: borderSize, width: drawingAreaSize, height: drawingAreaSize
+            });
             offscreenCtx.restore();
             resolve();
         }, 50));
@@ -2314,6 +2321,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnModalClose.title = getText('saveModal_close');
         dom.btnSaveImage.title = getText('saveModal_saveImage');
         dom.saveSmoothImage.parentElement.title = getText('save_smooth_note');
+        dom.saveGlowImage.parentElement.title = getText('save_glow_note');
         const settingsButton = document.getElementById('btnSaveSettings');
         settingsButton.title = getText('saveModal_saveSettings');
         settingsButton.setAttribute('aria-label', settingsButton.title);

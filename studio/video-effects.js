@@ -1,4 +1,4 @@
-import { DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity } from './engine/js/soft-bloom.js';
+import { DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, compositeSoftBloom } from './engine/js/soft-bloom.js';
 
 export const DEFAULT_VIDEO_EFFECTS = { smooth:true, glow:true, intensity:DEFAULT_BLOOM_INTENSITY };
 
@@ -30,23 +30,5 @@ export function inspectEffects(queue) {
 // Match the app's 160px bloom copy, screen blend, opacity and blur formula.
 // CSS-only overlays are not captured by VideoFrame, so composite into output.
 export function compositeGlow(output, small, intensity, displayWidth) {
-  intensity = normalizeBloomIntensity(intensity);
-  if (!intensity) return;
-  const scale = Math.min(1,160/output.width,160/output.height);
-  const width = Math.max(1,Math.round(output.width*scale));
-  const height = Math.max(1,Math.round(output.height*scale));
-  if (small.width !== width) small.width = width;
-  if (small.height !== height) small.height = height;
-  const copy = small.getContext('2d');
-  copy.imageSmoothingEnabled = true;
-  copy.clearRect(0,0,width,height);
-  copy.drawImage(output,0,0,width,height);
-  const context = output.getContext('2d');
-  context.save();
-  context.globalCompositeOperation = 'screen';
-  context.globalAlpha = intensity/100*.45;
-  context.imageSmoothingEnabled = true;
-  context.filter = `blur(${(3+intensity*.09)*output.width/Math.max(1,displayWidth)}px)`;
-  context.drawImage(small,0,0,output.width,output.height);
-  context.restore();
+  compositeSoftBloom(output.getContext('2d'),output,{intensity,referenceWidth:displayWidth,copyCanvas:small});
 }
