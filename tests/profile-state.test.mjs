@@ -123,7 +123,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     const expected = initial().settings;
     expected.simulationPlaybackTheme = 'gold';
     expected.rules.erosion.erosionStages.channels = 4;
-    Object.assign(expected.startup, { paletteName: 'Hearts', fill: 'random', brushColor: 'none', separatorPx: 3, boardSize: 21, symmetry: 'off' });
+    Object.assign(expected.startup, { paletteName: '@random', fill: 'random', brushColor: 'none', separatorPx: 3, boardSize: 21, symmetry: 'off' });
     expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
     assert.deepEqual(one, expected);
     assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
@@ -347,7 +347,7 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
     disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({version:1, defaultsVersion:6, selected:0, profiles}));
     const state = createProfileState(initial(), disk);
     state.persist();
-    assert.equal(JSON.parse(disk.getItem(PROFILE_STORAGE_KEY)).profiles[0].saved.settings.startup.paletteName, 'Hearts');
+    assert.equal(JSON.parse(disk.getItem(PROFILE_STORAGE_KEY)).profiles[0].saved.settings.startup.paletteName, '@random');
     assert.equal(state.draft().settings.startup.paletteName, 'Ancient 264');
     assert.equal(state.draft().settings.startup.brushColor, 'none');
     assert.equal(state.draft().settings.cycles.chiFlow[1].reach, 3);
@@ -359,7 +359,7 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
     assert.deepEqual(factory.identity.chiFlow.sources, ['Harmony','Nova','Alexis']);
     assert.equal(factory.identity.chiFlow.index, 0);
     assert.deepEqual(factory.identity.chiFlow.yoursRules, CHI_FLOW_PRESETS.Harmony);
-    assert.equal(loadProfileStartup(initial().settings.startup, storage()).paletteName, 'Hearts');
+    assert.equal(loadProfileStartup(initial().settings.startup, storage()).paletteName, '@random');
 });
 
 test('profile one opens at 21 with medium separators and symmetry off without changing other profiles', () => {
@@ -413,7 +413,7 @@ test('version 11 updates former profile-one defaults without losing custom draft
     assert.deepEqual(createProfileState(initial(),disk).draft(),state.draft());
 });
 
-test('saved fixed startup palettes survive the Hearts factory default', () => {
+test('saved fixed startup palettes survive the random factory default', () => {
     const disk = storage();
     const profiles = [0,1,2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));
     for (const kind of ['saved', 'draft']) profiles[0][kind].settings.startup.paletteName = 'Hearts';
@@ -422,12 +422,12 @@ test('saved fixed startup palettes survive the Hearts factory default', () => {
     assert.equal(state.draft().settings.startup.paletteName, 'Hearts');
     state.persist();
     assert.equal(loadProfileStartup(initial().settings.startup, disk).paletteName, 'Hearts');
-    assert.equal(factoryProfileSnapshot(0).settings.startup.paletteName, 'Hearts');
+    assert.equal(factoryProfileSnapshot(0).settings.startup.paletteName, '@random');
     assert.deepEqual(state.draft(1), profiles[1].draft);
     assert.deepEqual(state.draft(2), profiles[2].draft);
 });
 
-test('saved random and personal startup choices survive the Hearts default', () => {
+test('saved random and personal startup choices survive the random default', () => {
     for (const paletteName of ['@random', 'Journey']) {
         const disk = storage();
         const profiles = [0,1,2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));

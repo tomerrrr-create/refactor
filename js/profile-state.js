@@ -1,3 +1,4 @@
+import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
 import { validateWorkspaceSettings, deserializeWorkspaceSettings, defaultWorkspaceSettings } from './workspace-settings.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS, defaultGameOfLifeRules } from './constants.js';
 import { normalizeCycleSources, inferCycleSources } from './evolution-cycle-settings.js';
@@ -46,7 +47,7 @@ const PROFILE_EROSION_STAGES = [
 
 function applyProfileOneDefaults(snapshot) {
     Object.assign(snapshot.settings.startup, {
-        paletteName: 'Hearts', fill: 'random', brushColor: 'none', brushSize: 1, separatorPx: 3, boardSize: 21, symmetry: 'off', interfaceMode: 'creative'
+        paletteName: RANDOM_STARTUP_PALETTE, fill: 'random', brushColor: 'none', brushSize: 1, separatorPx: 3, boardSize: 21, symmetry: 'off', interfaceMode: 'creative'
     });
     snapshot.settings.brush.symmetry = 'off';
     snapshot.settings.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => clone(CHI_FLOW_PRESETS[name]));
@@ -292,7 +293,7 @@ export function createProfileState(initial, storage) {
                 // Upgrade former factory values only; keep personal overrides and other profiles.
                 const previous = { paletteName: 'Autumn into Winter 264', boardSize: 249,
                     separatorPx: 0, fill: 'dark', brushColor: 'rainbow' };
-                const next = { paletteName: 'Hearts', boardSize: 21,
+                const next = { paletteName: RANDOM_STARTUP_PALETTE, boardSize: 21,
                     separatorPx: 3, fill: 'random', brushColor: 'none' };
                 for (const kind of ['saved', 'draft']) {
                     const startup = state.profiles[0][kind].settings.startup;
