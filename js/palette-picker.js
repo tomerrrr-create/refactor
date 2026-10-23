@@ -89,7 +89,14 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const nameLabel = element('span', 'palette-current-name', name);
         nameLabel.title = name;
         const count = element('span', 'palette-choice-count', `${palette.colors.length} ${getText('palette_colors')}`);
-        current.append(dot, label, nameLabel, count, colorRibbon(palette.colors));
+        const details = element('div', 'palette-current-details');
+        details.dir = rtl ? 'rtl' : 'ltr';
+        details.append(dot, label, nameLabel, count);
+        const icon = paletteIcon(palette);
+        icon.classList.add('palette-current-icon');
+        // Keep the ribbon and icon at the physical right edge in both languages.
+        current.dir = 'ltr';
+        current.append(details, colorRibbon(palette.colors), icon);
     }
     function showGroup(group) {
         activeGroup = group;

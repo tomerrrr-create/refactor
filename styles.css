@@ -2034,10 +2034,11 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
     border-top: 1px solid #ae955836; background: #111512;
 }
 .palette-current-dot { width: 5px; height: 5px; border-radius: 50%; background: #dfc78d; box-shadow: 0 0 9px #d2b56655; flex-shrink: 0; }
+.palette-current-details { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
 .palette-current-label { color: #a79774; font-size: .63rem; flex-shrink: 0; }
 .palette-current-name { color: #e7d19d; font-size: .73rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .palette-current-summary .palette-choice-count { font-size: .6rem; }
-.palette-current-summary .palette-color-ribbon { width: 55px; height: 8px; flex-shrink: 0; margin-inline-start: auto; }
+.palette-current-summary .palette-color-ribbon { width: 55px; height: 8px; flex-shrink: 0; }
 .palette-choice-check { color: #d8bd82; font-size: .75rem; flex-shrink: 0; }
 .palette-choice-list { display: flex; flex-direction: column; gap: 7px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 5px; scrollbar-width: thin; scrollbar-color: #62533a transparent; }
 .palette-choice {
