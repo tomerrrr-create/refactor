@@ -101,3 +101,6 @@ Display zoom does not change the browser zoom setting.
 
 Picker releases use browser hit-testing rather than CSS-zoom rectangles, so
 desktop mouse taps and touch gestures remain aligned with the visible controls.
+
+Zoomed board layout budgets use control layout height multiplied by zoom, so
+older browsers reporting unscaled rectangles also release space to the board.

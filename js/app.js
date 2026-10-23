@@ -2893,7 +2893,9 @@ function updateLayout() {
         const padding = window.getComputedStyle(container);
         const top = parseFloat(padding.paddingTop) || 0;
         const sides = (parseFloat(padding.paddingLeft) || 0) + (parseFloat(padding.paddingRight) || 0);
-        const controlsHeight = dom.controlsContainer.getBoundingClientRect().height;
+        // offsetHeight is in layout pixels; apply zoom explicitly. Older Chrome
+        // reports unscaled bounding rectangles, reserving the original height.
+        const controlsHeight = dom.controlsContainer.offsetHeight * zoom;
         const controlsGap = (parseFloat(window.getComputedStyle(dom.controlsContainer).marginTop) || 0) * zoom;
         const availableHeight = window.innerHeight - controlsHeight - Math.max(top * 2, top + controlsGap);
         const availableWidth = window.innerWidth < 768 ? container.clientWidth - sides : window.innerWidth * .85;
