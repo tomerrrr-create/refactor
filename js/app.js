@@ -1,3 +1,4 @@
+import { openStudio } from './studio-link.js';
 import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, nextWindEffect, createWindModeIcon } from './wind-settings.js';
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
@@ -2354,7 +2355,8 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnUndo.title = getText('tooltip_undo');
         dom.btnDark.title = getText('tooltip_dark'); 
         dom.btnSpecialReset.title = getText('tooltip_specialReset');
-        dom.btnResetBoard.title = getText('tooltip_resetBoard'); 
+        dom.btnResetBoard.title = getText('tooltip_resetBoard');
+        dom.btnResetBoard.setAttribute('aria-label', getText('tooltip_resetBoard'));
         dom.btnResizeUp.title = getText('tooltip_resizeUp');
         dom.btnResizeDown.title = getText('tooltip_resizeDown'); 
         dom.btnSave.title = getText('tooltip_save');
@@ -3609,6 +3611,16 @@ function createArtRecipeFile(prefix = '') {
     const fileName = `${prefix}Intuition_Path_${cleanPaletteName}_${linesCount}.txt`;
 
     return new File([exportedLog.join('\n')], fileName, { type: 'text/plain' });
+}
+
+// Capture live simulation progress without pausing or changing the original log.
+function createStudioRecipeFile() {
+    const file = createArtRecipeFile();
+    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands') return file;
+    const now = new Date();
+    const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+    const generation = armedSimulation === 'breathe' ? '' : ` [GEN:${currentGenerationCount}]`;
+    return new File([file, `\n[${timestamp}]${generation} PAUSE -> ---`], file.name, { type: 'text/plain' });
 }
 
 async function saveArtRecipeFile(file) {
@@ -5022,7 +5034,11 @@ bindPickerGestures(dom.btnPalette, {
     holdMs: C.LONG_PRESS_SHOW_MS
 });
 
-        dom.btnResetBoard.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(resetToGoldAndDefaultPalette)));
+        dom.btnResetBoard.addEventListener('click', (e) => handleCtrlClick(e, () => openStudio({
+            language: getCurrentLang(), capture: createStudioRecipeFile,
+            onBlocked: () => alert(getText('studio_popup_blocked')),
+            onError: () => alert(getText('studio_transfer_failed'))
+        })));
         dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
         for (const [button, increase] of [[dom.btnResizeUp, true], [dom.btnResizeDown, false]]) {
             bindPickerGestures(button, {

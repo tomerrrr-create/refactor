@@ -2,6 +2,7 @@ import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pwaBuild } from './update-pwa-cache.mjs';
+import { buildStudio } from './build-studio.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
@@ -37,6 +38,7 @@ export async function buildVercel({ branch = process.env.VERCEL_GIT_COMMIT_REF,
             .replace(/<link rel="icon"[^>]*>/, `<link rel="icon" type="image/png" sizes="${size}" href="${icon}">`);
         await writeFile(htmlPath, html);
     }
+    await buildStudio({ outputDirectory:path.join(outputDirectory,'studio') });
     const built = await pwaBuild(outputDirectory);
     await writeFile(path.join(outputDirectory, 'service-worker.js'), built.worker);
     return { variant: work ? 'work' : 'main', branch: branch || 'unspecified', version: built.version, outputDirectory };

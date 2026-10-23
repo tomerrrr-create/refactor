@@ -58,3 +58,29 @@ Running simulations temporarily use the existing Gold overlay and icon colors. P
 Erosion cycles through Channel carving (river), Forward carving (mountain ridges), then Lateral carving (original chevron). The settings mode buttons use the same order and icons.
 
 For version-2 history recipes, Undo removes cancelled actions and their elapsed time from the playback timeline. History-settings checkpoints are instantaneous. Redo relocates the original action while preserving its internal stroke, Wind and simulation timing; deliberation before Undo/Redo is omitted. Normal idle caps and generation targets are unchanged, the original logger file is untouched, and older non-history recipes continue through the legacy parser.
+
+## Video Studio (v6)
+
+The person button opens `studio/` in a new tab and passes a read-only snapshot
+of the current logger with an origin- and token-checked browser message. It no
+longer resets the board. This is available on mobile too; encoding capabilities
+and resource limits still depend on the device. English/Hebrew and LTR/RTL follow
+the app's language at opening; Studio has no separate language picker.
+
+Rendering and encoding run locally. No macro upload API is used. The normal app
+loads only the small handoff module; Studio libraries are neither imported nor
+pre-cached by the normal PWA. Engine preferences use disposable in-memory storage
+and never write to the application's saved profiles or settings.
+
+Run `node tools/build-vercel.mjs` to build the app and Studio into `dist/`, then
+serve that directory. `node tools/build-studio.mjs` generates the isolated engine
+for local testing directly in `studio/engine/` (gitignored). The engine is derived
+from the current app source on every build, so simulations have one source of
+truth. GitHub Pages hosting should publish the built `dist/` directory as well.
+
+Studio retains v5's button choices, computed/real-time export, background support
+for computed mode, defaults of 1080 square / 60 fps / high quality, and enabled
+Smooth and 32% Glow. Recorded explicit display preferences override fallbacks.
+MP4 uses H.264 WebCodecs; VP9 WebM or real-time MediaRecorder are supported
+fallbacks. No preview is copied or displayed in computed mode. Keep the device
+awake and the Studio tab open; background throttling can slow or suspend work.

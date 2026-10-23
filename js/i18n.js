@@ -9,6 +9,9 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  studio_popup_blocked: { en: "Allow pop-ups for this site to open Video Studio.", he: "יש לאפשר חלונות קופצים לאתר כדי לפתוח את הסטודיו.", ru: "Разрешите всплывающие окна для открытия видеостудии.", nl: "Sta pop-ups toe om de videostudio te openen." },
+  studio_transfer_failed: { en: "The macro could not be transferred. You can save the logger and select its file in Studio.", he: "לא ניתן להעביר את המקרו. אפשר לשמור את הלוגר ולבחור את הקובץ בסטודיו.", ru: "Не удалось передать макрос. Сохраните журнал и выберите файл в студии.", nl: "De macro kon niet worden overgedragen. Sla het logbestand op en selecteer het in Studio." },
+
   tooltip_wind_cycle: {"en": "Wind: tap to change mode; swipe up for settings; swipe down to return to the brush", "he": "רוח: לחיצה להחלפת מצב; החלקה למעלה להגדרות; החלקה למטה לחזרה למברשת", "ru": "Ветер: нажмите для смены режима; смахните вверх для настроек; вниз — вернуться к кисти", "nl": "Wind: tik om van modus te wisselen; veeg omhoog voor instellingen; omlaag om terug te gaan naar het penseel"},
   wind_mode: {"en": "Ripple mode", "he": "סוג האדווה", "ru": "Режим волны", "nl": "Soort rimpeling"},
   wind_mode_displace: {"en": "Move existing colors", "he": "הזזת הצבעים הקיימים", "ru": "Перемещение существующих цветов", "nl": "Bestaande kleuren verplaatsen"},
@@ -329,7 +332,7 @@ export const translations = {
   tooltip_undo: { en: "Undo", he: "בטל", ru: "Отменить", nl: "Ongedaan maken" },
   tooltip_dark: { en: "Go dark", he: "לוח כהה", ru: "Затемнить", nl: "Verduisteren" },
   tooltip_specialReset: { en: "Visit somewhere", he: "אל הלא נודע", ru: "Отправиться в неизведанное", nl: "Bezoek ergens" },
-  tooltip_resetBoard: { en: "Restart", he: "נקודת התחלה", ru: "Начать заново", nl: "Herstarten" },
+  tooltip_resetBoard: { en: "Open Video Studio", he: "פתיחת סטודיו לווידאו", ru: "Открыть видеостудию", nl: "Videostudio openen" },
   tooltip_resizeUp: { en: "Rise up!", he: "הגדלת הלוח", ru: "Увеличить!", nl: "Groter worden!" },
   tooltip_resizeDown: { en: "Go minimal", he: "הקטנת הלוח", ru: "Уменьшить", nl: "Minimaliseer" },
   tooltip_gap: { en: "Grid Separator", he: "מרווח בין אריחים", ru: "Разделитель сетки", nl: "Raster-scheiding" },
@@ -405,7 +408,7 @@ export const translations = {
   help_gravitationalSort: {"en": "Gravity\nTap to cycle: upward, rightward or center sorting.", "he": "גרביטציה\nלחיצה למעבר בין מיון למעלה, ימינה או למרכז.", "ru": "Гравитация\nНажатие переключает сортировку вверх, вправо или к центру.", "nl": "Zwaartekracht\nTik om te wisselen: sorteren naar boven, rechts of het midden."},
   help_erosion: {"en": "Erosion\nWater erodes earth. Tap to cycle: sideways carving, forward carving or channel carving. Groups follow palette order.", "he": "שחיקה\nמים שוחקים אדמה. לחיצה למעבר בין חציבה לצדדים, חציבה קדימה וחציבת תעלות. הקבוצות לפי סדר הפלטה.", "ru": "Эрозия\nВода размывает землю. Нажатие переключает боковое вырезание, прямую эрозию и каналы. Группы следуют порядку палитры.", "nl": "Erosie\nWater erodeert aarde. Tik om te wisselen: zijwaarts uithollen, vooruit uithollen of kanalen uithollen. Groepen volgen de paletvolgorde."},
   help_dla: {"en": "DLA growth\nParticles attach and grow structures. Tap to cycle: with or without color genetics.", "he": "צמיחת DLA\nחלקיקים נצמדים ומגדלים מבנים. לחיצה למעבר בין צמיחה עם גנטיקת צבע ובלעדיה.", "ru": "Рост DLA\nЧастицы прикрепляются и растят структуры. Нажатие переключает рост с генетикой цвета и без неё.", "nl": "DLA-groei\nDeeltjes hechten zich vast en laten structuren groeien. Tik om te wisselen: met of zonder kleurgenetica."},
-  help_resetBoard: {"en": "Reset creation\nJourney palette, a 5×5 board and a gold seed in the center.", "he": "איפוס יצירה\nפלטת מסע, לוח 5×5 וזרע זהב במרכז.", "ru": "Сброс композиции\nПалитра Journey, доска 5×5 и золотое семя в центре.", "nl": "Creatie resetten\nJourney-palet, een bord van 5×5 en een gouden zaad in het midden."},
+  help_resetBoard: {"en": "Video Studio\nOpen a new tab with a copy of the current macro. Export video locally on your device.", "he": "סטודיו לווידאו\nפתיחת לשונית חדשה עם עותק המקרו הנוכחי. ייצוא וידאו מקומי במכשיר.", "ru": "Видеостудия\nОткрывает новую вкладку с копией текущего макроса для локального экспорта видео.", "nl": "Videostudio\nOpen een nieuw tabblad met een kopie van de huidige macro en exporteer video lokaal."},
   help_resizeUp: {"en": "Enlarge board\nSwipe or drag up to enter an exact size.", "he": "הגדלת הלוח\nהחלקה או גרירה למעלה לקביעת גודל מדויק.", "ru": "Увеличение доски\nСмахните или потяните вверх для точного размера.", "nl": "Bord vergroten\nVeeg of sleep omhoog voor een exact formaat."},
   help_resizeDown: {"en": "Shrink board\nTrims the edges. Swipe or drag up to enter an exact size.", "he": "הקטנת הלוח\nחותכת את הקצוות. החלקה או גרירה למעלה לקביעת גודל מדויק.", "ru": "Уменьшение доски\nОбрезает края. Смахните или потяните вверх для точного размера.", "nl": "Bord verkleinen\nSnijdt de randen af. Veeg of sleep omhoog voor een exact formaat."},
   help_gap: {"en": "Tile spacing\nTap to change the gaps between tiles.", "he": "מרווחים בין אריחים\nלחיצה לשינוי המרווחים.", "ru": "Зазоры между клетками\nНажатие — изменить зазоры.", "nl": "Tussenruimte\nTik om de afstand tussen tegels te wijzigen."},

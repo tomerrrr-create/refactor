@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Follow Your Intuition · Video Studio</title>
+<link rel="icon" href="engine/icons/fyi-eclipse-192.png">
+<style>
+:root{color-scheme:dark;--gold:#e8c76f;--muted:#9995a4;--border:#2b2933}
+*{box-sizing:border-box}body{margin:0;background:#09090d;color:#efedf3;font:16px system-ui,-apple-system,sans-serif}main{max-width:850px;margin:38px auto;padding:0 24px}header{text-align:center;margin-bottom:30px}.brand{mix-blend-mode:screen;display:block;width:112px;height:112px;margin:0 auto 12px}h1{font-size:clamp(23px,4vw,34px);font-weight:300;letter-spacing:1.5px;word-spacing:5px;color:var(--gold);margin:0 0 9px}.subtitle{font-size:11px;letter-spacing:4px;color:#b6a77f}header p{color:var(--muted);font-size:15px;margin:18px 0 0}p{line-height:1.7}.panel{background:linear-gradient(150deg,#15141d,#101016);border:1px solid var(--border);border-radius:24px;padding:28px}.file-title{display:block;font-size:14px;margin-bottom:10px}.file-input{width:100%;padding:15px;background:#1b1a24;border-radius:12px;color:#d6d2df;border:1px dashed #514937;font:inherit}.file-input::file-selector-button{background:#302a1d;color:var(--gold);border:0;border-radius:8px;padding:9px 14px;margin-inline-end:16px;cursor:pointer}fieldset{border:0;padding:0;margin:26px 0 0;min-width:0}legend{padding:0 0 12px;font-size:14px;color:#c1bdca}.choices{display:grid;gap:8px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.five{grid-template-columns:repeat(5,minmax(0,1fr))}.four{grid-template-columns:repeat(4,minmax(0,1fr))}.three{grid-template-columns:repeat(3,minmax(0,1fr))}.choice{position:relative;cursor:pointer;min-width:0}.choice input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}.tile{display:flex;align-items:center;justify-content:center;min-height:48px;padding:10px 8px;border:1px solid #37343f;border-radius:11px;background:#1b1a23;color:#aaa6b5;text-align:center;transition:background .15s,border-color .15s,color .15s}.choice input:checked+.tile{color:#f1d58e;border-color:#a98a47;background:#332b1b;box-shadow:inset 0 0 0 1px #bd975824}.choice:hover .tile{border-color:#746344}.choice input:focus-visible+.tile{outline:2px solid #f6dea4;outline-offset:3px}.choice input:disabled+.tile{opacity:.45;cursor:default}.mode .tile{flex-direction:column;gap:6px;min-height:88px}.mode strong{font-weight:500;font-size:15px}.mode small{font-size:12px;color:var(--muted)}.mode svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.settings-row{display:grid;grid-template-columns:1fr 1fr;gap:24px}.muted{color:var(--muted);font-size:13px}#modeNote{margin:14px 0 0}#format{margin:24px 0 12px;color:#c3b48e;font-size:13px}button,.download{font:inherit;border-radius:11px;padding:13px 24px;border:0;cursor:pointer;background:var(--gold);color:#211a0a;text-decoration:none;display:inline-block}button:disabled{opacity:.35;cursor:default}.secondary{background:#2d2935;color:#ddd}nav{display:flex;gap:10px;margin:0 0 22px;flex-wrap:wrap}progress{display:block;width:100%;height:5px;accent-color:var(--gold);border:0;border-radius:8px;background:#292630}progress::-webkit-progress-bar{border-radius:8px;background:#292630}progress::-webkit-progress-value{border-radius:8px;background:var(--gold)}#status{min-height:24px;color:#b9b3c4;font-size:13px;margin:12px 0 0}#error{color:#ffb8b0;white-space:pre-wrap;font-size:14px}#error:empty{display:none}canvas{display:block;width:100%;max-width:520px;margin:24px auto 0;background:#050509;border-radius:8px}iframe{position:fixed;left:-5000px;top:0;width:1200px;height:1400px;border:0}[hidden]{display:none!important}footer{text-align:center;font-size:12px;line-height:1.8;margin:20px 0;color:#817b8e}a{color:var(--gold)}
+@media(max-width:620px){main{padding:0 16px;margin-top:22px}.panel{padding:20px}.settings-row{grid-template-columns:1fr;gap:0}.five{grid-template-columns:repeat(3,minmax(0,1fr))}.brand{width:90px;height:90px}.mode strong{font-size:13px}.mode small{font-size:11px}.tile{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<header><img class="brand" src="engine/icons/fyi-eclipse-512.png" alt="לוגו Follow Your Intuition" width="112" height="112"><h1 lang="en" dir="ltr">follow your intuition</h1><div class="subtitle" lang="en" dir="ltr">VIDEO STUDIO</div><p>היצירה שלך, בתנועה.</p></header>
+<section class="panel" aria-label="המרת מקרו לווידאו">
+<label class="file-title" for="file">בחר קובץ מקרו או לוגר</label><input class="file-input" id="file" type="file" accept=".txt,text/plain">
+<p id="importedRecipe" class="muted" role="status"></p>
+<fieldset id="mode"><legend>שיטת ייצוא</legend><div class="choices two mode">
+<label class="choice"><input type="radio" name="mode" value="computed" checked><span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M9 1v4m6-4v4M9 19v4m6-4v4M1 9h4m-4 6h4m14-6h4m-4 6h4"/></svg><strong>חישוב פריימים</strong><small>שעון מבוקר · ללא תצוגה מקדימה</small></span></label>
+<label class="choice"><input type="radio" name="mode" value="realtime"><span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4Z"/></svg><strong>ניגון והקלטה</strong><small>בזמן אמת · עם תצוגה מקדימה</small></span></label>
+</div></fieldset>
+<p id="modeNote" class="muted"></p>
+<fieldset id="size"><legend>גודל הסרטון</legend><div class="choices five" dir="ltr">
+<label class="choice"><input type="radio" name="size" value="540"><span class="tile">540 × 540</span></label>
+<label class="choice"><input type="radio" name="size" value="720"><span class="tile">720 × 720</span></label>
+<label class="choice"><input type="radio" name="size" value="1080" checked><span class="tile">1080 × 1080</span></label>
+<label class="choice"><input type="radio" name="size" value="1440"><span class="tile">1440 × 1440</span></label>
+<label class="choice"><input type="radio" name="size" value="2160"><span class="tile">2160 × 2160</span></label>
+</div></fieldset>
+<div class="settings-row">
+<fieldset id="fps"><legend>פריימים לשנייה</legend><div class="choices four" dir="ltr">
+<label class="choice"><input type="radio" name="fps" value="15"><span class="tile">15</span></label>
+<label class="choice"><input type="radio" name="fps" value="24"><span class="tile">24</span></label>
+<label class="choice"><input type="radio" name="fps" value="30"><span class="tile">30</span></label>
+<label class="choice"><input type="radio" name="fps" value="60" checked><span class="tile">60</span></label>
+</div></fieldset>
+<fieldset id="quality"><legend>איכות קידוד</legend><div class="choices three">
+<label class="choice"><input type="radio" name="quality" value="8"><span class="tile">חסכונית</span></label>
+<label class="choice"><input type="radio" name="quality" value="16" checked><span class="tile">גבוהה</span></label>
+<label class="choice"><input type="radio" name="quality" value="24"><span class="tile">מרבית</span></label>
+</div></fieldset>
+</div>
+<fieldset id="effects"><legend>אפקטים</legend><div class="choices two">
+<label class="choice"><input id="glow" type="checkbox" checked><span class="tile" dir="ltr">Glow · <span id="glowLevel">32%</span><span id="glowSource"></span></span></label>
+<label class="choice"><input id="smooth" type="checkbox" checked><span class="tile" dir="ltr">Smooth <span id="smoothSource"></span></span></label>
+</div><p class="muted">הגדרות שמופיעות בקובץ מיושמות אוטומטית. כשאין הגדרה, הבחירה שלך קובעת.</p></fieldset>
+<p id="format" class="muted">בודק תמיכה בייצוא…</p>
+<nav><button id="start" disabled>יצירת וידאו</button><button id="cancel" class="secondary" hidden>ביטול</button><a id="download" class="download" hidden>שמירת הסרטון</a></nav>
+<progress id="progress" max="100" value="0" aria-label="התקדמות ההמרה"></progress>
+<p id="status" role="status" aria-live="polite">טוען את מנוע הניגון…</p><p id="error" role="alert"></p>
+<canvas id="preview" width="1" height="1" aria-label="תצוגת הסרטון" hidden></canvas>
+</section>
+<footer>הכול במחשב שלך · ללא קול<br><span id="runtimeHint">השאר את הכלי פתוח ואת המחשב ער.</span><br>איכות וגודל גבוהים דורשים יותר זמן וזיכרון.<br><span lang="en" dir="ltr">Studio · v6</span></footer>
+</main>
+<iframe id="engine" src="engine/index.html" title="מנוע ניגון מקומי" aria-hidden="true" tabindex="-1"></iframe>
+<script src="vendor/mp4-muxer.js"></script><script src="vendor/webm-muxer.js"></script><script type="module" src="exporter.js"></script>
+</body></html>
