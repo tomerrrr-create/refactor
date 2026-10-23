@@ -98,3 +98,6 @@ per browser, independently of profiles, recordings, image/video export and macro
 fullscreen. The same zoom scales the opening slogan and menu surfaces, while backdrops
 still cover the viewport. Menus keep viewport-aware bounds and scrolling.
 Display zoom does not change the browser zoom setting.
+
+Picker releases use browser hit-testing rather than CSS-zoom rectangles, so
+desktop mouse taps and touch gestures remain aligned with the visible controls.

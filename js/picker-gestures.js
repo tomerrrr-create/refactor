@@ -51,7 +51,7 @@ export function bindPickerGestures(button, {
             id: event.pointerId, x: event.clientX, y: event.clientY,
             currentX: event.clientX, currentY: event.clientY,
             touch: event.pointerType === 'touch' || event.pointerType === 'pen',
-            moved: false, held: false, bounds: button.getBoundingClientRect()
+            moved: false, held: false
         };
         button.setPointerCapture(event.pointerId);
         holdTimer = setTimeout(() => {
@@ -78,8 +78,11 @@ export function bindPickerGestures(button, {
         const state = active, open = swipeReady(state) && canOpen();
         const down = onSwipeDown && swipeReady(state, 1);
         const side = onSwipeSide && canSwipeSide() && sidewaysReady(state);
-        const inside = state.currentX >= state.bounds.left && state.currentX <= state.bounds.right &&
-            state.currentY >= state.bounds.top && state.currentY <= state.bounds.bottom;
+        // CSS zoom geometry differs in older desktop browsers. Ask the browser's
+        // hit tester, using the same viewport coordinates as pointer events.
+        // Pointer capture alone cannot tell whether release was over the button.
+        const hit = document.elementFromPoint(state.currentX, state.currentY);
+        const inside = hit === button || (hit !== null && button.contains(hit));
         const tap = !state.moved && !state.held && inside;
         active = null; clearHoldTimers(); clearGlow(); releaseCapture(state.id);
         onEnd();

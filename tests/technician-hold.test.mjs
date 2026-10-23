@@ -10,7 +10,7 @@ function harness(t, pointerType = 'touch') {
     t.after(() => Object.assign(globalThis, original));
     let now = 0, nextId = 0;
     const timers = new Map(), classes = new Set(), actions = [], handlers = new Map(), captured = new Set();
-    const button = { id: 'btnToggleSimMode', getBoundingClientRect: () => ({left: 0, top: 0, right: 50, bottom: 50}),
+    const button = { id: 'btnToggleSimMode', contains: node => node === button, getBoundingClientRect: () => ({left: 0, top: 0, right: 50, bottom: 50}),
         setPointerCapture: id => captured.add(id), hasPointerCapture: id => captured.has(id), releasePointerCapture: id => captured.delete(id),
         addEventListener(type, fn) { handlers.set(type, fn); },
         classList: { add: c => classes.add(c), remove: c => classes.delete(c), toggle(c, on) { if(on) classes.add(c); else classes.delete(c); } } };
@@ -20,7 +20,7 @@ function harness(t, pointerType = 'touch') {
         prepareBoardForSimMode() { actions.push('init'); },
         goDarkAction() { actions.push('dark'); },
         modals: { openTechnicianMenu(trigger) { assert.equal(trigger, button); actions.push('technicians'); } } });
-    Object.assign(globalThis, {document: {addEventListener() {}}, window: {addEventListener() {}},
+    Object.assign(globalThis, {document: {addEventListener() {}, elementFromPoint: (x,y) => x >= 0 && x <= 50 && y >= 0 && y <= 50 ? button : null}, window: {addEventListener() {}},
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, {fn, at: now + ms}); return id; }, clearTimeout: id => timers.delete(id)});
     const start = app.indexOf('bindPickerGestures(dom.btnToggleSimMode,');
     vm.runInContext(app.slice(start, app.indexOf('// A swipe opens settings', start)), context);

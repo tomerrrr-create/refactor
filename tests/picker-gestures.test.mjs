@@ -15,10 +15,12 @@ function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, 
     let now = 0, nextId = 0, allowed = true;
     Object.assign(button, {
         disabled: false,
+        contains: node => node === button,
         classList: { remove: c => classes.delete(c), toggle(c, value) { if (value) classes.add(c); else classes.delete(c); } },
         getBoundingClientRect: () => ({ left: 0, top: 0, right: 50, bottom: 50 }),
         setPointerCapture: id => captured.add(id), hasPointerCapture: id => captured.has(id), releasePointerCapture: id => captured.delete(id)
     });
+    doc.elementFromPoint = (x, y) => x >= 0 && x <= 50 && y >= 0 && y <= 50 ? button : null;
     Object.assign(globalThis, { document: doc, window: win,
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, { fn, at: now + ms }); return id; },
         clearTimeout: id => timers.delete(id) });
@@ -199,3 +201,17 @@ test('side eligibility is checked during movement and release, without changing 
  allowed=true;h.event('pointerdown');h.event('pointermove',65,25);assert(h.classes.has('picker-swipe-glow'));allowed=false;h.event('pointerup',65,25);h.event('click');assert.deepEqual(h.actions,[]);
  h.event('pointerdown');h.event('pointerup',25,-10);h.event('click');h.event('pointerdown');h.event('pointerup',25,60);h.event('click');assert.deepEqual(h.actions,['open','down']);
 });
+
+for (const pointerType of ['mouse', 'touch']) {
+    test(`${pointerType} release uses the visual hit target when CSS zoom rectangles disagree`, t => {
+        const h = harness(t, { pointerType });
+        // Old CSS zoom geometry can report coordinates outside the physical button.
+        h.button.getBoundingClientRect = () => ({ left: 1000, top: 1000, right: 1050, bottom: 1050 });
+        h.event('pointerdown'); h.event('pointerup'); h.event('click');
+        assert.deepEqual(h.actions, ['tap']);
+        // Capture must not turn a release over another surface into a button tap.
+        h.doc.elementFromPoint = () => ({});
+        h.event('pointerdown'); h.event('pointerup'); h.event('click');
+        assert.deepEqual(h.actions, ['tap']);
+    });
+}
