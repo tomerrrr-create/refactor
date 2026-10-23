@@ -104,3 +104,10 @@ desktop mouse taps and touch gestures remain aligned with the visible controls.
 
 Zoomed board layout budgets use control layout height multiplied by zoom, so
 older browsers reporting unscaled rectangles also release space to the board.
+
+Profile 1 now starts with Hearts, a random 21×21 board, relative Medium
+separators, creative mode and an unselected continuous size-1 brush. Its Life
+cycle remains Yours/Paint 4, Shuffle, Coral; Chi Flow remains Harmony, Nova,
+Alexis. Version 11 upgrades former factory startup values in profile 1 only;
+different personal values and profiles 2/3 are retained. Factory reset uses
+the new defaults.
