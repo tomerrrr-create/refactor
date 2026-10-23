@@ -60,6 +60,21 @@ test('palette group transition and adaptation are independently cancelled and re
         ['Palette Change', 'ADAPT_COLORS']);
 });
 
+test('one history action cancels and restores both palette change and adaptation', () => {
+    const r = recipe();
+    r.add('Palette Change', 'Journey | Sort: luminance');
+    r.add('ADAPT_COLORS', '---'); r.commit(1);
+    assert.deepEqual(r.parse().map(e => e.eventName), ['INIT_STATE', 'Palette Change', 'ADAPT_COLORS']);
+    r.undo(1, settings());
+    assert.deepEqual(r.parse().map(e => e.eventName), ['INIT_STATE', 'HISTORY_SETTINGS']);
+    r.redo(1, { ...settings(), activePaletteIndex: 1 });
+    assert.deepEqual(r.parse().filter(e => !['INIT_STATE', 'HISTORY_SETTINGS'].includes(e.eventName)).map(e => e.eventName),
+        ['Palette Change', 'ADAPT_COLORS']);
+    r.undo(1, settings());
+    r.add('DRAW_STROKE', [{ i: 0, k: 3 }]); r.commit(2);
+    assert.equal(r.parse().some(e => ['Palette Change', 'ADAPT_COLORS'].includes(e.eventName)), false);
+});
+
 test('multiple undos remove settings checkpoints belonging to cancelled actions', () => {
     const r = recipe();
     r.add('DRAW_STROKE', [{ i: 0, k: 1 }]); r.commit(1);

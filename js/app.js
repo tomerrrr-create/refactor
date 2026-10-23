@@ -961,25 +961,26 @@ function invertGrid() {
       }
 
       // Phase 1 Addition: New function to adapt colors
-      function adaptColors() {
-        performAction(() => {
+      function applyColorAdaptation() {
           if (boardState.some(tile => !tile.isGold && tile.k !== norm(tile.k))) {
-            window.logArtEvent('ADAPT_COLORS', '---');
+              window.logArtEvent('ADAPT_COLORS', '---');
           }
-          const len = paletteLen();
-          const now = performance.now();
           boardState.forEach(tile => {
-            if (!tile.isGold) {
-              const newK = norm(tile.k); // Use norm to get the visually correct index
-              if (tile.k !== newK) {
-                // We don't animate this change, we snap it to fix the state
-                tile.k = newK;
-                tile.v = newK;
+              if (!tile.isGold) {
+                  const newK = norm(tile.k);
+                  if (tile.k !== newK) {
+                      tile.k = newK;
+                      tile.v = newK;
+                  }
               }
-            }
           });
-          renderToScreen(null); // Re-render immediately with the corrected state
-        });
+      }
+
+      function adaptColors() {
+          performAction(() => {
+              applyColorAdaptation();
+              renderToScreen(null);
+          });
       }
       
 
@@ -1083,7 +1084,9 @@ function handlePaletteSwitch(backwards = false) {
 
       
 
-      function switchToPalette(index) {
+      // UI gestures opt in; recorded Palette Change / ADAPT_COLORS commands
+      // remain explicit so older macros retain their original board semantics.
+      function switchToPalette(index, { adapt = false } = {}) {
         // --- תוספת: תפיסת הבחירה אם אנחנו במצב החלפת פלטה למאקרו ---
         // נוודא שזה קורה רק כאשר המאקרו *לא* מנגן
         if (isSelectingMacroPalette && !isMacroPlaying) {
@@ -1101,11 +1104,13 @@ function handlePaletteSwitch(backwards = false) {
         }
         // -------------------------------------------------------------
         if (index === activePaletteIndex) return;
+        const previousCount = paletteLen();
         window.logArtEvent('Palette Change', `${C.PALETTES[index].name} | Sort: ${currentSortMethod}`); // תיעוד החלפת פלטה כולל שיטת מיון
 
         performAction(() => {
             
             activePaletteIndex = index;
+            if (adapt && previousCount !== paletteLen()) applyColorAdaptation();
             resetSelectedColor();
             updatePaletteHeader();
             renderToScreen(null);
@@ -1138,9 +1143,8 @@ function handlePaletteSwitch(backwards = false) {
         if (nextIndex === activePaletteIndex) return;
         const fromCount = paletteLen();
         const previousFrame = capturePaletteGroupBoard(dom.board);
-        // Keep palette change and index adaptation as separate undoable actions.
-        switchToPalette(nextIndex);
-        adaptColors();
+        // One gesture owns both the palette and the corrected board snapshot.
+        switchToPalette(nextIndex, { adapt: true });
         if (activePaletteIndex === nextIndex) {
             showPaletteGroupTransition(dom.board, fromCount, paletteLen(), previousFrame);
         }
@@ -4915,7 +4919,7 @@ else if (action.eventName === 'Invert Colors') {
             isRainbowModeActive: () => isRainbowModeActive,
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
-            switchToPalette,
+            switchToPalette: index => switchToPalette(index, { adapt: true }),
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
             getGameOfLifeCycle: () => ({ slots: gameOfLifeCycle.map(cloneGameOfLifeRules), sources: [...gameOfLifeSources], yoursRules: cloneGameOfLifeRules(personalGameOfLifeRules), index: ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode) }),
             setGameOfLifeCycle,
