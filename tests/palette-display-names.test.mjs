@@ -67,3 +67,21 @@ test('approved family names change presentation only and remain distinct without
         }
     }
 });
+
+test('approved size suffix removals preserve original palette and recording names in all languages', () => {
+    const names = {
+        'Ice & Fire 64': 'Ice & Fire', 'Ancient Mythos 264': 'Ancient Mythos',
+        'Opaline Trance 264': 'Opaline Trance', 'Blue Hypnosis 264': 'Blue Hypnosis',
+        'Glacier Pulse 264': 'Glacier Pulse', 'Autumn into Winter 264': 'Autumn into Winter',
+        'Jade Tides 264': 'Jade Tides',
+        'Golden Midnight Extended': 'Midnight Glow', 'Northern Lights HD': 'Aurora Veil'
+    };
+    for (const [id, display] of Object.entries(names)) {
+        const palette = PALETTES.find(p => p.originalName === id);
+        const before = JSON.stringify(palette);
+        assert.equal(getPaletteDisplayName(palette, 'en'), display);
+        for (const lang of ['en', 'he', 'ru', 'nl']) assert.doesNotMatch(getPaletteDisplayName(palette, lang), /\d/u);
+        assert.equal(JSON.stringify(palette), before);
+    }
+    assert.equal(getPaletteDisplayName({ originalName: 'Primavera Porteña 264' }, 'en'), 'Buenos Aires Spring 264');
+});
