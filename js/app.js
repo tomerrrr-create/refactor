@@ -2859,6 +2859,15 @@ function updateLayout() {
     const shell = dom.appShell;
     const container = shell.parentElement;
     const zoom = interfaceZoom / 100;
+    // Keep fixed backdrops at viewport size; scale only the menu surfaces/text.
+    if (interfaceZoom === 100) {
+        document.body.removeAttribute('data-menu-zoom');
+        document.body.style.removeProperty('--menu-zoom');
+    } else {
+        document.body.dataset.menuZoom = String(interfaceZoom);
+        document.body.style.setProperty('--menu-zoom', zoom);
+    }
+
     if (interfaceZoom === 100 || isMacroFullscreen) {
         container.removeAttribute('data-ui-zoom');
         container.style.removeProperty('--ui-zoom');

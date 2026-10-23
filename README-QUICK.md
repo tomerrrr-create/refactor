@@ -95,4 +95,6 @@ Technician Zoom ranges from 70% to 120%, with an unchanged 100% default. Lower
 values reduce controls and surrounding spacing, freeing space for the board;
 the button order and cell count are unchanged. The preference is saved locally
 per browser, independently of profiles, recordings, image/video export and macro
-fullscreen. Display zoom does not change the browser zoom setting.
+fullscreen. The same zoom scales the opening slogan and menu surfaces, while backdrops
+still cover the viewport. Menus keep viewport-aware bounds and scrolling.
+Display zoom does not change the browser zoom setting.

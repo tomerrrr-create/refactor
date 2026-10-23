@@ -1979,3 +1979,13 @@ body.wind-mode #board { cursor: crosshair; }
 .interface-zoom-option > label { color: #e3c677; margin-bottom: 10px; }
 .technician-display-settings .interface-zoom-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
 #appContainer.macro-fullscreen[data-ui-zoom] { padding: 0; }
+
+/* Match display zoom in menus, while their backdrops still cover the screen. */
+body[data-menu-zoom] > dialog,
+body[data-menu-zoom] > div[id$="Modal"] > div {
+  zoom: var(--menu-zoom);
+  max-height: calc((100dvh - 32px) / var(--menu-zoom));
+}
+body[data-menu-zoom] #splashText { zoom: var(--menu-zoom); }
+body[data-menu-zoom] > dialog { max-width: calc((100vw - 32px) / var(--menu-zoom)); }
+body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
