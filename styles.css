@@ -1,3 +1,11 @@
+/* Animate the inherited theme ink, not SVG stroke/fill: changing the selected
+   evolution still overrides the ink with Gold immediately, even mid-transition. */
+@property --sim-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #3F51B5;
+}
+
 /* Custom properties for dynamic styling controlled by JS */
 :root {
   --grid-size: 8;
@@ -10,7 +18,8 @@
   --stroke: 3px;
   --gold: #FFD700;
   --glow-color: var(--gold);
- --sim-color: #3F51B5;
+  --sim-color: #3F51B5;
+  transition: --sim-color 600ms ease-in-out;
 
 }
 
@@ -891,10 +900,10 @@ body {
   #btnIslands, #btnGravitationalSort, #btnErosion, #btnDla, #btnContour,
   #btnSpiral, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker
 ):not(.simulation-active):not(:disabled) > svg {
-  stroke: #766741;
+  stroke: var(--sim-color);
 }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] .sim-mode-active #btnDla:not(.simulation-active):not(:disabled) > svg {
-  fill: #766741;
+  fill: var(--sim-color);
 }
 
 /* --- Play/Pause Button Icon Colors --- */
@@ -1862,6 +1871,7 @@ button, .ctrl {
 .sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
 .sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
 :root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
+:root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: #766741; }
 :root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }
 :root[data-simulation-effective-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
 :root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
@@ -1869,6 +1879,7 @@ button, .ctrl {
 :root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
 .technician-display-settings .simulation-theme-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
 @media (prefers-reduced-motion: reduce) {
+  :root,
   .sim-mode-active #simModeBackground,
   .sim-mode-active #simModeBackground::before,
   .sim-mode-active #simModeBackground::after { transition: none; }
