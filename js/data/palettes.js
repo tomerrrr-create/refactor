@@ -838,6 +838,7 @@ iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(
 
 {
   originalName: "Bioluminescent Abyss 264",
+  isArchived: true,
 iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><path d="M5 12C5 7.6 8.1 4 12 4s7 3.6 7 8H5Z" style="fill:#00DDEB;" /><path d="M7 12v5c0 2 2 2 2 0v-3M12 12v7M17 12v5c0 2-2 2-2 0v-3" style="fill:none;stroke:#36FF9B;stroke-width:1.5;stroke-linecap:round;" /><circle cx="9" cy="9" r="1" style="fill:#DFFFFF;" /><circle cx="14.5" cy="8" r="0.8" style="fill:#8A70FF;" /></svg>',
 
 colors: (function() {
@@ -1114,6 +1115,7 @@ colors: (function() {
 
   {
     originalName: "Mystic Void 264",
+    isArchived: true,
     iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="9" style="fill:#08040D;" /><circle cx="12" cy="12" r="6.5" style="fill:#2A103F;" /><circle cx="12" cy="12" r="4" style="fill:#6C2FA3;" /><circle cx="12" cy="12" r="1.8" style="fill:#C59BEA;" /></svg>',
     colors: (function() {
 
@@ -1328,6 +1330,7 @@ colors: (function() {
 
 {
   originalName: "Silent Enigma",
+  isArchived: true,
   iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);"><circle cx="12" cy="12" r="10" fill="none" stroke="#4A657A" stroke-width="0.5"/><circle cx="12" cy="12" r="6" fill="none" stroke="#8FBBDC" stroke-width="1" opacity="0.6"/><circle cx="12" cy="12" r="2" fill="#A9DBFF"/><line x1="12" y1="0" x2="12" y2="4" stroke="#4A657A" stroke-width="0.5"/><line x1="12" y1="20" x2="12" y2="24" stroke="#4A657A" stroke-width="0.5"/><line x1="0" y1="12" x2="4" y2="12" stroke="#4A657A" stroke-width="0.5"/><line x1="20" y1="12" x2="24" y2="12" stroke="#4A657A" stroke-width="0.5"/><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#A9DBFF" text-anchor="end" stroke="rgba(0,0,0,0.5)" stroke-width="0.5" stroke-linejoin="round">HD</text><text x="23" y="5" font-family="sans-serif" font-size="6" font-weight="bold" fill="#A9DBFF" text-anchor="end">HD</text></svg>',
   colors: (function() {
       // 23 עוגנים מסתוריים: ממעמקי החושך, דרך כחול פלדה ואור בוהק, ובחזרה אל החושך
@@ -1501,7 +1504,7 @@ colors: (function() {
 {
   originalName: "Tibetan Turquoise Gold 264",
   iconHTML: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true" fill="none" stroke-linejoin="round"><path d="M12 1.6L16 5.6H18.4V8L22.4 12L18.4 16V18.4H16L12 22.4L8 18.4H5.6V16L1.6 12L5.6 8V5.6H8Z" fill="#061C25" stroke="#EACB73" stroke-width="1.15"/><path d="M12 4.7L19.3 12L12 19.3L4.7 12Z" stroke="#3BB9B8" stroke-width="1.5"/><path d="M8.3 8.3H15.7V15.7H8.3Z" stroke="#EACB73" stroke-width="1.1"/><path d="M12 7.1L16.9 12L12 16.9L7.1 12Z" fill="#3BB9B8"/><path d="M12 9.7L14.3 12L12 14.3L9.7 12Z" fill="#EACB73"/><path d="M12 2V3.5M20.5 12H22M12 20.5V22M2 12H3.5" stroke="#B4A55F" stroke-width="1.2"/></svg>',
-  isArchived: false,
+  isArchived: true,
   colors: [
     "#061C25", "#061E27", "#061F29", "#06212A", "#06222C", "#06242E", "#072530", "#072731",
     "#072833", "#072A34", "#072B36", "#072D39", "#072F3A", "#07303C", "#07323D", "#073440",
@@ -1542,7 +1545,7 @@ colors: (function() {
 {
   originalName: "Rose 264",
   iconHTML: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15c-4 0-7-3-7-6 3-1 5 0 7 2 2-2 4-3 7-2 0 3-3 6-7 6Z" stroke="#EE6094"/><path d="M8 9c0-3 2-5 4-6 2 1 4 3 4 6M10 8l2 3 2-3" stroke="#B7ADF0"/><path d="M12 15v6m0-3c3 0 5-2 5-3-3 0-5 1-5 3Z" stroke="#42C9CC"/></svg>',
-  isArchived: false,
+  isArchived: true,
   // Even perceptual steps through night violet, roses, blush, lilac and turquoise.
   colors: [
     "#090612", "#0B0715", "#0C0818", "#0E091C", "#100A1F", "#120B22", "#140C25", "#150D29",
