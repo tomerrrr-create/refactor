@@ -2051,10 +2051,12 @@ body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
 .palette-choice-list { display: flex; flex-direction: column; gap: 7px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 5px; scrollbar-width: thin; scrollbar-color: #62533a transparent; }
 /* Chrome before 121 and older Safari need the scrollbar pseudo-elements on
    the actual scrolling list, rather than its outer picker container. */
-.palette-choice-list::-webkit-scrollbar { width: 6px; }
-.palette-choice-list::-webkit-scrollbar-track { background: transparent; }
-.palette-choice-list::-webkit-scrollbar-thumb { background: #62533a; border-radius: 999px; }
-.palette-choice-list::-webkit-scrollbar-thumb:hover { background: #927a4e; }
+@media (hover: hover) and (pointer: fine) {
+    .palette-choice-list::-webkit-scrollbar { width: 6px; }
+    .palette-choice-list::-webkit-scrollbar-track { background: transparent; }
+    .palette-choice-list::-webkit-scrollbar-thumb { background: #62533a; border-radius: 999px; }
+    .palette-choice-list::-webkit-scrollbar-thumb:hover { background: #927a4e; }
+}
 .palette-choice {
     display: flex; flex-direction: column; gap: 7px; flex-shrink: 0; width: 100%; padding: 10px 12px;
     border: 1px solid #ffffff0e; border-radius: 10px; color: #dddcd3; background: #ffffff03;
