@@ -91,7 +91,7 @@ starts from the current display preferences; export-only overrides do not change
 them. Glow uses the current intensity and the shared display formula. PNG output
 remains 4096 square, with its black frame unaffected by the glow.
 
-Technician Zoom ranges from 70% to 120%, with an unchanged 100% default. Lower
+Technician Zoom ranges from 70% to 120%, with an 84% default; 100% restores the original layout. Lower
 values reduce controls and surrounding spacing, freeing space for the board;
 the button order and cell count are unchanged. The preference is saved locally
 per browser, independently of profiles, recordings, image/video export and macro

@@ -36,3 +36,17 @@ test('mobile board widths keep the existing zoom behavior', () => {
     assert.equal(run(80, mobile), '351.6px');
     assert.equal(run(70, mobile), '356.4px');
 });
+
+test('new devices use 84% zoom while existing saved zoom values remain intact', async () => {
+    const {loadInterfaceZoom, saveInterfaceZoom} = await import('../js/interface-zoom.js');
+    for (const missing of [null, '', 'invalid', '69', '121']) {
+        assert.equal(loadInterfaceZoom({getItem: () => missing}), 84);
+    }
+    for (const saved of ['70', '84', '85', '100', '120']) {
+        assert.equal(loadInterfaceZoom({getItem: () => saved}), Number(saved));
+    }
+    assert.equal(loadInterfaceZoom({getItem() {throw Error('blocked');}}), 84);
+    let stored;
+    saveInterfaceZoom(100, {setItem(key, value) {stored = value;}});
+    assert.equal(stored, '100');
+});
