@@ -1010,6 +1010,7 @@ function openGolSettingsModal() {
     document.getElementById('btnGolDeadColor').setAttribute('aria-expanded', 'false');
     const rules = app.getGameOfLifeRules();
     golDeadColor = isGameOfLifeDeadColor(rules.deadColor) ? rules.deadColor.toLowerCase() : null;
+    golSortGenetics = rules.sortGenetics === true;
     writeGolCycleRules(rules);
 updateActivePresetButton();
     // --- END: MODIFICATION ---
@@ -1021,7 +1022,7 @@ updateActivePresetButton();
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
         writeRules: writeGolCycleRules,
-        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots.map(withGolDeadColor), index, sources, withGolDeadColor(yoursRules)), saveButton: app.dom.btnGolSettingsSave, getText: app.getText
+        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots.map(withGolColorSettings), index, sources, withGolColorSettings(yoursRules)), saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
@@ -1035,6 +1036,7 @@ updateActivePresetButton();
 
 
 let golDeadColor = null;
+let golSortGenetics = false;
 
 function renderGolDeadColors() {
     const palette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
@@ -1080,16 +1082,18 @@ function readGolCycleRules() {
         ...(golDeadColor !== null ? { deadColor: golDeadColor } : {}) };
 }
 
-function withGolDeadColor(rules) {
+function withGolColorSettings(rules) {
     const snapshot = { ...rules };
     delete snapshot.deadColor;
+    delete snapshot.sortGenetics;
+    if (golSortGenetics) snapshot.sortGenetics = true;
     if (golDeadColor !== null) snapshot.deadColor = golDeadColor;
     return snapshot;
 }
 
 function writeGolCycleRules(rules) {
     renderGolDeadColors();
-    document.getElementById('golSortGeneticsToggle').checked = rules.sortGenetics === true;
+    document.getElementById('golSortGeneticsToggle').checked = golSortGenetics;
     applyGolPreset(rules.survival, rules.birth);
 }
 
@@ -1099,6 +1103,7 @@ function saveGolSettings() {
 
 function resetGolSettings() {
     golDeadColor = null;
+    golSortGenetics = false;
     writeGolCycleRules(app.C.defaultGameOfLifeRules);
     golCycleMembership?.manualChange();
 }
@@ -1762,7 +1767,10 @@ export function initializeModals(appContext) {
     app.dom.btnGolSettingsCancel.addEventListener('click', closeGolSettingsModal);
     app.dom.gameOfLifeSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.gameOfLifeSettingsModal) closeGolSettingsModal(); });
     app.dom.btnGolSettingsReset.addEventListener('click', resetGolSettings);
-    document.getElementById('golSortGeneticsToggle').addEventListener('change', () => golCycleMembership?.manualChange());
+    document.getElementById('golSortGeneticsToggle').addEventListener('change', event => {
+        golSortGenetics = event.target.checked;
+        golCycleMembership?.manualChange();
+    });
     document.getElementById('btnGolDeadColor').addEventListener('click', () => {
         const picker = document.getElementById('golDeadColorPicker');
         picker.hidden = !picker.hidden;

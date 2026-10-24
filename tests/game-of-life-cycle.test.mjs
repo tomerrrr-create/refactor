@@ -25,7 +25,7 @@ function harness() {
     c.currentSortMethod = 'luminance';
     const logger = source.indexOf('window.logArtEvent = function');
     vm.runInContext(source.slice(logger, source.indexOf('// ------------------------------------------', logger)), c);
-    vm.runInContext(['cloneGameOfLifeRules', 'getGameOfLifeRecordingRules', 'setPersonalGameOfLifeRules', 'setGameOfLifeCycle', 'restoreGameOfLifeRules', 'syncGameOfLifeDeadColor', 'cycleGameOfLifeMode', 'nextEvolutionMode'].map(fn).join('\n'), c);
+    vm.runInContext(['cloneGameOfLifeRules', 'getGameOfLifeRecordingRules', 'setPersonalGameOfLifeRules', 'setGameOfLifeCycle', 'restoreGameOfLifeRules', 'syncGameOfLifeColorSettings', 'cycleGameOfLifeMode', 'nextEvolutionMode'].map(fn).join('\n'), c);
     vm.runInContext(source.slice(source.indexOf('function applyMacroRules('), source.indexOf('function executeMacroAction(')), c);
     vm.runInContext(source.slice(source.indexOf('function getHistorySettings('), source.indexOf('function toggleMacroFullScreen(')), c);
     vm.runInContext(source.slice(source.indexOf('function executeMacroAction('), source.indexOf('        async function initializeApp(')), c);
@@ -148,7 +148,7 @@ test('sorted genetics is logged and replayed for PLAY, STEP and live changes; le
     assert.deepEqual(plain(replay.gameOfLifeRules),personal);
 });
 
-test('fixed anchor survives selecting Shuffle, Coral, Off and returning, while sort mixing remains per slot', () => {
+test('anchor and mixing stay shared through Shuffle, Coral, Off and returning', () => {
     const c=harness();c.cycleGameOfLifeMode();
     c.setPersonalGameOfLifeRules({...personal,deadColor:'#000000',sortGenetics:true});
     for(let i=0;i<9;i++){
@@ -156,11 +156,13 @@ test('fixed anchor survives selecting Shuffle, Coral, Off and returning, while s
         assert.equal(c.gameOfLifeRules.deadColor,'#000000');
         assert(c.gameOfLifeCycle.every(r=>r.deadColor==='#000000'));
         assert.equal(c.personalGameOfLifeRules.deadColor,'#000000');
-        if(c.gameOfLifeMode!=='personal')assert.equal(c.gameOfLifeRules.sortGenetics,undefined);
+        assert.equal(c.gameOfLifeRules.sortGenetics,true);
+        assert(c.gameOfLifeCycle.every(r=>r.sortGenetics===true));
     }
     c.setPersonalGameOfLifeRules(personal);c.cycleGameOfLifeMode();
     assert.equal(c.gameOfLifeRules.deadColor,undefined);
     assert(c.gameOfLifeCycle.every(r=>r.deadColor===undefined));
+    assert(c.gameOfLifeCycle.every(r=>r.sortGenetics===undefined));
 });
 
 test('legacy replay still restores original per-snapshot anchors without changing preferences', () => {

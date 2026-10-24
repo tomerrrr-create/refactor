@@ -1746,7 +1746,7 @@ if (!isTogglingOff && simulationName !== null) {
             chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
         }
         if (simulationName === 'gameOfLife') {
-            if (!isExecutingMacroCommand) syncGameOfLifeDeadColor();
+            if (!isExecutingMacroCommand) syncGameOfLifeColorSettings();
             gameOfLifeMode = 'personal';
             gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
         }
@@ -3195,11 +3195,11 @@ function restoreGameOfLifeRules(snapshot) {
     updateGameOfLifeButtonUI();
 }
 
-// Anchor selection belongs to the evolution, not its birth/survival shortcut.
+// Color settings belong to the evolution, not its birth/survival shortcut.
 // Keep explicit recording snapshots independent: macro restoration bypasses this.
-function syncGameOfLifeDeadColor() {
-    const { deadColor } = cloneGameOfLifeRules(gameOfLifeRules);
-    const anchored = rules => cloneGameOfLifeRules({ ...rules, deadColor });
+function syncGameOfLifeColorSettings() {
+    const { deadColor, sortGenetics } = cloneGameOfLifeRules(gameOfLifeRules);
+    const anchored = rules => cloneGameOfLifeRules({ ...rules, deadColor, sortGenetics });
     const slots = gameOfLifeCycle.map(anchored);
     const personal = anchored(personalGameOfLifeRules);
     const changed = JSON.stringify(slots) !== JSON.stringify(gameOfLifeCycle) ||
@@ -3214,7 +3214,7 @@ function syncGameOfLifeDeadColor() {
 
 function cycleGameOfLifeMode() {
     if (isLifePlaying && armedSimulation !== 'gameOfLife') return;
-    syncGameOfLifeDeadColor();
+    syncGameOfLifeColorSettings();
     const current = armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off';
     const next = nextEvolutionMode(current, ['off', 'personal', 'shuffle', 'coral']);
     if (next === 'off') {
