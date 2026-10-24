@@ -459,7 +459,7 @@ export const translations = {
   gol_dead_color: { en: "Anchor", he: "עוגן", ru: "Якорь", nl: "Anker" },
   gol_dead_default: { en: "Follow position 0", he: "עקיבה אחר מיקום 0", ru: "Следовать позиции 0", nl: "Volg positie 0" },
   gol_anchor_fixed: { en: "Fixed color", he: "צבע קבוע", ru: "Фикс. цвет", nl: "Vaste kleur" },
-  gol_anchor_position: { en: "Position 0", he: "מיקום 0", ru: "Позиция 0", nl: "Positie 0" },
+  gol_anchor_position: { en: "Root", he: "Root", ru: "Root", nl: "Root" },
   gol_choose_anchor: { en: "Choose dead cell color", he: "בחירת צבע תא מת", ru: "Выбрать цвет мёртвой клетки", nl: "Kies kleur van dode cellen" },
   gol_mixing: { en: "Mixing", he: "ערבוב", ru: "Смешивание", nl: "Mengen" },
   gol_sort_genetics: { en: "Sort order", he: "שיטת מיון", ru: "Сортировка", nl: "Sorteervolgorde" },
