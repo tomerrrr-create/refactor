@@ -1266,7 +1266,7 @@ colors: (function() {
 
 {
   originalName: "Baby First Gaze",
-  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12Q12 1.5 21.5 12Q12 22.5 2.5 12Z" stroke="#FFF3E0" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" stroke="#81D4FA" stroke-width="1.5"/><circle cx="12" cy="12" r="1.25" fill="#FFFFFF" stroke="none"/><path d="M8 3.5Q12 1.5 16 3.5" stroke="#F48FB1" stroke-width="1.25"/></svg>',
+  iconHTML: '<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g stroke="#FFF3E0" stroke-width=".9"><path d="M7.8 7.3C7.9 3.8 10 1.5 13 1.7c3.3.2 5.4 3.3 4.8 6.1-.4 1.9-1.7 3-3.2 3.6-1.9.7-4.3-.2-5-1.9"/><path d="M8.5 7q-.6.9-1.4.8C3.9 10 2.5 14.4 4.4 18c1.5 2.9 4.8 4.8 7.7 3.8 1.5-.5 2.5-1.5 2.6-3"/><path d="M8 12.8c-.6 2.6.8 4.5 2.8 4.3 2.2-.3 3.6-2.6 4.6-.7.8 1.5.5 3.5 2.3 4 1.6.4 2.8-.5 3.2-1.8"/><path d="M12.4 8.1q.1.9.8 1.1" stroke-width=".65"/></g><path d="M8 12.8c.1 1.1 1 2 2.3 1.8 2.2-.3 3.8-2.6 5.3-1.2 1.8 1.7.5 5.7 3 5.9q1.5.1 2.3-.7" stroke="#F48FB1" stroke-width=".9"/></svg>',
   colors: (function() {
       const orig = [
           "#050510", // חושך רחם / לילה עמוק
