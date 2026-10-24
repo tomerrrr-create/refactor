@@ -5,7 +5,7 @@ import { renderPalettePicker } from './palette-picker.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
-import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
+import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS, defaultContourRules } from './constants.js';
 import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel } from './relative-separators.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
@@ -1088,19 +1088,24 @@ function openContourSettingsModal() {
     app.dom.btnContourColorDark.title = app.getText('contour_color_darkest');
     app.dom.btnContourColorLight.title = app.getText('contour_color_lightest');
     app.dom.btnContourSettingsCancel.textContent = app.getText('gs_modal_cancel'); // Re-use "Cancel"
+    app.dom.btnContourSettingsReset.textContent = app.getText('evolution_reset_default');
     app.dom.btnContourSettingsSave.textContent = app.getText('gs_modal_save_close'); // Re-use "Save & Close"
 
     // 2. Get current rules and set UI elements
-    const rules = app.getContourRules();
+    populateContourSettings(app.getContourRules());
+
+    // 3. Show the modal
+    app.dom.contourSettingsModal.style.display = 'flex';
+    setTimeout(() => app.dom.contourSettingsModal.classList.add('modal-visible'), 10);
+}
+
+function populateContourSettings(rules) {
     app.dom.contourSensitivitySlider.value = rules.sensitivity;
     app.dom.contourSensitivityValue.textContent = `${rules.sensitivity}%`; // Set initial text value
     
     app.dom.btnContourColorDark.classList.toggle('active', rules.lineColor === 'darkest');
     app.dom.btnContourColorLight.classList.toggle('active', rules.lineColor === 'lightest');
 
-    // 3. Show the modal
-    app.dom.contourSettingsModal.style.display = 'flex';
-    setTimeout(() => app.dom.contourSettingsModal.classList.add('modal-visible'), 10);
 }
 
 function saveContourSettings() {
@@ -1755,6 +1760,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     // --- START: Added for Contour Settings ---
     app.dom.btnContourModalClose.addEventListener('click', closeContourSettingsModal);
     app.dom.contourSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.contourSettingsModal) { closeContourSettingsModal(); } });
+    app.dom.btnContourSettingsReset.addEventListener('click', () => populateContourSettings(defaultContourRules));
     app.dom.btnContourSettingsSave.addEventListener('click', saveContourSettings);
     app.dom.btnContourSettingsCancel.addEventListener('click', closeContourSettingsModal);
 

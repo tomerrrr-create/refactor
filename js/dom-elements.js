@@ -146,6 +146,7 @@ btnCycleSort: document.getElementById('btnCycleSort'),
 
   // --- START: Contour Settings Modal Elements ---
   btnContourModalClose: document.getElementById('btnContourModalClose'),
+  btnContourSettingsReset: document.getElementById('btnContourSettingsReset'),
   contourSettingsTitle: document.getElementById('contourSettingsTitle'),
   contourSensitivityLabel: document.getElementById('contourSensitivityLabel'),
   contourSensitivityDesc: document.getElementById('contourSensitivityDesc'),
