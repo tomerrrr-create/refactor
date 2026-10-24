@@ -238,7 +238,6 @@ function refreshLocalizedModalText() {
     }
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
-    if (app.dom.gameOfLifeSettingsModal.classList.contains('modal-visible')) renderGolAnchorControl();
     app.refreshProfiles();
 }
 
@@ -1006,10 +1005,10 @@ function applyGolPreset(survivalArray, birthArray) {
 function openGolSettingsModal() {
     if (app.isBreathing()) return;
     
+    // --- START: MODIFICATION ---
+    // במקום להגדיר טקסט, נפעיל את הפונקציה שמעדכנת את הכפתורים
     const rules = app.getGameOfLifeRules();
-    golRootLockMethod = app.getGameOfLifeRootLock();
-    golSortGenetics = rules.sortGenetics === true;
-    writeGolCycleRules(rules);
+    applyGolPreset(rules.survival, rules.birth);
 updateActivePresetButton();
     // --- END: MODIFICATION ---
     
@@ -1019,11 +1018,8 @@ updateActivePresetButton();
         iconButton: app.dom.btnGameOfLife,
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
-        writeRules: writeGolCycleRules,
-        save: (slots, index, sources, yoursRules) => {
-            if (app.canChangeGameOfLifeRootLock()) app.setGameOfLifeRootLock(golRootLockMethod, { record: false });
-            app.setGameOfLifeCycle(slots.map(withGolColorSettings), index, sources, withGolColorSettings(yoursRules));
-        }, saveButton: app.dom.btnGolSettingsSave, getText: app.getText
+        writeRules: rules => applyGolPreset(rules.survival, rules.birth),
+        save: app.setGameOfLifeCycle, saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
@@ -1036,37 +1032,9 @@ updateActivePresetButton();
 // --- END: MODIFICATION ---
 
 
-let golRootLockMethod = null;
-let golSortGenetics = false;
-
-function golColorRules() {
-    return golSortGenetics ? { sortGenetics: true } : {};
-}
-
-function renderGolAnchorControl() {
-    const toggle = document.getElementById('golRootLockToggle');
-    toggle.checked = golRootLockMethod !== null;
-    toggle.disabled = !app.canChangeGameOfLifeRootLock();
-}
-
 function readGolCycleRules() {
     const values = container => [...container.querySelectorAll('.gol-chip-btn.active')].map(chip => parseInt(chip.dataset.number, 10));
-    return { survival: values(app.dom.golSurvivalChipsContainer), birth: values(app.dom.golBirthChipsContainer),
-        ...golColorRules() };
-}
-
-function withGolColorSettings(rules) {
-    const snapshot = { ...rules };
-    delete snapshot.deadColor;
-    delete snapshot.sortGenetics;
-    delete snapshot.deadSortMethod;
-    return { ...snapshot, ...golColorRules() };
-}
-
-function writeGolCycleRules(rules) {
-    renderGolAnchorControl();
-    document.getElementById('golSortGeneticsToggle').checked = golSortGenetics;
-    applyGolPreset(rules.survival, rules.birth);
+    return { survival: values(app.dom.golSurvivalChipsContainer), birth: values(app.dom.golBirthChipsContainer) };
 }
 
 function saveGolSettings() {
@@ -1074,9 +1042,7 @@ function saveGolSettings() {
 }
 
 function resetGolSettings() {
-    golRootLockMethod = null;
-    golSortGenetics = false;
-    writeGolCycleRules(app.C.defaultGameOfLifeRules);
+    applyGolPreset(app.C.defaultGameOfLifeRules.survival, app.C.defaultGameOfLifeRules.birth);
     golCycleMembership?.manualChange();
 }
 
@@ -1739,13 +1705,8 @@ export function initializeModals(appContext) {
     app.dom.btnGolSettingsCancel.addEventListener('click', closeGolSettingsModal);
     app.dom.gameOfLifeSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.gameOfLifeSettingsModal) closeGolSettingsModal(); });
     app.dom.btnGolSettingsReset.addEventListener('click', resetGolSettings);
-    document.getElementById('golSortGeneticsToggle').addEventListener('change', event => {
-        golSortGenetics = event.target.checked;
-        golCycleMembership?.manualChange();
-    });
-    document.getElementById('golRootLockToggle').addEventListener('change', event => {
-        golRootLockMethod = event.target.checked ? app.getCurrentSortMethod() : null;
-    });
+
+
 
 // --- START: MODIFICATION ---
 // הוספת האזנה לכפתורי הצ'יפים החדשים
@@ -1764,7 +1725,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     if (button) {
         button.addEventListener('click', () => {
             applyGolPreset(rules.survival, rules.birth);
-            golCycleMembership?.selectPreset(buttonId, readGolCycleRules());
+            golCycleMembership?.selectPreset(buttonId, rules);
         });
     }
 }

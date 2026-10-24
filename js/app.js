@@ -1,4 +1,3 @@
-import { isGameOfLifeAnchorSort, stripGameOfLifeAnchor } from './game-of-life-settings.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
 import { loadInterfaceZoom, saveInterfaceZoom } from './interface-zoom.js';
@@ -281,16 +280,15 @@ tile.v = tile.k;
 
 
       
-      let gameOfLifeRootLock = null;
       let gameOfLifeRules = cloneGameOfLifeRules(C.defaultGameOfLifeRules);
       let personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeRules);
       let gameOfLifeMode = 'personal';
       const defaultGolCycle = [C.defaultGameOfLifeRules, C.GAME_OF_LIFE_PRESETS.btnGolPresetShuffle, C.GAME_OF_LIFE_PRESETS.btnGolPresetCoral];
-      let gameOfLifeCycle = loadEvolutionCycle('colorGridGolCycleMembership', defaultGolCycle).map(cloneGameOfLifePreferenceRules);
+      let gameOfLifeCycle = loadEvolutionCycle('colorGridGolCycleMembership', defaultGolCycle);
       let gameOfLifeSources;
 const gameOfLifeIdentity = loadCycleIdentity('colorGridGolCycleMembershipIdentity', gameOfLifeCycle, C.GAME_OF_LIFE_PRESETS);
 gameOfLifeSources = gameOfLifeIdentity.sources;
-personalGameOfLifeRules = cloneGameOfLifePreferenceRules(gameOfLifeIdentity.yoursRules);
+personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
@@ -1244,7 +1242,7 @@ dlaState.emptyIndices.push(index);
         let nextState;
         let didAdvance = true;
         switch(armedSimulation) {
-            case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration({ ...context, currentPaletteSource: C.PALETTES[activePaletteIndex].originalColors }); boardState = nextState; break;
+            case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration(context); boardState = nextState; break;
 case 'brightnessEvo':
     if (brightnessEvoMode === 'contrast') {
         nextState = Simulations.runContrastGeneration(context);
@@ -1376,7 +1374,7 @@ break;
             
             switch(armedSimulation) {
                 case 'gameOfLife': 
-                    boardState = Simulations.runGameOfLifeGeneration({ ...context, currentPaletteSource: C.PALETTES[activePaletteIndex].originalColors });
+                    boardState = Simulations.runGameOfLifeGeneration(context); 
                     break;
 case 'brightnessEvo': 
     if (brightnessEvoMode === 'contrast') {
@@ -1748,7 +1746,6 @@ if (!isTogglingOff && simulationName !== null) {
             chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
         }
         if (simulationName === 'gameOfLife') {
-            if (!isExecutingMacroCommand) syncGameOfLifeColorSettings();
             gameOfLifeMode = 'personal';
             gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
         }
@@ -2011,7 +2008,7 @@ if (simulationName === 'magnet') {
             smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked,
                 bloom: isSoftBloom, bloomIntensity: softBloomIntensity },
             brush: { size: brushSize, mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
-            cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifePreferenceRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
+            cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules }, turing: { ...turingRules } }
         };
@@ -2065,7 +2062,7 @@ if (simulationName === 'magnet') {
       function captureProfileSettings() {
         return { settings: getWorkspaceSettings(), identity: {
             gameOfLife: { index: ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode),
-                sources: [...gameOfLifeSources], yoursRules: cloneGameOfLifePreferenceRules(personalGameOfLifeRules) },
+                sources: [...gameOfLifeSources], yoursRules: cloneGameOfLifeRules(personalGameOfLifeRules) },
             chiFlow: { index: ['personal', 'ripples', 'nova'].indexOf(chiFlowMode),
                 sources: [...chiFlowSources], yoursRules: cloneChiFlowRules(personalChiFlowRules) }
         } };
@@ -2092,7 +2089,7 @@ if (simulationName === 'magnet') {
         const storedStartup = persistStartup(startupSettings);
         const storedInit = persistSimInit(simulationInitSettings);
         const storedSort = persistSortCycle(sortCycleMethods);
-        const storedWorkspace = persistWorkspaceSettings(getWorkspaceSettings());
+        const storedWorkspace = persistWorkspaceSettings(settings);
         const storedSmooth = persistSmoothRendering(settings.smoothing.display);
         modals.refreshLocalizedModalText();
         modals.refreshTechnicianSettings();
@@ -3141,32 +3138,7 @@ function updateBrightnessEvoButtonUI() {
 
 // Game of Life keeps the personal rules separate from its two preset shortcuts.
 function cloneGameOfLifeRules(rules) {
-    return { survival: [...rules.survival], birth: [...rules.birth], ...(rules.sortGenetics === true ? { sortGenetics: true } : {}),
-        ...(isGameOfLifeAnchorSort(rules.deadSortMethod) ? { deadSortMethod: rules.deadSortMethod } : {}),
-        ...(typeof rules.deadColor === 'string' && /^#[0-9a-f]{6}$/i.test(rules.deadColor) ? { deadColor: rules.deadColor.toLowerCase() } : {}) };
-}
-
-function cloneGameOfLifePreferenceRules(rules) {
-    return stripGameOfLifeAnchor(cloneGameOfLifeRules(rules));
-}
-
-function withGameOfLifeRootLock(rules) {
-    const copy = cloneGameOfLifePreferenceRules(rules);
-    if (gameOfLifeRootLock) copy.deadSortMethod = gameOfLifeRootLock;
-    return copy;
-}
-
-function setGameOfLifeRootLock(method, { record = true } = {}) {
-    if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
-    if (method !== null && !isGameOfLifeAnchorSort(method)) return false;
-    gameOfLifeRootLock = method;
-    gameOfLifeRules = withGameOfLifeRootLock(gameOfLifeRules);
-    gameOfLifeCycle = gameOfLifeCycle.map(withGameOfLifeRootLock);
-    personalGameOfLifeRules = withGameOfLifeRootLock(personalGameOfLifeRules);
-    if (record) window.logArtEvent('Game of Life Mode Changed', JSON.stringify({
-        ...getGameOfLifeRecordingRules(), mode: armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off'
-    }));
-    return true;
+    return { survival: [...rules.survival], birth: [...rules.birth] };
 }
 
 function getGameOfLifeRecordingRules() {
@@ -3181,9 +3153,7 @@ function updateGameOfLifeButtonUI() {
     dom.btnGameOfLife.querySelectorAll('[data-gol-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
-    const preset = Object.entries(C.GAME_OF_LIFE_PRESETS).find(([, rules]) =>
-        JSON.stringify(rules.survival) === JSON.stringify(gameOfLifeRules.survival) &&
-        JSON.stringify(rules.birth) === JSON.stringify(gameOfLifeRules.birth))?.[0];
+    const preset = Object.entries(C.GAME_OF_LIFE_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(gameOfLifeRules))?.[0];
     const name = preset ? document.getElementById(preset)?.textContent.trim() : getText('cycle_custom');
     dom.btnGameOfLife.title = getText('tooltip_gameOfLife') + (active ? ': ' + name : '');
     dom.btnGameOfLife.setAttribute('aria-label', dom.btnGameOfLife.title);
@@ -3198,13 +3168,13 @@ function setPersonalGameOfLifeRules(rules) {
 }
 
 function setGameOfLifeCycle(slots, index, sources = gameOfLifeSources, yoursRules = personalGameOfLifeRules) {
-    gameOfLifeCycle = normalizeEvolutionCycle(slots, defaultGolCycle).map(withGameOfLifeRootLock);
+    gameOfLifeCycle = normalizeEvolutionCycle(slots, defaultGolCycle);
     gameOfLifeSources = normalizeCycleSources(sources, gameOfLifeCycle, C.GAME_OF_LIFE_PRESETS);
-    personalGameOfLifeRules = withGameOfLifeRootLock(yoursRules);
+    personalGameOfLifeRules = cloneGameOfLifeRules(yoursRules);
     gameOfLifeMode = ['personal', 'shuffle', 'coral'][index];
     gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[index]);
-    persistEvolutionCycle('colorGridGolCycleMembership', gameOfLifeCycle.map(cloneGameOfLifePreferenceRules));
-    persistEvolutionCycle('colorGridGolCycleMembershipIdentity', { sources: gameOfLifeSources, yoursRules: cloneGameOfLifePreferenceRules(personalGameOfLifeRules) });
+    persistEvolutionCycle('colorGridGolCycleMembership', gameOfLifeCycle);
+    persistEvolutionCycle('colorGridGolCycleMembershipIdentity', { sources: gameOfLifeSources, yoursRules: personalGameOfLifeRules });
     updateGameOfLifeButtonUI();
     window.logArtEvent('Game of Life Mode Changed', JSON.stringify({
         ...getGameOfLifeRecordingRules(), mode: armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off'
@@ -3223,26 +3193,8 @@ function restoreGameOfLifeRules(snapshot) {
     updateGameOfLifeButtonUI();
 }
 
-// Color settings belong to the evolution, not its birth/survival shortcut.
-// Keep explicit recording snapshots independent: macro restoration bypasses this.
-function syncGameOfLifeColorSettings() {
-    const { sortGenetics } = cloneGameOfLifeRules(gameOfLifeRules);
-    const withColors = rules => withGameOfLifeRootLock({ ...rules, sortGenetics });
-    const slots = gameOfLifeCycle.map(withColors);
-    const personal = withColors(personalGameOfLifeRules);
-    const changed = JSON.stringify(slots) !== JSON.stringify(gameOfLifeCycle) ||
-        JSON.stringify(personal) !== JSON.stringify(personalGameOfLifeRules);
-    gameOfLifeCycle = slots;
-    personalGameOfLifeRules = personal;
-    if (changed && !isExecutingMacroCommand) {
-        persistEvolutionCycle('colorGridGolCycleMembership', gameOfLifeCycle.map(cloneGameOfLifePreferenceRules));
-        persistEvolutionCycle('colorGridGolCycleMembershipIdentity', { sources: gameOfLifeSources, yoursRules: cloneGameOfLifePreferenceRules(personalGameOfLifeRules) });
-    }
-}
-
 function cycleGameOfLifeMode() {
     if (isLifePlaying && armedSimulation !== 'gameOfLife') return;
-    syncGameOfLifeColorSettings();
     const current = armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off';
     const next = nextEvolutionMode(current, ['off', 'personal', 'shuffle', 'coral']);
     if (next === 'off') {
@@ -4995,10 +4947,6 @@ else if (action.eventName === 'Invert Colors') {
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
             switchToPalette: index => switchToPalette(index, { adapt: true }),
-            getGameOfLifeRootLock: () => gameOfLifeRootLock,
-            setGameOfLifeRootLock,
-            getCurrentSortMethod: () => currentSortMethod,
-            canChangeGameOfLifeRootLock: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
             getGameOfLifeCycle: () => ({ slots: gameOfLifeCycle.map(cloneGameOfLifeRules), sources: [...gameOfLifeSources], yoursRules: cloneGameOfLifeRules(personalGameOfLifeRules), index: ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode) }),
             setGameOfLifeCycle,

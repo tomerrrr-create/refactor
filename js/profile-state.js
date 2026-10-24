@@ -1,4 +1,3 @@
-import { stripGameOfLifeAnchor } from './game-of-life-settings.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { DEFAULT_SEPARATOR_CYCLE } from './separator-cycle.js';
 import { resolveSavedBloom } from './soft-bloom.js';
@@ -22,7 +21,6 @@ const equal = (a, b) => canonical(a) === canonical(b);
 
 export function validateProfileSnapshot(value) {
     const settings = validateWorkspaceSettings(value.settings);
-    settings.cycles.gameOfLife = settings.cycles.gameOfLife.map(stripGameOfLifeAnchor);
     settings.simulationTheme ??= 'blue';
     settings.simulationPlaybackTheme ??= 'gold';
     const snapshot = { settings };
@@ -37,7 +35,7 @@ export function validateProfileSnapshot(value) {
             snapshot.identity[name] = {
                 index: identity.index,
                 sources: normalizeCycleSources(identity.sources, settings.cycles[name], presets),
-                yoursRules: name === 'gameOfLife' ? stripGameOfLifeAnchor(checked.cycles[name][0]) : checked.cycles[name][0]
+                yoursRules: checked.cycles[name][0]
             };
         }
     }

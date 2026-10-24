@@ -2142,15 +2142,3 @@ body.wind-mode #board { cursor: crosshair; }
 .startup-random-check { margin-inline-start: auto; opacity: 0; }
 .startup-random-choice[aria-pressed="true"] .startup-random-check { opacity: 1; }
 .startup-random-choice:focus-visible { outline: 2px solid #e6cc8e; outline-offset: 2px; }
-
-/* Compact color controls: a pinned swatch is distinct from following rank 0. */
-.gol-color-settings { border: 1px solid #ad90532b; border-radius: 16px; padding: 4px 14px; background: linear-gradient(125deg, #d4af3707, #10101040); }
-.gol-color-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; min-height: 56px; padding: 8px 0; }
-.gol-color-row h3 { font-size: 13px; font-weight: 400; color: #a7a29a; }
-.gol-lock-row.relative-separator-toggle { margin: 0; color: #b9b5ac; font-size: 13px; }
-.gol-lock-row input { margin-inline-start: auto; }
-.gol-mixing-row { border-top: 1px solid #ffffff0b; }
-.gol-mix-options.relative-separator-toggle { margin: 0; gap: 10px; direction: ltr; font-size: 12px; color: #777; }
-.gol-mix-options .gol-rgb-label { color: #e3c677; }
-.gol-mix-options:has(input:checked) .gol-rgb-label { color: #777; }
-.gol-mix-options:has(input:checked) #golSortOrderLabel { color: #e3c677; }

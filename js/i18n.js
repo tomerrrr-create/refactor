@@ -456,9 +456,6 @@ export const translations = {
   dla_fastmode_desc: { en: "Uses a faster algorithm for filling gaps.", he: "משתמש באלגוריתם מהיר למילוי חללים.", ru: "Использует быстрый алгоритם для заполнения.", nl: "Gebruikt een sneller algoritme om gaten te vullen." },
 
 // --- START: Contour Settings Modal ---
-  gol_root_lock: { en: "Lock root", he: "נעל שורש", ru: "Закрепить корень", nl: "Wortel vastzetten" },
-  gol_mixing: { en: "Mixing", he: "ערבוב", ru: "Смешивание", nl: "Mengen" },
-  gol_sort_genetics: { en: "Sort order", he: "שיטת מיון", ru: "Сортировка", nl: "Sorteervolgorde" },
   contour_modal_title: { en: "Contour Settings", he: "הגדרות קווי מתאר", ru: "Настройки контуров", nl: "Contour-instellingen" },
   contour_sensitivity_label: { en: "Sensitivity", he: "רגישות", ru: "Чувствительность", nl: "Gevoeligheid" },
   contour_sensitivity_desc: { en: "Determines the color difference needed to draw a line.", he: "קובע כמה הבדל נדרש בין צבעים כדי ליצור קו.", ru: "Определяет разницу в цвете, необходимую для рисования линии.", nl: "Bepaalt het kleurverschil dat nodig is om een lijn te tekenen." },

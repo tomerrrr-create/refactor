@@ -444,12 +444,3 @@ test('saved random and personal startup choices survive the random default', () 
         assert.deepEqual(state.draft(2), profiles[2].draft);
     }
 });
-
-test('anchor fields from old profiles are removed without making profile changes',()=>{
- const disk=storage(), state=createProfileState(factoryProfileSnapshot(0),disk), snapshot=state.draft();
- snapshot.settings.cycles.gameOfLife.forEach(r=>{r.deadSortMethod='reversed';r.deadColor='#000000';});
- state.capture(snapshot);
- assert(state.draft().settings.cycles.gameOfLife.every(r=>r.deadSortMethod===undefined&&r.deadColor===undefined));
- assert.equal(state.modified(0),false);
- state.persist();assert(!disk.getItem(PROFILE_STORAGE_KEY).includes('deadSortMethod'));
-});

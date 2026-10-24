@@ -1,4 +1,3 @@
-import { isGameOfLifeAnchorSort } from './game-of-life-settings.js';
 import { CHI_REACH_PERCENTAGES } from './chi-reach.js';
 
 // Three rule snapshots per evolution. Playback does not persist user preferences.
@@ -11,25 +10,13 @@ export function normalizeEvolutionCycle(value, defaults) {
     return value.map((rules, index) => {
         const fallback = defaults[index];
         if (!rules || typeof rules !== 'object') return cloneCycleRules(fallback);
-        const requiredKeys = Object.keys(fallback).filter(key => key !== 'reachOffset' && key !== 'reachPercent' && key !== 'sortGenetics' && key !== 'deadColor' && key !== 'deadSortMethod');
+        const requiredKeys = Object.keys(fallback).filter(key => key !== 'reachOffset' && key !== 'reachPercent');
         const valid = requiredKeys.every(key => Array.isArray(fallback[key])
             ? Array.isArray(rules[key]) && rules[key].every(n => Number.isInteger(n) && n >= (key === 'awakening' || key === 'flow' ? 1 : 0) && n <= 8)
             : Number.isSafeInteger(rules[key]) && rules[key] >= 0 && rules[key] <= (key === 'reach' ? Number.MAX_SAFE_INTEGER : 10));
         if (!valid) return cloneCycleRules(fallback);
         const normalized = Object.fromEntries(requiredKeys.map(key => [key, Array.isArray(rules[key])
             ? [...new Set(rules[key])].sort((a, b) => a - b) : rules[key]]));
-        if ('survival' in fallback && 'deadSortMethod' in rules) {
-            if (!isGameOfLifeAnchorSort(rules.deadSortMethod)) return cloneCycleRules(fallback);
-            normalized.deadSortMethod = rules.deadSortMethod;
-        }
-        if ('survival' in fallback && 'deadColor' in rules) {
-            if (typeof rules.deadColor !== 'string' || !/^#[0-9a-f]{6}$/i.test(rules.deadColor)) return cloneCycleRules(fallback);
-            normalized.deadColor = rules.deadColor.toLowerCase();
-        }
-        if ('survival' in fallback && 'sortGenetics' in rules) {
-            if (typeof rules.sortGenetics !== 'boolean') return cloneCycleRules(fallback);
-            if (rules.sortGenetics) normalized.sortGenetics = true;
-        }
         if ('reach' in fallback && 'reachOffset' in rules) {
             if (!Number.isInteger(rules.reachOffset) || rules.reachOffset < -10 || rules.reachOffset > 10) return cloneCycleRules(fallback);
             normalized.reachOffset = rules.reachOffset;
@@ -54,7 +41,6 @@ export function persistEvolutionCycle(key, slots) {
 // Magnetic Reach can vary without changing a Chi Flow preset's neighbor pattern.
 function matchesCyclePreset(preset, rules) {
     if (JSON.stringify(preset) === JSON.stringify(rules)) return true;
-    if (preset.survival && rules.survival) return JSON.stringify({survival: preset.survival, birth: preset.birth}) === JSON.stringify({survival: rules.survival, birth: rules.birth});
     if (!preset.awakening || !rules.awakening) return false;
     const pattern = value => ({ awakening: value.awakening, flow: value.flow });
     return JSON.stringify(pattern(preset)) === JSON.stringify(pattern(rules));

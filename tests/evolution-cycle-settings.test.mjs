@@ -1,13 +1,12 @@
-import { isGameOfLifeAnchorSort } from '../js/game-of-life-settings.js';
 import { CHI_REACH_PERCENTAGES } from '../js/chi-reach.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-const source = readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replaceAll('export ', '');
+const source = readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, 'const CHI_REACH_PERCENTAGES = ' + JSON.stringify(CHI_REACH_PERCENTAGES) + ';').replaceAll('export ', '');
 const defaults = [{ survival: [0, 2], birth: [3] }, { survival: [4], birth: [] }, { survival: [8], birth: [2] }];
 const plain = x => JSON.parse(JSON.stringify(x));
-const c = vm.createContext({ CHI_REACH_PERCENTAGES, isGameOfLifeAnchorSort }); vm.runInContext(source, c);
+const c = vm.createContext({}); vm.runInContext(source, c);
 test('cycle storage validates shape, bounds, uniqueness and independent rule arrays', () => {
     assert.deepEqual(plain(c.normalizeEvolutionCycle([{}], defaults)), defaults);
     const input = [{ survival: [8, 0, 8], birth: [] }, { survival: [9], birth: [3] }, { survival: [1], birth: [2] }];
