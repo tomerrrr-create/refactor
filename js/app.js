@@ -2041,8 +2041,12 @@ if (simulationName === 'magnet') {
         if (!startup) brushSize = settings.brush.size;
         document.getElementById('brushSizeSlider').value = brushSize;
         document.getElementById('brushSizeValue').textContent = brushSize;
-        setBrushMode(settings.brush.mode !== 'copy', settings.brush.mode === 'continuous');
-        symmetryMode = settings.brush.symmetry;
+        // On app opening, Startup owns the brush and symmetry. Profile changes
+        // during a session still restore the profile's current working choices.
+        const brush = startup ? settings.startup : settings.brush;
+        const brushMode = startup ? brush.brushMode : brush.mode;
+        setBrushMode(brushMode !== 'copy', brushMode === 'continuous');
+        symmetryMode = brush.symmetry;
         updateSymmetryUI();
         renderToScreen(null);
       }
