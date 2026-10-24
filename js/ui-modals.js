@@ -1008,7 +1008,7 @@ function openGolSettingsModal() {
     // --- START: MODIFICATION ---
     // במקום להגדיר טקסט, נפעיל את הפונקציה שמעדכנת את הכפתורים
     const rules = app.getGameOfLifeRules();
-    applyGolPreset(rules.survival, rules.birth);
+    writeGolCycleRules(rules);
 updateActivePresetButton();
     // --- END: MODIFICATION ---
     
@@ -1018,7 +1018,7 @@ updateActivePresetButton();
         iconButton: app.dom.btnGameOfLife,
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
-        writeRules: rules => applyGolPreset(rules.survival, rules.birth),
+        writeRules: writeGolCycleRules,
         save: app.setGameOfLifeCycle, saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
@@ -1034,7 +1034,13 @@ updateActivePresetButton();
 
 function readGolCycleRules() {
     const values = container => [...container.querySelectorAll('.gol-chip-btn.active')].map(chip => parseInt(chip.dataset.number, 10));
-    return { survival: values(app.dom.golSurvivalChipsContainer), birth: values(app.dom.golBirthChipsContainer) };
+    return { survival: values(app.dom.golSurvivalChipsContainer), birth: values(app.dom.golBirthChipsContainer),
+        ...(document.getElementById('golSortGeneticsToggle').checked ? { sortGenetics: true } : {}) };
+}
+
+function writeGolCycleRules(rules) {
+    document.getElementById('golSortGeneticsToggle').checked = rules.sortGenetics === true;
+    applyGolPreset(rules.survival, rules.birth);
 }
 
 function saveGolSettings() {
@@ -1042,7 +1048,7 @@ function saveGolSettings() {
 }
 
 function resetGolSettings() {
-    applyGolPreset(app.C.defaultGameOfLifeRules.survival, app.C.defaultGameOfLifeRules.birth);
+    writeGolCycleRules(app.C.defaultGameOfLifeRules);
     golCycleMembership?.manualChange();
 }
 
@@ -1705,6 +1711,7 @@ export function initializeModals(appContext) {
     app.dom.btnGolSettingsCancel.addEventListener('click', closeGolSettingsModal);
     app.dom.gameOfLifeSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.gameOfLifeSettingsModal) closeGolSettingsModal(); });
     app.dom.btnGolSettingsReset.addEventListener('click', resetGolSettings);
+    document.getElementById('golSortGeneticsToggle').addEventListener('change', () => golCycleMembership?.manualChange());
 
 
 
@@ -1725,7 +1732,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     if (button) {
         button.addEventListener('click', () => {
             applyGolPreset(rules.survival, rules.birth);
-            golCycleMembership?.selectPreset(buttonId, rules);
+            golCycleMembership?.selectPreset(buttonId, { ...rules, ...(document.getElementById('golSortGeneticsToggle').checked ? { sortGenetics: true } : {}) });
         });
     }
 }

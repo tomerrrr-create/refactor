@@ -117,3 +117,30 @@ test('Yours survives replacement by a named preset and snapshot replay', () => {
     assert.deepEqual(plain(c.personalGameOfLifeRules), personalBefore);
     assert.deepEqual(plain(c.gameOfLifeSources), plain(sources));
 });
+
+test('sorted genetics is logged and replayed for PLAY, STEP and live changes; legacy snapshots clear it', () => {
+    const c = harness();
+    c.window.logArtEvent('INIT_STATE', JSON.stringify({recipeVersion:2,n:1,pal:0,sep:0,sort:'luminance',board:'1x0'}));
+    c.cycleGameOfLifeMode();
+    c.setPersonalGameOfLifeRules({...personal,sortGenetics:true});
+    const snapshot = plain(c.getGameOfLifeRecordingRules());
+    assert.equal(snapshot.sortGenetics,true);
+    assert.equal(snapshot.cycleSlots[0].sortGenetics,true);
+    for (const event of ['PLAY','STEP FORWARD']) {
+        c.window.logArtEvent(event,'Armed: gameOfLife | Sort: hue | Rules: '+JSON.stringify(snapshot));
+    }
+    c.isLifePlaying=true;c.currentGenerationCount=12;
+    c.setPersonalGameOfLifeRules({...personal,sortGenetics:true});
+    const changes=c.parseMacroText(c.artRecipeLog.join('\n'));
+    const recorded=changes.filter(a=>['PLAY','STEP FORWARD','Game of Life Mode Changed'].includes(a.eventName));
+    const replay=harness();
+    for(const action of recorded){
+        if (action.eventName === 'Game of Life Mode Changed') replay.executeMacroAction(action);
+        else replay.applyMacroRules(action.details);
+        const expected = action.eventName === 'Game of Life Mode Changed' ? JSON.parse(action.details) : snapshot;
+        assert.equal(replay.gameOfLifeRules.sortGenetics,expected.sortGenetics);
+    }
+    replay.applyMacroRules('Armed: gameOfLife | Rules: '+JSON.stringify(personal));
+    assert.equal(replay.gameOfLifeRules.sortGenetics,undefined);
+    assert.deepEqual(plain(replay.gameOfLifeRules),personal);
+});

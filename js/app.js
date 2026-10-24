@@ -3138,7 +3138,7 @@ function updateBrightnessEvoButtonUI() {
 
 // Game of Life keeps the personal rules separate from its two preset shortcuts.
 function cloneGameOfLifeRules(rules) {
-    return { survival: [...rules.survival], birth: [...rules.birth] };
+    return { survival: [...rules.survival], birth: [...rules.birth], ...(rules.sortGenetics === true ? { sortGenetics: true } : {}) };
 }
 
 function getGameOfLifeRecordingRules() {

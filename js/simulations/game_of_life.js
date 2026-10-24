@@ -32,6 +32,7 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
         for (let j = 0; j < n; j++) {
             let liveNeighbors = 0;
             const neighborColors = [];
+            let neighborIndexSum = 0;
 
             for (let di = -1; di <= 1; di++) {
                 for (let dj = -1; dj <= 1; dj++) {
@@ -40,6 +41,7 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
                     const nj = j + dj;
                     if (ni >= 0 && ni < n && nj >= 0 && nj < n && internalCurrentState[ni][nj].isAlive) {
                         liveNeighbors++;
+                        neighborIndexSum += internalCurrentState[ni][nj].k;
                         neighborColors.push(currentPalette[internalCurrentState[ni][nj].k]);
                     }
                 }
@@ -62,9 +64,15 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
                 if (becomesAlive) {
                     // --- START: MODIFICATION 2 ---
                     // The 'colorGenetics' method is now hard-coded to 'average' as requested.
-                    const geneticColor = getGeneticColor(neighborColors, 'average');
-                    // --- END: MODIFICATION 2 ---
-                    newK = findClosestColorIndex(geneticColor, currentPalette);
+                    if (gameOfLifeRules.sortGenetics === true && liveNeighbors > 0) {
+                        // Average ranks in the palette's current sort order. Living
+                        // parents have ranks >= 1, so a birth cannot select dead rank 0.
+                        newK = Math.round(neighborIndexSum / liveNeighbors);
+                    } else {
+                        // Preserve RGB mixing exactly for legacy recordings and B0.
+                        const geneticColor = getGeneticColor(neighborColors, 'average');
+                        newK = findClosestColorIndex(geneticColor, currentPalette);
+                    }
                 }
             }
             

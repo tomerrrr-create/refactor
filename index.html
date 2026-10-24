@@ -928,6 +928,11 @@
           <button class="gol-chip-btn" data-number="8">8</button>
         </div>
       </div>
+      <label class="relative-separator-toggle">
+        <span data-debug-text="gol_sort_genetics">Mix colors by palette order</span>
+        <input id="golSortGeneticsToggle" type="checkbox" role="switch" aria-describedby="golSortGeneticsNote">
+      </label>
+      <p id="golSortGeneticsNote" class="text-sm text-gray-400" data-debug-text="gol_sort_genetics_note">New cells inherit colors by the current sort order instead of RGB mixing.</p>
       <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300" data-debug-text="evolution_presets">Presets</h3>
 <div class="grid grid-flow-col grid-rows-5 gap-2">
