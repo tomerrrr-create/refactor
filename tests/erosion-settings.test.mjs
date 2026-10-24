@@ -183,12 +183,12 @@ test('relative acceleration survives settings/profile storage and old absolute t
     assert.equal(resolveErosionEvents(264, settings.rules.erosion), 5);
 });
 
-test('five acceleration stages span original to the former very-fast rate with exact hit counts', () => {
-    assert.deepEqual([0, 1, 2, 3, 4].map(s => erosionStageEvents(264, 'channels-solid', s)), [52, 43, 35, 26, 17]);
-    assert.deepEqual([0, 1, 2, 3, 4].map(s => erosionStageEvents(264, 'channels', s)), [159, 133, 106, 80, 53]);
+test('six acceleration stages keep the original five and add one-sixth with exact hit counts', () => {
+    assert.deepEqual([0, 1, 2, 3, 4, 5].map(s => erosionStageEvents(264, 'channels-solid', s)), [52, 43, 35, 26, 17, 9]);
+    assert.deepEqual([0, 1, 2, 3, 4, 5].map(s => erosionStageEvents(264, 'channels', s)), [159, 133, 106, 80, 53, 27]);
     for (const size of [21, 23, 64, 264]) for (const mode of ['channels-solid', 'channels']) {
         let previous = erosionEarthSpan(size, mode);
-        for (const stage of [0, 1, 2, 3, 4]) {
+        for (const stage of [0, 1, 2, 3, 4, 5]) {
             const rules = { mode, erosionStrength: .1, erosionStages: { [mode]: stage } };
             const events = resolveErosionEvents(size, rules);
             assert(events >= 1 && events <= previous); previous = events;
@@ -217,7 +217,7 @@ test('separate stages survive files/profiles and preserve old fallback rules for
     const draft = restoreErosionRules(settings.rules.erosion);
     draft.erosionStages.channels = 2;
     assert.equal(settings.rules.erosion.erosionStages.channels, 4, 'modal draft must not alias live nested rules');
-    for (const bad of [null, [], 1, { legacy: 1 }, { channels: 5 }, { channels: -1 }, { channels: '1' }]) {
+    for (const bad of [null, [], 1, { legacy: 1 }, { channels: 6 }, { channels: -1 }, { channels: '1' }]) {
         const invalid = structuredClone(settings); invalid.rules.erosion.erosionStages = bad;
         assert.throws(() => serializeWorkspaceSettings(invalid));
     }
@@ -227,4 +227,27 @@ test('separate stages survive files/profiles and preserve old fallback rules for
     profiles.capture({ settings }); profiles.save();
     assert.deepEqual(createProfileState({ settings: defaultWorkspaceSettings() }, storage).draft().settings.rules.erosion.erosionStages,
         { 'channels-solid': 0, channels: 4 });
+});
+
+
+test('sixth stage persists per channel mode and recordings keep absolute hits for stable replay', () => {
+    const settings = defaultWorkspaceSettings();
+    settings.rules.erosion = { mode: 'channels-solid', erosionStrength: .1,
+        erosionStages: { 'channels-solid': 5, channels: 5 } };
+    assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
+    let text;
+    const disk = { getItem: key => key === 'colorGridProfileDraftsV1' ? text ?? null : null,
+        setItem: (key, value) => { if (key === 'colorGridProfileDraftsV1') text = value; } };
+    const state = createProfileState({ settings: defaultWorkspaceSettings() }, disk);
+    state.replace({ settings });
+    const restored = createProfileState({ settings: defaultWorkspaceSettings() }, disk).draft().settings.rules.erosion;
+    assert.deepEqual(restored.erosionStages, { 'channels-solid': 5, channels: 5 });
+    for (const [mode, events] of [['channels-solid', 9], ['channels', 27]]) {
+        const rules = { ...restored, mode };
+        const recorded = recordErosionRules(rules, 264);
+        assert.equal(recorded.erosionEvents, events);
+        assert.equal(recorded.erosionStrength, .1);
+        assert(!Object.hasOwn(recorded, 'erosionStages'));
+        assert.equal(resolveErosionEvents(264, restoreErosionRules(recorded)), events);
+    }
 });

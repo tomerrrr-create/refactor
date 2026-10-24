@@ -1,11 +1,11 @@
 export const EROSION_MODES = ['legacy', 'channels-solid', 'channels'];
 export const EROSION_CHANNEL_MODES = ['channels-solid', 'channels'];
-export const EROSION_STAGE_SYMBOLS = ['I', 'II', 'III', 'IV', 'V'];
+export const EROSION_STAGE_SYMBOLS = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
 export function validErosionStages(stages) {
     return stages !== null && typeof stages === 'object' && !Array.isArray(stages) &&
         Object.entries(stages).every(([mode, stage]) => EROSION_CHANNEL_MODES.includes(mode) &&
-            Number.isInteger(stage) && stage >= 0 && stage <= 4);
+            Number.isInteger(stage) && stage >= 0 && stage < EROSION_STAGE_SYMBOLS.length);
 }
 
 export function erosionEarthSpan(paletteLength, mode) {
@@ -21,7 +21,7 @@ export function erosionPaceEvents(paletteLength, mode, pace) {
 
 export function erosionStageEvents(paletteLength, mode, stage) {
     const span = erosionEarthSpan(paletteLength, mode);
-    return Math.max(1, Math.round(span * [1, 5 / 6, 2 / 3, 1 / 2, 1 / 3][stage]));
+    return Math.max(1, Math.round(span * [1, 5 / 6, 2 / 3, 1 / 2, 1 / 3, 1 / 6][stage]));
 }
 
 export function resolveErosionEvents(paletteLength, rules) {

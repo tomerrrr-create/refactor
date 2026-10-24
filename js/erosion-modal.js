@@ -38,7 +38,7 @@ export function initializeErosionModal(app) {
         const stage = draft.erosionStages?.[draft.mode];
         const savedCount = stage === undefined && (draft.erosionPace || Object.hasOwn(draft, 'erosionEvents'));
         // Old shared/absolute settings remain exact until this mode is edited.
-        const nearest = [0, 1, 2, 3, 4].reduce((best, next) =>
+        const nearest = EROSION_STAGE_SYMBOLS.map((_, index) => index).reduce((best, next) =>
             Math.abs(erosionStageEvents(app.getPaletteLength(), draft.mode, next) - count) <
             Math.abs(erosionStageEvents(app.getPaletteLength(), draft.mode, best) - count) ? next : best, 0);
         slider.value = String(inactive ? 0 : stage ?? (savedCount ? nearest : 0));
