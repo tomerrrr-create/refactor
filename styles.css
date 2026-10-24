@@ -2143,13 +2143,28 @@ body.wind-mode #board { cursor: crosshair; }
 .startup-random-choice[aria-pressed="true"] .startup-random-check { opacity: 1; }
 .startup-random-choice:focus-visible { outline: 2px solid #e6cc8e; outline-offset: 2px; }
 
-/* Game of Life anchor uses the palette's colors without exposing internal indices. */
-.gol-dead-colors { display: flex; flex-direction: column; gap: 10px; }
-.gol-dead-default-row { display: flex; align-items: center; gap: 12px; }
-#btnGolDeadDefault { flex: 1; padding: 8px 12px; border: 1px solid #555; border-radius: 12px; color: #bbb; }
-#btnGolDeadDefault[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); background: #ffd7000c; }
-#golDeadColorIndicator { width: 36px; height: 36px; flex-shrink: 0; border: 1px solid var(--gold); border-radius: 12px; }
-#golDeadColorSwatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 8px; max-height: 144px; overflow-y: auto; padding: 6px; border: 1px solid #333; border-radius: 12px; }
-.gol-dead-swatch { height: 36px; border: 2px solid transparent; border-radius: 10px; }
-.gol-dead-swatch[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 2px #ffd70066; }
-.gol-dead-swatch:focus-visible, #btnGolDeadDefault:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* Compact color controls: a pinned swatch is distinct from following rank 0. */
+.gol-color-settings { border: 1px solid #ad90532b; border-radius: 16px; padding: 4px 14px; background: linear-gradient(125deg, #d4af3707, #10101040); }
+.gol-color-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; min-height: 56px; padding: 8px 0; }
+.gol-color-row h3 { font-size: 13px; font-weight: 400; color: #a7a29a; }
+.gol-anchor-actions { display: flex; align-items: center; gap: 8px; max-width: 100%; min-width: 0; }
+#btnGolDeadColor { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 9px 4px 5px; border: 1px solid #ffffff16; border-radius: 12px; color: #b9b5ac; font-size: 12px; }
+#btnGolDeadColor[data-fixed="true"] { color: #e3c677; border-color: #d5aa4859; background: #d5aa480a; }
+#golDeadColorIndicator { width: 26px; height: 26px; flex-shrink: 0; border: 1px solid #ffffff40; border-radius: 8px; }
+.gol-anchor-pin { display: none; width: 13px; height: 13px; }
+#btnGolDeadColor[data-fixed="true"] .gol-anchor-pin { display: block; }
+.gol-anchor-chevron { width: 12px; height: 12px; opacity: .6; }
+#btnGolDeadColor[aria-expanded="true"] .gol-anchor-chevron { transform: rotate(180deg); }
+#btnGolDeadDefault { flex-shrink: 0; display: flex; justify-content: center; align-items: center; gap: 1px; width: 40px; height: 40px; border: 1px solid #ffffff16; border-radius: 12px; color: #777; font-size: 11px; }
+#btnGolDeadDefault svg { width: 17px; height: 17px; }
+#btnGolDeadDefault[aria-pressed="true"] { color: #e3c677; border-color: #d5aa4859; }
+#golDeadColorSwatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 8px; max-height: 136px; overflow-y: auto; padding: 7px; margin: 0 -2px 12px; border-radius: 10px; background: #0003; }
+#golDeadColorSwatches[hidden] { display: none; }
+.gol-dead-swatch { height: 32px; border: 2px solid transparent; border-radius: 9px; }
+.gol-dead-swatch[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 2px #ffd70055; }
+.gol-mixing-row { border-top: 1px solid #ffffff0b; }
+.gol-mix-options.relative-separator-toggle { margin: 0; gap: 10px; direction: ltr; font-size: 12px; color: #777; }
+.gol-mix-options .gol-rgb-label { color: #e3c677; }
+.gol-mix-options:has(input:checked) .gol-rgb-label { color: #777; }
+.gol-mix-options:has(input:checked) #golSortOrderLabel { color: #e3c677; }
+.gol-dead-swatch:focus-visible, #btnGolDeadColor:focus-visible, #btnGolDeadDefault:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }

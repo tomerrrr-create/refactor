@@ -928,19 +928,31 @@
           <button class="gol-chip-btn" data-number="8">8</button>
         </div>
       </div>
-      <section class="gol-dead-colors" aria-labelledby="golDeadColorLabel">
-        <h3 id="golDeadColorLabel" class="font-semibold text-gray-300" data-debug-text="gol_dead_color">Dead cell color</h3>
-        <div class="gol-dead-default-row">
-          <button id="btnGolDeadDefault" type="button" aria-pressed="true" data-debug-text="gol_dead_default">Default · first color</button>
-          <span id="golDeadColorIndicator" aria-hidden="true"></span>
+      <section class="gol-color-settings" aria-labelledby="golDeadColorLabel golMixingLabel">
+        <div class="gol-color-row">
+          <h3 id="golDeadColorLabel" data-debug-text="gol_dead_color">Anchor</h3>
+          <div class="gol-anchor-actions">
+            <button id="btnGolDeadColor" type="button" aria-expanded="false" aria-controls="golDeadColorSwatches">
+              <span id="golDeadColorIndicator" aria-hidden="true"></span>
+              <svg class="gol-anchor-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m9 3 6 0-1 6 3 4H7l3-4-1-6Zm3 10v8"/></svg>
+              <span id="golDeadColorMode" data-debug-text="gol_anchor_position">Position 0</span>
+              <svg class="gol-anchor-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+            </button>
+            <button id="btnGolDeadDefault" type="button" aria-pressed="true" data-i18n-title="gol_dead_default">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 8a6 6 0 1 1 0 4M4 3v5h5"/></svg><span aria-hidden="true">0</span>
+            </button>
+          </div>
         </div>
-        <div id="golDeadColorSwatches" role="group" aria-labelledby="golDeadColorLabel"></div>
+        <div id="golDeadColorSwatches" role="group" aria-labelledby="golDeadColorLabel" hidden></div>
+        <div class="gol-color-row gol-mixing-row">
+          <h3 id="golMixingLabel" data-debug-text="gol_mixing">Mixing</h3>
+          <label class="gol-mix-options relative-separator-toggle">
+            <span class="gol-rgb-label">RGB</span>
+            <input id="golSortGeneticsToggle" type="checkbox" role="switch" aria-labelledby="golMixingLabel golSortOrderLabel">
+            <span id="golSortOrderLabel" dir="auto" data-debug-text="gol_sort_genetics">Sort order</span>
+          </label>
+        </div>
       </section>
-      <label class="relative-separator-toggle">
-        <span data-debug-text="gol_sort_genetics">Mix colors by palette order</span>
-        <input id="golSortGeneticsToggle" type="checkbox" role="switch" aria-describedby="golSortGeneticsNote">
-      </label>
-      <p id="golSortGeneticsNote" class="text-sm text-gray-400" data-debug-text="gol_sort_genetics_note">New cells inherit colors by the current sort order instead of RGB mixing.</p>
       <div class="flex flex-col gap-2">
         <h3 class="font-semibold text-gray-300" data-debug-text="evolution_presets">Presets</h3>
 <div class="grid grid-flow-col grid-rows-5 gap-2">

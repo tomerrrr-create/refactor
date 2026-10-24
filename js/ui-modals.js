@@ -1006,8 +1006,8 @@ function applyGolPreset(survivalArray, birthArray) {
 function openGolSettingsModal() {
     if (app.isBreathing()) return;
     
-    // --- START: MODIFICATION ---
-    // במקום להגדיר טקסט, נפעיל את הפונקציה שמעדכנת את הכפתורים
+    document.getElementById('golDeadColorSwatches').hidden = true;
+    document.getElementById('btnGolDeadColor').setAttribute('aria-expanded', 'false');
     const rules = app.getGameOfLifeRules();
     writeGolCycleRules(rules);
 updateActivePresetButton();
@@ -1040,6 +1040,15 @@ function renderGolDeadColors() {
     const index = resolveGameOfLifeDeadIndex({ deadColor: golDeadColor }, palette);
     const root = document.getElementById('btnGolDeadDefault');
     root.setAttribute('aria-pressed', String(golDeadColor === null));
+    root.title = app.getText('gol_dead_default');
+    root.setAttribute('aria-label', root.title);
+    const choice = document.getElementById('btnGolDeadColor');
+    choice.dataset.fixed = String(golDeadColor !== null);
+    choice.title = app.getText('gol_choose_anchor');
+    const mode = document.getElementById('golDeadColorMode');
+    mode.dataset.debugText = golDeadColor === null ? 'gol_anchor_position' : 'gol_anchor_fixed';
+    mode.textContent = app.getText(mode.dataset.debugText);
+    choice.setAttribute('aria-label', `${choice.title}: ${mode.textContent} · ${palette[index]}`);
     const indicator = document.getElementById('golDeadColorIndicator');
     indicator.style.backgroundColor = palette[index];
     indicator.title = palette[index];
@@ -1745,6 +1754,11 @@ export function initializeModals(appContext) {
     app.dom.gameOfLifeSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.gameOfLifeSettingsModal) closeGolSettingsModal(); });
     app.dom.btnGolSettingsReset.addEventListener('click', resetGolSettings);
     document.getElementById('golSortGeneticsToggle').addEventListener('change', () => golCycleMembership?.manualChange());
+    document.getElementById('btnGolDeadColor').addEventListener('click', () => {
+        const grid = document.getElementById('golDeadColorSwatches');
+        grid.hidden = !grid.hidden;
+        document.getElementById('btnGolDeadColor').setAttribute('aria-expanded', String(!grid.hidden));
+    });
     document.getElementById('btnGolDeadDefault').addEventListener('click', () => {
         golDeadColor = null; renderGolDeadColors(); golCycleMembership?.manualChange();
     });
