@@ -4852,6 +4852,7 @@ else if (action.eventName === 'Invert Colors') {
             setNudgeInterval, persistNudgeSettings,
             resetWorkspaceSettings: () => settingsProfiles.resetToDefaults(),
             getStartupSettings: () => ({ ...startupSettings }),
+            getDefaultStartupSettings: () => settingsProfiles.defaults().settings.startup,
             saveStartupSettings: (settings) => {
                 const normalized = normalizeStartup(settings);
                 const persisted = persistStartup(normalized);
@@ -4860,7 +4861,7 @@ else if (action.eventName === 'Invert Colors') {
             },
             getCurrentStartupSettings: () => ({
                 paletteName: C.PALETTES[activePaletteIndex].originalName,
-                boardSize: n, separatorPx, sortMethod: currentSortMethod,
+                boardSize: n, separatorPx: isRelativeSeparatorMode ? selectedRelativeSeparator : relativeSeparatorLevel(separatorPx), sortMethod: currentSortMethod,
                 fill: startupSettings.fill, brushSize,
                 brushMode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy',
                 brushColor: isRainbowModeActive ? 'rainbow' : selectedColor === sortColorsArray(palette(), 'luminance')[0] ? 'darkest' :

@@ -6,7 +6,8 @@ import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor } from './preset-cycle-editor.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
-import { DEFAULT_STARTUP, RANDOM_STARTUP_PALETTE } from './startup-settings.js';
+import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
+import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel } from './relative-separators.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
 import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
 // js/ui-modals.js
@@ -1537,7 +1538,8 @@ export function initializeModals(appContext) {
         if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) startupPaletteDialog.close();
     });
     addStartupOptions('startupBoardSize', app.C.SIZES.slice().sort((a, b) => a - b).map(n => [n, `${n} × ${n}`]));
-    addStartupOptions('startupSeparator', app.C.SEPARATORS.slice().reverse().map(gap => [gap, `${gap} px`]));
+    addStartupOptions('startupSeparator', RELATIVE_SEPARATOR_LEVELS.map(level =>
+        [level, '', { 5: 'startup_separator_large', 3: 'separator_medium', 1: 'startup_separator_small', 0: 'startup_separator_off' }[level]]));
     addStartupOptions('startupSort', app.SORT_MODES.map(mode => [mode.method, '', 'startup_sort_' + mode.method]));
     addStartupOptions('startupFill', ['random', 'dark', 'light', 'seed'].map(value => [value, '', 'startup_fill_' + value]));
     addStartupOptions('startupBrushMode', ['paint', 'continuous', 'copy'].map(value => [value, '', 'brushMode_' + value]));
@@ -1545,7 +1547,7 @@ export function initializeModals(appContext) {
     addStartupOptions('startupSymmetry', app.C.SYMMETRY_MODES.map(value => [value, '', 'symmetry_' + value]));
     addStartupOptions('startupInterface', ['creative', 'simulation'].map(value => [value, '', 'startup_mode_' + value]));
     function fillStartupForm(settings) {
-        Object.entries(startupFields).forEach(([key, id]) => { document.getElementById(id).value = settings[key]; });
+        Object.entries(startupFields).forEach(([key, id]) => { document.getElementById(id).value = key === 'separatorPx' ? relativeSeparatorLevel(settings[key]) : settings[key]; });
         document.getElementById('startupBrushValue').value = settings.brushSize;
         updateStartupPalettePreview();
         startupStatus.textContent = '';
@@ -1562,7 +1564,7 @@ export function initializeModals(appContext) {
         startupStatus.textContent = '';
     });
     document.getElementById('btnResetStartup').addEventListener('click', () => {
-        fillStartupForm(DEFAULT_STARTUP);
+        fillStartupForm(app.getDefaultStartupSettings());
         startupStatus.textContent = app.getText('init_defaults_pending');
     });
     document.getElementById('btnUseCurrentStartup').addEventListener('click', () => {
