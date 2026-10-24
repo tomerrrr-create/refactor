@@ -4857,6 +4857,10 @@ else if (action.eventName === 'Invert Colors') {
             resetWorkspaceSettings: () => settingsProfiles.resetToDefaults(),
             getStartupSettings: () => ({ ...startupSettings }),
             getDefaultStartupSettings: () => settingsProfiles.defaults().settings.startup,
+            getDefaultChiFlowCycle: () => {
+                const defaults = settingsProfiles.defaults();
+                return { slots: defaults.settings.cycles.chiFlow, sources: defaults.identity.chiFlow.sources };
+            },
             saveStartupSettings: (settings) => {
                 const normalized = normalizeStartup(settings);
                 const persisted = persistStartup(normalized);

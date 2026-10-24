@@ -372,9 +372,10 @@ app.dom.btnChiPresetElectric.textContent = app.getText('chi_preset_electric');
         app.dom.btnChiPresetZen.textContent = app.getText('chi_preset_zen');
 
 updateActiveChiPresetButton();
+        const defaultChiCycle = app.getDefaultChiFlowCycle();
         chiCycleMembership = bindPresetCycleEditor({
             toolbar: document.getElementById('chiCycleToolbar'),
-            defaults: [app.C.defaultChiFlowRules, CHI_PRESETS.Ripples, CHI_PRESETS.Nova], defaultSources: ['Harmony', 'Ripples', 'Nova'],
+            defaults: defaultChiCycle.slots, defaultSources: defaultChiCycle.sources,
             iconButton: app.dom.btnSandpile,
             presets: Object.entries(CHI_PRESETS).map(([name, rules]) => ({ button: document.getElementById('btnChiPreset' + name), rules, source: name })),
             state: app.getChiFlowCycle(), readRules: readChiCycleRules, writeRules: writeChiCycleRules,
