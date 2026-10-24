@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '8ec712c606b382547692';
+const VERSION = 'b6afe44e08965d5f8b80';
 const ASSETS = [
     "./",
     "./index.html",
@@ -22,6 +22,7 @@ const ASSETS = [
     "./js/guide-ripples.js",
     "./js/i18n.js",
     "./js/interface-zoom.js",
+    "./js/palette-color-transition.js",
     "./js/palette-display-names.js",
     "./js/palette-group-transition.js",
     "./js/palette-picker.js",

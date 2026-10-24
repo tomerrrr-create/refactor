@@ -1,3 +1,4 @@
+import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
 import { loadInterfaceZoom, saveInterfaceZoom } from './interface-zoom.js';
 import { openStudio } from './studio-link.js';
@@ -438,6 +439,7 @@ currentSortMethod,
       }
 
       function applyState(state) {
+        clearPaletteColorTransition(dom.board);
         if (state.evolutionTuning) {
             validateEvolutionTuning(state.evolutionTuning);
             if (['brightnessEvo', 'breathe', 'islands', 'dla'].includes(state.tuningSimulation) && armedSimulation !== state.tuningSimulation) {
@@ -568,6 +570,7 @@ k: tileState.k,
       function getPaletteColor(k) { return palette()[norm(k)]; }
 
       function initializeBoardAndCanvas(createEmptyState = true) {
+          clearPaletteColorTransition(dom.board);
           canvas = dom.boardCanvas;
           if (!canvas) { return; }
           ctx = canvas.getContext('2d');
@@ -1105,6 +1108,7 @@ function handlePaletteSwitch(backwards = false) {
         }
         // -------------------------------------------------------------
         if (index === activePaletteIndex) return;
+        clearPaletteColorTransition(dom.board);
         const previousCount = paletteLen();
         window.logArtEvent('Palette Change', `${C.PALETTES[index].name} | Sort: ${currentSortMethod}`); // תיעוד החלפת פלטה כולל שיטת מיון
 
@@ -1130,7 +1134,10 @@ function handlePaletteSwitch(backwards = false) {
 
       function switchPalette(backwards = false) {
         const shouldTriggerNudge = !hasUsedRandomize && !hasTriggeredFirstNudge;
+        const previousIndex = activePaletteIndex;
+        const previousFrame = !isSelectingMacroPalette && !isExecutingMacroCommand ? capturePaletteColors(dom.board) : null;
         handlePaletteSwitch(backwards);
+        if (activePaletteIndex !== previousIndex) showPaletteColorTransition(dom.board, previousFrame);
         if (shouldTriggerNudge) {
             hasTriggeredFirstNudge = true;
             dom.btnRandom.classList.add('glow-animation');
@@ -2727,6 +2734,7 @@ function finishBrushGesture() {
 }
 
 function onPointerDown(e) {
+    clearPaletteColorTransition(dom.board);
     if (windMode) {
         if (e.button !== 0 || e.isPrimary === false) return;
         const index = getTileIndexFromCoords(e.clientX, e.clientY);

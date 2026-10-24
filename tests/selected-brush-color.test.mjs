@@ -12,7 +12,7 @@ function excerpt(start, end) {
 }
 function harness() {
     const colors = ['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffffff'];
-    const ctx = vm.createContext({
+    const ctx = vm.createContext({clearPaletteColorTransition() {}, capturePaletteColors() { return null; }, showPaletteColorTransition() {},
         C: { PALETTES: [
             { originalName: 'First', originalColors: colors, colors: sortColorsArray(colors, 'luminance') },
             { originalName: 'Second', originalColors: ['#ff0000', '#ffffff'], colors: ['#ff0000', '#ffffff'] }

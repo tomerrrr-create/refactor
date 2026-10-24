@@ -8,7 +8,7 @@ const excerpt = (start, end) => source.slice(source.indexOf(start), source.index
 const plain = value => JSON.parse(JSON.stringify(value));
 function harness(index = 2) {
     const logs = [], history = [], opened = [];
-    const h = vm.createContext({
+    const h = vm.createContext({clearPaletteColorTransition() {}, capturePaletteColors() { return null; }, showPaletteColorTransition() {},
         C: { PALETTES: [23, 64, 264, 21].map((length, i) => ({ name: `Palette${i}`, colors: Array(length).fill('#000000') })),
             PALETTE_GROUPS: [
                 { id: 'classic', indexes: [0] }, { id: 'extended', indexes: [1] },
