@@ -1,7 +1,7 @@
 import { loadStartupProfile } from './startup-profile.js';
 import { createProfileState, readProfileFile, factoryProfileSnapshot } from './profile-state.js';
 
-export function initializeProfileControls({ capture, apply, canUse, getText }) {
+export function initializeProfileControls({ capture, apply, exportSettings, canUse, getText }) {
     const state = createProfileState(capture());
     state.select(loadStartupProfile());
     const host = document.getElementById('profileControls');
@@ -10,10 +10,21 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
     const actions = document.getElementById('profileActions');
     const status = document.getElementById('profileStatus');
     const fileInput = document.getElementById('profileSettingsFile');
-    let busy = false, queued = false;
-    function message(key) {
+    const transfer = document.getElementById('profileTransferDialog');
+    const transferTitle = document.getElementById('profileTransferTitle');
+    const transferPrompt = document.getElementById('profileTransferPrompt');
+    const targets = document.getElementById('profileCopyTargets');
+    const confirm = document.getElementById('btnProfileTransferConfirm');
+    const cancel = document.getElementById('btnProfileTransferCancel');
+    let busy = false, queued = false, pending = null, messageTimer;
+
+    function message(key, transient = false) {
+        clearTimeout(messageTimer);
         status.dataset.debugText = key;
         status.textContent = getText(key);
+        if (transient) messageTimer = setTimeout(() => {
+            status.textContent = ''; delete status.dataset.debugText;
+        }, 2500);
     }
     function closeActions() {
         actions.hidden = true;
@@ -26,14 +37,16 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
             button.setAttribute('aria-label', label);
             button.title = label;
         });
-        document.getElementById('btnProfileStore').disabled = busy;
+        document.getElementById('btnProfileExport').disabled = busy;
+        document.getElementById('btnProfileCopy').disabled = busy;
         document.getElementById('btnProfileLoad').disabled = busy;
         choices.forEach((button, index) => {
-            const dirty = state.dirty(index);
+            const modified = state.modified(index);
             button.setAttribute('aria-pressed', String(index === state.selected));
-            button.querySelector('.profile-dirty').hidden = !dirty;
+            button.querySelector('.profile-dirty').hidden = !modified;
             button.setAttribute('aria-label', getText('profile_number').replace('{n}', index + 1) +
-                (dirty ? ' — ' + getText('profile_modified') : ''));
+                (modified ? ' — ' + getText('profile_modified') : ''));
+            button.title = button.getAttribute('aria-label');
             button.disabled = busy;
             dots[index].disabled = busy || index !== state.selected;
             dots[index].setAttribute('aria-label', getText('profile_actions').replace('{n}', index + 1));
@@ -70,34 +83,99 @@ export function initializeProfileControls({ capture, apply, canUse, getText }) {
         closeActions();
         if (opening) { actions.hidden = false; dot.setAttribute('aria-expanded', 'true'); }
     }));
-    document.getElementById('btnProfileStore').addEventListener('click', () => {
-        if (!canUse()) { message('profile_replay_busy'); return; }
+    document.getElementById('btnProfileExport').addEventListener('click', async () => {
+        if (busy || !canUse()) { message('profile_replay_busy'); return; }
         captureNow();
-        message(state.save() ? 'profile_saved' : 'profile_session_only');
+        const snapshot = state.draft(), index = state.selected;
+        busy = true; refresh();
+        try {
+            if (await exportSettings(snapshot.settings, index)) message('profile_exported', true);
+        } catch { message('settings_save_error'); }
+        finally { busy = false; closeActions(); refresh(); dots[state.selected].focus(); }
+    });
+
+    function finishTransfer() {
+        pending = null; busy = false;
+        if (transfer.open) transfer.close();
         closeActions(); refresh(); dots[state.selected].focus();
+    }
+    function showConfirmation() {
+        targets.hidden = true; confirm.hidden = false;
+        const { kind, source, target } = pending;
+        transferTitle.textContent = getText(kind === 'copy' ? 'profile_copy' : 'profile_load');
+        transferPrompt.textContent = getText(kind === 'copy' ? 'profile_copy_prompt' : 'profile_load_prompt')
+            .replace('{from}', source + 1).replace('{to}', target + 1);
+        if (!transfer.open) transfer.showModal();
+        cancel.focus();
+    }
+    document.getElementById('btnProfileCopy').addEventListener('click', () => {
+        if (busy || !canUse()) { message('profile_replay_busy'); return; }
+        captureNow();
+        pending = { kind: 'copy', source: state.selected, snapshot: state.draft() };
+        busy = true; refresh();
+        transferTitle.textContent = getText('profile_copy');
+        transferPrompt.textContent = getText('profile_copy_choose');
+        targets.replaceChildren(); targets.hidden = false; confirm.hidden = true;
+        choices.forEach((_, index) => {
+            if (index === pending.source) return;
+            const button = document.createElement('button');
+            button.type = 'button'; button.className = 'profile-choice';
+            button.textContent = String(index + 1); button.dataset.copyTarget = index;
+            button.setAttribute('aria-label', getText('profile_number').replace('{n}', index + 1));
+            button.addEventListener('click', () => { pending.target = index; showConfirmation(); });
+            targets.append(button);
+        });
+        transfer.showModal(); targets.querySelector('button').focus();
     });
     document.getElementById('btnProfileLoad').addEventListener('click', () => {
-        if (!canUse()) { message('profile_replay_busy'); return; }
+        if (busy || !canUse()) { message('profile_replay_busy'); return; }
         fileInput.value = ''; fileInput.click();
     });
     fileInput.addEventListener('change', async () => {
         const file = fileInput.files[0];
         if (!file) return;
-        if (!canUse()) { message('profile_replay_busy'); return; }
-        // Freeze the target until file validation and application finish.
+        if (busy || !canUse()) { message('profile_replay_busy'); return; }
         captureNow(); busy = true; refresh();
+        const target = state.selected;
         try {
             if (file.size > 1024 * 1024) throw Error('Settings file is too large');
             const snapshot = readProfileFile(await file.text());
             if (!canUse()) throw Error('Replay is active');
-            const stored = apply(snapshot);
-            const profileStored = state.replace(capture());
-            message(stored && profileStored ? 'settings_loaded' : 'profile_session_only');
-        } catch { message('settings_load_error'); }
-        finally {
-            busy = false; fileInput.value = ''; closeActions(); refresh(); dots[state.selected].focus();
-        }
+            pending = { kind: 'load', source: target, target, snapshot };
+            showConfirmation();
+        } catch { message('settings_load_error'); finishTransfer(); }
+        finally { fileInput.value = ''; }
     });
+    confirm.addEventListener('click', () => {
+        if (!pending || pending.target === undefined) return;
+        if (!canUse() || state.selected !== pending.source) {
+            message('profile_replay_busy'); finishTransfer(); return;
+        }
+        confirm.disabled = true;
+        try {
+            let stored;
+            if (pending.kind === 'copy') {
+                stored = state.copyTo(pending.target, pending.snapshot);
+            } else {
+                const applied = apply(pending.snapshot);
+                const saved = state.replace(capture());
+                stored = applied && saved;
+            }
+            message(stored ? (pending.kind === 'copy' ? 'profile_copied' : 'settings_loaded') : 'profile_session_only', stored);
+        } catch { message('settings_load_error'); }
+        finally { confirm.disabled = false; finishTransfer(); }
+    });
+    cancel.addEventListener('click', finishTransfer);
+    document.getElementById('btnProfileTransferClose').addEventListener('click', finishTransfer);
+    transfer.addEventListener('cancel', event => { event.preventDefault(); finishTransfer(); });
+    transfer.addEventListener('close', () => { if (!transfer.open && pending) finishTransfer(); });
+    let startedOutside = false;
+    const outside = event => {
+        const r = transfer.getBoundingClientRect();
+        return event.target === transfer && (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom);
+    };
+    transfer.addEventListener('pointerdown', event => { startedOutside = outside(event); });
+    transfer.addEventListener('click', event => { if (startedOutside && outside(event)) finishTransfer(); startedOutside = false; });
     host.addEventListener('keydown', event => {
         if (event.key === 'Escape' && !actions.hidden) {
             event.preventDefault(); event.stopPropagation(); closeActions(); dots[state.selected].focus();

@@ -5057,6 +5057,8 @@ updateBrightnessEvoButtonUI();
         renderToScreen(null);
         settingsProfiles = initializeProfileControls({
             capture: captureProfileSettings,
+            exportSettings: (settings, index) => saveArtRecipeFile(new File(
+                [serializeWorkspaceSettings(settings)], `FYI_Profile_${index + 1}_settings.txt`, { type: 'text/plain' })),
             apply: (snapshot, options) => importWorkspaceSettings(snapshot.settings, snapshot.identity, options),
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText

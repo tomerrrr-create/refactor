@@ -1,3 +1,6 @@
+import { validateEvolutionTuning } from './evolution-tuning.js';
+import { DEFAULT_SEPARATOR_CYCLE } from './separator-cycle.js';
+import { resolveSavedBloom } from './soft-bloom.js';
 import { loadStartupProfile } from './startup-profile.js';
 import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
 import { validateWorkspaceSettings, deserializeWorkspaceSettings, defaultWorkspaceSettings } from './workspace-settings.js';
@@ -142,8 +145,25 @@ function mergeChanges(draft, previous, current) {
     return clone(current);
 }
 
+// Compare effective preferences, not optional field spelling or preset label IDs.
+function defaultComparable(value, factory) {
+    const snapshot = validateProfileSnapshot(value);
+    const settings = snapshot.settings;
+    settings.evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
+    settings.separatorCycle ??= [...DEFAULT_SEPARATOR_CYCLE];
+    const bloom = resolveSavedBloom(settings.smoothing);
+    Object.assign(settings.smoothing, { bloom: bloom.enabled, bloomIntensity: bloom.intensity });
+    const identity = Object.fromEntries(['gameOfLife', 'chiFlow'].map(name => [name, {
+        index: snapshot.identity?.[name].index ?? 0,
+        yoursRules: snapshot.identity?.[name].yoursRules ?? factory.identity[name].yoursRules
+    }]));
+    return { settings, identity };
+}
+
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
+    const factories = [0, 1, 2].map(factoryProfileSnapshot);
+    const defaults = factories.map(value => defaultComparable(value, value));
     let state = { version: 1, defaultsVersion: 11, selected: 0,
         profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
@@ -319,6 +339,15 @@ export function createProfileState(initial, storage) {
         get selected() { return state.selected; },
         draft(index = state.selected) { checkIndex(index); return clone(state.profiles[index].draft); },
         dirty(index) { checkIndex(index); return !equal(state.profiles[index].saved, state.profiles[index].draft); },
+        modified(index) { checkIndex(index); return !equal(defaultComparable(state.profiles[index].draft, factories[index]), defaults[index]); },
+        copyTo(index, value = this.draft()) {
+            checkIndex(index);
+            if (suspended || index === state.selected) throw Error('Cannot copy profile');
+            const snapshot = validateProfileSnapshot(value);
+            // Only the destination changes; the live profile and observation stay intact.
+            state.profiles[index] = { saved: clone(snapshot), draft: clone(snapshot) };
+            return persist();
+        },
         capture(value) {
             if (suspended) return false;
             const current = validateProfileSnapshot(value);
