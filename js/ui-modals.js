@@ -1009,6 +1009,7 @@ function openGolSettingsModal() {
     document.getElementById('golDeadColorPicker').hidden = true;
     document.getElementById('btnGolDeadColor').setAttribute('aria-expanded', 'false');
     const rules = app.getGameOfLifeRules();
+    golDeadColor = isGameOfLifeDeadColor(rules.deadColor) ? rules.deadColor.toLowerCase() : null;
     writeGolCycleRules(rules);
 updateActivePresetButton();
     // --- END: MODIFICATION ---
@@ -1020,7 +1021,7 @@ updateActivePresetButton();
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
         writeRules: writeGolCycleRules,
-        save: app.setGameOfLifeCycle, saveButton: app.dom.btnGolSettingsSave, getText: app.getText
+        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots.map(withGolDeadColor), index, sources, withGolDeadColor(yoursRules)), saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
@@ -1079,8 +1080,14 @@ function readGolCycleRules() {
         ...(golDeadColor !== null ? { deadColor: golDeadColor } : {}) };
 }
 
+function withGolDeadColor(rules) {
+    const snapshot = { ...rules };
+    delete snapshot.deadColor;
+    if (golDeadColor !== null) snapshot.deadColor = golDeadColor;
+    return snapshot;
+}
+
 function writeGolCycleRules(rules) {
-    golDeadColor = isGameOfLifeDeadColor(rules.deadColor) ? rules.deadColor.toLowerCase() : null;
     renderGolDeadColors();
     document.getElementById('golSortGeneticsToggle').checked = rules.sortGenetics === true;
     applyGolPreset(rules.survival, rules.birth);
@@ -1091,6 +1098,7 @@ function saveGolSettings() {
 }
 
 function resetGolSettings() {
+    golDeadColor = null;
     writeGolCycleRules(app.C.defaultGameOfLifeRules);
     golCycleMembership?.manualChange();
 }

@@ -34,7 +34,7 @@ function harness() {
         requestAnimationFrame: fn => { const id = c.queued.length + 1; c.queued.push({id,fn}); return id; },
         getErosionRecordingRules: () => ({...c.erosionRules}), getGameOfLifeRecordingRules: () => ({mode:c.gameOfLifeMode}),
         getChiFlowRecordingRules: () => ({cycleMode:c.chiFlowMode}), getNudgeTiming: () => ({legacyFrames:false}),
-        cloneChiFlowRules: r => ({...r}), cloneGameOfLifeRules: r => ({...r}),
+        syncGameOfLifeDeadColor() {}, cloneChiFlowRules: r => ({...r}), cloneGameOfLifeRules: r => ({...r}),
         createIslandsSession: () => ({mode:'classic',seed:42,state:42,steps:0}), logIslandsSessionStart() {},
         restoreIslandsSession: r => ({...r}), syncDlaCrystalState() {}, initializeDla() {} });
     for (const name of ['updateUndoRedoButtons','updateBrightnessEvoButtonUI','updateDlaButtonUI','updateErosionButtonUI',
