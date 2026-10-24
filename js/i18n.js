@@ -456,10 +456,7 @@ export const translations = {
   dla_fastmode_desc: { en: "Uses a faster algorithm for filling gaps.", he: "משתמש באלגוריתם מהיר למילוי חללים.", ru: "Использует быстрый алгоритם для заполнения.", nl: "Gebruikt een sneller algoritme om gaten te vullen." },
 
 // --- START: Contour Settings Modal ---
-  gol_dead_color: { en: "Anchor", he: "עוגן", ru: "Якорь", nl: "Anker" },
-  gol_anchor_current: { en: "Current sort", he: "מיון נוכחי", ru: "Текущая сортировка", nl: "Huidige sortering" },
-  gol_anchor_fixed_sort: { en: "Fixed sort", he: "מיון קבוע", ru: "Фиксированная сортировка", nl: "Vaste sortering" },
-  gol_anchor_legacy: { en: "Previous setting", he: "הגדרה קודמת", ru: "Предыдущая настройка", nl: "Vorige instelling" },
+  gol_root_lock: { en: "Lock root", he: "נעל שורש", ru: "Закрепить корень", nl: "Wortel vastzetten" },
   gol_mixing: { en: "Mixing", he: "ערבוב", ru: "Смешивание", nl: "Mengen" },
   gol_sort_genetics: { en: "Sort order", he: "שיטת מיון", ru: "Сортировка", nl: "Sorteervolgorde" },
   contour_modal_title: { en: "Contour Settings", he: "הגדרות קווי מתאר", ru: "Настройки контуров", nl: "Contour-instellingen" },

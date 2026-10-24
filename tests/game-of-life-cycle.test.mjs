@@ -1,4 +1,4 @@
-import { isGameOfLifeAnchorSort } from '../js/game-of-life-settings.js';
+import { isGameOfLifeAnchorSort, stripGameOfLifeAnchor } from '../js/game-of-life-settings.js';
 import { CHI_REACH_PERCENTAGES } from '../js/chi-reach.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,7 +12,7 @@ const plain = value => JSON.parse(JSON.stringify(value));
 const fn = name => source.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?^\\}`, 'm'))[0];
 const personal = { survival: [1, 2], birth: [3, 6] };
 function harness() {
-    const c = vm.createContext({ CHI_REACH_PERCENTAGES, isGameOfLifeAnchorSort, C: { GAME_OF_LIFE_PRESETS: presets }, gameOfLifeRules: plain(personal), personalGameOfLifeRules: plain(personal), gameOfLifeMode: 'personal',
+    const c = vm.createContext({ gameOfLifeRootLock:null,isMacroLoaded:false,isMacroPlaying:false,stripGameOfLifeAnchor,CHI_REACH_PERCENTAGES, isGameOfLifeAnchorSort, C: { GAME_OF_LIFE_PRESETS: presets }, gameOfLifeRules: plain(personal), personalGameOfLifeRules: plain(personal), gameOfLifeMode: 'personal',
         armedSimulation: null, isLifePlaying: false, isExecutingMacroCommand: false, window: {}, artRecipeLog: [], currentGenerationCount: 0, armCalls: 0 });
     c.defaultGolCycle = [plain(personal), plain(presets.btnGolPresetShuffle), plain(presets.btnGolPresetCoral)];
     c.gameOfLifeCycle = c.defaultGolCycle.map(plain);
@@ -26,7 +26,7 @@ function harness() {
     c.currentSortMethod = 'luminance';
     const logger = source.indexOf('window.logArtEvent = function');
     vm.runInContext(source.slice(logger, source.indexOf('// ------------------------------------------', logger)), c);
-    vm.runInContext(['cloneGameOfLifeRules', 'getGameOfLifeRecordingRules', 'setPersonalGameOfLifeRules', 'setGameOfLifeCycle', 'restoreGameOfLifeRules', 'syncGameOfLifeColorSettings', 'cycleGameOfLifeMode', 'nextEvolutionMode'].map(fn).join('\n'), c);
+    vm.runInContext(['cloneGameOfLifeRules', 'cloneGameOfLifePreferenceRules', 'withGameOfLifeRootLock', 'setGameOfLifeRootLock', 'getGameOfLifeRecordingRules', 'setPersonalGameOfLifeRules', 'setGameOfLifeCycle', 'restoreGameOfLifeRules', 'syncGameOfLifeColorSettings', 'cycleGameOfLifeMode', 'nextEvolutionMode'].map(fn).join('\n'), c);
     vm.runInContext(source.slice(source.indexOf('function applyMacroRules('), source.indexOf('function executeMacroAction(')), c);
     vm.runInContext(source.slice(source.indexOf('function getHistorySettings('), source.indexOf('function toggleMacroFullScreen(')), c);
     vm.runInContext(source.slice(source.indexOf('function executeMacroAction('), source.indexOf('        async function initializeApp(')), c);
@@ -123,16 +123,16 @@ test('sorted genetics is logged and replayed for PLAY, STEP and live changes; le
     const c = harness();
     c.window.logArtEvent('INIT_STATE', JSON.stringify({recipeVersion:2,n:1,pal:0,sep:0,sort:'luminance',board:'1x0'}));
     c.cycleGameOfLifeMode();
-    c.setPersonalGameOfLifeRules({...personal,sortGenetics:true,deadColor:'#ff0000'});
+    c.setPersonalGameOfLifeRules({...personal,sortGenetics:true});c.setGameOfLifeRootLock('luminance');
     const snapshot = plain(c.getGameOfLifeRecordingRules());
     assert.equal(snapshot.sortGenetics,true);
-    assert.equal(snapshot.deadColor,'#ff0000');
+    assert.equal(snapshot.deadSortMethod,'luminance');
     assert.equal(snapshot.cycleSlots[0].sortGenetics,true);
     for (const event of ['PLAY','STEP FORWARD']) {
         c.window.logArtEvent(event,'Armed: gameOfLife | Sort: hue | Rules: '+JSON.stringify(snapshot));
     }
     c.isLifePlaying=true;c.currentGenerationCount=12;
-    c.setPersonalGameOfLifeRules({...personal,sortGenetics:true,deadColor:'#ff0000'});
+    c.setPersonalGameOfLifeRules({...personal,sortGenetics:true});c.setGameOfLifeRootLock('luminance');
     const changes=c.parseMacroText(c.artRecipeLog.join('\n'));
     const recorded=changes.filter(a=>['PLAY','STEP FORWARD','Game of Life Mode Changed'].includes(a.eventName));
     const replay=harness();
@@ -151,16 +151,18 @@ test('sorted genetics is logged and replayed for PLAY, STEP and live changes; le
 
 test('anchor and mixing stay shared through Shuffle, Coral, Off and returning', () => {
     const c=harness();c.cycleGameOfLifeMode();
-    c.setPersonalGameOfLifeRules({...personal,deadColor:'#000000',sortGenetics:true});
+    c.setPersonalGameOfLifeRules({...personal,sortGenetics:true});c.setGameOfLifeRootLock('luminance');
     for(let i=0;i<9;i++){
         c.cycleGameOfLifeMode();
-        assert.equal(c.gameOfLifeRules.deadColor,'#000000');
-        assert(c.gameOfLifeCycle.every(r=>r.deadColor==='#000000'));
-        assert.equal(c.personalGameOfLifeRules.deadColor,'#000000');
+        assert.equal(c.gameOfLifeRules.deadSortMethod,'luminance');
+        assert(c.gameOfLifeCycle.every(r=>r.deadSortMethod==='luminance'));
+        assert.equal(c.personalGameOfLifeRules.deadSortMethod,'luminance');
         assert.equal(c.gameOfLifeRules.sortGenetics,true);
         assert(c.gameOfLifeCycle.every(r=>r.sortGenetics===true));
     }
     c.setPersonalGameOfLifeRules(personal);c.cycleGameOfLifeMode();
+    assert.equal(c.gameOfLifeRules.deadSortMethod,'luminance');
+    c.setGameOfLifeRootLock(null);
     assert.equal(c.gameOfLifeRules.deadColor,undefined);
     assert(c.gameOfLifeCycle.every(r=>r.deadColor===undefined));
     assert(c.gameOfLifeCycle.every(r=>r.sortGenetics===undefined));
@@ -178,7 +180,7 @@ test('legacy replay still restores original per-snapshot anchors without changin
 
 test('fixed sort method and mixing are global during cycling, logged fully, and restored by PLAY and STEP',()=>{
  const c=harness();c.cycleGameOfLifeMode();
- c.setPersonalGameOfLifeRules({...personal,deadSortMethod:'temperature',sortGenetics:true});
+ c.setPersonalGameOfLifeRules({...personal,sortGenetics:true});c.setGameOfLifeRootLock('temperature');
  for(let i=0;i<6;i++){
   c.cycleGameOfLifeMode();assert.equal(c.gameOfLifeRules.deadSortMethod,'temperature');assert.equal(c.gameOfLifeRules.sortGenetics,true);
   assert(c.gameOfLifeCycle.every(r=>r.deadSortMethod==='temperature'&&r.sortGenetics===true));
@@ -188,4 +190,28 @@ test('fixed sort method and mixing are global during cycling, logged fully, and 
  assert.deepEqual(plain(replay.getGameOfLifeRecordingRules()),snapshot);
  replay.applyMacroRules('Armed: gameOfLife | Rules: '+JSON.stringify(personal));
  assert.equal(replay.gameOfLifeRules.deadSortMethod,undefined);
+});
+
+test('session root locking never writes anchor fields to preferences and survives profile/rule changes',()=>{
+ const c=harness(), writes=[];c.localStorage.setItem=(key,value)=>writes.push({key,value:JSON.parse(value)});
+ assert.equal(c.gameOfLifeRootLock,null);
+ c.setGameOfLifeRootLock('reversed');assert.equal(writes.length,0);
+ c.setPersonalGameOfLifeRules({...personal,sortGenetics:true});
+ for(let i=0;i<5;i++)c.cycleGameOfLifeMode();
+ c.setGameOfLifeCycle([{...personal,deadSortMethod:'temperature'},...c.defaultGolCycle.slice(1)],0);
+ assert.equal(c.gameOfLifeRootLock,'reversed');assert.equal(c.gameOfLifeRules.deadSortMethod,'reversed');
+ assert(writes.length>0);assert(writes.every(w=>!JSON.stringify(w.value).includes('deadSortMethod')&&!JSON.stringify(w.value).includes('deadColor')));
+ const recorded=c.getGameOfLifeRecordingRules();assert.equal(recorded.deadSortMethod,'reversed');
+ const replay=harness();replay.applyMacroRules('Armed: gameOfLife | Sort: hue | Rules: '+JSON.stringify(recorded));
+ assert.equal(replay.gameOfLifeRules.deadSortMethod,'reversed');assert.equal(replay.gameOfLifeRootLock,null);
+ c.setGameOfLifeRootLock(null);assert.equal(c.gameOfLifeRules.deadSortMethod,undefined);
+ assert.equal(harness().gameOfLifeRootLock,null);
+});
+test('replay and invalid input cannot overwrite the user session root lock',()=>{
+ const c=harness();c.setGameOfLifeRootLock('luminance');
+ for(const flag of ['isMacroLoaded','isMacroPlaying','isExecutingMacroCommand']){
+  c[flag]=true;assert.equal(c.setGameOfLifeRootLock('reversed'),false);assert.equal(c.gameOfLifeRootLock,'luminance');c[flag]=false;
+ }
+ assert.equal(c.setGameOfLifeRootLock('unknown'),false);
+ assert.equal(c.gameOfLifeRootLock,'luminance');
 });

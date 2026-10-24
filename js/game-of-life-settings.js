@@ -40,3 +40,11 @@ export function closestLivingGameOfLifeColor(target, palette, deadRanks, deadInd
     });
     return index;
 }
+
+// Root locking is session-only; presets and profile files store no anchor state.
+export function stripGameOfLifeAnchor(rules) {
+    const copy = { ...rules };
+    delete copy.deadColor;
+    delete copy.deadSortMethod;
+    return copy;
+}

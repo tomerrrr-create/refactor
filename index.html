@@ -928,15 +928,11 @@
           <button class="gol-chip-btn" data-number="8">8</button>
         </div>
       </div>
-      <section class="gol-color-settings" aria-labelledby="golDeadColorLabel golMixingLabel">
-        <div class="gol-color-row">
-          <h3 id="golDeadColorLabel" data-debug-text="gol_dead_color">Anchor</h3>
-          <div class="gol-anchor-method" id="golAnchorChoice">
-            <span id="golDeadColorIndicator" aria-hidden="true"></span>
-            <select id="golAnchorSort" aria-labelledby="golDeadColorLabel"></select>
-            <svg class="gol-anchor-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m9 3 6 0-1 6 3 4H7l3-4-1-6Zm3 10v8"/></svg>
-          </div>
-        </div>
+      <section class="gol-color-settings" aria-labelledby="golRootLockLabel golMixingLabel">
+        <label class="gol-color-row gol-lock-row relative-separator-toggle">
+          <span id="golRootLockLabel" data-debug-text="gol_root_lock">Lock root</span>
+          <input id="golRootLockToggle" type="checkbox" role="switch" aria-labelledby="golRootLockLabel">
+        </label>
         <div class="gol-color-row gol-mixing-row">
           <h3 id="golMixingLabel" data-debug-text="gol_mixing">Mixing</h3>
           <label class="gol-mix-options relative-separator-toggle">

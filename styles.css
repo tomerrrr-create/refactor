@@ -2147,14 +2147,8 @@ body.wind-mode #board { cursor: crosshair; }
 .gol-color-settings { border: 1px solid #ad90532b; border-radius: 16px; padding: 4px 14px; background: linear-gradient(125deg, #d4af3707, #10101040); }
 .gol-color-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; min-height: 56px; padding: 8px 0; }
 .gol-color-row h3 { font-size: 13px; font-weight: 400; color: #a7a29a; }
-.gol-anchor-method { display: flex; align-items: center; gap: 8px; max-width: 100%; min-width: 0; min-height: 40px; border: 1px solid #ffffff16; border-radius: 12px; padding: 4px 8px 4px 5px; color: #b9b5ac; }
-.gol-anchor-method[data-fixed="true"] { color: #e3c677; border-color: #d5aa4859; background: #d5aa480a; }
-#golDeadColorIndicator { width: 26px; height: 26px; flex-shrink: 0; border: 1px solid #ffffff40; border-radius: 8px; }
-#golAnchorSort { min-width: 0; max-width: 190px; background: transparent; color: inherit; font: inherit; font-size: 12px; padding: 4px 2px; border: 0; cursor: pointer; }
-#golAnchorSort option, #golAnchorSort optgroup { background: #1c1c1c; color: #ddd; }
-.gol-anchor-pin { display: none; flex-shrink: 0; width: 13px; height: 13px; }
-.gol-anchor-method[data-fixed="true"] .gol-anchor-pin { display: block; }
-#golAnchorSort:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 3px; }
+.gol-lock-row.relative-separator-toggle { margin: 0; color: #b9b5ac; font-size: 13px; }
+.gol-lock-row input { margin-inline-start: auto; }
 .gol-mixing-row { border-top: 1px solid #ffffff0b; }
 .gol-mix-options.relative-separator-toggle { margin: 0; gap: 10px; direction: ltr; font-size: 12px; color: #777; }
 .gol-mix-options .gol-rgb-label { color: #e3c677; }

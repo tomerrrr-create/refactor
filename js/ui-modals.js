@@ -1,4 +1,3 @@
-import { resolveGameOfLifeDeadIndex, isGameOfLifeDeadColor, isGameOfLifeAnchorSort } from './game-of-life-settings.js';
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
 import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
@@ -1008,16 +1007,7 @@ function openGolSettingsModal() {
     if (app.isBreathing()) return;
     
     const rules = app.getGameOfLifeRules();
-    golLegacyDeadColor = isGameOfLifeDeadColor(rules.deadColor) ? rules.deadColor.toLowerCase() : null;
-    golAnchorSortMethod = isGameOfLifeAnchorSort(rules.deadSortMethod) ? rules.deadSortMethod : 'current';
-    if (!rules.deadSortMethod && golLegacyDeadColor) {
-        const entry = app.C.PALETTES[app.getActivePaletteIndex()];
-        const source = entry.originalColors || entry.colors;
-        // Upgrade an old fixed root to its source sort. Arbitrary legacy colors
-        // remain readable until the user explicitly chooses a supported anchor.
-        const match = app.SORT_MODES.find(mode => entry.colors[resolveGameOfLifeDeadIndex({ deadSortMethod: mode.method }, entry.colors, source)].toLowerCase() === golLegacyDeadColor);
-        golAnchorSortMethod = match?.method || 'legacy';
-    }
+    golRootLockMethod = app.getGameOfLifeRootLock();
     golSortGenetics = rules.sortGenetics === true;
     writeGolCycleRules(rules);
 updateActivePresetButton();
@@ -1030,7 +1020,10 @@ updateActivePresetButton();
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
         writeRules: writeGolCycleRules,
-        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots.map(withGolColorSettings), index, sources, withGolColorSettings(yoursRules)), saveButton: app.dom.btnGolSettingsSave, getText: app.getText
+        save: (slots, index, sources, yoursRules) => {
+            if (app.canChangeGameOfLifeRootLock()) app.setGameOfLifeRootLock(golRootLockMethod, { record: false });
+            app.setGameOfLifeCycle(slots.map(withGolColorSettings), index, sources, withGolColorSettings(yoursRules));
+        }, saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
@@ -1043,44 +1036,17 @@ updateActivePresetButton();
 // --- END: MODIFICATION ---
 
 
-let golAnchorSortMethod = 'current';
-let golLegacyDeadColor = null;
+let golRootLockMethod = null;
 let golSortGenetics = false;
 
 function golColorRules() {
-    return {
-        ...(golSortGenetics ? { sortGenetics: true } : {}),
-        ...(isGameOfLifeAnchorSort(golAnchorSortMethod) ? { deadSortMethod: golAnchorSortMethod } : {}),
-        ...(golAnchorSortMethod === 'legacy' && golLegacyDeadColor ? { deadColor: golLegacyDeadColor } : {})
-    };
+    return golSortGenetics ? { sortGenetics: true } : {};
 }
 
 function renderGolAnchorControl() {
-    const entry = app.C.PALETTES[app.getActivePaletteIndex()];
-    const index = resolveGameOfLifeDeadIndex(golColorRules(), entry.colors, entry.originalColors || entry.colors);
-    const indicator = document.getElementById('golDeadColorIndicator');
-    indicator.style.backgroundColor = entry.colors[index];
-    indicator.title = entry.colors[index];
-    document.getElementById('golAnchorChoice').dataset.fixed = String(golAnchorSortMethod !== 'current');
-    const select = document.getElementById('golAnchorSort');
-    select.replaceChildren();
-    const option = (value, key) => {
-        const node = document.createElement('option');
-        node.value = value; node.dataset.debugText = key;
-        node.textContent = app.getText(key);
-        return node;
-    };
-    select.append(option('current', 'gol_anchor_current'));
-    if (golAnchorSortMethod === 'legacy') {
-        const legacy = option('legacy', 'gol_anchor_legacy');
-        legacy.disabled = true;
-        select.append(legacy);
-    }
-    const fixed = document.createElement('optgroup');
-    fixed.label = app.getText('gol_anchor_fixed_sort');
-    app.SORT_MODES.forEach(mode => fixed.append(option(mode.method, 'startup_sort_' + mode.method)));
-    select.append(fixed);
-    select.value = golAnchorSortMethod;
+    const toggle = document.getElementById('golRootLockToggle');
+    toggle.checked = golRootLockMethod !== null;
+    toggle.disabled = !app.canChangeGameOfLifeRootLock();
 }
 
 function readGolCycleRules() {
@@ -1108,8 +1074,7 @@ function saveGolSettings() {
 }
 
 function resetGolSettings() {
-    golAnchorSortMethod = 'current';
-    golLegacyDeadColor = null;
+    golRootLockMethod = null;
     golSortGenetics = false;
     writeGolCycleRules(app.C.defaultGameOfLifeRules);
     golCycleMembership?.manualChange();
@@ -1778,11 +1743,8 @@ export function initializeModals(appContext) {
         golSortGenetics = event.target.checked;
         golCycleMembership?.manualChange();
     });
-    document.getElementById('golAnchorSort').addEventListener('change', event => {
-        golAnchorSortMethod = event.target.value;
-        golLegacyDeadColor = null;
-        renderGolAnchorControl();
-        golCycleMembership?.manualChange();
+    document.getElementById('golRootLockToggle').addEventListener('change', event => {
+        golRootLockMethod = event.target.checked ? app.getCurrentSortMethod() : null;
     });
 
 // --- START: MODIFICATION ---
