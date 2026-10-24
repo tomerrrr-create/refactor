@@ -4,8 +4,8 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const layout = app.slice(app.indexOf('function updateLayout()'), app.indexOf('  function createRainbowIconSVG('));
-function run(zoom, { legacy = false, fullscreen = false, width = 1280, height = 800, controlHeight = 224 } = {}) {
-    const element = () => ({dataset: {}, style: {setProperty() {}, removeProperty() {}}, removeAttribute() {}});
+function run(zoom, { legacy = false, fullscreen = false, width = 1280, height = 800, controlHeight = 224, inspect = false } = {}) {
+    const element = () => ({dataset: {}, style: {setProperty(key, value) { this[key] = value; }, removeProperty(key) { delete this[key]; }}, removeAttribute() {}});
     const body = element(), container = element(), shell = element();
     shell.parentElement = container; container.clientWidth = width;
     const controls = {offsetHeight: controlHeight, getBoundingClientRect: () => ({height: legacy ? controlHeight : controlHeight * zoom / 100})};
@@ -15,7 +15,7 @@ function run(zoom, { legacy = false, fullscreen = false, width = 1280, height = 
             ? {paddingTop: String(48 * zoom / 100), paddingLeft: String(24 * zoom / 100), paddingRight: String(24 * zoom / 100)}
             : {marginTop: '44px'}}});
     vm.runInContext(layout, context);context.updateLayout();
-    return shell.style.width;
+    return inspect ? { body, container } : shell.style.width;
 }
 for (const legacy of [false, true]) {
     test(`desktop board gets the freed control space with ${legacy ? 'legacy' : 'modern'} rectangles`, () => {
@@ -49,4 +49,15 @@ test('new devices use 84% zoom while existing saved zoom values remain intact', 
     let stored;
     saveInterfaceZoom(100, {setItem(key, value) {stored = value;}});
     assert.equal(stored, '100');
+});
+
+
+test('display zoom stays on the control container and never scales the page or its menus', () => {
+    for (const zoom of [70, 80, 84, 100, 120]) {
+        const { body, container } = run(zoom, { inspect: true });
+        assert.equal(body.dataset.menuZoom, undefined);
+        assert.equal(body.style['--menu-zoom'], undefined);
+        assert.equal(container.dataset.uiZoom, zoom === 100 ? undefined : String(zoom));
+        assert.equal(container.style['--ui-zoom'], zoom === 100 ? undefined : zoom / 100);
+    }
 });

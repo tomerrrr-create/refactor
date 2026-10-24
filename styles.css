@@ -1997,22 +1997,14 @@ body.wind-mode #board { cursor: crosshair; }
 .technician-display-settings .interface-zoom-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
 #appContainer.macro-fullscreen[data-ui-zoom] { padding: 0; }
 
-/* Match display zoom in menus, while their backdrops still cover the screen. */
-body[data-menu-zoom] > dialog,
-body[data-menu-zoom] > div[id$="Modal"] > div {
-  zoom: var(--menu-zoom);
-  max-height: calc((100dvh - 32px) / var(--menu-zoom));
-}
-body[data-menu-zoom] #splashText { zoom: var(--menu-zoom); }
-body[data-menu-zoom] > dialog { max-width: calc((100vw - 32px) / var(--menu-zoom)); }
-body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
-
 /* Technician settings share the picker's bounded frame, retaining their
    existing type and control sizes. Only the settings body scrolls. */
 #technicianDialog {
-    width: min(480px, calc((100vw - 32px) / var(--menu-zoom, 1)));
-    max-width: calc((100vw - 32px) / var(--menu-zoom, 1));
-    max-height: calc(min(80dvh, 720px) / var(--menu-zoom, 1));
+    width: min(480px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    height: min(80vh, 720px);
+    height: min(80dvh, 720px);
+    max-height: min(80dvh, 720px);
     overflow: hidden;
     border-radius: 20px;
     border-color: rgba(196, 162, 99, .28);
