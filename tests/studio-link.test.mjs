@@ -83,6 +83,13 @@ test('deploy build includes a generated, isolated Studio while normal PWA exclud
   await buildVercel({branch:'work',outputDirectory:out});
   const app=await readFile(path.join(out,'js/app.js'),'utf8');
   const studio=await readFile(path.join(out,'studio/index.html'),'utf8');
+  // Branding must load without the generated engine, including source hosting
+  // beneath a GitHub Pages project path.
+  for (const [, ref] of studio.matchAll(/(?:src|href)="([^"]+fyi-eclipse-[^"]+\.png)"/g)) {
+   assert.match(ref, /^\.\.\/icons\//);
+   assert.equal((await readFile(path.resolve(out, 'studio', ref))).subarray(1, 4).toString(), 'PNG');
+   assert.equal(new URL(ref, 'https://example.test/refactor/studio/').pathname, '/refactor/icons/' + path.basename(ref));
+  }
   const engine=await readFile(path.join(out,'studio/engine/js/app.js'),'utf8');
   const engineHtml=await readFile(path.join(out,'studio/engine/index.html'),'utf8');
   assert.equal(app.includes('window.macroVideoEngine ='),false);
