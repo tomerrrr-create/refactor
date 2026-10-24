@@ -1474,7 +1474,7 @@ export function initializeModals(appContext) {
         initForm.hidden = true;
         initToggle.setAttribute('aria-expanded', 'false');
         app.dom.technicianDialog.showModal();
-        app.dom.technicianDialog.scrollTop = 0;
+        document.getElementById('technicianSettingsScroll').scrollTop = 0;
         document.getElementById('btnTechnicianCloseTop').focus({ preventScroll: true });
     }
     app.dom.btnOpenDebug.addEventListener('click', () => openTechnicianMenu());

@@ -2007,6 +2007,47 @@ body[data-menu-zoom] #splashText { zoom: var(--menu-zoom); }
 body[data-menu-zoom] > dialog { max-width: calc((100vw - 32px) / var(--menu-zoom)); }
 body[data-menu-zoom] > div[id$="Modal"] > div { overflow-y: auto; }
 
+/* Technician settings share the picker's bounded frame, retaining their
+   existing type and control sizes. Only the settings body scrolls. */
+#technicianDialog {
+    width: min(480px, calc((100vw - 32px) / var(--menu-zoom, 1)));
+    max-width: calc((100vw - 32px) / var(--menu-zoom, 1));
+    max-height: calc(min(80dvh, 720px) / var(--menu-zoom, 1));
+    overflow: hidden;
+    border-radius: 20px;
+    border-color: rgba(196, 162, 99, .28);
+    background: radial-gradient(ellipse at top, #28251e 0, #171918 60%);
+    box-shadow: 0 24px 80px #0009;
+}
+#technicianDialog[open] { display: flex; flex-direction: column; }
+#technicianDialog::backdrop { background: rgba(0, 0, 0, .9); }
+#technicianDialog > .modal-dismiss-bar { flex-shrink: 0; }
+.technician-header {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-areas: "sigil eyebrow" "sigil title" "sigil subtitle";
+    column-gap: 14px; row-gap: 4px;
+    align-items: center; flex-shrink: 0;
+    padding: 24px 54px 20px 26px;
+    border-bottom: 1px solid #ae955836;
+    text-align: start;
+}
+.technician-header .technician-sigil { grid-area: sigil; text-align: center; }
+.technician-header .technician-eyebrow { grid-area: eyebrow; margin: 0; }
+.technician-header #technicianTitle { grid-area: title; margin: 0; }
+.technician-header #technicianSubtitle { grid-area: subtitle; margin: 0; }
+#technicianSettingsScroll {
+    flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: 22px 26px 24px;
+    scrollbar-width: thin; scrollbar-color: #62533a transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+    #technicianSettingsScroll::-webkit-scrollbar { width: 6px; }
+    #technicianSettingsScroll::-webkit-scrollbar-track { background: transparent; }
+    #technicianSettingsScroll::-webkit-scrollbar-thumb { background: #62533a; border-radius: 999px; }
+    #technicianSettingsScroll::-webkit-scrollbar-thumb:hover { background: #927a4e; }
+}
+
 /* Palette picker: load only one group into the scrollable colour catalogue. */
 #paletteModal .palette-picker-panel, #startupPaletteDialog.palette-picker-panel {
     max-width: 480px;
