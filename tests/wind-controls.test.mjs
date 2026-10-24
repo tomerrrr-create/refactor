@@ -16,7 +16,7 @@ test('Wind toggle preserves a running simulation without disabling panel buttons
 });
 test('Symmetry stays independent of Wind and has no hold trigger',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnSymmetry:{}},windMode:true,isBreathing:false,symmetryMode:'vertical',
- hideLongPressDisplay(){},cycleSymmetryMode:()=>events.push('cycle'),updateSymmetryUI:()=>events.push('symmetry'),
+ hideLongPressDisplay(){},swapSimulationUtilityControl(){},isSimModeActive:false,cycleSymmetryMode:()=>events.push('cycle'),updateSymmetryUI:()=>events.push('symmetry'),
  bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('        bindPickerGestures(dom.btnSymmetry,');
  vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnCycleSort,',start)),c);
@@ -49,14 +49,15 @@ test('ordinary panel events commit pending ripples without consuming or blocking
 });
 
 test('switching interfaces preserves active Wind in both directions',()=>{
- const control=()=>({style:{},classList:{toggle(){}}});
- const dom=Object.fromEntries(['controlsContainer','btnBrushMode','btnGap','btnResetBoard','btnTutorial','btnSpecialReset','btnPlayPauseLife','btnToggleSimMode'].map(key=>[key,control()]));
+ const control=()=>{const classes=new Set();return {style:{},classList:{contains:c=>classes.has(c),toggle(c,on=!classes.has(c)){if(on)classes.add(c);else classes.delete(c);}}};};
+ const dom=Object.fromEntries(['controlsContainer','btnSymmetry','btnBrushMode','btnGap','btnResetBoard','btnTutorial','btnSpecialReset','btnPlayPauseLife','btnToggleSimMode'].map(key=>[key,control()]));
  let pauses=0,resets=0;
  const c=vm.createContext({dom,windMode:true,isSimModeActive:false,setTimeout:callback=>callback(),
   setWindMode(){throw Error('interface changes must not toggle Wind');},pauseLife(){pauses++;},resetArmedState(){resets++;}});
- vm.runInContext(source.slice(source.indexOf('      function toggleSimMode()'),source.indexOf('      function resetArmedState()')),c);
+ vm.runInContext(source.slice(source.indexOf('      function updateSimulationUtilityControl()'),source.indexOf('      function resetArmedState()')),c);
  c.toggleSimMode();assert.equal(c.isSimModeActive,true);assert.equal(c.windMode,true);assert.equal(dom.controlsContainer.style.opacity,'1');
- c.toggleSimMode();assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,true);assert.equal(pauses,2);assert.equal(resets,2);
+ c.swapSimulationUtilityControl();assert(dom.btnSymmetry.classList.contains('control-hidden'));assert(!dom.btnGap.classList.contains('control-hidden'));assert(c.windMode);
+ c.toggleSimMode();assert(!dom.btnSymmetry.classList.contains('control-hidden'));assert(!dom.btnGap.classList.contains('control-hidden'));assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,true);assert.equal(pauses,2);assert.equal(resets,2);
 });
 
 test('Wind cycles through three active effects with separate preferences, without pausing a concurrent simulation or changing symmetry',()=>{

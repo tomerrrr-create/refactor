@@ -363,6 +363,8 @@ body {
 
 /* Right Panel (Col 9) */
 .sim-mode-active #btnSymmetry      { grid-area: 1 / 9; }
+.sim-mode-active.sim-separator-control #btnGap { display: inline-flex; grid-area: 1 / 9; }
+.sim-mode-active.sim-separator-control #btnSymmetry { display: none; }
 .sim-mode-active #btnUndo          { grid-area: 4 / 9; }
 
 #btnBrushMode svg path {

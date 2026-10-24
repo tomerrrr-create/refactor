@@ -1,7 +1,7 @@
 // Shared interaction for cycling controls with a picker. Mouse drags and touch
 // swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
-    onTap, onOpen, onSwipeDown, onSwipeSide, onHold, onExtendedHold, canInteract, canOpen = () => true, canSwipeSide = () => true,
+    onTap, onOpen, onSwipeDown, onSwipeSide, onHold, onExtendedHold, canInteract, canOpen = () => true, canSwipeSide = () => true, canSwipeDown = () => true,
     beforeStart = () => {}, onEnd = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
 }) {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
@@ -39,7 +39,7 @@ export function bindPickerGestures(button, {
             state.moved = true; clearHoldTimers();
         }
         button.classList.toggle('picker-swipe-glow', !button.disabled && canInteract() &&
-            ((swipeReady(state) && canOpen()) || (onSwipeDown && swipeReady(state, 1)) ||
+            ((swipeReady(state) && canOpen()) || (onSwipeDown && canSwipeDown() && swipeReady(state, 1)) ||
                 (onSwipeSide && canSwipeSide() && sidewaysReady(state))));
     }
     button.addEventListener('pointerdown', event => {
@@ -76,7 +76,7 @@ export function bindPickerGestures(button, {
         if (!active || active.id !== event.pointerId) return;
         updatePosition(event);
         const state = active, open = swipeReady(state) && canOpen();
-        const down = onSwipeDown && swipeReady(state, 1);
+        const down = onSwipeDown && canSwipeDown() && swipeReady(state, 1);
         const side = onSwipeSide && canSwipeSide() && sidewaysReady(state);
         // CSS zoom geometry differs in older desktop browsers. Ask the browser's
         // hit tester, using the same viewport coordinates as pointer events.

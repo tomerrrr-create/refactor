@@ -7,7 +7,7 @@ class Target {
     addEventListener(type, handler) { const list = this.listeners.get(type) || []; list.push(handler); this.listeners.set(type, list); }
     emit(type, event = {}) { for (const handler of this.listeners.get(type) || []) handler(event); }
 }
-function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, swipeDown = false, swipeSide = false, canSwipeSide = () => true, canOpen = () => true } = {}) {
+function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, swipeDown = false, swipeSide = false, canSwipeSide = () => true, canSwipeDown = () => true, canOpen = () => true } = {}) {
     const original = { document: globalThis.document, window: globalThis.window, setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
     t.after(() => Object.assign(globalThis, original));
     const doc = new Target(), win = new Target(), button = new Target();
@@ -26,7 +26,7 @@ function harness(t, { pointerType = 'touch', hold = true, extendedHold = false, 
         clearTimeout: id => timers.delete(id) });
     bindPickerGestures(button, { onTap: () => actions.push('tap'), onOpen: () => actions.push('open'),
         onSwipeDown: swipeDown ? () => actions.push('down') : undefined,
-        onSwipeSide: swipeSide ? () => actions.push('side') : undefined, canSwipeSide,
+        onSwipeSide: swipeSide ? () => actions.push('side') : undefined, canSwipeSide, canSwipeDown,
         onHold: hold ? () => actions.push('hold') : undefined,
         onExtendedHold: extendedHold ? () => actions.push('extendedHold') : undefined, canInteract: () => allowed, canOpen });
     return { actions, button, doc, win, classes, captured,
@@ -215,3 +215,19 @@ for (const pointerType of ['mouse', 'touch']) {
         assert.deepEqual(h.actions, ['tap']);
     });
 }
+
+test('downward swap is gated by the current mode without changing tap or upward actions', t => {
+    let simulation = false;
+    const h = harness(t, { swipeDown: true, canSwipeDown: () => simulation });
+    h.event('pointerdown'); h.event('pointermove', 25, 60);
+    assert(!h.classes.has('picker-swipe-glow'));
+    h.event('pointerup', 25, 60); h.event('click');
+    assert.deepEqual(h.actions, []);
+    simulation = true;
+    h.event('pointerdown'); h.event('pointermove', 25, 60);
+    assert(h.classes.has('picker-swipe-glow'));
+    h.event('pointerup', 25, 60); h.event('click');
+    h.event('pointerdown'); h.event('pointerup'); h.event('click');
+    h.event('pointerdown'); h.event('pointerup', 25, -10); h.event('click');
+    assert.deepEqual(h.actions, ['down', 'tap', 'open']);
+});

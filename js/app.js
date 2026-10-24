@@ -2448,6 +2448,19 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         setCurrentLang(availableLangs[nextIndex]);
       }
       
+      // Presentation only: reuse the real controls and their existing actions.
+      function updateSimulationUtilityControl() {
+          const showSeparators = isSimModeActive && dom.controlsContainer.classList.contains('sim-separator-control');
+          dom.btnGap.classList.toggle('control-hidden', isSimModeActive && !showSeparators);
+          dom.btnSymmetry.classList.toggle('control-hidden', showSeparators);
+      }
+
+      function swapSimulationUtilityControl() {
+          if (!isSimModeActive) return;
+          dom.controlsContainer.classList.toggle('sim-separator-control');
+          updateSimulationUtilityControl();
+      }
+
       function toggleSimMode() {
         const duration = 500;
         dom.controlsContainer.style.opacity = '0';
@@ -2463,8 +2476,9 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
             }
             
 
-const controlsToHide = [ dom.btnBrushMode, dom.btnGap, dom.btnResetBoard, dom.btnTutorial, dom.btnSpecialReset ];
+const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, dom.btnSpecialReset ];
             controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
+            updateSimulationUtilityControl();
 
             dom.btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
             dom.btnToggleSimMode.classList.toggle('active', isSimModeActive);
@@ -5120,6 +5134,7 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnSave.addEventListener('click', (e) => handleCtrlClick(e, openSaveModalWithPreview));
         bindPickerGestures(dom.btnGap, {
             onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
+            onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
             canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'),
             beforeStart: hideLongPressDisplay
         });
@@ -5135,6 +5150,7 @@ bindPickerGestures(dom.btnPalette, {
         initializeWindMode();
         bindPickerGestures(dom.btnSymmetry, {
             onTap: cycleSymmetryMode,
+            onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
             onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
             canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
         });
