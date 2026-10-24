@@ -111,7 +111,7 @@ export const translations = {
   settings_aligned: {"en": "Settings applied", "he": "ההגדרות הוחלו", "ru": "Настройки применены", "nl": "Instellingen toegepast"},
   settings_session_only: {"en": "For this session", "he": "לכניסה זו", "ru": "На этот сеанс", "nl": "Voor deze sessie"},
 
-  workspace_reset: {"en": "Reset", "he": "איפוס", "ru": "Сброс", "nl": "Herstellen"},
+  workspace_reset: {"en": "Reset this profile", "he": "איפוס הפרופיל הנוכחי", "ru": "Сбросить текущий профиль", "nl": "Dit profiel herstellen"},
   workspace_reset_title: {"en": "Restore selected profile defaults", "he": "שחזור ברירות המחדל של הפרופיל הנבחר", "ru": "Восстановить настройки выбранного профиля", "nl": "Standaardinstellingen van het geselecteerde profiel herstellen"},
   workspace_reset_prompt: {"en": "Restore this profile’s defaults? Your board stays.", "he": "לשחזר את ברירות המחדל של הפרופיל הזה? הלוח נשאר.", "ru": "Восстановить настройки этого профиля по умолчанию? Поле останется.", "nl": "Standaardinstellingen van dit profiel herstellen? Je bord blijft behouden."},
   workspace_reset_done: {"en": "Defaults restored. Your board is unchanged.", "he": "ברירות המחדל שוחזרו. הלוח נשאר כפי שהיה.", "ru": "Настройки восстановлены. Поле не изменено.", "nl": "Standaardinstellingen hersteld. Je bord is ongewijzigd."},
