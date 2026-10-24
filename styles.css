@@ -2142,3 +2142,14 @@ body.wind-mode #board { cursor: crosshair; }
 .startup-random-check { margin-inline-start: auto; opacity: 0; }
 .startup-random-choice[aria-pressed="true"] .startup-random-check { opacity: 1; }
 .startup-random-choice:focus-visible { outline: 2px solid #e6cc8e; outline-offset: 2px; }
+
+/* Game of Life anchor uses the palette's colors without exposing internal indices. */
+.gol-dead-colors { display: flex; flex-direction: column; gap: 10px; }
+.gol-dead-default-row { display: flex; align-items: center; gap: 12px; }
+#btnGolDeadDefault { flex: 1; padding: 8px 12px; border: 1px solid #555; border-radius: 12px; color: #bbb; }
+#btnGolDeadDefault[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); background: #ffd7000c; }
+#golDeadColorIndicator { width: 36px; height: 36px; flex-shrink: 0; border: 1px solid var(--gold); border-radius: 12px; }
+#golDeadColorSwatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 8px; max-height: 144px; overflow-y: auto; padding: 6px; border: 1px solid #333; border-radius: 12px; }
+.gol-dead-swatch { height: 36px; border: 2px solid transparent; border-radius: 10px; }
+.gol-dead-swatch[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 2px #ffd70066; }
+.gol-dead-swatch:focus-visible, #btnGolDeadDefault:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }

@@ -43,3 +43,47 @@ test('optional genetics survives settings files and normalization without changi
  assert.equal(defaultWorkspaceSettings().cycles.gameOfLife[1].sortGenetics,undefined);
  settings.cycles.gameOfLife[1].sortGenetics='true';assert.throws(()=>validateWorkspaceSettings(settings));
 });
+
+test('chosen dead color replaces rank zero for life, death and birth in both mixing modes',()=>{
+ const currentPalette=['#000000','#800080','#ff0000','#0000ff'];
+ const state=Array.from({length:9},()=>({k:1,v:1}));state[0].k=2;state[1].k=3;
+ for(const sortGenetics of [false,true]){
+  const next=run({n:3,currentBoardState:state,currentPalette,gameOfLifeRules:{survival:[],birth:[2],deadColor:'#800080',sortGenetics}});
+  assert.equal(next[0].k,1);assert.equal(next[1].k,1); // Both parents die into the chosen color.
+  assert.notEqual(next[4].k,1); // A birth never inherits the selected dead color.
+ }
+ const next=run({n:1,currentBoardState:[{k:0,v:0}],currentPalette,gameOfLifeRules:{survival:[0],birth:[],deadColor:'#800080'}});
+ assert.equal(next[0].k,0); // Rank 0 is now a living color.
+});
+
+test('custom dead color is fixed across all sort orders and uses nearest color in a different palette',async()=>{
+ const {resolveGameOfLifeDeadIndex}=await import('../js/game-of-life-settings.js');
+ for(const {method} of SORT_MODES){
+  const currentPalette=sortColorsArray(['#000000','#ffffff','#ff0000','#00ff00','#0000ff'],method);
+  const index=resolveGameOfLifeDeadIndex({deadColor:'#FF0000'},currentPalette);
+  assert.equal(currentPalette[index],'#ff0000');
+  const next=run({n:1,currentBoardState:[{k:index,v:index}],currentPalette,gameOfLifeRules:{survival:[0],birth:[],deadColor:'#ff0000'}});
+  assert.equal(next[0].k,index);
+ }
+ assert.equal(resolveGameOfLifeDeadIndex({deadColor:'#ff0000'},['#000000','#ee0000','#ffffff']),1);
+ assert.equal(resolveGameOfLifeDeadIndex({},['#ffffff','#000000']),0);
+});
+
+test('duplicate dead swatches all count as dead and are excluded from newborn color selection',()=>{
+ const currentPalette=['#ff0000','#800080','#800080','#0000ff'];
+ const state=Array.from({length:9},()=>({k:1,v:1}));state[0].k=0;state[1].k=3;state[2].k=2;
+ for(const sortGenetics of [false,true]){
+  const next=run({n:3,currentBoardState:state,currentPalette,gameOfLifeRules:{survival:[],birth:[2],deadColor:'#800080',sortGenetics}});
+  assert.equal(currentPalette[next[4].k],'#ff0000'); // Duplicate dead rank must not become a third living parent.
+ }
+ const only=run({n:1,currentBoardState:[{k:0,v:0}],currentPalette:['#ffffff'],gameOfLifeRules:{survival:[],birth:[0],deadColor:'#ffffff',sortGenetics:true}});
+ assert.equal(only[0].k,0);
+});
+
+test('dead color settings round trip with independent cycle flags; malformed colors are rejected',()=>{
+ const settings=defaultWorkspaceSettings();settings.cycles.gameOfLife[2]={...settings.cycles.gameOfLife[2],deadColor:'#112233',sortGenetics:true};
+ const restored=deserializeWorkspaceSettings(serializeWorkspaceSettings(settings));
+ assert.equal(restored.cycles.gameOfLife[2].deadColor,'#112233');assert.equal(restored.cycles.gameOfLife[0].deadColor,undefined);
+ assert.equal(normalizeEvolutionCycle(restored.cycles.gameOfLife,defaultWorkspaceSettings().cycles.gameOfLife)[2].deadColor,'#112233');
+ settings.cycles.gameOfLife[2].deadColor='invalid';assert.throws(()=>validateWorkspaceSettings(settings));
+});

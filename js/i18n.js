@@ -456,6 +456,8 @@ export const translations = {
   dla_fastmode_desc: { en: "Uses a faster algorithm for filling gaps.", he: "משתמש באלגוריתם מהיר למילוי חללים.", ru: "Использует быстрый алгоритם для заполнения.", nl: "Gebruikt een sneller algoritme om gaten te vullen." },
 
 // --- START: Contour Settings Modal ---
+  gol_dead_color: { en: "Dead cell color", he: "צבע תא מת", ru: "Цвет мёртвой клетки", nl: "Kleur van dode cellen" },
+  gol_dead_default: { en: "Default · first color", he: "ברירת מחדל · הצבע הראשון", ru: "По умолчанию · первый цвет", nl: "Standaard · eerste kleur" },
   gol_sort_genetics: { en: "Mix colors by palette order", he: "ערבוב צבעים לפי סדר הפלטה", ru: "Смешивание по порядку палитры", nl: "Kleuren mengen op paletvolgorde" },
   gol_sort_genetics_note: { en: "New cells inherit colors by the current sort order instead of RGB mixing.", he: "תאים חדשים יורשים צבע לפי שיטת המיון הנוכחית במקום ערבוב RGB.", ru: "Новые клетки наследуют цвет по текущему порядку сортировки вместо смешивания RGB.", nl: "Nieuwe cellen erven kleuren volgens de huidige sorteervolgorde in plaats van RGB-menging." },
   contour_modal_title: { en: "Contour Settings", he: "הגדרות קווי מתאר", ru: "Настройки контуров", nl: "Contour-instellingen" },

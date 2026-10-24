@@ -1,3 +1,4 @@
+import { resolveGameOfLifeDeadIndex, isGameOfLifeDeadColor } from './game-of-life-settings.js';
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
 import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
@@ -1032,13 +1033,45 @@ updateActivePresetButton();
 // --- END: MODIFICATION ---
 
 
+let golDeadColor = null;
+
+function renderGolDeadColors() {
+    const palette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
+    const index = resolveGameOfLifeDeadIndex({ deadColor: golDeadColor }, palette);
+    const root = document.getElementById('btnGolDeadDefault');
+    root.setAttribute('aria-pressed', String(golDeadColor === null));
+    const indicator = document.getElementById('golDeadColorIndicator');
+    indicator.style.backgroundColor = palette[index];
+    indicator.title = palette[index];
+    const grid = document.getElementById('golDeadColorSwatches');
+    grid.replaceChildren();
+    palette.forEach((color, i) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'gol-dead-swatch';
+        button.style.backgroundColor = color;
+        button.setAttribute('aria-pressed', String(golDeadColor !== null && color.toLowerCase() === palette[index].toLowerCase()));
+        button.setAttribute('aria-label', `${i} · ${color}`);
+        button.title = `${i} · ${color}`;
+        button.onclick = () => {
+            golDeadColor = color.toLowerCase();
+            renderGolDeadColors();
+            golCycleMembership?.manualChange();
+        };
+        grid.append(button);
+    });
+}
+
 function readGolCycleRules() {
     const values = container => [...container.querySelectorAll('.gol-chip-btn.active')].map(chip => parseInt(chip.dataset.number, 10));
     return { survival: values(app.dom.golSurvivalChipsContainer), birth: values(app.dom.golBirthChipsContainer),
-        ...(document.getElementById('golSortGeneticsToggle').checked ? { sortGenetics: true } : {}) };
+        ...(document.getElementById('golSortGeneticsToggle').checked ? { sortGenetics: true } : {}),
+        ...(golDeadColor !== null ? { deadColor: golDeadColor } : {}) };
 }
 
 function writeGolCycleRules(rules) {
+    golDeadColor = isGameOfLifeDeadColor(rules.deadColor) ? rules.deadColor.toLowerCase() : null;
+    renderGolDeadColors();
     document.getElementById('golSortGeneticsToggle').checked = rules.sortGenetics === true;
     applyGolPreset(rules.survival, rules.birth);
 }
@@ -1712,6 +1745,9 @@ export function initializeModals(appContext) {
     app.dom.gameOfLifeSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.gameOfLifeSettingsModal) closeGolSettingsModal(); });
     app.dom.btnGolSettingsReset.addEventListener('click', resetGolSettings);
     document.getElementById('golSortGeneticsToggle').addEventListener('change', () => golCycleMembership?.manualChange());
+    document.getElementById('btnGolDeadDefault').addEventListener('click', () => {
+        golDeadColor = null; renderGolDeadColors(); golCycleMembership?.manualChange();
+    });
 
 
 
@@ -1732,7 +1768,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     if (button) {
         button.addEventListener('click', () => {
             applyGolPreset(rules.survival, rules.birth);
-            golCycleMembership?.selectPreset(buttonId, { ...rules, ...(document.getElementById('golSortGeneticsToggle').checked ? { sortGenetics: true } : {}) });
+            golCycleMembership?.selectPreset(buttonId, readGolCycleRules());
         });
     }
 }

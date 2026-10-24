@@ -1,9 +1,11 @@
+import { resolveGameOfLifeDeadIndex, isGameOfLifeDeadColor, closestLivingGameOfLifeColor } from '../game-of-life-settings.js';
 import { getGeneticColor, findClosestColorIndex } from '../colors.js';
 
 export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, gameOfLifeRules }) {
-    const darkestIndex = 0;
-    const lightestIndex = currentPalette.length - 1;
-    const halfIndex = Math.floor(lightestIndex / 2);
+    const deadIndex = resolveGameOfLifeDeadIndex(gameOfLifeRules, currentPalette);
+    const customDeadColor = isGameOfLifeDeadColor(gameOfLifeRules.deadColor);
+    const deadRanks = customDeadColor
+        ? currentPalette.map(color => color.toLowerCase() === currentPalette[deadIndex].toLowerCase()) : null;
 
     // 1. Read the current state from the data array into a 2D grid for easier neighbor calculation
     let internalCurrentState = [];
@@ -13,11 +15,7 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
             const tileData = currentBoardState[i * n + j];
             const tileIndex = tileData.k;
 
-            // --- START: MODIFICATION 1 ---
-            // The 'liveCellDef' logic is now hard-coded to 'notDarkest' as requested.
-            // The old switch statement has been removed.
-            let isAlive = tileIndex !== darkestIndex;
-            // --- END: MODIFICATION 1 ---
+            let isAlive = deadRanks ? !deadRanks[tileIndex] : tileIndex !== deadIndex;
 
             if (tileData.isGold) isAlive = false;
 
@@ -62,21 +60,29 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
                 becomesAlive = gameOfLifeRules.birth.includes(liveNeighbors);
                 // === END MODIFICATION ===
                 if (becomesAlive) {
-                    // --- START: MODIFICATION 2 ---
-                    // The 'colorGenetics' method is now hard-coded to 'average' as requested.
                     if (gameOfLifeRules.sortGenetics === true && liveNeighbors > 0) {
-                        // Average ranks in the palette's current sort order. Living
-                        // parents have ranks >= 1, so a birth cannot select dead rank 0.
-                        newK = Math.round(neighborIndexSum / liveNeighbors);
+                        // Average ranks in the current sort order, skipping the
+                        // selected dead color if living parents straddle it.
+                        const mean = neighborIndexSum / liveNeighbors;
+                        newK = Math.round(mean);
+                        if (deadRanks?.[newK]) {
+                            let lower = newK - 1, upper = newK + 1;
+                            while (lower >= 0 && deadRanks[lower]) lower--;
+                            while (upper < currentPalette.length && deadRanks[upper]) upper++;
+                            newK = lower >= 0 && (upper >= currentPalette.length || mean - lower <= upper - mean)
+                                ? lower : upper < currentPalette.length ? upper : deadIndex;
+                        }
                     } else {
                         // Preserve RGB mixing exactly for legacy recordings and B0.
                         const geneticColor = getGeneticColor(neighborColors, 'average');
-                        newK = findClosestColorIndex(geneticColor, currentPalette);
+                        newK = customDeadColor
+                            ? closestLivingGameOfLifeColor(geneticColor, currentPalette, deadRanks, deadIndex)
+                            : findClosestColorIndex(geneticColor, currentPalette);
                     }
                 }
             }
             
-            nextState2D[i][j] = { isAlive: becomesAlive, k: becomesAlive ? newK : darkestIndex };
+            nextState2D[i][j] = { isAlive: becomesAlive, k: becomesAlive ? newK : deadIndex };
         }
     }
     

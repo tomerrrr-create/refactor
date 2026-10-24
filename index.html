@@ -928,6 +928,14 @@
           <button class="gol-chip-btn" data-number="8">8</button>
         </div>
       </div>
+      <section class="gol-dead-colors" aria-labelledby="golDeadColorLabel">
+        <h3 id="golDeadColorLabel" class="font-semibold text-gray-300" data-debug-text="gol_dead_color">Dead cell color</h3>
+        <div class="gol-dead-default-row">
+          <button id="btnGolDeadDefault" type="button" aria-pressed="true" data-debug-text="gol_dead_default">Default · first color</button>
+          <span id="golDeadColorIndicator" aria-hidden="true"></span>
+        </div>
+        <div id="golDeadColorSwatches" role="group" aria-labelledby="golDeadColorLabel"></div>
+      </section>
       <label class="relative-separator-toggle">
         <span data-debug-text="gol_sort_genetics">Mix colors by palette order</span>
         <input id="golSortGeneticsToggle" type="checkbox" role="switch" aria-describedby="golSortGeneticsNote">
