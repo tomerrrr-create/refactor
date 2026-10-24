@@ -61,6 +61,8 @@ export const translations = {
   "tuning_batchSize_note": {"en": "More steps allow faster growth and require more calculation. The original value is 100.", "he": "יותר צעדים מאפשרים צמיחה מהירה יותר ודורשים יותר חישוב. הערך המקורי הוא 100.", "ru": "Больше шагов ускоряет рост и требует больше вычислений. Исходное значение — 100.", "nl": "Meer stappen maken snellere groei mogelijk en vragen meer rekenwerk. Oorspronkelijk 100."},
   separator_relative: { en: "Relative spacing", he: "מפרידים יחסיים", ru: "Относительные разделители", nl: "Relatieve tussenruimte" },
   separator_relative_note: { en: "Three widths that adapt to the board size.", he: "שלושה עוביים שמתאימים את עצמם לגודל הלוח.", ru: "Три толщины, адаптирующиеся к размеру поля.", nl: "Drie diktes die zich aanpassen aan het raster." },
+  startup_profile: { en: "Opening profile", he: "פרופיל בפתיחה", ru: "Профиль при запуске", nl: "Opstartprofiel" },
+  startup_profile_note: { en: "Used each time the app opens. Default: profile 1.", he: "הפרופיל שיופעל בכל פתיחה. ברירת המחדל: פרופיל 1.", ru: "Используется при каждом запуске. По умолчанию: профиль 1.", nl: "Bij elke start van de app. Standaard: profiel 1." },
   startup_separator_large: { en: "Large", he: "גדול", ru: "Большие", nl: "Groot" },
   startup_separator_small: { en: "Small", he: "קטן", ru: "Маленькие", nl: "Klein" },
   startup_separator_off: { en: "Off", he: "ללא", ru: "Выкл.", nl: "Uit" },

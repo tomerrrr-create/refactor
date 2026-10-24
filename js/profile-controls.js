@@ -1,7 +1,9 @@
+import { loadStartupProfile } from './startup-profile.js';
 import { createProfileState, readProfileFile, factoryProfileSnapshot } from './profile-state.js';
 
 export function initializeProfileControls({ capture, apply, canUse, getText }) {
     const state = createProfileState(capture());
+    state.select(loadStartupProfile());
     const host = document.getElementById('profileControls');
     const choices = [...host.querySelectorAll('[data-profile-choice]')];
     const dots = [...host.querySelectorAll('[data-profile-dot]')];

@@ -1,3 +1,4 @@
+import { STARTUP_PROFILE_KEY } from '../js/startup-profile.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, loadProfileStartup, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
@@ -272,6 +273,7 @@ test('startup resolves profile separators and board size before rendering, inclu
         profile[kind].settings.startup.boardSize = 7;
     }
     for (const selected of [0, 1, 2]) {
+        disk.setItem(STARTUP_PROFILE_KEY, String(selected));
         disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected, profiles }));
         const startup = loadProfileStartup(initial().settings.startup, disk);
         assert.equal(startup.separatorPx, [3, 2, 0][selected]);
@@ -280,6 +282,7 @@ test('startup resolves profile separators and board size before rendering, inclu
     profiles[1].draft.settings.startup.boardSize = 21;
     profiles[1].draft.settings.startup.separatorPx = 3;
     disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected: 1, profiles }));
+    disk.setItem(STARTUP_PROFILE_KEY, '1');
     const personal = loadProfileStartup(initial().settings.startup, disk);
     assert.equal(personal.boardSize, 21); assert.equal(personal.separatorPx, 3);
     assert.equal(defaultProfileSnapshots(initial())[2].settings.startup.separatorPx, 0);

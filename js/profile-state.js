@@ -1,3 +1,4 @@
+import { loadStartupProfile } from './startup-profile.js';
 import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
 import { validateWorkspaceSettings, deserializeWorkspaceSettings, defaultWorkspaceSettings } from './workspace-settings.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS, defaultGameOfLifeRules } from './constants.js';
@@ -351,9 +352,9 @@ export function readProfileFile(text) {
     return { settings: deserializeWorkspaceSettings(text) };
 }
 
-// Resolve the selected profile before drawing the first frame, including migrations.
+// Resolve the configured opening profile before drawing the first frame, including migrations.
 // This read does not write preferences or replace the other runtime settings.
 export function loadProfileStartup(fallback, storage) {
     return createProfileState({ settings: { ...defaultWorkspaceSettings(), startup: fallback } }, storage)
-        .draft().settings.startup;
+        .draft(loadStartupProfile(storage)).settings.startup;
 }

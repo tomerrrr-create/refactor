@@ -1,3 +1,4 @@
+import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
 import { loadInterfaceZoom, saveInterfaceZoom } from './interface-zoom.js';
 import { openStudio } from './studio-link.js';
 import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, nextWindEffect, createWindModeIcon } from './wind-settings.js';
@@ -4856,6 +4857,8 @@ else if (action.eventName === 'Invert Colors') {
             setNudgeInterval, persistNudgeSettings,
             resetWorkspaceSettings: () => settingsProfiles.resetToDefaults(),
             getStartupSettings: () => ({ ...startupSettings }),
+            getStartupProfile: loadStartupProfile,
+            saveStartupProfile,
             getDefaultStartupSettings: () => settingsProfiles.defaults().settings.startup,
             getDefaultChiFlowCycle: () => {
                 const defaults = settingsProfiles.defaults();

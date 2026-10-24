@@ -1548,6 +1548,7 @@ export function initializeModals(appContext) {
     addStartupOptions('startupSymmetry', app.C.SYMMETRY_MODES.map(value => [value, '', 'symmetry_' + value]));
     addStartupOptions('startupInterface', ['creative', 'simulation'].map(value => [value, '', 'startup_mode_' + value]));
     function fillStartupForm(settings) {
+        document.getElementById('startupProfile').value = app.getStartupProfile();
         Object.entries(startupFields).forEach(([key, id]) => { document.getElementById(id).value = key === 'separatorPx' ? relativeSeparatorLevel(settings[key]) : settings[key]; });
         document.getElementById('startupBrushValue').value = settings.brushSize;
         updateStartupPalettePreview();
@@ -1579,7 +1580,8 @@ export function initializeModals(appContext) {
             return [key, ['boardSize', 'separatorPx', 'brushSize'].includes(key) ? Number(value) : value];
         }));
         const persisted = app.saveStartupSettings(settings);
-        startupStatus.textContent = app.getText(persisted ? 'startup_saved' : 'startup_saved_session');
+        const profilePersisted = app.saveStartupProfile(Number(document.getElementById('startupProfile').value));
+        startupStatus.textContent = app.getText(persisted && profilePersisted ? 'startup_saved' : 'startup_saved_session');
     });
     const resetWorkspaceButton = document.getElementById('btnResetWorkspace');
     const resetWorkspaceConfirmation = document.getElementById('workspaceResetConfirmation');
