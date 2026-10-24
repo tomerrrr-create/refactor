@@ -1,3 +1,4 @@
+import { isGameOfLifeAnchorSort } from '../js/game-of-life-settings.js';
 import { resolveChiReach } from '../js/chi-reach.js';
 import { CHI_REACH_PERCENTAGES } from '../js/chi-reach.js';
 import test from 'node:test';
@@ -12,12 +13,12 @@ const plain = value => JSON.parse(JSON.stringify(value));
 const fn = name => source.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?^\\}`, 'm'))[0];
 const personal = { awakening: [1, 2], flow: [3, 6], reach: 3 };
 function harness() {
-    const c = vm.createContext({ resolveChiReach, paletteLen: () => 64, C: { CHI_FLOW_PRESETS: presets }, chiFlowRules: plain(personal), personalChiFlowRules: plain(personal), chiFlowMode: 'personal',
+    const c = vm.createContext({ CHI_REACH_PERCENTAGES, isGameOfLifeAnchorSort, resolveChiReach, paletteLen: () => 64, C: { CHI_FLOW_PRESETS: presets }, chiFlowRules: plain(personal), personalChiFlowRules: plain(personal), chiFlowMode: 'personal',
         armedSimulation: null, isLifePlaying: false, isExecutingMacroCommand: false, window: {}, artRecipeLog: [], currentGenerationCount: 0, armCalls: 0 });
     c.defaultChiCycle = [plain(personal), plain(presets.Ripples), plain(presets.Nova)];
     c.chiFlowCycle = c.defaultChiCycle.map(plain);
     c.localStorage = { setItem() {} };
-    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, 'const CHI_REACH_PERCENTAGES = ' + JSON.stringify(CHI_REACH_PERCENTAGES) + ';').replaceAll('export ', ''), c);
+    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replaceAll('export ', ''), c);
     c.chiFlowSources = c.inferCycleSources(c.chiFlowCycle, c.C.CHI_FLOW_PRESETS);
     c.armSimulation = sim => { assert(!c.isLifePlaying); c.armedSimulation = sim; c.armCalls++; };
     c.updateChiFlowButtonUI = () => {};

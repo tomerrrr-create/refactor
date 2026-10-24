@@ -1,4 +1,4 @@
-import { resolveGameOfLifeDeadIndex, isGameOfLifeDeadColor } from './game-of-life-settings.js';
+import { resolveGameOfLifeDeadIndex, isGameOfLifeDeadColor, isGameOfLifeAnchorSort } from './game-of-life-settings.js';
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
 import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
@@ -239,6 +239,7 @@ function refreshLocalizedModalText() {
     }
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
+    if (app.dom.gameOfLifeSettingsModal.classList.contains('modal-visible')) renderGolAnchorControl();
     app.refreshProfiles();
 }
 
@@ -1006,10 +1007,17 @@ function applyGolPreset(survivalArray, birthArray) {
 function openGolSettingsModal() {
     if (app.isBreathing()) return;
     
-    document.getElementById('golDeadColorPicker').hidden = true;
-    document.getElementById('btnGolDeadColor').setAttribute('aria-expanded', 'false');
     const rules = app.getGameOfLifeRules();
-    golDeadColor = isGameOfLifeDeadColor(rules.deadColor) ? rules.deadColor.toLowerCase() : null;
+    golLegacyDeadColor = isGameOfLifeDeadColor(rules.deadColor) ? rules.deadColor.toLowerCase() : null;
+    golAnchorSortMethod = isGameOfLifeAnchorSort(rules.deadSortMethod) ? rules.deadSortMethod : 'current';
+    if (!rules.deadSortMethod && golLegacyDeadColor) {
+        const entry = app.C.PALETTES[app.getActivePaletteIndex()];
+        const source = entry.originalColors || entry.colors;
+        // Upgrade an old fixed root to its source sort. Arbitrary legacy colors
+        // remain readable until the user explicitly chooses a supported anchor.
+        const match = app.SORT_MODES.find(mode => entry.colors[resolveGameOfLifeDeadIndex({ deadSortMethod: mode.method }, entry.colors, source)].toLowerCase() === golLegacyDeadColor);
+        golAnchorSortMethod = match?.method || 'legacy';
+    }
     golSortGenetics = rules.sortGenetics === true;
     writeGolCycleRules(rules);
 updateActivePresetButton();
@@ -1035,64 +1043,62 @@ updateActivePresetButton();
 // --- END: MODIFICATION ---
 
 
-let golDeadColor = null;
+let golAnchorSortMethod = 'current';
+let golLegacyDeadColor = null;
 let golSortGenetics = false;
 
-function renderGolDeadColors() {
-    const palette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
-    const index = resolveGameOfLifeDeadIndex({ deadColor: golDeadColor }, palette);
-    const root = document.getElementById('btnGolDeadDefault');
-    root.setAttribute('aria-pressed', String(golDeadColor === null));
-    root.title = app.getText('gol_dead_default');
-    root.setAttribute('aria-label', root.title);
-    const choice = document.getElementById('btnGolDeadColor');
-    choice.dataset.fixed = String(golDeadColor !== null);
-    choice.title = app.getText('gol_choose_anchor');
-    const mode = document.getElementById('golDeadColorMode');
-    mode.dataset.debugText = golDeadColor === null ? 'gol_anchor_position' : 'gol_anchor_fixed';
-    mode.textContent = app.getText(mode.dataset.debugText);
-    choice.setAttribute('aria-label', `${choice.title}: ${mode.textContent} · ${palette[index]}`);
+function golColorRules() {
+    return {
+        ...(golSortGenetics ? { sortGenetics: true } : {}),
+        ...(isGameOfLifeAnchorSort(golAnchorSortMethod) ? { deadSortMethod: golAnchorSortMethod } : {}),
+        ...(golAnchorSortMethod === 'legacy' && golLegacyDeadColor ? { deadColor: golLegacyDeadColor } : {})
+    };
+}
+
+function renderGolAnchorControl() {
+    const entry = app.C.PALETTES[app.getActivePaletteIndex()];
+    const index = resolveGameOfLifeDeadIndex(golColorRules(), entry.colors, entry.originalColors || entry.colors);
     const indicator = document.getElementById('golDeadColorIndicator');
-    indicator.style.backgroundColor = palette[index];
-    indicator.title = palette[index];
-    document.getElementById('golRootColorIndicator').style.backgroundColor = palette[0];
-    const grid = document.getElementById('golDeadColorSwatches');
-    grid.replaceChildren();
-    palette.forEach((color, i) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'gol-dead-swatch';
-        button.style.backgroundColor = color;
-        button.setAttribute('aria-pressed', String(golDeadColor !== null && color.toLowerCase() === palette[index].toLowerCase()));
-        button.setAttribute('aria-label', `${i} · ${color}`);
-        button.title = `${i} · ${color}`;
-        button.onclick = () => {
-            golDeadColor = color.toLowerCase();
-            renderGolDeadColors();
-            golCycleMembership?.manualChange();
-        };
-        grid.append(button);
-    });
+    indicator.style.backgroundColor = entry.colors[index];
+    indicator.title = entry.colors[index];
+    document.getElementById('golAnchorChoice').dataset.fixed = String(golAnchorSortMethod !== 'current');
+    const select = document.getElementById('golAnchorSort');
+    select.replaceChildren();
+    const option = (value, key) => {
+        const node = document.createElement('option');
+        node.value = value; node.dataset.debugText = key;
+        node.textContent = app.getText(key);
+        return node;
+    };
+    select.append(option('current', 'gol_anchor_current'));
+    if (golAnchorSortMethod === 'legacy') {
+        const legacy = option('legacy', 'gol_anchor_legacy');
+        legacy.disabled = true;
+        select.append(legacy);
+    }
+    const fixed = document.createElement('optgroup');
+    fixed.label = app.getText('gol_anchor_fixed_sort');
+    app.SORT_MODES.forEach(mode => fixed.append(option(mode.method, 'startup_sort_' + mode.method)));
+    select.append(fixed);
+    select.value = golAnchorSortMethod;
 }
 
 function readGolCycleRules() {
     const values = container => [...container.querySelectorAll('.gol-chip-btn.active')].map(chip => parseInt(chip.dataset.number, 10));
     return { survival: values(app.dom.golSurvivalChipsContainer), birth: values(app.dom.golBirthChipsContainer),
-        ...(document.getElementById('golSortGeneticsToggle').checked ? { sortGenetics: true } : {}),
-        ...(golDeadColor !== null ? { deadColor: golDeadColor } : {}) };
+        ...golColorRules() };
 }
 
 function withGolColorSettings(rules) {
     const snapshot = { ...rules };
     delete snapshot.deadColor;
     delete snapshot.sortGenetics;
-    if (golSortGenetics) snapshot.sortGenetics = true;
-    if (golDeadColor !== null) snapshot.deadColor = golDeadColor;
-    return snapshot;
+    delete snapshot.deadSortMethod;
+    return { ...snapshot, ...golColorRules() };
 }
 
 function writeGolCycleRules(rules) {
-    renderGolDeadColors();
+    renderGolAnchorControl();
     document.getElementById('golSortGeneticsToggle').checked = golSortGenetics;
     applyGolPreset(rules.survival, rules.birth);
 }
@@ -1102,7 +1108,8 @@ function saveGolSettings() {
 }
 
 function resetGolSettings() {
-    golDeadColor = null;
+    golAnchorSortMethod = 'current';
+    golLegacyDeadColor = null;
     golSortGenetics = false;
     writeGolCycleRules(app.C.defaultGameOfLifeRules);
     golCycleMembership?.manualChange();
@@ -1771,16 +1778,12 @@ export function initializeModals(appContext) {
         golSortGenetics = event.target.checked;
         golCycleMembership?.manualChange();
     });
-    document.getElementById('btnGolDeadColor').addEventListener('click', () => {
-        const picker = document.getElementById('golDeadColorPicker');
-        picker.hidden = !picker.hidden;
-        document.getElementById('btnGolDeadColor').setAttribute('aria-expanded', String(!picker.hidden));
+    document.getElementById('golAnchorSort').addEventListener('change', event => {
+        golAnchorSortMethod = event.target.value;
+        golLegacyDeadColor = null;
+        renderGolAnchorControl();
+        golCycleMembership?.manualChange();
     });
-    document.getElementById('btnGolDeadDefault').addEventListener('click', () => {
-        golDeadColor = null; renderGolDeadColors(); golCycleMembership?.manualChange();
-    });
-
-
 
 // --- START: MODIFICATION ---
 // הוספת האזנה לכפתורי הצ'יפים החדשים

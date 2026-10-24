@@ -1,4 +1,4 @@
-import { isGameOfLifeDeadColor } from './game-of-life-settings.js';
+import { isGameOfLifeDeadColor, isGameOfLifeAnchorSort } from './game-of-life-settings.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
 import * as C from './constants.js';
@@ -46,10 +46,11 @@ const number = (n, min, max) => typeof n === 'number' && Number.isFinite(n) && n
 function validCycle(slots, chi) {
     return Array.isArray(slots) && slots.length === 3 && slots.every(rules => {
         if (!object(rules)) return false;
-        const fields = chi ? ['awakening', 'flow', 'reach', 'reachOffset', 'reachPercent'] : ['survival', 'birth', 'sortGenetics', 'deadColor'];
+        const fields = chi ? ['awakening', 'flow', 'reach', 'reachOffset', 'reachPercent'] : ['survival', 'birth', 'sortGenetics', 'deadColor', 'deadSortMethod'];
         if (Object.keys(rules).some(key => !fields.includes(key))) return false;
         const arrays = chi ? ['awakening', 'flow'] : ['survival', 'birth'];
         if (!arrays.every(key => Array.isArray(rules[key]) && rules[key].every(n => integer(n, chi ? 1 : 0, 8)))) return false;
+        if (!chi && Object.hasOwn(rules, 'deadSortMethod') && !isGameOfLifeAnchorSort(rules.deadSortMethod)) return false;
         if (!chi && Object.hasOwn(rules, 'deadColor') && !isGameOfLifeDeadColor(rules.deadColor)) return false;
         if (!chi && Object.hasOwn(rules, 'sortGenetics') && typeof rules.sortGenetics !== 'boolean') return false;
         return !chi || Number.isSafeInteger(rules.reach) && rules.reach >= 0 &&

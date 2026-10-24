@@ -87,3 +87,44 @@ test('dead color settings round trip with independent cycle flags; malformed col
  assert.equal(normalizeEvolutionCycle(restored.cycles.gameOfLife,defaultWorkspaceSettings().cycles.gameOfLife)[2].deadColor,'#112233');
  settings.cycles.gameOfLife[2].deadColor='invalid';assert.throws(()=>validateWorkspaceSettings(settings));
 });
+
+test('fixed sort anchors use original palette order across every display sort and palette change',async()=>{
+ const {resolveGameOfLifeDeadIndex}=await import('../js/game-of-life-settings.js');
+ for(const source of [
+  ['#000000','#ffffff','#aa0000','#00aa00','#0000aa','#777777'],
+  ['#221133','#eeeedd','#bb1100','#00bb44','#1144cc','#999999']
+ ])for(const fixed of SORT_MODES){
+  const expected=sortColorsArray(source,fixed.method)[0];
+  for(const displayed of SORT_MODES){
+   const palette=sortColorsArray(source,displayed.method);
+   assert.equal(palette[resolveGameOfLifeDeadIndex({deadSortMethod:fixed.method},palette,source)],expected,fixed.method+' / '+displayed.method);
+   assert.equal(resolveGameOfLifeDeadIndex({},palette,source),0);
+  }
+ }
+});
+test('fixed sort roots are cached across generations without re-sorting the palette',async()=>{
+ const {resolveGameOfLifeDeadIndex}=await import('../js/game-of-life-settings.js');
+ let iterations=0;const source=new Proxy(['#ff0000','#000000','#ffffff'],{get(target,key,receiver){if(key===Symbol.iterator)iterations++;return Reflect.get(target,key,receiver);}});
+ const palette=['#ffffff','#ff0000','#000000'];
+ assert.equal(resolveGameOfLifeDeadIndex({deadSortMethod:'luminance'},palette,source),2);
+ const first=iterations;assert(first>0);
+ for(let i=0;i<500;i++)assert.equal(resolveGameOfLifeDeadIndex({deadSortMethod:'luminance'},palette,source),2);
+ assert.equal(iterations,first);
+});
+test('fixed sort controls actual death output in both mixing modes without changing the display sort',()=>{
+ const source=['#000000','#ffffff','#ff0000','#0000ff'];
+ for(const {method} of SORT_MODES)for(const sortGenetics of [false,true]){
+  const currentPalette=sortColorsArray(source,method);
+  const board=Array.from({length:9},(_,i)=>({k:i%4,v:0}));
+  const next=run({n:3,currentBoardState:board,currentPalette,currentPaletteSource:source,gameOfLifeRules:{survival:[],birth:[],sortGenetics,deadSortMethod:'reversed'}});
+  assert(next.every(t=>currentPalette[t.k]==='#ffffff'));
+  assert.deepEqual(currentPalette,sortColorsArray(source,method));
+ }
+});
+test('sort anchor settings serialize independently of the current palette and reject unknown methods',()=>{
+ const settings=defaultWorkspaceSettings();settings.cycles.gameOfLife=settings.cycles.gameOfLife.map(r=>({...r,deadSortMethod:'temperature',sortGenetics:true}));
+ const restored=deserializeWorkspaceSettings(serializeWorkspaceSettings(settings));
+ assert(restored.cycles.gameOfLife.every(r=>r.deadSortMethod==='temperature'));
+ assert(normalizeEvolutionCycle(restored.cycles.gameOfLife,defaultWorkspaceSettings().cycles.gameOfLife).every(r=>r.deadSortMethod==='temperature'));
+ settings.cycles.gameOfLife[0].deadSortMethod='unknown';assert.throws(()=>validateWorkspaceSettings(settings));
+});

@@ -1,3 +1,4 @@
+import { isGameOfLifeAnchorSort } from './game-of-life-settings.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
 import { loadInterfaceZoom, saveInterfaceZoom } from './interface-zoom.js';
@@ -1242,7 +1243,7 @@ dlaState.emptyIndices.push(index);
         let nextState;
         let didAdvance = true;
         switch(armedSimulation) {
-            case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration(context); boardState = nextState; break;
+            case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration({ ...context, currentPaletteSource: C.PALETTES[activePaletteIndex].originalColors }); boardState = nextState; break;
 case 'brightnessEvo':
     if (brightnessEvoMode === 'contrast') {
         nextState = Simulations.runContrastGeneration(context);
@@ -1374,7 +1375,7 @@ break;
             
             switch(armedSimulation) {
                 case 'gameOfLife': 
-                    boardState = Simulations.runGameOfLifeGeneration(context); 
+                    boardState = Simulations.runGameOfLifeGeneration({ ...context, currentPaletteSource: C.PALETTES[activePaletteIndex].originalColors });
                     break;
 case 'brightnessEvo': 
     if (brightnessEvoMode === 'contrast') {
@@ -3140,6 +3141,7 @@ function updateBrightnessEvoButtonUI() {
 // Game of Life keeps the personal rules separate from its two preset shortcuts.
 function cloneGameOfLifeRules(rules) {
     return { survival: [...rules.survival], birth: [...rules.birth], ...(rules.sortGenetics === true ? { sortGenetics: true } : {}),
+        ...(isGameOfLifeAnchorSort(rules.deadSortMethod) ? { deadSortMethod: rules.deadSortMethod } : {}),
         ...(typeof rules.deadColor === 'string' && /^#[0-9a-f]{6}$/i.test(rules.deadColor) ? { deadColor: rules.deadColor.toLowerCase() } : {}) };
 }
 
@@ -3155,7 +3157,9 @@ function updateGameOfLifeButtonUI() {
     dom.btnGameOfLife.querySelectorAll('[data-gol-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
-    const preset = Object.entries(C.GAME_OF_LIFE_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(gameOfLifeRules))?.[0];
+    const preset = Object.entries(C.GAME_OF_LIFE_PRESETS).find(([, rules]) =>
+        JSON.stringify(rules.survival) === JSON.stringify(gameOfLifeRules.survival) &&
+        JSON.stringify(rules.birth) === JSON.stringify(gameOfLifeRules.birth))?.[0];
     const name = preset ? document.getElementById(preset)?.textContent.trim() : getText('cycle_custom');
     dom.btnGameOfLife.title = getText('tooltip_gameOfLife') + (active ? ': ' + name : '');
     dom.btnGameOfLife.setAttribute('aria-label', dom.btnGameOfLife.title);
@@ -3198,10 +3202,10 @@ function restoreGameOfLifeRules(snapshot) {
 // Color settings belong to the evolution, not its birth/survival shortcut.
 // Keep explicit recording snapshots independent: macro restoration bypasses this.
 function syncGameOfLifeColorSettings() {
-    const { deadColor, sortGenetics } = cloneGameOfLifeRules(gameOfLifeRules);
-    const anchored = rules => cloneGameOfLifeRules({ ...rules, deadColor, sortGenetics });
-    const slots = gameOfLifeCycle.map(anchored);
-    const personal = anchored(personalGameOfLifeRules);
+    const { deadColor, deadSortMethod, sortGenetics } = cloneGameOfLifeRules(gameOfLifeRules);
+    const withColors = rules => cloneGameOfLifeRules({ ...rules, deadColor, deadSortMethod, sortGenetics });
+    const slots = gameOfLifeCycle.map(withColors);
+    const personal = withColors(personalGameOfLifeRules);
     const changed = JSON.stringify(slots) !== JSON.stringify(gameOfLifeCycle) ||
         JSON.stringify(personal) !== JSON.stringify(personalGameOfLifeRules);
     gameOfLifeCycle = slots;

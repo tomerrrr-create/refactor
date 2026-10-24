@@ -457,10 +457,9 @@ export const translations = {
 
 // --- START: Contour Settings Modal ---
   gol_dead_color: { en: "Anchor", he: "עוגן", ru: "Якорь", nl: "Anker" },
-  gol_dead_default: { en: "Follow position 0", he: "עקיבה אחר מיקום 0", ru: "Следовать позиции 0", nl: "Volg positie 0" },
-  gol_anchor_fixed: { en: "Fixed color", he: "צבע קבוע", ru: "Фикс. цвет", nl: "Vaste kleur" },
-  gol_anchor_position: { en: "Root", he: "Root", ru: "Root", nl: "Root" },
-  gol_choose_anchor: { en: "Choose dead cell color", he: "בחירת צבע תא מת", ru: "Выбрать цвет мёртвой клетки", nl: "Kies kleur van dode cellen" },
+  gol_anchor_current: { en: "Current sort", he: "מיון נוכחי", ru: "Текущая сортировка", nl: "Huidige sortering" },
+  gol_anchor_fixed_sort: { en: "Fixed sort", he: "מיון קבוע", ru: "Фиксированная сортировка", nl: "Vaste sortering" },
+  gol_anchor_legacy: { en: "Previous setting", he: "הגדרה קודמת", ru: "Предыдущая настройка", nl: "Vorige instelling" },
   gol_mixing: { en: "Mixing", he: "ערבוב", ru: "Смешивание", nl: "Mengen" },
   gol_sort_genetics: { en: "Sort order", he: "שיטת מיון", ru: "Сортировка", nl: "Sorteervolgorde" },
   contour_modal_title: { en: "Contour Settings", he: "הגדרות קווי מתאר", ru: "Настройки контуров", nl: "Contour-instellingen" },

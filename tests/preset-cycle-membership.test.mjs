@@ -1,10 +1,12 @@
+import { isGameOfLifeAnchorSort } from '../js/game-of-life-settings.js';
+import { CHI_REACH_PERCENTAGES } from '../js/chi-reach.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-const c = vm.createContext({});
+const c = vm.createContext({ isGameOfLifeAnchorSort, CHI_REACH_PERCENTAGES });
 for (const file of ['evolution-cycle-settings.js', 'preset-cycle-membership.js']) {
-    vm.runInContext(readFileSync(new URL('../js/' + file, import.meta.url), 'utf8').replace(/^import .*;\n/m, '').replaceAll('export ', ''), c);
+    vm.runInContext(readFileSync(new URL('../js/' + file, import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replaceAll('export ', ''), c);
 }
 const slots = [0, 1, 2].map(i => ({ survival: [i], birth: [3] }));
 const plain = x => JSON.parse(JSON.stringify(x));

@@ -1,3 +1,4 @@
+import { isGameOfLifeAnchorSort } from '../js/game-of-life-settings.js';
 import { CHI_REACH_PERCENTAGES } from '../js/chi-reach.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,12 +12,12 @@ const plain = value => JSON.parse(JSON.stringify(value));
 const fn = name => source.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?^\\}`, 'm'))[0];
 const personal = { survival: [1, 2], birth: [3, 6] };
 function harness() {
-    const c = vm.createContext({ C: { GAME_OF_LIFE_PRESETS: presets }, gameOfLifeRules: plain(personal), personalGameOfLifeRules: plain(personal), gameOfLifeMode: 'personal',
+    const c = vm.createContext({ CHI_REACH_PERCENTAGES, isGameOfLifeAnchorSort, C: { GAME_OF_LIFE_PRESETS: presets }, gameOfLifeRules: plain(personal), personalGameOfLifeRules: plain(personal), gameOfLifeMode: 'personal',
         armedSimulation: null, isLifePlaying: false, isExecutingMacroCommand: false, window: {}, artRecipeLog: [], currentGenerationCount: 0, armCalls: 0 });
     c.defaultGolCycle = [plain(personal), plain(presets.btnGolPresetShuffle), plain(presets.btnGolPresetCoral)];
     c.gameOfLifeCycle = c.defaultGolCycle.map(plain);
     c.localStorage = { setItem() {} };
-    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, 'const CHI_REACH_PERCENTAGES = ' + JSON.stringify(CHI_REACH_PERCENTAGES) + ';').replaceAll('export ', ''), c);
+    vm.runInContext(readFileSync(new URL('../js/evolution-cycle-settings.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replaceAll('export ', ''), c);
     c.gameOfLifeSources = c.inferCycleSources(c.gameOfLifeCycle, c.C.GAME_OF_LIFE_PRESETS);
     c.armSimulation = sim => { assert(!c.isLifePlaying); c.armedSimulation = sim; c.armCalls++; };
     c.updateGameOfLifeButtonUI = () => {};
@@ -173,4 +174,18 @@ test('legacy replay still restores original per-snapshot anchors without changin
         assert.equal(c.gameOfLifeRules.deadColor,deadColor);
     }
     assert.equal(writes,0);
+});
+
+test('fixed sort method and mixing are global during cycling, logged fully, and restored by PLAY and STEP',()=>{
+ const c=harness();c.cycleGameOfLifeMode();
+ c.setPersonalGameOfLifeRules({...personal,deadSortMethod:'temperature',sortGenetics:true});
+ for(let i=0;i<6;i++){
+  c.cycleGameOfLifeMode();assert.equal(c.gameOfLifeRules.deadSortMethod,'temperature');assert.equal(c.gameOfLifeRules.sortGenetics,true);
+  assert(c.gameOfLifeCycle.every(r=>r.deadSortMethod==='temperature'&&r.sortGenetics===true));
+ }
+ const snapshot=plain(c.getGameOfLifeRecordingRules());
+ const replay=harness();replay.applyMacroRules('Armed: gameOfLife | Sort: reversed | Rules: '+JSON.stringify(snapshot));
+ assert.deepEqual(plain(replay.getGameOfLifeRecordingRules()),snapshot);
+ replay.applyMacroRules('Armed: gameOfLife | Rules: '+JSON.stringify(personal));
+ assert.equal(replay.gameOfLifeRules.deadSortMethod,undefined);
 });

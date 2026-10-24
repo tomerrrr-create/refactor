@@ -1,3 +1,4 @@
+import { isGameOfLifeAnchorSort } from './game-of-life-settings.js';
 import { CHI_REACH_PERCENTAGES } from './chi-reach.js';
 
 // Three rule snapshots per evolution. Playback does not persist user preferences.
@@ -10,13 +11,17 @@ export function normalizeEvolutionCycle(value, defaults) {
     return value.map((rules, index) => {
         const fallback = defaults[index];
         if (!rules || typeof rules !== 'object') return cloneCycleRules(fallback);
-        const requiredKeys = Object.keys(fallback).filter(key => key !== 'reachOffset' && key !== 'reachPercent' && key !== 'sortGenetics' && key !== 'deadColor');
+        const requiredKeys = Object.keys(fallback).filter(key => key !== 'reachOffset' && key !== 'reachPercent' && key !== 'sortGenetics' && key !== 'deadColor' && key !== 'deadSortMethod');
         const valid = requiredKeys.every(key => Array.isArray(fallback[key])
             ? Array.isArray(rules[key]) && rules[key].every(n => Number.isInteger(n) && n >= (key === 'awakening' || key === 'flow' ? 1 : 0) && n <= 8)
             : Number.isSafeInteger(rules[key]) && rules[key] >= 0 && rules[key] <= (key === 'reach' ? Number.MAX_SAFE_INTEGER : 10));
         if (!valid) return cloneCycleRules(fallback);
         const normalized = Object.fromEntries(requiredKeys.map(key => [key, Array.isArray(rules[key])
             ? [...new Set(rules[key])].sort((a, b) => a - b) : rules[key]]));
+        if ('survival' in fallback && 'deadSortMethod' in rules) {
+            if (!isGameOfLifeAnchorSort(rules.deadSortMethod)) return cloneCycleRules(fallback);
+            normalized.deadSortMethod = rules.deadSortMethod;
+        }
         if ('survival' in fallback && 'deadColor' in rules) {
             if (typeof rules.deadColor !== 'string' || !/^#[0-9a-f]{6}$/i.test(rules.deadColor)) return cloneCycleRules(fallback);
             normalized.deadColor = rules.deadColor.toLowerCase();

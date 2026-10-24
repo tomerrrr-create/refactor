@@ -1,9 +1,9 @@
-import { resolveGameOfLifeDeadIndex, isGameOfLifeDeadColor, closestLivingGameOfLifeColor } from '../game-of-life-settings.js';
+import { resolveGameOfLifeDeadIndex, isGameOfLifeDeadColor, isGameOfLifeAnchorSort, closestLivingGameOfLifeColor } from '../game-of-life-settings.js';
 import { getGeneticColor, findClosestColorIndex } from '../colors.js';
 
-export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, gameOfLifeRules }) {
-    const deadIndex = resolveGameOfLifeDeadIndex(gameOfLifeRules, currentPalette);
-    const customDeadColor = isGameOfLifeDeadColor(gameOfLifeRules.deadColor);
+export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, currentPaletteSource, gameOfLifeRules }) {
+    const deadIndex = resolveGameOfLifeDeadIndex(gameOfLifeRules, currentPalette, currentPaletteSource);
+    const customDeadColor = isGameOfLifeDeadColor(gameOfLifeRules.deadColor) || isGameOfLifeAnchorSort(gameOfLifeRules.deadSortMethod);
     const deadRanks = customDeadColor
         ? currentPalette.map(color => color.toLowerCase() === currentPalette[deadIndex].toLowerCase()) : null;
 
