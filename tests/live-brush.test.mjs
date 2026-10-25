@@ -2,15 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
+import {getBrushTiles} from '../js/brush-footprint.js';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 const copy=value=>JSON.parse(JSON.stringify(value));
-function harness({live=true,continuous=false,brush=1,symmetry='off',progressive=false}={}){
+function harness({live=true,continuous=false,brush=1,shape='circle',symmetry='off',progressive=false}={}){
  const logs=[],history=[],captures=new Set(),timers=new Map();let snapshots=0,serial=0,syncs=0;
  const rng=Object.create(Math);rng.random=()=>.75;
  const canvas={setPointerCapture:id=>captures.add(id),hasPointerCapture:id=>captures.has(id),releasePointerCapture:id=>captures.delete(id),getBoundingClientRect:()=>({left:0,top:0,right:90,bottom:90})};
  const c=vm.createContext({clearPaletteColorTransition() {}, capturePaletteColors() { return null; }, showPaletteColorTransition() {}, dom: { board: {} }, n:9,boardState:Array.from({length:81},()=>({k:3,v:3,isGold:false})),isLifePlaying:live,
   recordPausedBrushMotion:progressive,replayBrushBefore:null,simulationStartState:live?{}:null,simulationHasBrushInput:false,isBreathing:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
-  windMode:false,windPainter:{down:()=>true,move(){},up(){}},windPointerId:null,canvas,brushSize:brush,symmetryMode:symmetry,
+  windMode:false,windPainter:{down:()=>true,move(){},up(){}},windPointerId:null,canvas,brushSize:brush,brushShape:shape,getBrushTiles,symmetryMode:symmetry,
   isBrushModeOn:true,isContinuousBrushOn:continuous,isRainbowModeActive:false,selectedColorIndex:0,selectedColor:'#000000',
   armedSimulation:'gravitationalSort',dlaState:null,performance:{now:()=>100},Math:rng,Map,Set,
   setTimeout:fn=>{timers.set(++serial,fn);return serial;},clearTimeout:id=>timers.delete(id),C:{LONG_PRESS_SHOW_MS:600},
@@ -178,3 +179,24 @@ test('macro groups paused motion into one undo action, independently of the reco
  assert.equal(h.history.length,1);assert.equal(h.history[0].before.tiles[0].k,3);assert.equal(h.history[0].after.tiles[2].k,0);
  assert.equal(h.c.replayBrushBefore,null);
 });
+
+for(const shape of ['circle','square','diamond']) for(const live of [false,true]) {
+ test(`${shape} XL paints safely in ${live?'live simulation':'creative'} mode, one stroke and correct history ownership`,()=>{
+  const h=harness({live,brush:21,shape});
+  h.down(45,45); h.up(45,45);
+  assert(h.c.boardState.every(tile=>tile.k===0));
+  assert.equal(h.history.length,live?0:1);
+  if(!live) assert.equal(h.logs.filter(log=>log.name==='DRAW_STROKE').length,1);
+ });
+}
+
+for(const shape of ['circle','square','diamond']) for(const symmetry of ['off','vertical','horizontal','mandala','kaleidoscope']) {
+ test(`${shape} tap mirrors the complete footprint in ${symmetry} symmetry`,()=>{
+  const h=harness({live:false,brush:3,shape,symmetry});
+  h.down(15,15);h.up(15,15);
+  const copies=symmetry==='off'?1:['horizontal','vertical'].includes(symmetry)?2:4;
+  const area=shape==='square'?9:5;
+  assert.equal(h.c.boardState.filter(tile=>tile.k===0).length,area*copies);
+  assert.equal(h.history.length,1);
+ });
+}

@@ -1,3 +1,4 @@
+import { BRUSH_SIZES } from './brush-footprint.js';
 import { maximumSeparatorWidth } from './separator-cycle.js';
 import { PALETTES, SIZES, SEPARATORS, SYMMETRY_MODES } from './constants.js';
 import { SORT_MODES } from './colors.js';
@@ -21,7 +22,7 @@ export function normalizeStartup(settings) {
         boardSize: SIZES, separatorPx: SEPARATORS,
         sortMethod: SORT_MODES.map(mode => mode.method),
         fill: ['random', 'dark', 'light', 'seed'],
-        brushSize: [1, 3, 5, 7, 9, 11, 13, 15],
+        brushSize: BRUSH_SIZES,
         brushMode: ['paint', 'continuous', 'copy'],
         brushColor: ['first', 'none', 'darkest', 'lightest', 'rainbow'],
         symmetry: SYMMETRY_MODES, interfaceMode: ['creative', 'simulation']

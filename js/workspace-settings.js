@@ -1,3 +1,4 @@
+import { BRUSH_SIZES, BRUSH_SHAPES } from './brush-footprint.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
 import * as C from './constants.js';
@@ -30,6 +31,7 @@ function mergeKnown(defaults, overrides, path = '') {
     if (!object(overrides)) throw new Error('Invalid settings object');
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
+        if (path === 'brush' && key === 'shape') { result[key] = clone(value); continue; }
         // Optional extension; V1’s original baseline stays unchanged.
         if (path === '' && ['separatorCycle', 'simulationTheme', 'simulationPlaybackTheme', 'evolutionTuning'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
@@ -67,7 +69,8 @@ export function validateWorkspaceSettings(value) {
         typeof settings.smoothing.display === 'boolean' && typeof settings.smoothing.export === 'boolean' &&
         (!Object.hasOwn(settings.smoothing, 'bloom') || typeof settings.smoothing.bloom === 'boolean') &&
         (!Object.hasOwn(settings.smoothing, 'bloomIntensity') || integer(settings.smoothing.bloomIntensity, 0, 100)) &&
-        integer(settings.brush.size, 1, 15) && settings.brush.size % 2 === 1 &&
+        BRUSH_SIZES.includes(settings.brush.size) &&
+        (!Object.hasOwn(settings.brush, 'shape') || BRUSH_SHAPES.includes(settings.brush.shape)) &&
         ['paint', 'continuous', 'copy'].includes(settings.brush.mode) && C.SYMMETRY_MODES.includes(settings.brush.symmetry) &&
         validCycle(settings.cycles.gameOfLife, false) && validCycle(settings.cycles.chiFlow, true) &&
         ['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'].includes(r.gravity.direction) && number(r.gravity.strength, 0, 1) &&

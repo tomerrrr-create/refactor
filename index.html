@@ -499,10 +499,13 @@
   </dialog>
 
   <div id="colorPickerModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50">
-    <div class="bg-black border border-gray-700 rounded-lg p-6 w-full max-w-xs sm:max-w-sm text-center relative flex flex-col">
+    <div class="brush-picker-panel" role="dialog" aria-modal="true" aria-labelledby="brushPickerTitle">
+      <header class="brush-picker-heading"><h2 id="brushPickerTitle" data-debug-text="brush_picker_title"></h2>
       <button id="btnColorPickerCloseTop" type="button" class="modal-dismiss" data-i18n-title="saveModal_close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
         </button>
+      </header>
+      <div class="brush-picker-body">
         <div id="colorPickerHeader" class="flex items-center justify-center w-full mb-4">
             <button id="btnPrevPalette" class="p-2 rounded-full hover:bg-gray-700">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -515,12 +518,18 @@
         <div id="colorPickerSwatches" class="grid grid-cols-5 gap-3 justify-center"></div>
 
 
-<div class="w-full mt-4 pt-4 border-t border-gray-700">
-    <label for="brushSizeSlider" class="block text-sm text-gray-400 mb-2">גודל מברשת: <span id="brushSizeValue" class="font-bold text-white">1</span></label>
-    <input type="range" id="brushSizeSlider" min="1" max="15" value="1" step="2" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-</div>
-
-        <div id="colorPickerPagination" class="flex justify-center items-center h-8 mt-4"></div>
+<div id="colorPickerPagination" class="flex justify-center items-center h-8 mt-4"></div>
+        <section class="brush-picker-tools">
+          <div id="brushShapeOptions" class="brush-shape-options" role="group" aria-labelledby="brushShapeLabel"></div>
+          <span id="brushShapeLabel" class="sr-only" data-debug-text="brush_shape"></span>
+          <div class="brush-size-heading" id="brushSizeLabel" data-debug-text="init_brush_size"></div>
+          <div class="brush-size-and-preview">
+            <div id="brushSizeOptions" class="brush-size-options" role="group" aria-labelledby="brushSizeLabel"></div>
+            <figure class="brush-footprint"><svg id="brushFootprintPreview" role="img"></svg><figcaption id="brushFootprintCaption"></figcaption></figure>
+          </div>
+        </section>
+      </div>
+      <footer class="brush-picker-footer"><button id="btnBrushPickerContinue" type="button" data-debug-text="brush_continue"></button></footer>
     </div>
   </div>
 
@@ -685,7 +694,7 @@
         <label for="initBoardSize" data-debug-text="init_board_size"></label>
         <select id="initBoardSize" name="boardSize"></select>
         <label for="initBrushSize"><span data-debug-text="init_brush_size"></span> <output id="initBrushValue" for="initBrushSize">7</output></label>
-        <input id="initBrushSize" name="brushSize" type="range" min="1" max="15" step="2" value="7">
+        <select id="initBrushSize" name="brushSize"></select>
         <div class="init-settings-actions">
           <button type="submit" class="init-save" data-debug-text="init_save"></button>
           <button id="btnResetInit" type="button" class="init-reset" data-debug-text="init_reset"></button>
@@ -724,7 +733,7 @@
         <label for="startupInterface" data-debug-text="startup_interface"></label>
         <select id="startupInterface"></select>
         <label for="startupBrushSize"><span data-debug-text="init_brush_size"></span> <output id="startupBrushValue" for="startupBrushSize">1</output></label>
-        <input id="startupBrushSize" type="range" min="1" max="15" step="2" value="1">
+        <select id="startupBrushSize"></select>
         <div class="init-settings-actions">
           <button type="submit" class="init-save" data-debug-text="init_save"></button>
           <button id="btnUseCurrentStartup" type="button" class="init-reset" data-debug-text="startup_use_current"></button>

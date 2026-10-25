@@ -9,6 +9,14 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  brush_picker_title: { en: 'Color & brush', he: 'צבע ומברשת', ru: 'Цвет и кисть', nl: 'Kleur en penseel' },
+  brush_shape: { en: 'Brush shape', he: 'צורת המברשת', ru: 'Форма кисти', nl: 'Penseelvorm' },
+  brush_circle: { en: 'Circle', he: 'עיגול', ru: 'Круг', nl: 'Cirkel' },
+  brush_square: { en: 'Square', he: 'ריבוע', ru: 'Квадрат', nl: 'Vierkant' },
+  brush_diamond: { en: 'Diamond', he: 'מעוין', ru: 'Ромб', nl: 'Ruit' },
+  brush_continue: { en: 'Continue drawing', he: 'המשך לציור', ru: 'Продолжить рисование', nl: 'Verder tekenen' },
+  brush_width: { en: '{n} cells wide', he: 'רוחב של {n} תאים', ru: 'Ширина: {n} клеток', nl: '{n} cellen breed' },
+  brush_color_page: { en: 'Color page {n}', he: 'עמוד צבעים {n}', ru: 'Страница цветов {n}', nl: 'Kleurenpagina {n}' },
   studio_popup_blocked: { en: "Allow pop-ups for this site to open Video Studio.", he: "יש לאפשר חלונות קופצים לאתר כדי לפתוח את הסטודיו.", ru: "Разрешите всплывающие окна для открытия видеостудии.", nl: "Sta pop-ups toe om de videostudio te openen." },
   studio_transfer_failed: { en: "The macro could not be transferred. You can save the logger and select its file in Studio.", he: "לא ניתן להעביר את המקרו. אפשר לשמור את הלוגר ולבחור את הקובץ בסטודיו.", ru: "Не удалось передать макрос. Сохраните журнал и выберите файл в студии.", nl: "De macro kon niet worden overgedragen. Sla het logbestand op en selecteer het in Studio." },
 

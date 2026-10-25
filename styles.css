@@ -2142,3 +2142,44 @@ body.wind-mode #board { cursor: crosshair; }
 .startup-random-check { margin-inline-start: auto; opacity: 0; }
 .startup-random-choice[aria-pressed="true"] .startup-random-check { opacity: 1; }
 .startup-random-choice:focus-visible { outline: 2px solid #e6cc8e; outline-offset: 2px; }
+
+/* Color/brush picker only: other app windows retain their existing designs. */
+#colorPickerModal .brush-picker-panel {
+    display: flex; flex-direction: column; position: relative; box-sizing: border-box;
+    width: min(420px, calc(100vw - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px);
+    min-height: 0; overflow: hidden; border: 1px solid #b89a5745; border-radius: 16px;
+    color: #eaeaea; background: #151715; padding: 0;
+}
+.brush-picker-heading { position: relative; flex-shrink: 0; padding: 18px 52px; border-bottom: 1px solid #b89a572b; }
+.brush-picker-heading h2 { margin: 0; text-align: center; font-size: 19px; font-weight: 500; }
+.brush-picker-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 22px; scrollbar-width: thin; scrollbar-color: #756342 transparent; }
+.brush-picker-footer { flex-shrink: 0; padding: 12px 22px; border-top: 1px solid #b89a572b; }
+#btnBrushPickerContinue { width: 100%; min-height: 44px; border-radius: 9px; padding: 10px; background: #dfc484; color: #211c12; font: inherit; font-size: 14px; cursor: pointer; }
+.brush-picker-tools { border-top: 1px solid #b89a572b; margin-top: 12px; padding-top: 14px; }
+.brush-shape-options, .brush-size-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
+.brush-shape-options button, .brush-size-options button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; min-width: 0; border: 1px solid #b89a5730; border-radius: 8px; padding: 7px; color: #bfc0b5; background: #ffffff03; font: inherit; font-size: 13px; cursor: pointer; overflow-wrap: anywhere; }
+.brush-shape-options svg { width: 20px; height: 20px; flex-shrink: 0; }
+.brush-shape-options button[aria-pressed="true"], .brush-size-options button[aria-pressed="true"] { border-color: #d8b76ba0; color: #f0d797; background: #d5aa4817; }
+.brush-size-heading { margin: 16px 0 10px; font-size: 13px; color: #bfc0b5; text-align: start; }
+.brush-size-and-preview { display: grid; grid-template-columns: minmax(0,1fr) 84px; gap: 14px; align-items: center; }
+.brush-footprint { margin: 0; min-width: 0; }
+#brushFootprintPreview { display: block; width: 84px; height: 84px; border-radius: 6px; background: #10120f; padding: 3px; box-sizing: border-box; }
+#brushFootprintCaption { margin-top: 8px; text-align: center; font-size: 12px; color: #c0b596; font-variant-numeric: tabular-nums; direction: ltr; }
+#colorPickerModal .color-swatch { padding: 0; aspect-ratio: 1; min-width: 0; }
+#colorPickerModal .color-swatch:hover { transform: none; }
+#colorPickerModal .color-swatch:focus-visible, .brush-picker-panel button:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
+#colorPickerPagination:empty { display: none; }
+#colorPickerModal #colorPickerPaletteName { margin-inline: 6px; }
+#colorPickerModal #colorPickerPaletteName > svg { width: 26px !important; height: 26px !important; }
+#colorPickerModal #colorPickerPagination .pagination-dot { width: 20px; height: 24px; margin: 0 2px; border-radius: 0; background: transparent; padding: 0; cursor: pointer; }
+#colorPickerModal .pagination-dot::after { content: ''; display: block; margin: auto; width: 7px; height: 7px; border-radius: 50%; background: #62645b; }
+#colorPickerModal .pagination-dot.active::after { background: #e3c677; }
+@media (max-width: 380px) {
+    .brush-picker-body { padding-inline: 14px; }
+    .brush-shape-options button { flex-direction: column; gap: 4px; }
+}
+@media (hover: hover) and (pointer: fine) {
+    .brush-picker-body::-webkit-scrollbar { width: 6px; }
+    .brush-picker-body::-webkit-scrollbar-thumb { border-radius: 999px; background: #756342; }
+    .brush-shape-options button:hover, .brush-size-options button:hover { border-color: #d8b76b80; }
+}

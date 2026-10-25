@@ -1,3 +1,5 @@
+import { initializeBrushPicker } from './brush-picker.js';
+import { brushSizeLabel } from './brush-footprint.js';
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
 import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
@@ -14,13 +16,16 @@ import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
 
 let lastWheelTime = 0;
 let touchStartX = 0;
+let touchStartY = 0;
 
 function handleTouchStart(e) {
     touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
 }
 
 function handleTouchEnd(e) {
     const touchEndX = e.changedTouches[0].screenX;
+    if (Math.abs(touchEndX - touchStartX) <= Math.abs(e.changedTouches[0].screenY - touchStartY)) return;
     
     if (touchEndX < touchStartX - 50) { // Swipe Left
         app.navigateColorPages(true);
@@ -33,14 +38,17 @@ function handleTouchEnd(e) {
 }
 
 function handlePaletteWheel(e) {
+    if (!e.shiftKey && Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
     if (Date.now() - lastWheelTime < 200) return;
     e.preventDefault();
-    app.navigateColorPages(e.deltaY > 0);
+    app.navigateColorPages((e.deltaX || e.deltaY) > 0);
     renderColorPickerContent(); 
     lastWheelTime = Date.now();
 }
 
 let app;
+let brushPicker;
+let colorPickerReturnFocus;
 
 // --- Internal Helper Functions ---
 
@@ -132,6 +140,7 @@ function closeColorPickerModal() {
     app.dom.colorPickerModal.classList.remove('modal-visible');
     app.pointerState.longPressTarget = null;
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
+    colorPickerReturnFocus?.focus({ preventScroll: true });
 }
 
 function closeHelpModal() {
@@ -530,7 +539,7 @@ function handleConfirmResize() {
     }
 }
 
-function selectColorAndClose(color) {
+function selectColor(color) {
     const targetIndex = app.pointerState.longPressTarget;
     app.setIsRainbowModeActive(false);
     app.setSelectedColor(color);
@@ -545,10 +554,11 @@ function selectColorAndClose(color) {
             });
         });
     }
-    closeColorPickerModal();
+    renderColorPickerContent();
+    app.dom.colorPickerSwatches.querySelector('[aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 
-function selectRainbowAndClose() {
+function selectRainbow() {
     const targetIndex = app.pointerState.longPressTarget;
     app.setIsRainbowModeActive(true);
     app.setSelectedColor(null);
@@ -564,7 +574,8 @@ function selectRainbowAndClose() {
             });
         });
     }
-    closeColorPickerModal();
+    renderColorPickerContent();
+    app.dom.colorPickerSwatches.querySelector('[aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 
 function renderColorPickerContent() {
@@ -592,7 +603,9 @@ function renderColorPickerContent() {
     app.dom.colorPickerSwatches.innerHTML = '';
     const frag = document.createDocumentFragment();
 
-    const rainbowSwatch = document.createElement('div');
+    const rainbowSwatch = document.createElement('button');
+    rainbowSwatch.type = 'button';
+    rainbowSwatch.setAttribute('aria-pressed', String(rainbowSelected));
     rainbowSwatch.className = 'color-swatch' + (rainbowSelected ? ' is-selected' : '');
     if (rainbowSelected) rainbowSwatch.setAttribute('aria-current', 'true');
     const rainbowSwatchInner = document.createElement('div');
@@ -600,7 +613,7 @@ function renderColorPickerContent() {
     rainbowSwatchInner.innerHTML = app.createRainbowIconSVG();
     rainbowSwatch.appendChild(rainbowSwatchInner);
     rainbowSwatch.setAttribute('aria-label', app.getText('colorPicker_rainbow'));
-    rainbowSwatch.addEventListener('click', () => selectRainbowAndClose());
+    rainbowSwatch.addEventListener('click', () => selectRainbow());
     frag.appendChild(rainbowSwatch);
 
     const startIndex = currentPage * app.C.COLORS_PER_PAGE;
@@ -609,7 +622,9 @@ function renderColorPickerContent() {
 
     pageColors.forEach((color, index) => {
         const selected = !rainbowSelected && startIndex + index === selectedColorIndex;
-        const swatch = document.createElement('div');
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.setAttribute('aria-pressed', String(selected));
         swatch.className = 'color-swatch' + (selected ? ' is-selected' : '');
         if (selected) swatch.setAttribute('aria-current', 'true');
         const swatchInner = document.createElement('div');
@@ -637,7 +652,7 @@ function renderColorPickerContent() {
         swatch.appendChild(swatchInner);
         swatch.dataset.color = color;
         swatch.setAttribute('aria-label', `${app.getText('colorPicker_select')} ${color}`);
-        swatch.addEventListener('click', () => selectColorAndClose(color));
+        swatch.addEventListener('click', () => selectColor(color));
         frag.appendChild(swatch);
     });
 
@@ -655,7 +670,10 @@ function renderColorPickerContent() {
     app.dom.colorPickerPagination.innerHTML = '';
     if (totalPages > 1) {
         for (let i = 0; i < totalPages; i++) {
-            const dot = document.createElement('div');
+            const dot = document.createElement('button');
+            dot.type = 'button';
+            dot.setAttribute('aria-label', app.getText('brush_color_page').replace('{n}', i + 1));
+            dot.setAttribute('aria-pressed', String(i === currentPage));
             dot.className = 'pagination-dot' + (i === currentPage ? ' active' : '');
             dot.dataset.page = i;
             dot.addEventListener('click', (e) => {
@@ -665,16 +683,19 @@ function renderColorPickerContent() {
             app.dom.colorPickerPagination.appendChild(dot);
         }
     }
+    brushPicker?.refresh();
 }
 
 function openColorPickerModal(targetTileIndex = null) {
     if (app.isBreathing()) return;
+    if (!app.dom.colorPickerModal.classList.contains('modal-visible')) colorPickerReturnFocus = document.activeElement;
     app.pointerState.longPressTarget = targetTileIndex;
     const selectedColorIndex = app.getSelectedColorIndex();
     app.setColorPickerPage(!app.isRainbowModeActive() && selectedColorIndex >= 0
         ? Math.floor(selectedColorIndex / app.C.COLORS_PER_PAGE) : 0);
     renderColorPickerContent();
     app.dom.colorPickerModal.classList.add('modal-visible');
+    document.getElementById('btnBrushPickerContinue').focus({ preventScroll: true });
 }
 
 function openHelpModal() {
@@ -1133,6 +1154,7 @@ let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית
 
 export function initializeModals(appContext) {
     app = appContext;
+    brushPicker = initializeBrushPicker(app);
     const openSeparatorCycleModal = initializeSeparatorCycleModal(app);
     const openErosionSettingsModal = initializeErosionModal(app);
     const evolutionTuningModals = initializeEvolutionTuningModals(app);
@@ -1337,6 +1359,16 @@ export function initializeModals(appContext) {
     app.dom.resizeModal.addEventListener('click', (e) => { if (e.target === app.dom.resizeModal) { closeResizeModal(); } });
 
     // Color Picker Modal
+    document.getElementById('btnBrushPickerContinue').addEventListener('click', closeColorPickerModal);
+    app.dom.colorPickerModal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') { event.preventDefault(); closeColorPickerModal(); }
+        if (event.key === 'Tab') {
+            const buttons = [...app.dom.colorPickerModal.querySelectorAll('button')].filter(button => !button.disabled && button.getClientRects().length > 0);
+            const first = buttons[0], last = buttons.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        }
+    });
     app.dom.colorPickerModal.addEventListener('click', (e) => { if (e.target === app.dom.colorPickerModal) { closeColorPickerModal(); } });
     
     app.dom.btnNextPalette.addEventListener('click', () => {
@@ -1348,9 +1380,9 @@ export function initializeModals(appContext) {
         renderColorPickerContent();
     });
     
-    app.dom.colorPickerModal.addEventListener('wheel', handlePaletteWheel);
-    app.dom.colorPickerModal.addEventListener('touchstart', handleTouchStart, { passive: true });
-    app.dom.colorPickerModal.addEventListener('touchend', handleTouchEnd, { passive: true });
+    app.dom.colorPickerSwatches.addEventListener('wheel', handlePaletteWheel, { passive: false });
+    app.dom.colorPickerSwatches.addEventListener('touchstart', handleTouchStart, { passive: true });
+    app.dom.colorPickerSwatches.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     // Simulation initialization preferences are separate from the current board.
     const initForm = document.getElementById('initSettingsForm');
@@ -1368,7 +1400,7 @@ export function initializeModals(appContext) {
     function fillInitForm(settings) {
         initBoard.value = settings.boardSize;
         initBrush.value = settings.brushSize;
-        initBrushValue.value = settings.brushSize;
+        initBrushValue.value = brushSizeLabel(settings.brushSize);
         initStatus.textContent = '';
     }
     const nudgeSpeed = document.getElementById('nudgeSpeed');
@@ -1490,7 +1522,7 @@ export function initializeModals(appContext) {
         initToggle.setAttribute('aria-expanded', String(!initForm.hidden));
     });
     initBrush.addEventListener('input', () => {
-        initBrushValue.value = initBrush.value;
+        initBrushValue.value = brushSizeLabel(Number(initBrush.value));
         initStatus.textContent = '';
     });
     initBoard.addEventListener('change', () => { initStatus.textContent = ''; });
@@ -1555,7 +1587,7 @@ export function initializeModals(appContext) {
     function fillStartupForm(settings) {
         document.getElementById('startupProfile').value = app.getStartupProfile();
         Object.entries(startupFields).forEach(([key, id]) => { document.getElementById(id).value = key === 'separatorPx' ? relativeSeparatorLevel(settings[key]) : settings[key]; });
-        document.getElementById('startupBrushValue').value = settings.brushSize;
+        document.getElementById('startupBrushValue').value = brushSizeLabel(settings.brushSize);
         updateStartupPalettePreview();
         startupStatus.textContent = '';
     }
@@ -1567,7 +1599,7 @@ export function initializeModals(appContext) {
         if (!startupForm.hidden) document.getElementById('btnStartupPalette').focus();
     });
     startupForm.addEventListener('input', () => {
-        document.getElementById('startupBrushValue').value = document.getElementById('startupBrushSize').value;
+        document.getElementById('startupBrushValue').value = brushSizeLabel(Number(document.getElementById('startupBrushSize').value));
         startupStatus.textContent = '';
     });
     document.getElementById('btnResetStartup').addEventListener('click', () => {

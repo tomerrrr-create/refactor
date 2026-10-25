@@ -1,3 +1,4 @@
+import { BRUSH_SIZES } from './brush-footprint.js';
 import { SIZES, SYMMETRY_MODES } from './constants.js';
 
 export const SIM_INIT_STORAGE_KEY = 'colorGridSimulationInit';
@@ -5,8 +6,7 @@ export const DEFAULT_SIM_INIT = Object.freeze({ boardSize: 249, brushSize: 7 });
 
 export function validateSimInit(settings) {
     return settings && SIZES.includes(settings.boardSize) &&
-        Number.isInteger(settings.brushSize) && settings.brushSize >= 1 &&
-        settings.brushSize <= 15 && settings.brushSize % 2 === 1 &&
+        BRUSH_SIZES.includes(settings.brushSize) &&
         (!Object.hasOwn(settings, 'symmetry') || SYMMETRY_MODES.includes(settings.symmetry)) &&
         (!Object.hasOwn(settings, 'brushColor') || ['first', 'last', 'lightest', 'rainbow'].includes(settings.brushColor));
 }

@@ -1,3 +1,4 @@
+import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
 import { loadInterfaceZoom, saveInterfaceZoom } from './interface-zoom.js';
@@ -343,7 +344,8 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let wasLongPress = false;
       let startupSettings = loadProfileStartup(loadStartup());
       let simulationInitSettings = loadSimInit();
-      let brushSize = 1; 
+      let brushSize = 1;
+      let brushShape = 'circle';
       let isLifePlaying = false;
       let animationFrameId = null;
       let armedSimulation = null;
@@ -2007,7 +2009,7 @@ if (simulationName === 'magnet') {
             ...(separatorCycle.join() === DEFAULT_SEPARATOR_CYCLE.join() ? {} : { separatorCycle: [...separatorCycle] }),
             smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked,
                 bloom: isSoftBloom, bloomIntensity: softBloomIntensity },
-            brush: { size: brushSize, mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
+            brush: { size: brushSize, ...(brushShape === 'circle' ? {} : { shape: brushShape }), mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules }, turing: { ...turingRules } }
@@ -2047,8 +2049,7 @@ if (simulationName === 'magnet') {
         dom.saveSmoothImage.checked = settings.smoothing.export;
         document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
         if (!startup) brushSize = settings.brush.size;
-        document.getElementById('brushSizeSlider').value = brushSize;
-        document.getElementById('brushSizeValue').textContent = brushSize;
+        brushShape = settings.brush.shape || 'circle';
         // On app opening, Startup owns the brush and symmetry. Profile changes
         // during a session still restore the profile's current working choices.
         const brush = startup ? settings.startup : settings.brush;
@@ -2263,10 +2264,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 selectedColor = selectedColorIndex >= 0 ? currentPalette[selectedColorIndex] : null;
 
                 brushSize = simulationInitSettings.brushSize;
-                const brushSizeSlider = document.getElementById('brushSizeSlider');
-                const brushSizeValue = document.getElementById('brushSizeValue');
-                if (brushSizeSlider) brushSizeSlider.value = brushSize;
-                if (brushSizeValue) brushSizeValue.textContent = brushSize;
+
 
 
 
@@ -3049,30 +3047,10 @@ function updateLayout() {
         }
     }
 
-function getTilesInRadius(centerIndex, radius) {
-    if (radius <= 1) return [centerIndex];
-
-    const tilesInRadius = new Set();
-    const centerCol = centerIndex % n;
-    const centerRow = Math.floor(centerIndex / n);
-    const r = Math.floor(radius / 2);
-
-    for (let rowOffset = -r; rowOffset <= r; rowOffset++) {
-        for (let colOffset = -r; colOffset <= r; colOffset++) {
-            const dist = Math.sqrt(rowOffset * rowOffset + colOffset * colOffset);
-            if (dist <= r) {
-                const targetRow = centerRow + rowOffset;
-                const targetCol = centerCol + colOffset;
-                if (targetRow >= 0 && targetRow < n && targetCol >= 0 && targetCol < n) {
-                    tilesInRadius.add(targetRow * n + targetCol);
-                }
-            }
-        }
-    }
-    return Array.from(tilesInRadius);
+function getTilesInRadius(centerIndex, size) {
+    return getBrushTiles(centerIndex, n, size, brushShape);
 }
 
-      
     function getSymmetricIndices(index) {
           if (index === -1) return [];
           if (symmetryMode === 'off') return [index];
@@ -4946,6 +4924,11 @@ else if (action.eventName === 'Invert Colors') {
             isRainbowModeActive: () => isRainbowModeActive,
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
+            getBrush: () => ({ size: brushSize, shape: brushShape }),
+            setBrush: ({ size, shape }) => {
+                if (!BRUSH_SIZES.includes(size) || !BRUSH_SHAPES.includes(shape)) throw new RangeError('Invalid brush');
+                brushSize = size; brushShape = shape; settingsProfiles?.scheduleCapture();
+            },
             switchToPalette: index => switchToPalette(index, { adapt: true }),
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
             getGameOfLifeCycle: () => ({ slots: gameOfLifeCycle.map(cloneGameOfLifeRules), sources: [...gameOfLifeSources], yoursRules: cloneGameOfLifeRules(personalGameOfLifeRules), index: ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode) }),
@@ -5032,8 +5015,7 @@ applySortMethod,
         C.PALETTES.forEach(p => { p.colors = sortColorsArray(p.originalColors, currentSortMethod); });
         updateSortButtonUI();
         brushSize = startupSettings.brushSize;
-        document.getElementById('brushSizeSlider').value = brushSize;
-        document.getElementById('brushSizeValue').textContent = brushSize;
+
         symmetryMode = startupSettings.symmetry;
         isRainbowModeActive = startupSettings.brushColor === 'rainbow';
         const brightnessOrder = sortColorsArray(palette(), 'luminance');
@@ -5258,17 +5240,6 @@ dom.btnColorPicker.addEventListener('keydown', event => {
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
             btn.addEventListener('pointercancel', hideLongPressDisplay);
         });
-// Brush Size Slider Logic
-const brushSizeSlider = document.getElementById('brushSizeSlider');
-const brushSizeValue = document.getElementById('brushSizeValue');
-if (brushSizeSlider) {
-    brushSizeSlider.addEventListener('input', (e) => {
-        brushSize = parseInt(e.target.value, 10);
-        if(brushSizeValue) brushSizeValue.textContent = brushSize;
-    });
-}
-
-
         window.addEventListener('resize', updateLayout);
         window.addEventListener('contextmenu', e => e.preventDefault());
         
