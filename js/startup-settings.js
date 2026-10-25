@@ -1,4 +1,4 @@
-import { BRUSH_SIZES } from './brush-footprint.js';
+import { BRUSH_SIZES, normalizeBrushSize } from './brush-footprint.js';
 import { maximumSeparatorWidth } from './separator-cycle.js';
 import { PALETTES, SIZES, SEPARATORS, SYMMETRY_MODES } from './constants.js';
 import { SORT_MODES } from './colors.js';
@@ -27,8 +27,10 @@ export function normalizeStartup(settings) {
         brushColor: ['first', 'none', 'darkest', 'lightest', 'rainbow'],
         symmetry: SYMMETRY_MODES, interfaceMode: ['creative', 'simulation']
     };
-    return Object.fromEntries(Object.entries(allowed).map(([key, options]) =>
-        [key, options.includes(value[key]) ? value[key] : DEFAULT_STARTUP[key]]));
+    return Object.fromEntries(Object.entries(allowed).map(([key, options]) => {
+        const candidate = key === 'brushSize' ? normalizeBrushSize(value[key]) : value[key];
+        return [key, options.includes(candidate) ? candidate : DEFAULT_STARTUP[key]];
+    }));
 }
 
 export function loadStartup(storage) {

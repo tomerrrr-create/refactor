@@ -16,13 +16,13 @@ try{for(const width of [390,320]){
  const context=await browser.newContext({viewport:{width,height:width===390?844:568},isMobile:true,hasTouch:true,serviceWorkers:'block'});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
- source=source.replace('      initializeApp();',`window.swipeTest={open:()=>{activePaletteIndex=C.PALETTES.findIndex(p=>p.colors.length===264);selectedColorIndex=-1;selectedColor=null;modals.openColorPickerModal();},state:()=>({color:selectedColorIndex,brush:brushSize,shape:brushShape})};initializeApp().then(()=>swipeTest.ready=true);`);
+ source=source.replace('      initializeApp();',`window.swipeTest={open:()=>{activePaletteIndex=C.PALETTES.findIndex(p=>p.colors.length===264);selectedColorIndex=-1;selectedColor=null;modals.openColorPickerModal();},page:()=>colorPickerPage,state:()=>({color:selectedColorIndex,brush:brushSize,shape:brushShape})};initializeApp().then(()=>swipeTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  await page.goto(base);await page.waitForFunction(()=>window.swipeTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  await page.evaluate(()=>swipeTest.open());await page.waitForTimeout(350);
  const cdp=await context.newCDPSession(page),body=page.locator('.brush-picker-body'),grid=page.locator('#colorPickerSwatches');
- const activePage=()=>page.locator('#colorPickerPagination .active').getAttribute('data-page');
+ const activePage=()=>page.evaluate(()=>String(swipeTest.page()));
  const position=()=>body.evaluate(e=>({scroll:e.scrollTop,top:e.querySelector('#colorPickerSwatches').getBoundingClientRect().top}));
  const drag=async(start,dx,dy,check)=>{
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[start]});

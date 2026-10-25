@@ -92,7 +92,6 @@ spiralSettingsModal: document.getElementById('spiralSettingsModal'),
 
   // Color Picker Modal Elements
   colorPickerPaletteName: document.getElementById('colorPickerPaletteName'),
-  colorPickerPagination: document.getElementById('colorPickerPagination'),
   colorPickerSwatches: document.getElementById('colorPickerSwatches'),
 
   // Technician menu

@@ -1,4 +1,4 @@
-import { BRUSH_SIZES, BRUSH_SHAPES } from './brush-footprint.js';
+import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
 import * as C from './constants.js';
@@ -59,6 +59,9 @@ function validCycle(slots, chi) {
 
 export function validateWorkspaceSettings(value) {
     const settings = mergeKnown(defaultWorkspaceSettings(), value);
+    settings.brush.size = normalizeBrushSize(settings.brush.size);
+    settings.startup.brushSize = normalizeBrushSize(settings.startup.brushSize);
+    settings.simulationInit.brushSize = normalizeBrushSize(settings.simulationInit.brushSize);
     const r = settings.rules;
     if (Object.hasOwn(settings, 'evolutionTuning')) settings.evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
     const valid = equal(normalizeStartup(settings.startup), settings.startup) && validateSimInit(settings.simulationInit) &&

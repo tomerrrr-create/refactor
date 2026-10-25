@@ -182,7 +182,7 @@ test('macro groups paused motion into one undo action, independently of the reco
 
 for(const shape of ['circle','square','diamond']) for(const live of [false,true]) {
  test(`${shape} XL paints safely in ${live?'live simulation':'creative'} mode, one stroke and correct history ownership`,()=>{
-  const h=harness({live,brush:21,shape});
+  const h=harness({live,brush:23,shape});
   h.down(45,45); h.up(45,45);
   assert(h.c.boardState.every(tile=>tile.k===0));
   assert.equal(h.history.length,live?0:1);

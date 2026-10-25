@@ -647,22 +647,7 @@ function renderColorPickerContent() {
 
     app.dom.colorPickerSwatches.appendChild(frag);
 
-    app.dom.colorPickerPagination.innerHTML = '';
-    if (totalPages > 1) {
-        for (let i = 0; i < totalPages; i++) {
-            const dot = document.createElement('button');
-            dot.type = 'button';
-            dot.setAttribute('aria-label', app.getText('brush_color_page').replace('{n}', i + 1));
-            dot.setAttribute('aria-pressed', String(i === currentPage));
-            dot.className = 'pagination-dot' + (i === currentPage ? ' active' : '');
-            dot.dataset.page = i;
-            dot.addEventListener('click', (e) => {
-                app.setColorPickerPage(parseInt(e.target.dataset.page, 10));
-                renderColorPickerContent();
-            });
-            app.dom.colorPickerPagination.appendChild(dot);
-        }
-    }
+    document.getElementById('colorPageNudge').hidden = totalPages <= 1;
     brushPicker?.refresh();
 }
 

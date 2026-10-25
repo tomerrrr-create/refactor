@@ -712,18 +712,6 @@ body {
     text-align: center;
     pointer-events: none;
 }
-#colorPickerPagination .pagination-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #4a4a4a;
-    margin: 0 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-}
-#colorPickerPagination .pagination-dot.active {
-    background-color: #eaeaea;
-}
 #colorPickerModal .color-swatch-inner {
     position: absolute;
     inset: 0;
@@ -2156,17 +2144,17 @@ body.wind-mode #board { cursor: crosshair; }
 .brush-shape-options, .brush-size-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
 .brush-shape-options button, .brush-size-options button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; min-width: 0; border: 1px solid #b89a5730; border-radius: 8px; padding: 7px; color: #bfc0b5; background: #ffffff03; font: inherit; font-size: 13px; cursor: pointer; overflow-wrap: anywhere; }
 .brush-shape-options svg { width: 20px; height: 20px; flex-shrink: 0; }
-.brush-control-stack { min-width: 0; }
-.brush-control-stack .brush-size-options { margin-top: 7px; }
+.brush-control-stack { display: contents; }
+.brush-control-grid { grid-row: 2; grid-column: 1; min-width: 0; display: grid; gap: 7px; }
 .brush-shape-options button { color: #c9bca0; background: #b89a5710; border-color: #b89a5745; }
 .brush-control-stack .brush-shape-options button[aria-pressed="true"] { background: #d5aa4829; }
 .brush-shape-options button[aria-pressed="true"], .brush-size-options button[aria-pressed="true"] { border-color: #d8b76ba0; color: #f0d797; background: #d5aa4817; }
-.brush-size-heading { margin: 0 0 10px; height: 28px; display: flex; align-items: center; color: #dfc484; }
+.brush-size-heading { grid-row: 1; grid-column: 1; margin: 0; height: 28px; display: flex; align-items: center; color: #dfc484; }
 .brush-signature { display: block; width: 104px; height: 28px; }
-.brush-size-and-preview { display: grid; grid-template-columns: minmax(0,1fr) 84px; gap: 14px; align-items: center; }
-.brush-footprint { margin: 0; min-width: 0; }
+.brush-size-and-preview { display: grid; grid-template-columns: minmax(0,1fr) 84px; column-gap: 14px; row-gap: 10px; align-items: center; }
+.brush-footprint { grid-row: 2; grid-column: 2; position: relative; margin: 0; min-width: 0; height: 84px; }
 #brushFootprintPreview { display: block; width: 84px; height: 84px; border-radius: 6px; background: #10120f; padding: 3px; box-sizing: border-box; }
-#brushFootprintCaption { margin-top: 8px; text-align: center; font-size: 12px; color: #c0b596; font-variant-numeric: tabular-nums; direction: ltr; }
+#brushFootprintCaption { position: absolute; top: 100%; inset-inline: 0; margin-top: 8px; text-align: center; font-size: 12px; color: #c0b596; font-variant-numeric: tabular-nums; direction: ltr; }
 #colorPickerModal .color-swatch { padding: 0; aspect-ratio: 1; min-width: 0; }
 #colorPickerModal #colorPickerSwatches { width: min(100%, 272px); margin-inline: auto; gap: 8px; touch-action: pan-y; }
 #colorPickerModal .color-swatch:hover { transform: none; }
@@ -2184,7 +2172,10 @@ body.wind-mode #board { cursor: crosshair; }
 #colorPickerModal #colorPickerPaletteName { display: flex; align-items: center; justify-content: center; height: 28.5px; font-size: 26px; line-height: 1; }
 #colorPickerModal #colorPickerPaletteName > :is(svg,span) { width: 28px !important; height: 28px !important; font-size: 26px !important; }
 
-#colorPickerPagination:empty { display: none; }
-#colorPickerModal #colorPickerPagination .pagination-dot { width: 20px; height: 24px; margin: 0 2px; border-radius: 0; background: transparent; padding: 0; cursor: pointer; }
-#colorPickerModal .pagination-dot::after { content: ''; display: block; margin: auto; width: 7px; height: 7px; border-radius: 50%; background: #62645b; }
-#colorPickerModal .pagination-dot.active::after { background: #e3c677; }
+
+.color-picker-grid-wrap { position: relative; width: min(100%, 272px); margin-inline: auto; }
+.color-page-nudge { position: absolute; top: 50%; right: -10px; width: 8px; height: 24px; margin-top: -12px; color: #d5c49e; opacity: .12; pointer-events: none; animation: color-page-hint 4s ease-in-out infinite; }
+.color-page-nudge[hidden] { display: none; }
+.color-page-nudge svg { width: 100%; height: 100%; }
+@keyframes color-page-hint { 0%, 100% { opacity: .10; } 50% { opacity: .32; } }
+@media (prefers-reduced-motion: reduce) { .color-page-nudge { animation: none; opacity: .18; } }

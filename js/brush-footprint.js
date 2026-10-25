@@ -1,6 +1,8 @@
-export const BRUSH_SIZES = Object.freeze([1, 3, 5, 7, 9, 11, 13, 15, 21]);
+export const BRUSH_SIZES = Object.freeze([1, 3, 5, 7, 9, 11, 13, 15, 23]);
 export const BRUSH_SHAPES = Object.freeze(['circle', 'square', 'diamond']);
-export const brushSizeLabel = size => size === 21 ? 'XL' : String(size);
+export const brushSizeLabel = size => size === 23 ? 'XL' : String(size);
+// Preserve existing XL preferences when its width changes from 21 to 23.
+export const normalizeBrushSize = size => size === 21 ? 23 : size;
 const cache = new Map();
 
 export function getBrushOffsets(size, shape = 'circle') {
