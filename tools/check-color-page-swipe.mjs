@@ -46,15 +46,19 @@ try{for(const width of [390,320]){
   assert.deepEqual(await page.evaluate(()=>swipeTest.state()),before,'swipe never selects a color accidentally');
  }
  // Intentional vertical movement within colors scrolls, without paging.
+ const maxScroll=await body.evaluate(e=>e.scrollHeight-e.clientHeight);
  const box=await grid.boundingBox(),pageBefore=await activePage();
  await drag({x:box.x+box.width/2,y:box.y+120},3,-80);
  await page.waitForTimeout(500);
- assert.equal(await activePage(),pageBefore);assert(await body.evaluate(e=>e.scrollTop>0),'vertical color-area gesture still scrolls');
+ assert.equal(await activePage(),pageBefore);
+ if(maxScroll>1)assert(await body.evaluate(e=>e.scrollTop>0),'vertical color-area gesture still scrolls; max='+maxScroll);
+ else assert.equal(await body.evaluate(e=>e.scrollTop),0,'fitting content stays still');
  // Vertical movement outside colors is also unaffected.
  await body.evaluate(e=>e.scrollTop=e.scrollHeight);await page.waitForTimeout(100);
  const tools=await page.locator('.brush-shape-options').boundingBox(),scrollBefore=await body.evaluate(e=>e.scrollTop);
  await drag({x:tools.x+tools.width/2,y:tools.y+20},0,70);await page.waitForTimeout(500);
- assert(await body.evaluate(e=>e.scrollTop)<scrollBefore,'vertical scrolling outside colors remains usable');
+ if(maxScroll>1)assert(await body.evaluate(e=>e.scrollTop)<scrollBefore,'vertical scrolling outside colors remains usable');
+ else assert.equal(await body.evaluate(e=>e.scrollTop),0);
  assert.equal(await activePage(),pageBefore);
  // A subsequent normal tap still selects immediately and keeps the picker open.
  await body.evaluate(e=>e.scrollTop=0);await page.waitForTimeout(100);

@@ -15,7 +15,7 @@ export function initializeBrushPicker(app) {
     for (const shape of BRUSH_SHAPES) {
         const button = document.createElement('button');
         button.type = 'button'; button.dataset.brushShape = shape;
-        button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${icons[shape]}</svg><span></span>`;
+        button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${icons[shape]}</svg>`;
         button.addEventListener('click', () => { app.setBrush({ ...app.getBrush(), shape }); refresh(); });
         shapes.append(button);
     }
@@ -37,7 +37,9 @@ export function initializeBrushPicker(app) {
         shapes.closest('.brush-picker-tools').dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         for (const button of shapes.children) {
             button.setAttribute('aria-pressed', String(button.dataset.brushShape === shape));
-            button.querySelector('span').textContent = app.getText('brush_' + button.dataset.brushShape);
+            const label = app.getText('brush_' + button.dataset.brushShape);
+            button.setAttribute('aria-label', label);
+            button.title = label;
         }
         for (const button of sizes.children) {
             button.setAttribute('aria-pressed', String(Number(button.dataset.brushSize) === size));

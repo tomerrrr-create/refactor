@@ -575,14 +575,10 @@ function renderColorPickerContent() {
         currentPage = 0;
     }
 
-    if (totalPages > 1) {
-      app.dom.colorPickerHeader.style.display = 'flex';
-    } else {
-      app.dom.colorPickerHeader.style.display = 'none';
-    }
-
     const displayIcon = currentPalette.iconHTML || currentPalette.emoji || '';
     app.dom.colorPickerPaletteName.innerHTML = displayIcon;
+    document.getElementById('brushPickerTitle').setAttribute('aria-label', app.getText('brush_picker_title') + ' — ' + getPaletteDisplayName(currentPalette));
+    document.getElementById('colorPickerPageStatus').textContent = totalPages > 1 ? app.getText('brush_color_page').replace('{n}', currentPage + 1) : '';
 
     app.dom.colorPickerSwatches.innerHTML = '';
     const frag = document.createDocumentFragment();
@@ -1353,15 +1349,6 @@ export function initializeModals(appContext) {
         }
     });
     app.dom.colorPickerModal.addEventListener('click', (e) => { if (e.target === app.dom.colorPickerModal) { closeColorPickerModal(); } });
-    
-    app.dom.btnNextPalette.addEventListener('click', () => {
-        app.navigateColorPages(true);
-        renderColorPickerContent();
-    });
-    app.dom.btnPrevPalette.addEventListener('click', () => {
-        app.navigateColorPages(false);
-        renderColorPickerContent();
-    });
     
     app.dom.colorPickerSwatches.addEventListener('wheel', handlePaletteWheel, { passive: false });
     bindColorPageSwipe(app.dom.colorPickerSwatches, { onPage: forward => {

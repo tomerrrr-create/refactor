@@ -1653,7 +1653,6 @@ button, .ctrl {
 .modal-dismiss-bar .modal-dismiss { background: #090a09e8; }
 #saveResetConfirmation .modal-dismiss, #workspaceResetConfirmation .modal-dismiss { background: transparent; }
 #colorPickerModal > div, #spiralSettingsModal > div, #gravitationalSortSettingsModal > div { max-height: calc(100dvh - 32px); overflow-y: auto; box-sizing: border-box; }
-#colorPickerHeader { padding-top: 28px; }
 #golSettingsTitle, #spiralSettingsTitle, #gsSettingsTitle { padding-inline: 24px; }
 
 .pwa-update { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 1100; display: flex; align-items: center; gap: 12px; width: min(440px, calc(100vw - 32px)); box-sizing: border-box; padding: 12px 14px; border: 1px solid #b28b3659; border-radius: 12px; background: #10110ff5; color: #c3b99e; font-family: inherit; line-height: 1.5; }
@@ -2157,8 +2156,6 @@ body.wind-mode #board { cursor: crosshair; }
 .brush-shape-options, .brush-size-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
 .brush-shape-options button, .brush-size-options button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; min-width: 0; border: 1px solid #b89a5730; border-radius: 8px; padding: 7px; color: #bfc0b5; background: #ffffff03; font: inherit; font-size: 13px; cursor: pointer; overflow-wrap: anywhere; }
 .brush-shape-options svg { width: 20px; height: 20px; flex-shrink: 0; }
-.brush-shape-options button { column-gap: 5px; padding-inline: 5px; }
-.brush-shape-options span { white-space: nowrap; }
 .brush-shape-options button[aria-pressed="true"], .brush-size-options button[aria-pressed="true"] { border-color: #d8b76ba0; color: #f0d797; background: #d5aa4817; }
 .brush-size-heading { margin: 16px 0 10px; font-size: 13px; color: #bfc0b5; text-align: start; }
 .brush-size-and-preview { display: grid; grid-template-columns: minmax(0,1fr) 84px; gap: 14px; align-items: center; }
@@ -2169,19 +2166,20 @@ body.wind-mode #board { cursor: crosshair; }
 #colorPickerModal #colorPickerSwatches { width: min(100%, 272px); margin-inline: auto; gap: 8px; touch-action: pan-y; }
 #colorPickerModal .color-swatch:hover { transform: none; }
 #colorPickerModal .color-swatch:focus-visible, .brush-picker-panel button:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
-#colorPickerPagination:empty { display: none; }
-#colorPickerModal #colorPickerPaletteName { margin-inline: 6px; }
-#colorPickerModal #colorPickerPaletteName > svg { width: 26px !important; height: 26px !important; }
-#colorPickerModal #colorPickerPagination .pagination-dot { width: 20px; height: 24px; margin: 0 2px; border-radius: 0; background: transparent; padding: 0; cursor: pointer; }
-#colorPickerModal .pagination-dot::after { content: ''; display: block; margin: auto; width: 7px; height: 7px; border-radius: 50%; background: #62645b; }
-#colorPickerModal .pagination-dot.active::after { background: #e3c677; }
 @media (max-width: 380px) {
     .brush-picker-body { padding-inline: 13px; }
     #colorPickerModal #colorPickerSwatches { gap: 6px; }
-    .brush-shape-options button { flex-direction: column; gap: 4px; }
 }
 @media (hover: hover) and (pointer: fine) {
     .brush-picker-body::-webkit-scrollbar { width: 6px; }
     .brush-picker-body::-webkit-scrollbar-thumb { border-radius: 999px; background: #756342; }
     .brush-shape-options button:hover, .brush-size-options button:hover { border-color: #d8b76b80; }
 }
+
+#colorPickerModal #colorPickerPaletteName { display: flex; align-items: center; justify-content: center; height: 28.5px; font-size: 26px; line-height: 1; }
+#colorPickerModal #colorPickerPaletteName > :is(svg,span) { width: 28px !important; height: 28px !important; font-size: 26px !important; }
+
+#colorPickerPagination:empty { display: none; }
+#colorPickerModal #colorPickerPagination .pagination-dot { width: 20px; height: 24px; margin: 0 2px; border-radius: 0; background: transparent; padding: 0; cursor: pointer; }
+#colorPickerModal .pagination-dot::after { content: ''; display: block; margin: auto; width: 7px; height: 7px; border-radius: 50%; background: #62645b; }
+#colorPickerModal .pagination-dot.active::after { background: #e3c677; }

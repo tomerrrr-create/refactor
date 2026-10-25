@@ -91,12 +91,9 @@ spiralSettingsModal: document.getElementById('spiralSettingsModal'),
   projectFileInput: document.getElementById('projectFileInput'),
 
   // Color Picker Modal Elements
-  colorPickerHeader: document.getElementById('colorPickerHeader'),
   colorPickerPaletteName: document.getElementById('colorPickerPaletteName'),
-  colorPickerSwatches: document.getElementById('colorPickerSwatches'),
-  btnPrevPalette: document.getElementById('btnPrevPalette'),
-  btnNextPalette: document.getElementById('btnNextPalette'),
   colorPickerPagination: document.getElementById('colorPickerPagination'),
+  colorPickerSwatches: document.getElementById('colorPickerSwatches'),
 
   // Technician menu
   btnOpenDebug: document.getElementById('btnOpenDebug'),

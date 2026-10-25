@@ -37,7 +37,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const shape=async value=>p.locator(`[data-brush-shape="${value}"]`).click();
  const size=async value=>p.locator(`[data-brush-size="${value}"]`).click();
  await p.evaluate(()=>brushTest.setup());await open();
- assert.equal(await p.locator('[data-brush-shape]').count(),3);assert.equal(await p.locator('[data-brush-size]').count(),9);
+ assert.equal(await p.locator('[data-brush-shape]').count(),3);assert.equal(await p.locator('#btnNextPalette, #btnPrevPalette, #colorPickerHeader').count(),0);assert(await p.locator('[data-brush-shape]').evaluateAll(buttons=>buttons.every(b=>!b.textContent.trim()&&b.getAttribute('aria-label')&&b.title)));assert(await p.locator('#colorPickerPaletteName').evaluate(e=>e.closest('.brush-picker-heading')!==null));assert.equal(await p.locator('[data-brush-size]').count(),9);
  assert.equal(await p.locator('[data-brush-size="21"]').textContent(),'XL');
  const before=await p.evaluate(()=>brushTest.state());
  await p.locator('#colorPickerSwatches button[data-color]').nth(3).click();
@@ -47,6 +47,8 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  assert(geometry.x>=10&&geometry.y>=10&&geometry.x+geometry.w<=config.width-10&&geometry.y+geometry.h<=config.height-10);assert(!geometry.overflow);
  assert(geometry.w<=340 && geometry.x>=24,'compact width retains 24px side margins');
  assert(geometry.h<=config.height*.82+1,'height is bounded to 82% of the viewport');
+ await p.locator('.brush-picker-body').evaluate(body=>body.scrollTop=0);
+ const headerGeometry=await p.locator('.brush-picker-heading').evaluate(header=>({height:header.getBoundingClientRect().height,gap:document.getElementById('colorPickerSwatches').getBoundingClientRect().top-header.getBoundingClientRect().bottom,border:getComputedStyle(header).borderBottomWidth}));assert.equal(headerGeometry.height,65.5);assert.equal(headerGeometry.gap,18);assert.equal(headerGeometry.border,'1px');
  const swatch=await p.locator('#colorPickerSwatches button[data-color]').first().boundingBox();assert(swatch.width>=43.9&&swatch.width<=48.1,'colors remain compact and touchable');
  await p.screenshot({path:path.join(artifacts,`${config.lang}-picker.png`)});
  await p.locator('#btnColorPickerCloseTop').click();await p.waitForTimeout(320);await open();assert.equal(await p.locator('[data-brush-size="21"]').getAttribute('aria-pressed'),'true');await close();
@@ -87,7 +89,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   await p.waitForTimeout(210);await wheel(-100);
  }
  assert(await p.locator('.brush-picker-tools').evaluate(tools=>{const event=new WheelEvent('wheel',{deltaY:100,bubbles:true,cancelable:true});tools.dispatchEvent(event);return !event.defaultPrevented;}),'tools do not intercept wheel scrolling');
- await p.locator('#btnNextPalette').click();await p.locator('#colorPickerSwatches button[data-color]').first().click();assert((await p.evaluate(()=>brushTest.state())).selectedColorIndex>=24);
+ await p.locator('#colorPickerPagination [data-page="1"]').click();await p.locator('#colorPickerSwatches button[data-color]').first().click();assert((await p.evaluate(()=>brushTest.state())).selectedColorIndex>=24);
  await p.locator('#colorPickerSwatches button').first().click();assert((await p.evaluate(()=>brushTest.state())).rainbow);assert.equal((await p.evaluate(()=>brushTest.state())).brushSize,21);await close();await tap(15,15);state=await p.evaluate(()=>brushTest.state());assert.equal(state.history,1);assert(state.tiles.some(t=>t[0]!==2));
  // Tile hold flow: choosing color still edits that tile immediately, without closing.
  await p.evaluate(()=>brushTest.setup());await open(480);await p.locator('#colorPickerSwatches button[data-color]').first().click();state=await p.evaluate(()=>brushTest.state());assert.equal(state.tiles[480][0],0);assert.equal(state.tiles.filter(t=>t[0]===0).length,1);assert.equal(state.history,1);await close();
