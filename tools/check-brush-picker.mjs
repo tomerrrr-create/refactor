@@ -40,8 +40,11 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  assert.equal(await p.locator('[data-brush-shape]').count(),3);assert.equal(await p.locator('#btnNextPalette, #btnPrevPalette, #colorPickerHeader').count(),0);assert(await p.locator('[data-brush-shape]').evaluateAll(buttons=>buttons.every(b=>!b.textContent.trim()&&b.getAttribute('aria-label')&&b.title)));assert(await p.locator('#colorPickerPaletteName').evaluate(e=>e.closest('.brush-picker-heading')!==null));assert.equal(await p.locator('[data-brush-size]').count(),9);
  const rows=await p.evaluate(()=>({shapes:[...document.querySelectorAll('[data-brush-shape]')].map(b=>{const r=b.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};}),sizes:[...document.querySelectorAll('[data-brush-size]')].slice(0,3).map(b=>{const r=b.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};})}));
  for(let i=0;i<3;i++){assert.equal(rows.shapes[i].x,rows.sizes[i].x);assert.equal(rows.shapes[i].w,rows.sizes[i].w);assert.equal(rows.shapes[i].h,rows.sizes[i].h);assert(rows.shapes[i].y+rows.shapes[i].h<rows.sizes[i].y);}
- const alignment=await p.evaluate(()=>{const grid=document.querySelector('.brush-control-grid').getBoundingClientRect(),preview=document.getElementById('brushFootprintPreview').getBoundingClientRect();return Math.abs(grid.top+grid.height/2-preview.top-preview.height/2);});
- assert(alignment<.1,'preview square is centered on four rows');
+ const alignment=await p.evaluate(()=>{const rect=el=>el.getBoundingClientRect(),center=el=>{const r=rect(el);return r.left+r.width/2;},tools=document.querySelector('.brush-picker-tools'),middle=center(tools);return ['.brush-signature','.brush-shape-options','.brush-size-options'].map(selector=>Math.abs(center(document.querySelector(selector))-middle));});
+ assert(alignment.every(offset=>offset<.1),'signature, shapes and sizes share the center of the panel');
+ assert.equal(await p.locator('#brushFootprintPreview, #brushFootprintCaption, .brush-footprint').count(),0);
+ const tones=await p.evaluate(()=>{const style=selector=>{const s=getComputedStyle(document.querySelector(selector));return {color:s.color,border:s.borderColor,background:s.backgroundImage};};return {shape:style('[data-brush-shape][aria-pressed="true"]'),size:style('[data-brush-size][aria-pressed="true"]')};});
+ assert.notEqual(tones.shape.color,tones.size.color);assert.notEqual(tones.shape.border,tones.size.border);assert(tones.shape.background.includes('linear-gradient'),'shape buttons have a dark metallic finish');
  assert.equal(await p.locator('#colorPickerPagination').count(),0);
  assert.equal(await p.locator('[data-brush-size="23"]').textContent(),'XL');
  const before=await p.evaluate(()=>brushTest.state());

@@ -1,4 +1,4 @@
-import { BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel, getBrushOffsets } from './brush-footprint.js';
+import { BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { onLanguageChange } from './i18n.js';
 
 const icons = {
@@ -10,8 +10,6 @@ const icons = {
 export function initializeBrushPicker(app) {
     const shapes = document.getElementById('brushShapeOptions');
     const sizes = document.getElementById('brushSizeOptions');
-    const preview = document.getElementById('brushFootprintPreview');
-    const caption = document.getElementById('brushFootprintCaption');
     for (const shape of BRUSH_SHAPES) {
         const button = document.createElement('button');
         button.type = 'button'; button.dataset.brushShape = shape;
@@ -45,23 +43,7 @@ export function initializeBrushPicker(app) {
             button.setAttribute('aria-pressed', String(Number(button.dataset.brushSize) === size));
             button.setAttribute('aria-label', app.getText('brush_width').replace('{n}', button.dataset.brushSize));
         }
-        const width = Math.max(5, size), r = Math.floor(size / 2), margin = Math.floor((width - size) / 2);
-        const cells = new Set(getBrushOffsets(size, shape).map(([x,y]) => `${x+r+margin}:${y+r+margin}`));
-        const palette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
-        const color = app.isRainbowModeActive() ? null : palette[app.getSelectedColorIndex()] || '#e3c677';
-        preview.replaceChildren();
-        preview.setAttribute('viewBox', `0 0 ${width * 4} ${width * 4}`);
-        for (let y = 0; y < width; y++) for (let x = 0; x < width; x++) {
-            const cell = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            cell.setAttribute('x', x*4); cell.setAttribute('y', y*4);
-            cell.setAttribute('width', '3.4'); cell.setAttribute('height', '3.4'); cell.setAttribute('rx', '.35');
-            const painted = cells.has(`${x}:${y}`);
-            cell.setAttribute('fill', painted ? color || palette[(y*width+x)%palette.length] : '#353832');
-            if (painted) { cell.setAttribute('stroke', '#a18e61'); cell.setAttribute('stroke-width', '.18'); }
-            preview.append(cell);
-        }
-        caption.textContent = `${size} × ${size}`;
-        preview.setAttribute('aria-label', `${app.getText('brush_' + shape)} · ${app.getText('brush_width').replace('{n}', size)}`);
+
     }
     onLanguageChange(refresh);
     return { refresh };
