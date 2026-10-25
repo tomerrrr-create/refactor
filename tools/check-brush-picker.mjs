@@ -38,6 +38,8 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const size=async value=>p.locator(`[data-brush-size="${value}"]`).click();
  await p.evaluate(()=>brushTest.setup());await open();
  assert.equal(await p.locator('[data-brush-shape]').count(),3);assert.equal(await p.locator('#btnNextPalette, #btnPrevPalette, #colorPickerHeader').count(),0);assert(await p.locator('[data-brush-shape]').evaluateAll(buttons=>buttons.every(b=>!b.textContent.trim()&&b.getAttribute('aria-label')&&b.title)));assert(await p.locator('#colorPickerPaletteName').evaluate(e=>e.closest('.brush-picker-heading')!==null));assert.equal(await p.locator('[data-brush-size]').count(),9);
+ const rows=await p.evaluate(()=>({shapes:[...document.querySelectorAll('[data-brush-shape]')].map(b=>{const r=b.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};}),sizes:[...document.querySelectorAll('[data-brush-size]')].slice(0,3).map(b=>{const r=b.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};})}));
+ for(let i=0;i<3;i++){assert.equal(rows.shapes[i].x,rows.sizes[i].x);assert.equal(rows.shapes[i].w,rows.sizes[i].w);assert.equal(rows.shapes[i].h,rows.sizes[i].h);assert(rows.shapes[i].y+rows.shapes[i].h<rows.sizes[i].y);}
  assert.equal(await p.locator('[data-brush-size="21"]').textContent(),'XL');
  const before=await p.evaluate(()=>brushTest.state());
  await p.locator('#colorPickerSwatches button[data-color]').nth(3).click();
