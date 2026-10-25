@@ -25,6 +25,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  undo,redo,record:()=>artRecipeLog.join('\\n'),getSettings:getWorkspaceSettings,
  replay:text=>{pauseLife();isExecutingMacroCommand=true;try{for(const action of parseMacroText(text))executeMacroAction(action);}finally{isExecutingMacroCommand=false;}},
  largePalette:()=>{activePaletteIndex=C.PALETTES.findIndex(p=>p.colors.length===264);selectedColorIndex=0;selectedColor=palette()[0];},
+ smallPalette:()=>{activePaletteIndex=C.PALETTES.findIndex(p=>p.colors.length>=4&&p.colors.length<=C.COLORS_PER_PAGE);selectedColorIndex=0;selectedColor=palette()[0];},
  live:()=>{if(armedSimulation!=='gravitationalSort')armSimulation('gravitationalSort');togglePlayPauseLife();},stop:pauseLife,gen:()=>currentGenerationCount
  };initializeApp().then(()=>brushTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -44,6 +45,9 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  let state=await p.evaluate(()=>brushTest.state());assert.equal(state.brushShape,'square');assert.equal(state.brushSize,21);assert.equal(state.selectedColorIndex,3);assert.deepEqual(state.tiles,before.tiles);assert(await p.locator('#colorPickerModal').evaluate(e=>e.classList.contains('modal-visible')));
  const geometry=await p.locator('.brush-picker-panel').evaluate(panel=>{const b=panel.getBoundingClientRect(),body=panel.querySelector('.brush-picker-body');return {x:b.x,y:b.y,w:b.width,h:b.height,overflow:body.scrollWidth>body.clientWidth+1};});
  assert(geometry.x>=10&&geometry.y>=10&&geometry.x+geometry.w<=config.width-10&&geometry.y+geometry.h<=config.height-10);assert(!geometry.overflow);
+ assert(geometry.w<=340 && geometry.x>=24,'compact width retains 24px side margins');
+ assert(geometry.h<=config.height*.82+1,'height is bounded to 82% of the viewport');
+ const swatch=await p.locator('#colorPickerSwatches button[data-color]').first().boundingBox();assert(swatch.width>=43.9&&swatch.width<=48.1,'colors remain compact and touchable');
  await p.screenshot({path:path.join(artifacts,`${config.lang}-picker.png`)});
  await p.locator('#btnColorPickerCloseTop').click();await p.waitForTimeout(320);await open();assert.equal(await p.locator('[data-brush-size="21"]').getAttribute('aria-pressed'),'true');await close();
  // Actual pointer input, all shapes, including single-cell and oversized brushes.
@@ -62,7 +66,28 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await p.evaluate(()=>{brushTest.setup();brushTest.mode('copy');brushTest.copySource();});await open();await shape('square');await size(3);await close();
  a=await point(5,5);b=await point(15,15);await p.mouse.move(a.x,a.y);await p.mouse.down();await p.mouse.move(b.x,b.y,{steps:5});await p.mouse.up();state=await p.evaluate(()=>brushTest.state());assert.equal(state.history,1);assert.equal(state.tiles.filter(t=>t[0]===1).length,10,'copy source plus nine destination cells');
  // Palette paging and rainbow leave the picker open and keep shape/size.
- await p.evaluate(()=>{brushTest.setup();brushTest.largePalette();});await open();await shape('diamond');await size(21);await p.locator('#btnNextPalette').click();await p.locator('#colorPickerSwatches button[data-color]').first().click();assert((await p.evaluate(()=>brushTest.state())).selectedColorIndex>=24);
+ await p.evaluate(()=>{brushTest.setup();brushTest.largePalette();});await open();await shape('diamond');await size(21);
+ // A normal vertical wheel pages only over the color grid. The debounce must
+ // consume extra events too, while wheel over the tools still scrolls normally.
+ await p.locator('#colorPickerSwatches').scrollIntoViewIfNeeded();
+ const wheel=async(deltaY)=>p.locator('#colorPickerSwatches').evaluate((grid,deltaY)=>{
+  const body=grid.closest('.brush-picker-body'),before=body.scrollTop;
+  const event=new WheelEvent('wheel',{deltaY,bubbles:true,cancelable:true});grid.dispatchEvent(event);
+  return {prevented:event.defaultPrevented,before,after:body.scrollTop};
+ },deltaY);
+ let event=await wheel(100);assert(event.prevented);assert.equal(event.after,event.before);assert.equal(await p.locator('#colorPickerPagination .active').getAttribute('data-page'),'1');
+ event=await wheel(100);assert(event.prevented);assert.equal(await p.locator('#colorPickerPagination .active').getAttribute('data-page'),'1','debounced event does not page twice');
+ await p.waitForTimeout(210);await wheel(-100);assert.equal(await p.locator('#colorPickerPagination .active').getAttribute('data-page'),'0','reverse wheel returns to previous page');
+ if(config.width===1280){
+  await p.waitForTimeout(210);await p.locator('#colorPickerSwatches').hover();
+  const scrollBefore=await p.locator('.brush-picker-body').evaluate(body=>body.scrollTop);
+  await p.mouse.wheel(0,100);await p.waitForTimeout(80);
+  assert.equal(await p.locator('#colorPickerPagination .active').getAttribute('data-page'),'1','real mouse wheel pages colors');
+  assert.equal(await p.locator('.brush-picker-body').evaluate(body=>body.scrollTop),scrollBefore);
+  await p.waitForTimeout(210);await wheel(-100);
+ }
+ assert(await p.locator('.brush-picker-tools').evaluate(tools=>{const event=new WheelEvent('wheel',{deltaY:100,bubbles:true,cancelable:true});tools.dispatchEvent(event);return !event.defaultPrevented;}),'tools do not intercept wheel scrolling');
+ await p.locator('#btnNextPalette').click();await p.locator('#colorPickerSwatches button[data-color]').first().click();assert((await p.evaluate(()=>brushTest.state())).selectedColorIndex>=24);
  await p.locator('#colorPickerSwatches button').first().click();assert((await p.evaluate(()=>brushTest.state())).rainbow);assert.equal((await p.evaluate(()=>brushTest.state())).brushSize,21);await close();await tap(15,15);state=await p.evaluate(()=>brushTest.state());assert.equal(state.history,1);assert(state.tiles.some(t=>t[0]!==2));
  // Tile hold flow: choosing color still edits that tile immediately, without closing.
  await p.evaluate(()=>brushTest.setup());await open(480);await p.locator('#colorPickerSwatches button[data-color]').first().click();state=await p.evaluate(()=>brushTest.state());assert.equal(state.tiles[480][0],0);assert.equal(state.tiles.filter(t=>t[0]===0).length,1);assert.equal(state.history,1);await close();
@@ -75,5 +100,6 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  // Startup and initialization lists expose exactly the nine supported sizes.
  await p.evaluate(()=>brushTest.tech());assert.equal(await p.locator('#startupBrushSize option').count(),9);assert.equal(await p.locator('#initBrushSize option').count(),9);await p.evaluate(()=>document.getElementById('technicianDialog').close());
  await open();await p.locator('#btnBrushPickerContinue').focus();await p.keyboard.press('Tab');assert(await p.evaluate(()=>document.getElementById('colorPickerModal').contains(document.activeElement)));await p.keyboard.press('Escape');await p.waitForTimeout(320);assert(!(await p.locator('#colorPickerModal').evaluate(e=>e.classList.contains('modal-visible'))));
+ await p.evaluate(()=>brushTest.smallPalette());await open();event=await wheel(100);assert(!event.prevented,'single-page palette allows ordinary content scrolling');await close();
  assert.deepEqual(errors,[]);results.push({...config,passed:true});console.log('PASS',JSON.stringify(config));await context.close();
 }await writeFile(path.join(artifacts,'results.json'),JSON.stringify(results,null,2));}finally{await browser.close();await new Promise(r=>server.close(r));}

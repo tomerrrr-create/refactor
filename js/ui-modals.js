@@ -38,10 +38,15 @@ function handleTouchEnd(e) {
 }
 
 function handlePaletteWheel(e) {
-    if (!e.shiftKey && Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
-    if (Date.now() - lastWheelTime < 200) return;
+    const colors = app.C.PALETTES[app.getActivePaletteIndex()].colors;
+    if (e.ctrlKey || colors.length <= app.C.COLORS_PER_PAGE) return;
+    const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    if (!delta) return;
+    // Consume the whole wheel gesture over a paged palette, including events
+    // during the debounce, so it cannot also scroll the surrounding dialog.
     e.preventDefault();
-    app.navigateColorPages((e.deltaX || e.deltaY) > 0);
+    if (Date.now() - lastWheelTime < 200) return;
+    app.navigateColorPages(delta > 0);
     renderColorPickerContent(); 
     lastWheelTime = Date.now();
 }
