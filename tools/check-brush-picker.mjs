@@ -30,8 +30,8 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  };initializeApp().then(()=>brushTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await p.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await p.goto(base);await p.waitForFunction(()=>window.brushTest?.ready);await p.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
- const open=async target=>{await p.evaluate(t=>brushTest.open(t),target);await p.locator('#btnBrushPickerContinue').waitFor({state:'visible'});};
- const close=async()=>{await p.locator('#btnBrushPickerContinue').click();await p.waitForTimeout(320);};
+ const open=async target=>{await p.evaluate(t=>brushTest.open(t),target);await p.locator('#btnColorPickerCloseTop').waitFor({state:'visible'});};
+ const close=async()=>{await p.locator('#btnColorPickerCloseTop').click();await p.waitForTimeout(320);};
  const point=async(x,y)=>{await p.locator('#boardCanvas').scrollIntoViewIfNeeded();return p.locator('#boardCanvas').evaluate((canvas,{x,y})=>{const r=canvas.getBoundingClientRect(),n=brushTest.state().n;return {x:r.x+(x+.5)*r.width/n,y:r.y+(y+.5)*r.height/n};},{x,y});};
  const tap=async(x,y)=>{const q=await point(x,y);if(config.width<600)await p.touchscreen.tap(q.x,q.y);else await p.mouse.click(q.x,q.y);};
  const shape=async value=>p.locator(`[data-brush-shape="${value}"]`).click();
@@ -99,7 +99,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await p.evaluate(()=>{brushTest.setup();brushTest.live();});const generation=await p.evaluate(()=>brushTest.gen());await open();await shape('diamond');await size(7);await close();await tap(15,15);await p.waitForTimeout(100);assert(await p.evaluate(()=>brushTest.gen())>generation);await p.evaluate(()=>brushTest.stop());
  // Startup and initialization lists expose exactly the nine supported sizes.
  await p.evaluate(()=>brushTest.tech());assert.equal(await p.locator('#startupBrushSize option').count(),9);assert.equal(await p.locator('#initBrushSize option').count(),9);await p.evaluate(()=>document.getElementById('technicianDialog').close());
- await open();await p.locator('#btnBrushPickerContinue').focus();await p.keyboard.press('Tab');assert(await p.evaluate(()=>document.getElementById('colorPickerModal').contains(document.activeElement)));await p.keyboard.press('Escape');await p.waitForTimeout(320);assert(!(await p.locator('#colorPickerModal').evaluate(e=>e.classList.contains('modal-visible'))));
+ await open();assert.equal(await p.locator('.brush-picker-footer').count(),0);await p.locator('[data-brush-size="21"]').focus();await p.keyboard.press('Tab');assert(await p.evaluate(()=>document.getElementById('colorPickerModal').contains(document.activeElement)));await p.keyboard.press('Escape');await p.waitForTimeout(320);assert(!(await p.locator('#colorPickerModal').evaluate(e=>e.classList.contains('modal-visible'))));
  await p.evaluate(()=>brushTest.smallPalette());await open();event=await wheel(100);assert(!event.prevented,'single-page palette allows ordinary content scrolling');await close();
  assert.deepEqual(errors,[]);results.push({...config,passed:true});console.log('PASS',JSON.stringify(config));await context.close();
 }await writeFile(path.join(artifacts,'results.json'),JSON.stringify(results,null,2));}finally{await browser.close();await new Promise(r=>server.close(r));}

@@ -2153,8 +2153,6 @@ body.wind-mode #board { cursor: crosshair; }
 .brush-picker-heading { position: relative; flex-shrink: 0; padding: 18px 52px; border-bottom: 1px solid #b89a572b; }
 .brush-picker-heading h2 { margin: 0; text-align: center; font-size: 19px; font-weight: 500; }
 .brush-picker-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 22px; scrollbar-width: thin; scrollbar-color: #756342 transparent; }
-.brush-picker-footer { flex-shrink: 0; padding: 12px 22px; border-top: 1px solid #b89a572b; }
-#btnBrushPickerContinue { width: 100%; min-height: 44px; border-radius: 9px; padding: 10px; background: #dfc484; color: #211c12; font: inherit; font-size: 14px; cursor: pointer; }
 .brush-picker-tools { border-top: 1px solid #b89a572b; margin-top: 12px; padding-top: 14px; }
 .brush-shape-options, .brush-size-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
 .brush-shape-options button, .brush-size-options button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; min-width: 0; border: 1px solid #b89a5730; border-radius: 8px; padding: 7px; color: #bfc0b5; background: #ffffff03; font: inherit; font-size: 13px; cursor: pointer; overflow-wrap: anywhere; }

@@ -700,7 +700,7 @@ function openColorPickerModal(targetTileIndex = null) {
         ? Math.floor(selectedColorIndex / app.C.COLORS_PER_PAGE) : 0);
     renderColorPickerContent();
     app.dom.colorPickerModal.classList.add('modal-visible');
-    document.getElementById('btnBrushPickerContinue').focus({ preventScroll: true });
+    document.getElementById('btnColorPickerCloseTop').focus({ preventScroll: true });
 }
 
 function openHelpModal() {
@@ -1364,7 +1364,6 @@ export function initializeModals(appContext) {
     app.dom.resizeModal.addEventListener('click', (e) => { if (e.target === app.dom.resizeModal) { closeResizeModal(); } });
 
     // Color Picker Modal
-    document.getElementById('btnBrushPickerContinue').addEventListener('click', closeColorPickerModal);
     app.dom.colorPickerModal.addEventListener('keydown', event => {
         if (event.key === 'Escape') { event.preventDefault(); closeColorPickerModal(); }
         if (event.key === 'Tab') {

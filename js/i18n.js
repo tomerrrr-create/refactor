@@ -14,7 +14,6 @@ export const translations = {
   brush_circle: { en: 'Circle', he: 'עיגול', ru: 'Круг', nl: 'Cirkel' },
   brush_square: { en: 'Square', he: 'ריבוע', ru: 'Квадрат', nl: 'Vierkant' },
   brush_diamond: { en: 'Diamond', he: 'מעוין', ru: 'Ромб', nl: 'Ruit' },
-  brush_continue: { en: 'Continue drawing', he: 'המשך לציור', ru: 'Продолжить рисование', nl: 'Verder tekenen' },
   brush_width: { en: '{n} cells wide', he: 'רוחב של {n} תאים', ru: 'Ширина: {n} клеток', nl: '{n} cellen breed' },
   brush_color_page: { en: 'Color page {n}', he: 'עמוד צבעים {n}', ru: 'Страница цветов {n}', nl: 'Kleurenpagina {n}' },
   studio_popup_blocked: { en: "Allow pop-ups for this site to open Video Studio.", he: "יש לאפשר חלונות קופצים לאתר כדי לפתוח את הסטודיו.", ru: "Разрешите всплывающие окна для открытия видеостудии.", nl: "Sta pop-ups toe om de videostudio te openen." },
