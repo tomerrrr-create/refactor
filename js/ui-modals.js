@@ -1,4 +1,5 @@
 import { initializeBrushPicker } from './brush-picker.js';
+import { bindColorPageSwipe } from './color-page-swipe.js';
 import { brushSizeLabel } from './brush-footprint.js';
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
 import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
@@ -15,28 +16,6 @@ import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
 // js/ui-modals.js
 
 let lastWheelTime = 0;
-let touchStartX = 0;
-let touchStartY = 0;
-
-function handleTouchStart(e) {
-    touchStartX = e.changedTouches[0].screenX;
-    touchStartY = e.changedTouches[0].screenY;
-}
-
-function handleTouchEnd(e) {
-    const touchEndX = e.changedTouches[0].screenX;
-    if (Math.abs(touchEndX - touchStartX) <= Math.abs(e.changedTouches[0].screenY - touchStartY)) return;
-    
-    if (touchEndX < touchStartX - 50) { // Swipe Left
-        app.navigateColorPages(true);
-        renderColorPickerContent();
-    }
-    if (touchEndX > touchStartX + 50) { // Swipe Right
-        app.navigateColorPages(false);
-        renderColorPickerContent();
-    }
-}
-
 function handlePaletteWheel(e) {
     const colors = app.C.PALETTES[app.getActivePaletteIndex()].colors;
     if (e.ctrlKey || colors.length <= app.C.COLORS_PER_PAGE) return;
@@ -1385,8 +1364,11 @@ export function initializeModals(appContext) {
     });
     
     app.dom.colorPickerSwatches.addEventListener('wheel', handlePaletteWheel, { passive: false });
-    app.dom.colorPickerSwatches.addEventListener('touchstart', handleTouchStart, { passive: true });
-    app.dom.colorPickerSwatches.addEventListener('touchend', handleTouchEnd, { passive: true });
+    bindColorPageSwipe(app.dom.colorPickerSwatches, { onPage: forward => {
+        if (app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
+        app.navigateColorPages(forward);
+        renderColorPickerContent();
+    } });
 
     // Simulation initialization preferences are separate from the current board.
     const initForm = document.getElementById('initSettingsForm');

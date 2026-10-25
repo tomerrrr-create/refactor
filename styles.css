@@ -2166,7 +2166,7 @@ body.wind-mode #board { cursor: crosshair; }
 #brushFootprintPreview { display: block; width: 84px; height: 84px; border-radius: 6px; background: #10120f; padding: 3px; box-sizing: border-box; }
 #brushFootprintCaption { margin-top: 8px; text-align: center; font-size: 12px; color: #c0b596; font-variant-numeric: tabular-nums; direction: ltr; }
 #colorPickerModal .color-swatch { padding: 0; aspect-ratio: 1; min-width: 0; }
-#colorPickerModal #colorPickerSwatches { width: min(100%, 272px); margin-inline: auto; gap: 8px; }
+#colorPickerModal #colorPickerSwatches { width: min(100%, 272px); margin-inline: auto; gap: 8px; touch-action: pan-y; }
 #colorPickerModal .color-swatch:hover { transform: none; }
 #colorPickerModal .color-swatch:focus-visible, .brush-picker-panel button:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
 #colorPickerPagination:empty { display: none; }
