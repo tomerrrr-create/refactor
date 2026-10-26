@@ -160,12 +160,28 @@ function defaultComparable(value, factory) {
     return { settings, identity };
 }
 
+// Simulation edits belong to this session until explicitly saved. Other
+// preferences (Startup, display, brush, etc.) keep their existing autosave policy.
+function withSavedSimulations(draft, saved) {
+    const result = clone(draft);
+    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning']) {
+        if (Object.hasOwn(saved.settings, key)) result.settings[key] = clone(saved.settings[key]);
+        else delete result.settings[key];
+    }
+    if (saved.identity) result.identity = clone(saved.identity);
+    else delete result.identity;
+    return result;
+}
+
 export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
     const factories = [0, 1, 2].map(factoryProfileSnapshot);
     const defaults = factories.map(value => defaultComparable(value, value));
     let state = { version: 1, defaultsVersion: 11, selected: 0,
-        profiles: defaultProfileSnapshots(initial).map(snapshot => ({ saved: clone(snapshot), draft: clone(snapshot) })) };
+        profiles: defaultProfileSnapshots(initial).map((snapshot, index) => {
+            const baseline = withSavedSimulations(snapshot, factories[index]);
+            return { saved: clone(baseline), draft: clone(baseline) };
+        }) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
     try {
         storage ??= globalThis.localStorage;
@@ -323,11 +339,20 @@ export function createProfileState(initial, storage) {
                     }
                 }
             }
+            for (const profile of state.profiles) {
+                profile.draft = withSavedSimulations(profile.draft, profile.saved);
+            }
             restored = true;
         }
     } catch { storageError = true; }
     function persist() {
-        try { storage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(state)); storageError = false; return true; }
+        try {
+            const stored = { ...state, profiles: state.profiles.map(profile => ({
+                saved: profile.saved, draft: withSavedSimulations(profile.draft, profile.saved)
+            })) };
+            storage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(stored));
+            storageError = false; return true;
+        }
         catch { storageError = true; return false; }
     }
     function checkIndex(index) {
@@ -361,7 +386,7 @@ export function createProfileState(initial, storage) {
         },
         observe(value) { observed = validateProfileSnapshot(value); },
         select(index) { checkIndex(index); state.selected = index; suspended = false; return persist(); },
-        save() { state.profiles[state.selected].saved = clone(state.profiles[state.selected].draft); return persist(); },
+        save() { if (suspended) throw Error('Cannot save during replay'); state.profiles[state.selected].saved = clone(state.profiles[state.selected].draft); return persist(); },
         replace(value) {
             const snapshot = validateProfileSnapshot(value);
             state.profiles[state.selected] = { saved: clone(snapshot), draft: snapshot };

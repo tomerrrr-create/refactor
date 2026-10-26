@@ -37,6 +37,7 @@ export function initializeProfileControls({ capture, apply, exportSettings, canU
             button.setAttribute('aria-label', label);
             button.title = label;
         });
+        document.getElementById('btnProfileSave').disabled = busy;
         document.getElementById('btnProfileExport').disabled = busy;
         document.getElementById('btnProfileCopy').disabled = busy;
         document.getElementById('btnProfileLoad').disabled = busy;
@@ -83,6 +84,17 @@ export function initializeProfileControls({ capture, apply, exportSettings, canU
         closeActions();
         if (opening) { actions.hidden = false; dot.setAttribute('aria-expanded', 'true'); }
     }));
+    document.getElementById('btnProfileSave').addEventListener('click', () => {
+        if (busy || !canUse()) { message('profile_replay_busy'); return; }
+        try {
+            // Capture synchronously: the document's deferred capture may still
+            // be queued from the previous modal Save or input event.
+            state.capture(capture());
+            const stored = state.save();
+            message(stored ? 'profile_saved' : 'profile_session_only', stored);
+        } catch { message('settings_save_error'); }
+        finally { closeActions(); refresh(); dots[state.selected].focus(); }
+    });
     document.getElementById('btnProfileExport').addEventListener('click', async () => {
         if (busy || !canUse()) { message('profile_replay_busy'); return; }
         captureNow();

@@ -47,3 +47,48 @@ test('copy reports blocked persistence instead of reporting durable success',()=
  const disk={getItem:()=>null,setItem(){throw Error('blocked');}},state=createProfileState(initial(),disk);
  assert.equal(state.copyTo(1),false);assert(state.storageError);assert.equal(state.selected,0);
 });
+
+test('all simulation groups are session-only until Save; display and Startup still autosave',()=>{
+ const disk=storage(), state=createProfileState(initial(),disk), baseline=state.draft();state.observe(baseline);
+ const edited=edit(baseline,s=>{
+  s.settings.rules.gravity.strength=.25;
+  s.settings.rules.erosion.erosionStages.channels=5;
+  s.settings.cycles.gameOfLife[0].birth=[2];
+  s.settings.cycles.chiFlow[1].reach=8;
+  s.identity.gameOfLife.index=2;s.identity.gameOfLife.yoursRules.birth=[2];
+  s.settings.evolutionTuning=structuredClone(DEFAULT_EVOLUTION_TUNING);s.settings.evolutionTuning.breathe.speed=2;
+  s.settings.nudgeIntervalMs=30;s.settings.startup.boardSize=27;
+  s.settings.simulationTheme='silver';s.settings.brush.size=23;
+ });
+ state.capture(edited);
+ state.select(1);state.observe(state.draft());state.select(0);
+ assert.deepEqual(state.draft(),edited,'switching retains the session draft');
+ const raw=JSON.parse(disk.getItem(PROFILE_STORAGE_KEY)).profiles[0].draft;
+ assert.deepEqual(raw.settings.rules,baseline.settings.rules,'temporary rules never enter profile storage');
+ const reopened=createProfileState(initial(),disk).draft();
+ for(const key of ['rules','cycles','evolutionTuning','nudgeIntervalMs'])assert.deepEqual(reopened.settings[key],baseline.settings[key],key);
+ assert.deepEqual(reopened.identity,baseline.identity);
+ assert.equal(reopened.settings.startup.boardSize,27);assert.equal(reopened.settings.simulationTheme,'silver');assert.equal(reopened.settings.brush.size,23);
+ state.save();const saved=createProfileState(initial(),disk);assert.deepEqual(saved.draft(),edited);
+ saved.observe(saved.draft());saved.capture(edit(edited,s=>{s.settings.rules.erosion.erosionStages.channels=1;}));
+ assert.deepEqual(createProfileState(initial(),disk).draft(),edited,'later experiments do not overwrite the saved version');
+ saved.replace(factoryProfileSnapshot(0));assert.equal(saved.modified(0),false);
+ assert.deepEqual(createProfileState(initial(),disk).draft(),factoryProfileSnapshot(0));
+});
+test('old automatic simulation drafts are discarded while old explicit saves and other preferences survive',()=>{
+ const disk=storage(), saved=edit(initial(),s=>{s.settings.rules.erosion.erosionStages.channels=2;});
+ const draft=edit(saved,s=>{s.settings.rules.erosion.erosionStages.channels=5;s.settings.cycles.gameOfLife[0].birth=[2];s.settings.startup.boardSize=27;});
+ disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:11,selected:0,profiles:[{saved,draft},...[1,2].map(i=>({saved:factoryProfileSnapshot(i),draft:factoryProfileSnapshot(i)}))]}));
+ const state=createProfileState(initial(),disk);
+ assert.deepEqual(state.draft().settings.rules,saved.settings.rules);assert.deepEqual(state.draft().settings.cycles,saved.settings.cycles);
+ assert.equal(state.draft().settings.startup.boardSize,27);
+});
+test('orphan legacy preferences cannot become the initial saved simulation defaults',()=>{
+ const dirty=edit(initial(),s=>{s.settings.rules.gravity.strength=.25;s.settings.cycles.gameOfLife[0].birth=[2];});
+ const state=createProfileState(dirty,storage());
+ for(const i of [0,1,2]){
+  assert.deepEqual(state.draft(i).settings.rules,factoryProfileSnapshot(i).settings.rules);
+  assert.deepEqual(state.draft(i).settings.cycles,factoryProfileSnapshot(i).settings.cycles);
+ }
+ state.beginReplay(state.draft());assert.throws(()=>state.save());
+});

@@ -16,31 +16,34 @@ test('initial slots are independent, select 1, and compare actual settings inclu
     const state = createProfileState(initial(), storage());
     assert.equal(state.selected, 0);
     assert.deepEqual([0, 1, 2].map(i => state.dirty(i)), [false, false, false]);
-    const edited = change(initial(), s => { s.nudgeIntervalMs = 25; });
+    const baseline = state.draft(); state.observe(baseline);
+    const edited = change(baseline, s => { s.nudgeIntervalMs = 25; });
     assert(state.capture(edited));
     assert.equal(state.dirty(0), true);
     assert.equal(state.draft(1).settings.nudgeIntervalMs, 100);
-    state.capture(initial());
+    state.capture(baseline);
     assert.equal(state.dirty(0), false);
     const copy = state.draft(); copy.settings.nudgeIntervalMs = 1;
     assert.equal(state.draft().settings.nudgeIntervalMs, 100);
 });
 
-test('switching and reopening retain three independent drafts, stars and the selected slot', () => {
+test('session switching keeps edits but reopening restores only explicitly saved simulations', () => {
     const disk = storage();
     const state = createProfileState(initial(), disk);
     for (let i = 0; i < 3; i++) {
         state.select(i); state.observe(state.draft());
         state.capture(change(state.draft(), s => { s.nudgeIntervalMs = (i + 1) * 20; }));
     }
+    assert.deepEqual([0,1,2].map(i=>state.draft(i).settings.nudgeIntervalMs),[20,40,60]);
+    state.save(); // Only profile 3 is explicitly saved.
     const reopened = createProfileState(initial(), disk);
     assert(reopened.restored);
     assert.equal(reopened.selected, 2);
-    assert.deepEqual([0, 1, 2].map(i => reopened.draft(i).settings.nudgeIntervalMs), [20, 40, 60]);
-    assert.deepEqual([0, 1, 2].map(i => reopened.dirty(i)), [true, true, true]);
+    assert.deepEqual([0, 1, 2].map(i => reopened.draft(i).settings.nudgeIntervalMs), [100, 100, 60]);
+    assert.deepEqual([0, 1, 2].map(i => reopened.dirty(i)), [false, false, false]);
     reopened.save();
     const again = createProfileState(initial(), disk);
-    assert.deepEqual([0, 1, 2].map(i => again.dirty(i)), [true, true, false]);
+    assert.deepEqual([0, 1, 2].map(i => again.dirty(i)), [false, false, false]);
 });
 
 test('file replacement affects only the active profile and becomes a clean saved baseline', () => {
@@ -109,10 +112,10 @@ test('personal rules and cycle source identity remain independent from named pre
 
 test('failed replay completion resumes normal profile capture without accepting invalid settings',()=>{
     for(const throwsDuringCapture of [false,true]){
-        const state=createProfileState(initial(),storage());state.beginReplay(initial());
+        const state=createProfileState(initial(),storage()), before=state.draft();state.beginReplay(initial());
         const invalid=change(initial(),s=>{s.rules.dla.mode='genetics';});
         assert.throws(()=>state.endReplay(throwsDuringCapture?()=>{throw Error('capture failed');}:invalid));
-        assert.deepEqual(state.draft(),defaultProfileSnapshots(initial())[0]);
+        assert.deepEqual(state.draft(),before);
         const edited=change(initial(),s=>{s.brush.size=5;});
         assert.equal(state.capture(edited),true);assert.equal(state.draft().settings.brush.size,5);
     }
@@ -253,8 +256,8 @@ test('erosion defaults migrate once and retain personal per-mode and legacy acce
     const disk = storage();
     const profiles = [0, 1, 2].map(index => ({ saved: factoryProfileSnapshot(index), draft: factoryProfileSnapshot(index) }));
     for (const profile of profiles) for (const kind of ['saved', 'draft']) delete profile[kind].settings.rules.erosion.erosionStages;
-    profiles[1].draft.settings.rules.erosion.erosionStages = { channels: 1 };
-    profiles[2].draft.settings.rules.erosion.erosionEvents = 7;
+    for(const kind of ['saved','draft']) profiles[1][kind].settings.rules.erosion.erosionStages = { channels: 1 };
+    for(const kind of ['saved','draft']) profiles[2][kind].settings.rules.erosion.erosionEvents = 7;
     disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 2, selected: 1, profiles }));
     const state = createProfileState(initial(), disk);
     assert.deepEqual(state.draft(0).settings.rules.erosion.erosionStages, { 'channels-solid': 0, channels: 4 });
@@ -346,7 +349,7 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
         profiles[0][kind].settings.cycles.chiFlow = defaultWorkspaceSettings().cycles.chiFlow;
     }
     profiles[0].draft.settings.startup.paletteName = 'Ancient 264';
-    profiles[0].draft.settings.cycles.chiFlow[1].reach = 3;
+    for(const kind of ['saved','draft']) profiles[0][kind].settings.cycles.chiFlow[1].reach = 3;
     disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({version:1, defaultsVersion:6, selected:0, profiles}));
     const state = createProfileState(initial(), disk);
     state.persist();
@@ -388,7 +391,7 @@ test('channel acceleration V upgrades previous defaults once and retains custom 
     const disk=storage();
     const profiles=[0,1,2].map(i=>({saved:factoryProfileSnapshot(i),draft:factoryProfileSnapshot(i)}));
     for(const [i,p] of profiles.entries()) for(const kind of ['saved','draft']) p[kind].settings.rules.erosion.erosionStages.channels=[0,3,4][i];
-    profiles[1].draft.settings.rules.erosion.erosionStages.channels=1;
+    for(const kind of ['saved','draft']) profiles[1][kind].settings.rules.erosion.erosionStages.channels=1;
     disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:9,selected:0,profiles}));
     const state=createProfileState(initial(),disk);
     assert.equal(state.draft(0).settings.rules.erosion.erosionStages.channels,4);
