@@ -36,6 +36,19 @@ function colorRibbon(colors) {
     return ribbon;
 }
 
+function colorMosaic(colors) {
+    const mosaic = element('span', 'palette-color-mosaic');
+    mosaic.setAttribute('aria-hidden', 'true');
+    // A fixed square preview keeps every card the same size. Sample existing
+    // colors in catalogue order; no interpolation or changes to palette data.
+    for (let i = 0; i < 36; i++) {
+        const cell = element('i', '');
+        cell.style.backgroundColor = colors[Math.round(i * (colors.length - 1) / 35)];
+        mosaic.append(cell);
+    }
+    return mosaic;
+}
+
 // Presentation only: group navigation never changes the board or records actions.
 export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, rtl = false, idPrefix = 'palette' }) {
     host.replaceChildren();
@@ -74,10 +87,13 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const count = element('span', 'palette-choice-count', String(palette.colors.length));
         const showCount = activeGroup.id === 'archive';
         title.append(name);
-        if (showCount) title.append(count);
+        const symbol = element('span', 'palette-choice-symbol');
+        if (showCount) symbol.append(count);
+        symbol.append(paletteIcon(palette));
+        title.append(symbol);
         const preview = element('span', 'palette-choice-preview');
-        preview.append(colorRibbon(palette.colors), paletteIcon(palette));
-        button.append(title, preview);
+        preview.append(colorMosaic(palette.colors));
+        button.append(preview, title);
         if (selected) {
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
         }
