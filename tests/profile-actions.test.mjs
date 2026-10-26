@@ -92,3 +92,28 @@ test('orphan legacy preferences cannot become the initial saved simulation defau
  }
  state.beginReplay(state.draft());assert.throws(()=>state.save());
 });
+
+test('brush shape resets on reopen unless explicitly saved, while working size and Startup retain their policies',()=>{
+ const disk=storage(),state=createProfileState(initial(),disk),before=state.draft();state.observe(before);
+ const edited=edit(before,s=>{s.settings.brush.shape='diamond';s.settings.brush.size=9;});
+ state.capture(edited);assert.equal(state.draft().settings.brush.shape,'diamond');
+ state.select(1);state.observe(state.draft());state.select(0);state.observe(state.draft());
+ assert.equal(state.draft().settings.brush.shape,'diamond','profile switching within the session keeps the shape');
+ let reopened=createProfileState(initial(),disk).draft();
+ assert.equal(reopened.settings.brush.shape,undefined,'missing shape means the default circle');
+ assert.equal(reopened.settings.brush.size,9,'working size still persists for profile switching');
+ assert.equal(reopened.settings.startup.brushSize,1,'opening size is still owned by Startup');
+ state.save();reopened=createProfileState(initial(),disk).draft();assert.equal(reopened.settings.brush.shape,'diamond');
+ state.capture(edit(edited,s=>{s.settings.brush.shape='square';}));
+ assert.equal(createProfileState(initial(),disk).draft().settings.brush.shape,'diamond');
+ state.replace(factoryProfileSnapshot(0));assert.equal(createProfileState(initial(),disk).draft().settings.brush.shape,undefined);
+});
+test('legacy auto-saved shapes are discarded, explicit saved shapes are retained',()=>{
+ for(const shape of [undefined,'square']){
+  const saved=initial();if(shape)saved.settings.brush.shape=shape;
+  const draft=edit(saved,s=>{s.settings.brush.shape='diamond';s.settings.brush.size=9;});
+  const disk=storage();disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:11,selected:0,profiles:[{saved,draft},...[1,2].map(i=>({saved:factoryProfileSnapshot(i),draft:factoryProfileSnapshot(i)}))]}));
+  const reopened=createProfileState(initial(),disk).draft();
+  assert.equal(reopened.settings.brush.shape,shape);assert.equal(reopened.settings.brush.size,9);
+ }
+});

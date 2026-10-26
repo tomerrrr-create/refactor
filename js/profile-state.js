@@ -160,14 +160,16 @@ function defaultComparable(value, factory) {
     return { settings, identity };
 }
 
-// Simulation edits belong to this session until explicitly saved. Other
-// preferences (Startup, display, brush, etc.) keep their existing autosave policy.
-function withSavedSimulations(draft, saved) {
+// Simulation edits and brush shape belong to this session until explicitly
+// saved. Other preferences (Startup, display, brush size/mode, etc.) still autosave.
+function withSavedSessionPreferences(draft, saved) {
     const result = clone(draft);
     for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning']) {
         if (Object.hasOwn(saved.settings, key)) result.settings[key] = clone(saved.settings[key]);
         else delete result.settings[key];
     }
+    if (Object.hasOwn(saved.settings.brush, 'shape')) result.settings.brush.shape = saved.settings.brush.shape;
+    else delete result.settings.brush.shape;
     if (saved.identity) result.identity = clone(saved.identity);
     else delete result.identity;
     return result;
@@ -179,7 +181,7 @@ export function createProfileState(initial, storage) {
     const defaults = factories.map(value => defaultComparable(value, value));
     let state = { version: 1, defaultsVersion: 11, selected: 0,
         profiles: defaultProfileSnapshots(initial).map((snapshot, index) => {
-            const baseline = withSavedSimulations(snapshot, factories[index]);
+            const baseline = withSavedSessionPreferences(snapshot, factories[index]);
             return { saved: clone(baseline), draft: clone(baseline) };
         }) };
     let restored = false, storageError = false, suspended = false, observed = clone(initial);
@@ -340,7 +342,7 @@ export function createProfileState(initial, storage) {
                 }
             }
             for (const profile of state.profiles) {
-                profile.draft = withSavedSimulations(profile.draft, profile.saved);
+                profile.draft = withSavedSessionPreferences(profile.draft, profile.saved);
             }
             restored = true;
         }
@@ -348,7 +350,7 @@ export function createProfileState(initial, storage) {
     function persist() {
         try {
             const stored = { ...state, profiles: state.profiles.map(profile => ({
-                saved: profile.saved, draft: withSavedSimulations(profile.draft, profile.saved)
+                saved: profile.saved, draft: withSavedSessionPreferences(profile.draft, profile.saved)
             })) };
             storage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(stored));
             storageError = false; return true;

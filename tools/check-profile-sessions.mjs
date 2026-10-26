@@ -19,7 +19,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
- source=source.replace('      initializeApp();',`window.profileTest={snapshot:captureProfileSettings,tech:()=>modals.openTechnicianMenu(),gol:()=>modals.openGolSettingsModal(),reset:()=>settingsProfiles.resetToDefaults(),replay:()=>settingsProfiles.beginReplay(),endReplay:()=>settingsProfiles.endReplay(),edit:()=>{const s=captureProfileSettings();s.settings.rules.erosion.erosionStages.channels=5;s.settings.rules.gravity.strength=.25;s.settings.evolutionTuning={...structuredClone(DEFAULT_EVOLUTION_TUNING),breathe:{speed:2,depth:1}};importWorkspaceSettings(s.settings,s.identity);settingsProfiles.refresh();}};initializeApp().then(()=>profileTest.ready=true);`);
+ source=source.replace('      initializeApp();',`window.profileTest={snapshot:captureProfileSettings,tech:()=>modals.openTechnicianMenu(),gol:()=>modals.openGolSettingsModal(),brush:()=>modals.openColorPickerModal(),reset:()=>settingsProfiles.resetToDefaults(),replay:()=>settingsProfiles.beginReplay(),endReplay:()=>settingsProfiles.endReplay(),edit:()=>{const s=captureProfileSettings();s.settings.rules.erosion.erosionStages.channels=5;s.settings.rules.gravity.strength=.25;s.settings.evolutionTuning={...structuredClone(DEFAULT_EVOLUTION_TUNING),breathe:{speed:2,depth:1}};importWorkspaceSettings(s.settings,s.identity);settingsProfiles.refresh();}};initializeApp().then(()=>profileTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  const boot=async(reload=false)=>{if(reload)await page.reload();else await page.goto(base);await page.waitForFunction(()=>window.profileTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));};
@@ -28,6 +28,15 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const actions=async()=>{if(!(await page.locator('#profileActions').isVisible()))await page.locator('[data-profile-dot="0"]').click();};
  const golEdit=async()=>{await page.evaluate(()=>profileTest.gol());await page.locator('#btnGolPresetNaive').click();await page.locator('#btnGolSettingsSave').click();await page.waitForTimeout(350);};
  await boot();const baseline=await snap();
+ // First-visit scenario: a size-9 diamond must reopen as a size-1 circle.
+ const brush=async(shape)=>{await page.evaluate(()=>profileTest.brush());await page.locator('[data-brush-shape="'+shape+'"]').click();await page.locator('[data-brush-size="9"]').click();await page.locator('#btnColorPickerCloseTop').click();await page.waitForTimeout(350);};
+ await brush('diamond');assert.equal((await snap()).settings.brush.shape,'diamond');
+ await boot(true);assert.equal((await snap()).settings.brush.shape,undefined);assert.equal((await snap()).settings.brush.size,1);
+ await brush('diamond');await tech();await actions();await page.locator('#btnProfileSave').click();
+ await boot(true);assert.equal((await snap()).settings.brush.shape,'diamond');assert.equal((await snap()).settings.brush.size,1);
+ await brush('square');await boot(true);assert.equal((await snap()).settings.brush.shape,'diamond');
+ await page.evaluate(()=>profileTest.reset());await boot(true);
+
  await golEdit();await page.evaluate(()=>profileTest.edit());const edited=await snap();
  assert.notDeepEqual(edited.settings.cycles.gameOfLife,baseline.settings.cycles.gameOfLife);
  await tech();await page.locator('[data-profile-choice="1"]').click();await page.locator('[data-profile-choice="0"]').click();
