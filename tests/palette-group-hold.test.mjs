@@ -18,7 +18,7 @@ function harness(index = 2) {
         isSelectingMacroPalette: false, isMacroPlaying: false, isExecutingMacroCommand: false,
         armedSimulation: null, isBreathing: false, isLifePlaying: false, hasPerformedInitialAutofill: false,
         boardState: [{ k: 263, v: 263, isGold: false }, { k: 263, v: 263, isGold: true }],
-        performance: { now: () => 0 }, dom: {}, modals: { openPaletteModal(options) { opened.push(options || {}); } },
+        performance: { now: () => 0 }, dom: {}, modals: { openPaletteModal(options) { opened.push(options || {}); }, openColorPickerModal(target, options) { opened.push({colorPicker:true,target,options}); } },
         resetSelectedColor() {}, updatePaletteHeader() {}, renderToScreen() {}, hideLongPressDisplay() {},
         showPaletteGroupTransition() {},
         capturePaletteGroupBoard() { return null; },
@@ -114,13 +114,13 @@ test('choosing a macro replacement palette never changes or adapts the current b
     assert.equal(logs.length, 0);
 });
 
-test('hold and upward or downward swipe open the picker without changing palette, board, history or log', () => {
+test('hold opens colors while upward/downward swipes open palettes without changing board or log', () => {
     const { h, logs, history, opened } = harness();
     const before = plain(h.getCurrentState());
     h.gestures.onHold();
     h.gestures.onOpen();
     h.gestures.onSwipeDown();
-    assert.deepEqual(plain(opened), [{ guardOpeningClick: true }, {}, {}]);
+    assert.deepEqual(plain(opened), [{colorPicker:true,target:null,options:{guardOpeningClick:true}}, {}, {}]);
     assert.deepEqual(plain(h.getCurrentState()), before);
     assert.deepEqual(logs, []);
     assert.deepEqual(history, []);

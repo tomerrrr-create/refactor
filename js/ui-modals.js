@@ -33,6 +33,7 @@ function handlePaletteWheel(e) {
 let app;
 let brushPicker;
 let colorPickerReturnFocus;
+let colorPickerHoldOpeningClick = false;
 
 // --- Internal Helper Functions ---
 
@@ -121,6 +122,7 @@ const currentMethod = app.spiralRules ? app.spiralRules.method : 'magnet';    ap
 
 
 function closeColorPickerModal() {
+    colorPickerHoldOpeningClick = false;
     app.dom.colorPickerModal.classList.remove('modal-visible');
     app.pointerState.longPressTarget = null;
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
@@ -651,9 +653,10 @@ function renderColorPickerContent() {
     brushPicker?.refresh();
 }
 
-function openColorPickerModal(targetTileIndex = null) {
+function openColorPickerModal(targetTileIndex = null, { guardOpeningClick = false, returnFocus = document.activeElement } = {}) {
     if (app.isBreathing()) return;
-    if (!app.dom.colorPickerModal.classList.contains('modal-visible')) colorPickerReturnFocus = document.activeElement;
+    colorPickerHoldOpeningClick = guardOpeningClick;
+    if (!app.dom.colorPickerModal.classList.contains('modal-visible')) colorPickerReturnFocus = returnFocus;
     app.pointerState.longPressTarget = targetTileIndex;
     const selectedColorIndex = app.getSelectedColorIndex();
     app.setColorPickerPage(!app.isRainbowModeActive() && selectedColorIndex >= 0
@@ -1324,6 +1327,14 @@ export function initializeModals(appContext) {
     app.dom.resizeModal.addEventListener('click', (e) => { if (e.target === app.dom.resizeModal) { closeResizeModal(); } });
 
     // Color Picker Modal
+    // Swallow only the release/click that opened the picker via a held button.
+    // A fresh pointerdown or keyboard activation is a deliberate selection.
+    app.dom.colorPickerModal.addEventListener('pointerdown', () => { colorPickerHoldOpeningClick = false; });
+    app.dom.colorPickerModal.addEventListener('click', event => {
+        const openingRelease = colorPickerHoldOpeningClick && event.detail !== 0;
+        colorPickerHoldOpeningClick = false;
+        if (openingRelease) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
     app.dom.colorPickerModal.addEventListener('keydown', event => {
         if (event.key === 'Escape') { event.preventDefault(); closeColorPickerModal(); }
         if (event.key === 'Tab') {
