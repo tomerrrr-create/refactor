@@ -28,7 +28,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
    const cards=[...list.children],rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
    return {columns:getComputedStyle(list).gridTemplateColumns.split(' ').length,overflow:list.scrollWidth>list.clientWidth+1,cards:cards.map(c=>{const mosaic=c.querySelector('.palette-color-mosaic'),r=rect(mosaic);return{...r,cells:mosaic.children.length,label:c.getAttribute('aria-label'),icon:!!c.querySelector('.palette-choice-icon'),count:!!c.querySelector('.palette-choice-count')};})};
   });
-  assert.equal(geometry.columns,2);assert(!geometry.overflow);assert(geometry.cards.length);
+  assert.equal(geometry.columns,3);assert(!geometry.overflow);assert(geometry.cards.length);
   for(const card of geometry.cards){assert(Math.abs(card.w-card.h)<.1,'color preview is square');assert.equal(card.cells,36);assert(card.label&&card.icon);assert.equal(card.count,group==='archive');}
   assert.deepEqual(await state(),before,'group browsing never changes board, palette or log');
   if(group==='classic')await page.screenshot({path:path.join(artifacts,config.lang+'-palette-cards.png')});

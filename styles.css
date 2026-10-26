@@ -2086,7 +2086,7 @@ body.wind-mode #board { cursor: crosshair; }
 .palette-current-name { color: #e7d19d; font-size: .73rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .palette-current-summary .palette-choice-count { font-size: .6rem; }
 .palette-current-summary .palette-color-ribbon { width: 55px; height: 8px; flex-shrink: 0; }
-.palette-choice-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 12px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 5px; scrollbar-width: thin; scrollbar-color: #62533a transparent; }
+.palette-choice-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; gap: 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 5px; scrollbar-width: thin; scrollbar-color: #62533a transparent; }
 /* Chrome before 121 and older Safari need the scrollbar pseudo-elements on
    the actual scrolling list, rather than its outer picker container. */
 @media (hover: hover) and (pointer: fine) {
@@ -2102,7 +2102,7 @@ body.wind-mode #board { cursor: crosshair; }
 }
 .palette-choice.is-current { background: #b89a570d; border-color: #b89a5759; }
 .palette-choice.is-current .palette-choice-name { color: var(--gold); }
-.palette-choice-title { display: flex; align-items: center; gap: 7px; width: 100%; min-height: 34px; }
+.palette-choice-title { display: flex; flex-direction: column-reverse; align-items: center; gap: 4px; width: 100%; min-height: 64px; }
 .palette-choice-symbol { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; gap: 2px; }
 .palette-choice-preview { display: block; width: 100%; direction: ltr; }
 .palette-color-mosaic { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); aspect-ratio: 1; gap: 2px; overflow: hidden; border-radius: 6px; background: #080b09; }
@@ -2110,7 +2110,7 @@ body.wind-mode #board { cursor: crosshair; }
 .palette-choice.is-current .palette-color-mosaic { box-shadow: 0 0 0 1px #b89a5760; }
 .palette-choice-icon { --icon-size: 23px; display: flex; align-items: center; justify-content: center; width: 25px; height: 25px; flex-shrink: 0; font-size: 21px; }
 .palette-choice-icon > svg, .palette-choice-icon > span { width: 23px !important; height: 23px !important; font-size: 21px !important; }
-.palette-choice-name { flex: 1; min-width: 0; font-size: .8rem; line-height: 1.4; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.palette-choice-name { flex: 1; min-width: 0; width: 100%; text-align: center; font-size: .8rem; line-height: 1.4; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .palette-choice-count { flex-shrink: 0; font-size: .65rem; color: #96998f; white-space: nowrap; }
 .palette-color-ribbon { display: flex; direction: ltr; width: 100%; height: 13px; overflow: hidden; border-radius: 3px; }
 .palette-color-ribbon i { flex: 1; min-width: 0; }
