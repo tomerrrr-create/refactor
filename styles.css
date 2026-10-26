@@ -2105,8 +2105,8 @@ body.wind-mode #board { cursor: crosshair; }
 .palette-choice-title { display: flex; flex-direction: column-reverse; align-items: center; gap: 4px; width: 100%; min-height: 64px; }
 .palette-choice-symbol { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; gap: 2px; }
 .palette-choice-preview { display: block; width: 100%; direction: ltr; }
-.palette-color-mosaic { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); aspect-ratio: 1; gap: 2px; overflow: hidden; border-radius: 6px; background: #080b09; }
-.palette-color-mosaic i { min-width: 0; min-height: 0; border-radius: 1px; }
+.palette-color-mosaic { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); aspect-ratio: 1; gap: 0; overflow: hidden; border-radius: 6px; background: #080b09; }
+.palette-color-mosaic i { min-width: 0; min-height: 0; border-radius: 0; }
 .palette-choice.is-current .palette-color-mosaic { box-shadow: 0 0 0 1px #b89a5760; }
 .palette-choice-icon { --icon-size: 23px; display: flex; align-items: center; justify-content: center; width: 25px; height: 25px; flex-shrink: 0; font-size: 21px; }
 .palette-choice-icon > svg, .palette-choice-icon > span { width: 23px !important; height: 23px !important; font-size: 21px !important; }
