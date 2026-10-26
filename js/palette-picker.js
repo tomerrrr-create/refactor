@@ -1,4 +1,3 @@
-import { getPalettePreviewColors } from './palette-preview.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 
 const groupMarks = {
@@ -93,7 +92,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         symbol.append(paletteIcon(palette));
         title.append(symbol);
         const preview = element('span', 'palette-choice-preview');
-        preview.append(colorMosaic(getPalettePreviewColors(palette)));
+        preview.append(colorMosaic(palette.colors));
         button.append(preview, title);
         if (selected) {
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
@@ -118,7 +117,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         icon.classList.add('palette-current-icon');
         // Keep the ribbon and icon at the physical right edge in both languages.
         current.dir = 'ltr';
-        current.append(details, colorRibbon(getPalettePreviewColors(palette)), icon);
+        current.append(details, colorRibbon(palette.colors), icon);
     }
     function showGroup(group) {
         activeGroup = group;
