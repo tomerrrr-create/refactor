@@ -153,3 +153,34 @@ test('invalid nested motion is rejected and an exported partial stroke gets a cl
  assert.throws(()=>parse(base+'\n[12:00:00.200] BRUSH_START -> {"version":1}'));
  assert.equal(parse(base+'\n[12:00:00.200] DRAW_STROKE -> [{"i":0,"k":1}]').at(-1).eventName,'BRUSH_END');
 });
+
+test('undoing a live stroke retains the simulation lead-in and pauses at its exact generation',()=>{
+ const r=recipe(),marker={version:1,simulation:'gameOfLife',generation:12,elapsed:0};
+ r.add('PLAY','Armed: gameOfLife | Rules: {}');r.add('BRUSH_CHECKPOINT',marker,12);r.commit(1);
+ r.add('BRUSH_CONTINUE',marker,12);r.add('DRAW_STROKE',[{i:0,k:2}],12);r.add('PAUSE','---',20);r.commit(2);r.undo(2,settings());
+ const queue=r.parse();assert(queue.some(a=>a.eventName==='PLAY'));assert(!queue.some(a=>a.eventName==='DRAW_STROKE'));
+ assert.deepEqual(queue.filter(a=>a.eventName==='PAUSE').map(a=>a.targetGen),[12]);
+ r.redo(2,settings());const restored=r.parse();
+ const resume=restored.find(a=>a.eventName==='BRUSH_CONTINUE');assert(resume);assert.equal(resume.isGenBased,false);
+ assert.equal(restored.find(a=>a.eventName==='DRAW_STROKE').targetGen,12);
+ assert.deepEqual(restored.filter(a=>a.eventName==='PAUSE').map(a=>a.targetGen),[12,20]);
+ r.undo(2,settings());assert(!r.parse().some(a=>a.eventName==='DRAW_STROKE'));
+ r.undo(1,settings());assert(!r.parse().some(a=>a.isGenBased),'undoing the lead-in removes its waits too');
+});
+test('malformed live brush checkpoints are rejected before playback',()=>{
+ for(const record of [{version:2},{version:1,simulation:'gameOfLife',generation:-1,elapsed:0},{version:1,simulation:'gameOfLife',generation:1,elapsed:-1}]){
+  const r=recipe();r.add('BRUSH_CHECKPOINT',record);assert.throws(()=>r.parse());
+ }
+});
+
+test('Redo of an intermediate live stroke stops at the next brush boundary without advancing an extra generation',()=>{
+ const r=recipe(),marker=g=>({version:1,simulation:'gameOfLife',generation:g,elapsed:0});
+ r.add('PLAY','Armed: gameOfLife | Rules: {}');r.add('BRUSH_CHECKPOINT',marker(12),12);r.commit(1);
+ r.add('BRUSH_CONTINUE',marker(12),12);r.add('DRAW_STROKE',[{i:0,k:1}],12);
+ r.add('BRUSH_CHECKPOINT',marker(20),20);r.commit(2);
+ r.add('BRUSH_CONTINUE',marker(20),20);r.add('DRAW_STROKE',[{i:0,k:2}],20);r.add('PAUSE','---',30);r.commit(3);
+ r.undo(3,settings());r.undo(2,settings());r.redo(2,settings());
+ const queue=r.parse();assert.equal(queue.at(-1).eventName,'HISTORY_SETTINGS');
+ assert.equal(queue.at(-1).isGenBased,true);assert.equal(queue.at(-1).targetGen,20);
+ assert.deepEqual(queue.filter(a=>a.eventName==='DRAW_STROKE').map(a=>JSON.parse(a.details)[0].k),[1]);
+});

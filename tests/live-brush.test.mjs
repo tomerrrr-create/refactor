@@ -6,7 +6,7 @@ import {getBrushTiles} from '../js/brush-footprint.js';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 const copy=value=>JSON.parse(JSON.stringify(value));
 function harness({live=true,continuous=false,brush=1,shape='circle',symmetry='off',progressive=false}={}){
- const logs=[],history=[],captures=new Set(),timers=new Map();let snapshots=0,serial=0,syncs=0;
+ const logs=[],checkpoints=[],history=[],captures=new Set(),timers=new Map();let snapshots=0,serial=0,syncs=0;
  const rng=Object.create(Math);rng.random=()=>.75;
  const canvas={setPointerCapture:id=>captures.add(id),hasPointerCapture:id=>captures.has(id),releasePointerCapture:id=>captures.delete(id),getBoundingClientRect:()=>({left:0,top:0,right:90,bottom:90})};
  const c=vm.createContext({clearPaletteColorTransition() {}, capturePaletteColors() { return null; }, showPaletteColorTransition() {}, dom: { board: {} }, n:9,boardState:Array.from({length:81},()=>({k:3,v:3,isGold:false})),isLifePlaying:live,
@@ -18,30 +18,31 @@ function harness({live=true,continuous=false,brush=1,shape='circle',symmetry='of
   paletteLen:()=>16,startAnimationLoop(){},getTileIndexFromCoords:(x,y)=>x<0||y<0||x>=90||y>=90?-1:Math.floor(y/10)*9+Math.floor(x/10),
   getCurrentState:()=>{snapshots++;return {n:9,tiles:copy(c.boardState)};},
   areStatesEqual:(a,b)=>JSON.stringify(a.tiles.map(t=>[t.k,t.isGold]))===JSON.stringify(b.tiles.map(t=>[t.k,t.isGold])),
-  pushHistory:entry=>history.push(copy(entry)),window:{logArtEvent:(name,data)=>logs.push({name,data:name==='DRAW_STROKE'?JSON.parse(data):data,generation:c.isLifePlaying?c.generation:null})},
-  generation:12,hasPerformedInitialAutofill:false,syncDlaCrystalState:()=>syncs++,
+  pushHistory:entry=>history.push(copy(entry)),window:{logArtEvent:(name,data)=>{const entry={name,data:name==='DRAW_STROKE'?JSON.parse(data):data,generation:c.isLifePlaying?c.generation:null};(['BRUSH_CHECKPOINT','BRUSH_CONTINUE'].includes(name)?checkpoints:logs).push(entry);}},
+  generation:12,currentGenerationCount:12,breatheStartTime:0,hasPerformedInitialAutofill:false,syncDlaCrystalState:()=>syncs++,
   performAction:fn=>fn(),resetSelectedColor(){throw Error('holding a live brush must not clear its color');},modals:{openColorPickerModal(){throw Error('must not open a modal while drawing live');}},
   animateBoardTransition:fn=>fn(),toggleMacroFullScreen(){}});
+ if(live)c.simulationStartState={n:9,tiles:copy(c.boardState)};
  vm.runInContext(source.slice(source.indexOf('function applyActionToTiles('),source.indexOf('let windMode =')),c);
  vm.runInContext(source.slice(source.indexOf('function getTilesInRadius('),source.indexOf('      function updateSymmetryButtonUI(')),c);
  vm.runInContext(source.slice(source.indexOf('const pointerState ='),source.indexOf('function updateLayout()'))+'\nglobalThis.pointer=pointerState;',c);
  const event=(type,x,y,id=1,extra={})=>({type,clientX:x,clientY:y,pointerId:id,button:0,isPrimary:true,target:canvas,preventDefault(){},...extra});
- return {c,logs,history,timers,captures,get snapshots(){return snapshots;},get syncs(){return syncs;},
+ return {c,logs,checkpoints,history,timers,captures,get snapshots(){return snapshots;},get syncs(){return syncs;},
  down:(x,y,id=1,extra={})=>c.onPointerDown(event('pointerdown',x,y,id,extra)),
  move:(x,y,id=1)=>c.onPointerMove(event('pointermove',x,y,id)),up:(x,y,id=1,type='pointerup')=>c.onPointerUp(event(type,x,y,id))};
 }
 
-test('live thick/symmetric taps use the selected color and do not snapshot simulation generations',()=>{
+test('live thick/symmetric taps snapshot only the single brush boundary',()=>{
  const h=harness({brush:3,symmetry:'mandala'});h.down(25,25);h.up(25,25);
  assert(h.logs.length===1);const writes=h.logs[0].data;assert(writes.length>5);assert(writes.every(t=>t.k===0));
- assert.equal(h.logs[0].generation,12);assert.equal(h.c.isLifePlaying,true);assert.equal(h.snapshots,0);assert.equal(h.history.length,0);assert.equal(h.c.pointer.id,null);
+ assert.equal(h.logs[0].generation,12);assert.equal(h.c.isLifePlaying,true);assert.equal(h.snapshots,1);assert.equal(h.history.length,1);assert.equal(h.c.pointer.id,null);
 });
 test('live drag packets contain only brush writes, not unrelated simulation edits or an end-of-drag snapshot',()=>{
  const h=harness();h.down(15,15);h.c.boardState[80].k=12;h.move(35,15);h.c.generation=20;
  h.c.boardState[10].k=9;h.move(55,15);h.up(55,15);
  assert.equal(h.logs.length,2);assert.deepEqual(h.logs.map(e=>e.generation),[12,20]);
  assert.deepEqual(h.logs.flatMap(e=>e.data.map(t=>t.i)),[10,12,14]);assert.equal(h.c.boardState[10].k,9);assert.equal(h.c.boardState[80].k,12);
- assert.equal(h.snapshots,0);assert.equal(h.history.length,0);
+ assert.equal(h.snapshots,1);assert.equal(h.history.length,1,'the simulated lead-in is a separate history action');
 });
 test('live continuous brush fills a fast segment delivered only on pointerup, including rainbow',()=>{
  const h=harness({continuous:true});h.c.isRainbowModeActive=true;h.down(15,15);h.up(75,15);
@@ -112,14 +113,14 @@ test('the Undo control is available during the first live run before any history
 
 for (const live of [false,true]) test(`${live?'running':'paused'}: a thick mirrored stroke on matching colors repaints its entire footprint on a different replay board`,()=>{
  const h=harness({live,continuous:true,brush:3,symmetry:'vertical'});
- h.c.boardState.forEach(t=>{t.k=t.v=0;});
+ h.c.boardState.forEach(t=>{t.k=t.v=0;});if(h.c.isLifePlaying)h.c.simulationStartState={n:9,tiles:copy(h.c.boardState)};
  h.down(15,15);h.up(75,15);
  const footprint=new Set();
  for(const row of [0,2,6,8])for(let col=1;col<=7;col++)footprint.add(row*9+col);
  for(const row of [1,7])for(let col=0;col<=8;col++)footprint.add(row*9+col);
  const recorded=h.logs.flatMap(e=>e.data);
  assert.equal(recorded.length,46);assert.deepEqual(new Set(recorded.map(t=>t.i)),footprint);assert(recorded.every(t=>t.k===0));
- assert.equal(h.history.length,live?0:1);if(live)assert.equal(h.snapshots,0);
+ assert.equal(h.history.length,1);if(live)assert.equal(h.snapshots,1);
  // Replay real DRAW_STROKE handlers on colors that did not exist under the
  // original brush. Every touched cell must be painted; others must stay intact.
  const start=source.indexOf("        else if (action.eventName === 'DRAW_STROKE'");
@@ -132,14 +133,14 @@ for (const live of [false,true]) test(`${live?'running':'paused'}: a thick mirro
 });
 
 test('an unchanged-color live stroke still owns a combined history action when the simulation pauses',()=>{
- const h=harness();h.c.armedSimulation='breathe';h.c.boardState.forEach(t=>{t.k=t.v=0;});
+ const h=harness();h.c.armedSimulation='breathe';h.c.boardState.forEach(t=>{t.k=t.v=0;});h.c.simulationStartState={n:9,tiles:copy(h.c.boardState)};if(h.c.isLifePlaying)h.c.simulationStartState={n:9,tiles:copy(h.c.boardState)};
  h.down(15,15);h.up(15,15);assert.equal(h.c.simulationHasBrushInput,true);
  Object.assign(h.c,{animationFrameId:null,setSimulationRunning(){},cancelAnimationFrame(){},updateUndoRedoButtons(){},
   dom:{iconPlay:{style:{}},iconPause:{style:{}},btnStepForward:{}}});
  vm.runInContext(source.slice(source.indexOf('function pauseLife()'),source.indexOf('      function togglePlayPauseLife()')),h.c);
- h.c.pauseLife();assert.equal(h.history.length,1);assert.equal(h.c.simulationHasBrushInput,false);
+ h.c.pauseLife();assert.equal(h.history.length,2);assert.equal(h.c.simulationHasBrushInput,false);
  // A later untouched, visually unchanged breathing run stays a genuine no-op.
- h.c.simulationStartState=h.c.getCurrentState();h.c.isLifePlaying=true;h.c.pauseLife();assert.equal(h.history.length,1);
+ h.c.simulationStartState=h.c.getCurrentState();h.c.isLifePlaying=true;h.c.pauseLife();assert.equal(h.history.length,2);
 });
 
 for(const tool of ['rainbow','copy'])test(`${tool} also records an unchanged-color paint intent while paused`,()=>{
@@ -153,7 +154,7 @@ for(const tool of ['rainbow','copy'])test(`${tool} also records an unchanged-col
 
 for (const cancelled of [false,true]) test('paused progressive stroke records motion with one undo, including cancellation='+cancelled,()=>{
  const h=harness({live:false,progressive:true,continuous:true});
- h.c.boardState.forEach(t=>{t.k=t.v=0;});
+ h.c.boardState.forEach(t=>{t.k=t.v=0;});if(h.c.isLifePlaying)h.c.simulationStartState={n:9,tiles:copy(h.c.boardState)};
  h.down(15,15);h.move(35,15);h.move(55,15);
  assert.equal(h.history.length,0);assert.equal(h.logs[0].name,'BRUSH_START');
  assert.equal(h.logs.filter(e=>e.name==='DRAW_STROKE').length,2);
@@ -185,7 +186,7 @@ for(const shape of ['circle','square','diamond']) for(const live of [false,true]
   const h=harness({live,brush:23,shape});
   h.down(45,45); h.up(45,45);
   assert(h.c.boardState.every(tile=>tile.k===0));
-  assert.equal(h.history.length,live?0:1);
+  assert.equal(h.history.length,1);
   if(!live) assert.equal(h.logs.filter(log=>log.name==='DRAW_STROKE').length,1);
  });
 }
@@ -200,3 +201,37 @@ for(const shape of ['circle','square','diamond']) for(const symmetry of ['off','
   assert.equal(h.history.length,1);
  });
 }
+
+function enableLiveUndo(h) {
+ const c=h.c;
+ Object.assign(c,{animationFrameId:null,setSimulationRunning(){},cancelAnimationFrame(){},updateUndoRedoButtons(){},
+  history:h.history,future:[],artRecipeLog:[],historyRecipeCursor:0,getHistorySettings:()=>({}),
+  applyState:s=>{c.boardState=copy(s.tiles);}});
+ c.windPainter.stop=()=>{};
+ Object.assign(c.dom,{iconPlay:{style:{}},iconPause:{style:{}},btnStepForward:{}});
+ vm.runInContext(source.slice(source.indexOf('function pauseLife()'),source.indexOf('      function togglePlayPauseLife()')),c);
+ vm.runInContext(source.slice(source.indexOf('      function undo()'),source.indexOf('      function updateUndoRedoButtons()')),c);
+}
+test('live Undo stops at the latest brush boundary, preserves earlier generations, and Redo restores the result',()=>{
+ const h=harness();enableLiveUndo(h);h.c.boardState[80].k=h.c.boardState[80].v=12;
+ const before=copy(h.c.boardState);h.down(15,15);assert.equal(h.snapshots,0,'do not snapshot a pointerdown that might cancel');
+ h.move(35,15);const boundary=h.c.simulationStartState;
+ for(let x=4;x<=7;x++)h.move(x*10+5,15);
+ h.up(75,15);assert.equal(h.snapshots,1,'one snapshot for the entire stroke');assert(h.c.isLifePlaying);
+ assert.equal(h.c.currentGenerationCount,12,'drawing never resets the generation counter');
+ assert.deepEqual(h.history[0].after,boundary);assert.deepEqual(boundary.tiles,before);
+ h.c.boardState[79].k=h.c.boardState[79].v=8;const after=copy(h.c.boardState);
+ h.c.undo();assert.equal(h.c.isLifePlaying,false);assert.deepEqual(h.c.boardState,before);
+ h.c.redo();assert.deepEqual(h.c.boardState,after);
+ h.c.undo();h.c.undo();assert(h.c.boardState.every(t=>t.k===3),'a second Undo can still undo the earlier simulation');
+});
+test('each live stroke creates its own boundary, but cancelled untouched input creates none',()=>{
+ const h=harness();enableLiveUndo(h);
+ h.down(15,15);h.up(15,15,1,'pointercancel');assert.equal(h.snapshots,0);assert.equal(h.checkpoints.length,0);
+ h.c.boardState[80].k=h.c.boardState[80].v=12;
+ const first=copy(h.c.boardState);h.down(15,15);h.up(15,15);
+ h.c.boardState[79].k=h.c.boardState[79].v=8;
+ const second=copy(h.c.boardState);h.down(35,15);h.up(35,15);
+ assert.equal(h.snapshots,2);assert.equal(h.checkpoints.length,4);
+ h.c.undo();assert.deepEqual(h.c.boardState,second);h.c.undo();assert.deepEqual(h.c.boardState,first);
+});

@@ -2537,6 +2537,16 @@ gsMode = 'off';
       
 
 function applyActionToTiles(indices, actionFn) {
+        if (pointerState.id !== null && !pointerState.liveCheckpoint && isLifePlaying && simulationStartState &&
+            indices.some(index => boardState[index])) {
+            const checkpoint = JSON.stringify({ version: 1, simulation: armedSimulation,
+                generation: currentGenerationCount,
+                elapsed: armedSimulation === 'breathe' ? Math.max(0, performance.now() - breatheStartTime) : 0 });
+            window.logArtEvent('BRUSH_CHECKPOINT', checkpoint);
+            checkpointLiveSimulation();
+            pointerState.liveCheckpoint = true;
+            window.logArtEvent('BRUSH_CONTINUE', checkpoint);
+        }
         let changed = false;
         const now = performance.now();
         indices.forEach(idx => {
@@ -2723,7 +2733,44 @@ function initializeWindMode() {
     });
 }
 
-const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null, changes: null, liveRecording: false, pausedMotion: false, motionStarted: false };
+const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null, changes: null, liveRecording: false, pausedMotion: false, motionStarted: false, liveCheckpoint: false };
+
+// One full snapshot per live stroke, shared across adjacent history segments.
+// Never pause/restart the engine or reset its generation counter here.
+function checkpointLiveSimulation() {
+    if (!isLifePlaying || !simulationStartState) return;
+    const boundary = getCurrentState();
+    // Even a visually stable run owns its PLAY and elapsed generations. Keep
+    // that lead-in outside the stroke so Undo never leaves an orphan GEN wait.
+    pushHistory({ before: simulationStartState, after: boundary });
+    simulationStartState = boundary;
+    simulationHasBrushInput = false;
+}
+
+function resumeBrushCheckpoint(record) {
+    if (isLifePlaying) return;
+    if (armedSimulation !== record.simulation) throw Error('Brush checkpoint simulation mismatch');
+    simulationStartState = getCurrentState();
+    simulationHasBrushInput = false;
+    currentGenerationCount = record.generation;
+    isLifePlaying = true;
+    setSimulationRunning(true);
+    dom.iconPlay.style.display = 'none';
+    dom.iconPause.style.display = 'block';
+    dom.btnStepForward.disabled = true;
+    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
+        dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile,
+        dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker]
+        .filter(Boolean).forEach(button => { button.disabled = armedSimulation === 'breathe'
+            ? button !== dom.btnShowBreatheMenu : button === dom.btnShowBreatheMenu; });
+    updateUndoRedoButtons();
+    if (armedSimulation === 'breathe') {
+        breatheStartTime = performance.now() - record.elapsed;
+        startAnimationLoop();
+    } else {
+        animationFrameId = requestAnimationFrame(gameLoop);
+    }
+}
 
 // Only brush targets enter this map. Simulation generations are never diffed
 // against a pointer-down snapshot or serialized as part of a brush sample.
@@ -2770,7 +2817,7 @@ function onPointerDown(e) {
     Object.assign(pointerState, { id: e.pointerId, downIndex: index, downX: e.clientX, downY: e.clientY, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false,
         beforeState: isLifePlaying && simulationStartState ? null : getCurrentState(),
         changes: new Map(), liveRecording: isLifePlaying || recordPausedBrushMotion,
-        pausedMotion: !isLifePlaying && recordPausedBrushMotion, motionStarted: false });
+        pausedMotion: !isLifePlaying && recordPausedBrushMotion, motionStarted: false, liveCheckpoint: false });
     pointerState.longPressTimer = isLifePlaying ? null : setTimeout(() => {
         if (pointerState.isDragging) return;
         pointerState.suppressClick = true;
@@ -2864,7 +2911,7 @@ function onPointerUp(e) {
         }
     }
     flushLiveBrushChanges();
-    // A running simulation owns its complete combined action, just as with Wind.
+    // A running segment starts at the latest brush checkpoint; Pause commits it.
     // A standalone brush stroke still creates exactly one Undo entry.
     if (pointerState.beforeState) {
         const afterState = getCurrentState();
@@ -2882,7 +2929,7 @@ function onPointerUp(e) {
     const pointerId = pointerState.id;
     Object.assign(pointerState, { id: null, downIndex: -1, isDragging: false, dragSourceIndex: null,
         lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null,
-        changes: null, liveRecording: false, pausedMotion: false, motionStarted: false });
+        changes: null, liveRecording: false, pausedMotion: false, motionStarted: false, liveCheckpoint: false });
     if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
 }
 
@@ -3828,6 +3875,11 @@ function parseHistoryMacro(lines) {
                 if (start !== -1) {
                     const removed = visible.splice(start);
                     cancelledActions.set(target.id, removed.filter(item => item.historyId === target.id));
+                    const continuation = removed.find(item => item.eventName === 'BRUSH_CONTINUE');
+                    if (continuation) {
+                        // Retain simulation generations up to the cancelled brush.
+                        visible.push({ ...continuation, eventName: 'PAUSE', details: '---', historyId: null });
+                    }
                 }
             } else {
                 // Redo reuses the recorded commands, not a fresh random result or a board snapshot.
@@ -3836,16 +3888,20 @@ function parseHistoryMacro(lines) {
                 const originalStart = restored[0]?.time ?? startTime;
                 // Relocate the action as a block, preserving all internal
                 // offsets (including time-based simulations and Wind).
-                visible.push(...restored.map(item => ({ ...item, time: startTime + item.time - originalStart, restoredTiming: true })));
+                visible.push(...restored.map(item => ({ ...item, time: startTime + item.time - originalStart, restoredTiming: true,
+                    // Resume the paused boundary before waiting for generations.
+                    ...(item.eventName === 'BRUSH_CONTINUE' ? { isGenBased: false, targetGen: null } : {}) })));
             }
             // A checkpoint is instantaneous at the retained/restored tail.
             // Rebase subsequent raw timestamps from here, so repeated edits
             // cannot accumulate waits or subtract the same interval twice.
             event.time = visibleTime(event.time);
             removedTime = rawTime - event.time;
+            const tail = visible.findLast(item => item.eventName !== 'HISTORY_ACTION');
+            const stopAtBoundary = event.eventName === 'REDO' && tail?.eventName === 'BRUSH_CHECKPOINT' && tail.isGenBased;
             visible.push({ ...event, eventName: 'HISTORY_SETTINGS', details: JSON.stringify(target.settings),
                 historyId: event.eventName === 'REDO' ? target.id : null,
-                isGenBased: false, targetGen: null });
+                isGenBased: Boolean(stopAtBoundary), targetGen: stopAtBoundary ? tail.targetGen : null });
         } else {
             visible.push(event);
         }
@@ -3916,6 +3972,12 @@ function parseMacroText(text) {
     actions.forEach(validateIslandsMacroAction);
     let brushOpen = false;
     for (const action of actions) {
+        if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) {
+            const record = JSON.parse(action.details);
+            if (record.version !== 1 || typeof record.simulation !== 'string' ||
+                !Number.isSafeInteger(record.generation) || record.generation < 0 ||
+                !Number.isFinite(record.elapsed) || record.elapsed < 0) throw Error('Invalid live brush checkpoint');
+        }
         if (action.eventName === 'BRUSH_START') {
             if (brushOpen || JSON.parse(action.details).version !== 1 || action.isGenBased) throw new Error('Invalid brush motion start');
             brushOpen = true;
@@ -4292,7 +4354,16 @@ function scheduleNextMacroStep() {
         if (!isMacroPlaying || currentMacroStep >= macroQueue.length) return;
     if (replayWindBatch?.ending) return;
     
-        const nextAction = macroQueue[currentMacroStep];
+        let nextAction = macroQueue[currentMacroStep];
+    // After Redo resumes a checkpoint, paint same-generation samples before
+    // allowing the next animation frame to advance the simulation.
+    while (nextAction?.isGenBased && nextAction.eventName !== 'WIND_WAVE' && isLifePlaying &&
+        currentGenerationCount >= nextAction.targetGen && !replayWindBatch?.ending) {
+        executeMacroAction(nextAction);
+        currentMacroStep++;
+        if (currentMacroStep >= macroQueue.length) { finishMacroPlayback(); return; }
+        nextAction = macroQueue[currentMacroStep];
+    }
     
         // אם הפעולה הבאה מבוססת על מספר דורות בסימולציה שרצה כרגע,
         // אנחנו לא מתזמנים טיימר! gameLoop יקרא לפעולה הזו באופן טבעי.
@@ -4731,6 +4802,12 @@ else if (action.eventName === 'Invert Colors') {
         }
 
 
+        else if (action.eventName === 'BRUSH_CHECKPOINT') {
+            checkpointLiveSimulation();
+        }
+        else if (action.eventName === 'BRUSH_CONTINUE') {
+            resumeBrushCheckpoint(JSON.parse(action.details));
+        }
         else if (action.eventName === 'BRUSH_START') {
             replayBrushBefore = getCurrentState();
         }
