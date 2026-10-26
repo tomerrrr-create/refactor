@@ -1,4 +1,18 @@
+import { sortColorsArray } from './colors.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
+
+const previewCache = new WeakMap();
+
+// The picker always uses the same rainbow preview. Sort a separate copy of
+// the original palette; the active board order and palette data stay untouched.
+export function getPalettePreviewColors(palette) {
+    const source = palette.originalColors ?? palette.colors;
+    const cached = previewCache.get(palette);
+    if (cached?.source === source) return cached.colors;
+    const colors = Object.freeze(sortColorsArray(source, 'dark-rainbow'));
+    previewCache.set(palette, { source, colors });
+    return colors;
+}
 
 const groupMarks = {
     classic: '<path d="m12 2 8 10-8 10-8-10zM12 6l5 6-5 6-5-6z"/>',
@@ -92,7 +106,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         symbol.append(paletteIcon(palette));
         title.append(symbol);
         const preview = element('span', 'palette-choice-preview');
-        preview.append(colorMosaic(palette.colors));
+        preview.append(colorMosaic(getPalettePreviewColors(palette)));
         button.append(preview, title);
         if (selected) {
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
@@ -117,7 +131,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         icon.classList.add('palette-current-icon');
         // Keep the ribbon and icon at the physical right edge in both languages.
         current.dir = 'ltr';
-        current.append(details, colorRibbon(palette.colors), icon);
+        current.append(details, colorRibbon(getPalettePreviewColors(palette)), icon);
     }
     function showGroup(group) {
         activeGroup = group;

@@ -17,7 +17,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
- source=source.replace('      initializeApp();',`window.paletteTest={open:()=>modals.openPaletteModal(),tech:()=>modals.openTechnicianMenu(),state:()=>({index:activePaletteIndex,logs:artRecipeLog.join('~'),board:boardState.map(t=>t.k),colors:C.PALETTES.map(p=>[p.originalName,p.colors])})};initializeApp().then(()=>paletteTest.ready=true);`);
+ source=source.replace('      initializeApp();',`window.paletteTest={open:()=>modals.openPaletteModal(),tech:()=>modals.openTechnicianMenu(),sort:method=>{applySortMethod(method);modals.populatePaletteModal();},state:()=>({index:activePaletteIndex,sortMethod:currentSortMethod,logs:artRecipeLog.join('~'),board:boardState.map(t=>t.k),colors:C.PALETTES.map(p=>[p.originalName,p.colors])})};initializeApp().then(()=>paletteTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.paletteTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const state=()=>page.evaluate(()=>paletteTest.state());await page.evaluate(()=>paletteTest.open());await page.waitForTimeout(350);
@@ -33,6 +33,18 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   assert.deepEqual(await state(),before,'group browsing never changes board, palette or log');
   if(group==='classic')await page.screenshot({path:path.join(artifacts,config.lang+'-palette-cards.png')});
  }
+ // Board sorting must never alter any group of catalogue previews or the footer.
+ const preview=async()=>page.locator('#paletteModal .palette-color-mosaic, #paletteModal .palette-current-summary .palette-color-ribbon').evaluateAll(items=>items.map(item=>[...item.children].map(cell=>cell.style.backgroundColor)));
+ for(const group of ['classic','extended','continuous','archive']){
+  await page.locator('#paletteModal [data-palette-group="'+group+'"]').click();const fixed=await preview();
+  for(const method of ['dark-rainbow','reversed','temperature','hue']){
+   await page.evaluate(method=>paletteTest.sort(method),method);
+   await page.locator('#paletteModal [data-palette-group="'+group+'"]').click();
+   assert.deepEqual(await preview(),fixed,group+' previews stay fixed under '+method);
+  }
+ }
+ await page.evaluate(method=>paletteTest.sort(method),before.sortMethod);
+ await page.locator('#paletteModal [data-palette-group="classic"]').click();
  // Tabs retain their keyboard navigation and the selection stays accessible.
  await page.locator('#paletteModal [data-palette-group="archive"]').focus();await page.keyboard.press('Home');assert.equal(await page.locator('#paletteModal [aria-selected="true"]').getAttribute('data-palette-group'),'classic');
  const selected=page.locator('#paletteModal .palette-choice[aria-pressed="true"]');
