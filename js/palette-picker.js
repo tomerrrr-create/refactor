@@ -190,4 +190,13 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     }
     host.append(tabs, description, list, current);
     showGroup(activeGroup);
+    // The host can still be hidden while it is populated. Wait for the opening
+    // layout before revealing the selected card; manual tab browsing stays at
+    // the top of each group as before.
+    const selectedCard = list.querySelector('[aria-pressed="true"]');
+    if (selectedCard) requestAnimationFrame(() => {
+        if (selectedCard.isConnected && selectedCard.getClientRects().length) {
+            selectedCard.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+        }
+    });
 }

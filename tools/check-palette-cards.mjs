@@ -52,6 +52,26 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const choice=page.locator('#paletteModal .palette-choice').nth(1),index=Number(await choice.getAttribute('data-palette-index'));
  await choice.click();await page.waitForTimeout(350);assert.equal((await state()).index,index);assert(!(await page.locator('#paletteModal').evaluate(e=>e.classList.contains('modal-visible'))));
  assert.deepEqual((await state()).colors,before.colors,'preview never edits the palette catalogue');
+ // Reopening lands on the selected card even near the end of a long group.
+ for(const group of ['classic','extended','continuous','archive']){
+  await page.evaluate(()=>paletteTest.open());
+  await page.locator('#paletteModal [data-palette-group="'+group+'"]').click();
+  const last=page.locator('#paletteModal .palette-choice').last();
+  const lastIndex=Number(await last.getAttribute('data-palette-index'));
+  await last.click();
+  const selectedState=await state();
+  await page.evaluate(()=>paletteTest.open());await page.waitForTimeout(350);
+  assert.equal(await page.locator('#paletteModal [aria-selected="true"]').getAttribute('data-palette-group'),group);
+  assert.equal((await state()).index,lastIndex);
+  const visible=await page.locator('#paletteModal .palette-choice[aria-pressed="true"]').evaluate(card=>{
+   const r=card.getBoundingClientRect(),list=card.parentElement.getBoundingClientRect();
+   const overlap=Math.min(r.bottom,list.bottom)-Math.max(r.top,list.top);
+   return overlap>=Math.min(r.height,list.height)-2;
+  });
+  assert(visible,'selected card fills the available viewport on opening: '+group);
+  assert.deepEqual(await state(),selectedState,'opening does not change board or logs');
+  await page.locator('#btnPaletteModalClose').click();
+ }
  await page.evaluate(()=>paletteTest.tech());
  // Open the same shared chooser through Startup without changing the board.
  const startupButton=page.locator('#btnStartupPalette');
