@@ -107,7 +107,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         title.append(symbol);
         const preview = element('span', 'palette-choice-preview');
         preview.append(colorMosaic(getPalettePreviewColors(palette)));
-        button.append(title, preview);
+        button.append(preview, title);
         if (selected) {
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
         }
