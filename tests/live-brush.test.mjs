@@ -191,13 +191,15 @@ for(const shape of ['circle','square','diamond']) for(const live of [false,true]
  });
 }
 
-for(const shape of ['circle','square','diamond']) for(const symmetry of ['off','vertical','horizontal','mandala','kaleidoscope']) {
+for(const shape of ['circle','square','diamond','ring','line']) for(const symmetry of ['off','vertical','horizontal','mandala','kaleidoscope']) {
  test(`${shape} tap mirrors the complete footprint in ${symmetry} symmetry`,()=>{
   const h=harness({live:false,brush:3,shape,symmetry});
   h.down(15,15);h.up(15,15);
   const copies=symmetry==='off'?1:['horizontal','vertical'].includes(symmetry)?2:4;
-  const area=shape==='square'?9:5;
-  assert.equal(h.c.boardState.filter(tile=>tile.k===0).length,area*copies);
+  const area=shape==='square'?9:shape==='ring'?4:shape==='line'?3:5;
+  // Kaleidoscope also transposes the line, creating vertical copies.
+  const expected=shape==='line'&&symmetry==='kaleidoscope'?20:area*copies;
+  assert.equal(h.c.boardState.filter(tile=>tile.k===0).length,expected);
   assert.equal(h.history.length,1);
  });
 }

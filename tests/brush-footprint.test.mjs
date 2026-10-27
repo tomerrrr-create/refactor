@@ -77,3 +77,18 @@ test('legacy XL settings migrate to 23 without losing other preferences', () => 
     assert.equal(JSON.parse(data.get(SIM_INIT_STORAGE_KEY)).brushSize,23);
     assert.equal(validateProfileSnapshot({settings:legacy}).settings.brush.size,23);
 });
+
+
+test('ring paints only its one-cell annulus and line paints one horizontal row', () => {
+    assert.deepEqual(getBrushOffsets(3,'ring'),[[0,-1],[-1,0],[1,0],[0,1]]);
+    for(const size of BRUSH_SIZES) {
+        const r=(size-1)/2;
+        assert.deepEqual(getBrushOffsets(size,'line'),Array.from({length:size},(_,i)=>[i-r,0]));
+        const ring=new Set(getBrushOffsets(size,'ring').map(String));
+        for(let y=-r;y<=r;y++) for(let x=-r;x<=r;x++) {
+            const d=x*x+y*y;
+            assert.equal(ring.has(String([x,y])),d<=r*r&&(r===0||d>(r-1)*(r-1)));
+        }
+        if(size>1) assert(!ring.has('0,0'),'ring leaves the center untouched');
+    }
+});

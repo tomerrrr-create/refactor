@@ -2158,6 +2158,7 @@ body.wind-mode #board { cursor: crosshair; }
 .brush-shape-options, .brush-size-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
 .brush-shape-options button, .brush-size-options button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; min-width: 0; border: 1px solid #b89a5730; border-radius: 8px; padding: 7px; color: #bfc0b5; background: #ffffff03; font: inherit; font-size: 13px; cursor: pointer; overflow-wrap: anywhere; }
 .brush-shape-options svg { width: 20px; height: 20px; flex-shrink: 0; }
+.brush-shape-options { grid-template-columns: repeat(5,minmax(0,1fr)); width: min(248px, calc(100% + 24px)); justify-self: center; }
 .brush-controls { width: min(100%, 224px); margin-inline: auto; }
 .brush-control-grid { min-width: 0; display: grid; gap: 7px; }
 .brush-shape-options button { color: #a2abb3; background: transparent; border: 0; box-shadow: none; }

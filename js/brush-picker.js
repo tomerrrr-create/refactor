@@ -4,7 +4,9 @@ import { onLanguageChange } from './i18n.js';
 const icons = {
     circle: '<circle cx="12" cy="12" r="8"/>',
     square: '<rect x="4" y="4" width="16" height="16" rx="1"/>',
-    diamond: '<path d="m12 3 9 9-9 9-9-9z"/>'
+    diamond: '<path d="m12 3 9 9-9 9-9-9z"/>',
+    ring: '<path fill-rule="evenodd" d="M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18Zm0 4a5 5 0 1 0 0 10 5 5 0 1 0 0-10Z"/>',
+    line: '<rect x="3" y="10" width="18" height="4" rx="1"/>'
 };
 
 export function initializeBrushPicker(app) {

@@ -4,6 +4,7 @@ import {createServer} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
+import {getBrushTiles} from '../js/brush-footprint.js';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../',import.meta.url));
 const artifacts=process.env.BRUSH_ARTIFACTS||'/tmp/brush-picker-check';await mkdir(artifacts,{recursive:true});
@@ -37,15 +38,16 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const shape=async value=>p.locator(`[data-brush-shape="${value}"]`).click();
  const size=async value=>p.locator(`[data-brush-size="${value}"]`).click();
  await p.evaluate(()=>brushTest.setup());await open();
- assert.equal(await p.locator('[data-brush-shape]').count(),3);assert.equal(await p.locator('#btnNextPalette, #btnPrevPalette, #colorPickerHeader').count(),0);assert(await p.locator('[data-brush-shape]').evaluateAll(buttons=>buttons.every(b=>!b.textContent.trim()&&b.getAttribute('aria-label')&&b.title)));assert(await p.locator('#colorPickerPaletteName').evaluate(e=>e.closest('.brush-picker-heading')!==null));assert.equal(await p.locator('[data-brush-size]').count(),9);
+ assert.equal(await p.locator('[data-brush-shape]').count(),5);assert.equal(await p.locator('#btnNextPalette, #btnPrevPalette, #colorPickerHeader').count(),0);assert(await p.locator('[data-brush-shape]').evaluateAll(buttons=>buttons.every(b=>!b.textContent.trim()&&b.getAttribute('aria-label')&&b.title)));assert(await p.locator('#colorPickerPaletteName').evaluate(e=>e.closest('.brush-picker-heading')!==null));assert.equal(await p.locator('[data-brush-size]').count(),9);
  const rows=await p.evaluate(()=>({shapes:[...document.querySelectorAll('[data-brush-shape]')].map(b=>{const r=b.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};}),sizes:[...document.querySelectorAll('[data-brush-size]')].slice(0,3).map(b=>{const r=b.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};})}));
- for(let i=0;i<3;i++){assert.equal(rows.shapes[i].x,rows.sizes[i].x);assert.equal(rows.shapes[i].w,rows.sizes[i].w);assert.equal(rows.shapes[i].h,rows.sizes[i].h);assert(rows.shapes[i].y+rows.shapes[i].h<rows.sizes[i].y);}
+ for(const item of rows.shapes){assert.equal(item.y,rows.shapes[0].y);assert(item.w>=44&&item.h>=44);assert(item.y+item.h<rows.sizes[0].y);}
+
  const alignment=await p.evaluate(()=>{const rect=el=>el.getBoundingClientRect(),center=el=>{const r=rect(el);return r.left+r.width/2;},tools=document.querySelector('.brush-picker-tools'),middle=center(tools);return ['.brush-signature','.brush-shape-options','.brush-size-options'].map(selector=>Math.abs(center(document.querySelector(selector))-middle));});
  assert(alignment.every(offset=>offset<.1),'signature, shapes and sizes share the center of the panel');
  assert.equal(await p.locator('#brushFootprintPreview, #brushFootprintCaption, .brush-footprint').count(),0);
  const tones=await p.evaluate(()=>{const style=selector=>{const s=getComputedStyle(document.querySelector(selector));return {color:s.color,border:s.borderColor,background:s.backgroundImage};};return {shape:style('[data-brush-shape][aria-pressed="true"]'),size:style('[data-brush-size][aria-pressed="true"]')};});
  assert.equal(tones.shape.color,'rgb(255, 215, 0)');assert.equal(tones.shape.background,'none');
- for(const form of ['circle','square','diamond']){
+ for(const form of ['circle','square','diamond','ring','line']){
   await shape(form);
   const appearance=await p.locator('[data-brush-shape]').evaluateAll(buttons=>buttons.map(b=>{const s=getComputedStyle(b),svg=getComputedStyle(b.querySelector('svg'));return {selected:b.getAttribute('aria-pressed')==='true',border:s.borderWidth,background:s.backgroundColor,shadow:s.boxShadow,fill:svg.fill,height:b.getBoundingClientRect().height};}));
   for(const b of appearance){assert.equal(b.border,'0px');assert.equal(b.background,'rgba(0, 0, 0, 0)');assert.equal(b.shadow,'none');assert(b.height>=44);assert.equal(b.fill,b.selected?'rgb(255, 215, 0)':'none');}
@@ -67,10 +69,10 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await p.screenshot({path:path.join(artifacts,`${config.lang}-picker.png`)});
  await p.locator('#btnColorPickerCloseTop').click();await p.waitForTimeout(320);await open();assert.equal(await p.locator('[data-brush-size="23"]').getAttribute('aria-pressed'),'true');await close();
  // Actual pointer input, all shapes, including single-cell and oversized brushes.
- for(const form of ['circle','square','diamond'])for(const width of [1,7,23]){
+ for(const form of ['circle','square','diamond','ring','line'])for(const width of [1,7,23]){
   await p.evaluate(()=>brushTest.setup());await open();await shape(form);await size(width);await close();await tap(15,15);
-  state=await p.evaluate(()=>brushTest.state());const r=(width-1)/2;const count=form==='square'?width*width:form==='diamond'?1+2*r*(r+1):({1:1,7:29,23:377}[width]);
-  assert.equal(state.tiles.filter(t=>t[0]===0).length,count,`${form}/${width} pointer footprint`);assert.equal(state.history,1);
+  state=await p.evaluate(()=>brushTest.state());const expected=getBrushTiles(15*31+15,31,width,form);
+  assert.deepEqual(state.tiles.flatMap((t,i)=>t[0]===0?[i]:[]),expected,`${form}/${width} pointer footprint`);assert.equal(state.history,1);
   await p.evaluate(()=>brushTest.undo());assert((await p.evaluate(()=>brushTest.state())).tiles.every(t=>t[0]===2));await p.evaluate(()=>brushTest.redo());assert.deepEqual((await p.evaluate(()=>brushTest.state())).tiles,state.tiles);
   const recording=await p.evaluate(()=>brushTest.record());await p.evaluate(text=>brushTest.replay(text),recording);assert.deepEqual((await p.evaluate(()=>brushTest.state())).tiles,state.tiles,'macro replays concrete stroke exactly');
  }
@@ -81,6 +83,17 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  let a=await point(5,15),b=await point(25,15);await p.mouse.move(a.x,a.y);await p.mouse.down();await p.mouse.move(b.x,b.y,{steps:5});await p.mouse.up();state=await p.evaluate(()=>brushTest.state());for(let x=5;x<=25;x++)assert.equal(state.tiles[15*31+x][0],0,'continuous path has no gaps');assert.equal(state.history,1);
  await p.evaluate(()=>{brushTest.setup();brushTest.mode('copy');brushTest.copySource();});await open();await shape('square');await size(3);await close();
  a=await point(5,5);b=await point(15,15);await p.mouse.move(a.x,a.y);await p.mouse.down();await p.mouse.move(b.x,b.y,{steps:5});await p.mouse.up();state=await p.evaluate(()=>brushTest.state());assert.equal(state.history,1);assert.equal(state.tiles.filter(t=>t[0]===1).length,10,'copy source plus nine destination cells');
+ // New sparse shapes retain their footprint in continuous and copy modes.
+ for(const form of ['ring','line']){
+  await p.evaluate(()=>{brushTest.setup();brushTest.mode('continuous');});await open();await shape(form);await size(3);await close();
+  a=await point(5,15);b=await point(25,15);await p.mouse.move(a.x,a.y);await p.mouse.down();await p.mouse.move(b.x,b.y,{steps:5});await p.mouse.up();
+  state=await p.evaluate(()=>brushTest.state());const union=new Set();for(let x=5;x<=25;x++)for(const i of getBrushTiles(15*31+x,31,3,form))union.add(i);
+  assert.deepEqual(state.tiles.flatMap((t,i)=>t[0]===0?[i]:[]),[...union].sort((a,b)=>a-b));assert.equal(state.history,1);
+  await p.evaluate(()=>{brushTest.setup();brushTest.mode('copy');brushTest.copySource();});await open();await shape(form);await size(3);await close();
+  a=await point(5,5);b=await point(15,15);await p.mouse.move(a.x,a.y);await p.mouse.down();await p.mouse.move(b.x,b.y,{steps:5});await p.mouse.up();
+  state=await p.evaluate(()=>brushTest.state());assert.equal(state.tiles.filter(t=>t[0]===1).length,1+getBrushTiles(15*31+15,31,3,form).length);
+  assert.equal((await p.evaluate(()=>brushTest.getSettings())).brush.shape,form);
+ }
  // Palette paging and rainbow leave the picker open and keep shape/size.
  await p.evaluate(()=>{brushTest.setup();brushTest.largePalette();});await open();await shape('diamond');await size(23);
  const largeGeometry=await p.locator('.brush-picker-panel').evaluate(panel=>({height:panel.getBoundingClientRect().height,scroll:panel.querySelector('.brush-picker-body').scrollHeight}));

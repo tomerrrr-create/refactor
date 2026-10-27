@@ -1,5 +1,5 @@
 export const BRUSH_SIZES = Object.freeze([1, 3, 5, 7, 9, 11, 13, 15, 23]);
-export const BRUSH_SHAPES = Object.freeze(['circle', 'square', 'diamond']);
+export const BRUSH_SHAPES = Object.freeze(['circle', 'square', 'diamond', 'ring', 'line']);
 export const brushSizeLabel = size => size === 23 ? 'XL' : String(size);
 // Preserve existing XL preferences when its width changes from 21 to 23.
 export const normalizeBrushSize = size => size === 21 ? 23 : size;
@@ -11,7 +11,13 @@ export function getBrushOffsets(size, shape = 'circle') {
     if (!cache.has(key)) {
         const r = Math.floor(size / 2), cells = [];
         for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
-            if (shape === 'square' || (shape === 'diamond' ? Math.abs(x) + Math.abs(y) <= r : x*x + y*y <= r*r)) cells.push(Object.freeze([x || 0,y || 0]));
+            const distance = x*x + y*y;
+            const included = shape === 'square' ||
+                (shape === 'diamond' && Math.abs(x) + Math.abs(y) <= r) ||
+                (shape === 'circle' && distance <= r*r) ||
+                (shape === 'ring' && distance <= r*r && (r === 0 || distance > (r-1)*(r-1))) ||
+                (shape === 'line' && y === 0);
+            if (included) cells.push(Object.freeze([x || 0,y || 0]));
         }
         cache.set(key, Object.freeze(cells));
     }
