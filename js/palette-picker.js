@@ -75,8 +75,9 @@ function colorMosaic(colors) {
 }
 
 // Presentation only: group navigation never changes the board or records actions.
-export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, onCurrent, showCurrentLabel = true, rtl = false, idPrefix = 'palette' }) {
+export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, onCurrent, currentPreviewHost = null, showCurrentLabel = true, rtl = false, idPrefix = 'palette' }) {
     host.replaceChildren();
+    currentPreviewHost?.replaceChildren();
     host.dir = rtl ? 'rtl' : 'ltr';
     const availableGroups = groups.filter(group => group.indexes.length);
     let activeGroup = availableGroups.find(group => group.indexes.includes(selectedIndex)) || availableGroups[0];
@@ -147,9 +148,23 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         details.append(nameLabel, count);
         const icon = paletteIcon(palette);
         icon.classList.add('palette-current-icon');
-        // Keep the ribbon and icon at the physical right edge in both languages.
         current.dir = 'ltr';
-        current.append(details, colorRibbon(getPalettePreviewColors(palette)), icon);
+        const ribbon = colorRibbon(getPalettePreviewColors(palette));
+        if (currentPreviewHost && onCurrent) {
+            const preview = element('button', 'palette-current-preview');
+            preview.id = `${idPrefix}-current-preview`;
+            preview.type = 'button';
+            preview.dir = 'ltr';
+            preview.setAttribute('aria-haspopup', 'dialog');
+            preview.setAttribute('aria-label', current.getAttribute('aria-label'));
+            preview.addEventListener('click', onCurrent);
+            preview.append(ribbon, icon);
+            currentPreviewHost.append(preview);
+            current.append(details);
+        } else {
+            // Other palette pickers retain their combined footer.
+            current.append(details, ribbon, icon);
+        }
     }
     function showGroup(group) {
         activeGroup = group;
