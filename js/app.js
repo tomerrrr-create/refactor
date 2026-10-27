@@ -1,3 +1,4 @@
+import { validateCracksMaterial } from './cracks-settings.js';
 import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
@@ -296,7 +297,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
-      let contourMode = 'cracks', cracksState = null;
+      let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null;
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
@@ -441,6 +442,8 @@ currentSortMethod,
 
       function areStatesEqual(stateA, stateB) {
         if (!stateA || !stateB) return false;
+        if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
+        if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
         if (JSON.stringify(stateA.evolutionTuning) !== JSON.stringify(stateB.evolutionTuning) ||
             stateA.brightnessEvoMode !== stateB.brightnessEvoMode || stateA.breatheEvoMode !== stateB.breatheEvoMode || stateA.dlaMode !== stateB.dlaMode) return false;
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
@@ -1713,6 +1716,7 @@ function handleEvolutionTap(simulation, onTap) {
 
 function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     if (isLifePlaying) return;
+    if (!isExecutingMacroCommand) replayCracksMaterial = null;
 
     // --- MACRO KILL SWITCH ---
     // אם לחצו על כפתור סימולציה באופן ידני (ולא מתוך פקודת מאקרו), אנחנו משמידים את המאקרו הטעון
@@ -2813,7 +2817,7 @@ function resumeBrushCheckpoint(record) {
 // against a pointer-down snapshot or serialized as part of a brush sample.
 function flushLiveBrushChanges() {
     if (pointerState.changes?.size && armedSimulation === 'contour' && contourMode === 'cracks') {
-        cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), contourRules },
+        cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), contourRules: { ...contourRules, material: getCracksMaterial() } },
             cracksState, pointerState.changes.values());
     }
     if (!pointerState.liveRecording || !pointerState.changes?.size) return;
@@ -3362,29 +3366,59 @@ function cycleChiFlowMode() {
 }
 
 // Running evolutions cycle through active modes; paused cycles retain Off.
+function getCracksMaterial() {
+    return validateCracksMaterial(replayCracksMaterial ?? contourRules.material);
+}
+function saveCracksSettings(material, lineColor) {
+    if (armedSimulation !== 'contour' || contourMode !== 'cracks' || isBreathing || isMacroLoaded || isMacroPlaying) return false;
+    const next = validateCracksMaterial(material);
+    if (!['darkest','lightest'].includes(lineColor)) return false;
+    const commit = () => {
+        replayCracksMaterial = null;
+        contourRules = { ...contourRules, material:next, lineColor };
+        if (next.enabled && next.strength === 80) delete contourRules.material;
+        cracksState = cracksState ? { ...restoreCracksState(cracksState), version:3, pendingSeed:cracksState.pendingSeed ?? null } : createCracksState(n);
+    };
+    if (isLifePlaying) commit(); else performAction(commit);
+    recordLiveSimulationRules('contour');
+    persistWorkspaceSettings(getWorkspaceSettings());
+    settingsProfiles?.scheduleCapture();
+    return true;
+}
 function getContourSnapshot() {
-    return { mode: contourMode, rules: { ...contourRules }, cracksState: cracksState ? restoreCracksState(cracksState) : null };
+    return { mode: contourMode, rules: { ...contourRules }, ...(contourMode === 'cracks' ? { material: getCracksMaterial() } : {}), cracksState: cracksState ? restoreCracksState(cracksState) : null };
 }
 function validateContourSnapshot(value) {
     if (!value || !['contours','cracks'].includes(value.mode) || !value.rules ||
         !Number.isFinite(value.rules.sensitivity) || value.rules.sensitivity<0 || value.rules.sensitivity>100 ||
         !['darkest','lightest'].includes(value.rules.lineColor)) throw new Error('Invalid contour state');
     if (value.cracksState) restoreCracksState(value.cracksState);
+    if (value.material) validateCracksMaterial(value.material);
+    if (value.rules.material) validateCracksMaterial(value.rules.material);
 }
 function restoreContourSnapshot(value) {
     validateContourSnapshot(value);
     if (armedSimulation !== 'contour') armSimulation('contour');
     contourMode = value.mode;
+    const preferenceMaterial = contourRules.material;
     contourRules = { ...value.rules };
+    if (isMacroPlaying || isExecutingMacroCommand) {
+        if (preferenceMaterial) contourRules.material = preferenceMaterial;
+        else delete contourRules.material;
+        replayCracksMaterial = value.material ?? { enabled:false, strength:80 };
+    } else {
+        replayCracksMaterial = null;
+        if (value.material && JSON.stringify(validateCracksMaterial(contourRules.material)) !== JSON.stringify(value.material)) contourRules.material = validateCracksMaterial(value.material);
+    }
     cracksState = value.cracksState ? restoreCracksState(value.cracksState) : null;
     updateContourButtonUI();
 }
 function getContourRecordingRules() {
-    return contourMode === 'cracks' ? { ...contourRules, mode: 'cracks', cracksState: cracksState ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
+    return contourMode === 'cracks' ? { ...contourRules, material: getCracksMaterial(), mode: 'cracks', cracksState: cracksState ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
 }
 function runContourEvolution(context) {
     if (contourMode !== 'cracks') return Simulations.runContourGeneration(context);
-    const result = runCracksGeneration(context, cracksState);
+    const result = runCracksGeneration({ ...context, contourRules: { ...context.contourRules, material: getCracksMaterial() } }, cracksState);
     cracksState = result.nextCracksState;
     return result.nextBoardState;
 }
@@ -4447,6 +4481,7 @@ function stopMacro() {
         console.error('Failed to finish macro profile capture:', error);
     }
     replayNudgeTiming = null;
+    replayCracksMaterial = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
     isSelectingMacroPalette = false; 
@@ -4613,7 +4648,9 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
                 }
                 else if (sim === 'contour') {
-                    contourRules = { sensitivity: parsedRules.sensitivity ?? 75, lineColor: parsedRules.lineColor === 'lightest' ? 'lightest' : 'darkest' };
+                    const preferenceMaterial = contourRules.material;
+                    contourRules = { sensitivity: parsedRules.sensitivity ?? 75, lineColor: parsedRules.lineColor === 'lightest' ? 'lightest' : 'darkest', ...(preferenceMaterial ? {material:preferenceMaterial} : {}) };
+                    replayCracksMaterial = parsedRules.material ? validateCracksMaterial(parsedRules.material) : {enabled:false,strength:80};
                     contourMode = parsedRules.mode === 'cracks' ? 'cracks' : 'contours';
                     cracksState = parsedRules.cracksState ? restoreCracksState(parsedRules.cracksState) : null;
                     updateContourButtonUI();
@@ -4988,7 +5025,7 @@ else if (action.eventName === 'Invert Colors') {
                 });
                 
                 if (action.eventName === 'DRAW_STROKE' && armedSimulation === 'contour' && contourMode === 'cracks') {
-                    cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), contourRules }, cracksState, diff);
+                    cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), contourRules: { ...contourRules, material: getCracksMaterial() } }, cracksState, diff);
                 }
                 if (changed) {
                     renderToScreen(now);
@@ -5199,7 +5236,10 @@ syncGsModeFromModal: (direction) => {
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning,
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
-            getContourRules: () => ({ ...contourRules, mode: contourMode }), setContourRules: (r) => { contourRules = r; recordLiveSimulationRules('contour'); }, // <-- ADDED HERE
+            canEditCracksSettings: () => armedSimulation === 'contour' && contourMode === 'cracks' && !isBreathing && !isMacroLoaded && !isMacroPlaying,
+            getCracksSettings: () => ({ ...getCracksMaterial(), ...(cracksState && cracksState.version<3 ? {enabled:false} : {}), lineColor:contourRules.lineColor }),
+            saveCracksSettings,
+            getContourRules: () => ({ ...contourRules, mode: contourMode }), setContourRules: (r) => { contourRules = { ...contourRules, ...r }; recordLiveSimulationRules('contour'); }, // <-- ADDED HERE
 
 spiralRules,
 syncSpiralModeFromModal: (method) => {
@@ -5478,7 +5518,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         const evolutionPickers = [
             [dom.btnGameOfLife, 'gameOfLife', cycleGameOfLifeMode, modals.openGolSettingsModal],
             [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
-            [dom.btnContour, 'contour', cycleContourMode, modals.openContourSettingsModal],
+            [dom.btnContour, 'contour', cycleContourMode, () => contourMode === 'cracks' ? modals.openCracksSettingsModal() : modals.openContourSettingsModal()],
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
             [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],

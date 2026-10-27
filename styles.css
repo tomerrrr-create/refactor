@@ -2246,3 +2246,18 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnContour .contour-cracks-icon { display: none; }
 #btnContour.cracks-active .contour-original-icon { display: none; }
 #btnContour.cracks-active .contour-cracks-icon { display: block; }
+
+#cracksSettingsDialog { max-width: 440px; }
+#cracksMaterialNote { color: #b7b2a8; font-size: .85rem; line-height: 1.55; margin: 0; }
+#cracksSettingsDialog .cracks-toggle, #cracksSettingsDialog .cracks-line-color { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; }
+.cracks-toggle input { width: 24px; height: 24px; flex-shrink: 0; accent-color: var(--gold); }
+.cracks-strength { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.cracks-strength input { grid-column: 1 / -1; width: 100%; min-height: 44px; accent-color: var(--gold); }
+.cracks-strength input:disabled { opacity: .4; }
+.cracks-strength output { color: var(--gold); }
+.cracks-line-color select { max-width: 60%; min-height: 44px; padding: 6px; background: #171918; color: #e7d19d; border: 1px solid #b89a5755; border-radius: 6px; }
+
+#cracksSettingsDialog form { display: flex; flex-direction: column; gap: 18px; }
+#cracksSettingsDialog h2 { margin-bottom: 0; }
+
+#cracksMaterialStrength { direction: ltr; }

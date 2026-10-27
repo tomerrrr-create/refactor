@@ -1,3 +1,4 @@
+import { createCracksSettingsDialog } from './cracks-settings-dialog.js';
 import { initializeBrushPicker } from './brush-picker.js';
 import { transitionPickerDialog, finishPickerDialogTransition } from './picker-dialog-transition.js';
 import { bindColorPageSwipe } from './color-page-swipe.js';
@@ -1183,6 +1184,7 @@ export function initializeModals(appContext) {
     const openSeparatorCycleModal = initializeSeparatorCycleModal(app);
     const openErosionSettingsModal = initializeErosionModal(app);
     const evolutionTuningModals = initializeEvolutionTuningModals(app);
+    const cracksSettings = createCracksSettingsDialog(app);
     const helpTabs = [...document.querySelectorAll('[data-help-tab]')];
     helpTabs.forEach((button, index) => {
         button.addEventListener('click', () => selectHelpTab(button.dataset.helpTab));
@@ -2164,7 +2166,8 @@ return {
         openGolSettingsModal,
         openGravitationalSortSettingsModal,
         openAdvancedColorMappingModal, // Phase 1 Addition
-        openContourSettingsModal, // <-- ADDED HERE
+        openContourSettingsModal,
+        openCracksSettingsModal: cracksSettings.open, // <-- ADDED HERE
 openChiFlowSettingsModal,
 openTuringSettingsModal,
         closeModal,
