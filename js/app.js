@@ -22,7 +22,7 @@ import { loadBrushMotionRecording, persistBrushMotionRecording } from './brush-r
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, isSmoothDisplayAvailable } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
-import { updateRainbowFrame, updateColorFrame } from './rainbow-frame.js';
+import { updateRainbowFrame, getColorFrameShades } from './rainbow-frame.js';
 import { serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings } from './workspace-settings.js';
 import { resolveChiReach } from './chi-reach.js';
 // js/app.js
@@ -3043,7 +3043,7 @@ function updateLayout() {
             dom.board.classList.add('glowing-border-rainbow'); dom.board.classList.remove('glowing-border');
         }
         else if (selectedColor) {
-            updateColorFrame(dom.board, selectedColor);
+            updateRainbowFrame(dom.board, getColorFrameShades(selectedColor));
             dom.board.classList.add('glowing-border-rainbow'); dom.board.classList.remove('glowing-border');
         }
         else { dom.board.classList.remove('glowing-border', 'glowing-border-rainbow'); }

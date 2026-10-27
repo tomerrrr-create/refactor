@@ -1,22 +1,24 @@
 import { hexToRgb } from './colors.js';
 
-// A smooth decorative frame, independent of palette data and randomness.
-export function getColorFrameGradient(color) {
+// Cosmetic shades only: do not add colors to the drawing palette or consume
+// the simulation's random stream. Repeated entries weight the perimeter toward
+// the selected color: 70% base, 20% dark shades, 8% light tints, 2% white.
+export function getColorFrameShades(color) {
     const rgb = hexToRgb(color);
     const encode = components => '#' + components.map(channel => channel.toString(16).padStart(2, '0')).join('');
-    const base = encode(rgb);
-    const dark = encode(rgb.map(channel => Math.round(channel * .45)));
-    return `conic-gradient(${base} 0%, ${dark} 25%, ${base} 50%, ${dark} 75%, ${base} 100%)`;
+    const shades = Array(70).fill(encode(rgb));
+    for (const amount of [0, .25, .5, .75]) {
+        shades.push(...Array(5).fill(encode(rgb.map(channel => Math.round(channel * amount)))));
+    }
+    for (const amount of [.12, .24]) {
+        shades.push(...Array(4).fill(encode(rgb.map(channel => Math.round(channel + (255 - channel) * amount)))));
+    }
+    shades.push('#ffffff', '#ffffff');
+    return shades;
 }
 
 // Presentation only: keep decorative randomness separate from simulation randomness.
 const frameKeys = new WeakMap();
-
-export function updateColorFrame(board, color) {
-    board.style.setProperty('--rainbow-frame-pattern', getColorFrameGradient(color));
-    // Returning to rainbow must restore its pattern even at the same size.
-    frameKeys.delete(board);
-}
 
 export function updateRainbowFrame(board, colors) {
     const bounds = board.getBoundingClientRect();
