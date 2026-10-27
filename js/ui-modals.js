@@ -725,6 +725,7 @@ function populatePaletteModal() {
         getText: app.getText,
         rtl: app.getCurrentLang() === 'he',
         showCurrentLabel: false,
+        currentPreviewHost: document.getElementById('paletteCurrentPreview'),
         onCurrent() {
             transitionPickerDialog({ from: app.dom.paletteModal, to: app.dom.colorPickerModal,
                 close: closePaletteModal,

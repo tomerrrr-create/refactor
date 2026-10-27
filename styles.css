@@ -2230,3 +2230,15 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .color-page-arrow svg { width: 16px; height: 44px; pointer-events: none; }
 .color-page-previous svg { transform: scaleX(-1); }
 .color-page-arrow:hover, .color-page-arrow:focus-visible { color: #f1d886; opacity: 1; }
+
+/* Current palette navigation: preview above the catalogue, details below. */
+#paletteCurrentPreview { flex-shrink: 0; margin: -8px 32px 12px; }
+.palette-current-preview {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; min-height: 44px; padding: 8px; border: 0; border-radius: 8px;
+    background: transparent; color: inherit; cursor: pointer;
+}
+.palette-current-preview .palette-current-icon { flex-shrink: 0; }
+.palette-current-preview:hover { background: #d5aa4810; }
+.palette-current-preview:focus-visible { outline: 2px solid #d5aa48; outline-offset: -2px; }
+#paletteModal .palette-current-details { justify-content: center; text-align: center; }

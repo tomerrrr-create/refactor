@@ -33,6 +33,17 @@ try {
  const midway=await page.evaluate(()=>{const a=document.getElementById('colorPickerModal'),b=document.getElementById('paletteModal');return {out:a.classList.contains('picker-handoff-outgoing'),in:b.classList.contains('picker-handoff-incoming'),inert:a.inert,hidden:a.getAttribute('aria-hidden'),outBackground:getComputedStyle(a).backgroundColor,backdropOpacity:getComputedStyle(b).opacity,panelOpacity:Number(getComputedStyle(b.firstElementChild).opacity),animations:b.firstElementChild.getAnimations().map(a=>({time:a.currentTime,state:a.playState,duration:a.effect.getTiming().duration}))};});
  assert(midway.out&&midway.in&&midway.inert);assert.equal(midway.hidden,'true');assert.equal(midway.outBackground,'rgba(0, 0, 0, 0)');assert.equal(midway.backdropOpacity,'1','backdrop does not fade to the board');assert(midway.panelOpacity>=0&&midway.panelOpacity<=1);assert(midway.animations.some(a=>a.duration===220),'panel uses the 220ms handoff animation');
  await waitForHandoff(page);assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);assert(!(await page.locator('#colorPickerModal').isVisible()));assert(await page.locator('#paletteModal').isVisible());
+ const paletteLayout=await page.locator('#paletteModal').evaluate(modal=>{
+  const preview=modal.querySelector('#palette-current-preview'),footer=modal.querySelector('#palette-current-summary');
+  const header=preview.getBoundingClientRect(),details=footer.querySelector('.palette-current-details').getBoundingClientRect(),bottom=footer.getBoundingClientRect(),tabs=modal.querySelector('.palette-group-tabs').getBoundingClientRect();
+  return {above:header.bottom<=tabs.top,centered:Math.abs((details.left+details.right)-(bottom.left+bottom.right))<2,headerRibbon:!!preview.querySelector('.palette-color-ribbon'),headerIcon:!!preview.querySelector('.palette-current-icon'),footerRibbon:!!footer.querySelector('.palette-color-ribbon'),headerOverflow:preview.scrollWidth>preview.clientWidth+1};
+ });
+ assert(paletteLayout.above&&paletteLayout.centered&&!paletteLayout.headerRibbon&&paletteLayout.headerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'preview is above the catalogue and footer details are centered');
+ await page.screenshot({path:path.join(artifacts,config.lang+'-palette-layout.png')});
+ // Both the new header (keyboard) and existing footer (pointer) open colors.
+ await page.locator('#palette-current-preview').focus();await page.keyboard.press('Enter');await waitForHandoff(page);
+ assert(await page.locator('#colorPickerModal').isVisible());
+ await page.locator('#btnColorPickerPalette').click();await waitForHandoff(page);
  await page.locator('#palette-current-summary').click();await waitForHandoff(page);assert(await page.locator('#colorPickerModal').isVisible());assert(!(await page.locator('#paletteModal').isVisible()));
  assert.deepEqual(await page.locator('.brush-picker-panel').evaluate(e=>({width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height})),geometry);
  // Several handoffs inside the transition must leave one interactive panel.
