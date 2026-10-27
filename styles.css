@@ -2096,18 +2096,17 @@ body.wind-mode #board { cursor: crosshair; }
     .palette-choice-list::-webkit-scrollbar-thumb:hover { background: #927a4e; }
 }
 .palette-choice {
-    display: flex; flex-direction: column; gap: 10px; min-width: 0; width: 100%; padding: 8px;
-    border: 1px solid #ffffff0e; border-radius: 10px; color: #dddcd3; background: #ffffff03;
+    display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; width: 100%; padding: 12px 5px 10px;
+    border: 1px solid #ffffff0e; border-radius: 3px; color: #dddcd3; background: #ffffff03;
     text-align: start; transition: border-color .18s, background-color .18s;
 }
 .palette-choice.is-current { background: #b89a570d; border-color: #b89a5759; }
 .palette-choice.is-current .palette-choice-name { color: var(--gold); }
 .palette-choice-title { display: flex; flex-direction: column-reverse; align-items: center; gap: 4px; width: 100%; min-height: 64px; }
 .palette-choice-symbol { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; gap: 2px; }
-.palette-choice-preview { display: block; width: 100%; direction: ltr; }
-.palette-color-mosaic { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); aspect-ratio: 1; gap: 0; overflow: hidden; border-radius: 6px; background: #080b09; }
+.palette-choice-preview { display: block; width: 46px; flex-shrink: 0; direction: ltr; }
+.palette-color-mosaic { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); box-sizing: border-box; aspect-ratio: 1; gap: 0; overflow: hidden; border: 1px solid #000; border-radius: 2px; background: #080b09; }
 .palette-color-mosaic i { min-width: 0; min-height: 0; border-radius: 0; }
-.palette-choice.is-current .palette-color-mosaic { box-shadow: 0 0 0 1px #b89a5760; }
 .palette-choice-icon { --icon-size: 23px; display: flex; align-items: center; justify-content: center; width: 25px; height: 25px; flex-shrink: 0; font-size: 21px; }
 .palette-choice-icon > svg, .palette-choice-icon > span { width: 23px !important; height: 23px !important; font-size: 21px !important; }
 .palette-choice-name { flex: 1; min-width: 0; width: 100%; text-align: center; font-size: .8rem; line-height: 1.4; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
