@@ -363,8 +363,8 @@ body {
 
 /* Right Panel (Col 9) */
 .sim-mode-active #btnSymmetry      { grid-area: 1 / 9; }
-.sim-mode-active.sim-separator-control #btnGap { display: inline-flex; grid-area: 1 / 9; }
-.sim-mode-active.sim-separator-control #btnSymmetry { display: none; }
+.sim-mode-active.sim-separator-control #btnGap { display: inline-flex; grid-area: 3 / 9; }
+.sim-mode-active.sim-separator-control #btnResizeUp { display: none; }
 .sim-mode-active #btnUndo          { grid-area: 4 / 9; }
 
 #btnBrushMode svg path {
@@ -1975,7 +1975,7 @@ body.wind-mode #board { cursor: crosshair; }
 .tuning-modes.wind-mode-buttons button { display: grid; place-items: center; width: 52px; height: 52px; padding: 10px; border-radius: 50%; flex-shrink: 0; }
 .wind-mode-buttons svg { width: 28px; height: 28px; }
 #btnColorPicker { border-radius: 50%; }
-#btnColorPicker.wind-active { color: var(--gold); }
+#btnSymmetry.wind-active { color: var(--gold); }
 .wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }
 
 /* Breathing mode pickers reuse the control panel's four original symbols. */
