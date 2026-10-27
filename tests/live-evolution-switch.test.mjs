@@ -32,7 +32,7 @@ function harness() {
         finishBrushGesture: () => c.brushFinishes++,
         cancelAnimationFrame: id => { c.queued = c.queued.filter(item => item.id !== id); },
         requestAnimationFrame: fn => { const id = c.queued.length + 1; c.queued.push({id,fn}); return id; },
-        getErosionRecordingRules: () => ({...c.erosionRules}), getGameOfLifeRecordingRules: () => ({mode:c.gameOfLifeMode}),
+        getContourRecordingRules: () => ({...c.contourRules}), getErosionRecordingRules: () => ({...c.erosionRules}), getGameOfLifeRecordingRules: () => ({mode:c.gameOfLifeMode}),
         getChiFlowRecordingRules: () => ({cycleMode:c.chiFlowMode}), getNudgeTiming: () => ({legacyFrames:false}),
         cloneChiFlowRules: r => ({...r}), cloneGameOfLifeRules: r => ({...r}),
         createIslandsSession: () => ({mode:'classic',seed:42,state:42,steps:0}), logIslandsSessionStart() {},

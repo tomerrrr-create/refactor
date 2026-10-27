@@ -113,3 +113,9 @@ different personal values and profiles 2/3 are retained. Factory reset uses
 the new defaults.
 
 The palette picker shows the current palette icon alone above the catalogue, with its name and color count centered below. Both areas open the color/brush picker using the existing handoff.
+
+## Experimental cracks
+
+The Contours button cycles Contours → Cracks → Off while paused; running cycles alternate Contours/Cracks without pausing. Cracks grows thin branching fractures in colored material and stops at existing line-colored cells, protected gold and the board edges. It uses the existing darkest/lightest line-color setting; sensitivity remains exclusive to Contours. Draw colored areas and press Play or Single step. Drawing remains available during playback. The branching icon marks Cracks. This is a visual experiment, not a physical stress model. Runtime tips and the deterministic random cursor are optional project/history/macro fields; old contour recordings still use the original engine. Profile preferences and file format versions are unchanged.
+
+Check with `node --test tests/*.test.mjs`, `node tools/build-vercel.mjs` and `node tools/check-cracks.mjs` (Playwright/Chromium, with PLAYWRIGHT_MODULE and CHROMIUM_PATH overrides).

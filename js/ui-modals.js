@@ -1123,9 +1123,11 @@ function openContourSettingsModal() {
     if (app.isBreathing()) return;
 
     // 1. Set all texts from i18n
-    app.dom.contourSettingsTitle.textContent = app.getText('contour_modal_title');
+    const cracks = app.getContourRules().mode === 'cracks';
+    app.dom.contourSensitivitySlider.disabled = cracks;
+    app.dom.contourSettingsTitle.textContent = app.getText(cracks ? 'tooltip_cracks' : 'contour_modal_title');
     app.dom.contourSensitivityLabel.textContent = app.getText('contour_sensitivity_label');
-    app.dom.contourSensitivityDesc.textContent = app.getText('contour_sensitivity_desc');
+    app.dom.contourSensitivityDesc.textContent = app.getText(cracks ? 'cracks_settings_note' : 'contour_sensitivity_desc');
     app.dom.contourSensitivityLabelLow.textContent = app.getText('contour_sensitivity_low');
     app.dom.contourSensitivityLabelHigh.textContent = app.getText('contour_sensitivity_high');
     app.dom.contourColorLabel.textContent = app.getText('contour_color_label');

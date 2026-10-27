@@ -1,3 +1,4 @@
+import { createCracksState, restoreCracksState, runCracksGeneration } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
@@ -295,6 +296,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
+      let contourMode = 'contours', cracksState = null;
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
@@ -408,6 +410,7 @@ currentSortMethod,
             ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
+            ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
             ...(armedSimulation === 'islands' && islandsSession ? { islandsState: { ...islandsSession } } : {}),
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
@@ -448,6 +451,10 @@ currentSortMethod,
       }
 
       function applyState(state) {
+        if (state.contourState) {
+            validateContourSnapshot(state.contourState);
+            if (state.contourState.cracksState && state.contourState.cracksState.n !== state.n) throw new Error('Cracks board size mismatch');
+        }
         clearPaletteColorTransition(dom.board);
         if (state.evolutionTuning) {
             validateEvolutionTuning(state.evolutionTuning);
@@ -517,6 +524,7 @@ k: tileState.k,
             islandsSession = restoreIslandsSession(state.islandsState);
             updateIslandsButtonUI();
         }
+        if (state.contourState) restoreContourSnapshot(state.contourState);
         applySeparator();
       }
 
@@ -1284,7 +1292,7 @@ case 'brightnessEvo':
             case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration(context); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
        case 'contour': 
-                nextState = Simulations.runContourGeneration(context); 
+                nextState = runContourEvolution(context);
                 boardState = nextState; 
                 break;
 
@@ -1381,7 +1389,7 @@ break;
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
-        else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
+        else if (armedSimulation === 'contour') simDetails = JSON.stringify(getContourRecordingRules());
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
@@ -1423,7 +1431,7 @@ case 'brightnessEvo':
                     break;
             
 case 'contour': 
-                boardState = Simulations.runContourGeneration(context); 
+                boardState = runContourEvolution(context);
                 break;
 
 case 'spiral': 
@@ -1589,7 +1597,7 @@ function pauseLife() {
           });
 
           // Install queued generation-one commands before the macro's first frame.
-          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands')) {
+          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
               animationFrameId = requestAnimationFrame(gameLoop);
           } else {
               gameLoop();
@@ -1604,7 +1612,7 @@ function getSimulationRecordingDetails() {
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
-        else if (armedSimulation === 'contour') simDetails = JSON.stringify(contourRules);
+        else if (armedSimulation === 'contour') simDetails = JSON.stringify(getContourRecordingRules());
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
@@ -1736,6 +1744,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     updateBrightnessEvoButtonUI();
     updateDlaButtonUI();
     updateErosionButtonUI();
+    if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
     updateBreatheEvoButtonUI();
     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -1749,6 +1758,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
 // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
 if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
+    if (simulationName === 'contour') { contourMode = 'contours'; cracksState = null; }
     if (simulationName === 'islands') {
         islandsSession = createIslandsSession(undefined, evolutionTuning.islands);
         if (!isExecutingMacroCommand && recordIslandsStart) {
@@ -1833,6 +1843,7 @@ if (simulationName === 'magnet') {
     }
     updateGameOfLifeButtonUI();
     updateChiFlowButtonUI();
+    if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
 }
 
       
@@ -2423,7 +2434,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnGravitationalSort.title = getText('tooltip_gravitationalSort'); 
         updateErosionButtonUI();
         dom.btnDla.title = getText('tooltip_dla'); 
-        dom.btnContour.title = getText('tooltip_contour');
+        updateContourButtonUI();
 dom.btnSpiral.title = getText('tooltip_spiral');
 dom.btnTuring.title = getText('tooltip_turing');
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
@@ -2535,6 +2546,7 @@ magnetMode = 'off';
 
 gsMode = 'off';
     updateGravitationalSortButtonUI();
+    if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
 
       }
 
@@ -3327,6 +3339,7 @@ function restoreChiFlowRules(snapshot) {
     chiFlowSources = normalizeCycleSources(snapshot.cycleSources, chiFlowCycle, C.CHI_FLOW_PRESETS);
     personalChiFlowRules = cloneChiFlowRules(snapshot.personalRules || snapshot);
     updateChiFlowButtonUI();
+    if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
 }
 
 function cycleChiFlowMode() {
@@ -3345,6 +3358,52 @@ function cycleChiFlowMode() {
 }
 
 // Running evolutions cycle through active modes; paused cycles retain Off.
+function getContourSnapshot() {
+    return { mode: contourMode, rules: { ...contourRules }, cracksState: cracksState ? restoreCracksState(cracksState) : null };
+}
+function validateContourSnapshot(value) {
+    if (!value || !['contours','cracks'].includes(value.mode) || !value.rules ||
+        !Number.isFinite(value.rules.sensitivity) || value.rules.sensitivity<0 || value.rules.sensitivity>100 ||
+        !['darkest','lightest'].includes(value.rules.lineColor)) throw new Error('Invalid contour state');
+    if (value.cracksState) restoreCracksState(value.cracksState);
+}
+function restoreContourSnapshot(value) {
+    validateContourSnapshot(value);
+    if (armedSimulation !== 'contour') armSimulation('contour');
+    contourMode = value.mode;
+    contourRules = { ...value.rules };
+    cracksState = value.cracksState ? restoreCracksState(value.cracksState) : null;
+    updateContourButtonUI();
+}
+function getContourRecordingRules() {
+    return contourMode === 'cracks' ? { ...contourRules, mode: 'cracks', cracksState: cracksState ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
+}
+function runContourEvolution(context) {
+    if (contourMode !== 'cracks') return Simulations.runContourGeneration(context);
+    const result = runCracksGeneration(context, cracksState);
+    cracksState = result.nextCracksState;
+    return result.nextBoardState;
+}
+function updateContourButtonUI() {
+    const active = armedSimulation === 'contour', cracks = active && contourMode === 'cracks';
+    dom.btnContour.classList.toggle('simulation-active', active);
+    dom.btnContour.classList.toggle('cracks-active', cracks);
+    const title = getText(cracks ? 'tooltip_cracks' : 'tooltip_contour');
+    dom.btnContour.title = title;
+    dom.btnContour.setAttribute('aria-label', title);
+    dom.btnContour.setAttribute('aria-pressed', String(active));
+}
+function cycleContourMode() {
+    if (armedSimulation !== 'contour') { armSimulation('contour'); return; }
+    if (contourMode === 'contours') {
+        contourMode = 'cracks'; cracksState = createCracksState(n);
+    } else if (isLifePlaying) {
+        contourMode = 'contours'; cracksState = null;
+    } else { armSimulation(null); updateContourButtonUI(); return; }
+    updateContourButtonUI();
+    recordLiveSimulationRules('contour');
+}
+
 function nextEvolutionMode(current, sequence) {
     let index = (sequence.indexOf(current) + 1) % sequence.length;
     if (isLifePlaying && sequence[index] === 'off') index = (index + 1) % sequence.length;
@@ -3705,7 +3764,7 @@ function createArtRecipeFile(prefix = '') {
         exportedLog.push(`[${timestamp}] WIND_END -> ${JSON.stringify({ windVersion: 1,
             batch: windBatch.id, elapsed: Math.max(0, performance.now() - windBatch.time), reason: 'stop' })}`);
     }
-    if (armedSimulation === 'islands' && isLifePlaying) {
+    if ((armedSimulation === 'islands' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
         const now = new Date();
         const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
         exportedLog.push(`[${timestamp}] [GEN:${currentGenerationCount}] PAUSE -> ---`);
@@ -3792,12 +3851,14 @@ function getHistorySettings(state) {
         ...(state.evolutionTuning ? { evolutionTuning: state.evolutionTuning, brightnessEvoMode: state.brightnessEvoMode,
             breatheEvoMode: state.breatheEvoMode, dlaMode: state.dlaMode,
             ...(state.tuningSimulation ? { tuningSimulation: state.tuningSimulation } : {}) } : {}),
-        ...(state.islandsState ? { islandsState: state.islandsState } : {}) };
+        ...(state.islandsState ? { islandsState: state.islandsState } : {}),
+        ...(state.contourState ? { contourState: state.contourState } : {}) };
 }
 
 function validateHistorySettings(settings) {
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);
     if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
+    if (settings?.contourState) validateContourSnapshot(settings.contourState);
     if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 327 ||
         !Number.isInteger(settings.activePaletteIndex) || settings.activePaletteIndex < 0 ||
         !Number.isFinite(settings.separatorPx) || settings.separatorPx < 0 ||
@@ -3820,6 +3881,7 @@ function applyHistorySettings(settings) {
         islandsSession = restored;
         updateIslandsButtonUI();
     }
+    if (settings.contourState) restoreContourSnapshot(settings.contourState);
     let changed = false;
     if (currentSortMethod !== settings.currentSortMethod) {
         applySortMethod(settings.currentSortMethod);
@@ -4542,7 +4604,12 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     }
                     if (typeof updateDlaButtonUI === 'function') updateDlaButtonUI();
                 }
-                else if (sim === 'contour') Object.assign(contourRules, parsedRules);
+                else if (sim === 'contour') {
+                    contourRules = { sensitivity: parsedRules.sensitivity ?? 75, lineColor: parsedRules.lineColor === 'lightest' ? 'lightest' : 'darkest' };
+                    contourMode = parsedRules.mode === 'cracks' ? 'cracks' : 'contours';
+                    cracksState = parsedRules.cracksState ? restoreCracksState(parsedRules.cracksState) : null;
+                    updateContourButtonUI();
+                }
                 else if (sim === 'spiral') {
                     Object.assign(spiralRules, parsedRules);
                     spiralMode = parsedRules.method || spiralMode;
@@ -5121,7 +5188,7 @@ syncGsModeFromModal: (direction) => {
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning,
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
-            getContourRules: () => contourRules, setContourRules: (r) => { contourRules = r; recordLiveSimulationRules('contour'); }, // <-- ADDED HERE
+            getContourRules: () => ({ ...contourRules, mode: contourMode }), setContourRules: (r) => { contourRules = r; recordLiveSimulationRules('contour'); }, // <-- ADDED HERE
 
 spiralRules,
 syncSpiralModeFromModal: (method) => {
@@ -5400,7 +5467,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         const evolutionPickers = [
             [dom.btnGameOfLife, 'gameOfLife', cycleGameOfLifeMode, modals.openGolSettingsModal],
             [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
-            [dom.btnContour, 'contour', () => armSimulation('contour'), modals.openContourSettingsModal],
+            [dom.btnContour, 'contour', cycleContourMode, modals.openContourSettingsModal],
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
             [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],

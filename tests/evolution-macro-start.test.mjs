@@ -8,7 +8,7 @@ for (const simulation of ['gameOfLife', 'sandpile', 'islands', 'contour']) {
     test(`${simulation}: macro can install generation-one commands before the first frame`, () => {
         const c = vm.createContext({ armedSimulation: simulation, isLifePlaying: false, isExecutingMacroCommand: true,
             currentSortMethod: 'luminance', currentGenerationCount: 0, dom: { iconPlay: { style: {} }, iconPause: { style: {} }, btnStepForward: {} },
-            window: { logArtEvent() {} }, setSimulationRunning() {}, updateUndoRedoButtons() {}, getCurrentState: () => ({}), contourRules: {},
+            window: { logArtEvent() {} }, setSimulationRunning() {}, updateUndoRedoButtons() {}, getCurrentState: () => ({}), contourRules: {}, getContourRecordingRules: () => ({}),
             islandsSession: {islandsVersion:1,seed:42,state:42,steps:0}, getGameOfLifeRecordingRules: () => ({}), getChiFlowRecordingRules: () => ({}) });
         let callback, generations = 0;
         c.gameLoop = () => generations++;
