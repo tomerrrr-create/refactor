@@ -61,6 +61,15 @@ try {
  await page.evaluate(()=>pickerNavTest.play());await page.waitForTimeout(200);assert((await state()).playing);const gen=(await state()).gen;await sort.click();assert((await state()).playing);await page.waitForTimeout(200);assert((await state()).gen>gen,'sorting during simulation does not stop it');await page.evaluate(()=>pickerNavTest.pause());
  const snapshot=await state();await page.screenshot({path:path.join(artifacts,config.lang+'.png')});
  await pal.click();await page.waitForTimeout(350);assert(await page.locator('#paletteModal').isVisible());assert(!(await page.locator('#colorPickerModal').isVisible()),'palette navigation closes the color picker');
+ const footer=page.locator('#palette-current-summary');assert.equal(await footer.evaluate(e=>e.tagName),'BUTTON');assert.equal(await footer.locator('.palette-current-label').count(),0);
+ const footerBefore=await state();
+ for(const selector of ['.palette-current-icon','.palette-color-ribbon','.palette-current-name','.palette-choice-count',null]){
+   if(selector)await footer.locator(selector).click();else await footer.click({position:{x:3,y:3}});
+   await page.waitForTimeout(350);assert(await page.locator('#colorPickerModal').isVisible());assert(!(await page.locator('#paletteModal').isVisible()));assert.deepEqual(await state(),footerBefore,'footer navigation does not alter the board, brush, sorting or logger');
+   await pal.click();await page.waitForTimeout(350);
+ }
+ await footer.focus();await page.keyboard.press('Space');await page.waitForTimeout(350);assert(await page.locator('#colorPickerModal').isVisible(),'native keyboard activation opens colors');await pal.click();await page.waitForTimeout(350);
+ await page.screenshot({path:path.join(artifacts,config.lang+'-palette-footer.png')});
  const choices=page.locator('#paletteModalGrid [data-palette-index]');
  // Choose another visible palette using the actual picker cards.
  const cards=page.locator('#paletteModalGrid .palette-choice');

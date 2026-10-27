@@ -721,6 +721,11 @@ function populatePaletteModal() {
         selectedIndex: app.getActivePaletteIndex(),
         getText: app.getText,
         rtl: app.getCurrentLang() === 'he',
+        showCurrentLabel: false,
+        onCurrent() {
+            closePaletteModal();
+            openColorPickerModal(null, { returnFocus: app.dom.btnPalette });
+        },
         onSelect(index) {
             app.switchToPalette(index);
             closePaletteModal();

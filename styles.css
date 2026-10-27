@@ -2091,6 +2091,9 @@ body.wind-mode #board { cursor: crosshair; }
     padding: 13px var(--palette-panel-padding);
     border-top: 1px solid #ae955836; background: #111512;
 }
+button.palette-current-summary { width: calc(100% + 2 * var(--palette-panel-padding)); border: 0; border-top: 1px solid #ae955836; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+button.palette-current-summary:hover { background: #191d17; }
+button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outline-offset: -3px; }
 .palette-current-dot { width: 5px; height: 5px; border-radius: 50%; background: #dfc78d; box-shadow: 0 0 9px #d2b56655; flex-shrink: 0; }
 .palette-current-details { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
 .palette-current-label { color: #a79774; font-size: .63rem; flex-shrink: 0; }
