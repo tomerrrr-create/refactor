@@ -1,4 +1,4 @@
-import { createCracksState, restoreCracksState, runCracksGeneration } from './simulations/cracks.js';
+import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
@@ -2812,6 +2812,10 @@ function resumeBrushCheckpoint(record) {
 // Only brush targets enter this map. Simulation generations are never diffed
 // against a pointer-down snapshot or serialized as part of a brush sample.
 function flushLiveBrushChanges() {
+    if (pointerState.changes?.size && armedSimulation === 'contour' && contourMode === 'cracks') {
+        cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), contourRules },
+            cracksState, pointerState.changes.values());
+    }
     if (!pointerState.liveRecording || !pointerState.changes?.size) return;
     if (isLifePlaying && simulationStartState) simulationHasBrushInput = true;
     if (pointerState.pausedMotion && !pointerState.motionStarted) {
@@ -4983,6 +4987,9 @@ else if (action.eventName === 'Invert Colors') {
                     }
                 });
                 
+                if (action.eventName === 'DRAW_STROKE' && armedSimulation === 'contour' && contourMode === 'cracks') {
+                    cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), contourRules }, cracksState, diff);
+                }
                 if (changed) {
                     renderToScreen(now);
                     startAnimationLoop(); 

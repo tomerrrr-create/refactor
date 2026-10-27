@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {createCracksState,restoreCracksState,runCracksGeneration} from '../js/simulations/cracks.js';
+import {createHash} from 'node:crypto';
+import {createCracksState,restoreCracksState,runCracksGeneration,queueCracksGrowth} from '../js/simulations/cracks.js';
 const fixture=(n=81,color='darkest')=>({n,currentPalette:Array(23).fill('#fff'),contourRules:{sensitivity:75,lineColor:color},currentBoardState:Array.from({length:n*n},()=>({k:11,v:11,isGold:false}))});
 const advance=(ctx,state,count)=>{for(let i=0;i<count;i++){const result=runCracksGeneration(ctx,state);ctx={...ctx,currentBoardState:result.nextBoardState};state=result.nextCracksState;}return {ctx,state};};
 test('cracks branch gradually, preserve protected cells and do not mutate inputs',()=>{
@@ -43,4 +44,30 @@ test('legacy contour recordings select original contours despite the new default
  vm.runInContext(source.slice(source.indexOf('function applyMacroRules('),source.indexOf('function executeMacroAction(')),c);
  c.applyMacroRules('Armed: contour | Sort: luminance | Rules: No specific rules mapping');assert.equal(c.contourMode,'contours');
  c.cycleContourMode();c.applyMacroRules('Armed: contour | Sort: luminance | Rules: {"sensitivity":75,"lineColor":"darkest"}');assert.equal(c.contourMode,'contours');
+});
+
+test('exhausted cracks restart inside newly painted material after Pause/Play, without changing the paused board',()=>{
+ let {ctx,state}=advance(fixture(21),createCracksState(21),500);assert.equal(state.tips.length,0);assert.equal(state.roots,3);
+ const changes=[];for(let y=7;y<14;y++)for(let x=7;x<14;x++){const i=y*21+x;ctx.currentBoardState[i]={k:12,v:12,isGold:false};changes.push({i,k:12});}
+ const painted=structuredClone(ctx.currentBoardState),dead=advance(ctx,state,20);assert.deepEqual(dead.ctx.currentBoardState,painted,'reproduces the exhausted original state');
+ const queued=queueCracksGrowth(ctx,state,changes);assert.deepEqual(ctx.currentBoardState,painted);assert.equal(queued.roots,0);assert(queued.pendingSeed!==null);assert.equal(state.roots,3);
+ const resumed=advance(ctx,queued,8);assert.notDeepEqual(resumed.ctx.currentBoardState,painted);assert(resumed.ctx.currentBoardState.some((tile,i)=>tile.k===0&&painted[i].k!==0));
+ const saved=JSON.parse(JSON.stringify(queued));assert.deepEqual(advance(ctx,restoreCracksState(saved),8),resumed);
+});
+test('renewal is independent of brush packet grouping and ignores line-colored or protected targets',()=>{
+ const ctx=fixture(21),state=createCracksState(21),a=[{i:250,k:11},{i:249,k:11}],b=[{i:247,k:11},{i:248,k:11}];
+ assert.deepEqual(queueCracksGrowth(ctx,queueCracksGrowth(ctx,state,a),b),queueCracksGrowth(ctx,state,[...a,...b]));
+ ctx.currentBoardState[50]={k:0,v:0,isGold:false};ctx.currentBoardState[51].isGold=true;
+ assert.deepEqual(queueCracksGrowth(ctx,state,[{i:50,k:0},{i:51,k:11}]),state);
+ const legacy={...state,version:1,roots:3};delete legacy.pendingSeed;
+ assert.strictEqual(queueCracksGrowth(ctx,legacy,a),legacy,'old recordings keep version-1 behavior');
+ assert.deepEqual(advance(ctx,legacy,10),advance(ctx,restoreCracksState(JSON.parse(JSON.stringify(legacy))),10));
+ assert.throws(()=>restoreCracksState({...state,pendingSeed:441}));
+});
+
+test('version-1 recipes retain the board and random cursor captured from the original engine',()=>{
+ const ctx=fixture(41),legacy={version:1,n:41,random:123,steps:0,roots:0,tips:[]};
+ const result=advance(ctx,legacy,100);
+ const hash=createHash('sha256').update(JSON.stringify({board:result.ctx.currentBoardState,state:result.state})).digest('hex');
+ assert.equal(hash,'b7b0358bcb508c9b35a57dd931b5822ed82e7ac7924614ffee699e08868358b2');
 });
