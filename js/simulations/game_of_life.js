@@ -1,6 +1,7 @@
 import { getGeneticColor, findClosestColorIndex } from '../colors.js';
 
 export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, gameOfLifeRules }) {
+    const paletteOrderGenetics = gameOfLifeRules.genetics === 'palette-order';
     const darkestIndex = 0;
     const lightestIndex = currentPalette.length - 1;
     const halfIndex = Math.floor(lightestIndex / 2);
@@ -32,6 +33,7 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
         for (let j = 0; j < n; j++) {
             let liveNeighbors = 0;
             const neighborColors = [];
+            let neighborRanks = 0;
 
             for (let di = -1; di <= 1; di++) {
                 for (let dj = -1; dj <= 1; dj++) {
@@ -40,7 +42,9 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
                     const nj = j + dj;
                     if (ni >= 0 && ni < n && nj >= 0 && nj < n && internalCurrentState[ni][nj].isAlive) {
                         liveNeighbors++;
-                        neighborColors.push(currentPalette[internalCurrentState[ni][nj].k]);
+                        const parentIndex = internalCurrentState[ni][nj].k;
+                        if (paletteOrderGenetics) neighborRanks += ((parentIndex % currentPalette.length) + currentPalette.length) % currentPalette.length;
+                        else neighborColors.push(currentPalette[parentIndex]);
                     }
                 }
             }
@@ -60,11 +64,15 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
                 becomesAlive = gameOfLifeRules.birth.includes(liveNeighbors);
                 // === END MODIFICATION ===
                 if (becomesAlive) {
-                    // --- START: MODIFICATION 2 ---
-                    // The 'colorGenetics' method is now hard-coded to 'average' as requested.
-                    const geneticColor = getGeneticColor(neighborColors, 'average');
-                    // --- END: MODIFICATION 2 ---
-                    newK = findClosestColorIndex(geneticColor, currentPalette);
+                    if (paletteOrderGenetics) {
+                        // Index zero remains dead. Birth without parents (B0)
+                        // uses the first living color when one is available.
+                        newK = lightestIndex > 0 ? Math.max(1, Math.min(lightestIndex,
+                            Math.round(liveNeighbors ? neighborRanks / liveNeighbors : 1))) : 0;
+                    } else {
+                        const geneticColor = getGeneticColor(neighborColors, 'average');
+                        newK = findClosestColorIndex(geneticColor, currentPalette);
+                    }
                 }
             }
             

@@ -188,6 +188,16 @@ function closeContourSettingsModal() {
     let tempChiReachPercent = 100;
 let chiCycleMembership = null;
 let golCycleMembership = null;
+let golGeneticsDraft = 'rgb';
+
+function refreshGolGeneticsButton() {
+    const button = document.getElementById('btnGolGenetics');
+    if (!button) return;
+    const ordered = golGeneticsDraft === 'palette-order';
+    button.setAttribute('aria-checked', String(ordered));
+    button.title = app.getText(ordered ? 'gol_genetics_order' : 'gol_genetics_rgb');
+    button.setAttribute('aria-label', button.title);
+}
 
 const CHI_PRESETS = CHI_FLOW_PRESETS;
 
@@ -233,6 +243,7 @@ function refreshLocalizedModalText() {
     }
     chiCycleMembership?.refresh();
     golCycleMembership?.refresh();
+    refreshGolGeneticsButton();
     app.refreshProfiles();
 }
 
@@ -1001,6 +1012,7 @@ function openGolSettingsModal() {
     // --- START: MODIFICATION ---
     // במקום להגדיר טקסט, נפעיל את הפונקציה שמעדכנת את הכפתורים
     const rules = app.getGameOfLifeRules();
+    golGeneticsDraft = rules.genetics === 'palette-order' ? 'palette-order' : 'rgb';
     applyGolPreset(rules.survival, rules.birth);
 updateActivePresetButton();
     // --- END: MODIFICATION ---
@@ -1012,8 +1024,20 @@ updateActivePresetButton();
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
         writeRules: rules => applyGolPreset(rules.survival, rules.birth),
-        save: app.setGameOfLifeCycle, saveButton: app.dom.btnGolSettingsSave, getText: app.getText
+        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots, index, sources, yoursRules, golGeneticsDraft),
+        saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
+    const geneticsButton = document.createElement('button');
+    geneticsButton.type = 'button';
+    geneticsButton.id = 'btnGolGenetics';
+    geneticsButton.className = 'gol-genetics-dot';
+    geneticsButton.setAttribute('role', 'switch');
+    geneticsButton.addEventListener('click', () => {
+        golGeneticsDraft = golGeneticsDraft === 'rgb' ? 'palette-order' : 'rgb';
+        refreshGolGeneticsButton();
+    });
+    document.getElementById('golCycleToolbar').prepend(geneticsButton);
+    refreshGolGeneticsButton();
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
 }
@@ -1035,6 +1059,8 @@ function saveGolSettings() {
 }
 
 function resetGolSettings() {
+    golGeneticsDraft = 'rgb';
+    refreshGolGeneticsButton();
     applyGolPreset(app.C.defaultGameOfLifeRules.survival, app.C.defaultGameOfLifeRules.birth);
     golCycleMembership?.manualChange();
 }

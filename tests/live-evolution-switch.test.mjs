@@ -24,7 +24,7 @@ function harness() {
         turingState: null, spiralRules: {method: 'b'}, gravitationalSortRules: {direction: 'up'},
         magnetRules: {}, erosionRules: {mode: 'legacy'}, contourRules: {}, turingRules: {},
         evolutionTuning: {islands: {activity: .05}, brightnessEvo: {}, dla: {}}, dlaRules: {},
-        gameOfLifeCycle: [{}, {}, {}], chiFlowCycle: [{}, {}, {}], SPIRAL_MODE_SEQUENCE: ['off','b','left','black_hole'],
+        gameOfLifeRules: {}, gameOfLifeCycle: [{}, {}, {}], chiFlowCycle: [{}, {}, {}], SPIRAL_MODE_SEQUENCE: ['off','b','left','black_hole'],
         isMacroPlaying: false, lastNudgeTime: 0, performance: {now: () => 100},
         getCurrentState: () => ({board: c.boardState.map(t => ({...t}))}),
         areStatesEqual: (a,b) => JSON.stringify(a) === JSON.stringify(b),

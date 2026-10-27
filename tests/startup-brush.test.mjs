@@ -9,7 +9,7 @@ const apply = source.slice(source.indexOf('function applyWorkspacePreferences(')
 function harness() {
     const noop = () => {};
     const context = vm.createContext({
-        validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
+        gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],
         updateGravitationalSortButtonUI: noop, updateSpiralButtonUI: noop,

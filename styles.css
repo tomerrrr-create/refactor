@@ -1595,6 +1595,12 @@ button, .ctrl {
 .cycle-slot-button[aria-pressed="true"] { color: var(--gold); opacity: 1; background: #d5aa4814; }
 .cycle-reset-dot { width: 32px; margin-inline-start: 4px; }
 .cycle-reset-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #d5aa48; box-shadow: 0 0 7px #d5aa4840; }
+#golCycleToolbar { direction: ltr; }
+.gol-genetics-dot { display: inline-grid; place-items: center; flex-shrink: 0; width: 32px; height: 40px; margin-inline-end: 4px; padding: 0; border: 0; border-radius: 8px; background: transparent; cursor: pointer; }
+.gol-genetics-dot::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: conic-gradient(#ef5350 0deg 120deg, #66bb6a 120deg 240deg, #42a5f5 240deg 360deg); }
+.gol-genetics-dot[aria-checked="true"]::before { background: linear-gradient(135deg, #f1d886, #d5aa48); box-shadow: 0 0 7px #d5aa4840; }
+.gol-genetics-dot:focus-visible { outline: 1px solid #d5aa48; outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .gol-genetics-dot:hover { background: #d5aa4814; } }
 .cycle-slot-button:focus-visible, .cycle-reset-dot:focus-visible { outline: 1px solid #d5aa48; outline-offset: 2px; }
 @media (hover: hover) and (pointer: fine) { .cycle-slot-button:hover, .cycle-reset-dot:hover { background: #d5aa4814; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .cycle-slot-button { transition: none; } }

@@ -117,3 +117,12 @@ test('Yours survives replacement by a named preset and snapshot replay', () => {
     assert.deepEqual(plain(c.personalGameOfLifeRules), personalBefore);
     assert.deepEqual(plain(c.gameOfLifeSources), plain(sources));
 });
+
+test('palette genetics is shared across all cycle slots and old snapshots restore RGB',()=>{
+    const c=harness();c.gameOfLifeRules.genetics='palette-order';
+    for(let i=0;i<6;i++){c.cycleGameOfLifeMode();assert.equal(c.gameOfLifeRules.genetics,'palette-order');assert.equal(c.getGameOfLifeRecordingRules().genetics,'palette-order');}
+    c.setPersonalGameOfLifeRules(personal);assert.equal(c.gameOfLifeRules.genetics,'palette-order');
+    const snapshot=plain(c.getGameOfLifeRecordingRules());c.restoreGameOfLifeRules(snapshot);assert.equal(c.gameOfLifeRules.genetics,'palette-order');
+    delete snapshot.genetics;c.restoreGameOfLifeRules(snapshot);assert.equal(c.gameOfLifeRules.genetics,undefined);
+    c.gameOfLifeRules.genetics='palette-order';c.applyMacroRules('Armed: gameOfLife | Rules: No specific rules mapping');assert.equal(c.gameOfLifeRules.genetics,undefined);
+});

@@ -447,3 +447,12 @@ test('saved random and personal startup choices survive the random default', () 
         assert.deepEqual(state.draft(2), profiles[2].draft);
     }
 });
+
+test('shared Game of Life genetics returns to RGB unless explicitly saved, and reset clears it',()=>{
+    const disk=storage(),state=createProfileState(initial(),disk);
+    state.observe(state.draft());state.capture(change(state.draft(),s=>{s.gameOfLifeGenetics='palette-order';}));
+    assert(state.dirty(0));assert.equal(state.draft().settings.gameOfLifeGenetics,'palette-order');
+    assert.equal(createProfileState(initial(),disk).draft().settings.gameOfLifeGenetics,undefined);
+    assert(state.save());assert.equal(createProfileState(initial(),disk).draft().settings.gameOfLifeGenetics,'palette-order');
+    state.replace(factoryProfileSnapshot(0));assert.equal(state.draft().settings.gameOfLifeGenetics,undefined);assert(!state.dirty(0));
+});
