@@ -90,7 +90,7 @@ export function bindPickerGestures(button, {
         if (button.disabled || !canInteract()) return;
         if (open) onOpen();
         else if (down) onSwipeDown();
-        else if (side) onSwipeSide();
+        else if (side) onSwipeSide(state.currentX > state.x ? 1 : -1);
         else if (state.touch && tap) onTap();
     });
     button.addEventListener('click', event => {

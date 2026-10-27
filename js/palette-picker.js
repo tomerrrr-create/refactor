@@ -75,7 +75,7 @@ function colorMosaic(colors) {
 }
 
 // Presentation only: group navigation never changes the board or records actions.
-export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, rtl = false, idPrefix = 'palette' }) {
+export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, onCurrent, showCurrentLabel = true, rtl = false, idPrefix = 'palette' }) {
     host.replaceChildren();
     host.dir = rtl ? 'rtl' : 'ltr';
     const availableGroups = groups.filter(group => group.indexes.length);
@@ -89,9 +89,15 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     const description = element('p', 'palette-group-description');
     description.id = `${idPrefix}-group-description`;
     description.setAttribute('aria-live', 'polite');
-    const current = element('div', 'palette-current-summary');
+    const current = element(onCurrent ? 'button' : 'div', 'palette-current-summary');
     current.id = `${idPrefix}-current-summary`;
     current.hidden = !palettes[selectedIndex];
+    if (onCurrent) {
+        current.type = 'button';
+        current.setAttribute('aria-haspopup', 'dialog');
+        current.setAttribute('aria-label', `${getText('brush_picker_title')} — ${palettes[selectedIndex] ? getPaletteDisplayName(palettes[selectedIndex]) : ''}`);
+        current.addEventListener('click', onCurrent);
+    }
     const list = element('div', 'palette-choice-list');
     list.id = `${idPrefix}-choice-panel`;
     list.setAttribute('role', 'tabpanel');
@@ -135,9 +141,10 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const nameLabel = element('span', 'palette-current-name', name);
         nameLabel.title = name;
         const count = element('span', 'palette-choice-count', `${palette.colors.length} ${getText('palette_colors')}`);
-        const details = element('div', 'palette-current-details');
+        const details = element('span', 'palette-current-details');
         details.dir = rtl ? 'rtl' : 'ltr';
-        details.append(dot, label, nameLabel, count);
+        if (showCurrentLabel) details.append(dot, label);
+        details.append(nameLabel, count);
         const icon = paletteIcon(palette);
         icon.classList.add('palette-current-icon');
         // Keep the ribbon and icon at the physical right edge in both languages.

@@ -1334,6 +1334,13 @@ button, .ctrl {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
 }
+#btnPalette.palette-brush-size-feedback {
+  color: #d5aa48;
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px #d5aa4840;
+}
 #btnPalette, #btnColorPicker, #btnCycleSort, #btnResizeUp, #btnResizeDown,
 #btnGameOfLife, #btnGravitationalSort, #btnContour, #btnSpiral,
 #btnMagnetModes, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker {
@@ -2084,6 +2091,9 @@ body.wind-mode #board { cursor: crosshair; }
     padding: 13px var(--palette-panel-padding);
     border-top: 1px solid #ae955836; background: #111512;
 }
+button.palette-current-summary { width: calc(100% + 2 * var(--palette-panel-padding)); border: 0; border-top: 1px solid #ae955836; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+button.palette-current-summary:hover { background: #191d17; }
+button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outline-offset: -3px; }
 .palette-current-dot { width: 5px; height: 5px; border-radius: 50%; background: #dfc78d; box-shadow: 0 0 9px #d2b56655; flex-shrink: 0; }
 .palette-current-details { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
 .palette-current-label { color: #a79774; font-size: .63rem; flex-shrink: 0; }
@@ -2151,13 +2161,29 @@ body.wind-mode #board { cursor: crosshair; }
 .startup-random-choice:focus-visible { outline: 2px solid #e6cc8e; outline-offset: 2px; }
 
 /* Color/brush picker only: other app windows retain their existing designs. */
+#colorPickerModal.picker-handoff-outgoing, #paletteModal.picker-handoff-outgoing,
+#colorPickerModal.picker-handoff-incoming, #paletteModal.picker-handoff-incoming {
+    visibility: visible; opacity: 1; transition: none;
+}
+#colorPickerModal.picker-handoff-outgoing, #paletteModal.picker-handoff-outgoing {
+    background: transparent; pointer-events: none; z-index: 61;
+}
+#colorPickerModal.picker-handoff-incoming, #paletteModal.picker-handoff-incoming { z-index: 60; }
+@media (prefers-reduced-motion: reduce) {
+    #colorPickerModal, #paletteModal { transition: none; }
+}
 #colorPickerModal .brush-picker-panel {
     display: flex; flex-direction: column; position: relative; box-sizing: border-box;
     width: min(340px, calc(100vw - 48px)); max-height: 82vh; max-height: 82dvh;
     min-height: 0; overflow: hidden; border: 1px solid #b89a5745; border-radius: 16px;
     color: #eaeaea; background: #151715; padding: 0;
 }
-.brush-picker-heading { position: relative; flex-shrink: 0; padding: 18px 52px; border-bottom: 1px solid #b89a572b; }
+.brush-picker-heading { position: relative; flex-shrink: 0; padding: 10px 48px; border-bottom: 1px solid #b89a572b; }
+.brush-picker-navigation { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.brush-picker-control { position: relative; display: flex; align-items: center; justify-content: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 7px; border: 0; background: transparent; color: #d5aa48; border-radius: 6px; cursor: pointer; touch-action: none !important; }
+.brush-picker-control:hover { background: #d5aa4810; }
+.brush-picker-control > svg { width: 24px; height: 24px; }
+.brush-picker-control .picker-gap-value { position: absolute; right: 7px; bottom: 5px; padding: 0 2px; background: #000; color: #fff; font: 11px/12px sans-serif; }
 .brush-picker-heading h2 { margin: 0; text-align: center; font-size: 19px; font-weight: 500; }
 .brush-picker-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 22px; scrollbar-width: thin; scrollbar-color: #756342 transparent; }
 .brush-picker-tools { border-top: 1px solid #b89a572b; margin-top: 12px; padding-top: 14px; }
@@ -2194,8 +2220,13 @@ body.wind-mode #board { cursor: crosshair; }
 
 
 .color-picker-grid-wrap { position: relative; width: min(100%, 272px); margin-inline: auto; }
-.color-page-nudge { position: absolute; top: 50%; right: -10px; width: 8px; height: 24px; margin-top: -12px; color: #d5c49e; opacity: .12; pointer-events: none; animation: color-page-hint 4s ease-in-out infinite; }
-.color-page-nudge[hidden] { display: none; }
-.color-page-nudge svg { width: 100%; height: 100%; }
-@keyframes color-page-hint { 0%, 100% { opacity: .10; } 50% { opacity: .32; } }
-@media (prefers-reduced-motion: reduce) { .color-page-nudge { animation: none; opacity: .18; } }
+@media (max-width: 380px) {
+    .color-picker-grid-wrap { width: calc(100% - 20px); }
+}
+.color-page-arrow { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 28px; height: 56px; padding: 0; border: 0; background: transparent; color: #d5aa48; cursor: pointer; opacity: .85; transition: color 150ms, opacity 150ms; }
+.color-page-arrow[hidden] { display: none; }
+.color-page-previous { left: -28px; }
+.color-page-next { right: -28px; }
+.color-page-arrow svg { width: 16px; height: 44px; pointer-events: none; }
+.color-page-previous svg { transform: scaleX(-1); }
+.color-page-arrow:hover, .color-page-arrow:focus-visible { color: #f1d886; opacity: 1; }

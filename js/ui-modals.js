@@ -1,4 +1,5 @@
 import { initializeBrushPicker } from './brush-picker.js';
+import { transitionPickerDialog, finishPickerDialogTransition } from './picker-dialog-transition.js';
 import { bindColorPageSwipe } from './color-page-swipe.js';
 import { brushSizeLabel } from './brush-footprint.js';
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
@@ -122,6 +123,7 @@ const currentMethod = app.spiralRules ? app.spiralRules.method : 'magnet';    ap
 
 
 function closeColorPickerModal() {
+    finishPickerDialogTransition();
     colorPickerHoldOpeningClick = false;
     app.dom.colorPickerModal.classList.remove('modal-visible');
     app.pointerState.longPressTarget = null;
@@ -137,6 +139,7 @@ function closeHelpModal() {
 let paletteHoldOpeningClick = false;
 
 function closePaletteModal() {
+    finishPickerDialogTransition();
     paletteHoldOpeningClick = false;
     app.dom.paletteModal.classList.remove('modal-visible');
     app.dom.btnPalette.focus({ preventScroll: true });
@@ -594,6 +597,10 @@ function renderColorPickerContent() {
 
     const displayIcon = currentPalette.iconHTML || currentPalette.emoji || '';
     app.dom.colorPickerPaletteName.innerHTML = displayIcon;
+    const paletteLabel = app.getText('tooltip_palette') + ' — ' + getPaletteDisplayName(currentPalette);
+    const paletteButton = document.getElementById('btnColorPickerPalette');
+    paletteButton.setAttribute('aria-label', paletteLabel);
+    paletteButton.title = paletteLabel;
     document.getElementById('brushPickerTitle').setAttribute('aria-label', app.getText('brush_picker_title') + ' — ' + getPaletteDisplayName(currentPalette));
     document.getElementById('colorPickerPageStatus').textContent = totalPages > 1 ? app.getText('brush_color_page').replace('{n}', currentPage + 1) : '';
 
@@ -664,7 +671,12 @@ function renderColorPickerContent() {
 
     app.dom.colorPickerSwatches.appendChild(frag);
 
-    document.getElementById('colorPageNudge').hidden = totalPages <= 1;
+    for (const [id, key] of [['btnColorPagePrevious', 'brush_page_previous'], ['btnColorPageNext', 'brush_page_next']]) {
+        const button = document.getElementById(id);
+        button.hidden = totalPages <= 1;
+        button.title = app.getText(key);
+        button.setAttribute('aria-label', app.getText(key));
+    }
     brushPicker?.refresh();
 }
 
@@ -695,6 +707,12 @@ function openPaletteModal({ guardOpeningClick = false } = {}) {
     app.dom.paletteModalGrid.querySelector('[aria-selected="true"]')?.focus({ preventScroll: true });
 }
 
+function openPalettesFromColorPicker() {
+    if (app.isBreathing()) return;
+    transitionPickerDialog({ from: app.dom.colorPickerModal, to: app.dom.paletteModal,
+        close: closeColorPickerModal, open: openPaletteModal });
+}
+
 
 
 
@@ -706,6 +724,12 @@ function populatePaletteModal() {
         selectedIndex: app.getActivePaletteIndex(),
         getText: app.getText,
         rtl: app.getCurrentLang() === 'he',
+        showCurrentLabel: false,
+        onCurrent() {
+            transitionPickerDialog({ from: app.dom.paletteModal, to: app.dom.colorPickerModal,
+                close: closePaletteModal,
+                open: () => openColorPickerModal(null, { returnFocus: app.dom.btnPalette }) });
+        },
         onSelect(index) {
             app.switchToPalette(index);
             closePaletteModal();
@@ -1275,6 +1299,7 @@ export function initializeModals(appContext) {
     });
 
     // Save Modal
+    document.getElementById('btnColorPickerPalette').addEventListener('click', openPalettesFromColorPicker);
     const modalDismissActions = {
         btnTechnicianCloseTop: () => app.dom.technicianDialog.close(),
         btnSortCycleCloseTop: () => document.getElementById('sortCycleDialog').close(),
@@ -1377,6 +1402,13 @@ export function initializeModals(appContext) {
     app.dom.colorPickerModal.addEventListener('click', (e) => { if (e.target === app.dom.colorPickerModal) { closeColorPickerModal(); } });
     
     app.dom.colorPickerSwatches.addEventListener('wheel', handlePaletteWheel, { passive: false });
+    for (const [id, forward] of [['btnColorPagePrevious', false], ['btnColorPageNext', true]]) {
+        document.getElementById(id).addEventListener('click', () => {
+            if (app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
+            app.navigateColorPages(forward);
+            renderColorPickerContent();
+        });
+    }
     bindColorPageSwipe(app.dom.colorPickerSwatches, { onPage: forward => {
         if (app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
         app.navigateColorPages(forward);

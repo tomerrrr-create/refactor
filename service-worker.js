@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = 'c8f4146676c97902ad83';
+const VERSION = '2486c18e2fd717049965';
 const ASSETS = [
     "./",
     "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
     "./manifest.webmanifest",
     "./js/app.js",
     "./js/brush-footprint.js",
+    "./js/brush-picker-navigation.js",
     "./js/brush-picker.js",
     "./js/brush-recording-settings.js",
     "./js/chi-reach.js",
@@ -29,6 +30,7 @@ const ASSETS = [
     "./js/palette-display-names.js",
     "./js/palette-group-transition.js",
     "./js/palette-picker.js",
+    "./js/picker-dialog-transition.js",
     "./js/picker-gestures.js",
     "./js/preset-cycle-editor.js",
     "./js/preset-cycle-membership.js",

@@ -97,11 +97,11 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  // Palette paging and rainbow leave the picker open and keep shape/size.
  await p.evaluate(()=>{brushTest.setup();brushTest.largePalette();});await open();await shape('diamond');await size(23);
  const largeGeometry=await p.locator('.brush-picker-panel').evaluate(panel=>({height:panel.getBoundingClientRect().height,scroll:panel.querySelector('.brush-picker-body').scrollHeight}));
- assert(await p.locator('#colorPageNudge').isVisible());
+ assert(await p.locator('#btnColorPageNext').isVisible());
  await close();await p.evaluate(()=>brushTest.smallPalette());await open();
  const smallGeometry=await p.locator('.brush-picker-panel').evaluate(panel=>({height:panel.getBoundingClientRect().height,scroll:panel.querySelector('.brush-picker-body').scrollHeight}));
  assert.deepEqual(largeGeometry,smallGeometry,'23 and 264 colors have the same dialog height');
- assert(!(await p.locator('#colorPageNudge').isVisible()));
+ assert(!(await p.locator('#btnColorPageNext').isVisible()));
  await close();await p.evaluate(()=>brushTest.largePalette());await open();
  // A normal vertical wheel pages only over the color grid. The debounce must
  // consume extra events too, while wheel over the tools still scrolls normally.
