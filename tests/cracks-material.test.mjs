@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createCracksState,runCracksGeneration,restoreCracksState,queueCracksGrowth} from '../js/simulations/cracks.js';
+import {createCracksState,runCracksGeneration,restoreCracksState,queueCracksGrowth,prepareCracksResume} from '../js/simulations/cracks.js';
 import {DEFAULT_CRACKS_MATERIAL,validateCracksMaterial} from '../js/cracks-settings.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 const fixture=()=>({n:41,currentPalette:Array(23),contourRules:{lineColor:'darkest',material:{enabled:true,strength:80}},currentBoardState:Array.from({length:1681},()=>({k:20,v:20,isGold:false}))});
@@ -33,4 +33,32 @@ test('material settings and pending growth round trip without changing old setti
  settings.rules.contour.material={enabled:false,strength:45};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)),settings);
  for(const value of [{enabled:1,strength:80},{enabled:true,strength:101},{enabled:true,strength:1.5},{enabled:true,strength:80,extra:1}])assert.throws(()=>validateCracksMaterial(value));
  const ctx=fixture(),queued=queueCracksGrowth(ctx,createCracksState(41),[{i:800,k:20}]);const restored=restoreCracksState(JSON.parse(JSON.stringify(queued)));assert.deepEqual(run(ctx,queued,25),run(ctx,restored,25));
+});
+
+test('exhausted material runs renew on explicit resume, repeatedly, without painting during Pause',()=>{
+ let {ctx,state}=run(fixture(),createCracksState(41,123),1000);
+ for(let repeat=0;repeat<3;repeat++) {
+  assert.equal(state.tips.length,0);assert(state.roots>=3);
+  const before=structuredClone({ctx,state});
+  assert.deepEqual(run(ctx,state,10).ctx.currentBoardState,ctx.currentBoardState,'exhausted state stays stuck without preparation');
+  const resumed=prepareCracksResume(ctx,state);
+  assert.notEqual(resumed,state);assert.equal(resumed.roots,0);assert.notEqual(resumed.pendingSeed,null);
+  assert.deepEqual({ctx,state},before);assert.equal(resumed.random,state.random);
+  const result=run(ctx,resumed,1000);assert.notDeepEqual(result.ctx.currentBoardState,ctx.currentBoardState);
+  ({ctx,state}=result);
+ }
+});
+test('resume finds tiny soft patches and respects hard/line/gold material and legacy sessions',()=>{
+ const ctx=fixture();ctx.currentBoardState.forEach(t=>{t.k=t.v=2;});
+ const exhausted={...createCracksState(41),steps:500,roots:3};
+ assert.strictEqual(prepareCracksResume(ctx,exhausted),exhausted);
+ ctx.currentBoardState[800]={k:20,v:20,isGold:false};ctx.currentBoardState[801]={k:20,v:20,isGold:false};
+ const resumed=prepareCracksResume(ctx,exhausted);assert([800,801].includes(resumed.pendingSeed));
+ assert.notDeepEqual(run(ctx,resumed,1).ctx.currentBoardState,ctx.currentBoardState);
+ ctx.currentBoardState[800].isGold=true;ctx.currentBoardState[801].k=0;assert.strictEqual(prepareCracksResume(ctx,exhausted),exhausted);
+ for(const version of [1,2]){const old={...exhausted,version};assert.strictEqual(prepareCracksResume(ctx,old),old);}
+ const off={...ctx,contourRules:{...ctx.contourRules,material:{enabled:false,strength:80}}};
+ assert.notEqual(prepareCracksResume(off,exhausted),exhausted,'disabling material unblocks an exhausted run');
+ const live=run(fixture(),createCracksState(41),1).state;assert(live.tips.length);assert.strictEqual(prepareCracksResume(fixture(),live),live);
+ assert.strictEqual(prepareCracksResume(ctx,resumed),resumed,'queued brush nucleus is retained');
 });

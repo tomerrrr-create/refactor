@@ -1,5 +1,5 @@
 import { validateCracksMaterial } from './cracks-settings.js';
-import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth } from './simulations/cracks.js';
+import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
@@ -1528,6 +1528,11 @@ function pauseLife() {
         }
         if (!armedSimulation) return;
 
+        let cracksResumeBefore = null;
+        if (armedSimulation === 'contour' && !isExecutingMacroCommand && !isMacroPlaying && cracksState?.version >= 3 && contourMode === 'cracks') {
+            const resumed = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), contourRules:{ ...contourRules, material:getCracksMaterial() } }, cracksState);
+            if (resumed !== cracksState) { cracksResumeBefore = getCurrentState(); cracksState = resumed; }
+        }
         window.logArtEvent('PLAY', getSimulationRecordingDetails());
 
         // רשימת כל כפתורי הסימולציה
@@ -1583,7 +1588,7 @@ function pauseLife() {
               syncDlaCrystalState();
           }
 
-          simulationStartState = getCurrentState();
+          simulationStartState = cracksResumeBefore ?? getCurrentState();
           simulationHasBrushInput = false;
 
           isLifePlaying = true;
@@ -3378,6 +3383,7 @@ function saveCracksSettings(material, lineColor) {
         contourRules = { ...contourRules, material:next, lineColor };
         if (next.enabled && next.strength === 80) delete contourRules.material;
         cracksState = cracksState ? { ...restoreCracksState(cracksState), version:3, pendingSeed:cracksState.pendingSeed ?? null } : createCracksState(n);
+        cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), contourRules:{ ...contourRules, material:next } }, cracksState);
     };
     if (isLifePlaying) commit(); else performAction(commit);
     recordLiveSimulationRules('contour');

@@ -24,7 +24,7 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
  source=source.replace('      initializeApp();',`window.cracksTest={
  setup:()=>{pauseLife();resetArmedState();activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Journey');updatePaletteHeader();n=81;initializeBoardAndCanvas(true);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();boardState.forEach((t,i)=>{t.k=t.v=12+Math.floor((i%81)/14)%5;t.isGold=false;});contourRules={sensitivity:75,lineColor:'darkest'};selectedColorIndex=12;selectedColor=palette()[12];brushSize=3;isRainbowModeActive=false;isBrushModeOn=true;isContinuousBrushOn=false;updateColorPickerButtonUI();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();},
- exhaust:()=>{pauseLife();armSimulation('contour');n=21;initializeBoardAndCanvas(true);contourMode='cracks';cracksState=createCracksState(n);armedSimulation='contour';boardState.forEach(t=>{t.k=t.v=11;t.isGold=false;});for(let i=0;i<500;i++)boardState=runContourEvolution({n,currentBoardState:boardState,currentPalette:palette(),contourRules});brushSize=7;selectedColorIndex=12;selectedColor=palette()[12];history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();updateColorPickerButtonUI();updateContourButtonUI();},
+ exhaust:(hard=false)=>{pauseLife();armSimulation('contour');n=21;initializeBoardAndCanvas(true);contourMode='cracks';cracksState=createCracksState(n);armedSimulation='contour';boardState.forEach(t=>{t.k=t.v=11;t.isGold=false;});for(let i=0;i<500;i++)boardState=runContourEvolution({n,currentBoardState:boardState,currentPalette:palette(),contourRules});if(hard)boardState.forEach(t=>{t.k=t.v=2;});brushSize=7;selectedColorIndex=12;selectedColor=palette()[12];history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();updateColorPickerButtonUI();updateContourButtonUI();},
  state:()=>({mode:contourMode,armed:armedSimulation,playing:isLifePlaying,gen:currentGenerationCount,board:boardState.map(t=>t.k),snapshot:getCurrentState(),loaded:isMacroLoaded,macro:isMacroPlaying,logs:[...artRecipeLog],undoTarget:history.at(-1)?.before}),
  liveExport:()=>{const file=createArtRecipeFile(),snapshot=getCurrentState();pauseLife();return file.text().then(text=>({text,snapshot}));},play:togglePlayPauseLife,pause:pauseLife,undo,redo,restore:state=>applyState(state),recipe:async()=>await createArtRecipeFile().text(),macro:playMacro,prefs:()=>getWorkspaceSettings(),legacy:()=>applyMacroRules('Armed: contour | Sort: luminance | Rules: {"sensitivity":75,"lineColor":"darkest"}')
  };initializeApp().then(()=>cracksTest.ready=true);`);
@@ -65,6 +65,22 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
   const live=await page.evaluate(()=>cracksTest.liveExport());assert(/\[GEN:\d+\] PAUSE/.test(live.text));
   await page.locator('#projectFileInput').setInputFiles({name:'live-cracks.txt',mimeType:'text/plain',buffer:Buffer.from(live.text)});await page.waitForFunction(()=>cracksTest.state().loaded);await page.evaluate(()=>cracksTest.macro());await page.waitForFunction(()=>!cracksTest.state().loaded&&!cracksTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,live.snapshot.tiles.map(t=>t.k),'export during growth captures its final generation');
  }
+ // Exhaustion alone must not make Play a no-op while soft material remains.
+ await page.evaluate(()=>{cracksTest.setup();cracksTest.exhaust();});
+ const dormant=await state();
+ await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>cracksTest.state().gen>=8);await tap(page.locator('#btnPlayPauseLife'));
+ const restarted=await state();assert.notDeepEqual(restarted.board,dormant.board,'Play revives exhausted cracks without requiring new paint');
+ await page.evaluate(()=>cracksTest.undo());assert.deepEqual((await state()).snapshot.contourState,dormant.snapshot.contourState,'Undo restores exhausted runtime before reseeding');
+ await page.evaluate(()=>cracksTest.redo());assert.deepEqual((await state()).board,restarted.board);
+ const restartRecipe=await page.evaluate(()=>cracksTest.recipe());await page.locator('#projectFileInput').setInputFiles({name:'restart.txt',mimeType:'text/plain',buffer:Buffer.from(restartRecipe)});await page.waitForFunction(()=>cracksTest.state().loaded);await page.evaluate(()=>cracksTest.macro());await page.waitForFunction(()=>!cracksTest.state().loaded&&!cracksTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,restarted.board,'resume-only reseeding replays exactly');
+ // An exhausted hard board stays protected; disabling material while running
+ // must revive it without a second Pause/Play or an extra brush gesture.
+ await page.evaluate(()=>{cracksTest.setup();cracksTest.exhaust(true);});
+ const hardBoard=(await state()).board;
+ await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>cracksTest.state().gen>=8);assert.deepEqual((await state()).board,hardBoard);
+ await openSettings();await enabled.uncheck();await dialog.locator('[type=submit]').click();assert((await state()).playing);
+ await page.waitForFunction(()=>cracksTest.state().board.some(k=>k===0));await tap(page.locator('#btnPlayPauseLife'));
+ assert.notDeepEqual((await state()).board,hardBoard,'turning material Off revives exhausted growth');
  // Regression: exhaust every tip, pause, cover old cracks with a color patch,
  // then resume through real controls. The queued restart must survive history
  // and replay, and must not advance while paused.

@@ -17,6 +17,23 @@ function materialResistance(state, rules, paletteLength, k) {
     if(state.version<3 || !rules.material?.enabled || !rules.material.strength)return 0;
     return (1-Math.max(0,Math.min(1,k/Math.max(1,paletteLength-1))))*rules.material.strength/100;
 }
+// Explicit Play/settings changes can revive an exhausted run. Search only on
+// those actions, never per frame, and leave surviving tips/old recipes intact.
+export function prepareCracksResume(context, previous) {
+    if (!previous || previous.version < 3 || previous.steps === 0 || previous.tips.length || previous.pendingSeed !== null) return previous;
+    const {n,currentBoardState:board,currentPalette,contourRules}=context;
+    if (previous.n !== n) return previous;
+    const line=contourRules.lineColor==='lightest'?currentPalette.length-1:0;
+    const available=i=>i>=0&&i<n*n&&!board[i].isGold&&board[i].k!==line&&materialResistance(previous,contourRules,currentPalette.length,board[i].k)<.5;
+    const start=previous.random%(n*n);
+    for(let offset=0;offset<n*n;offset++) {
+        const i=(start+offset)%(n*n),x=i%n,y=Math.floor(i/n);
+        if(available(i)&&((x>0&&available(i-1))||(x<n-1&&available(i+1))||(y>0&&available(i-n))||(y<n-1&&available(i+n)))) {
+            return {...previous,roots:0,pendingSeed:i};
+        }
+    }
+    return previous;
+}
 // Merge painted targets between generations independent of brush packet grouping.
 // Painting queues a nucleus; it does not change pixels or advance the simulation.
 // Version-1 recordings retain their original finite-root behavior.
