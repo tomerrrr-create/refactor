@@ -1,19 +1,3 @@
-import { hexToRgb } from './colors.js';
-
-// Cosmetic shades only: do not add colors to the drawing palette or consume
-// the simulation's random stream. Include black, the exact color, and white.
-export function getColorFrameShades(color) {
-    const rgb = hexToRgb(color);
-    const shades = [];
-    for (let step = 0; step <= 20; step++) {
-        const components = rgb.map(channel => step <= 10
-            ? Math.round(channel * step / 10)
-            : Math.round(channel + (255 - channel) * (step - 10) / 10));
-        shades.push('#' + components.map(channel => channel.toString(16).padStart(2, '0')).join(''));
-    }
-    return shades;
-}
-
 // Presentation only: keep decorative randomness separate from simulation randomness.
 const frameKeys = new WeakMap();
 
