@@ -27,7 +27,7 @@ try {
  state:()=>({sort:currentSortMethod,symmetry:symmetryMode,palette:activePaletteIndex,colors:boardState.map(t=>palette()[t.k]),gen:currentGenerationCount,playing:isLifePlaying,logs:[...artRecipeLog],shape:brushShape,size:brushSize}),
  sim:()=>{isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');armSimulation('gameOfLife');updateSimulationUtilityControl();},
  play:()=>togglePlayPauseLife(),pause:pauseLife,
- mainSymmetry:cycleSymmetryMode
+ page:()=>colorPickerPage,pages:size=>{activePaletteIndex=C.PALETTES.findIndex(p=>size==='large'?p.colors.length>80:p.originalName==='Journey');updatePaletteHeader();modals.openColorPickerModal();},mainSymmetry:cycleSymmetryMode
  };initializeApp().then(()=>pickerNavTest.ready=true);`);
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.pickerNavTest?.ready);await page.waitForTimeout(500);
  await page.evaluate(()=>{pickerNavTest.setup();pickerNavTest.open();});await page.waitForTimeout(350);
@@ -35,6 +35,16 @@ try {
  const sort=page.locator('#btnColorPickerSort'),sym=page.locator('#btnColorPickerSymmetry'),pal=page.locator('#btnColorPickerPalette');
  const boxes=await Promise.all([sort,pal,sym].map(b=>b.boundingBox()));assert(boxes[0].x<boxes[1].x&&boxes[1].x<boxes[2].x,'physical left sort / center palette / right symmetry in every language');assert(boxes.every(b=>b.width>=44&&b.height>=44));
  assert.equal(await page.locator('.brush-picker-navigation').evaluate(e=>e.scrollWidth<=e.clientWidth),true);
+ assert(!(await page.locator('#btnColorPageNext').isVisible()));assert(!(await page.locator('#btnColorPagePrevious').isVisible()));
+ const shortHeight=await page.locator('.brush-picker-panel').evaluate(e=>e.getBoundingClientRect().height);
+ await page.evaluate(()=>pickerNavTest.pages('large'));await page.waitForTimeout(200);
+ const previous=page.locator('#btnColorPagePrevious'),next=page.locator('#btnColorPageNext');assert(await previous.isVisible());assert(await next.isVisible());
+ assert(Math.abs(await page.locator('.brush-picker-panel').evaluate(e=>e.getBoundingClientRect().height)-shortHeight)<2,'arrows do not add a row or change dialog height');
+ const pagingBefore=await state();await previous.click();assert(await page.evaluate(()=>pickerNavTest.page())>0,'previous wraps to last page');await next.click();assert.equal(await page.evaluate(()=>pickerNavTest.page()),0);await next.click();assert.equal(await page.evaluate(()=>pickerNavTest.page()),1);await previous.click();assert.equal(await page.evaluate(()=>pickerNavTest.page()),0);
+ assert.deepEqual(await state(),pagingBefore,'paging does not paint, change the brush, or log an action');
+ const arrowBox=await next.boundingBox(),gridBox=await page.locator('#colorPickerSwatches').boundingBox();assert(Math.abs(arrowBox.y+arrowBox.height/2-gridBox.y-gridBox.height/2)<1,'arrows centered beside colors');
+ await page.screenshot({path:path.join(artifacts,config.lang+'-arrows.png')});
+ await page.evaluate(()=>pickerNavTest.pages('small'));assert(!(await next.isVisible()));
  const before=await state(),swatches=()=>page.locator('#colorPickerSwatches .color-swatch').evaluateAll(items=>items.map(e=>e.querySelector('.color-swatch-inner')?.style.backgroundColor || ''));
  const originalSwatches=await swatches();
  for(const method of ['temperature','hue','luminance']){await sort.click();assert.equal((await state()).sort,method);assert.deepEqual((await state()).colors,before.colors,'sorting keeps existing painted colors');}

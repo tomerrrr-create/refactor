@@ -170,6 +170,8 @@ export const translations = {
   palette_groups: {"en": "Palette groups", "he": "קבוצות פלטות", "ru": "Группы палитр", "nl": "Paletgroepen"},
   palette_colors: {"en": "colors", "he": "צבעים", "ru": "цветов", "nl": "kleuren"},
   palette_current: {"en": "Current:", "he": "נוכחית:", "ru": "Текущая:", "nl": "Huidig:"},
+  brush_page_previous: { en: "Previous colors", he: "עמוד הצבעים הקודם", ru: "Предыдущие цвета", nl: "Vorige kleuren" },
+  brush_page_next: { en: "Next colors", he: "עמוד הצבעים הבא", ru: "Следующие цвета", nl: "Volgende kleuren" },
   palette_items: {"en": "items", "he": "פלטות", "ru": "палитр", "nl": "paletten"},
   save_image_preview: {"en": "Image Preview", "he": "תצוגה מקדימה של התמונה", "ru": "Предпросмотр изображения", "nl": "Voorbeeld van de afbeelding"},
 

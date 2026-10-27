@@ -668,7 +668,12 @@ function renderColorPickerContent() {
 
     app.dom.colorPickerSwatches.appendChild(frag);
 
-    document.getElementById('colorPageNudge').hidden = totalPages <= 1;
+    for (const [id, key] of [['btnColorPagePrevious', 'brush_page_previous'], ['btnColorPageNext', 'brush_page_next']]) {
+        const button = document.getElementById(id);
+        button.hidden = totalPages <= 1;
+        button.title = app.getText(key);
+        button.setAttribute('aria-label', app.getText(key));
+    }
     brushPicker?.refresh();
 }
 
@@ -1388,6 +1393,13 @@ export function initializeModals(appContext) {
     app.dom.colorPickerModal.addEventListener('click', (e) => { if (e.target === app.dom.colorPickerModal) { closeColorPickerModal(); } });
     
     app.dom.colorPickerSwatches.addEventListener('wheel', handlePaletteWheel, { passive: false });
+    for (const [id, forward] of [['btnColorPagePrevious', false], ['btnColorPageNext', true]]) {
+        document.getElementById(id).addEventListener('click', () => {
+            if (app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
+            app.navigateColorPages(forward);
+            renderColorPickerContent();
+        });
+    }
     bindColorPageSwipe(app.dom.colorPickerSwatches, { onPage: forward => {
         if (app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
         app.navigateColorPages(forward);
