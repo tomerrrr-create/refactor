@@ -594,6 +594,10 @@ function renderColorPickerContent() {
 
     const displayIcon = currentPalette.iconHTML || currentPalette.emoji || '';
     app.dom.colorPickerPaletteName.innerHTML = displayIcon;
+    const paletteLabel = app.getText('tooltip_palette') + ' — ' + getPaletteDisplayName(currentPalette);
+    const paletteButton = document.getElementById('btnColorPickerPalette');
+    paletteButton.setAttribute('aria-label', paletteLabel);
+    paletteButton.title = paletteLabel;
     document.getElementById('brushPickerTitle').setAttribute('aria-label', app.getText('brush_picker_title') + ' — ' + getPaletteDisplayName(currentPalette));
     document.getElementById('colorPickerPageStatus').textContent = totalPages > 1 ? app.getText('brush_color_page').replace('{n}', currentPage + 1) : '';
 
@@ -693,6 +697,12 @@ function openPaletteModal({ guardOpeningClick = false } = {}) {
     populatePaletteModal();
     app.dom.paletteModal.classList.add('modal-visible');
     app.dom.paletteModalGrid.querySelector('[aria-selected="true"]')?.focus({ preventScroll: true });
+}
+
+function openPalettesFromColorPicker() {
+    if (app.isBreathing()) return;
+    closeColorPickerModal();
+    openPaletteModal();
 }
 
 
@@ -1275,6 +1285,7 @@ export function initializeModals(appContext) {
     });
 
     // Save Modal
+    document.getElementById('btnColorPickerPalette').addEventListener('click', openPalettesFromColorPicker);
     const modalDismissActions = {
         btnTechnicianCloseTop: () => app.dom.technicianDialog.close(),
         btnSortCycleCloseTop: () => document.getElementById('sortCycleDialog').close(),

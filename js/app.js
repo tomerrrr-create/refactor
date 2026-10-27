@@ -38,6 +38,7 @@ import * as C from './constants.js';
 import * as Simulations from './simulations.js';
 import { dom } from './dom-elements.js';
 import { initializeModals } from './ui-modals.js';
+import { initializeBrushPickerNavigation } from './brush-picker-navigation.js';
 import { loadSimInit, persistSimInit } from './sim-init-settings.js';
 import { loadSortCycle, persistSortCycle, normalizeSortCycle, nextSortMethod } from './sort-cycle-settings.js';
 import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, resolveStartupPaletteIndex } from './startup-settings.js';
@@ -5305,6 +5306,43 @@ bindPickerGestures(dom.btnCycleSort, {
 dom.btnCycleSort.addEventListener('keydown', e => {
     if (e.altKey && e.key === 'ArrowDown') {
         e.preventDefault(); modals.openSortCycleModal();
+    }
+});
+const transitionPickerSort = action => {
+    const before = currentSortMethod;
+    const previousFrame = capturePaletteColors(dom.board);
+    action();
+    if (currentSortMethod !== before) {
+        modals.renderColorPickerContent();
+        showPaletteColorTransition(dom.board, previousFrame);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            dom.colorPickerSwatches.getAnimations().forEach(animation => animation.cancel());
+            dom.colorPickerSwatches.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+        }
+    }
+};
+initializeBrushPickerNavigation({
+    sortButton: document.getElementById('btnColorPickerSort'),
+    utilityButton: document.getElementById('btnColorPickerSymmetry'),
+    sortControl: dom.btnCycleSort, symmetryControl: dom.btnSymmetry,
+    separatorControl: dom.btnGap, controlsContainer: dom.controlsContainer,
+    usesSeparators: () => isSimModeActive && dom.controlsContainer.classList.contains('sim-separator-control'),
+    sortGestures: {
+        onTap: () => transitionPickerSort(cycleSortMethod), onOpen: modals.openSortCycleModal,
+        onHold: () => transitionPickerSort(() => selectSortMethod(sortCycleMethods[0])),
+        canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'),
+        beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
+    },
+    symmetryGestures: {
+        onTap: cycleSymmetryMode, onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
+        onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
+        canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
+    },
+    separatorGestures: {
+        onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
+        onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
+        canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'),
+        beforeStart: hideLongPressDisplay
     }
 });
 bindPickerGestures(dom.btnColorPicker, {
