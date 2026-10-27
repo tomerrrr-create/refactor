@@ -2160,8 +2160,9 @@ body.wind-mode #board { cursor: crosshair; }
 .brush-shape-options svg { width: 20px; height: 20px; flex-shrink: 0; }
 .brush-controls { width: min(100%, 224px); margin-inline: auto; }
 .brush-control-grid { min-width: 0; display: grid; gap: 7px; }
-.brush-shape-options button { color: #a2abb3; background: linear-gradient(160deg, #282d32, #1b1f23); border-color: #46505a; box-shadow: inset 0 1px 0 #ffffff08, 0 2px 3px #00000025; }
-.brush-shape-options button[aria-pressed="true"] { border-color: #7b8792; color: #c1c8ce; background: linear-gradient(160deg, #3b454e, #292f35); box-shadow: inset 0 1px 0 #ffffff12, 0 2px 4px #00000040; }
+.brush-shape-options button { color: #a2abb3; background: transparent; border: 0; box-shadow: none; }
+.brush-shape-options button[aria-pressed="true"] { color: var(--gold); }
+.brush-shape-options button[aria-pressed="true"] svg { fill: currentColor; }
 .brush-size-options button[aria-pressed="true"] { border-color: #d8b76ba0; color: #f0d797; background: #d5aa4817; }
 .brush-size-heading { margin: 0 0 10px; height: 28px; display: flex; align-items: center; justify-content: center; color: #dfc484; }
 .brush-signature { display: block; width: 104px; height: 28px; }
@@ -2178,7 +2179,7 @@ body.wind-mode #board { cursor: crosshair; }
     .brush-picker-body::-webkit-scrollbar { width: 6px; }
     .brush-picker-body::-webkit-scrollbar-thumb { border-radius: 999px; background: #756342; }
     .brush-size-options button:hover { border-color: #d8b76b80; }
-    .brush-shape-options button:hover { border-color: #8996a1; }
+    .brush-shape-options button:not([aria-pressed="true"]):hover { color: #c1c8ce; }
 }
 
 #colorPickerModal #colorPickerPaletteName { display: flex; align-items: center; justify-content: center; height: 28.5px; font-size: 26px; line-height: 1; }

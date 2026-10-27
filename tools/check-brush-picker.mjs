@@ -44,7 +44,13 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  assert(alignment.every(offset=>offset<.1),'signature, shapes and sizes share the center of the panel');
  assert.equal(await p.locator('#brushFootprintPreview, #brushFootprintCaption, .brush-footprint').count(),0);
  const tones=await p.evaluate(()=>{const style=selector=>{const s=getComputedStyle(document.querySelector(selector));return {color:s.color,border:s.borderColor,background:s.backgroundImage};};return {shape:style('[data-brush-shape][aria-pressed="true"]'),size:style('[data-brush-size][aria-pressed="true"]')};});
- assert.notEqual(tones.shape.color,tones.size.color);assert.notEqual(tones.shape.border,tones.size.border);assert(tones.shape.background.includes('linear-gradient'),'shape buttons have a dark metallic finish');
+ assert.equal(tones.shape.color,'rgb(255, 215, 0)');assert.equal(tones.shape.background,'none');
+ for(const form of ['circle','square','diamond']){
+  await shape(form);
+  const appearance=await p.locator('[data-brush-shape]').evaluateAll(buttons=>buttons.map(b=>{const s=getComputedStyle(b),svg=getComputedStyle(b.querySelector('svg'));return {selected:b.getAttribute('aria-pressed')==='true',border:s.borderWidth,background:s.backgroundColor,shadow:s.boxShadow,fill:svg.fill,height:b.getBoundingClientRect().height};}));
+  for(const b of appearance){assert.equal(b.border,'0px');assert.equal(b.background,'rgba(0, 0, 0, 0)');assert.equal(b.shadow,'none');assert(b.height>=44);assert.equal(b.fill,b.selected?'rgb(255, 215, 0)':'none');}
+ }
+ await shape('circle');
  assert.equal(await p.locator('#colorPickerPagination').count(),0);
  assert.equal(await p.locator('[data-brush-size="23"]').textContent(),'XL');
  const before=await p.evaluate(()=>brushTest.state());
