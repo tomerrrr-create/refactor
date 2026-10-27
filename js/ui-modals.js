@@ -1,4 +1,5 @@
 import { initializeBrushPicker } from './brush-picker.js';
+import { transitionPickerDialog, finishPickerDialogTransition } from './picker-dialog-transition.js';
 import { bindColorPageSwipe } from './color-page-swipe.js';
 import { brushSizeLabel } from './brush-footprint.js';
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
@@ -122,6 +123,7 @@ const currentMethod = app.spiralRules ? app.spiralRules.method : 'magnet';    ap
 
 
 function closeColorPickerModal() {
+    finishPickerDialogTransition();
     colorPickerHoldOpeningClick = false;
     app.dom.colorPickerModal.classList.remove('modal-visible');
     app.pointerState.longPressTarget = null;
@@ -137,6 +139,7 @@ function closeHelpModal() {
 let paletteHoldOpeningClick = false;
 
 function closePaletteModal() {
+    finishPickerDialogTransition();
     paletteHoldOpeningClick = false;
     app.dom.paletteModal.classList.remove('modal-visible');
     app.dom.btnPalette.focus({ preventScroll: true });
@@ -706,8 +709,8 @@ function openPaletteModal({ guardOpeningClick = false } = {}) {
 
 function openPalettesFromColorPicker() {
     if (app.isBreathing()) return;
-    closeColorPickerModal();
-    openPaletteModal();
+    transitionPickerDialog({ from: app.dom.colorPickerModal, to: app.dom.paletteModal,
+        close: closeColorPickerModal, open: openPaletteModal });
 }
 
 
@@ -723,8 +726,9 @@ function populatePaletteModal() {
         rtl: app.getCurrentLang() === 'he',
         showCurrentLabel: false,
         onCurrent() {
-            closePaletteModal();
-            openColorPickerModal(null, { returnFocus: app.dom.btnPalette });
+            transitionPickerDialog({ from: app.dom.paletteModal, to: app.dom.colorPickerModal,
+                close: closePaletteModal,
+                open: () => openColorPickerModal(null, { returnFocus: app.dom.btnPalette }) });
         },
         onSelect(index) {
             app.switchToPalette(index);

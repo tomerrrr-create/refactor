@@ -2161,6 +2161,17 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .startup-random-choice:focus-visible { outline: 2px solid #e6cc8e; outline-offset: 2px; }
 
 /* Color/brush picker only: other app windows retain their existing designs. */
+#colorPickerModal.picker-handoff-outgoing, #paletteModal.picker-handoff-outgoing,
+#colorPickerModal.picker-handoff-incoming, #paletteModal.picker-handoff-incoming {
+    visibility: visible; opacity: 1; transition: none;
+}
+#colorPickerModal.picker-handoff-outgoing, #paletteModal.picker-handoff-outgoing {
+    background: transparent; pointer-events: none; z-index: 61;
+}
+#colorPickerModal.picker-handoff-incoming, #paletteModal.picker-handoff-incoming { z-index: 60; }
+@media (prefers-reduced-motion: reduce) {
+    #colorPickerModal, #paletteModal { transition: none; }
+}
 #colorPickerModal .brush-picker-panel {
     display: flex; flex-direction: column; position: relative; box-sizing: border-box;
     width: min(340px, calc(100vw - 48px)); max-height: 82vh; max-height: 82dvh;
