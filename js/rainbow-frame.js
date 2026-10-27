@@ -1,19 +1,16 @@
 import { hexToRgb } from './colors.js';
 
 // Cosmetic shades only: do not add colors to the drawing palette or consume
-// the simulation's random stream. Repeated entries weight the perimeter toward
-// the selected color: 70% base, 20% dark shades, 8% light tints, 2% white.
+// the simulation's random stream. Include black, the exact color, and white.
 export function getColorFrameShades(color) {
     const rgb = hexToRgb(color);
-    const encode = components => '#' + components.map(channel => channel.toString(16).padStart(2, '0')).join('');
-    const shades = Array(70).fill(encode(rgb));
-    for (const amount of [0, .25, .5, .75]) {
-        shades.push(...Array(5).fill(encode(rgb.map(channel => Math.round(channel * amount)))));
+    const shades = [];
+    for (let step = 0; step <= 20; step++) {
+        const components = rgb.map(channel => step <= 10
+            ? Math.round(channel * step / 10)
+            : Math.round(channel + (255 - channel) * (step - 10) / 10));
+        shades.push('#' + components.map(channel => channel.toString(16).padStart(2, '0')).join(''));
     }
-    for (const amount of [.12, .24]) {
-        shades.push(...Array(4).fill(encode(rgb.map(channel => Math.round(channel + (255 - channel) * amount)))));
-    }
-    shades.push('#ffffff', '#ffffff');
     return shades;
 }
 
