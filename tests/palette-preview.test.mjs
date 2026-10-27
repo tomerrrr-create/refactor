@@ -30,7 +30,7 @@ test('each palette keeps its specified preview regardless of the current board s
     for(const palette of PALETTES) {
         const originalColors=Object.freeze([...palette.colors]);
         const p={...palette,originalColors,colors:[...originalColors]};
-        const expected=sortColorsArray(originalColors,lightToDarkNames.includes(p.originalName)?'reversed':'dark-rainbow');
+        const expected=sortColorsArray(originalColors,lightToDarkNames.includes(p.originalName)?'reversed':'hue');
         const preview=getPalettePreviewColors(p);
         assert.deepEqual(preview,expected,p.originalName);
         assert(Object.isFrozen(preview));assert.notEqual(preview,originalColors);
@@ -43,9 +43,9 @@ test('each palette keeps its specified preview regardless of the current board s
         }
     }
 });
-test('rainbow preview also works without originalColors and refreshes when the source is replaced',()=>{
+test('hue preview also works without originalColors and refreshes when the source is replaced',()=>{
     const p={colors:['#FFFFFF','#0000FF','#000000','#FF0000']};
-    assert.deepEqual(getPalettePreviewColors(p),sortColorsArray(p.colors,'dark-rainbow'));
+    assert.deepEqual(getPalettePreviewColors(p),sortColorsArray(p.colors,'hue'));
     p.originalColors=['#00FF00','#000000','#FFFFFF'];
-    assert.deepEqual(getPalettePreviewColors(p),sortColorsArray(p.originalColors,'dark-rainbow'));
+    assert.deepEqual(getPalettePreviewColors(p),sortColorsArray(p.originalColors,'hue'));
 });

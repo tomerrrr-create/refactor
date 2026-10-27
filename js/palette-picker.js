@@ -4,7 +4,7 @@ import { getPaletteDisplayName } from './palette-display-names.js';
 const previewCache = new WeakMap();
 
 // Explicit presentation choices keyed by stable catalogue names, not translated
-// labels. All other palettes keep their rainbow previews.
+// labels. All other palettes use hue previews.
 const reversedPreviews = new Set([
     'Hearts', 'Amazon Rainforest', 'Magma Flow', 'Sky', 'Golden Midnight',
     'Electric Dreams', 'Desert Sunrise', 'Mono', 'Serenety',
@@ -17,7 +17,7 @@ const reversedPreviews = new Set([
 // reversed previews run from light to dark.
 export function getPalettePreviewColors(palette) {
     const source = palette.originalColors ?? palette.colors;
-    const method = reversedPreviews.has(palette.originalName ?? palette.name) ? 'reversed' : 'dark-rainbow';
+    const method = reversedPreviews.has(palette.originalName ?? palette.name) ? 'reversed' : 'hue';
     const cached = previewCache.get(palette);
     if (cached?.source === source && cached.method === method) return cached.colors;
     const colors = Object.freeze(sortColorsArray(source, method));
