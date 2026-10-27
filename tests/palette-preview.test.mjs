@@ -1,17 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getPalettePreviewColors } from '../js/palette-picker.js';
-import { sortColorsArray, SORT_MODES } from '../js/colors.js';
+import { sortColorsArray, SORT_MODES, getLuminance } from '../js/colors.js';
 const warn=console.warn;
 let PALETTES;
 try { console.warn=()=>{}; ({PALETTES}=await import('../js/data/palettes.js')); }
 finally { console.warn=warn; }
 
-test('every palette uses rainbow previews regardless of the current board sort',()=>{
+const lightToDarkNames = [
+    'Hearts', 'Amazon Rainforest', 'Magma Flow', 'Sky', 'Golden Midnight',
+    'Electric Dreams', 'Desert Sunrise', 'Mono', 'Serenety',
+    'Golden Midnight Extended', 'Plasma Overload', 'Jasmine Stardust Aura',
+    'Earth & Spirit', 'Air', 'Blue Hypnosis 264', 'Glacier Pulse 264',
+    'Northern Lights HD', 'Baby First Gaze'
+];
+
+test('all 18 requested palettes exist and their previews run light to dark',()=>{
+    for(const name of lightToDarkNames) {
+        const palette=PALETTES.find(p=>p.originalName===name);
+        assert(palette, name);
+        const preview=getPalettePreviewColors(palette);
+        for(let i=1;i<preview.length;i++) {
+            assert(getLuminance(preview[i])<=getLuminance(preview[i-1]), name);
+        }
+    }
+});
+
+test('each palette keeps its specified preview regardless of the current board sort',()=>{
     for(const palette of PALETTES) {
         const originalColors=Object.freeze([...palette.colors]);
         const p={...palette,originalColors,colors:[...originalColors]};
-        const expected=sortColorsArray(originalColors,'dark-rainbow');
+        const expected=sortColorsArray(originalColors,lightToDarkNames.includes(p.originalName)?'reversed':'dark-rainbow');
         const preview=getPalettePreviewColors(p);
         assert.deepEqual(preview,expected,p.originalName);
         assert(Object.isFrozen(preview));assert.notEqual(preview,originalColors);

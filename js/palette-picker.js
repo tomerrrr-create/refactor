@@ -3,14 +3,25 @@ import { getPaletteDisplayName } from './palette-display-names.js';
 
 const previewCache = new WeakMap();
 
-// The picker always uses the same rainbow preview. Sort a separate copy of
-// the original palette; the active board order and palette data stay untouched.
+// Explicit presentation choices keyed by stable catalogue names, not translated
+// labels. All other palettes keep their rainbow previews.
+const reversedPreviews = new Set([
+    'Hearts', 'Amazon Rainforest', 'Magma Flow', 'Sky', 'Golden Midnight',
+    'Electric Dreams', 'Desert Sunrise', 'Mono', 'Serenety',
+    'Golden Midnight Extended', 'Plasma Overload', 'Jasmine Stardust Aura',
+    'Earth & Spirit', 'Air', 'Blue Hypnosis 264', 'Glacier Pulse 264',
+    'Northern Lights HD', 'Baby First Gaze'
+]);
+
+// Preview order is independent of the active board order. The requested
+// reversed previews run from light to dark.
 export function getPalettePreviewColors(palette) {
     const source = palette.originalColors ?? palette.colors;
+    const method = reversedPreviews.has(palette.originalName ?? palette.name) ? 'reversed' : 'dark-rainbow';
     const cached = previewCache.get(palette);
-    if (cached?.source === source) return cached.colors;
-    const colors = Object.freeze(sortColorsArray(source, 'dark-rainbow'));
-    previewCache.set(palette, { source, colors });
+    if (cached?.source === source && cached.method === method) return cached.colors;
+    const colors = Object.freeze(sortColorsArray(source, method));
+    previewCache.set(palette, { source, method, colors });
     return colors;
 }
 
