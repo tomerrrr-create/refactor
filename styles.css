@@ -2064,14 +2064,12 @@ body.wind-mode #board { cursor: crosshair; }
     transition: color .18s, background-color .18s, border-color .18s;
 }
 .palette-group-tab[aria-selected="true"] {
-    color: var(--gold);
-    background: linear-gradient(145deg, #b28b3642, #b28b361c);
-    border-color: #ffd700b3;
-    box-shadow: 0 0 8px #ffd70012;
-    text-shadow: 0 0 12px #ffd70030;
+    color: #241b09;
+    background: linear-gradient(145deg, #f1d886, #d5aa48);
+    border-color: #e8c66c;
+    box-shadow: inset 0 1px 0 #fff3c480, 0 2px 8px #0003;
 }
 .palette-group-tab[aria-selected="true"] > span:last-child { font-weight: 600; }
-.palette-group-tab[aria-selected="true"] .palette-group-mark { filter: drop-shadow(0 0 4px #ffd70045); }
 .palette-group-mark, .palette-group-mark svg { display: block; width: 20px; height: 20px; }
 .palette-group-description { margin: 3px 0 5px; padding-inline: 3px; flex-shrink: 0; color: #e1c78f; font-size: .86rem; line-height: 1.6; text-align: center; }
 .palette-current-summary {
