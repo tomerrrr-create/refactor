@@ -369,7 +369,6 @@ let magnetMode = 'off';
       let future = [];
 
       const originalColorPickerIconHTML = dom.btnColorPicker.innerHTML;
-      const originalSymmetryIconHTML = dom.btnSymmetry.innerHTML;
       
       let modals;
       let settingsProfiles;
@@ -2476,7 +2475,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
       function updateSimulationUtilityControl() {
           const showSeparators = isSimModeActive && dom.controlsContainer.classList.contains('sim-separator-control');
           dom.btnGap.classList.toggle('control-hidden', isSimModeActive && !showSeparators);
-          dom.btnResizeUp.classList.toggle('control-hidden', showSeparators);
+          dom.btnSymmetry.classList.toggle('control-hidden', showSeparators);
       }
 
       function swapSimulationUtilityControl() {
@@ -2712,15 +2711,15 @@ function setWindMode(enabled) {
     }
     windMode = enabled;
     document.body.classList.toggle('wind-mode', enabled);
-    updateSymmetryUI();
-    flashToolMode(dom.btnSymmetry);
+    updateColorPickerButtonUI();
+    flashToolMode(dom.btnColorPicker);
 }
 function cycleWindEffect() {
     if (!windMode) return;
     windPainter?.stop();
     windSettings = selectWindMode(windSettings, nextWindEffect(windSettings.mode));
     saveWindSettings(windSettings);
-    updateSymmetryUI();
+    updateColorPickerButtonUI();
 }
 let windPointerId = null;
 function initializeWindMode() {
@@ -2746,8 +2745,8 @@ function initializeWindMode() {
     document.addEventListener('visibilitychange', () => { if (document.hidden) { finishBrushGesture(); if (windMode) setWindMode(false); } });
     window.addEventListener('blur', () => { finishBrushGesture(); if (windMode) setWindMode(false); });
     windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
-        getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); updateSymmetryUI(); },
-        onOpen: () => windPainter.stop(), trigger: dom.btnSymmetry });
+        getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); updateColorPickerButtonUI(); },
+        onOpen: () => windPainter.stop(), trigger: dom.btnColorPicker });
     windPainter = createWindPainter({
         settings: () => windSettings,
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
@@ -3069,6 +3068,17 @@ function updateLayout() {
     }
 
     function updateColorPickerButtonUI() {
+        dom.btnColorPicker.classList.toggle('wind-active', windMode);
+        dom.btnColorPicker.setAttribute('aria-pressed', String(windMode));
+        dom.btnColorPicker.setAttribute('aria-keyshortcuts', 'Alt+ArrowDown');
+        if (windMode) {
+            dom.btnColorPicker.replaceChildren(createWindModeIcon(windSettings.mode));
+            dom.btnColorPicker.dataset.windMode = windSettings.mode;
+            dom.btnColorPicker.title = `${getText('wind_mode_' + windSettings.mode)} — ${getText('tooltip_wind_cycle')}`;
+            dom.btnColorPicker.setAttribute('aria-label', dom.btnColorPicker.title);
+            return;
+        }
+        delete dom.btnColorPicker.dataset.windMode;
         dom.btnColorPicker.title = getText('tooltip_colorPicker');
         dom.btnColorPicker.setAttribute('aria-label', dom.btnColorPicker.title);
         // 1. האם אנחנו במצב קשת?
@@ -3128,18 +3138,6 @@ function getTilesInRadius(centerIndex, size) {
       }
       
       function updateSymmetryButtonUI() {
-          dom.btnSymmetry.classList.toggle('wind-active', windMode);
-          dom.btnSymmetry.setAttribute('aria-pressed', String(windMode));
-          dom.btnSymmetry.setAttribute('aria-keyshortcuts', 'Alt+ArrowDown');
-          if (windMode) {
-              dom.btnSymmetry.replaceChildren(createWindModeIcon(windSettings.mode));
-              dom.btnSymmetry.dataset.windMode = windSettings.mode;
-              dom.btnSymmetry.title = `${getText('wind_mode_' + windSettings.mode)} — ${getText('tooltip_wind_cycle')}`;
-              dom.btnSymmetry.setAttribute('aria-label', dom.btnSymmetry.title);
-              return;
-          }
-          delete dom.btnSymmetry.dataset.windMode;
-          if (!dom.btnSymmetry.querySelector('.part.top')) dom.btnSymmetry.innerHTML = originalSymmetryIconHTML;
           const parts = {
               top: dom.btnSymmetry.querySelector('.part.top'), bottom: dom.btnSymmetry.querySelector('.part.bottom'),
               left: dom.btnSymmetry.querySelector('.part.left'), right: dom.btnSymmetry.querySelector('.part.right'),
@@ -5272,7 +5270,6 @@ bindPickerGestures(dom.btnPalette, {
         for (const [button, increase] of [[dom.btnResizeUp, true], [dom.btnResizeDown, false]]) {
             bindPickerGestures(button, {
                 onTap: () => resizeGrid(increase), onOpen: modals.openResizeModal,
-                onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => increase && isSimModeActive,
                 canInteract: () => !isBreathing,
                 beforeStart: hideLongPressDisplay
             });
@@ -5284,11 +5281,6 @@ bindPickerGestures(dom.btnPalette, {
             canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'),
             beforeStart: hideLongPressDisplay
         });
-        dom.btnResizeUp.addEventListener('keydown', event => {
-            if (event.altKey && event.key === 'ArrowDown' && isSimModeActive && !isBreathing) {
-                event.preventDefault(); swapSimulationUtilityControl();
-            }
-        });
         dom.btnGap.addEventListener('keydown', event => {
             if (event.altKey && event.key === 'ArrowDown') {
                 event.preventDefault(); modals.openSeparatorCycleModal();
@@ -5299,20 +5291,11 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnRedo.addEventListener('click', (e) => handleCtrlClick(e, redo));
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         initializeWindMode();
-        const symmetryGestures = {
-            onTap: () => windMode ? cycleWindEffect() : cycleSymmetryMode(),
-            onSwipeDown: () => setWindMode(!windMode),
-            onOpen: () => {
-                if (windMode) windSettingsUI.open();
-                else { symmetryMode = 'off'; updateSymmetryUI(); }
-            },
+        bindPickerGestures(dom.btnSymmetry, {
+            onTap: cycleSymmetryMode,
+            onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
+            onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
             canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
-        };
-        bindPickerGestures(dom.btnSymmetry, symmetryGestures);
-        dom.btnSymmetry.addEventListener('keydown', event => {
-            if (event.altKey && event.key === 'ArrowDown' && !isBreathing) {
-                event.preventDefault(); setWindMode(!windMode);
-            }
         });
 bindPickerGestures(dom.btnCycleSort, {
     onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
@@ -5342,35 +5325,49 @@ initializeBrushPickerNavigation({
     sortButton: document.getElementById('btnColorPickerSort'),
     utilityButton: document.getElementById('btnColorPickerSymmetry'),
     sortControl: dom.btnCycleSort, symmetryControl: dom.btnSymmetry,
+    separatorControl: dom.btnGap, controlsContainer: dom.controlsContainer,
+    usesSeparators: () => isSimModeActive && dom.controlsContainer.classList.contains('sim-separator-control'),
     sortGestures: {
         onTap: () => transitionPickerSort(cycleSortMethod), onOpen: modals.openSortCycleModal,
         onHold: () => transitionPickerSort(() => selectSortMethod(sortCycleMethods[0])),
         canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'),
         beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
     },
-    symmetryGestures
+    symmetryGestures: {
+        onTap: cycleSymmetryMode, onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
+        onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
+        canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
+    },
+    separatorGestures: {
+        onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
+        onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
+        canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'),
+        beforeStart: hideLongPressDisplay
+    }
 });
 bindPickerGestures(dom.btnColorPicker, {
     onTap: () => {
-        if (!(isLifePlaying && armedSimulation === 'breathe')) handleColorPickerClick();
+        if (windMode) cycleWindEffect();
+        else if (!(isLifePlaying && armedSimulation === 'breathe')) handleColorPickerClick();
     },
-    onOpen: () => modals.openColorPickerModal(),
+    onOpen: () => windMode ? windSettingsUI.open() : modals.openColorPickerModal(),
+    onSwipeDown: () => setWindMode(!windMode),
     canSwipeSide: () => !windMode,
     onSwipeSide: () => {
         if (windMode || (!selectedColor && !isRainbowModeActive)) return;
         resetSelectedColor();
         dom.btnColorPicker.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 250 });
     },
-    canOpen: () => !(isLifePlaying && armedSimulation === 'breathe'),
+    canOpen: () => windMode || !(isLifePlaying && armedSimulation === 'breathe'),
     onHold: () => {
-        if (isLifePlaying && armedSimulation === 'breathe') return;
+        if (windMode || (isLifePlaying && armedSimulation === 'breathe')) return;
         selectedColorIndex = 0;
         selectedColor = palette()[0];
         isRainbowModeActive = false;
         updateGlowEffect(); updateColorPickerButtonUI();
     },
     onExtendedHold: () => {
-        if (isLifePlaying && armedSimulation === 'breathe') return;
+        if (windMode || (isLifePlaying && armedSimulation === 'breathe')) return;
         selectedColor = null;
         selectedColorIndex = -1;
         isRainbowModeActive = true;
@@ -5378,6 +5375,11 @@ bindPickerGestures(dom.btnColorPicker, {
     },
     canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
+});
+dom.btnColorPicker.addEventListener('keydown', event => {
+    if (event.altKey && event.key === 'ArrowDown' && !isBreathing) {
+        event.preventDefault(); setWindMode(!windMode);
+    }
 });
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
         bindPickerGestures(dom.btnToggleSimMode, {

@@ -56,15 +56,15 @@ try {
  async function drag(button,dy){const r=await button.boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:5});await page.mouse.up();await page.waitForTimeout(100);}
  await drag(sym,-35);assert.equal((await state()).symmetry,'off');
  await drag(sort,-35);assert(await page.locator('#sortCycleDialog').isVisible());await page.locator('#btnCancelSortCycle').click();
- await page.evaluate(()=>pickerNavTest.sim());await drag(sym,35);assert.equal(await sym.getAttribute('data-wind-mode'),'ripple');
- await sym.click();assert.equal(await sym.getAttribute('data-wind-mode'),'paint');await drag(sym,-35);assert(await page.locator('dialog[open]').isVisible());await page.keyboard.press('Escape');await drag(sym,35);assert.equal(await sym.locator('[data-symmetry-icon]').count(),1);
+ await page.evaluate(()=>pickerNavTest.sim());await drag(sym,35);assert.equal(await sym.getAttribute('data-relative-gap'),await page.locator('#btnGap').getAttribute('data-relative-gap'));
+ assert.equal(await sym.locator('.picker-gap-value').count(),1);await sym.click();await drag(sym,-35);assert(await page.locator('#separatorCycleDialog').isVisible());await page.locator('#btnCancelSeparatorCycle').click();await drag(sym,35);assert.equal(await sym.locator('[data-symmetry-icon]').count(),1);
  await page.evaluate(()=>pickerNavTest.play());await page.waitForTimeout(200);assert((await state()).playing);const gen=(await state()).gen;await sort.click();assert((await state()).playing);await page.waitForTimeout(200);assert((await state()).gen>gen,'sorting during simulation does not stop it');await page.evaluate(()=>pickerNavTest.pause());
  const snapshot=await state();await page.screenshot({path:path.join(artifacts,config.lang+'.png')});
  await pal.click();await page.waitForTimeout(350);assert(await page.locator('#paletteModal').isVisible());assert(!(await page.locator('#colorPickerModal').isVisible()),'palette navigation closes the color picker');
  const footer=page.locator('#palette-current-summary');assert.equal(await footer.evaluate(e=>e.tagName),'BUTTON');assert.equal(await footer.locator('.palette-current-label').count(),0);
  const footerBefore=await state();
- for(const selector of ['#palette-current-preview .palette-current-icon','#palette-current-preview','#palette-current-summary .palette-current-name','#palette-current-summary .palette-choice-count',null]){
-   if(selector)await page.locator(selector).click();else await footer.click({position:{x:3,y:3}});
+ for(const selector of ['.palette-current-icon','.palette-color-ribbon','.palette-current-name','.palette-choice-count',null]){
+   if(selector)await footer.locator(selector).click();else await footer.click({position:{x:3,y:3}});
    await page.waitForTimeout(350);assert(await page.locator('#colorPickerModal').isVisible());assert(!(await page.locator('#paletteModal').isVisible()));assert.deepEqual(await state(),footerBefore,'footer navigation does not alter the board, brush, sorting or logger');
    await pal.click();await page.waitForTimeout(350);
  }
