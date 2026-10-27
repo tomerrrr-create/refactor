@@ -1,4 +1,4 @@
-import { validateCracksMaterial } from './cracks-settings.js';
+import { DEFAULT_CRACKS_MATERIAL, validateCracksMaterial } from './cracks-settings.js';
 import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
@@ -3381,7 +3381,7 @@ function saveCracksSettings(material, lineColor) {
     const commit = () => {
         replayCracksMaterial = null;
         contourRules = { ...contourRules, material:next, lineColor };
-        if (next.enabled && next.strength === 80) delete contourRules.material;
+        if (next.enabled && next.strength === DEFAULT_CRACKS_MATERIAL.strength) delete contourRules.material;
         cracksState = cracksState ? { ...restoreCracksState(cracksState), version:3, pendingSeed:cracksState.pendingSeed ?? null } : createCracksState(n);
         cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), contourRules:{ ...contourRules, material:next } }, cracksState);
     };

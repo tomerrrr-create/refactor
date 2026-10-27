@@ -1,4 +1,4 @@
-import { validateCracksMaterial } from './cracks-settings.js';
+import { DEFAULT_CRACKS_MATERIAL, validateCracksMaterial } from './cracks-settings.js';
 import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
@@ -93,7 +93,7 @@ export function validateWorkspaceSettings(value) {
         number(r.turing.feed, .01, .1) && number(r.turing.kill, .01, .07) &&
         number(r.turing.dA, 0, 1) && number(r.turing.dB, 0, 1) && number(r.turing.timeStep, 0, 1);
     if (!valid) throw new Error('Invalid workspace settings');
-    if (r.contour.material?.enabled && r.contour.material.strength === 80) delete r.contour.material;
+    if (r.contour.material?.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
     return settings;
 }
 

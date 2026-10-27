@@ -27,9 +27,10 @@ test('Off and zero influence preserve version-2 growth exactly, including the ra
  }
 });
 test('material settings and pending growth round trip without changing old settings files',()=>{
- assert.deepEqual(validateCracksMaterial(),DEFAULT_CRACKS_MATERIAL);
+ assert.deepEqual(validateCracksMaterial(),DEFAULT_CRACKS_MATERIAL);assert.equal(DEFAULT_CRACKS_MATERIAL.strength,40);
  const settings=defaultWorkspaceSettings(),old=serializeWorkspaceSettings(settings);assert(!old.includes('material'));
  settings.rules.contour.material={...DEFAULT_CRACKS_MATERIAL};assert.equal(serializeWorkspaceSettings(settings),old,'default material settings have one canonical representation');
+ settings.rules.contour.material={enabled:true,strength:80};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)),settings,'saved 80% stays explicit after the default changes');
  settings.rules.contour.material={enabled:false,strength:45};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)),settings);
  for(const value of [{enabled:1,strength:80},{enabled:true,strength:101},{enabled:true,strength:1.5},{enabled:true,strength:80,extra:1}])assert.throws(()=>validateCracksMaterial(value));
  const ctx=fixture(),queued=queueCracksGrowth(ctx,createCracksState(41),[{i:800,k:20}]);const restored=restoreCracksState(JSON.parse(JSON.stringify(queued)));assert.deepEqual(run(ctx,queued,25),run(ctx,restored,25));
