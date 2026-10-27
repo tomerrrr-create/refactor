@@ -2238,7 +2238,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     width: 100%; min-height: 44px; padding: 8px; border: 0; border-radius: 8px;
     background: transparent; color: inherit; cursor: pointer;
 }
-.palette-current-preview .palette-color-ribbon { max-width: 160px; height: 8px; }
 .palette-current-preview .palette-current-icon { flex-shrink: 0; }
 .palette-current-preview:hover { background: #d5aa4810; }
 .palette-current-preview:focus-visible { outline: 2px solid #d5aa48; outline-offset: -2px; }

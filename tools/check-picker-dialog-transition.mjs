@@ -38,7 +38,7 @@ try {
   const header=preview.getBoundingClientRect(),details=footer.querySelector('.palette-current-details').getBoundingClientRect(),bottom=footer.getBoundingClientRect(),tabs=modal.querySelector('.palette-group-tabs').getBoundingClientRect();
   return {above:header.bottom<=tabs.top,centered:Math.abs((details.left+details.right)-(bottom.left+bottom.right))<2,headerRibbon:!!preview.querySelector('.palette-color-ribbon'),headerIcon:!!preview.querySelector('.palette-current-icon'),footerRibbon:!!footer.querySelector('.palette-color-ribbon'),headerOverflow:preview.scrollWidth>preview.clientWidth+1};
  });
- assert(paletteLayout.above&&paletteLayout.centered&&paletteLayout.headerRibbon&&paletteLayout.headerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'preview is above the catalogue and footer details are centered');
+ assert(paletteLayout.above&&paletteLayout.centered&&!paletteLayout.headerRibbon&&paletteLayout.headerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'preview is above the catalogue and footer details are centered');
  await page.screenshot({path:path.join(artifacts,config.lang+'-palette-layout.png')});
  // Both the new header (keyboard) and existing footer (pointer) open colors.
  await page.locator('#palette-current-preview').focus();await page.keyboard.press('Enter');await waitForHandoff(page);

@@ -158,7 +158,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             preview.setAttribute('aria-haspopup', 'dialog');
             preview.setAttribute('aria-label', current.getAttribute('aria-label'));
             preview.addEventListener('click', onCurrent);
-            preview.append(ribbon, icon);
+            preview.append(icon);
             currentPreviewHost.append(preview);
             current.append(details);
         } else {

@@ -112,4 +112,4 @@ Alexis. Version 11 upgrades former factory startup values in profile 1 only;
 different personal values and profiles 2/3 are retained. Factory reset uses
 the new defaults.
 
-The palette picker shows the current palette icon and color ribbon above the catalogue, with its name and color count centered below. Both areas open the color/brush picker using the existing handoff.
+The palette picker shows the current palette icon alone above the catalogue, with its name and color count centered below. Both areas open the color/brush picker using the existing handoff.

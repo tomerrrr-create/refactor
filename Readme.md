@@ -562,4 +562,4 @@ Capture runs after committed UI events and logged actions, plus on page hide/vis
 
 Verification: `node --test tests/*.test.mjs` includes profile state isolation, persistence, dirty reversal, file validation and replay separation. Browser checks should cover native checkbox/slider events, cancelled forms, stars on inactive profiles, switch/reopen, save/import, keyboard/RTL, unchanged board pixels and macro completion followed by a manual preference change. Run `node tools/update-pwa-cache.mjs` after asset changes.
 
-The palette picker shows the current palette icon and color ribbon above the catalogue, with its name and color count centered below. Both areas open the color/brush picker using the existing handoff.
+The palette picker shows the current palette icon alone above the catalogue, with its name and color count centered below. Both areas open the color/brush picker using the existing handoff.
