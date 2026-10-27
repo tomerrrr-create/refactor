@@ -104,3 +104,12 @@ test('exporting an in-flight Wind batch closes only the export copy at the curre
  assert(line.includes(' WIND_END -> '));assert.deepEqual(JSON.parse(line.split(' -> ')[1]),{windVersion:1,batch:'live-wind',elapsed:550,reason:'stop'});
  assert.deepEqual(Array.from(h.artRecipeLog),original);assert.equal(h.windBatch.id,'live-wind');
 });
+
+test('a live initial snapshot captures rules and the current generation without restarting',()=>{
+    const events=[];
+    const h=vm.createContext({n:1,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,boardState:[{k:0,isGold:false}],isLifePlaying:true,armedSimulation:'brightnessEvo',currentGenerationCount:361,
+        compressBoardState:()=> '1x0',getSimulationRecordingDetails:()=> 'Armed: brightnessEvo | Sort: luminance | Rules: {"mode":"contrast"}',window:{logArtEvent:(name,details)=>events.push({name,details:JSON.parse(details)})}});
+    vm.runInContext(source.slice(source.indexOf('      function logCurrentStateAsInit()'),source.indexOf('      function areStatesEqual(')),h);
+    h.logCurrentStateAsInit();assert.equal(events[0].details.liveSimulation.generation,361);assert.equal(events[0].details.liveSimulation.simulation,'brightnessEvo');assert.equal(h.currentGenerationCount,361);assert.equal(h.isLifePlaying,true);
+    h.isLifePlaying=false;h.logCurrentStateAsInit();assert.equal(events[1].details.liveSimulation,undefined);
+});

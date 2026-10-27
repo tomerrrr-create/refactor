@@ -137,7 +137,7 @@ test('an unchanged-color live stroke still owns a combined history action when t
  h.down(15,15);h.up(15,15);assert.equal(h.c.simulationHasBrushInput,true);
  Object.assign(h.c,{animationFrameId:null,setSimulationRunning(){},cancelAnimationFrame(){},updateUndoRedoButtons(){},
   dom:{iconPlay:{style:{}},iconPause:{style:{}},btnStepForward:{}}});
- vm.runInContext(source.slice(source.indexOf('function pauseLife()'),source.indexOf('      function togglePlayPauseLife()')),h.c);
+ vm.runInContext(source.slice(source.indexOf('function pauseLife()'),source.indexOf('      function togglePlayPauseLife(')),h.c);
  h.c.pauseLife();assert.equal(h.history.length,2);assert.equal(h.c.simulationHasBrushInput,false);
  // A later untouched, visually unchanged breathing run stays a genuine no-op.
  h.c.simulationStartState=h.c.getCurrentState();h.c.isLifePlaying=true;h.c.pauseLife();assert.equal(h.history.length,2);
@@ -211,7 +211,7 @@ function enableLiveUndo(h) {
   applyState:s=>{c.boardState=copy(s.tiles);}});
  c.windPainter.stop=()=>{};
  Object.assign(c.dom,{iconPlay:{style:{}},iconPause:{style:{}},btnStepForward:{}});
- vm.runInContext(source.slice(source.indexOf('function pauseLife()'),source.indexOf('      function togglePlayPauseLife()')),c);
+ vm.runInContext(source.slice(source.indexOf('function pauseLife()'),source.indexOf('      function togglePlayPauseLife(')),c);
  vm.runInContext(source.slice(source.indexOf('      function undo()'),source.indexOf('      function updateUndoRedoButtons()')),c);
 }
 test('live Undo stops at the latest brush boundary, preserves earlier generations, and Redo restores the result',()=>{

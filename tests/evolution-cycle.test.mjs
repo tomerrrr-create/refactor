@@ -44,6 +44,7 @@ for (const item of cases) {
         const c = harness();
         c.window.logArtEvent('INIT_STATE', JSON.stringify({ recipeVersion: 2, n: 1, pal: 0, sep: 0, sort: 'luminance', board: '1x0' }));
         c[item.fn](); assert.equal(item.get(c), item.modes[0]);
+        c.window.logArtEvent('PLAY', `Armed: ${item.sim} | Rules: No specific rules mapping`);
         c.isLifePlaying = true; c.armCalls = 0;
         const board = c.boardState, crystal = c.dlaState;
         const expected = [];

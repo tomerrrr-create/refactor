@@ -86,7 +86,7 @@ test('displacement strength changes the deformation while preserving the same co
 
 test('initial recipe gold metadata round-trips through the actual logger and macro handler; legacy stays unchanged',()=>{
  const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8'),events=[];
- const c=vm.createContext({n:2,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,pendingMacroPalette:null,
+ const c=vm.createContext({n:2,isLifePlaying:false,armedSimulation:null,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,pendingMacroPalette:null,
   boardState:[{k:1,isGold:true},{k:2,isGold:false},{k:3,isGold:true},{k:4,isGold:false}],
   compressBoardState:()=> '1x1,1x2,1x3,1x4',window:{logArtEvent:(name,details)=>events.push({eventName:name,details})},
   restoreSeparatorWidth(){},syncSelectedColorWithPalette(){},updatePaletteHeader(){},applySeparator(){},updateSortButtonUI(){},renderToScreen(){},artRecipeLog:[],console});

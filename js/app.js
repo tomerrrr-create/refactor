@@ -423,6 +423,11 @@ currentSortMethod,
             sort: currentSortMethod,
             sep: separatorPx,
             board: compressBoardState(),
+            ...(isLifePlaying && armedSimulation ? { liveSimulation: {
+                version: 1, simulation: armedSimulation, details: getSimulationRecordingDetails(),
+                generation: currentGenerationCount,
+                elapsed: armedSimulation === 'breathe' ? Math.max(0, performance.now() - breatheStartTime) : 0
+            } } : {}),
             ...(boardState.some(tile => tile.isGold) ? { gold: boardState.flatMap((tile, i) => tile.isGold ? [i] : []) } : {})
         };
         window.logArtEvent('INIT_STATE', JSON.stringify(stateSnapshot));
@@ -1486,7 +1491,7 @@ function pauseLife() {
 
 
       
-      function togglePlayPauseLife() {
+      function togglePlayPauseLife({ deferFirstGeneration = false } = {}) {
 //        if (isMacroPlaying) return; // לא מאפשרים לגעת בסימולציות כשהמאקרו רץ
 
         if (isLifePlaying) {
@@ -1567,7 +1572,7 @@ function pauseLife() {
           });
 
           // Install queued generation-one commands before the macro's first frame.
-          if (isExecutingMacroCommand && (armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands')) {
+          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands')) {
               animationFrameId = requestAnimationFrame(gameLoop);
           } else {
               gameLoop();
@@ -3972,7 +3977,47 @@ function parseMacroText(text) {
         if (!match) return false;
         try { return JSON.parse(match[2]).recipeVersion === 2; } catch { return false; }
     });
-    const actions = isHistoryRecipe ? parseHistoryMacro(recipeLines) : parseLegacyMacroText(text);
+    const parsed = isHistoryRecipe ? parseHistoryMacro(recipeLines) : parseLegacyMacroText(text);
+    const actions = [];
+    const hasInitialState = parsed.some(action => action.eventName === 'INIT_STATE');
+    let hasSimulationContext = false, simulationRunning = false;
+    for (const original of parsed) {
+        const action = { ...original };
+        if (!hasInitialState) { actions.push(action); continue; }
+        if (action.eventName === 'INIT_STATE') {
+            // A fresh log may have been captured while a simulation was already
+            // running. Its initial board must load before waiting for any GEN.
+            action.isGenBased = false; action.targetGen = null;
+            hasSimulationContext = false; simulationRunning = false;
+            actions.push(action);
+            const live = JSON.parse(action.details).liveSimulation;
+            if (live !== undefined) {
+                if (live.version !== 1 || typeof live.simulation !== 'string' || typeof live.details !== 'string' ||
+                    !Number.isSafeInteger(live.generation) || live.generation < 0 ||
+                    !Number.isFinite(live.elapsed) || live.elapsed < 0 ||
+                    !live.details.startsWith(`Armed: ${live.simulation} |`)) throw Error('Invalid initial simulation');
+                actions.push({ ...action, eventName: 'PLAY', details: live.details, resume: live });
+                hasSimulationContext = true; simulationRunning = true;
+            }
+            continue;
+        }
+        if (action.eventName === 'PLAY') {
+            if (!simulationRunning) { action.isGenBased = false; action.targetGen = null; }
+            hasSimulationContext = true; simulationRunning = true;
+        } else if (action.eventName === 'BRUSH_CONTINUE' && hasSimulationContext) {
+            if (!simulationRunning) { action.isGenBased = false; action.targetGen = null; }
+            simulationRunning = true;
+        } else if (!simulationRunning) {
+            // Older mid-run exports lack the original PLAY/rules. Replay their
+            // recorded edits by time until an actual simulation start appears;
+            // never invent rules or wait forever on an engine that is stopped.
+            action.isGenBased = false; action.targetGen = null;
+            if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) action.orphanedSimulation = true;
+        }
+        if (action.eventName === 'SIMULATION_RULES') hasSimulationContext = true;
+        if (['PAUSE', 'HISTORY_SETTINGS'].includes(action.eventName)) simulationRunning = false;
+        actions.push(action);
+    }
     actions.forEach(validateIslandsMacroAction);
     let brushOpen = false;
     for (const action of actions) {
@@ -4650,7 +4695,11 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'PLAY') {
         const sim = applyMacroRules(action.details);
-        if (sim && !isLifePlaying) togglePlayPauseLife();
+        if (sim && !isLifePlaying) togglePlayPauseLife({ deferFirstGeneration: Boolean(action.resume) });
+        if (sim && action.resume) {
+            currentGenerationCount = action.resume.generation;
+            if (sim === 'breathe') breatheStartTime = performance.now() - action.resume.elapsed;
+        }
     } 
     else if (action.eventName === 'STEP FORWARD') {
         applyMacroRules(action.details);
@@ -4810,7 +4859,7 @@ else if (action.eventName === 'Invert Colors') {
             checkpointLiveSimulation();
         }
         else if (action.eventName === 'BRUSH_CONTINUE') {
-            resumeBrushCheckpoint(JSON.parse(action.details));
+            if (!action.orphanedSimulation) resumeBrushCheckpoint(JSON.parse(action.details));
         }
         else if (action.eventName === 'BRUSH_START') {
             replayBrushBefore = getCurrentState();

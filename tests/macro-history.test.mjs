@@ -184,3 +184,32 @@ test('Redo of an intermediate live stroke stops at the next brush boundary witho
  assert.equal(queue.at(-1).isGenBased,true);assert.equal(queue.at(-1).targetGen,20);
  assert.deepEqual(queue.filter(a=>a.eventName==='DRAW_STROKE').map(a=>JSON.parse(a.details)[0].k),[1]);
 });
+
+test('mid-run legacy snapshot loads before GEN waits and replays orphan edits by time',()=>{
+    const text=[
+        `[12:00:00.000] [GEN:361] INIT_STATE -> ${JSON.stringify(init)}`,
+        '[12:00:00.100] [GEN:397] BRUSH_CHECKPOINT -> {"version":1,"simulation":"brightnessEvo","generation":397,"elapsed":0}',
+        '[12:00:00.100] [GEN:397] BRUSH_CONTINUE -> {"version":1,"simulation":"brightnessEvo","generation":397,"elapsed":0}',
+        '[12:00:00.200] [GEN:398] DRAW_STROKE -> [{"i":0,"k":2}]',
+        '[12:00:00.300] [GEN:400] PAUSE -> ---',
+        '[12:00:00.400] PLAY -> Armed: brightnessEvo | Sort: luminance | Rules: {"mode":"contrast"}',
+        '[12:00:00.500] [GEN:2] PAUSE -> ---'
+    ].join('\n');
+    const actions=parse(text);
+    for(const action of actions.slice(0,5)) assert.equal(action.isGenBased,false);
+    assert.equal(actions[2].orphanedSimulation,true);
+    assert.equal(actions[3].eventName,'DRAW_STROKE');
+    assert.equal(actions[5].eventName,'PLAY');
+    assert.equal(actions[6].isGenBased,true);assert.equal(actions[6].targetGen,2);
+});
+
+test('new mid-run snapshots restore recorded simulation rules and starting generation',()=>{
+    const live={version:1,simulation:'brightnessEvo',details:'Armed: brightnessEvo | Sort: luminance | Rules: {"mode":"contrast"}',generation:361,elapsed:0};
+    const text=`[12:00:00.000] [GEN:361] INIT_STATE -> ${JSON.stringify({...init,liveSimulation:live})}\n[12:00:00.500] [GEN:363] PAUSE -> ---`;
+    const actions=parse(text);
+    assert.equal(actions[0].isGenBased,false);
+    assert.equal(actions[1].eventName,'PLAY');assert.deepEqual(actions[1].resume,live);
+    assert.equal(actions[1].delta,actions[0].delta);assert.equal(actions[1].isGenBased,false);
+    assert.equal(actions[2].isGenBased,true);assert.equal(actions[2].targetGen,363);
+    assert.throws(()=>parse(text.replace('"generation":361','"generation":-1')),/Invalid initial simulation/);
+});
