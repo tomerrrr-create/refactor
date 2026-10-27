@@ -1,4 +1,4 @@
-import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES } from './brush-footprint.js';
+import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
 import { loadInterfaceZoom, saveInterfaceZoom } from './interface-zoom.js';
@@ -345,6 +345,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let startupSettings = loadProfileStartup(loadStartup());
       let simulationInitSettings = loadSimInit();
       let brushSize = 1;
+      let paletteBrushFeedbackTimer = null;
       let brushShape = 'circle';
       let isLifePlaying = false;
       let animationFrameId = null;
@@ -780,12 +781,27 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
       // Logic is merged into togglePlayPauseLife.
       
       function updatePaletteHeader() {
+        clearTimeout(paletteBrushFeedbackTimer);
+        paletteBrushFeedbackTimer = null;
+        dom.btnPalette.classList.remove('palette-brush-size-feedback');
         const pal = C.PALETTES[activePaletteIndex];
         if (pal.iconHTML) { dom.btnPalette.innerHTML = pal.iconHTML; } 
         else { dom.btnPalette.innerHTML = ''; dom.btnPalette.textContent = pal.emoji; }
         const label = `${getText('tooltip_palette')}: ${getPaletteDisplayName(pal)} (${activePaletteIndex + 1}/${C.PALETTES.length})`;
         dom.btnPalette.title = getText('tooltip_palette');
         dom.btnPalette.setAttribute('aria-label', label);
+      }
+
+      function cyclePaletteBrushSize(direction) {
+        const index = BRUSH_SIZES.indexOf(brushSize);
+        brushSize = BRUSH_SIZES[(Math.max(0, index) + direction + BRUSH_SIZES.length) % BRUSH_SIZES.length];
+        settingsProfiles?.scheduleCapture();
+        updatePaletteHeader();
+        dom.btnPalette.textContent = brushSizeLabel(brushSize);
+        dom.btnPalette.title = `${getText('init_brush_size')}: ${brushSize}`;
+        dom.btnPalette.setAttribute('aria-label', dom.btnPalette.title);
+        dom.btnPalette.classList.add('palette-brush-size-feedback');
+        paletteBrushFeedbackTimer = setTimeout(updatePaletteHeader, 900);
       }
       
       function updateSeparatorButtonUI() {
@@ -5236,8 +5252,10 @@ updateBrightnessEvoButtonUI();
         dom.btnInvert.addEventListener('click', (e) => handleCtrlClick(e, invertGrid));
 
 bindPickerGestures(dom.btnPalette, {
-    onTap: switchPalette, onOpen: modals.openPaletteModal, onSwipeDown: modals.openPaletteModal,
-    onHold: () => modals.openColorPickerModal(null, { guardOpeningClick: true, returnFocus: dom.btnPalette }), onSwipeSide: switchPaletteGroup,
+    onTap: switchPalette,
+    onOpen: () => modals.openColorPickerModal(null, { guardOpeningClick: true, returnFocus: dom.btnPalette }),
+    onSwipeDown: modals.openPaletteModal,
+    onHold: switchPaletteGroup, onSwipeSide: cyclePaletteBrushSize,
     canInteract: () => !isBreathing && !(isLifePlaying && armedSimulation === 'breathe'), beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });

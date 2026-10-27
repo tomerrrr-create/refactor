@@ -19,7 +19,7 @@ function harness(index = 2) {
         armedSimulation: null, isBreathing: false, isLifePlaying: false, hasPerformedInitialAutofill: false,
         boardState: [{ k: 263, v: 263, isGold: false }, { k: 263, v: 263, isGold: true }],
         performance: { now: () => 0 }, dom: {}, modals: { openPaletteModal(options) { opened.push(options || {}); }, openColorPickerModal(target, options) { opened.push({colorPicker:true,target,options}); } },
-        resetSelectedColor() {}, updatePaletteHeader() {}, renderToScreen() {}, hideLongPressDisplay() {},
+        resetSelectedColor() {}, updatePaletteHeader() {}, renderToScreen() {}, hideLongPressDisplay() {}, cyclePaletteBrushSize() {},
         showPaletteGroupTransition() {},
         capturePaletteGroupBoard() { return null; },
         areStatesEqual: (a, b) => JSON.stringify(a) === JSON.stringify(b)
@@ -43,7 +43,7 @@ function harness(index = 2) {
     return { h, logs, history, opened };
 }
 
-test('palette side swipes cycle only active groups, wrap to Origin, and enter Origin from archive', () => {
+test('palette holds cycle only active groups, wrap to Origin, and enter Origin from archive', () => {
     const { h } = harness();
     assert.equal(h.getNextPaletteGroupIndex(0), 1);
     assert.equal(h.getNextPaletteGroupIndex(1), 2);
@@ -53,10 +53,10 @@ test('palette side swipes cycle only active groups, wrap to Origin, and enter Or
     assert.equal(h.getNextPaletteGroupIndex(0), 2);
 });
 
-test('side swipe captures palette and adaptation together; legacy macro commands reproduce the result', () => {
+test('hold captures palette and adaptation together; legacy macro commands reproduce the result', () => {
     const manual = harness();
     const before = plain(manual.h.getCurrentState());
-    manual.h.gestures.onSwipeSide();
+    manual.h.gestures.onHold();
     assert.equal(manual.h.activePaletteIndex, 0);
     assert.equal(manual.h.boardState[0].k, 10); // Preserve existing modulo adaptation: 263 % 23.
     assert.equal(manual.h.boardState[0].v, 10);
@@ -76,7 +76,7 @@ test('side swipe captures palette and adaptation together; legacy macro commands
 test('growing palette needs no index correction and creates no empty adaptation undo or log', () => {
     const { h, logs, history } = harness(0);
     h.boardState[0].k = h.boardState[0].v = 22;
-    h.gestures.onSwipeSide();
+    h.gestures.onHold();
     assert.equal(h.activePaletteIndex, 1);
     assert.equal(h.boardState[0].k, 22);
     assert.equal(history.length, 1);
@@ -114,13 +114,12 @@ test('choosing a macro replacement palette never changes or adapts the current b
     assert.equal(logs.length, 0);
 });
 
-test('hold opens colors while upward/downward swipes open palettes without changing board or log', () => {
+test('upward swipe opens colors and downward swipe opens palettes without changing board or log', () => {
     const { h, logs, history, opened } = harness();
     const before = plain(h.getCurrentState());
-    h.gestures.onHold();
     h.gestures.onOpen();
     h.gestures.onSwipeDown();
-    assert.deepEqual(plain(opened), [{colorPicker:true,target:null,options:{guardOpeningClick:true}}, {}, {}]);
+    assert.deepEqual(plain(opened), [{colorPicker:true,target:null,options:{guardOpeningClick:true}}, {}]);
     assert.deepEqual(plain(h.getCurrentState()), before);
     assert.deepEqual(logs, []);
     assert.deepEqual(history, []);
@@ -144,4 +143,25 @@ test('adaptation status matches the operation and ignores protected tiles', () =
     assert.equal(h.boardState[2].k,800);
     assert.equal(h.needsColorAdaptation(),false);
     assert.equal(logs.filter(([name])=>name==='ADAPT_COLORS').length,1);
+});
+
+test('brush swipes wrap all sizes, keep shape and palette, and replace stale feedback timers', () => {
+    const timers = new Map(), classes = new Set(), attrs = {};
+    let id = 0, captures = 0;
+    const button = { innerHTML: '', textContent: '', title: '',
+        classList: {add:c=>classes.add(c),remove:c=>classes.delete(c)},setAttribute:(k,v)=>attrs[k]=v };
+    const h = vm.createContext({brushSize:1,brushShape:'ring',paletteBrushFeedbackTimer:null,
+        BRUSH_SIZES:[1,3,5,7,9,11,13,15,23],brushSizeLabel:n=>n===23?'XL':String(n),
+        settingsProfiles:{scheduleCapture:()=>captures++},getText:k=>k,getPaletteDisplayName:p=>p.name,
+        C:{PALETTES:[{name:'Journey',iconHTML:'<svg></svg>'}]},activePaletteIndex:0,dom:{btnPalette:button},
+        clearTimeout:key=>timers.delete(key),setTimeout:(callback,delay)=>{timers.set(++id,{callback,delay});return id;}});
+    vm.runInContext(excerpt('function updatePaletteHeader(', 'function updateSeparatorButtonUI('),h);
+    h.cyclePaletteBrushSize(-1);assert.equal(h.brushSize,23);assert.equal(button.textContent,'XL');
+    assert(classes.has('palette-brush-size-feedback'));assert.equal(timers.size,1);
+    h.cyclePaletteBrushSize(1);assert.equal(h.brushSize,1);assert.equal(button.textContent,'1');assert.equal(timers.size,1);
+    for(const expected of [3,5,7,9,11,13,15,23,1]){h.cyclePaletteBrushSize(1);assert.equal(h.brushSize,expected);}
+    assert.equal(h.brushShape,'ring');assert.equal(h.activePaletteIndex,0);assert.equal(captures,11);
+    const timer=[...timers.values()][0];assert.equal(timer.delay,900);timer.callback();
+    assert(!classes.has('palette-brush-size-feedback'));assert.equal(button.innerHTML,'<svg></svg>');assert.equal(timers.size,0);
+    h.cyclePaletteBrushSize(1);h.updatePaletteHeader();assert.equal(timers.size,0,'palette changes cancel obsolete size feedback');
 });
