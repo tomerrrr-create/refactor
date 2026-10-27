@@ -169,7 +169,7 @@ export const translations = {
   startup_palette_random_hint: {"en": "A new palette. A new beginning.", "he": "פלטה חדשה. התחלה חדשה.", "ru": "Новая палитра. Новое начало.", "nl": "Een nieuw palet. Een nieuw begin."},
   palette_groups: {"en": "Palette groups", "he": "קבוצות פלטות", "ru": "Группы палитр", "nl": "Paletgroepen"},
   palette_colors: {"en": "colors", "he": "צבעים", "ru": "цветов", "nl": "kleuren"},
-  palette_current: {"en": "Current palette", "he": "הפלטה הפעילה", "ru": "Текущая палитра", "nl": "Huidig palet"},
+  palette_current: {"en": "Current:", "he": "נוכחית:", "ru": "Текущая:", "nl": "Huidig:"},
   palette_items: {"en": "items", "he": "פלטות", "ru": "палитр", "nl": "paletten"},
   save_image_preview: {"en": "Image Preview", "he": "תצוגה מקדימה של התמונה", "ru": "Предпросмотр изображения", "nl": "Voorbeeld van de afbeelding"},
 
