@@ -29,12 +29,18 @@ test('empty and gold boards stay unchanged, light lines work and changed board s
 });
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 function harness(){const c=vm.createContext({createCracksState,restoreCracksState,runCracksGeneration,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest'},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
- c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='contour'){c.contourMode='contours';c.cracksState=null;}};
+ c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='contour'){c.contourMode='cracks';c.cracksState=null;}};
  vm.runInContext(source.slice(source.indexOf('function getContourSnapshot()'),source.indexOf('function nextEvolutionMode(')),c);return c;}
 test('paused contour cycle includes Off, live cycle skips Off, and snapshots preserve rules and tips',()=>{
- const c=harness();c.cycleContourMode();assert.equal(c.armedSimulation,'contour');assert.equal(c.contourMode,'contours');assert.deepEqual(c.runContourEvolution(fixture(21)),['original']);
- c.cycleContourMode();assert.equal(c.contourMode,'cracks');c.runContourEvolution(fixture(21));const snapshot=JSON.parse(JSON.stringify(c.getContourSnapshot()));assert(snapshot.cracksState.steps>0);
- c.cycleContourMode();assert.equal(c.armedSimulation,null);c.restoreContourSnapshot(snapshot);assert.equal(c.contourMode,'cracks');assert.deepEqual(JSON.parse(JSON.stringify(c.getContourSnapshot())),snapshot);
+ const c=harness();c.cycleContourMode();assert.equal(c.armedSimulation,'contour');assert.equal(c.contourMode,'cracks');c.runContourEvolution(fixture(21));const snapshot=JSON.parse(JSON.stringify(c.getContourSnapshot()));assert(snapshot.cracksState.steps>0);
+ c.cycleContourMode();assert.equal(c.contourMode,'contours');assert.deepEqual(c.runContourEvolution(fixture(21)),['original']);c.cycleContourMode();assert.equal(c.armedSimulation,null);c.restoreContourSnapshot(snapshot);assert.equal(c.contourMode,'cracks');assert.deepEqual(JSON.parse(JSON.stringify(c.getContourSnapshot())),snapshot);
  c.isLifePlaying=true;c.cycleContourMode();assert.equal(c.contourMode,'contours');assert.equal(c.armedSimulation,'contour');c.cycleContourMode();assert.equal(c.recorded.mode,'cracks');assert.equal(c.recorded.cracksState.steps,0);assert(c.isLifePlaying);
  assert.throws(()=>c.validateContourSnapshot({...snapshot,mode:'unknown'}));
+});
+
+test('legacy contour recordings select original contours despite the new default',()=>{
+ const c=harness();c.currentSortMethod='luminance';
+ vm.runInContext(source.slice(source.indexOf('function applyMacroRules('),source.indexOf('function executeMacroAction(')),c);
+ c.applyMacroRules('Armed: contour | Sort: luminance | Rules: No specific rules mapping');assert.equal(c.contourMode,'contours');
+ c.cycleContourMode();c.applyMacroRules('Armed: contour | Sort: luminance | Rules: {"sensitivity":75,"lineColor":"darkest"}');assert.equal(c.contourMode,'contours');
 });

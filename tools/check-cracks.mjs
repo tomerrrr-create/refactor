@@ -31,8 +31,9 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.cracksTest?.ready);await page.evaluate(()=>cracksTest.setup());
  const state=()=>page.evaluate(()=>cracksTest.state()),button=page.locator('#btnContour'),before=await state();
  const tap=target=>config.width<600?target.tap():target.click();
- await tap(button);assert.equal((await state()).mode,'contours');assert.equal((await state()).armed,'contour');await tap(button);assert.equal((await state()).mode,'cracks');await tap(button);assert.equal((await state()).armed,null);assert.deepEqual((await state()).board,before.board);
- await tap(button);await tap(button);assert(await button.evaluate(e=>e.classList.contains('cracks-active')));
+ assert(await button.evaluate(e=>e.classList.contains('cracks-active')),'idle icon defaults to Cracks');
+ await tap(button);assert.equal((await state()).mode,'cracks');assert.equal((await state()).armed,'contour');await tap(button);assert.equal((await state()).mode,'contours');await tap(button);assert.equal((await state()).armed,null);assert.deepEqual((await state()).board,before.board);
+ await tap(button);assert(await button.evaluate(e=>e.classList.contains('cracks-active')));
  // Reuse settings without exposing an ineffective sensitivity control.
  const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();await page.locator('#contourSettingsModal').waitFor({state:'visible'});assert(await page.locator('#contourSensitivitySlider').isDisabled());await page.locator('#btnContourSettingsCancel').click();await page.locator('#contourSettingsModal').waitFor({state:'hidden'});
  await tap(page.locator('#btnStepForward'));await page.waitForFunction(()=>cracksTest.state().snapshot.contourState?.cracksState?.steps>0);assert((await state()).board.some(k=>k===0));const runStart=await state();
@@ -47,7 +48,7 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  await page.locator('#projectFileInput').setInputFiles({name:'cracks.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});await page.waitForFunction(()=>cracksTest.state().loaded);await page.evaluate(()=>cracksTest.macro());await page.waitForFunction(()=>!cracksTest.state().loaded&&!cracksTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,finished.board,'recorded live mode changes and brush input replay exactly');assert.deepEqual(await page.evaluate(()=>cracksTest.prefs()),prefs,'replay does not overwrite preferences');
  await page.evaluate(()=>cracksTest.legacy());assert.equal((await state()).mode,'contours','old recipes retain the original engine');assert.deepEqual(errors,[]);
  if(config.lang==='en'){
-  await page.evaluate(()=>cracksTest.setup());await tap(button);await tap(button);assert.equal((await state()).mode,'cracks');await page.evaluate(()=>cracksTest.play());await page.waitForFunction(()=>cracksTest.state().gen>=12);
+  await page.evaluate(()=>cracksTest.setup());await tap(button);assert.equal((await state()).mode,'cracks');await page.evaluate(()=>cracksTest.play());await page.waitForFunction(()=>cracksTest.state().gen>=12);
   const live=await page.evaluate(()=>cracksTest.liveExport());assert(/\[GEN:\d+\] PAUSE/.test(live.text));
   await page.locator('#projectFileInput').setInputFiles({name:'live-cracks.txt',mimeType:'text/plain',buffer:Buffer.from(live.text)});await page.waitForFunction(()=>cracksTest.state().loaded);await page.evaluate(()=>cracksTest.macro());await page.waitForFunction(()=>!cracksTest.state().loaded&&!cracksTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,live.snapshot.tiles.map(t=>t.k),'export during growth captures its final generation');
  }

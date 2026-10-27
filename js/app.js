@@ -296,7 +296,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
-      let contourMode = 'contours', cracksState = null;
+      let contourMode = 'cracks', cracksState = null;
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
@@ -1758,7 +1758,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
 // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
 if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
-    if (simulationName === 'contour') { contourMode = 'contours'; cracksState = null; }
+    if (simulationName === 'contour') { contourMode = 'cracks'; cracksState = null; }
     if (simulationName === 'islands') {
         islandsSession = createIslandsSession(undefined, evolutionTuning.islands);
         if (!isExecutingMacroCommand && recordIslandsStart) {
@@ -3385,7 +3385,7 @@ function runContourEvolution(context) {
     return result.nextBoardState;
 }
 function updateContourButtonUI() {
-    const active = armedSimulation === 'contour', cracks = active && contourMode === 'cracks';
+    const active = armedSimulation === 'contour', cracks = !active || contourMode === 'cracks';
     dom.btnContour.classList.toggle('simulation-active', active);
     dom.btnContour.classList.toggle('cracks-active', cracks);
     const title = getText(cracks ? 'tooltip_cracks' : 'tooltip_contour');
@@ -3395,10 +3395,10 @@ function updateContourButtonUI() {
 }
 function cycleContourMode() {
     if (armedSimulation !== 'contour') { armSimulation('contour'); return; }
-    if (contourMode === 'contours') {
-        contourMode = 'cracks'; cracksState = createCracksState(n);
-    } else if (isLifePlaying) {
+    if (contourMode === 'cracks') {
         contourMode = 'contours'; cracksState = null;
+    } else if (isLifePlaying) {
+        contourMode = 'cracks'; cracksState = createCracksState(n);
     } else { armSimulation(null); updateContourButtonUI(); return; }
     updateContourButtonUI();
     recordLiveSimulationRules('contour');
@@ -4566,6 +4566,10 @@ if (sortMethod && currentSortMethod !== sortMethod) {
     replayNudgeTiming = null;
 
     // הטמעת החוקים (Rules Injection)
+    if (sim === 'contour' && rulesStr === "No specific rules mapping") {
+        contourMode = 'contours'; cracksState = null;
+        updateContourButtonUI();
+    }
     if (sim === 'erosion' && rulesStr === "No specific rules mapping") {
         erosionRules = restoreErosionRules({});
         updateErosionButtonUI();
