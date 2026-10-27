@@ -1,27 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {getColorFrameShades} from '../js/rainbow-frame.js';
+import {getColorFrameGradient,updateColorFrame,updateRainbowFrame} from '../js/rainbow-frame.js';
 
-test('weighted frame favors the chosen color, with small dark/light accents and rare white',()=>{
-    for(const color of ['#FF0000','#0000FF','#ffc0cb','#52a68c','#808080']){
-        const shades=getColorFrameShades(color);
-        assert.equal(shades.length,100);
-        assert(shades.slice(0,70).every(shade=>shade===color.toLowerCase()));
-        assert.equal(shades.filter(shade=>shade===color.toLowerCase()).length,70);
-        assert.equal(shades.filter(shade=>shade==='#ffffff').length,2);
-        assert.deepEqual(shades.slice(-2),['#ffffff','#ffffff']);
-        assert.deepEqual(getColorFrameShades(color),shades);
+test('smooth frame repeats the selected color and a darker shade with a seamless join',()=>{
+    assert.equal(getColorFrameGradient('#FF0000'),'conic-gradient(#ff0000 0%, #730000 25%, #ff0000 50%, #730000 75%, #ff0000 100%)');
+    assert.equal(getColorFrameGradient('#0000ff'),'conic-gradient(#0000ff 0%, #000073 25%, #0000ff 50%, #000073 75%, #0000ff 100%)');
+    for(const color of ['#ffc0cb','#52a68c','#808080']){
+        const gradient=getColorFrameGradient(color);
+        assert(!gradient.includes('#ffffff'));assert(!gradient.includes('#000000'));
+        assert.equal(getColorFrameGradient(color),gradient);
     }
 });
-test('red weights are 70 base, 20 dark, 8 light and 2 white',()=>{
-    const counts={};for(const shade of getColorFrameShades('#ff0000')) counts[shade]=(counts[shade]||0)+1;
-    assert.deepEqual(counts,{'#ff0000':70,'#000000':5,'#400000':5,'#800000':5,'#bf0000':5,'#ff1f1f':4,'#ff3d3d':4,'#ffffff':2});
+test('switching from a smooth frame back to rainbow restores the cached rainbow pattern',()=>{
+    let serial=0;
+    const oldDocument=globalThis.document;
+    globalThis.document={createElement:()=>({getContext:()=>({fillRect(){}}),toDataURL:()=>`data:image/png;base64,${++serial}`})};
+    try {
+        const styles=new Map();
+        const board={getBoundingClientRect:()=>({width:100,height:100}),classList:{contains:()=>true},style:{setProperty:(key,value)=>styles.set(key,value)}};
+        updateRainbowFrame(board,['#ff0000','#00ff00']);const initial=styles.get('--rainbow-frame-pattern');
+        updateRainbowFrame(board,['#ff0000','#00ff00']);assert.equal(serial,1);
+        updateColorFrame(board,'#ff0000');assert(styles.get('--rainbow-frame-pattern').startsWith('conic-gradient('));assert.equal(serial,1,'solid color needs no canvas');
+        updateRainbowFrame(board,['#ff0000','#00ff00']);assert.equal(serial,2);assert.notEqual(styles.get('--rainbow-frame-pattern'),initial);assert(styles.get('--rainbow-frame-pattern').startsWith('url('));
+    } finally {globalThis.document=oldDocument;}
 });
-test('black and white remain valid choices when weighted shades coincide',()=>{
-    for(const color of ['#000000','#FFFFFF']){
-        const shades=getColorFrameShades(color);
-        assert.equal(shades.length,100);
-        assert(shades.every(shade=>/^#[0-9a-f]{6}$/.test(shade)));
-        assert(shades.slice(0,70).every(shade=>shade===color.toLowerCase()));
-    }
+test('black and white choices produce valid monochrome frames',()=>{
+    assert(getColorFrameGradient('#000000').includes('#000000'));
+    assert(getColorFrameGradient('#ffffff').includes('#737373'));
 });
