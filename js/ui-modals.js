@@ -504,6 +504,10 @@ function openAdvancedColorMappingModal() {
     if (app.isBreathing() || app.isLifePlaying()) return;
     app.dom.adaptModalTitle.textContent = app.getText('adaptModal_title');
     app.dom.adaptModalDesc.textContent = app.getText('adaptModal_desc');
+    const needed = app.needsColorAdaptation();
+    app.dom.adaptModalStatus.textContent = app.getText(needed ? 'adaptModal_needed' : 'adaptModal_ready');
+    app.dom.adaptModalStatus.dataset.needed = String(needed);
+    app.dom.btnAdaptColors.disabled = !needed;
     app.dom.btnAdaptColors.textContent = app.getText('adaptModal_confirmBtn');
     app.dom.advancedColorMappingModal.style.display = 'flex';
     setTimeout(() => app.dom.advancedColorMappingModal.classList.add('modal-visible'), 10);
@@ -1754,6 +1758,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     app.dom.btnAdaptModalClose.addEventListener('click', closeAdvancedColorMappingModal);
     app.dom.advancedColorMappingModal.addEventListener('click', (e) => { if (e.target === app.dom.advancedColorMappingModal) { closeAdvancedColorMappingModal(); } });
     app.dom.btnAdaptColors.addEventListener('click', () => {
+        if (!app.needsColorAdaptation()) return;
         app.adaptColors();
         closeAdvancedColorMappingModal();
     });

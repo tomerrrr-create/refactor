@@ -968,7 +968,7 @@ function invertGrid() {
 
       // Phase 1 Addition: New function to adapt colors
       function applyColorAdaptation() {
-          if (boardState.some(tile => !tile.isGold && tile.k !== norm(tile.k))) {
+          if (needsColorAdaptation()) {
               window.logArtEvent('ADAPT_COLORS', '---');
           }
           boardState.forEach(tile => {
@@ -980,6 +980,10 @@ function invertGrid() {
                   }
               }
           });
+      }
+
+      function needsColorAdaptation() {
+          return boardState.some(tile => !tile.isGold && tile.k !== norm(tile.k));
       }
 
       function adaptColors() {
@@ -5075,7 +5079,7 @@ setMagnetRules: (r) => { magnetRules = r; },
             resetWasLongPress,
 downloadImage: shareOrDownloadImage,
             // startBreatheAnimation is removed
-            adaptColors, 
+            adaptColors, needsColorAdaptation,
 applySortMethod,
         };
         modals = initializeModals(contextForModals);

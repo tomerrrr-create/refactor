@@ -476,6 +476,8 @@ export const translations = {
 
 // Phase 1 Additions
   adaptModal_title: { en: "Adapt Colors to Palette", he: "התאם צבעים לפלטה", ru: "Адаптировать цвета к палитре", nl: "Kleuren aan palet aanpassen" },
+  adaptModal_needed: { en: "Adaptation needed", he: "נדרשת התאמה", ru: "Требуется адаптация", nl: "Aanpassing nodig" },
+  adaptModal_ready: { en: "Already adapted to palette", he: "כבר מותאם לפלטה", ru: "Уже адаптировано к палитре", nl: "Al aangepast aan het palet" },
   adaptModal_desc: { en: "This will remap the board's colors to the current palette for consistent tool behavior. This action can be undone.", he: "פעולה זו תתאם את צבעי היצירה לפלטה הנוכחית. ניתן לבטל באמצעות כפתור ה-Undo.", ru: "Это действие переназначит цвета на доске к текущей палитре для последовательной работы инструментов. Это действие можно отменить.", nl: "Dit zal de kleuren van het bord opnieuw toewijzen aan het huidige palet voor consistent gedrag van de tools. Deze actie kan ongedaan worden gemaakt." },
   adaptModal_confirmBtn: { en: "Confirm & Adapt", he: "אשר והתאם", ru: "Подтвердить и адаптировать", nl: "Bevestig & Pas aan" }, 
 

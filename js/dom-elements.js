@@ -138,6 +138,7 @@ btnCycleSort: document.getElementById('btnCycleSort'),
   btnAdaptModalClose: document.getElementById('btnAdaptModalClose'),
   adaptModalTitle: document.getElementById('adaptModalTitle'),
   adaptModalDesc: document.getElementById('adaptModalDesc'),
+  adaptModalStatus: document.getElementById('adaptModalStatus'),
   btnAdaptColors: document.getElementById('btnAdaptColors'),
 
   // --- START: Contour Settings Modal Elements ---

@@ -128,3 +128,20 @@ test('hold opens colors while upward/downward swipes open palettes without chang
     h.isBreathing = true;
     assert.equal(h.gestures.canInteract(), false);
 });
+
+test('adaptation status matches the operation and ignores protected tiles', () => {
+    const {h,logs}=harness();
+    h.boardState=[{k:0,isGold:false},{k:263,isGold:false},{k:800,isGold:true}];
+    assert.equal(h.needsColorAdaptation(),false);
+    assert.equal(logs.length,0);
+    h.boardState[0].k=264;
+    h.boardState[1].k=-1;
+    assert.equal(h.needsColorAdaptation(),true);
+    assert.equal(logs.length,0,'checking status must not record an action');
+    h.applyColorAdaptation();
+    assert.equal(h.boardState[0].k,0);
+    assert.equal(h.boardState[1].k,263);
+    assert.equal(h.boardState[2].k,800);
+    assert.equal(h.needsColorAdaptation(),false);
+    assert.equal(logs.filter(([name])=>name==='ADAPT_COLORS').length,1);
+});

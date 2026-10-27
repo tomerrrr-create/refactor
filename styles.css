@@ -2131,6 +2131,10 @@ body.wind-mode #board { cursor: crosshair; }
     #startupPaletteGrid .palette-choice-list { overflow-y: visible; }
 }
 
+#adaptModalStatus { color: #a9b7a9; }
+#adaptModalStatus[data-needed="true"] { color: var(--gold); }
+#btnAdaptColors:disabled { opacity: .4; cursor: default; }
+
 .palette-current-summary[hidden] { display: none; }
 .startup-random-choice { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 13px; margin-bottom: 13px; flex-shrink: 0; border: 1px solid #b89a5733; border-radius: 10px; background: #ffffff03; color: #d5c49e; text-align: start; font: inherit; font-size: .85rem; }
 .startup-random-choice[aria-pressed="true"] { border-color: #b89a5780; background: #b89a5712; }
