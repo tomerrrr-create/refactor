@@ -2168,7 +2168,7 @@ body.wind-mode #board { cursor: crosshair; }
 .brush-picker-navigation { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .brush-picker-control { position: relative; display: flex; align-items: center; justify-content: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 7px; border: 0; background: transparent; color: #d5aa48; border-radius: 6px; cursor: pointer; touch-action: none !important; }
 .brush-picker-control:hover { background: #d5aa4810; }
-.brush-picker-control > svg { width: 22px; height: 22px; }
+.brush-picker-control > svg { width: 24px; height: 24px; }
 .brush-picker-control .picker-gap-value { position: absolute; right: 7px; bottom: 5px; padding: 0 2px; background: #000; color: #fff; font: 11px/12px sans-serif; }
 .brush-picker-heading h2 { margin: 0; text-align: center; font-size: 19px; font-weight: 500; }
 .brush-picker-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 22px; scrollbar-width: thin; scrollbar-color: #756342 transparent; }
