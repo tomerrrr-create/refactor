@@ -77,21 +77,28 @@ test('simulation initialization preserves current symmetry by default and honors
     const start = app.indexOf('function prepareBoardForSimMode()');
     const end = app.indexOf('function handlePointerDownCtrl', start);
     for (const current of ['off', 'horizontal', 'vertical', 'mandala', 'kaleidoscope']) {
-        for (const configured of [undefined, 'off', 'horizontal', 'kaleidoscope']) {
+        for (const configured of [undefined, 'off', 'horizontal', 'kaleidoscope']) for (const playing of [false,true]) {
+            const events=[];
             const context = vm.createContext({
                 symmetryMode: current, n: 249, separatorPx: 3, selectedRelativeSeparator: 3,
                 separatorIsSnapshot: true, selectedColorIndex: -1, selectedColor: null,
                 brushSize: 1, isRainbowModeActive: false, artRecipeLog: [], historyRecipeCursor: 0,
                 activePaletteIndex: 0, currentSortMethod: 'luminance', boardState: [],
+                isLifePlaying:playing,armedSimulation:'brightnessEvo',currentGenerationCount:361,
+                getSimulationRecordingDetails:()=> 'Armed: brightnessEvo | Sort: luminance | Rules: {"mode":"contrast"}',
                 simulationInitSettings: { boardSize: 249, brushSize: 7,
                     ...(configured === undefined ? {} : { symmetry: configured }) },
                 animateBoardTransition: fn => fn(), performAction: fn => fn(),
                 applySeparator() {}, goDark() {}, palette: () => ['#000', '#fff'],
                 document: { getElementById: () => null }, updateSymmetryUI() {},
                 updateColorPickerButtonUI() {}, updateGlowEffect() {}, compressBoardState: () => [],
-                window: { logArtEvent() {} }
+                window: { logArtEvent:(name,details)=>events.push({name,details:JSON.parse(details)}) }
             });
+            vm.runInContext(app.slice(app.indexOf('      function logCurrentStateAsInit()'),app.indexOf('      function areStatesEqual(')),context);
             vm.runInContext(app.slice(start, end) + '\nprepareBoardForSimMode();', context);
+            assert.equal(events.length,1);assert.equal(events[0].name,'INIT_STATE');
+            assert.equal(events[0].details.liveSimulation?.generation,playing?361:undefined);
+            assert.equal(context.isLifePlaying,playing);assert.equal(context.currentGenerationCount,361);
             assert.equal(context.symmetryMode, configured ?? current);
             assert.equal(context.brushSize, 7);
             assert.equal(context.separatorPx, 0);

@@ -2283,20 +2283,11 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 updateColorPickerButtonUI();
                 updateGlowEffect();
 
-                // === תוספת שלנו: יצירת תמונת מצב מעודכנת למאקרו לאחר הכניסה לסימולציה ===
+                // Use the shared snapshot, including a running simulation's
+                // rules and generation, just like every other logger reset.
                 artRecipeLog = [];
                 historyRecipeCursor = 0;
-                const simState = {
-                    recipeVersion: 2,
-                    n: n,
-                    pal: activePaletteIndex,
-                    sort: currentSortMethod,
-                    sep: separatorPx,
-                    board: compressBoardState(),
-                    ...(boardState.some(tile => tile.isGold) ? { gold: boardState.flatMap((tile, i) => tile.isGold ? [i] : []) } : {})
-                };
-                window.logArtEvent('INIT_STATE', JSON.stringify(simState));
-                // =========================================================================
+                logCurrentStateAsInit();
             });
         });
       }
