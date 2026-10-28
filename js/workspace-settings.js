@@ -1,4 +1,3 @@
-import { DEFAULT_CRACKS_MATERIAL, validateCracksMaterial } from './cracks-settings.js';
 import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
@@ -37,7 +36,6 @@ function mergeKnown(defaults, overrides, path = '') {
         if (path === '' && ['separatorCycle', 'simulationTheme', 'simulationPlaybackTheme', 'evolutionTuning', 'gameOfLifeGenetics'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
-        if (path === 'rules.contour' && key === 'material') { result[key] = validateCracksMaterial(value); continue; }
         if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
         if (!Object.hasOwn(defaults, key)) throw new Error('Unknown settings field: ' + key);
         result[key] = object(defaults[key]) ? mergeKnown(defaults[key], value, path ? path + '.' + key : key) : clone(value);
@@ -93,7 +91,6 @@ export function validateWorkspaceSettings(value) {
         number(r.turing.feed, .01, .1) && number(r.turing.kill, .01, .07) &&
         number(r.turing.dA, 0, 1) && number(r.turing.dB, 0, 1) && number(r.turing.timeStep, 0, 1);
     if (!valid) throw new Error('Invalid workspace settings');
-    if (r.contour.material?.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
     return settings;
 }
 
