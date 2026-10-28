@@ -1584,4 +1584,47 @@ colors: (function() {
   ]
 },
 
+{
+  originalName: "rozita",
+  emoji: "🌸",
+  isArchived: false,
+  // 252 pinks across fourteen vintage/modern rose families, with 12 gold accents.
+  // Perceptually ordered from deep mulberry and old rose to luminous pink whites.
+  colors: [
+    "#260E23", "#310A2A", "#360B23", "#340B31", "#30132A", "#2F162D", "#3B0C29", "#3F0E34",
+    "#43102B", "#3B1832", "#3C1A2C", "#430F3F", "#3D1B32", "#3B1E38", "#4C1034", "#49192F",
+    "#491C28", "#4E1727", "#42222E", "#4D113F", "#40242E", "#461D3A", "#47212B", "#511533",
+    "#54124E", "#4B2639", "#472743", "#522241", "#5E143F", "#5B144A", "#4D2840", "#4B2C37",
+    "#4E2B36", "#601A3B", "#5E2031", "#592732", "#59263D", "#542C36", "#64165D", "#5D284A",
+    "#54304E", "#6A1855", "#593246", "#573541", "#5A343F", "#71184A", "#6F2043", "#6F293B",
+    "#5E364F", "#69313D", "#623740", "#692D52", "#75196C", "#6A344B", "#60395A", "#7A1C60",
+    "#633D4B", "#67410E", "#663D48", "#7E254C", "#841C56", "#693E53", "#75335A", "#813346",
+    "#70434C", "#7A3D47", "#891F6C", "#6E4266", "#871D7C", "#6F4654", "#70445F", "#8D2B55",
+    "#734651", "#823862", "#7B4259", "#982062", "#784B61", "#992377", "#933D51", "#7C4F5F",
+    "#7B4C72", "#7F4F57", "#99208C", "#9D305E", "#8F3E6B", "#804F5A", "#8B4852", "#82551C",
+    "#82536F", "#AC246E", "#8D5068", "#AA2683", "#885869", "#AD3667", "#89586F", "#89557E",
+    "#8D5963", "#AB249D", "#A5475C", "#8D5C63", "#9C4E78", "#9D545D", "#BA2A90", "#C1287B",
+    "#956174", "#BD3C70", "#94627F", "#9A636C", "#975F8B", "#9F5F77", "#9C6A27", "#BE27AE",
+    "#99657E", "#B75168", "#9C686F", "#AF6069", "#AA6388", "#A26B7E", "#D62C87", "#C7419C",
+    "#A76D76", "#A56997", "#C94F7D", "#D12BBF", "#A77190", "#CA5C74", "#B16E87", "#AB757B",
+    "#AA738D", "#AF7589", "#C16C75", "#EB3194", "#B57780", "#B177A3", "#B38434", "#D15DA9",
+    "#B77899", "#D2668C", "#DD45CA", "#DD6680", "#BB8288", "#BA8195", "#BB819C", "#BA81A1",
+    "#C47D97", "#BF848B", "#F649A0", "#D37981", "#BA87AE", "#E461D2", "#DA75B6", "#DB7C9C",
+    "#C48FA1", "#F1718C", "#C48EA9", "#CA8F95", "#C89297", "#FA65AC", "#C99A42", "#CC8FAC",
+    "#E6858D", "#D78CA7", "#CE91B2", "#C496B9", "#EA7AD9", "#FA8098", "#D49BA0", "#CD9EAD",
+    "#E28DC3", "#E391AD", "#D09FA3", "#FD7CB8", "#D69CB7", "#EF9399", "#D1A3BA", "#D6AD58",
+    "#CEA6C4", "#FC90A4", "#DBA7AB", "#EA9CB8", "#F091E0", "#E2A1C4", "#D6ACB9", "#DCA8C0",
+    "#D8ADB0", "#F3A0A4", "#FF92C4", "#EAA7BD", "#EAA4D0", "#FEA0B0", "#E1B2B6", "#F3A9C3",
+    "#D8B6D0", "#E0BE72", "#EBADCE", "#E2B4C9", "#F6AEB0", "#DDB9CC", "#F4A7E8", "#DFBBBD",
+    "#DFBAC6", "#FFA7CF", "#FFAFBC", "#F5B4CA", "#EEB7D4", "#E7BEC1", "#F0BCCE", "#E8C0D2",
+    "#F8BBBC", "#F1BBDD", "#E8CB8A", "#E1C6DB", "#F7BED1", "#F2C1DA", "#E7C9CA", "#FFBEC9",
+    "#FFBBDC", "#E8C9D2", "#F9BCEF", "#EDCACC", "#FBC8C8", "#EECCDC", "#E9CFDD", "#F9C9D9",
+    "#F4CBE0", "#EFD7A3", "#FFCDD5", "#F6D1DF", "#F3D5D7", "#EBD7E6", "#EFD8D7", "#F7D2EB",
+    "#FFCFE8", "#FBD3E0", "#F7D4E6", "#F1D8DF", "#FCD6D4", "#FCD1F5", "#F4D8E5", "#F5E2B8",
+    "#FFDCE2", "#FADEED", "#FDDEE8", "#F9E1E3", "#F6E6E4", "#FEE3E1", "#F5E5EF", "#FAE5EE",
+    "#F4E7F2", "#FAEACB", "#FFE3F4", "#FAE7EC", "#FBE6F0", "#FEE8EF", "#FDE8F3", "#FFE6FC",
+    "#FCE9F8", "#FFEBEF", "#FFEDEE", "#FFF0ED", "#FFF3DB", "#FFF1F8", "#FFF2F9", "#FFF3F7"
+  ]
+},
+
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));
