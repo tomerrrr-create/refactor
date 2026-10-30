@@ -1,4 +1,4 @@
-import {DEFAULT_CYMATICS_RULES,CYMATICS_PATTERNS,validateCymaticsRules} from './cymatics-settings.js';
+import {DEFAULT_CYMATICS_RULES,CYMATICS_PATTERNS,CURRENT_RESONANCE_VERSION,validateCymaticsRules} from './cymatics-settings.js';
 export function createCymaticsSettingsDialog({getRules,saveRules,canEdit,getText,getLang,onLanguageChange}){
     const dialog=document.createElement('dialog');dialog.id='cymaticsSettingsDialog';dialog.className='erosion-settings-dialog evolution-tuning-dialog';dialog.setAttribute('aria-labelledby','cymaticsSettingsTitle');
     dialog.innerHTML='<form><button type="button" class="modal-dismiss" data-close>×</button><h2 id="cymaticsSettingsTitle"></h2><p class="cymatics-note"></p><div class="tuning-modes cymatics-source" role="group"><button type="button" data-source="patterns"></button><button type="button" data-source="resonance"></button></div><div class="tuning-modes cymatics-patterns" role="group"></div><div class="tuning-field cymatics-frequency" hidden><label for="cymaticsFrequency"></label><output for="cymaticsFrequency"></output><input id="cymaticsFrequency" type="range" min="0" max="1000" step="1" aria-describedby="cymaticsFrequencyNote"><p id="cymaticsFrequencyNote"></p></div><div class="tuning-field"><label for="cymaticsStrength"></label><output for="cymaticsStrength"></output><input id="cymaticsStrength" type="range" min="10" max="100" step="5" aria-describedby="cymaticsStrengthNote"><p id="cymaticsStrengthNote"></p></div><div class="init-settings-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></div></form>';
@@ -6,8 +6,8 @@ export function createCymaticsSettingsDialog({getRules,saveRules,canEdit,getText
     for(const pattern of Object.keys(CYMATICS_PATTERNS)){const b=document.createElement('button');b.type='button';b.dataset.cymaticsPattern=pattern;b.addEventListener('click',()=>{draft.pattern=pattern;render();});modes.append(b);}
     const frequency=dialog.querySelector('#cymaticsFrequency');let lastFrequency=440;
     for(const b of dialog.querySelectorAll('[data-source]'))b.addEventListener('click',()=>{
-        if(b.dataset.source==='resonance'){draft.mode='resonance';draft.frequency=lastFrequency;}
-        else {lastFrequency=draft.frequency??lastFrequency;delete draft.mode;delete draft.frequency;}render();
+        if(b.dataset.source==='resonance'){draft.mode='resonance';draft.frequency=lastFrequency;draft.resonanceVersion=CURRENT_RESONANCE_VERSION;}
+        else {lastFrequency=draft.frequency??lastFrequency;delete draft.mode;delete draft.frequency;delete draft.resonanceVersion;}render();
     });
     frequency.addEventListener('input',()=>{draft.frequency=Math.round(20*Math.pow(1000,Number(frequency.value)/1000));lastFrequency=draft.frequency;render();});
     function render(){
@@ -28,7 +28,7 @@ export function createCymaticsSettingsDialog({getRules,saveRules,canEdit,getText
     strength.addEventListener('input',()=>{draft.strength=Number(strength.value);render();});
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
     dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft={...DEFAULT_CYMATICS_RULES};render();});
-    dialog.querySelector('form').addEventListener('submit',e=>{e.preventDefault();if(canEdit()&&saveRules(validateCymaticsRules(draft))!==false)dialog.close();});
+    dialog.querySelector('form').addEventListener('submit',e=>{e.preventDefault();if(canEdit()&&saveRules(validateCymaticsRules(draft.mode==='resonance'?{...draft,resonanceVersion:CURRENT_RESONANCE_VERSION}:draft))!==false)dialog.close();});
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};let beganOutside=false;
     dialog.addEventListener('pointerdown',e=>{beganOutside=outside(e);});dialog.addEventListener('click',e=>{if(beganOutside&&outside(e))dialog.close();beganOutside=false;});
     dialog.addEventListener('close',()=>{draft=null;document.getElementById('btnCymatics').focus({preventScroll:true});});onLanguageChange(()=>{if(dialog.open)render();});

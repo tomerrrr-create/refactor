@@ -6,7 +6,8 @@ let fieldSize=0,fieldPattern='',field=null;
 // 40 Hz is a chosen plate calibration, not a universal frequency-to-shape law.
 const resonanceModes=[];
 for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
-export function getCymaticsField(n,pattern,frequency){
+export function getCymaticsField(n,pattern,frequency,resonanceVersion){
+    if(resonanceVersion===2)return getVariedResonanceField(n,frequency);
     if(frequency!==undefined)return getResonanceField(n,frequency);
     if(field&&fieldSize===n&&fieldPattern===pattern)return field;
     const pair=CYMATICS_PATTERNS[pattern];if(!Number.isInteger(n)||n<1||n>327||!pair)throw new Error('Invalid Cymatics field');
@@ -35,6 +36,33 @@ function getResonanceField(n,frequency){
     for(const e of energy)if(e>peak)peak=e;
     field=Uint16Array.from(energy,e=>peak?Math.round(e/peak*65535):0);fieldSize=n;fieldPattern=key;return field;
 }
+// General rectangular standing modes, including axial stripes (m=0 or k=0).
+// A fixed off-center drive couples differently to horizontal and vertical modes;
+// no antisymmetric subtraction forces every mode onto the same diagonal.
+const variedModes=[];
+for(let m=0;m<=24;m++)for(let k=0;k<=24;k++){
+    const frequency=40*(m*m+k*k);
+    if(frequency>0&&frequency<=24000)variedModes.push({m,k,frequency,coupling:Math.cos(m*Math.PI*.27)*Math.cos(k*Math.PI*.41)});
+}
+function getVariedResonanceField(n,frequency){
+    if(!Number.isInteger(n)||n<1||n>327||!Number.isInteger(frequency)||frequency<20||frequency>20000)throw new Error('Invalid resonance field');
+    const key='resonance-v2:'+frequency;
+    if(field&&fieldSize===n&&fieldPattern===key)return field;
+    // Forced damped modal response, weighted by the drive location and stiffness.
+    // Independent time-averaged energies avoid phase-dependent flicker.
+    const responses=variedModes.map(mode=>{
+        const ratio=frequency/mode.frequency;
+        return {...mode,weight:mode.coupling**2/(mode.frequency**4*((1-ratio*ratio)**2+(.12*ratio)**2))};
+    }).sort((a,b)=>b.weight-a.weight);
+    const maximum=responses[0].weight,selected=responses.filter(mode=>mode.weight>=maximum*.015).slice(0,32);
+    const cos=Array.from({length:25},(_,m)=>Float64Array.from({length:n},(_,i)=>Math.cos(m*Math.PI*(i+.5)/n)));
+    const energy=new Float64Array(n*n);let peak=0;
+    for(const {m,k,weight} of selected)for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+        const a=cos[m][x]*cos[k][y];energy[y*n+x]+=weight/maximum*a*a;
+    }
+    for(const e of energy)if(e>peak)peak=e;
+    field=Uint16Array.from(energy,e=>peak?Math.round(e/peak*65535):0);fieldSize=n;fieldPattern=key;return field;
+}
 export function createCymaticsState(n,seed=0x43ad19){
     return restoreCymaticsState({version:1,n,random:seed,steps:0});
 }
@@ -49,7 +77,7 @@ export function validateCymaticsSnapshot(value){
 }
 const dx=[-1,0,1,-1,1,-1,0,1],dy=[-1,-1,-1,0,0,1,1,1];
 export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,cymaticsRules},previous){
-    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.pattern,rules.mode==='resonance'?rules.frequency:undefined);
+    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.pattern,rules.mode==='resonance'?rules.frequency:undefined,rules.resonanceVersion);
     const random=()=>{let x=state.random;x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/4294967296;};
     const length=currentPalette.length,rank=k=>((k%length)+length)%length;
     const attempts=Math.max(1,Math.round(n*n*.5*rules.strength/100));

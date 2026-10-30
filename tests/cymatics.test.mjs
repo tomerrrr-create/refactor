@@ -58,3 +58,28 @@ test('resonance fields vary with frequency, conserve pigments and replay determi
  assert.notDeepEqual(getCymaticsField(41,'petals',440),getCymaticsField(41,'petals',1200));
  for(const extra of [{mode:'unknown'},{mode:'resonance'},{mode:'resonance',frequency:19},{mode:'resonance',frequency:20001},{mode:'resonance',frequency:440.5},{frequency:440}])assert.throws(()=>validateCymaticsRules({...legacy,...extra}));
 });
+
+test('expanded resonance produces axial and grid fields without a forced diagonal, with exact checkpoint replay',()=>{
+ const frequencies=[40,80,160,320,680,2000];
+ const legacyRules={pattern:'petals',strength:60,mode:'resonance',frequency:440};
+ assert.equal(validateCymaticsRules(legacyRules).resonanceVersion,undefined);
+ for(const frequency of frequencies){
+  const rules={...legacyRules,frequency,resonanceVersion:2},field=getCymaticsField(41,'petals',frequency,2),diagonal=Array.from({length:41},(_,i)=>field[i*42]);
+  assert(Math.max(...diagonal)-Math.min(...diagonal)>20000,'diagonal is no longer forced to zero');
+  const ctx={...fixture(41),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState),score=b=>b.reduce((sum,t,i)=>sum+t.k*field[i],0);
+  const a=advance(ctx,createCymaticsState(41),40),saved=JSON.parse(JSON.stringify(a));assert(score(a.ctx.currentBoardState)<score(before));assert.deepEqual(histogram(a.ctx.currentBoardState),histogram(before));assert.deepEqual(a.ctx.currentBoardState[840],before[840]);
+  assert.deepEqual(advance(a.ctx,a.state,30),advance(saved.ctx,saved.state,30));
+  const settings=defaultWorkspaceSettings();settings.rules.cymatics=rules;assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
+  assert.deepEqual(validateCymaticsSnapshot({cymaticsVersion:1,rules,state:saved.state}).rules,rules);
+ }
+ assert.notDeepEqual(getCymaticsField(41,'petals',40,2),getCymaticsField(41,'petals',80,2));
+ assert.throws(()=>validateCymaticsRules({...legacyRules,resonanceVersion:3}));assert.throws(()=>validateCymaticsRules({pattern:'petals',strength:60,resonanceVersion:2}));
+});
+test('original resonance recordings retain their exact fields',async()=>{
+ const {createHash}=await import('node:crypto');
+ const expected={20:'cf92cc686e009e01dcf5f3c590e5e1b7afaa152bff1dfe3fab85afb89a71ce52',440:'84b2134a4b8b069ea5711ee6c558eb4a7026a3523012fa30bba9fa808b21d8e0',1200:'067299a2a17fabbd3502a4071ee08b86af8bc5e25954db51cf18f34151bd247b',20000:'2c1cefd422ea4d45256c041bff00cf58f5c568c8af9b377ee853b84fb093f7d0'};
+ for(const [frequency,hash] of Object.entries(expected)){
+  getCymaticsField(41,'petals',Number(frequency),2);const legacy=getCymaticsField(41,'petals',Number(frequency));
+  assert.equal(createHash('sha256').update(new Uint8Array(legacy.buffer)).digest('hex'),hash);
+ }
+});
