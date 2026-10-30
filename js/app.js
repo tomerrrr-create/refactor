@@ -299,6 +299,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
+      let replayBrightnessPreferences = null;
       let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null, replayCracksGrowth = null, replayCracksBrush = null, lastCracksBrushKey = '';
       let contourRules = { ...C.defaultContourRules, lineColor:'brush', growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
@@ -458,7 +459,8 @@ currentSortMethod,
         return true;
       }
 
-      function applyState(state, { preserveCracksPreferences = false } = {}) {
+      function applyState(state, { preserveCracksPreferences = false, preserveBrightnessPreferences = false } = {}) {
+        const brightnessPreferences = preserveBrightnessPreferences ? { rules:{...evolutionTuning.brightnessEvo}, mode:brightnessEvoMode } : null;
         if (state.contourState) {
             validateContourSnapshot(state.contourState);
             if (state.contourState.cracksState && state.contourState.cracksState.n !== state.n) throw new Error('Cracks board size mismatch');
@@ -469,7 +471,9 @@ currentSortMethod,
             if (['brightnessEvo', 'breathe', 'islands', 'dla'].includes(state.tuningSimulation) && armedSimulation !== state.tuningSimulation) {
                 armSimulation(state.tuningSimulation, { recordIslandsStart: false });
             }
-            restoreEvolutionTuningState(state);
+            restoreEvolutionTuningState(brightnessPreferences ? { ...state,
+                evolutionTuning:{...state.evolutionTuning,brightnessEvo:brightnessPreferences.rules},
+                brightnessEvoMode:brightnessPreferences.mode } : state);
         }
         let paletteIdx = C.PALETTES.findIndex(p => p.originalName === state.paletteName);
         if (paletteIdx === -1) {
@@ -568,7 +572,7 @@ k: tileState.k,
         if (history.length === 0) return;
         const lastAction = history.pop();
         future.push(lastAction);
-        applyState(lastAction.before, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying });
+        applyState(lastAction.before, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveBrightnessPreferences: !isExecutingMacroCommand && !isMacroPlaying });
         window.logArtEvent('UNDO', JSON.stringify({ recipeVersion: 2, id: lastAction.id, settings: getHistorySettings(getCurrentState()) }), isExecutingMacroCommand);
         historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
@@ -581,7 +585,7 @@ k: tileState.k,
         if (future.length === 0) return;
         const nextAction = future.pop();
         history.push(nextAction);
-        applyState(nextAction.after, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying });
+        applyState(nextAction.after, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveBrightnessPreferences: !isExecutingMacroCommand && !isMacroPlaying });
         window.logArtEvent('REDO', JSON.stringify({ recipeVersion: 2, id: nextAction.id, settings: getHistorySettings(getCurrentState()) }), isExecutingMacroCommand);
         historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
@@ -2046,8 +2050,9 @@ if (simulationName === 'magnet') {
             restoreEvolutionTuningState(state);
             window.logArtEvent('EVOLUTION_TUNING', JSON.stringify({ simulation, ...state }));
         };
-        // A running simulation already owns the combined history segment.
-        if (isLifePlaying) apply();
+        // Brightness preferences are independent of artwork history, like Cracks.
+        // Other evolutions retain their existing history behavior.
+        if (isLifePlaying || simulation === 'brightnessEvo') apply();
         else performAction(apply);
         return true;
       }
@@ -2259,6 +2264,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 macroQueue = parsedQueue;
                 if (typeof windMode !== 'undefined' && windMode) setWindMode(false);
                 settingsProfiles?.beginReplay();
+                replayBrightnessPreferences={rules:{...evolutionTuning.brightnessEvo},mode:brightnessEvoMode};
                 isMacroLoaded = true;
                 currentMacroStep = 0;
                 pendingMacroPalette = null; // איפוס בחירה קודמת בטעינת קובץ חדש
@@ -4529,6 +4535,11 @@ function stopMacro() {
     finishWindReplay('stop');
     if (isLifePlaying) pauseLife();
     replayWindClocks.clear();
+    if(replayBrightnessPreferences){
+        Object.assign(evolutionTuning.brightnessEvo,replayBrightnessPreferences.rules);
+        brightnessEvoMode=replayBrightnessPreferences.mode;replayBrightnessPreferences=null;
+        updateBrightnessEvoButtonUI();
+    }
     try {
         if (typeof settingsProfiles !== 'undefined') settingsProfiles?.endReplay();
     } catch (error) {
