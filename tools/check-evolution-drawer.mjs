@@ -25,7 +25,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  async function assign(slot,id){await tap(dialog.locator('[data-drawer-slot="'+slot+'"]'));await tap(dialog.locator('[data-drawer-evolution="'+id+'"]'));}
  async function visibleSlots(){return page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>Number(a.dataset.evolutionSlot)-Number(b.dataset.evolutionSlot)).map(e=>e.dataset.evolutionId));}
  if(config.lang==='en'){
-  for(const [theme,color] of [['gold','rgb(165, 139, 84)'],['teal','rgb(104, 189, 181)'],['silver','rgb(137, 144, 153)'],['ice','rgb(145, 184, 203)'],['blue','rgb(51, 65, 85)']]){await page.evaluate(theme=>drawerTest.theme(theme),theme);assert.equal(await trigger.locator('span').evaluate(e=>getComputedStyle(e).backgroundColor),color);}
+  for(const [theme,color] of [['pink','rgb(201, 145, 173)'],['gold','rgb(165, 139, 84)'],['teal','rgb(104, 189, 181)'],['silver','rgb(137, 144, 153)'],['ice','rgb(145, 184, 203)'],['blue','rgb(51, 65, 85)']]){await page.evaluate(theme=>drawerTest.theme(theme),theme);assert.equal(await trigger.locator('span').evaluate(e=>getComputedStyle(e).backgroundColor),color);}
  }
  assert(await trigger.locator('span').evaluate(e=>Math.abs(parseFloat(getComputedStyle(e).width)-5)<.1));
  assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);const initial=await state();

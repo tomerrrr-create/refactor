@@ -4,10 +4,10 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 const STORAGE_KEY = 'colorGridSimulationTheme';
 const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const LABELS = {
-  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', silver: 'Smoky silver', ice: 'Ice'},
-  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', silver: 'כסף מעושן', ice: 'קרח'},
-  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', silver: 'Дымчатое серебро', ice: 'Лёд'},
-  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', silver: 'Gedempt zilver', ice: 'IJs'}
+  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', silver: 'Smoky silver', ice: 'Ice', pink: 'Pink'},
+  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', silver: 'כסף מעושן', ice: 'קרח', pink: 'ורוד'},
+  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', silver: 'Дымчатое серебро', ice: 'Лёд', pink: 'Розовый'},
+  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', silver: 'Gedempt zilver', ice: 'IJs', pink: 'Roze'}
 };
 export function getSimulationTheme() {
   return document.documentElement.dataset.simulationTheme || 'blue';
@@ -30,7 +30,7 @@ export function setSimulationRunning(running) {
 }
 
 export function applySimulationTheme(value) {
-  const theme = ['blue', 'gold', 'teal', 'silver', 'ice'].includes(value) ? value : 'blue';
+  const theme = ['blue', 'gold', 'teal', 'silver', 'ice', 'pink'].includes(value) ? value : 'blue';
   document.documentElement.dataset.simulationTheme = theme;
   for (const preview of document.querySelectorAll('#simulationThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
@@ -41,7 +41,7 @@ export function applySimulationTheme(value) {
 }
 
 export function applySimulationPlaybackTheme(value) {
-  const theme = ['blue', 'gold', 'teal', 'silver', 'ice'].includes(value) ? value : 'gold';
+  const theme = ['blue', 'gold', 'teal', 'silver', 'ice', 'pink'].includes(value) ? value : 'gold';
   document.documentElement.dataset.simulationPlaybackTheme = theme;
   for (const preview of document.querySelectorAll('#simulationPlaybackThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));

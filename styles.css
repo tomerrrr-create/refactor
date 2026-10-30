@@ -2344,3 +2344,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog .drawer-title { display:flex; align-items:center; gap:12px; min-width:0; }
 #evolutionDrawerDialog .drawer-mark { display:grid; place-items:center; width:40px; height:40px; flex-shrink:0; border:1px solid #d4b86533; border-radius:12px; color:#e3c677; background:linear-gradient(140deg,#d4b86512,#d4b86503); }
 #evolutionDrawerDialog .drawer-mark svg { width:28px; height:28px; }
+
+.sim-mode-active #simModeBackground .sim-theme-pink { background:linear-gradient(135deg,#2a1821,#100c0f); }
+:root[data-simulation-effective-theme="pink"] { --sim-color:#c991ad; }
+:root[data-simulation-effective-theme="pink"] .sim-mode-active #simModeBackground { border-color:#c991ad45; }
+:root[data-simulation-effective-theme="pink"] #simModeBackground .sim-theme-pink { opacity:1; }
+.simulation-theme-preview[data-theme="pink"] { --preview-color:#c991ad; --preview-border:#c991ad45; --preview-background:linear-gradient(135deg,#2a1821,#100c0f); }
+:root[data-simulation-effective-theme="pink"] #btnEvolutionDrawer { --drawer-trigger-color:#c991ad; }

@@ -73,8 +73,8 @@ export function validateWorkspaceSettings(value) {
         equal(normalizeSortCycle(settings.sortCycle), settings.sortCycle) && integer(settings.nudgeIntervalMs, 0, 200) &&
         (!Object.hasOwn(settings, 'gameOfLifeGenetics') || ['rgb', 'palette-order'].includes(settings.gameOfLifeGenetics)) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&
-        (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal', 'silver', 'ice'].includes(settings.simulationTheme)) &&
-        (!Object.hasOwn(settings, 'simulationPlaybackTheme') || ['blue', 'gold', 'teal', 'silver', 'ice'].includes(settings.simulationPlaybackTheme)) &&
+        (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal', 'silver', 'ice', 'pink'].includes(settings.simulationTheme)) &&
+        (!Object.hasOwn(settings, 'simulationPlaybackTheme') || ['blue', 'gold', 'teal', 'silver', 'ice', 'pink'].includes(settings.simulationPlaybackTheme)) &&
         typeof settings.smoothing.display === 'boolean' && typeof settings.smoothing.export === 'boolean' &&
         (!Object.hasOwn(settings.smoothing, 'bloom') || typeof settings.smoothing.bloom === 'boolean') &&
         (!Object.hasOwn(settings.smoothing, 'bloomIntensity') || integer(settings.smoothing.bloomIntensity, 0, 100)) &&
