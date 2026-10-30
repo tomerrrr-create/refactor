@@ -3386,7 +3386,7 @@ function saveCracksSettings(material, lineColor, growth = getCracksGrowth()) {
         replayCracksMaterial = null; replayCracksGrowth = null;
         contourRules = { ...contourRules, material:next, growth:nextGrowth, lineColor };
         if (JSON.stringify(nextGrowth) === JSON.stringify(DEFAULT_CRACKS_GROWTH)) delete contourRules.growth;
-        if (next.enabled && next.strength === DEFAULT_CRACKS_MATERIAL.strength) delete contourRules.material;
+        if (next.enabled === DEFAULT_CRACKS_MATERIAL.enabled && next.strength === DEFAULT_CRACKS_MATERIAL.strength) delete contourRules.material;
         cracksState = cracksState ? { ...restoreCracksState(cracksState), version:3, pendingSeed:cracksState.pendingSeed ?? null } : createCracksState(n);
         cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules:{ ...contourRules, material:next } }, cracksState);
     };

@@ -2293,3 +2293,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   #cracksSettingsDialog .cracks-line-color { flex-direction:column; align-items:stretch; }
   #cracksSettingsDialog select { max-width:100%; width:100%; }
 }
+
+#cracksSettingsDialog .cracks-presets-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+#cracksSettingsDialog .cracks-presets-heading h3 { margin:0; font-size:13px; font-weight:500; color:#e3dccb; }
+#cracksSettingsDialog #cracksPresetCustom { font-size:11px; color:#aaa99f; }
+#cracksSettingsDialog .cracks-preset-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+#cracksSettingsDialog [data-cracks-preset] { display:flex; flex-direction:column; justify-content:center; gap:5px; min-width:0; min-height:66px; padding:10px 8px; border:1px solid #b89a5733; border-radius:9px; background:#121510; color:#bdb8a9; font-family:inherit; cursor:pointer; text-align:center; }
+#cracksSettingsDialog [data-cracks-preset]:hover { border-color:#d9ba7560; background:#d9ba7509; }
+#cracksSettingsDialog [data-cracks-preset][aria-pressed="true"] { border-color:#d9ba7590; background:#d9ba7518; color:#f2d99f; box-shadow:inset 0 0 0 1px #d9ba7510; }
+#cracksSettingsDialog .cracks-preset-name { font-size:12px; font-weight:500; line-height:1.4; overflow-wrap:anywhere; }
+#cracksSettingsDialog .cracks-preset-values { font-size:10px; line-height:1.4; font-variant-numeric:tabular-nums; opacity:.72; }

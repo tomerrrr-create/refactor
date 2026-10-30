@@ -94,7 +94,7 @@ export function validateWorkspaceSettings(value) {
         number(r.turing.feed, .01, .1) && number(r.turing.kill, .01, .07) &&
         number(r.turing.dA, 0, 1) && number(r.turing.dB, 0, 1) && number(r.turing.timeStep, 0, 1);
     if (!valid) throw new Error('Invalid workspace settings');
-    if (r.contour.material?.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
+    if (r.contour.material && r.contour.material.enabled === DEFAULT_CRACKS_MATERIAL.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
     if (r.contour.growth && equal(r.contour.growth, DEFAULT_CRACKS_GROWTH)) delete r.contour.growth;
     return settings;
 }

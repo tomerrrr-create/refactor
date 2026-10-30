@@ -1,4 +1,4 @@
-import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
+import { CRACKS_GROWTH_PRESETS, CRACKS_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -98,4 +98,13 @@ test('new growth preferences survive old drawing snapshots, while macro override
  c.restoreContourSnapshot(old);assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),oldGrowth);
  c.contourRules.growth=current;c.isMacroPlaying=true;c.restoreContourSnapshot(old,{preservePreferences:true});assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),oldGrowth);assert.deepEqual(c.contourRules.growth,current);
  const legacy=JSON.parse(JSON.stringify(old));delete legacy.growth;delete legacy.rules.growth;c.restoreContourSnapshot(legacy);assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),DEFAULT_CRACKS_GROWTH);assert.deepEqual(c.contourRules.growth,current);
+});
+
+test('recorded preset values and legacy material overrides are independent of the new default',()=>{
+ const c=harness();c.armSimulation('contour');
+ for(const p of CRACKS_GROWTH_PRESETS){c.contourRules.growth={...p.values};const rules=JSON.parse(JSON.stringify(c.getContourRecordingRules()));assert.deepEqual(rules.growth,p.values);assert(!JSON.stringify(rules).includes(p.id));}
+ const legacy=JSON.parse(JSON.stringify(c.getContourSnapshot()));delete legacy.growth;delete legacy.rules.growth;delete legacy.rules.material;legacy.material={enabled:true,strength:40};
+ c.contourRules={sensitivity:75,lineColor:'darkest'};c.isMacroPlaying=true;c.restoreContourSnapshot(legacy);
+ assert.equal(c.getCracksMaterial().enabled,true,'old recorded material On overrides the new Off default');assert.equal(c.contourRules.material,undefined,'replay does not turn user preference On');assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),DEFAULT_CRACKS_GROWTH);
+ c.isMacroPlaying=false;c.replayCracksMaterial=null;c.replayCracksGrowth=null;assert.equal(c.getCracksMaterial().enabled,false);
 });
