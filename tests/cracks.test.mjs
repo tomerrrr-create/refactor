@@ -1,4 +1,4 @@
-import { CRACKS_GROWTH_PRESETS, CRACKS_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
+import { validateCracksBrush, CRACKS_GROWTH_PRESETS, CRACKS_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -30,9 +30,9 @@ test('empty and gold boards stay unchanged, light lines work and changed board s
  for(const invalid of [{...createCracksState(9),random:0},{...createCracksState(9),tips:[{x:NaN,y:0,angle:0,age:0}]},{...createCracksState(9),tips:Array(49).fill({x:0,y:0,angle:0,age:0})}])assert.throws(()=>restoreCracksState(invalid));
 });
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-function harness(){const c=vm.createContext({C:{PALETTES:[{}]},activePaletteIndex:0,CRACKS_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
+function harness(){const c=vm.createContext({C:{PALETTES:[{}]},validateCracksBrush,replayCracksBrush:null,selectedColor:null,isRainbowModeActive:false,activePaletteIndex:0,CRACKS_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
  c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='contour'){c.contourMode='cracks';c.cracksState=null;}};
- vm.runInContext(source.slice(source.indexOf('function getCracksMaterial()'),source.indexOf('function nextEvolutionMode(')),c);return c;}
+ vm.runInContext(source.slice(source.indexOf('function getCracksBrush()'),source.indexOf('function nextEvolutionMode(')),c);return c;}
 test('paused contour cycle includes Off, live cycle skips Off, and snapshots preserve rules and tips',()=>{
  const c=harness();c.cycleContourMode();assert.equal(c.armedSimulation,'contour');assert.equal(c.contourMode,'cracks');c.runContourEvolution(fixture(21));const snapshot=JSON.parse(JSON.stringify(c.getContourSnapshot()));assert(snapshot.cracksState.steps>0);
  c.cycleContourMode();assert.equal(c.contourMode,'contours');assert.deepEqual(c.runContourEvolution(fixture(21)),['original']);c.cycleContourMode();assert.equal(c.armedSimulation,null);c.restoreContourSnapshot(snapshot);assert.equal(c.contourMode,'cracks');assert.deepEqual(JSON.parse(JSON.stringify(c.getContourSnapshot())),snapshot);

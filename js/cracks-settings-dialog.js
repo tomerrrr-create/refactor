@@ -1,5 +1,5 @@
 import { onLanguageChange } from './i18n.js';
-import { CRACKS_GROWTH_PRESETS, getCracksPresetId, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
+import { CRACKS_LINE_COLORS, INITIAL_CRACKS_GROWTH, CRACKS_GROWTH_PRESETS, getCracksPresetId, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, validateCracksGrowth } from './cracks-settings.js';
 const growthControls = [
     {field:'branchChance',id:'cracksBranchChance',key:'cracks_branch_chance',min:0,max:100,step:5,percent:true},
     {field:'branchInterval',id:'cracksBranchInterval',key:'cracks_branch_interval',min:1,max:40,step:1},
@@ -27,7 +27,7 @@ export function createCracksSettingsDialog(app) {
         <section class="cracks-settings-panel cracks-growth-panel">
           ${growthControls.map(c=>`<div class="cracks-control"><label for="${c.id}"></label><output for="${c.id}"></output><p id="${c.id}Help" class="cracks-control-help"></p><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" aria-describedby="${c.id}Help"></div>`).join('')}
         </section>
-        <section class="cracks-settings-panel cracks-line-color"><label for="cracksLineColor"></label><select id="cracksLineColor"><option value="darkest"></option><option value="lightest"></option><option value="original-anchor"></option></select></section>
+        <section class="cracks-settings-panel cracks-line-color"><h3 id="cracksLineColorLabel"></h3><div id="cracksLineColor" class="cracks-color-grid" role="group" aria-labelledby="cracksLineColorLabel">${CRACKS_LINE_COLORS.map(mode=>`<button type="button" data-cracks-color="${mode}" aria-pressed="false"><span class="cracks-color-swatch" aria-hidden="true"></span><span class="cracks-color-name"></span></button>`).join('')}</div></section>
       </div>
       <footer class="cracks-settings-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></footer>
     </form>`;
@@ -45,8 +45,8 @@ export function createCracksSettingsDialog(app) {
         dialog.querySelector('#cracksMaterialNote').textContent=app.getText('cracks_material_note');
         dialog.querySelector('#cracksMaterialLabel').textContent=app.getText('cracks_material_enabled');
         dialog.querySelector('label[for="cracksMaterialStrength"]').textContent=app.getText('cracks_material_strength');
-        dialog.querySelector('label[for="cracksLineColor"]').textContent=app.getText('contour_color_label');
-        for(const option of color.options)option.textContent=app.getText(option.value==='original-anchor'?'cracks_original_anchor':'contour_color_'+option.value);
+        dialog.querySelector('#cracksLineColorLabel').textContent=app.getText('contour_color_label');
+        for(const button of color.querySelectorAll('[data-cracks-color]')){const mode=button.dataset.cracksColor;button.querySelector('.cracks-color-name').textContent=app.getText(mode==='brush'?'cracks_brush_color':mode==='original-anchor'?'cracks_original_anchor':'contour_color_'+mode);button.setAttribute('aria-pressed',String(draft?.lineColor===mode));}
         dialog.querySelector('[data-close]').setAttribute('aria-label',app.getText('saveModal_close'));
         dialog.querySelector('[data-reset]').textContent=app.getText('evolution_reset_default');
         dialog.querySelector('[data-cancel]').textContent=app.getText('gs_modal_cancel');
@@ -67,15 +67,15 @@ export function createCracksSettingsDialog(app) {
         }
         for(const c of growthControls)setRange(dialog.querySelector('#'+c.id),draft[c.field],draft[c.field]+(c.percent?'%':''));
         enabled.checked=draft.enabled;strength.disabled=!draft.enabled;
-        setRange(strength,draft.strength,draft.strength+'%');color.value=draft.lineColor;
+        setRange(strength,draft.strength,draft.strength+'%');
     }
     for(const p of CRACKS_GROWTH_PRESETS)dialog.querySelector('[data-cracks-preset="'+p.id+'"]').addEventListener('click',()=>{Object.assign(draft,p.values);render();});
     enabled.addEventListener('change',()=>{draft.enabled=enabled.checked;render();});
     strength.addEventListener('input',()=>{draft.strength=Number(strength.value);render();});
     for(const c of growthControls)dialog.querySelector('#'+c.id).addEventListener('input',event=>{draft[c.field]=Number(event.target.value);render();});
-    color.addEventListener('change',()=>{draft.lineColor=color.value;});
+    for(const button of color.querySelectorAll('[data-cracks-color]'))button.addEventListener('click',()=>{draft.lineColor=button.dataset.cracksColor;render();});
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
-    dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft={...DEFAULT_CRACKS_MATERIAL,...DEFAULT_CRACKS_GROWTH,lineColor:'darkest'};render();});
+    dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft={...DEFAULT_CRACKS_MATERIAL,...INITIAL_CRACKS_GROWTH,lineColor:'darkest'};render();});
     dialog.querySelector('form').addEventListener('submit',event=>{event.preventDefault();const material=validateCracksMaterial({enabled:draft.enabled,strength:draft.strength});const growth=validateCracksGrowth(Object.fromEntries(growthControls.map(c=>[c.field,draft[c.field]])));if(app.saveCracksSettings(material,draft.lineColor,growth)!==false)dialog.close();});
     dialog.addEventListener('close',()=>{draft=null;app.dom.btnContour.focus({preventScroll:true});});
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};

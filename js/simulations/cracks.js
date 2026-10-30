@@ -2,7 +2,8 @@ import { getLuminance } from '../colors.js';
 import { DEFAULT_CRACKS_GROWTH } from '../cracks-settings.js';
 // Original palette order breaks equal-luminance ties exactly like the default
 // stable luminance sort. Resolve its color back into the current sorted palette.
-export function getCracksLineIndex({currentPalette,originalPalette=currentPalette,contourRules}) {
+export function getCracksLineIndex({currentPalette,originalPalette=currentPalette,contourRules,cracksBrush}) {
+    if(contourRules.lineColor==='brush')return Math.max(0,currentPalette.indexOf(cracksBrush?.color));
     if(contourRules.lineColor==='lightest')return currentPalette.length-1;
     if(contourRules.lineColor!=='original-anchor')return 0;
     let anchor=originalPalette[0],light=getLuminance(anchor);
@@ -11,6 +12,31 @@ export function getCracksLineIndex({currentPalette,originalPalette=currentPalett
         if(candidate<light){anchor=originalPalette[i];light=candidate;}
     }
     return Math.max(0,currentPalette.indexOf(anchor));
+}
+// Sparse immutable chunks: 256 visited cells in each 64-character hex string.
+// Copies only the small chunk directory and edited strings; history shares the rest.
+function rainbowMode(context){return context.contourRules.lineColor==='brush' && context.cracksBrush?.rainbow===true;}
+function trailHas(state,index){const chunk=state?.rainbowTrail?.[Math.floor(index/256)];return !!(parseInt(chunk?.[Math.floor(index%256/4)]||'0',16)&(1<<(index%4)));}
+function trailEditor(state){
+    let copied=false;
+    return (index,visited)=>{
+        const key=Math.floor(index/256),at=Math.floor(index%256/4),mask=1<<(index%4),old=state.rainbowTrail?.[key]??'0'.repeat(64),bits=parseInt(old[at],16),next=visited?bits|mask:bits&~mask;
+        if(next===bits)return;
+        if(!copied){state.rainbowTrail={...state.rainbowTrail};copied=true;}
+        const chunk=old.slice(0,at)+next.toString(16)+old.slice(at+1);
+        if(/^0+$/.test(chunk))delete state.rainbowTrail[key];else state.rainbowTrail[key]=chunk;
+    };
+}
+function validTrail(value,n){
+    if(value===undefined)return true;
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length>Math.ceil(n*n/256))return false;
+    return Object.entries(value).every(([key,chunk])=>{
+        if(!/^(0|[1-9][0-9]*)$/.test(key)||Number(key)>=Math.ceil(n*n/256)||typeof chunk!=='string'||!/^[0-9a-f]{64}$/.test(chunk))return false;
+        const start=Number(key)*256;
+        if(start+256<=n*n)return true;
+        for(let bit=n*n-start;bit<256;bit++)if(parseInt(chunk[Math.floor(bit/4)],16)&(1<<(bit%4)))return false;
+        return true;
+    });
 }
 // Experimental branching fractures. All runtime state is small and serializable;
 // board colors are the collision surface, so live drawing participates directly.
@@ -22,10 +48,11 @@ export function restoreCracksState(value) {
         !Number.isInteger(value.random) || value.random < 1 || value.random > 0xffffffff ||
         !Number.isSafeInteger(value.steps) || value.steps < 0 || !Number.isSafeInteger(value.roots) || value.roots < 0 ||
         (value.version >= 2 && value.pendingSeed !== null && (!Number.isInteger(value.pendingSeed) || value.pendingSeed < 0 || value.pendingSeed >= value.n*value.n)) ||
+        !validTrail(value.rainbowTrail,value.n) ||
         !Array.isArray(value.tips) || value.tips.length > 48 || value.tips.some(t =>
             ![t.x,t.y,t.angle].every(Number.isFinite) || t.x < 0 || t.x >= value.n || t.y < 0 || t.y >= value.n ||
             !Number.isSafeInteger(t.age) || t.age < 0)) throw new Error('Invalid cracks state');
-    return { ...value, tips: value.tips.map(t => ({...t})) };
+    return { ...value, ...(value.rainbowTrail ? {rainbowTrail:{...value.rainbowTrail}} : {}), tips: value.tips.map(t => ({...t})) };
 }
 function materialResistance(state, rules, paletteLength, k) {
     if(state.version<3 || !rules.material?.enabled || !rules.material.strength)return 0;
@@ -38,7 +65,7 @@ export function prepareCracksResume(context, previous) {
     const {n,currentBoardState:board,currentPalette,contourRules}=context;
     if (previous.n !== n) return previous;
     const line=getCracksLineIndex(context);
-    const available=i=>i>=0&&i<n*n&&!board[i].isGold&&board[i].k!==line&&materialResistance(previous,contourRules,currentPalette.length,board[i].k)<.5;
+    const available=i=>i>=0&&i<n*n&&!board[i].isGold&&(rainbowMode(context)?!trailHas(previous,i):board[i].k!==line)&&materialResistance(previous,contourRules,currentPalette.length,board[i].k)<.5;
     const start=previous.random%(n*n);
     for(let offset=0;offset<n*n;offset++) {
         const i=(start+offset)%(n*n),x=i%n,y=Math.floor(i/n);
@@ -53,12 +80,15 @@ export function prepareCracksResume(context, previous) {
 // Version-1 recordings retain their original finite-root behavior.
 export function queueCracksGrowth(context, previous, changes) {
     const {n,currentBoardState:board,currentPalette,contourRules}=context;
-    const state=previous?.n===n ? previous : createCracksState(n);
-    if(state.version<2)return state;
+    const previousState=previous?.n===n ? previous : createCracksState(n);
+    if(previousState.version<2)return previousState;
+    const state={...previousState};
+    const edit=trailEditor(state);
+    const painted=[...changes];for(const change of painted)if(Number.isInteger(change.i)&&change.i>=0&&change.i<n*n)edit(change.i,false);
     const line=getCracksLineIndex(context);
-    const available=i=>Number.isInteger(i)&&i>=0&&i<n*n&&board[i]&&!board[i].isGold&&board[i].k!==line&&materialResistance(state,contourRules,currentPalette.length,board[i].k)<.5;
+    const available=i=>Number.isInteger(i)&&i>=0&&i<n*n&&board[i]&&!board[i].isGold&&(rainbowMode(context)?!trailHas(state,i):board[i].k!==line)&&materialResistance(state,contourRules,currentPalette.length,board[i].k)<.5;
     let seed=available(state.pendingSeed)?state.pendingSeed:null;
-    for(const change of changes)if(available(change.i)&&(seed===null||change.i<seed))seed=change.i;
+    for(const change of painted)if(available(change.i)&&(seed===null||change.i<seed))seed=change.i;
     if(seed===null)return state;
     return {...state,roots:0,pendingSeed:seed};
 }
@@ -67,14 +97,15 @@ export function runCracksGeneration(context, previous) {
     const state = previous?.n === n ? restoreCracksState(previous) : createCracksState(n);
     const growth = state.version>=3 ? contourRules.growth ?? DEFAULT_CRACKS_GROWTH : DEFAULT_CRACKS_GROWTH;
     const random = () => { let x=state.random; x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/0x100000000; };
-    const line = getCracksLineIndex(context);
+    const line = getCracksLineIndex(context),rainbow=rainbowMode(context),editTrail=trailEditor(state);
     let board=currentBoardState;
-    const available = index => index>=0 && index<n*n && !board[index].isGold && board[index].k!==line;
+    const available = index => index>=0 && index<n*n && !board[index].isGold && (rainbow?!trailHas(state,index):board[index].k!==line);
     const resistance=index=>materialResistance(state,contourRules,currentPalette.length,board[index].k);
     const materialAvailable=index=>available(index)&&resistance(index)<.5;
     const paint = index => {
         if(board===currentBoardState)board=currentBoardState.slice();
-        board[index]={...board[index],k:line,v:line};
+        const color=rainbow?Math.floor(random()*currentPalette.length):line;
+        board[index]={...board[index],k:color,v:color};editTrail(index,rainbow);
     };
     // A few nuclei, preferably inside material. Bounded sampling avoids scanning
     // or duplicating a 249x249 board on every frame, including an empty canvas.
