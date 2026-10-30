@@ -2,10 +2,10 @@ export const CYMATICS_PATTERNS = Object.freeze({
     petals:Object.freeze([1,2]), star:Object.freeze([2,3]), lattice:Object.freeze([3,5]), bloom:Object.freeze([4,7])
 });
 export const CURRENT_RESONANCE_VERSION=2;
-export const CYMATICS_RESONANCE_MAPS=Object.freeze({diagonal:1,grid:2,circular:3});
+export const CYMATICS_RESONANCE_MAPS=Object.freeze({diagonal:1,grid:2,circular:3,interference:4});
 export const DEFAULT_CYMATICS_RULES = Object.freeze({pattern:'petals',strength:60});
 export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
-    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['pattern','strength','mode','frequency','resonanceVersion'].includes(k))||
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['pattern','strength','mode','frequency','resonanceVersion','phaseMotion'].includes(k))||
        !Object.hasOwn(CYMATICS_PATTERNS,value.pattern)||!Number.isInteger(value.strength)||value.strength<10||value.strength>100)throw new Error('Invalid Cymatics settings');
     const result={pattern:value.pattern,strength:value.strength};
     if(value.mode!==undefined&&value.mode!=='patterns'&&value.mode!=='resonance')throw new Error('Invalid Cymatics mode');
@@ -17,6 +17,10 @@ export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
     if(value.resonanceVersion!==undefined){
         if(value.mode!=='resonance'||!Object.values(CYMATICS_RESONANCE_MAPS).includes(value.resonanceVersion))throw new Error('Invalid resonance version');
         result.resonanceVersion=value.resonanceVersion;
+    }
+    if(value.phaseMotion!==undefined){
+        if(value.mode!=='resonance'||value.resonanceVersion!==4||typeof value.phaseMotion!=='boolean')throw new Error('Invalid phase motion');
+        result.phaseMotion=value.phaseMotion;
     }
     return result;
 }

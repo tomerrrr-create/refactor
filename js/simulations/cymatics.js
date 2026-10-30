@@ -1,3 +1,4 @@
+import {createInterferenceField} from './cymatics-interference.js';
 import {createCircularResonanceField} from './cymatics-circular.js';
 import {CYMATICS_PATTERNS,validateCymaticsRules} from '../cymatics-settings.js';
 // Chladni-inspired square plate, not an acoustic solver. Only a derived field is
@@ -7,7 +8,8 @@ let fieldSize=0,fieldPattern='',field=null;
 // 40 Hz is a chosen plate calibration, not a universal frequency-to-shape law.
 const resonanceModes=[];
 for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
-export function getCymaticsField(n,pattern,frequency,resonanceVersion){
+export function getCymaticsField(n,pattern,frequency,resonanceVersion,phaseStep=0){
+    if(resonanceVersion===4)return createInterferenceField(n,frequency,phaseStep);
     if(resonanceVersion===3){
         const key='resonance-v3:'+frequency;
         if(field&&fieldSize===n&&fieldPattern===key)return field;
@@ -83,7 +85,7 @@ export function validateCymaticsSnapshot(value){
 }
 const dx=[-1,0,1,-1,1,-1,0,1],dy=[-1,-1,-1,0,0,1,1,1];
 export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,cymaticsRules},previous){
-    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.pattern,rules.mode==='resonance'?rules.frequency:undefined,rules.resonanceVersion);
+    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.pattern,rules.mode==='resonance'?rules.frequency:undefined,rules.resonanceVersion,rules.phaseMotion?state.steps:0);
     const random=()=>{let x=state.random;x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/4294967296;};
     const length=currentPalette.length,rank=k=>((k%length)+length)%length;
     const attempts=Math.max(1,Math.round(n*n*.5*rules.strength/100));

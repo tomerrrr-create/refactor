@@ -73,7 +73,7 @@ test('expanded resonance produces axial and grid fields without a forced diagona
   assert.deepEqual(validateCymaticsSnapshot({cymaticsVersion:1,rules,state:saved.state}).rules,rules);
  }
  assert.notDeepEqual(getCymaticsField(41,'petals',40,2),getCymaticsField(41,'petals',80,2));
- assert.throws(()=>validateCymaticsRules({...legacyRules,resonanceVersion:4}));assert.throws(()=>validateCymaticsRules({pattern:'petals',strength:60,resonanceVersion:2}));
+ assert.throws(()=>validateCymaticsRules({...legacyRules,resonanceVersion:5}));assert.throws(()=>validateCymaticsRules({pattern:'petals',strength:60,resonanceVersion:2}));
 });
 test('original resonance recordings retain their exact fields',async()=>{
  const {createHash}=await import('node:crypto');
@@ -103,4 +103,23 @@ test('all three selectable resonance maps preserve settings, pigments, gold and 
  for(const frequency of [20,20000])for(const n of [1,2,41]){
   const field=getCymaticsField(n,'petals',frequency,3);assert.equal(field.length,n*n);assert([...field].every(v=>Number.isFinite(v)&&v>=0&&v<=65535));
  }
+});
+
+test('interference phase motion follows generations, preserves pigments and resumes exactly',()=>{
+ const base={pattern:'petals',strength:100,mode:'resonance',frequency:1200,resonanceVersion:4};
+ for(const phaseMotion of [false,true]){
+  const rules={...base,phaseMotion};assert.deepEqual(validateCymaticsRules(rules),rules);
+  const settings=defaultWorkspaceSettings();settings.rules.cymatics=rules;
+  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
+  const ctx={...fixture(41),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState),result=advance(ctx,createCymaticsState(41),250),copy=JSON.parse(JSON.stringify(result));
+  assert.deepEqual(histogram(result.ctx.currentBoardState),histogram(before));assert.deepEqual(result.ctx.currentBoardState[840],before[840]);
+  assert.deepEqual(advance(result.ctx,result.state,180),advance(copy.ctx,copy.state,180));
+  const staticContext={...fixture(41),cymaticsRules:rules};staticContext.currentBoardState.forEach(t=>{t.k=t.v=3;});const uniform=structuredClone(staticContext.currentBoardState);advance(staticContext,createCymaticsState(41),30);assert.deepEqual(staticContext.currentBoardState,uniform);
+ }
+ const zero=getCymaticsField(41,'petals',1200,4,0),shift=getCymaticsField(41,'petals',1200,4,300);
+ assert.notDeepEqual(zero,shift);assert.deepEqual(zero,getCymaticsField(41,'petals',1200,4,1200));
+ for(const phaseMotion of [null,1,'true'])assert.throws(()=>validateCymaticsRules({...base,phaseMotion}));
+ assert.throws(()=>validateCymaticsRules({...base,resonanceVersion:3,phaseMotion:true}));
+ const moving={...fixture(41),cymaticsRules:{...base,phaseMotion:true}};const first=advance(moving,createCymaticsState(41),900),previous=structuredClone(first.ctx.currentBoardState);advance(first.ctx,first.state,300);assert.notDeepEqual(first.ctx.currentBoardState,previous,'moving field still rearranges pigments late in the run');
+ for(const n of [1,2])for(const frequency of [20,20000])assert.equal(getCymaticsField(n,'petals',frequency,4,117).length,n*n);
 });

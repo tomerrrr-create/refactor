@@ -2369,6 +2369,11 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 #cymaticsSettingsDialog .cymatics-maps[hidden] { display:none; }
 #cymaticsSettingsDialog .cymatics-maps > p { margin:12px 0 8px; color:var(--muted, #aaa); font-size:.9rem; }
-#cymaticsSettingsDialog .cymatics-maps .tuning-modes { grid-template-columns:repeat(3,minmax(0,1fr)); }
+#cymaticsSettingsDialog .cymatics-maps .tuning-modes { grid-template-columns:repeat(2,minmax(0,1fr)); }
 #cymaticsSettingsDialog [data-cymatics-map] { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-height:64px; padding:8px 3px; }
 #cymaticsSettingsDialog [data-cymatics-map] svg { width:24px; height:24px; }
+
+#cymaticsSettingsDialog .cymatics-phase[hidden] { display:none; }
+#cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; gap:10px; min-height:44px; text-align:start; }
+#cymaticsSettingsDialog .cymatics-phase input { width:18px; height:18px; accent-color:var(--gold); }
+#cymaticsSettingsDialog #cymaticsPhaseNote { margin:0 0 12px; color:#aaa; font-size:12px; line-height:1.5; }
