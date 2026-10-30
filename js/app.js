@@ -1,4 +1,4 @@
-import { DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
+import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
@@ -1530,7 +1530,7 @@ function pauseLife() {
 
         let cracksResumeBefore = null;
         if (armedSimulation === 'contour' && !isExecutingMacroCommand && !isMacroPlaying && cracksState?.version >= 3 && contourMode === 'cracks') {
-            const resumed = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), contourRules:{ ...contourRules, material:getCracksMaterial() } }, cracksState);
+            const resumed = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules:{ ...contourRules, material:getCracksMaterial() } }, cracksState);
             if (resumed !== cracksState) { cracksResumeBefore = getCurrentState(); cracksState = resumed; }
         }
         window.logArtEvent('PLAY', getSimulationRecordingDetails());
@@ -2822,7 +2822,7 @@ function resumeBrushCheckpoint(record) {
 // against a pointer-down snapshot or serialized as part of a brush sample.
 function flushLiveBrushChanges() {
     if (pointerState.changes?.size && armedSimulation === 'contour' && contourMode === 'cracks') {
-        cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), contourRules: { ...contourRules, material: getCracksMaterial() } },
+        cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules: { ...contourRules, material: getCracksMaterial() } },
             cracksState, pointerState.changes.values());
     }
     if (!pointerState.liveRecording || !pointerState.changes?.size) return;
@@ -3381,14 +3381,14 @@ function saveCracksSettings(material, lineColor, growth = getCracksGrowth()) {
     if (armedSimulation !== 'contour' || contourMode !== 'cracks' || isBreathing || isMacroLoaded || isMacroPlaying) return false;
     const next = validateCracksMaterial(material);
     const nextGrowth = validateCracksGrowth(growth);
-    if (!['darkest','lightest'].includes(lineColor)) return false;
+    if (!CRACKS_LINE_COLORS.includes(lineColor)) return false;
     const commit = () => {
         replayCracksMaterial = null; replayCracksGrowth = null;
         contourRules = { ...contourRules, material:next, growth:nextGrowth, lineColor };
         if (JSON.stringify(nextGrowth) === JSON.stringify(DEFAULT_CRACKS_GROWTH)) delete contourRules.growth;
         if (next.enabled && next.strength === DEFAULT_CRACKS_MATERIAL.strength) delete contourRules.material;
         cracksState = cracksState ? { ...restoreCracksState(cracksState), version:3, pendingSeed:cracksState.pendingSeed ?? null } : createCracksState(n);
-        cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), contourRules:{ ...contourRules, material:next } }, cracksState);
+        cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules:{ ...contourRules, material:next } }, cracksState);
     };
     // Saved Cracks preferences belong to the profile, not drawing history.
     commit();
@@ -3403,7 +3403,7 @@ function getContourSnapshot() {
 function validateContourSnapshot(value) {
     if (!value || !['contours','cracks'].includes(value.mode) || !value.rules ||
         !Number.isFinite(value.rules.sensitivity) || value.rules.sensitivity<0 || value.rules.sensitivity>100 ||
-        !['darkest','lightest'].includes(value.rules.lineColor)) throw new Error('Invalid contour state');
+        !CRACKS_LINE_COLORS.includes(value.rules.lineColor)) throw new Error('Invalid contour state');
     if (value.cracksState) restoreCracksState(value.cracksState);
     if (value.material) validateCracksMaterial(value.material);
     if (value.growth) validateCracksGrowth(value.growth);
@@ -3445,7 +3445,7 @@ function getContourRecordingRules() {
 }
 function runContourEvolution(context) {
     if (contourMode !== 'cracks') return Simulations.runContourGeneration(context);
-    const result = runCracksGeneration({ ...context, contourRules: { ...context.contourRules, material: getCracksMaterial(), growth:getCracksGrowth() } }, cracksState);
+    const result = runCracksGeneration({ ...context, originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules: { ...context.contourRules, material: getCracksMaterial(), growth:getCracksGrowth() } }, cracksState);
     cracksState = result.nextCracksState;
     return result.nextBoardState;
 }
@@ -4677,7 +4677,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 else if (sim === 'contour') {
                     const preferenceMaterial = contourRules.material;
                     const preferenceGrowth = contourRules.growth;
-                    contourRules = { sensitivity: parsedRules.sensitivity ?? 75, lineColor: parsedRules.lineColor === 'lightest' ? 'lightest' : 'darkest', ...(preferenceMaterial ? {material:preferenceMaterial} : {}), ...(preferenceGrowth ? {growth:preferenceGrowth} : {}) };
+                    contourRules = { sensitivity: parsedRules.sensitivity ?? 75, lineColor: CRACKS_LINE_COLORS.includes(parsedRules.lineColor) ? parsedRules.lineColor : 'darkest', ...(preferenceMaterial ? {material:preferenceMaterial} : {}), ...(preferenceGrowth ? {growth:preferenceGrowth} : {}) };
                     replayCracksGrowth = validateCracksGrowth(parsedRules.growth);
                     replayCracksMaterial = parsedRules.material ? validateCracksMaterial(parsedRules.material) : {enabled:false,strength:80};
                     contourMode = parsedRules.mode === 'cracks' ? 'cracks' : 'contours';
@@ -5054,7 +5054,7 @@ else if (action.eventName === 'Invert Colors') {
                 });
                 
                 if (action.eventName === 'DRAW_STROKE' && armedSimulation === 'contour' && contourMode === 'cracks') {
-                    cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), contourRules: { ...contourRules, material: getCracksMaterial() } }, cracksState, diff);
+                    cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules: { ...contourRules, material: getCracksMaterial() } }, cracksState, diff);
                 }
                 if (changed) {
                     renderToScreen(now);

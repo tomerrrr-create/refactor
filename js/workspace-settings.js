@@ -1,4 +1,4 @@
-import { DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
+import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
@@ -90,7 +90,7 @@ export function validateWorkspaceSettings(value) {
         (!Object.hasOwn(r.erosion, 'erosionPace') || integer(r.erosion.erosionPace, 1, 3)) &&
         (!Object.hasOwn(r.erosion, 'erosionStages') || validErosionStages(r.erosion.erosionStages)) &&
         Object.values(r.dla).every(v => typeof v === 'boolean') &&
-        number(r.contour.sensitivity, 0, 100) && ['darkest', 'lightest'].includes(r.contour.lineColor) &&
+        number(r.contour.sensitivity, 0, 100) && CRACKS_LINE_COLORS.includes(r.contour.lineColor) &&
         number(r.turing.feed, .01, .1) && number(r.turing.kill, .01, .07) &&
         number(r.turing.dA, 0, 1) && number(r.turing.dB, 0, 1) && number(r.turing.timeStep, 0, 1);
     if (!valid) throw new Error('Invalid workspace settings');

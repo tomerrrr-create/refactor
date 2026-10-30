@@ -1,3 +1,4 @@
+export const CRACKS_LINE_COLORS = Object.freeze(['darkest','lightest','original-anchor']);
 export const DEFAULT_CRACKS_MATERIAL = Object.freeze({ enabled: true, strength: 40 });
 export function validateCracksMaterial(value = DEFAULT_CRACKS_MATERIAL) {
     if (!value || typeof value !== 'object' || Array.isArray(value) ||

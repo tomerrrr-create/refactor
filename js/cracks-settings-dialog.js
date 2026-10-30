@@ -7,40 +7,54 @@ const growthControls = [
 ];
 export function createCracksSettingsDialog(app) {
     const dialog=document.createElement('dialog');
-    dialog.id='cracksSettingsDialog';dialog.className='erosion-settings-dialog evolution-tuning-dialog';
+    dialog.id='cracksSettingsDialog';dialog.className='cracks-settings-dialog';
     dialog.setAttribute('aria-labelledby','cracksSettingsTitle');
     dialog.innerHTML=`<form>
-      <button type="button" class="modal-dismiss" data-close>×</button>
-      <h2 id="cracksSettingsTitle"></h2><p id="cracksMaterialNote"></p>
-      <label class="cracks-toggle" for="cracksMaterialEnabled"><span></span><input id="cracksMaterialEnabled" type="checkbox" aria-describedby="cracksMaterialNote"></label>
-      <div class="cracks-strength"><label for="cracksMaterialStrength"></label><output for="cracksMaterialStrength"></output><input id="cracksMaterialStrength" type="range" min="0" max="100" step="5" aria-describedby="cracksMaterialNote"></div>
-      ${growthControls.map(c=>`<div class="cracks-strength cracks-growth-control"><label for="${c.id}"></label><output for="${c.id}"></output><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}"></div>`).join('')}
-      <label class="cracks-line-color" for="cracksLineColor"><span></span><select id="cracksLineColor"><option value="darkest"></option><option value="lightest"></option></select></label>
-      <div class="init-settings-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></div>
+      <header class="cracks-settings-header">
+        <div class="cracks-heading"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m14 3-4 6 4 4-3 8M10 9 5 7m9 6 5-4m-7 8-6 2"/></svg><h2 id="cracksSettingsTitle"></h2></div>
+        <button type="button" data-close>×</button>
+      </header>
+      <div class="cracks-settings-body">
+        <section class="cracks-settings-panel" aria-labelledby="cracksMaterialLabel">
+          <label class="cracks-toggle" for="cracksMaterialEnabled"><span id="cracksMaterialLabel"></span><input id="cracksMaterialEnabled" type="checkbox" aria-describedby="cracksMaterialNote"></label>
+          <div class="cracks-control"><label for="cracksMaterialStrength"></label><output for="cracksMaterialStrength"></output><input id="cracksMaterialStrength" type="range" min="0" max="100" step="5" aria-describedby="cracksMaterialNote"></div>
+          <p id="cracksMaterialNote" class="cracks-settings-note"></p>
+        </section>
+        <section class="cracks-settings-panel cracks-growth-panel">
+          ${growthControls.map(c=>`<div class="cracks-control"><label for="${c.id}"></label><output for="${c.id}"></output><p id="${c.id}Help" class="cracks-control-help"></p><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" aria-describedby="${c.id}Help"></div>`).join('')}
+        </section>
+        <section class="cracks-settings-panel cracks-line-color"><label for="cracksLineColor"></label><select id="cracksLineColor"><option value="darkest"></option><option value="lightest"></option><option value="original-anchor"></option></select></section>
+      </div>
+      <footer class="cracks-settings-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></footer>
     </form>`;
     document.body.append(dialog);
     const enabled=dialog.querySelector('#cracksMaterialEnabled'),strength=dialog.querySelector('#cracksMaterialStrength'),color=dialog.querySelector('#cracksLineColor');
     let draft=null;
+    function setRange(input,value,text){
+        input.value=value;input.setAttribute('aria-valuetext',text);
+        input.style.setProperty('--range-fill',((value-Number(input.min))/(Number(input.max)-Number(input.min))*100)+'%');
+        dialog.querySelector(`output[for="${input.id}"]`).value=text;
+    }
     function render(){
         dialog.dir=app.getCurrentLang()==='he'?'rtl':'ltr';
         dialog.querySelector('h2').textContent=app.getText('cracks_settings_title');
         dialog.querySelector('#cracksMaterialNote').textContent=app.getText('cracks_material_note');
-        dialog.querySelector('.cracks-toggle span').textContent=app.getText('cracks_material_enabled');
-        dialog.querySelector('.cracks-strength label').textContent=app.getText('cracks_material_strength');
-        dialog.querySelector('.cracks-line-color span').textContent=app.getText('contour_color_label');
-        for(const option of color.options)option.textContent=app.getText('contour_color_'+option.value);
+        dialog.querySelector('#cracksMaterialLabel').textContent=app.getText('cracks_material_enabled');
+        dialog.querySelector('label[for="cracksMaterialStrength"]').textContent=app.getText('cracks_material_strength');
+        dialog.querySelector('label[for="cracksLineColor"]').textContent=app.getText('contour_color_label');
+        for(const option of color.options)option.textContent=app.getText(option.value==='original-anchor'?'cracks_original_anchor':'contour_color_'+option.value);
         dialog.querySelector('[data-close]').setAttribute('aria-label',app.getText('saveModal_close'));
         dialog.querySelector('[data-reset]').textContent=app.getText('evolution_reset_default');
         dialog.querySelector('[data-cancel]').textContent=app.getText('gs_modal_cancel');
         dialog.querySelector('[type=submit]').textContent=app.getText('gs_modal_save_close');
-        for(const c of growthControls)dialog.querySelector(`label[for="${c.id}"]`).textContent=app.getText(c.key);
-        if(!draft)return;
         for(const c of growthControls){
-            const input=dialog.querySelector('#'+c.id),text=draft[c.field]+(c.percent?'%':'');
-            input.value=draft[c.field];input.setAttribute('aria-valuetext',text);dialog.querySelector(`output[for="${c.id}"]`).value=text;
+            dialog.querySelector(`label[for="${c.id}"]`).textContent=app.getText(c.key);
+            dialog.querySelector('#'+c.id+'Help').textContent=app.getText(c.key+'_help');
         }
-        enabled.checked=draft.enabled;strength.value=draft.strength;strength.disabled=!draft.enabled;
-        const text=draft.strength+'%';dialog.querySelector('output').value=text;strength.setAttribute('aria-valuetext',text);color.value=draft.lineColor;
+        if(!draft)return;
+        for(const c of growthControls)setRange(dialog.querySelector('#'+c.id),draft[c.field],draft[c.field]+(c.percent?'%':''));
+        enabled.checked=draft.enabled;strength.disabled=!draft.enabled;
+        setRange(strength,draft.strength,draft.strength+'%');color.value=draft.lineColor;
     }
     enabled.addEventListener('change',()=>{draft.enabled=enabled.checked;render();});
     strength.addEventListener('input',()=>{draft.strength=Number(strength.value);render();});

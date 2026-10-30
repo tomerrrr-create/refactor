@@ -2247,19 +2247,49 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnContour.cracks-active .contour-original-icon { display: none; }
 #btnContour.cracks-active .contour-cracks-icon { display: block; }
 
-#cracksSettingsDialog { max-width: 440px; }
-#cracksMaterialNote { color: #b7b2a8; font-size: .85rem; line-height: 1.55; margin: 0; }
-#cracksSettingsDialog .cracks-toggle, #cracksSettingsDialog .cracks-line-color { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; }
-.cracks-toggle input { width: 24px; height: 24px; flex-shrink: 0; accent-color: var(--gold); }
-.cracks-strength { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
-.cracks-strength input { grid-column: 1 / -1; width: 100%; min-height: 44px; accent-color: var(--gold); }
-.cracks-strength input:disabled { opacity: .4; }
-.cracks-strength output { color: var(--gold); }
-.cracks-line-color select { max-width: 60%; min-height: 44px; padding: 6px; background: #171918; color: #e7d19d; border: 1px solid #b89a5755; border-radius: 6px; }
-
-#cracksSettingsDialog form { display: flex; flex-direction: column; gap: 18px; }
-#cracksSettingsDialog h2 { margin-bottom: 0; }
-
-#cracksMaterialStrength { direction: ltr; }
-
-#cracksSettingsDialog input[type="range"] { direction:ltr; }
+#cracksSettingsDialog {
+  position:fixed; inset:0; margin:auto; padding:0; box-sizing:border-box;
+  width:min(480px, calc(100vw - 24px)); max-height:min(880px, calc(100dvh - 24px));
+  overflow:hidden; border:1px solid #b89a574d; border-radius:18px;
+  background:linear-gradient(150deg,#20221e,#151815 70%); color:#eee9df; font-family:inherit;
+  box-shadow:0 24px 90px #0009, inset 0 1px #ffffff05;
+}
+#cracksSettingsDialog::backdrop { background:#000b; }
+#cracksSettingsDialog form { display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-height:inherit; margin:0; }
+#cracksSettingsDialog .cracks-settings-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid #cbb2731c; }
+#cracksSettingsDialog .cracks-heading { display:flex; align-items:center; gap:12px; }
+#cracksSettingsDialog .cracks-heading svg { width:24px; height:24px; flex-shrink:0; color:#d9ba75; }
+#cracksSettingsDialog h2 { margin:0; font-size:19px; font-weight:600; line-height:1.4; letter-spacing:.01em; }
+#cracksSettingsDialog [data-close] { width:44px; height:44px; padding:0; border:0; border-radius:9px; background:transparent; color:#aaa99e; font-size:24px; cursor:pointer; }
+#cracksSettingsDialog [data-close]:hover { background:#ffffff08; color:#fff0c9; }
+#cracksSettingsDialog .cracks-settings-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:18px; display:flex; flex-direction:column; gap:14px; scrollbar-width:thin; scrollbar-color:#84724c #191b17; }
+#cracksSettingsDialog .cracks-settings-panel { margin:0; padding:16px; border:1px solid #b89a5726; border-radius:12px; background:#ffffff03; }
+#cracksSettingsDialog label { font-size:13px; line-height:1.5; font-weight:500; color:#e3dccb; text-align:start; }
+#cracksSettingsDialog .cracks-toggle { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:44px; cursor:pointer; }
+#cracksSettingsDialog .cracks-toggle input { width:22px; height:22px; margin:0; flex-shrink:0; accent-color:#d9ba75; cursor:pointer; }
+#cracksSettingsDialog .cracks-control { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px 14px; }
+#cracksSettingsDialog .cracks-toggle + .cracks-control { margin-top:12px; }
+#cracksSettingsDialog .cracks-control output { min-width:48px; padding:4px 8px; box-sizing:border-box; border:1px solid #d9ba7524; border-radius:7px; background:#d9ba750a; color:#e6ca8c; font-size:12px; font-variant-numeric:tabular-nums; text-align:center; direction:ltr; }
+#cracksSettingsDialog .cracks-control-help, #cracksSettingsDialog .cracks-settings-note { margin:0; color:#aaa99f; font-size:12px; line-height:1.55; font-weight:400; }
+#cracksSettingsDialog .cracks-control-help { grid-column:1 / -1; }
+#cracksSettingsDialog .cracks-settings-note { margin-top:4px; }
+#cracksSettingsDialog .cracks-growth-panel .cracks-control + .cracks-control { margin-top:14px; padding-top:14px; border-top:1px solid #ffffff09; }
+#cracksSettingsDialog input[type="range"] { grid-column:1 / -1; width:100%; min-width:0; height:44px; margin:0; padding:0; direction:ltr; appearance:none; background:transparent; cursor:pointer; }
+#cracksSettingsDialog input[type="range"]::-webkit-slider-runnable-track { height:4px; border-radius:4px; background:linear-gradient(to right,#d9ba75 var(--range-fill),#4c4d42 var(--range-fill)); }
+#cracksSettingsDialog input[type="range"]::-moz-range-track { height:4px; border-radius:4px; background:linear-gradient(to right,#d9ba75 var(--range-fill),#4c4d42 var(--range-fill)); }
+#cracksSettingsDialog input[type="range"]::-webkit-slider-thumb { appearance:none; width:16px; height:16px; margin-top:-6px; border:3px solid #24251e; border-radius:50%; background:#e4c98e; box-shadow:0 0 0 1px #c9ab68; }
+#cracksSettingsDialog input[type="range"]::-moz-range-thumb { width:10px; height:10px; border:3px solid #24251e; border-radius:50%; background:#e4c98e; box-shadow:0 0 0 1px #c9ab68; }
+#cracksSettingsDialog input[type="range"]:disabled { opacity:.35; cursor:default; }
+#cracksSettingsDialog .cracks-line-color { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#cracksSettingsDialog select { min-height:44px; max-width:68%; padding:8px 10px; border:1px solid #b89a5740; border-radius:8px; background:#171a16; color:#e7d3a4; font-family:inherit; font-size:12px; cursor:pointer; }
+#cracksSettingsDialog .cracks-settings-actions { display:flex; gap:8px; padding:14px 18px; border-top:1px solid #cbb2731c; background:#171a16; }
+#cracksSettingsDialog .cracks-settings-actions button { flex:1; min-width:0; min-height:44px; padding:9px 8px; border:1px solid #b89a573b; border-radius:8px; background:transparent; color:#bdb8a9; font-family:inherit; font-size:11.5px; line-height:1.45; cursor:pointer; }
+#cracksSettingsDialog .cracks-settings-actions .save-btn { border-color:#d9ba7580; background:#d9ba7518; color:#f2d99f; }
+#cracksSettingsDialog .cracks-settings-actions button:hover { background:#d9ba7512; color:#f2d99f; }
+#cracksSettingsDialog button:focus-visible, #cracksSettingsDialog input:focus-visible, #cracksSettingsDialog select:focus-visible { outline:2px solid #d9ba75; outline-offset:3px; }
+@media (max-width:360px) {
+  #cracksSettingsDialog .cracks-settings-body { padding:12px; }
+  #cracksSettingsDialog .cracks-settings-panel { padding:13px; }
+  #cracksSettingsDialog .cracks-line-color { flex-direction:column; align-items:stretch; }
+  #cracksSettingsDialog select { max-width:100%; width:100%; }
+}
