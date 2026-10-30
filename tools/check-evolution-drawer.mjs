@@ -29,6 +29,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.evaluate(()=>window.realLifeButton=document.querySelector('#btnGameOfLife'));
  await open();assert.equal(await dialog.getAttribute('dir'),config.lang==='he'?'rtl':'ltr');assert.equal(await dialog.locator('[data-drawer-slot]').count(),10);assert.equal(await dialog.locator('[data-drawer-evolution]').count(),14);assert.equal(await dialog.locator('.drawer-icon [id]').count(),0);assert(await dialog.evaluate(d=>{const original=document.querySelector('#btnContour .contour-original-icon'),copy=d.querySelector('[data-drawer-evolution="contour"] .contour-original-icon');return (getComputedStyle(original).display==='none')===(getComputedStyle(copy).display==='none');}));
  assert(await dialog.evaluate(e=>{const r=e.getBoundingClientRect();return e.scrollWidth<=e.clientWidth+1&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;}));
+ assert.equal(await dialog.locator('.drawer-slots .drawer-slot-label').count(),0);assert.equal(await dialog.locator('.drawer-mark svg').count(),1);
+ assert(await dialog.locator('[data-drawer-slot="0"]').getAttribute('aria-label'));assert.equal(await dialog.locator('[data-drawer-evolution] > span:not(.drawer-icon)').count(),14);
  await page.screenshot({path:path.join(artifacts,config.lang+'-drawer.png')});
  await assign(0,'breathe');assert.deepEqual(await state(),initial,'draft assignment changes no live state');await tap(dialog.locator('[data-cancel]'));assert.deepEqual(await state(),initial);
  await open();await assign(0,'breathe');await assign(1,'turing');await assign(2,'nudgeBrighter');await assign(3,'nudgeDarker');await tap(dialog.locator('[type=submit]'));

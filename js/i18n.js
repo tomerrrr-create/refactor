@@ -9,7 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  drawer_title: {"en":"Evolution drawer", "he":"מגירת אבולוציות", "ru":"Ящик эволюций", "nl":"Evolutielade"},
+  drawer_title: {"en":"Evolution map", "he":"מפת האבולוציות", "ru":"Карта эволюций", "nl":"Evolutiekaart"},
   drawer_instructions: {"en":"Choose one of the ten slots, then choose an evolution below. Choosing an evolution already on the panel swaps the two slots. Save to apply.", "he":"בחרו אחד מעשרת המקומות ואז אבולוציה מהרשימה. בחירה באבולוציה שכבר בלוח מחליפה בין שני המקומות. שמרו כדי להחיל.", "ru":"Выберите одно из десяти мест, затем эволюцию ниже. Уже размещённая эволюция поменяется местами с выбранной. Сохраните изменения.", "nl":"Kies een van de tien plekken en daarna een evolutie hieronder. Een evolutie die al op het paneel staat, wisselt van plek. Sla op om toe te passen."},
   drawer_all: {"en":"All evolutions", "he":"כל האבולוציות", "ru":"Все эволюции", "nl":"Alle evoluties"},
   drawer_slots: {"en":"Ten toolbar slots", "he":"עשרת המקומות בלוח", "ru":"Десять мест на панели", "nl":"Tien plekken op het paneel"},
