@@ -877,6 +877,7 @@ body {
     transform: scale(1.1); /* Make button slightly larger */
 }
 
+#btnCymatics.simulation-active svg,
 #btnGameOfLife.simulation-active svg,
 #btnMagnetModes.simulation-active svg,
 #btnBrightnessEvo.simulation-active svg,
@@ -900,7 +901,7 @@ body {
 :root[data-simulation-running][data-simulation-effective-theme="gold"] .sim-mode-active :is(
   #btnGameOfLife, #btnMagnetModes, #btnBrightnessEvo, #btnShowBreatheMenu,
   #btnIslands, #btnGravitationalSort, #btnErosion, #btnDla, #btnContour,
-  #btnSpiral, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker
+  #btnCymatics, #btnSpiral, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker
 ):not(.simulation-active):not(:disabled) > svg {
   stroke: var(--sim-color);
 }
@@ -1016,6 +1017,7 @@ body {
 
 
 /* --- Custom Simulation Button Color --- */
+#btnCymatics svg,
 #btnGameOfLife svg,
 #btnMagnetModes svg,
 #btnBrightnessEvo svg,
@@ -2358,7 +2360,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 :root[data-simulation-effective-theme="pink"] #btnEvolutionDrawer { --drawer-trigger-color:#c991ad; }
 
 #btnCymatics { display:none; }
-#btnCymatics.simulation-active svg { stroke:var(--gold); }
 #cymaticsSettingsDialog .cymatics-note { color:#aaa99f; font-size:12px; line-height:1.6; margin:0 0 18px; }
 #cymaticsSettingsDialog .tuning-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
 #cymaticsSettingsDialog .tuning-modes button { border-radius:6px; min-height:44px; }

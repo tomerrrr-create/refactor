@@ -15,7 +15,19 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  async function save(pattern,strength,frequency){await openSettings();await tap(dialog.locator('[data-source=patterns]'));await tap(dialog.locator('[data-cymatics-pattern="'+pattern+'"]'));await dialog.locator('#cymaticsStrength').fill(String(strength));if(frequency){await tap(dialog.locator('[data-source=resonance]'));await dialog.locator('#cymaticsFrequency').fill(String(frequency));}await tap(dialog.locator('[type=submit]'));}
  async function paint(col,row){const r=await canvas.boundingBox(),position={x:(col+.5)*r.width/41,y:(row+.5)*r.height/41};if(config.width<600)await canvas.tap({position});else await canvas.click({position});}
  assert(!(await button.isVisible()));await tap(trigger);await drawer.waitFor({state:'visible'});assert.equal(await drawer.locator('[data-drawer-evolution]').count(),15);assert.equal(await drawer.locator('[data-drawer-group=parked] [data-drawer-evolution=cymatics]').count(),1);await tap(drawer.locator('[data-cancel]'));
- await assign('cymatics');assert(await button.isVisible());await tap(button);const initial=await state();assert.equal(await button.getAttribute('aria-pressed'),'true');
+ await assign('cymatics');assert(await button.isVisible());
+ await page.evaluate(async()=>{
+  const theme=await import('/js/simulation-theme.js'),stroke=id=>getComputedStyle(document.querySelector('#'+id+' > svg')).stroke;
+  for(const rest of ['blue','gold','teal','silver','ice','pink']){
+   theme.applySimulationTheme(rest);if(stroke('btnCymatics')!==stroke('btnSpiral'))throw Error('Cymatics resting theme mismatch: '+rest);
+   for(const playback of ['blue','gold','teal','silver','ice','pink']){theme.applySimulationPlaybackTheme(playback);theme.setSimulationRunning(true);if(stroke('btnCymatics')!==stroke('btnSpiral'))throw Error('Cymatics playback theme mismatch: '+playback);theme.setSimulationRunning(false);}
+  }
+  theme.applySimulationTheme('blue');theme.applySimulationPlaybackTheme('gold');
+ });
+ await tap(button);
+ assert.equal(await button.locator('svg').evaluate(e=>getComputedStyle(e).strokeWidth),'2.5px');
+ if(process.env.CYMATICS_THEME_ONLY){console.log(JSON.stringify({config,themePassed:true}));await context.close();continue;}
+const initial=await state();assert.equal(await button.getAttribute('aria-pressed'),'true');
  await openSettings();assert.equal(await dialog.getAttribute('dir'),config.lang==='he'?'rtl':'ltr');assert.equal(await dialog.locator('[data-cymatics-pattern]').count(),4);await tap(dialog.locator('[data-cymatics-pattern=star]'));await dialog.locator('#cymaticsStrength').fill('85');await tap(dialog.locator('[data-reset]'));assert.equal(await dialog.locator('#cymaticsStrength').inputValue(),'60');await page.keyboard.press('Escape');assert.deepEqual((await state()).rules,initial.rules);assert.deepEqual((await state()).board,initial.board);
  await save('lattice',80);assert.deepEqual((await state()).rules,{pattern:'lattice',strength:80});assert.equal((await state()).history,initial.history);assert.deepEqual((await state()).board,initial.board);
  await openSettings();assert(await dialog.evaluate(e=>{const r=e.getBoundingClientRect();return e.scrollWidth<=e.clientWidth+1&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;}));await page.screenshot({path:path.join(artifacts,config.lang+'-settings.png')});await tap(dialog.locator('[data-cancel]'));
