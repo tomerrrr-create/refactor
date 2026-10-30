@@ -2356,34 +2356,3 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 :root[data-simulation-effective-theme="pink"] #simModeBackground .sim-theme-pink { opacity:1; }
 .simulation-theme-preview[data-theme="pink"] { --preview-color:#c991ad; --preview-border:#c991ad45; --preview-background:linear-gradient(135deg,#2a1821,#100c0f); }
 :root[data-simulation-effective-theme="pink"] #btnEvolutionDrawer { --drawer-trigger-color:#c991ad; }
-
-/* Fixed Autumn into Winter 264 samples; independent of the active art palette. */
-#spiralSettingsModal [data-method="b"], #cracksSettingsDialog [data-cracks-preset="first-whisper"] { --autumn-tile-bg:#9E4A38; --autumn-tile-ink:#FFFDF8; }
-#spiralSettingsModal [data-method="vortex"], #cracksSettingsDialog [data-cracks-preset="quiet-flow"] { --autumn-tile-bg:#D78B4A; --autumn-tile-ink:#0D100D; }
-#spiralSettingsModal [data-method="radial"] { --autumn-tile-bg:#BDA15B; --autumn-tile-ink:#0D100D; }
-#spiralSettingsModal [data-method="down"] { --autumn-tile-bg:#737B50; --autumn-tile-ink:#000000; }
-#spiralSettingsModal [data-method="left"], #cracksSettingsDialog [data-cracks-preset="crystal-paths"] { --autumn-tile-bg:#3C5454; --autumn-tile-ink:#FFFDF8; }
-#spiralSettingsModal [data-method="black_hole"], #cracksSettingsDialog [data-cracks-preset="fibonacci-bloom"] { --autumn-tile-bg:#71838D; --autumn-tile-ink:#0D100D; }
-#spiralSettingsModal [data-method="a"] { --autumn-tile-bg:#CACFCB; --autumn-tile-ink:#0D100D; }
-#spiralSettingsModal .spiral-method-btn,
-#cracksSettingsDialog [data-cracks-preset],
-#cracksSettingsDialog [data-cracks-preset]:hover,
-#cracksSettingsDialog [data-cracks-preset][aria-pressed="true"] {
-  background:var(--autumn-tile-bg); color:var(--autumn-tile-ink); border-color:transparent;
-  box-shadow:none; transform:none; transition:filter 160ms ease, transform 160ms ease;
-}
-#cracksSettingsDialog .cracks-preset-values { opacity:1; }
-#spiralSettingsModal .spiral-method-btn:hover,
-#cracksSettingsDialog [data-cracks-preset]:hover { filter:brightness(1.04); transform:translateY(-1px); }
-#spiralSettingsModal .spiral-method-btn.active,
-#cracksSettingsDialog [data-cracks-preset][aria-pressed="true"] { outline:2px solid #e3c677; outline-offset:2px; box-shadow:none; }
-#spiralSettingsModal .spiral-method-btn:focus-visible,
-#cracksSettingsDialog [data-cracks-preset]:focus-visible { outline:2px solid #fffdf8; outline-offset:4px; }
-@media (prefers-reduced-motion:reduce) {
-  #spiralSettingsModal .spiral-method-btn,
-  #cracksSettingsDialog [data-cracks-preset],
-  #cracksSettingsDialog [data-cracks-preset]:hover,
-  #cracksSettingsDialog [data-cracks-preset][aria-pressed="true"] { transition:none; }
-  #spiralSettingsModal .spiral-method-btn:hover,
-  #cracksSettingsDialog [data-cracks-preset]:hover { transform:none; }
-}
