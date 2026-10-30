@@ -27,11 +27,16 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  liveExport:()=>{const file=createArtRecipeFile(),snapshot=getCurrentState();pauseLife();return file.text().then(text=>({text,snapshot}));},play:togglePlayPauseLife,pause:pauseLife,undo,redo,restore:state=>applyState(state),recipe:async()=>await createArtRecipeFile().text(),macro:playMacro,prefs:()=>getWorkspaceSettings(),legacy:()=>applyMacroRules('Armed: contour | Sort: luminance | Rules: {"sensitivity":75,"lineColor":"darkest"}')
  };initializeApp().then(()=>cracksTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
- await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.cracksTest?.ready);assert.deepEqual(await page.evaluate(()=>cracksTest.prefs().rules.contour.growth),{branchChance:55,branchInterval:8,curvature:130},'each opening starts with Fibonacci');await page.evaluate(()=>cracksTest.setup());
+ await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.cracksTest?.ready);assert.deepEqual(await page.evaluate(()=>cracksTest.prefs().rules.contour.growth),{branchChance:55,branchInterval:8,curvature:130},'each opening starts with Fibonacci');assert.equal(await page.evaluate(()=>cracksTest.prefs().rules.contour.lineColor),'brush');await page.evaluate(()=>cracksTest.setup());
  const state=()=>page.evaluate(()=>cracksTest.state()),button=page.locator('#btnContour'),before=await state();
  const tap=target=>config.width<600?target.tap():target.click();
  const canvas=page.locator('#boardCanvas'),dialog=page.locator('#cracksSettingsDialog');
  async function openSettings(){const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();await dialog.waitFor({state:'visible'});}
+ if(process.env.CRACKS_DEFAULTS_ONLY){
+  await tap(button);await openSettings();await dialog.locator('[data-reset]').click();assert.equal(await dialog.locator('[data-cracks-color="brush"]').getAttribute('aria-pressed'),'true');await dialog.locator('[data-cancel]').click();assert.equal((await state()).snapshot.contourState.rules.lineColor,'darkest','Cancel retains explicit fixture preferences');
+  await openSettings();await dialog.locator('[data-cracks-color="lightest"]').click();await dialog.locator('[type=submit]').click();assert.equal((await state()).snapshot.contourState.rules.lineColor,'lightest');
+  await page.reload();await page.waitForFunction(()=>window.cracksTest?.ready);assert.equal(await page.evaluate(()=>cracksTest.prefs().rules.contour.lineColor),'brush','opening overrides saved line color');assert.deepEqual(errors,[]);console.log(JSON.stringify({config,defaultsPassed:true}));await context.close();continue;
+ }
  // Brush-source colors, rainbow runtime, paused painting and exact macro replay.
  await page.evaluate(()=>cracksTest.setup());await tap(button);await openSettings();
  assert.equal(await dialog.locator('select').count(),0);assert.equal(await dialog.locator('[data-cracks-color]').count(),4);

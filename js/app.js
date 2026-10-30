@@ -300,7 +300,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
       let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null, replayCracksGrowth = null, replayCracksBrush = null, lastCracksBrushKey = '';
-      let contourRules = { ...C.defaultContourRules, growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
+      let contourRules = { ...C.defaultContourRules, lineColor:'brush', growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
 let chiFlowRules = cloneChiFlowRules(C.defaultChiFlowRules);
@@ -2088,7 +2088,7 @@ if (simulationName === 'magnet') {
         erosionRules = { ...settings.rules.erosion };
         dlaRules = { ...settings.rules.dla };
         contourRules = { ...settings.rules.contour };
-        if(startup)contourRules.growth={...INITIAL_CRACKS_GROWTH};
+        if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH};contourRules.lineColor='brush';}
         turingRules = { ...settings.rules.turing };
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (armedSimulation === 'spiral') spiralMode = spiralRules.method;

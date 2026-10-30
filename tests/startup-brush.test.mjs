@@ -52,8 +52,8 @@ test('applying a profile during the session restores its working brush and symme
 });
 
 test('each app opening starts with Fibonacci despite saved growth; explicit profile changes retain their values',()=>{
- const settings=defaultWorkspaceSettings();settings.rules.contour.growth={branchChance:40,branchInterval:22,curvature:0};const h=harness();
- h.applyWorkspacePreferences(settings,{startup:true});assert.deepEqual(JSON.parse(JSON.stringify(h.contourRules.growth)),INITIAL_CRACKS_GROWTH);
+ const settings=defaultWorkspaceSettings();settings.rules.contour.growth={branchChance:40,branchInterval:22,curvature:0};settings.rules.contour.lineColor='lightest';const h=harness();
+ h.applyWorkspacePreferences(settings,{startup:true});assert.equal(h.contourRules.lineColor,'brush');assert.equal(settings.rules.contour.lineColor,'lightest');assert.deepEqual(JSON.parse(JSON.stringify(h.contourRules.growth)),INITIAL_CRACKS_GROWTH);
  assert.deepEqual(settings.rules.contour.growth,{branchChance:40,branchInterval:22,curvature:0},'opening override does not mutate the stored input');
- h.applyWorkspacePreferences(settings);assert.deepEqual(h.contourRules.growth,settings.rules.contour.growth);
+ h.applyWorkspacePreferences(settings);assert.equal(h.contourRules.lineColor,'lightest');assert.deepEqual(h.contourRules.growth,settings.rules.contour.growth);
 });
