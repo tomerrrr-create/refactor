@@ -125,7 +125,7 @@ test('a reduced-motion recording cannot let later actions overtake its animated 
 });
 
 test('macro cancellation cancels pending wave frames, closes history once and clears timing anchors',()=>{
- let stopped=0,ended=0,paused=0;const c=vm.createContext({isLifePlaying:true,pauseLife(){paused++;c.isLifePlaying=false;},replayBrushBefore:null,macroTimerId:1,clearTimeout(){},macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
+ let stopped=0,ended=0,paused=0;const c=vm.createContext({replayBrightnessPreferences:null,isLifePlaying:true,pauseLife(){paused++;c.isLifePlaying=false;},replayBrushBefore:null,macroTimerId:1,clearTimeout(){},macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
   windReplay:{stop:()=>stopped++},finishWindReplay:reason=>{assert.equal(reason,'stop');ended++;},replayWindClocks:new Map([[1,123]]),
   replayNudgeTiming:null,currentMacroStep:1,pendingMacroPalette:null,isSelectingMacroPalette:false,isMacroFullscreen:false,
   dom:{macroOverlay:{classList:{remove(){}}},boardOverlay:{style:{}}},console});
@@ -135,7 +135,7 @@ test('macro cancellation cancels pending wave frames, closes history once and cl
 
 test('file import validates a replacement before cancelling the old macro, then installs only the new queue',()=>{
  const old=[{eventName:'OLD'}],replacement=[{eventName:'DRAW_STROKE',details:'[{"i":0,"k":1}]'}],order=[],alerts=[];
- const c=vm.createContext({isMacroLoaded:true,isMacroPlaying:true,isLifePlaying:true,windMode:false,macroQueue:old,
+ const c=vm.createContext({evolutionTuning:{brightnessEvo:{smoothing:.5,contrast:.1}},brightnessEvoMode:'brightness',isMacroLoaded:true,isMacroPlaying:true,isLifePlaying:true,windMode:false,macroQueue:old,
   currentMacroStep:10,pendingMacroPalette:2,isSelectingMacroPalette:true,
   isWorkspaceSettingsText:()=>false,modals:{closeModal(){}},
   parseMacroText:text=>{order.push('parse');if(text==='bad')throw Error('bad file');return replacement;},
