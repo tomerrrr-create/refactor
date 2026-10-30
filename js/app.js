@@ -1,7 +1,10 @@
+import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
+import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
+import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
 import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
 import {createEvolutionDrawer} from './evolution-drawer.js';
 import { CRACKS_LINE_COLORS, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
-import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
+import { createCracksState, createCracksSession, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
@@ -57,6 +60,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let recordPausedBrushMotion = loadBrushMotionRecording();
       let replayBrushBefore = null;
       let islandsSession = null;
+      let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},replayCymaticsRules=null,cymaticsSettingsUI=null;
       let evolutionTuning = validateEvolutionTuning();
       
       const ANIMATION_DURATION = 200; // ms
@@ -417,6 +421,7 @@ currentSortMethod,
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
+            ...(armedSimulation === 'cymatics' ? {cymaticsState:getCymaticsSnapshot()} : {}),
             ...(armedSimulation === 'islands' && islandsSession ? { islandsState: { ...islandsSession } } : {}),
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
@@ -447,6 +452,7 @@ currentSortMethod,
 
       function areStatesEqual(stateA, stateB) {
         if (!stateA || !stateB) return false;
+        if(JSON.stringify(stateA.cymaticsState)!==JSON.stringify(stateB.cymaticsState))return false;
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
         if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
         if (JSON.stringify(stateA.contourState?.cracksState?.rainbowTrail) !== JSON.stringify(stateB.contourState?.cracksState?.rainbowTrail)) return false;
@@ -459,12 +465,13 @@ currentSortMethod,
         return true;
       }
 
-      function applyState(state, { preserveCracksPreferences = false, preserveBrightnessPreferences = false } = {}) {
+      function applyState(state, { preserveCracksPreferences = false, preserveBrightnessPreferences = false, preserveCymaticsPreferences = false } = {}) {
         const brightnessPreferences = preserveBrightnessPreferences ? { rules:{...evolutionTuning.brightnessEvo}, mode:brightnessEvoMode } : null;
         if (state.contourState) {
             validateContourSnapshot(state.contourState);
             if (state.contourState.cracksState && state.contourState.cracksState.n !== state.n) throw new Error('Cracks board size mismatch');
         }
+        if(state.cymaticsState){const c=validateCymaticsSnapshot(state.cymaticsState);if(c.state.n!==state.n)throw new Error('Cymatics board size mismatch');}
         clearPaletteColorTransition(dom.board);
         if (state.evolutionTuning) {
             validateEvolutionTuning(state.evolutionTuning);
@@ -537,6 +544,7 @@ k: tileState.k,
             updateIslandsButtonUI();
         }
         if (state.contourState) restoreContourSnapshot(state.contourState, { preservePreferences: preserveCracksPreferences && (contourMode === 'cracks' || state.contourState.mode === 'cracks') });
+        if(state.cymaticsState)restoreCymaticsSnapshot(state.cymaticsState,{preservePreferences:preserveCymaticsPreferences});
         applySeparator();
       }
 
@@ -572,7 +580,7 @@ k: tileState.k,
         if (history.length === 0) return;
         const lastAction = history.pop();
         future.push(lastAction);
-        applyState(lastAction.before, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveBrightnessPreferences: !isExecutingMacroCommand && !isMacroPlaying });
+        applyState(lastAction.before, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveBrightnessPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveCymaticsPreferences: !isExecutingMacroCommand && !isMacroPlaying });
         window.logArtEvent('UNDO', JSON.stringify({ recipeVersion: 2, id: lastAction.id, settings: getHistorySettings(getCurrentState()) }), isExecutingMacroCommand);
         historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
@@ -585,7 +593,7 @@ k: tileState.k,
         if (future.length === 0) return;
         const nextAction = future.pop();
         history.push(nextAction);
-        applyState(nextAction.after, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveBrightnessPreferences: !isExecutingMacroCommand && !isMacroPlaying });
+        applyState(nextAction.after, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveBrightnessPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveCymaticsPreferences: !isExecutingMacroCommand && !isMacroPlaying });
         window.logArtEvent('REDO', JSON.stringify({ recipeVersion: 2, id: nextAction.id, settings: getHistorySettings(getCurrentState()) }), isExecutingMacroCommand);
         historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
@@ -1300,6 +1308,7 @@ case 'brightnessEvo':
     boardState = nextState;
     break;
 
+            case 'cymatics': boardState=runCymaticsEvolution(context); break;
             case 'islands': boardState = runIslandsGeneration(context, islandsSession); break;
             case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration(context); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
@@ -1398,6 +1407,7 @@ break;
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'cymatics') simDetails=JSON.stringify(getCymaticsSnapshot());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
@@ -1432,6 +1442,7 @@ case 'brightnessEvo':
     }
     break;
 
+                case 'cymatics': boardState=runCymaticsEvolution(context); break;
                 case 'islands':
                     boardState = runIslandsGeneration(context, islandsSession);
                     break;
@@ -1515,7 +1526,7 @@ function pauseLife() {
           
           // מחזירים לפעולה את כל כפתורי הסימולציה
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1548,7 +1559,7 @@ function pauseLife() {
 
        
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1614,7 +1625,7 @@ function pauseLife() {
           });
 
           // Install queued generation-one commands before the macro's first frame.
-          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
+          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || armedSimulation === 'cymatics' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
               animationFrameId = requestAnimationFrame(gameLoop);
           } else {
               gameLoop();
@@ -1626,6 +1637,7 @@ function getSimulationRecordingDetails() {
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'cymatics') simDetails=JSON.stringify(getCymaticsSnapshot());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
@@ -1730,7 +1742,7 @@ function handleEvolutionTap(simulation, onTap) {
 
 function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     if (isLifePlaying) return;
-    if (!isExecutingMacroCommand) { replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
+    if (!isExecutingMacroCommand) { replayCymaticsRules=null; replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
 
     // --- MACRO KILL SWITCH ---
     // אם לחצו על כפתור סימולציה באופן ידני (ולא מתוך פקודת מאקרו), אנחנו משמידים את המאקרו הטעון
@@ -1754,7 +1766,7 @@ function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
 magnetMode = 'off';
 if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     
@@ -1763,6 +1775,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     updateDlaButtonUI();
     updateErosionButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
+    if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     updateBreatheEvoButtonUI();
     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -1776,7 +1789,11 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
 // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
 if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
-    if (simulationName === 'contour') { contourMode = 'cracks'; cracksState = null; }
+    if (simulationName === 'cymatics')cymaticsState=createCymaticsState(n);
+    if (simulationName === 'contour') {
+        contourMode = 'cracks';
+        cracksState = isMacroPlaying || isExecutingMacroCommand ? null : createCracksSession(n);
+    }
     if (simulationName === 'islands') {
         islandsSession = createIslandsSession(undefined, evolutionTuning.islands);
         if (!isExecutingMacroCommand && recordIslandsStart) {
@@ -1862,6 +1879,7 @@ if (simulationName === 'magnet') {
     updateGameOfLifeButtonUI();
     updateChiFlowButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
+    if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
 }
 
       
@@ -2072,7 +2090,8 @@ if (simulationName === 'magnet') {
             brush: { size: brushSize, ...(brushShape === 'circle' ? {} : { shape: brushShape }), mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
-                erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules }, turing: { ...turingRules } }
+                erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules }, turing: { ...turingRules },
+                ...(JSON.stringify(cymaticsRules)===JSON.stringify(INITIAL_CYMATICS_RULES)?{}:{cymatics:{...cymaticsRules}}) }
         };
       }
 
@@ -2095,6 +2114,8 @@ if (simulationName === 'magnet') {
         contourRules = { ...settings.rules.contour };
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH};contourRules.lineColor='brush';}
         turingRules = { ...settings.rules.turing };
+        cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
+        if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
         if (armedSimulation === 'magnet') magnetMode = magnetRules.method;
@@ -2328,6 +2349,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 goDark();
                 // A new board starts a new fracture run, even at the same size.
                 cracksState = null;
+                cymaticsState = null;
                 const currentPalette = palette();
                 const colorChoice = simulationInitSettings.brushColor || 'last';
                 selectedColorIndex = colorChoice === 'rainbow' ? -1 : colorChoice === 'first' ? 0 : colorChoice === 'lightest'
@@ -2457,6 +2479,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         updateGameOfLifeButtonUI();
         updateChiFlowButtonUI();
         dom.btnBrightnessEvo.title = getText('tooltip_brightnessEvo');
+        updateCymaticsButtonUI();
         dom.btnGravitationalSort.title = getText('tooltip_gravitationalSort'); 
         updateErosionButtonUI();
         dom.btnDla.title = getText('tooltip_dla'); 
@@ -2551,7 +2574,7 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
         dlaState = null;
 turingState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
@@ -2573,6 +2596,7 @@ magnetMode = 'off';
 gsMode = 'off';
     updateGravitationalSortButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
+    if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
 
       }
 
@@ -2821,7 +2845,7 @@ function resumeBrushCheckpoint(record) {
     dom.iconPlay.style.display = 'none';
     dom.iconPause.style.display = 'block';
     dom.btnStepForward.disabled = true;
-    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands,
+    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics,
         dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile,
         dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker]
         .filter(Boolean).forEach(button => { button.disabled = armedSimulation === 'breathe'
@@ -3394,6 +3418,53 @@ function cycleChiFlowMode() {
 }
 
 // Running evolutions cycle through active modes; paused cycles retain Off.
+function updateCymaticsButtonUI(){
+    if(typeof dom==='undefined'||!dom.btnCymatics)return;
+    const button=dom.btnCymatics,rules=getCymaticsRules();
+    const map=rules.mode==='resonance'?Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===(rules.resonanceVersion??1)):'patterns';
+    for(const name of ['patterns',...Object.keys(CYMATICS_RESONANCE_MAPS)])button.classList.toggle('cymatics-'+name,name===map);
+    button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',armedSimulation==='cymatics');
+    const title=getText('tooltip_cymatics')+' — '+getText(map==='patterns'?'cymatics_'+rules.pattern:'cymatics_map_'+map);
+    button.title=title;button.setAttribute('aria-label',title);button.setAttribute('aria-pressed',String(armedSimulation==='cymatics'));
+}
+function recordCymaticsSelection(){
+    window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+}
+function cycleCymaticsMode(){
+    if(isLifePlaying&&armedSimulation!=='cymatics')return;
+    if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
+    const activating=armedSimulation!=='cymatics';
+    if(activating)armSimulation('cymatics');
+    const rules=getCymaticsRules(),inCycle=rules.mode==='resonance'&&[4,3].includes(rules.resonanceVersion);
+    const next=!inCycle?4:activating?rules.resonanceVersion:nextEvolutionMode(rules.resonanceVersion,['off',4,3]);
+    const updated={...rules,mode:'resonance',frequency:rules.frequency??INITIAL_CYMATICS_RULES.frequency,
+        resonanceVersion:next==='off'?4:next,phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion};
+    const running=isLifePlaying;
+    if(saveCymaticsSettings(updated)===false)return;
+    if(next==='off'){
+        armSimulation(null);
+        window.logArtEvent('Cymatics Mode Changed',JSON.stringify({mode:'off',...getCymaticsSnapshot()}));
+    }else if(!running)recordCymaticsSelection();
+}
+function getCymaticsRules(){return replayCymaticsRules??cymaticsRules;}
+function getCymaticsSnapshot(){return {cymaticsVersion:1,rules:{...getCymaticsRules()},state:cymaticsState?.n===n?restoreCymaticsState(cymaticsState):createCymaticsState(n)};}
+function restoreCymaticsSnapshot(value,{preservePreferences=false}={}){
+    const snapshot=validateCymaticsSnapshot(value);
+    if(armedSimulation!=='cymatics')armSimulation('cymatics');
+    cymaticsState=snapshot.state;
+    if(isMacroPlaying||isExecutingMacroCommand)replayCymaticsRules=snapshot.rules;
+    else {replayCymaticsRules=null;if(!preservePreferences)cymaticsRules=snapshot.rules;}
+    updateCymaticsButtonUI();
+}
+function runCymaticsEvolution(context){
+    const result=runCymaticsGeneration({...context,cymaticsRules:getCymaticsRules()},cymaticsState);
+    cymaticsState=result.nextCymaticsState;return result.nextBoardState;
+}
+function saveCymaticsSettings(rules){
+    if(armedSimulation!=='cymatics'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
+    cymaticsRules=validateCymaticsRules(rules);replayCymaticsRules=null;
+    updateCymaticsButtonUI();recordLiveSimulationRules('cymatics');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
+}
 function getCracksBrush() {
     return replayCracksBrush ?? {color:selectedColor ?? null,rainbow:isRainbowModeActive};
 }
@@ -3499,7 +3570,7 @@ function cycleContourMode() {
     if (contourMode === 'cracks') {
         contourMode = 'contours'; cracksState = null;
     } else if (isLifePlaying) {
-        contourMode = 'cracks'; cracksState = createCracksState(n);
+        contourMode = 'cracks'; cracksState = isMacroPlaying || isExecutingMacroCommand ? createCracksState(n) : createCracksSession(n);
     } else { armSimulation(null); updateContourButtonUI(); return; }
     updateContourButtonUI();
     recordLiveSimulationRules('contour');
@@ -3865,7 +3936,7 @@ function createArtRecipeFile(prefix = '') {
         exportedLog.push(`[${timestamp}] WIND_END -> ${JSON.stringify({ windVersion: 1,
             batch: windBatch.id, elapsed: Math.max(0, performance.now() - windBatch.time), reason: 'stop' })}`);
     }
-    if ((armedSimulation === 'islands' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
+    if ((armedSimulation === 'islands' || armedSimulation === 'cymatics' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
         const now = new Date();
         const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
         exportedLog.push(`[${timestamp}] [GEN:${currentGenerationCount}] PAUSE -> ---`);
@@ -3903,7 +3974,7 @@ function createArtRecipeFile(prefix = '') {
 // Capture live simulation progress without pausing or changing the original log.
 function createStudioRecipeFile() {
     const file = createArtRecipeFile();
-    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands') return file;
+    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands' || armedSimulation === 'cymatics') return file;
     const now = new Date();
     const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
     const generation = armedSimulation === 'breathe' ? '' : ` [GEN:${currentGenerationCount}]`;
@@ -3953,12 +4024,14 @@ function getHistorySettings(state) {
             breatheEvoMode: state.breatheEvoMode, dlaMode: state.dlaMode,
             ...(state.tuningSimulation ? { tuningSimulation: state.tuningSimulation } : {}) } : {}),
         ...(state.islandsState ? { islandsState: state.islandsState } : {}),
+        ...(state.cymaticsState ? {cymaticsState:state.cymaticsState} : {}),
         ...(state.contourState ? { contourState: state.contourState } : {}) };
 }
 
 function validateHistorySettings(settings) {
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);
     if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
+    if(settings?.cymaticsState){const c=validateCymaticsSnapshot(settings.cymaticsState);if(c.state.n!==settings.n)throw new Error('Cymatics board size mismatch');}
     if (settings?.contourState) validateContourSnapshot(settings.contourState);
     if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 327 ||
         !Number.isInteger(settings.activePaletteIndex) || settings.activePaletteIndex < 0 ||
@@ -3982,6 +4055,7 @@ function applyHistorySettings(settings) {
         islandsSession = restored;
         updateIslandsButtonUI();
     }
+    if(settings.cymaticsState)restoreCymaticsSnapshot(settings.cymaticsState);
     if (settings.contourState) restoreContourSnapshot(settings.contourState);
     let changed = false;
     if (currentSortMethod !== settings.currentSortMethod) {
@@ -4125,7 +4199,7 @@ function parseHistoryMacro(lines) {
         if (event.eventName === 'BRUSH_END') brushMotion = false;
         previousBrushElapsed = brushMotion ? event.brushElapsed : null;
         if (event.eventName === 'PLAY') simulationRunning = true;
-        if (event.eventName === 'PAUSE' || event.eventName === 'HISTORY_SETTINGS') simulationRunning = false;
+        if (['PAUSE','HISTORY_SETTINGS','Cymatics Mode Changed'].includes(event.eventName)) simulationRunning = false;
         return { ...event, delta };
     });
 }
@@ -4153,6 +4227,18 @@ function validateIslandsMacroAction(action) {
     } else if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
         const match = action.details.match(/^Armed: islands\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
         if (match) restoreIslandsSession(JSON.parse(match[1]));
+    }
+}
+
+function validateCymaticsMacroAction(action){
+    if(action.eventName==='Cymatics Mode Changed'){
+        const snapshot=JSON.parse(action.details);
+        if(snapshot.mode!=='off')throw new Error('Invalid Cymatics mode');
+        validateCymaticsSnapshot(snapshot);
+    }
+    if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)){
+        const match=action.details.match(/^Armed: cymatics\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
+        if(match)validateCymaticsSnapshot(JSON.parse(match[1]));
     }
 }
 
@@ -4201,10 +4287,11 @@ function parseMacroText(text) {
             if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) action.orphanedSimulation = true;
         }
         if (action.eventName === 'SIMULATION_RULES') hasSimulationContext = true;
-        if (['PAUSE', 'HISTORY_SETTINGS'].includes(action.eventName)) simulationRunning = false;
+        if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed'].includes(action.eventName)) simulationRunning = false;
         actions.push(action);
     }
     actions.forEach(validateIslandsMacroAction);
+    actions.forEach(validateCymaticsMacroAction);
     let brushOpen = false;
     for (const action of actions) {
         if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) {
@@ -4549,6 +4636,8 @@ function stopMacro() {
         console.error('Failed to finish macro profile capture:', error);
     }
     replayNudgeTiming = null;
+    replayCymaticsRules=null;
+    if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
@@ -4647,6 +4736,7 @@ function applyMacroRules(details) {
         rulesStr = match[2];
     }
 
+    const restoredCymatics=sim==='cymatics'?validateCymaticsSnapshot(JSON.parse(rulesStr)):null;
     const restoredIslands = sim === 'islands' ? restoreIslandsSession(JSON.parse(rulesStr)) : null;
 
 // כופה את שיטת המיון אם היא קיימת ואינה תואמת למה שמוגדר כרגע בקנבס
@@ -4659,6 +4749,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
     // מוודאים שהסימולציה הנכונה חמושה בממשק
     if (armedSimulation !== sim) armSimulation(sim);
 
+    if(sim==='cymatics'){restoreCymaticsSnapshot(restoredCymatics);return sim;}
     if (sim === 'islands') {
         islandsSession = restoredIslands;
         updateIslandsButtonUI();
@@ -4897,6 +4988,12 @@ function executeMacroAction(action) {
     else if (action.eventName === 'PAUSE') {
         pauseLife();
     } 
+    else if (action.eventName === 'Cymatics Mode Changed') {
+        validateCymaticsMacroAction(action);
+        const snapshot=validateCymaticsSnapshot(JSON.parse(action.details));
+        if(armedSimulation==='cymatics'){if(isLifePlaying)pauseLife();armSimulation(null);}
+        replayCymaticsRules=snapshot.rules;cymaticsState=snapshot.state;updateCymaticsButtonUI();
+    }
     else if (action.eventName === 'SIMULATION_RULES') {
         applyMacroRules(action.details);
     }
@@ -5406,6 +5503,9 @@ updateBrightnessEvoButtonUI();
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
         });
+        cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,saveRules:saveCymaticsSettings,
+            canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying,
+            getText,getLang:getCurrentLang,onLanguageChange});
         evolutionDrawer = createEvolutionDrawer({
             controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
@@ -5604,6 +5704,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, modals.openBrightnessSettingsModal],
             [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, modals.openBreatheSettingsModal],
+            [dom.btnCymatics,'cymatics',cycleCymaticsMode,()=>cymaticsSettingsUI.open()],
             [dom.btnIslands, 'islands', cycleIslandsMode, modals.openIslandsSettingsModal],
             [dom.btnErosion, 'erosion', cycleErosionMode, modals.openErosionSettingsModal],
             [dom.btnDla, 'dla', cycleDlaMode, modals.openDlaSettingsModal]

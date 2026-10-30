@@ -1,3 +1,4 @@
+import {INITIAL_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
 import {validateEvolutionSlots} from './evolution-drawer-settings.js';
 import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
@@ -34,6 +35,7 @@ function mergeKnown(defaults, overrides, path = '') {
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
         if (path === '' && key === 'evolutionSlots') { result[key] = validateEvolutionSlots(value); continue; }
+        if (path === 'rules' && key === 'cymatics') { result[key] = validateCymaticsRules(value); continue; }
         if (path === 'brush' && key === 'shape') { result[key] = clone(value); continue; }
         // Optional extension; V1’s original baseline stays unchanged.
         if (path === '' && ['separatorCycle', 'simulationTheme', 'simulationPlaybackTheme', 'evolutionTuning', 'gameOfLifeGenetics'].includes(key)) { result[key] = clone(value); continue; }
@@ -98,6 +100,7 @@ export function validateWorkspaceSettings(value) {
     if (!valid) throw new Error('Invalid workspace settings');
     if (r.contour.material && r.contour.material.enabled === DEFAULT_CRACKS_MATERIAL.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
     if (r.contour.growth && equal(r.contour.growth, DEFAULT_CRACKS_GROWTH)) delete r.contour.growth;
+    if(r.cymatics && equal(r.cymatics,INITIAL_CYMATICS_RULES))delete r.cymatics;
     return settings;
 }
 

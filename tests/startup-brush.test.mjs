@@ -1,3 +1,4 @@
+import {INITIAL_CYMATICS_RULES,validateCymaticsRules} from '../js/cymatics-settings.js';
 import {INITIAL_CRACKS_GROWTH} from '../js/cracks-settings.js';
 import {validateEvolutionSlots} from '../js/evolution-drawer-settings.js';
 import test from 'node:test';
@@ -11,7 +12,7 @@ const apply = source.slice(source.indexOf('function applyWorkspacePreferences(')
 function harness() {
     const noop = () => {};
     const context = vm.createContext({
-        INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
+        INITIAL_CYMATICS_RULES, validateCymaticsRules, INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],
         updateGravitationalSortButtonUI: noop, updateSpiralButtonUI: noop,

@@ -8,6 +8,12 @@ export const evolutionExplanations = {
         ['Острова', 'Пиксели копируют цвет случайного соседа, постепенно образуя цветные острова.'],
         ['Eilanden', 'Pixels nemen de kleur van een willekeurige buur over en vormen geleidelijk kleureilanden.']
     ],
+    cymatics: [
+        ['Cymatics', 'Existing colors gather along the quiet lines of standing waves, forming Chladni-inspired patterns.'],
+        ['סימטיקה', 'הצבעים נאספים לאורך קווי השקט של גלים עומדים ויוצרים תבניות בהשראת צורות כלדני.'],
+        ['Киматика', 'Цвета собираются вдоль узлов стоячих волн, образуя узоры по мотивам фигур Хладни.'],
+        ['Cymatica', 'Kleuren verzamelen zich langs knooplijnen van staande golven en vormen Chladni-patronen.']
+    ],
     gameOfLife: [
         ['Game of Life', 'Pixels appear and disappear according to their living neighbors.'],
         ['משחק החיים', 'פיקסלים מופיעים ונעלמים לפי השכנים החיים שלהם.'],

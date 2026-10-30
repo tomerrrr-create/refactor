@@ -43,6 +43,11 @@ function validTrail(value,n){
 export function createCracksState(n, seed = 0x51f15e) {
     return { version: 3, n, random: seed >>> 0 || 1, steps: 0, roots: 0, tips: [], pendingSeed: null };
 }
+// Human session entry gets a fresh seed. Keep createCracksState's fixed default
+// for legacy recordings and deterministic engine restoration.
+export function createCracksSession(n) {
+    return createCracksState(n, globalThis.crypto.getRandomValues(new Uint32Array(1))[0]);
+}
 export function restoreCracksState(value) {
     if (!value || ![1,2,3].includes(value.version) || !Number.isInteger(value.n) || value.n < 1 || value.n > 327 ||
         !Number.isInteger(value.random) || value.random < 1 || value.random > 0xffffffff ||

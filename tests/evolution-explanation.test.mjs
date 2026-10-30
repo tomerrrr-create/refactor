@@ -6,7 +6,7 @@ import { evolutionExplanations, getEvolutionExplanation } from '../js/evolution-
 
 const source = readFileSync(new URL('../js/evolution-explanation.js', import.meta.url), 'utf8');
 test('every evolution has concise display copy in all four languages', () => {
-    assert.equal(Object.keys(evolutionExplanations).length, 14);
+    assert.equal(Object.keys(evolutionExplanations).length, 15);
     for (const id of Object.keys(evolutionExplanations)) {
         for (const lang of ['en', 'he', 'ru', 'nl']) {
             const [title, description] = getEvolutionExplanation(id, lang);
