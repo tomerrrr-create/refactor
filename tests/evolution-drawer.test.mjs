@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots,assignEvolutionSlot} from '../js/evolution-drawer-settings.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings,validateWorkspaceSettings} from '../js/workspace-settings.js';
 import {translations} from '../js/i18n.js';
-test('default ten places match the original overlay, with fourteen unique existing engine and button identities',()=>{
+test('default ten places match the original overlay, with fifteen unique existing engine and button identities',()=>{
  assert.deepEqual(DEFAULT_EVOLUTION_SLOTS,['dla','contour','gameOfLife','brightnessEvo','islands','spiral','magnet','gravitationalSort','sandpile','erosion']);
- assert.equal(EVOLUTION_CATALOG.length,14);assert.equal(new Set(EVOLUTION_CATALOG.map(e=>e.button)).size,14);
+ assert.equal(EVOLUTION_CATALOG.length,15);assert.equal(new Set(EVOLUTION_CATALOG.map(e=>e.button)).size,15);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang],e.key+'/'+lang);
 });
 test('assignment replaces a parked evolution or swaps an existing place without duplicates or mutation',()=>{

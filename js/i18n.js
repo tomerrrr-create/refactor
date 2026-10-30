@@ -10,6 +10,17 @@ export function onLanguageChange(callback) {
 
 export const translations = {
   cracks_brush_color: {"en":"Brush color", "he":"צבע המברשת", "ru":"Цвет кисти", "nl":"Penseelkleur"},
+  tooltip_cymatics: {"en":"Cymatics","he":"סימטיקה","ru":"Киматика","nl":"Cymatica"},
+  help_cymatics: {"en":"Cymatics\nDraw colors, select Cymatics and press Play. Swipe up for vibration pattern and strength. Gold cells remain protected.","he":"סימטיקה\nציירו צבעים, בחרו סימטיקה ולחצו Play. החליקו למעלה לבחירת תבנית הרטט והעוצמה. תאי הזהב מוגנים.","ru":"Киматика\nНарисуйте цвета, выберите киматику и нажмите Play. Смахните вверх для выбора узора и силы. Золотые клетки защищены.","nl":"Cymatica\nTeken kleuren, kies Cymatica en druk op Play. Veeg omhoog voor patroon en sterkte. Gouden cellen blijven beschermd."},
+  cymatics_title: {"en": "Cymatics settings", "he": "הגדרות סימטיקה", "ru": "Настройки киматики", "nl": "Cymatica-instellingen"},
+  cymatics_note: {"en": "Existing colors gather along the quiet lines of a standing-wave pattern. Gold cells stay fixed.", "he": "הצבעים הקיימים נאספים לאורך קווי השקט של גל עומד. תאי הזהב נשארים קבועים.", "ru": "Цвета собираются вдоль узлов стоячей волны. Золотые клетки остаются на месте.", "nl": "Bestaande kleuren verzamelen zich langs de knooplijnen van een staande golf. Gouden cellen blijven staan."},
+  cymatics_pattern: {"en": "Vibration pattern", "he": "תבנית הרטט", "ru": "Узор колебаний", "nl": "Trillingspatroon"},
+  cymatics_petals: {"en": "Petals", "he": "עלי כותרת", "ru": "Лепестки", "nl": "Bloemblaadjes"},
+  cymatics_star: {"en": "Star", "he": "כוכב", "ru": "Звезда", "nl": "Ster"},
+  cymatics_lattice: {"en": "Lattice", "he": "סריג", "ru": "Решётка", "nl": "Rooster"},
+  cymatics_bloom: {"en": "Bloom", "he": "פריחה", "ru": "Цветение", "nl": "Bloei"},
+  cymatics_strength: {"en": "Strength", "he": "עוצמה", "ru": "Интенсивность", "nl": "Sterkte"},
+  cymatics_strength_note: {"en": "Higher values move more colors per generation. The palette and its color counts stay unchanged.", "he": "ערך גבוה מניע יותר צבעים בכל דור. הפלטה וכמות התאים מכל צבע נשמרות.", "ru": "Чем выше значение, тем больше перемещений за поколение. Число клеток каждого цвета сохраняется.", "nl": "Hogere waarden verplaatsen meer kleuren per generatie. Het aantal cellen per kleur blijft gelijk."},
   drawer_title: {"en":"Evolution map", "he":"מפת האבולוציות", "ru":"Карта эволюций", "nl":"Evolutiekaart"},
   drawer_instructions: {"en":"Choose one of the ten slots, then choose an evolution below. Choosing an evolution already on the panel swaps the two slots. Save to apply.", "he":"בחרו אחד מעשרת המקומות ואז אבולוציה מהרשימה. בחירה באבולוציה שכבר בלוח מחליפה בין שני המקומות. שמרו כדי להחיל.", "ru":"Выберите одно из десяти мест, затем эволюцию ниже. Уже размещённая эволюция поменяется местами с выбранной. Сохраните изменения.", "nl":"Kies een van de tien plekken en daarna een evolutie hieronder. Een evolutie die al op het paneel staat, wisselt van plek. Sla op om toe te passen."},
   drawer_parked: {"en":"Outside the toolbar", "he":"מחוץ ללוח הבקרה", "ru":"Вне панели", "nl":"Buiten het paneel"},

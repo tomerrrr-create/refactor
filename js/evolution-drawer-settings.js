@@ -6,7 +6,7 @@ export const EVOLUTION_CATALOG = Object.freeze([
     ['magnet','btnMagnetModes','help_magnet'],['gravitationalSort','btnGravitationalSort','help_gravitationalSort'],
     ['sandpile','btnSandpile','help_sandpile'],['erosion','btnErosion','help_erosion'],
     ['breathe','btnShowBreatheMenu','help_breathe'],['turing','btnTuring','help_turing'],
-    ['nudgeBrighter','btnNudgeBrighter','help_nudge_forward'],['nudgeDarker','btnNudgeDarker','help_nudge_backward']
+    ['nudgeBrighter','btnNudgeBrighter','help_nudge_forward'],['nudgeDarker','btnNudgeDarker','help_nudge_backward'],['cymatics','btnCymatics','help_cymatics']
 ].map(([id,button,key])=>Object.freeze({id,button,key})));
 export const DEFAULT_EVOLUTION_SLOTS = Object.freeze(EVOLUTION_CATALOG.slice(0,10).map(e=>e.id));
 export function validateEvolutionSlots(value=DEFAULT_EVOLUTION_SLOTS) {
