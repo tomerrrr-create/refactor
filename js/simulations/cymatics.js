@@ -2,7 +2,12 @@ import {CYMATICS_PATTERNS,validateCymaticsRules} from '../cymatics-settings.js';
 // Chladni-inspired square plate, not an acoustic solver. Only a derived field is
 // cached; serializable PRNG state and steps determine every particle exchange.
 let fieldSize=0,fieldPattern='',field=null;
-export function getCymaticsField(n,pattern){
+// Fixed virtual square plate: bending-mode frequencies grow with m²+k².
+// 40 Hz is a chosen plate calibration, not a universal frequency-to-shape law.
+const resonanceModes=[];
+for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
+export function getCymaticsField(n,pattern,frequency){
+    if(frequency!==undefined)return getResonanceField(n,frequency);
     if(field&&fieldSize===n&&fieldPattern===pattern)return field;
     const pair=CYMATICS_PATTERNS[pattern];if(!Number.isInteger(n)||n<1||n>327||!pair)throw new Error('Invalid Cymatics field');
     const [m,k]=pair,cosM=new Float64Array(n),cosK=new Float64Array(n);
@@ -13,6 +18,22 @@ export function getCymaticsField(n,pattern){
         field[y*n+x]=Math.round(Math.min(1,amplitude*amplitude/4)*65535);
     }
     fieldSize=n;fieldPattern=pattern;return field;
+}
+function getResonanceField(n,frequency){
+    if(!Number.isInteger(n)||n<1||n>327||!Number.isInteger(frequency)||frequency<20||frequency>20000)throw new Error('Invalid resonance field');
+    const key='resonance:'+frequency;
+    if(field&&fieldSize===n&&fieldPattern===key)return field;
+    // Damped independent modes: sum their time-averaged squared amplitudes.
+    // Normalize weights to avoid a flat, numerically vanishing off-resonance map.
+    const weights=resonanceModes.map(([m,k,f])=>{const ratio=frequency/f;return 1/((1-ratio*ratio)**2+(.12*ratio)**2);});
+    const maximum=Math.max(...weights),selected=resonanceModes.map((mode,i)=>({mode,weight:weights[i]/maximum})).filter(v=>v.weight>=.015);
+    const cos=Array.from({length:21},(_,m)=>Float64Array.from({length:n},(_,i)=>Math.cos(m*Math.PI*(i+.5)/n)));
+    const energy=new Float64Array(n*n);let peak=0;
+    for(const {mode:[m,k],weight} of selected)for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+        const a=cos[m][x]*cos[k][y]-cos[k][x]*cos[m][y];energy[y*n+x]+=weight*a*a;
+    }
+    for(const e of energy)if(e>peak)peak=e;
+    field=Uint16Array.from(energy,e=>peak?Math.round(e/peak*65535):0);fieldSize=n;fieldPattern=key;return field;
 }
 export function createCymaticsState(n,seed=0x43ad19){
     return restoreCymaticsState({version:1,n,random:seed,steps:0});
@@ -28,7 +49,7 @@ export function validateCymaticsSnapshot(value){
 }
 const dx=[-1,0,1,-1,1,-1,0,1],dy=[-1,-1,-1,0,0,1,1,1];
 export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,cymaticsRules},previous){
-    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.pattern);
+    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.pattern,rules.mode==='resonance'?rules.frequency:undefined);
     const random=()=>{let x=state.random;x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/4294967296;};
     const length=currentPalette.length,rank=k=>((k%length)+length)%length;
     const attempts=Math.max(1,Math.round(n*n*.5*rules.strength/100));

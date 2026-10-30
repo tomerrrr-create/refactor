@@ -44,3 +44,17 @@ test('sparse pigment on a dark board approaches nodal lines and malformed recipe
  const snapshot={cymaticsVersion:1,rules:DEFAULT_CYMATICS_RULES,state:createCymaticsState(41)};
  for(const eventName of ['PLAY','STEP FORWARD','SIMULATION_RULES']){const action={eventName,details:'Armed: cymatics | Sort: luminance | Rules: '+JSON.stringify(snapshot)};assert.doesNotThrow(()=>c.validateCymaticsMacroAction(action));assert.throws(()=>c.validateCymaticsMacroAction({...action,details:action.details.replace('"cymaticsVersion":1','"cymaticsVersion":2')}));}
 });
+
+test('resonance fields vary with frequency, conserve pigments and replay deterministically',()=>{
+ const legacy={pattern:'petals',strength:60};assert.deepEqual(validateCymaticsRules(legacy),legacy);
+ for(const frequency of [20,200,440,1200,20000]){
+  const rules={...legacy,mode:'resonance',frequency};assert.deepEqual(validateCymaticsRules(rules),rules);
+  const ctx={...fixture(),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState),field=getCymaticsField(21,'petals',frequency),score=b=>b.reduce((sum,t,i)=>sum+t.k*field[i],0);
+  const first=advance(ctx,createCymaticsState(21),20),saved=JSON.parse(JSON.stringify({ctx:first.ctx,state:first.state}));
+  assert(score(first.ctx.currentBoardState)<score(before));assert.deepEqual(histogram(first.ctx.currentBoardState),histogram(before));assert.deepEqual(first.ctx.currentBoardState[220],before[220]);
+  assert.deepEqual(advance(first.ctx,first.state,30),advance(saved.ctx,saved.state,30));
+  const settings=defaultWorkspaceSettings();settings.rules.cymatics=rules;assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
+ }
+ assert.notDeepEqual(getCymaticsField(41,'petals',440),getCymaticsField(41,'petals',1200));
+ for(const extra of [{mode:'unknown'},{mode:'resonance'},{mode:'resonance',frequency:19},{mode:'resonance',frequency:20001},{mode:'resonance',frequency:440.5},{frequency:440}])assert.throws(()=>validateCymaticsRules({...legacy,...extra}));
+});

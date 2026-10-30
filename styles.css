@@ -2362,3 +2362,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cymaticsSettingsDialog .cymatics-note { color:#aaa99f; font-size:12px; line-height:1.6; margin:0 0 18px; }
 #cymaticsSettingsDialog .tuning-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
 #cymaticsSettingsDialog .tuning-modes button { border-radius:6px; min-height:44px; }
+
+#cymaticsSettingsDialog .tuning-modes[hidden],
+#cymaticsSettingsDialog .tuning-field[hidden] { display: none; }
