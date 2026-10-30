@@ -4,7 +4,7 @@ import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
 import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
 import {createEvolutionDrawer} from './evolution-drawer.js';
 import { CRACKS_LINE_COLORS, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
-import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
+import { createCracksState, createCracksSession, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
@@ -1790,7 +1790,10 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
 if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
     if (simulationName === 'cymatics')cymaticsState=createCymaticsState(n);
-    if (simulationName === 'contour') { contourMode = 'cracks'; cracksState = null; }
+    if (simulationName === 'contour') {
+        contourMode = 'cracks';
+        cracksState = isMacroPlaying || isExecutingMacroCommand ? null : createCracksSession(n);
+    }
     if (simulationName === 'islands') {
         islandsSession = createIslandsSession(undefined, evolutionTuning.islands);
         if (!isExecutingMacroCommand && recordIslandsStart) {
@@ -3537,7 +3540,7 @@ function cycleContourMode() {
     if (contourMode === 'cracks') {
         contourMode = 'contours'; cracksState = null;
     } else if (isLifePlaying) {
-        contourMode = 'cracks'; cracksState = createCracksState(n);
+        contourMode = 'cracks'; cracksState = isMacroPlaying || isExecutingMacroCommand ? createCracksState(n) : createCracksSession(n);
     } else { armSimulation(null); updateContourButtonUI(); return; }
     updateContourButtonUI();
     recordLiveSimulationRules('contour');

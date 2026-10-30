@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { createCracksState } from '../js/simulations/cracks.js';
 import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
@@ -15,7 +16,8 @@ const simulations = {
 function harness() {
     const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
-    const c = vm.createContext({ dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
+    const c = vm.createContext({ n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
+        C:{PALETTES:[{originalColors:[]}]}, activePaletteIndex:0, palette:()=>[], getCracksBrush:()=>({color:null,rainbow:false}), getCracksMaterial:()=>({enabled:false,strength:40}), dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
         setSimulationRunning(value) { c.runningAppearance = value; }, isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
         boardState: [{k: 1}, {k: 2}], simulationStartState: null, simulationHasBrushInput: false,
         animationFrameId: null, history: [], queued: [], brushFinishes: 0,

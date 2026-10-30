@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {createHash} from 'node:crypto';
-import {createCracksState,restoreCracksState,runCracksGeneration,queueCracksGrowth,prepareCracksResume} from '../js/simulations/cracks.js';
+import {createCracksState,createCracksSession,restoreCracksState,runCracksGeneration,queueCracksGrowth,prepareCracksResume} from '../js/simulations/cracks.js';
 const fixture=(n=81,color='darkest')=>({n,currentPalette:Array(23).fill('#fff'),contourRules:{sensitivity:75,lineColor:color},currentBoardState:Array.from({length:n*n},()=>({k:11,v:11,isGold:false}))});
 const advance=(ctx,state,count)=>{for(let i=0;i<count;i++){const result=runCracksGeneration(ctx,state);ctx={...ctx,currentBoardState:result.nextBoardState};state=result.nextCracksState;}return {ctx,state};};
 test('cracks branch gradually, preserve protected cells and do not mutate inputs',()=>{
@@ -30,7 +30,7 @@ test('empty and gold boards stay unchanged, light lines work and changed board s
  for(const invalid of [{...createCracksState(9),random:0},{...createCracksState(9),tips:[{x:NaN,y:0,angle:0,age:0}]},{...createCracksState(9),tips:Array(49).fill({x:0,y:0,angle:0,age:0})}])assert.throws(()=>restoreCracksState(invalid));
 });
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-function harness(){const c=vm.createContext({C:{PALETTES:[{}]},validateCracksBrush,replayCracksBrush:null,selectedColor:null,isRainbowModeActive:false,activePaletteIndex:0,CRACKS_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
+function harness(){const c=vm.createContext({C:{PALETTES:[{}]},validateCracksBrush,replayCracksBrush:null,selectedColor:null,isRainbowModeActive:false,activePaletteIndex:0,CRACKS_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,createCracksSession,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
  c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='contour'){c.contourMode='cracks';c.cracksState=null;}};
  vm.runInContext(source.slice(source.indexOf('function getCracksBrush()'),source.indexOf('function nextEvolutionMode(')),c);return c;}
 test('paused contour cycle includes Off, live cycle skips Off, and snapshots preserve rules and tips',()=>{
@@ -107,4 +107,21 @@ test('recorded preset values and legacy material overrides are independent of th
  c.contourRules={sensitivity:75,lineColor:'darkest'};c.isMacroPlaying=true;c.restoreContourSnapshot(legacy);
  assert.equal(c.getCracksMaterial().enabled,true,'old recorded material On overrides the new Off default');assert.equal(c.contourRules.material,undefined,'replay does not turn user preference On');assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),DEFAULT_CRACKS_GROWTH);
  c.isMacroPlaying=false;c.replayCracksMaterial=null;c.replayCracksGrowth=null;assert.equal(c.getCracksMaterial().enabled,false);
+});
+
+test('fresh human entries seed before recording; replay and engine defaults remain deterministic',()=>{
+ const c=harness();let draws=0;
+ c.crypto={getRandomValues:values=>{values[0]=++draws*1234567;return values;}};
+ const engine=readFileSync(new URL('../js/simulations/cracks.js',import.meta.url),'utf8');
+ vm.runInContext(engine.slice(engine.indexOf('export function createCracksSession('),engine.indexOf('export function restoreCracksState(')).replace('export ',''),c);
+ c.dom.btnPlayPauseLife={};c.dom.btnStepForward={};c.dom.btnContour.id='btnContour';c.dom.btnContour.classList.remove=()=>{};c.dom.btnContour.classList.add=()=>{};c.isMacroLoaded=false;
+ for(const key of ['updateBrightnessEvoButtonUI','updateDlaButtonUI','updateErosionButtonUI','updateBreatheEvoButtonUI','updateGameOfLifeButtonUI','updateChiFlowButtonUI'])c[key]=()=>{};
+ vm.runInContext(source.slice(source.indexOf('function armSimulation('),source.indexOf('      function setBrushMode(')),c);
+ c.armSimulation('contour');const first=JSON.parse(JSON.stringify(c.getContourRecordingRules()));assert.equal(first.cracksState.random,1234567);assert.equal(first.cracksState.steps,0);
+ const ctx=fixture(21),expected=runCracksGeneration(ctx,first.cracksState);assert.deepEqual(c.runContourEvolution(ctx),expected.nextBoardState);assert.deepEqual(JSON.parse(JSON.stringify(c.cracksState)),expected.nextCracksState);
+ c.armSimulation('brightnessEvo');c.armSimulation('contour');assert.equal(c.cracksState.random,2469134);assert.equal(draws,2);
+ c.isLifePlaying=true;c.contourMode='contours';c.cycleContourMode();assert.equal(c.recorded.cracksState.random,3703701);assert.equal(c.recorded.cracksState.steps,0);
+ c.isLifePlaying=false;c.isExecutingMacroCommand=true;c.armSimulation('brightnessEvo');c.armSimulation('contour');assert.equal(c.cracksState,null);assert.equal(draws,3,'macro does not draw entropy');
+ c.restoreContourSnapshot({mode:'cracks',rules:first,cracksState:first.cracksState});assert.equal(c.cracksState.random,1234567);assert.equal(draws,3);
+ assert.equal(createCracksState(21).random,0x51f15e,'legacy fallback is unchanged');
 });
