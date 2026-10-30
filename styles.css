@@ -2307,7 +2307,11 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
 #controlsContainer #btnEvolutionDrawer { display:none; }
 #controlsContainer.sim-mode-active #btnEvolutionDrawer { display:inline-flex; align-items:center; justify-content:center; grid-area:1 / 7; width:44px; height:44px; margin:auto; padding:0; border:0; background:transparent; cursor:pointer; }
-#btnEvolutionDrawer span { width:7px; height:7px; border-radius:50%; background:#d7b65f; box-shadow:0 0 8px #d7b65f35; }
+#btnEvolutionDrawer span { width:5px; height:5px; border-radius:50%; background:var(--drawer-trigger-color,#334155); }
+:root[data-simulation-effective-theme="gold"] #btnEvolutionDrawer { --drawer-trigger-color:#a58b54; }
+:root[data-simulation-effective-theme="teal"] #btnEvolutionDrawer { --drawer-trigger-color:#68bdb5; }
+:root[data-simulation-effective-theme="silver"] #btnEvolutionDrawer { --drawer-trigger-color:#899099; }
+:root[data-simulation-effective-theme="ice"] #btnEvolutionDrawer { --drawer-trigger-color:#91b8cb; }
 #btnEvolutionDrawer[data-parked-active="true"] span { background:#969994; box-shadow:none; }
 #btnEvolutionDrawer:disabled { cursor:default; }
 #btnEvolutionDrawer:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:8px; }
@@ -2317,10 +2321,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog .drawer-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 #evolutionDrawerDialog h2 { margin:0; font-size:19px; }
 #evolutionDrawerDialog [data-close] { min-width:44px; min-height:44px; border:0; background:transparent; color:#c3b99e; font-size:25px; }
-#evolutionDrawerDialog .drawer-instructions { margin:10px 0 16px; font-size:12px; line-height:1.6; color:#aaa99e; }
-#evolutionDrawerDialog .drawer-slots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; direction:ltr; }
-#evolutionDrawerDialog .drawer-slots button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-width:0; min-height:72px; padding:7px 3px; border:1px solid #b28b3645; border-radius:8px; background:#111611; color:#bdb8a9; }
-#evolutionDrawerDialog .drawer-slots small { font-size:9px; color:#a49c85; }
+#evolutionDrawerDialog .drawer-slots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); width:min(100%,272px); margin:22px auto 6px; gap:8px; direction:ltr; }
+#evolutionDrawerDialog .drawer-slots button { display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; aspect-ratio:1; padding:0; border:1px solid transparent; border-radius:2px; }
+#evolutionDrawerDialog .drawer-slots button[aria-pressed="true"] { outline:2px solid #e3c677; outline-offset:2px; }
 #evolutionDrawerDialog h3 { font-size:13px; color:#d4c8aa; margin:20px 0 10px; font-weight:500; }
 #evolutionDrawerDialog .drawer-catalog { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
 #evolutionDrawerDialog .drawer-catalog button { display:flex; align-items:center; gap:8px; min-height:56px; min-width:0; padding:8px; border:1px solid #b28b362c; border-radius:8px; background:#131711; color:#c3b99e; font-size:11px; text-align:start; }
