@@ -150,8 +150,8 @@ test('fixed resonance maps retain their pre-motion byte signatures',async()=>{
  }
 });
 
-test('new defaults select moving Interference at exactly 2731 Hz while legacy recipes keep Patterns',()=>{
- assert.deepEqual(INITIAL_CYMATICS_RULES,{pattern:'petals',strength:60,mode:'resonance',frequency:2731,resonanceVersion:4,phaseMotion:true});
+test('new defaults select moving Interference at exactly 11831 Hz while legacy recipes keep Patterns',()=>{
+ assert.deepEqual(INITIAL_CYMATICS_RULES,{pattern:'petals',strength:60,mode:'resonance',frequency:11831,resonanceVersion:4,phaseMotion:true});
  assert.deepEqual(validateCymaticsRules(),DEFAULT_CYMATICS_RULES);assert.deepEqual(DEFAULT_CYMATICS_RULES,{pattern:'petals',strength:60});
  const defaults=defaultWorkspaceSettings();defaults.rules.cymatics={...INITIAL_CYMATICS_RULES};
  assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(defaults)).rules.cymatics,undefined,'omitted preferences inherit new application defaults');
@@ -173,7 +173,7 @@ test('toolbar cycles four maps without resetting the run and only includes Off w
  vm.runInContext(source.slice(source.indexOf('function nextEvolutionMode('),source.indexOf('function cycleBrightnessEvoMode(')),c);
  c.cycleCymaticsMode();assert.equal(c.armedSimulation,'cymatics');assert.equal(c.getCymaticsRules().resonanceVersion,4);
  for(const [map,active] of [[1,true],[2,true],[3,true],[4,false],[4,true]]){
-  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation==='cymatics',active);assert.equal(c.getCymaticsRules().frequency,2731);assert.equal(c.getCymaticsRules().phaseMotion,true);
+  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation==='cymatics',active);assert.equal(c.getCymaticsRules().frequency,11831);assert.equal(c.getCymaticsRules().phaseMotion,true);
  }
  assert(events.some(e=>e.name==='Cymatics Mode Changed'&&JSON.parse(e.details).mode==='off'));
  c.isLifePlaying=true;c.cymaticsState={...createCymaticsState(21),steps:250,random:123456};const state=c.cymaticsState;
