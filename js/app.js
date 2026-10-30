@@ -1,4 +1,4 @@
-import {DEFAULT_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
+import {INITIAL_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
 import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
@@ -60,7 +60,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let recordPausedBrushMotion = loadBrushMotionRecording();
       let replayBrushBefore = null;
       let islandsSession = null;
-      let cymaticsState=null,cymaticsRules={...DEFAULT_CYMATICS_RULES},replayCymaticsRules=null,cymaticsSettingsUI=null;
+      let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},replayCymaticsRules=null,cymaticsSettingsUI=null;
       let evolutionTuning = validateEvolutionTuning();
       
       const ANIMATION_DURATION = 200; // ms
@@ -2091,7 +2091,7 @@ if (simulationName === 'magnet') {
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules }, turing: { ...turingRules },
-                ...(JSON.stringify(cymaticsRules)===JSON.stringify(DEFAULT_CYMATICS_RULES)?{}:{cymatics:{...cymaticsRules}}) }
+                ...(JSON.stringify(cymaticsRules)===JSON.stringify(INITIAL_CYMATICS_RULES)?{}:{cymatics:{...cymaticsRules}}) }
         };
       }
 
@@ -2114,7 +2114,7 @@ if (simulationName === 'magnet') {
         contourRules = { ...settings.rules.contour };
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH};contourRules.lineColor='brush';}
         turingRules = { ...settings.rules.turing };
-        cymaticsRules=validateCymaticsRules(settings.rules.cymatics);
+        cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
         if (armedSimulation === 'magnet') magnetMode = magnetRules.method;

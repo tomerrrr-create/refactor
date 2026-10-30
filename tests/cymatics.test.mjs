@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
-import {CYMATICS_PATTERNS,DEFAULT_CYMATICS_RULES,validateCymaticsRules} from '../js/cymatics-settings.js';
+import {CYMATICS_PATTERNS,DEFAULT_CYMATICS_RULES,INITIAL_CYMATICS_RULES,validateCymaticsRules} from '../js/cymatics-settings.js';
 import {getCymaticsField,createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from '../js/simulations/cymatics.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 import {validateProfileSnapshot} from '../js/profile-state.js';
@@ -148,4 +148,14 @@ test('fixed resonance maps retain their pre-motion byte signatures',async()=>{
   getCymaticsField(41,'petals',440,i+1,417);const field=getCymaticsField(41,'petals',440,i+1,0);
   assert.equal(createHash('sha256').update(new Uint8Array(field.buffer)).digest('hex'),hash);
  }
+});
+
+test('new defaults select moving Interference at exactly 2731 Hz while legacy recipes keep Patterns',()=>{
+ assert.deepEqual(INITIAL_CYMATICS_RULES,{pattern:'petals',strength:60,mode:'resonance',frequency:2731,resonanceVersion:4,phaseMotion:true});
+ assert.deepEqual(validateCymaticsRules(),DEFAULT_CYMATICS_RULES);assert.deepEqual(DEFAULT_CYMATICS_RULES,{pattern:'petals',strength:60});
+ const defaults=defaultWorkspaceSettings();defaults.rules.cymatics={...INITIAL_CYMATICS_RULES};
+ assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(defaults)).rules.cymatics,undefined,'omitted preferences inherit new application defaults');
+ const old=defaultWorkspaceSettings();old.rules.cymatics={...DEFAULT_CYMATICS_RULES};
+ assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(old)).rules.cymatics,DEFAULT_CYMATICS_RULES,'explicit old Patterns preferences remain explicit');
+ assert.deepEqual(validateCymaticsSnapshot({cymaticsVersion:1,rules:DEFAULT_CYMATICS_RULES,state:createCymaticsState(41)}).rules,DEFAULT_CYMATICS_RULES);
 });

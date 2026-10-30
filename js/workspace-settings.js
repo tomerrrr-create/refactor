@@ -1,4 +1,4 @@
-import {DEFAULT_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
+import {INITIAL_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
 import {validateEvolutionSlots} from './evolution-drawer-settings.js';
 import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
@@ -100,7 +100,7 @@ export function validateWorkspaceSettings(value) {
     if (!valid) throw new Error('Invalid workspace settings');
     if (r.contour.material && r.contour.material.enabled === DEFAULT_CRACKS_MATERIAL.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
     if (r.contour.growth && equal(r.contour.growth, DEFAULT_CRACKS_GROWTH)) delete r.contour.growth;
-    if(r.cymatics && equal(r.cymatics,DEFAULT_CYMATICS_RULES))delete r.cymatics;
+    if(r.cymatics && equal(r.cymatics,INITIAL_CYMATICS_RULES))delete r.cymatics;
     return settings;
 }
 
