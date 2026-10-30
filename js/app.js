@@ -1,6 +1,6 @@
 import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
 import {createEvolutionDrawer} from './evolution-drawer.js';
-import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
+import { CRACKS_LINE_COLORS, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
@@ -299,8 +299,8 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
-      let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null, replayCracksGrowth = null;
-      let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
+      let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null, replayCracksGrowth = null, replayCracksBrush = null, lastCracksBrushKey = '';
+      let contourRules = { ...C.defaultContourRules, growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
 let chiFlowRules = cloneChiFlowRules(C.defaultChiFlowRules);
@@ -448,6 +448,7 @@ currentSortMethod,
         if (!stateA || !stateB) return false;
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
         if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
+        if (JSON.stringify(stateA.contourState?.cracksState?.rainbowTrail) !== JSON.stringify(stateB.contourState?.cracksState?.rainbowTrail)) return false;
         if (JSON.stringify(stateA.evolutionTuning) !== JSON.stringify(stateB.evolutionTuning) ||
             stateA.brightnessEvoMode !== stateB.brightnessEvoMode || stateA.breatheEvoMode !== stateB.breatheEvoMode || stateA.dlaMode !== stateB.dlaMode) return false;
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
@@ -1534,7 +1535,7 @@ function pauseLife() {
 
         let cracksResumeBefore = null;
         if (armedSimulation === 'contour' && !isExecutingMacroCommand && !isMacroPlaying && cracksState?.version >= 3 && contourMode === 'cracks') {
-            const resumed = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules:{ ...contourRules, material:getCracksMaterial() } }, cracksState);
+            const resumed = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, cracksBrush:getCracksBrush(), contourRules:{ ...contourRules, material:getCracksMaterial() } }, cracksState);
             if (resumed !== cracksState) { cracksResumeBefore = getCurrentState(); cracksState = resumed; }
         }
         window.logArtEvent('PLAY', getSimulationRecordingDetails());
@@ -1725,7 +1726,7 @@ function handleEvolutionTap(simulation, onTap) {
 
 function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     if (isLifePlaying) return;
-    if (!isExecutingMacroCommand) { replayCracksMaterial = null; replayCracksGrowth = null; }
+    if (!isExecutingMacroCommand) { replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
 
     // --- MACRO KILL SWITCH ---
     // אם לחצו על כפתור סימולציה באופן ידני (ולא מתוך פקודת מאקרו), אנחנו משמידים את המאקרו הטעון
@@ -2087,6 +2088,7 @@ if (simulationName === 'magnet') {
         erosionRules = { ...settings.rules.erosion };
         dlaRules = { ...settings.rules.dla };
         contourRules = { ...settings.rules.contour };
+        if(startup)contourRules.growth={...INITIAL_CRACKS_GROWTH};
         turingRules = { ...settings.rules.turing };
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
@@ -2829,7 +2831,7 @@ function resumeBrushCheckpoint(record) {
 // against a pointer-down snapshot or serialized as part of a brush sample.
 function flushLiveBrushChanges() {
     if (pointerState.changes?.size && armedSimulation === 'contour' && contourMode === 'cracks') {
-        cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules: { ...contourRules, material: getCracksMaterial() } },
+        cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, cracksBrush:getCracksBrush(), contourRules: { ...contourRules, material: getCracksMaterial() } },
             cracksState, pointerState.changes.values());
     }
     if (!pointerState.liveRecording || !pointerState.changes?.size) return;
@@ -3100,6 +3102,12 @@ function updateLayout() {
     }
 
     function updateColorPickerButtonUI() {
+        const brushKey=JSON.stringify(getCracksBrush());
+        if(!isMacroPlaying&&!isExecutingMacroCommand&&brushKey!==lastCracksBrushKey&&armedSimulation==='contour'&&contourMode==='cracks'&&contourRules.lineColor==='brush'){
+            cracksState=prepareCracksResume({n,currentBoardState:boardState,currentPalette:palette(),contourRules:{...contourRules,material:getCracksMaterial()},cracksBrush:getCracksBrush()},cracksState);
+            recordLiveSimulationRules('contour');
+        }
+        lastCracksBrushKey=brushKey;
         dom.btnColorPicker.classList.toggle('wind-active', windMode);
         dom.btnColorPicker.setAttribute('aria-pressed', String(windMode));
         dom.btnColorPicker.setAttribute('aria-keyshortcuts', 'Alt+ArrowDown');
@@ -3378,6 +3386,16 @@ function cycleChiFlowMode() {
 }
 
 // Running evolutions cycle through active modes; paused cycles retain Off.
+function getCracksBrush() {
+    return replayCracksBrush ?? {color:selectedColor ?? null,rainbow:isRainbowModeActive};
+}
+function restoreCracksBrush(source){
+    const brush=validateCracksBrush(source);isRainbowModeActive=brush.rainbow;
+    selectedColorIndex=brush.color===null?-1:palette().indexOf(brush.color);
+    selectedColor=selectedColorIndex<0?null:palette()[selectedColorIndex];
+    lastCracksBrushKey=JSON.stringify(getCracksBrush());
+    updateColorPickerButtonUI();updateGlowEffect();
+}
 function getCracksMaterial() {
     return validateCracksMaterial(replayCracksMaterial ?? contourRules.material);
 }
@@ -3390,12 +3408,12 @@ function saveCracksSettings(material, lineColor, growth = getCracksGrowth()) {
     const nextGrowth = validateCracksGrowth(growth);
     if (!CRACKS_LINE_COLORS.includes(lineColor)) return false;
     const commit = () => {
-        replayCracksMaterial = null; replayCracksGrowth = null;
+        replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
         contourRules = { ...contourRules, material:next, growth:nextGrowth, lineColor };
         if (JSON.stringify(nextGrowth) === JSON.stringify(DEFAULT_CRACKS_GROWTH)) delete contourRules.growth;
         if (next.enabled === DEFAULT_CRACKS_MATERIAL.enabled && next.strength === DEFAULT_CRACKS_MATERIAL.strength) delete contourRules.material;
         cracksState = cracksState ? { ...restoreCracksState(cracksState), version:3, pendingSeed:cracksState.pendingSeed ?? null } : createCracksState(n);
-        cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules:{ ...contourRules, material:next } }, cracksState);
+        cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, cracksBrush:getCracksBrush(), contourRules:{ ...contourRules, material:next } }, cracksState);
     };
     // Saved Cracks preferences belong to the profile, not drawing history.
     commit();
@@ -3405,13 +3423,14 @@ function saveCracksSettings(material, lineColor, growth = getCracksGrowth()) {
     return true;
 }
 function getContourSnapshot() {
-    return { mode: contourMode, rules: { ...contourRules }, ...(contourMode === 'cracks' ? { material: getCracksMaterial(), growth:getCracksGrowth() } : {}), cracksState: cracksState ? restoreCracksState(cracksState) : null };
+    return { mode: contourMode, rules: { ...contourRules }, ...(contourMode === 'cracks' ? { material: getCracksMaterial(), growth:getCracksGrowth(), ...(contourRules.lineColor==='brush'?{brush:getCracksBrush()}:{}) } : {}), cracksState: cracksState ? restoreCracksState(cracksState) : null };
 }
 function validateContourSnapshot(value) {
     if (!value || !['contours','cracks'].includes(value.mode) || !value.rules ||
         !Number.isFinite(value.rules.sensitivity) || value.rules.sensitivity<0 || value.rules.sensitivity>100 ||
         !CRACKS_LINE_COLORS.includes(value.rules.lineColor)) throw new Error('Invalid contour state');
     if (value.cracksState) restoreCracksState(value.cracksState);
+    if (value.brush) validateCracksBrush(value.brush);
     if (value.material) validateCracksMaterial(value.material);
     if (value.growth) validateCracksGrowth(value.growth);
     if (value.rules.growth) validateCracksGrowth(value.rules.growth);
@@ -3430,9 +3449,10 @@ function restoreContourSnapshot(value, { preservePreferences = false } = {}) {
         else delete contourRules.material;
         if (preferenceGrowth) contourRules.growth = preferenceGrowth; else delete contourRules.growth;
         replayCracksGrowth = validateCracksGrowth(value.growth ?? value.rules.growth);
+        replayCracksBrush = validateCracksBrush(value.brush ?? value.rules.brush);
         replayCracksMaterial = value.material ?? { enabled:false, strength:80 };
     } else {
-        replayCracksMaterial = null; replayCracksGrowth = null;
+        replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
         if (preservePreferences) {
             if (preferenceMaterial) contourRules.material = validateCracksMaterial(preferenceMaterial);
             else delete contourRules.material;
@@ -3445,14 +3465,15 @@ function restoreContourSnapshot(value, { preservePreferences = false } = {}) {
         if (JSON.stringify(growth) === JSON.stringify(DEFAULT_CRACKS_GROWTH)) delete contourRules.growth; else contourRules.growth = growth;
     }
     cracksState = value.cracksState ? restoreCracksState(value.cracksState) : null;
+    if(!preservePreferences&&!isMacroPlaying&&!isExecutingMacroCommand&&value.brush)restoreCracksBrush(value.brush);
     updateContourButtonUI();
 }
 function getContourRecordingRules() {
-    return contourMode === 'cracks' ? { ...contourRules, material: getCracksMaterial(), growth:getCracksGrowth(), mode: 'cracks', cracksState: cracksState ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
+    return contourMode === 'cracks' ? { ...contourRules, material: getCracksMaterial(), growth:getCracksGrowth(), ...(contourRules.lineColor==='brush'?{brush:getCracksBrush()}:{}), mode: 'cracks', cracksState: cracksState ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
 }
 function runContourEvolution(context) {
     if (contourMode !== 'cracks') return Simulations.runContourGeneration(context);
-    const result = runCracksGeneration({ ...context, originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules: { ...context.contourRules, material: getCracksMaterial(), growth:getCracksGrowth() } }, cracksState);
+    const result = runCracksGeneration({ ...context, originalPalette:C.PALETTES[activePaletteIndex].originalColors, cracksBrush:getCracksBrush(), contourRules: { ...context.contourRules, material: getCracksMaterial(), growth:getCracksGrowth() } }, cracksState);
     cracksState = result.nextCracksState;
     return result.nextBoardState;
 }
@@ -4515,7 +4536,7 @@ function stopMacro() {
         console.error('Failed to finish macro profile capture:', error);
     }
     replayNudgeTiming = null;
-    replayCracksMaterial = null; replayCracksGrowth = null;
+    replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
     isSelectingMacroPalette = false; 
@@ -4686,6 +4707,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     const preferenceGrowth = contourRules.growth;
                     contourRules = { sensitivity: parsedRules.sensitivity ?? 75, lineColor: CRACKS_LINE_COLORS.includes(parsedRules.lineColor) ? parsedRules.lineColor : 'darkest', ...(preferenceMaterial ? {material:preferenceMaterial} : {}), ...(preferenceGrowth ? {growth:preferenceGrowth} : {}) };
                     replayCracksGrowth = validateCracksGrowth(parsedRules.growth);
+                    replayCracksBrush = validateCracksBrush(parsedRules.brush);
                     replayCracksMaterial = parsedRules.material ? validateCracksMaterial(parsedRules.material) : {enabled:false,strength:80};
                     contourMode = parsedRules.mode === 'cracks' ? 'cracks' : 'contours';
                     cracksState = parsedRules.cracksState ? restoreCracksState(parsedRules.cracksState) : null;
@@ -5061,7 +5083,7 @@ else if (action.eventName === 'Invert Colors') {
                 });
                 
                 if (action.eventName === 'DRAW_STROKE' && armedSimulation === 'contour' && contourMode === 'cracks') {
-                    cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, contourRules: { ...contourRules, material: getCracksMaterial() } }, cracksState, diff);
+                    cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, cracksBrush:getCracksBrush(), contourRules: { ...contourRules, material: getCracksMaterial() } }, cracksState, diff);
                 }
                 if (changed) {
                     renderToScreen(now);

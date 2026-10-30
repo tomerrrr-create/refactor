@@ -1,3 +1,4 @@
+import {INITIAL_CRACKS_GROWTH} from '../js/cracks-settings.js';
 import {validateEvolutionSlots} from '../js/evolution-drawer-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,7 +11,7 @@ const apply = source.slice(source.indexOf('function applyWorkspacePreferences(')
 function harness() {
     const noop = () => {};
     const context = vm.createContext({
-        validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
+        INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],
         updateGravitationalSortButtonUI: noop, updateSpiralButtonUI: noop,
@@ -48,4 +49,11 @@ test('applying a profile during the session restores its working brush and symme
     assert.equal(h.mode, 'copy');
     assert.equal(h.symmetryMode, 'vertical');
     assert.equal(h.brushSize, 9);
+});
+
+test('each app opening starts with Fibonacci despite saved growth; explicit profile changes retain their values',()=>{
+ const settings=defaultWorkspaceSettings();settings.rules.contour.growth={branchChance:40,branchInterval:22,curvature:0};const h=harness();
+ h.applyWorkspacePreferences(settings,{startup:true});assert.deepEqual(JSON.parse(JSON.stringify(h.contourRules.growth)),INITIAL_CRACKS_GROWTH);
+ assert.deepEqual(settings.rules.contour.growth,{branchChance:40,branchInterval:22,curvature:0},'opening override does not mutate the stored input');
+ h.applyWorkspacePreferences(settings);assert.deepEqual(h.contourRules.growth,settings.rules.contour.growth);
 });
