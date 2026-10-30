@@ -3378,8 +3378,6 @@ function saveCracksSettings(material, lineColor) {
     if (armedSimulation !== 'contour' || contourMode !== 'cracks' || isBreathing || isMacroLoaded || isMacroPlaying) return false;
     const next = validateCracksMaterial(material);
     if (!['darkest','lightest'].includes(lineColor)) return false;
-    finishBrushGesture();
-    windPainter?.stop();
     const commit = () => {
         replayCracksMaterial = null;
         contourRules = { ...contourRules, material:next, lineColor };
