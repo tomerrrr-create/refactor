@@ -3433,10 +3433,10 @@ function recordCymaticsSelection(){
 function cycleCymaticsMode(){
     if(isLifePlaying&&armedSimulation!=='cymatics')return;
     if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
-    if(armedSimulation!=='cymatics'){
-        armSimulation('cymatics');recordCymaticsSelection();return;
-    }
-    const rules=getCymaticsRules(),next=rules.mode==='resonance'?nextEvolutionMode(rules.resonanceVersion??1,['off',4,1,2,3]):4;
+    const activating=armedSimulation!=='cymatics';
+    if(activating)armSimulation('cymatics');
+    const rules=getCymaticsRules(),inCycle=rules.mode==='resonance'&&[4,3].includes(rules.resonanceVersion);
+    const next=!inCycle?4:activating?rules.resonanceVersion:nextEvolutionMode(rules.resonanceVersion,['off',4,3]);
     const updated={...rules,mode:'resonance',frequency:rules.frequency??INITIAL_CYMATICS_RULES.frequency,
         resonanceVersion:next==='off'?4:next,phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion};
     const running=isLifePlaying;
