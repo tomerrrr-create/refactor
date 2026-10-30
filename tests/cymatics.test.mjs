@@ -73,7 +73,7 @@ test('expanded resonance produces axial and grid fields without a forced diagona
   assert.deepEqual(validateCymaticsSnapshot({cymaticsVersion:1,rules,state:saved.state}).rules,rules);
  }
  assert.notDeepEqual(getCymaticsField(41,'petals',40,2),getCymaticsField(41,'petals',80,2));
- assert.throws(()=>validateCymaticsRules({...legacyRules,resonanceVersion:3}));assert.throws(()=>validateCymaticsRules({pattern:'petals',strength:60,resonanceVersion:2}));
+ assert.throws(()=>validateCymaticsRules({...legacyRules,resonanceVersion:4}));assert.throws(()=>validateCymaticsRules({pattern:'petals',strength:60,resonanceVersion:2}));
 });
 test('original resonance recordings retain their exact fields',async()=>{
  const {createHash}=await import('node:crypto');
@@ -81,5 +81,26 @@ test('original resonance recordings retain their exact fields',async()=>{
  for(const [frequency,hash] of Object.entries(expected)){
   getCymaticsField(41,'petals',Number(frequency),2);const legacy=getCymaticsField(41,'petals',Number(frequency));
   assert.equal(createHash('sha256').update(new Uint8Array(legacy.buffer)).digest('hex'),hash);
+ }
+});
+
+test('all three selectable resonance maps preserve settings, pigments, gold and deterministic replay',()=>{
+ const fields=[];
+ for(const resonanceVersion of [1,2,3]){
+  const rules={pattern:'star',strength:100,mode:'resonance',frequency:1055,resonanceVersion};
+  assert.deepEqual(validateCymaticsRules(rules),rules);
+  const settings=defaultWorkspaceSettings();settings.rules.cymatics=rules;
+  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
+  assert.deepEqual(validateProfileSnapshot({settings}).settings.rules.cymatics,rules);
+  const ctx={...fixture(41),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState),field=getCymaticsField(41,'star',1055,resonanceVersion);
+  fields.push(field);assert(field.some(v=>v>0));
+  const energy=b=>b.reduce((sum,t,i)=>sum+t.k*field[i],0),result=advance(ctx,createCymaticsState(41),45),snapshot=JSON.parse(JSON.stringify(result));
+  assert(energy(result.ctx.currentBoardState)<energy(before));assert.deepEqual(histogram(result.ctx.currentBoardState),histogram(before));assert.deepEqual(result.ctx.currentBoardState[840],before[840]);
+  assert.deepEqual(advance(result.ctx,result.state,50),advance(snapshot.ctx,snapshot.state,50));
+ }
+ assert.notDeepEqual(fields[0],fields[1]);assert.notDeepEqual(fields[1],fields[2]);
+ assert.deepEqual(getCymaticsField(41,'star',1055,1),getCymaticsField(41,'star',1055));
+ for(const frequency of [20,20000])for(const n of [1,2,41]){
+  const field=getCymaticsField(n,'petals',frequency,3);assert.equal(field.length,n*n);assert([...field].every(v=>Number.isFinite(v)&&v>=0&&v<=65535));
  }
 });

@@ -1,3 +1,4 @@
+import {createCircularResonanceField} from './cymatics-circular.js';
 import {CYMATICS_PATTERNS,validateCymaticsRules} from '../cymatics-settings.js';
 // Chladni-inspired square plate, not an acoustic solver. Only a derived field is
 // cached; serializable PRNG state and steps determine every particle exchange.
@@ -7,6 +8,11 @@ let fieldSize=0,fieldPattern='',field=null;
 const resonanceModes=[];
 for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
 export function getCymaticsField(n,pattern,frequency,resonanceVersion){
+    if(resonanceVersion===3){
+        const key='resonance-v3:'+frequency;
+        if(field&&fieldSize===n&&fieldPattern===key)return field;
+        field=createCircularResonanceField(n,frequency);fieldSize=n;fieldPattern=key;return field;
+    }
     if(resonanceVersion===2)return getVariedResonanceField(n,frequency);
     if(frequency!==undefined)return getResonanceField(n,frequency);
     if(field&&fieldSize===n&&fieldPattern===pattern)return field;
