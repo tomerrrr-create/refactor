@@ -10,17 +10,17 @@ export function createCymaticsSettingsDialog({getRules,saveRules,canEdit,getText
         const b=document.createElement('button');b.type='button';b.dataset.cymaticsMap=name;
         const paths={diagonal:'<path d="M4 4l16 16M4 20L20 4"/>',grid:'<path d="M8 3v18M16 3v18M3 8h18M3 16h18"/>',interference:'<circle cx="6" cy="9" r="2"/><circle cx="18" cy="15" r="2"/><path d="M3 3c12 0 12 18 18 18M3 15c6 0 6-12 18-12M3 21c12 0 6-18 18-12"/>',circular:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'};
         b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">'+paths[name]+'</svg><span></span>';
-        b.addEventListener('click',()=>{draft.resonanceVersion=version;lastMap=version;if(version===4)draft.phaseMotion=lastMotion;else delete draft.phaseMotion;render();});maps.append(b);
+        b.addEventListener('click',()=>{draft.resonanceVersion=version;lastMap=version;draft.phaseMotion=lastMotion;render();});maps.append(b);
     }
     for(const b of dialog.querySelectorAll('[data-source]'))b.addEventListener('click',()=>{
-        if(b.dataset.source==='resonance'){draft.mode='resonance';draft.frequency=lastFrequency;draft.resonanceVersion=lastMap;if(lastMap===4)draft.phaseMotion=lastMotion;}
+        if(b.dataset.source==='resonance'){draft.mode='resonance';draft.frequency=lastFrequency;draft.resonanceVersion=lastMap;draft.phaseMotion=lastMotion;}
         else {if(draft.mode==='resonance'){lastFrequency=draft.frequency;lastMap=draft.resonanceVersion??1;}delete draft.mode;delete draft.frequency;delete draft.resonanceVersion;delete draft.phaseMotion;}render();
     });
     frequency.addEventListener('input',()=>{draft.frequency=Math.round(20*Math.pow(1000,Number(frequency.value)/1000));lastFrequency=draft.frequency;render();});
     const motion=dialog.querySelector('#cymaticsPhaseMotion');
     motion.addEventListener('change',()=>{draft.phaseMotion=motion.checked;lastMotion=motion.checked;});
     function render(){
-        dialog.querySelector('.cymatics-phase').hidden=!(draft?.mode==='resonance'&&draft.resonanceVersion===4);
+        dialog.querySelector('.cymatics-phase').hidden=draft?.mode!=='resonance';
         dialog.querySelector('.cymatics-phase span').textContent=getText('cymatics_phase_motion');
         dialog.querySelector('#cymaticsPhaseNote').textContent=getText('cymatics_phase_note');motion.checked=Boolean(draft?.phaseMotion);
         const resonance=draft?.mode==='resonance';

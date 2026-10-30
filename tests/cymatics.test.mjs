@@ -119,7 +119,33 @@ test('interference phase motion follows generations, preserves pigments and resu
  const zero=getCymaticsField(41,'petals',1200,4,0),shift=getCymaticsField(41,'petals',1200,4,300);
  assert.notDeepEqual(zero,shift);assert.deepEqual(zero,getCymaticsField(41,'petals',1200,4,1200));
  for(const phaseMotion of [null,1,'true'])assert.throws(()=>validateCymaticsRules({...base,phaseMotion}));
- assert.throws(()=>validateCymaticsRules({...base,resonanceVersion:3,phaseMotion:true}));
+ assert.deepEqual(validateCymaticsRules({...base,resonanceVersion:3,phaseMotion:true}),{...base,resonanceVersion:3,phaseMotion:true});
  const moving={...fixture(41),cymaticsRules:{...base,phaseMotion:true}};const first=advance(moving,createCymaticsState(41),900),previous=structuredClone(first.ctx.currentBoardState);advance(first.ctx,first.state,300);assert.notDeepEqual(first.ctx.currentBoardState,previous,'moving field still rearranges pigments late in the run');
  for(const n of [1,2])for(const frequency of [20,20000])assert.equal(getCymaticsField(n,'petals',frequency,4,117).length,n*n);
+});
+
+test('phase motion works for each resonance map, preserves preferences and replays exactly',()=>{
+ for(const resonanceVersion of [1,2,3,4]){
+  const rules={pattern:'petals',strength:100,mode:'resonance',frequency:1200,resonanceVersion,phaseMotion:true};
+  const prefs=defaultWorkspaceSettings();prefs.rules.cymatics=rules;assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(prefs)).rules.cymatics,rules);
+  const ctx={...fixture(41),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState),start={...createCymaticsState(41),steps:250};
+  const result=advance(ctx,start,120),saved=JSON.parse(JSON.stringify(result));
+  assert.deepEqual(histogram(result.ctx.currentBoardState),histogram(before));assert.deepEqual(result.ctx.currentBoardState[840],before[840]);
+  assert.deepEqual(advance(result.ctx,result.state,100),advance(saved.ctx,saved.state,100));
+  const base=getCymaticsField(41,'petals',1200,resonanceVersion,0);assert.notDeepEqual(base,getCymaticsField(41,'petals',1200,resonanceVersion,300));assert.deepEqual(base,getCymaticsField(41,'petals',1200,resonanceVersion,1200));
+  const staticRules={...rules,phaseMotion:false},a=advance({...fixture(),cymaticsRules:staticRules},createCymaticsState(21),50),legacyRules={...staticRules};delete legacyRules.phaseMotion;
+  const legacy=advance({...fixture(),cymaticsRules:legacyRules},createCymaticsState(21),50);assert.deepEqual(a.ctx.currentBoardState,legacy.ctx.currentBoardState,'off uses exactly the original calculation');assert.deepEqual(a.state,legacy.state);
+  const uniform={...fixture(9),cymaticsRules:rules};uniform.currentBoardState.forEach(t=>{t.k=t.v=3;});const same=structuredClone(uniform.currentBoardState);advance(uniform,createCymaticsState(9),30);assert.deepEqual(uniform.currentBoardState,same);
+ }
+ const diagonal={pattern:'petals',strength:60,mode:'resonance',frequency:440,phaseMotion:true};assert.deepEqual(validateCymaticsRules(diagonal),diagonal,'legacy omitted map means moving Diagonals');
+ assert.throws(()=>validateCymaticsRules({pattern:'petals',strength:60,phaseMotion:true}));
+ const ring=(step)=>{const field=getCymaticsField(81,'petals',230,3,step),line=[...field.slice(40*81+41,41*81)];return line.indexOf(Math.min(...line));};assert(ring(600)<ring(0),'circular rings contract even when rotation alone is invisible');
+});
+test('fixed resonance maps retain their pre-motion byte signatures',async()=>{
+ const {createHash}=await import('node:crypto');
+ const hashes=['84b2134a4b8b069ea5711ee6c558eb4a7026a3523012fa30bba9fa808b21d8e0','c022d338d493f1396ab3203f9d8305a2e41419f1e9de661766ca61c4a80a86a1','8309599a2494ec268b163aec18de13705431b68fca287187e2c7700541901f74','a4c2367ecd7041c6dfe85bb65265b109c8333e03223923fb0caa40d938e8ffef'];
+ for(const [i,hash] of hashes.entries()){
+  getCymaticsField(41,'petals',440,i+1,417);const field=getCymaticsField(41,'petals',440,i+1,0);
+  assert.equal(createHash('sha256').update(new Uint8Array(field.buffer)).digest('hex'),hash);
+ }
 });

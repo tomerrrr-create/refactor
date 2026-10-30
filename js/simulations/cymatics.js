@@ -1,3 +1,4 @@
+import {moveCymaticsField} from './cymatics-motion.js';
 import {createInterferenceField} from './cymatics-interference.js';
 import {createCircularResonanceField} from './cymatics-circular.js';
 import {CYMATICS_PATTERNS,validateCymaticsRules} from '../cymatics-settings.js';
@@ -10,6 +11,10 @@ const resonanceModes=[];
 for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
 export function getCymaticsField(n,pattern,frequency,resonanceVersion,phaseStep=0){
     if(resonanceVersion===4)return createInterferenceField(n,frequency,phaseStep);
+    const base=getStaticCymaticsField(n,pattern,frequency,resonanceVersion);
+    return frequency!==undefined&&phaseStep!==0?moveCymaticsField(base,n,resonanceVersion??1,phaseStep):base;
+}
+function getStaticCymaticsField(n,pattern,frequency,resonanceVersion){
     if(resonanceVersion===3){
         const key='resonance-v3:'+frequency;
         if(field&&fieldSize===n&&fieldPattern===key)return field;

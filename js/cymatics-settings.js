@@ -19,7 +19,7 @@ export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
         result.resonanceVersion=value.resonanceVersion;
     }
     if(value.phaseMotion!==undefined){
-        if(value.mode!=='resonance'||value.resonanceVersion!==4||typeof value.phaseMotion!=='boolean')throw new Error('Invalid phase motion');
+        if(value.mode!=='resonance'||typeof value.phaseMotion!=='boolean')throw new Error('Invalid phase motion');
         result.phaseMotion=value.phaseMotion;
     }
     return result;
