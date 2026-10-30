@@ -453,7 +453,7 @@ currentSortMethod,
         return true;
       }
 
-      function applyState(state) {
+      function applyState(state, { preserveCracksPreferences = false } = {}) {
         if (state.contourState) {
             validateContourSnapshot(state.contourState);
             if (state.contourState.cracksState && state.contourState.cracksState.n !== state.n) throw new Error('Cracks board size mismatch');
@@ -527,7 +527,7 @@ k: tileState.k,
             islandsSession = restoreIslandsSession(state.islandsState);
             updateIslandsButtonUI();
         }
-        if (state.contourState) restoreContourSnapshot(state.contourState);
+        if (state.contourState) restoreContourSnapshot(state.contourState, { preservePreferences: preserveCracksPreferences && (contourMode === 'cracks' || state.contourState.mode === 'cracks') });
         applySeparator();
       }
 
@@ -563,8 +563,8 @@ k: tileState.k,
         if (history.length === 0) return;
         const lastAction = history.pop();
         future.push(lastAction);
-        applyState(lastAction.before);
-        window.logArtEvent('UNDO', JSON.stringify({ recipeVersion: 2, id: lastAction.id, settings: getHistorySettings(lastAction.before) }), isExecutingMacroCommand);
+        applyState(lastAction.before, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying });
+        window.logArtEvent('UNDO', JSON.stringify({ recipeVersion: 2, id: lastAction.id, settings: getHistorySettings(getCurrentState()) }), isExecutingMacroCommand);
         historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
       }
@@ -576,8 +576,8 @@ k: tileState.k,
         if (future.length === 0) return;
         const nextAction = future.pop();
         history.push(nextAction);
-        applyState(nextAction.after);
-        window.logArtEvent('REDO', JSON.stringify({ recipeVersion: 2, id: nextAction.id, settings: getHistorySettings(nextAction.after) }), isExecutingMacroCommand);
+        applyState(nextAction.after, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying });
+        window.logArtEvent('REDO', JSON.stringify({ recipeVersion: 2, id: nextAction.id, settings: getHistorySettings(getCurrentState()) }), isExecutingMacroCommand);
         historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
       }
@@ -3378,6 +3378,8 @@ function saveCracksSettings(material, lineColor) {
     if (armedSimulation !== 'contour' || contourMode !== 'cracks' || isBreathing || isMacroLoaded || isMacroPlaying) return false;
     const next = validateCracksMaterial(material);
     if (!['darkest','lightest'].includes(lineColor)) return false;
+    finishBrushGesture();
+    windPainter?.stop();
     const commit = () => {
         replayCracksMaterial = null;
         contourRules = { ...contourRules, material:next, lineColor };
@@ -3385,7 +3387,8 @@ function saveCracksSettings(material, lineColor) {
         cracksState = cracksState ? { ...restoreCracksState(cracksState), version:3, pendingSeed:cracksState.pendingSeed ?? null } : createCracksState(n);
         cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), contourRules:{ ...contourRules, material:next } }, cracksState);
     };
-    if (isLifePlaying) commit(); else performAction(commit);
+    // Saved Cracks preferences belong to the profile, not drawing history.
+    commit();
     recordLiveSimulationRules('contour');
     persistWorkspaceSettings(getWorkspaceSettings());
     settingsProfiles?.scheduleCapture();
@@ -3402,11 +3405,12 @@ function validateContourSnapshot(value) {
     if (value.material) validateCracksMaterial(value.material);
     if (value.rules.material) validateCracksMaterial(value.rules.material);
 }
-function restoreContourSnapshot(value) {
+function restoreContourSnapshot(value, { preservePreferences = false } = {}) {
     validateContourSnapshot(value);
     if (armedSimulation !== 'contour') armSimulation('contour');
     contourMode = value.mode;
     const preferenceMaterial = contourRules.material;
+    const preferenceLineColor = contourRules.lineColor;
     contourRules = { ...value.rules };
     if (isMacroPlaying || isExecutingMacroCommand) {
         if (preferenceMaterial) contourRules.material = preferenceMaterial;
@@ -3414,7 +3418,11 @@ function restoreContourSnapshot(value) {
         replayCracksMaterial = value.material ?? { enabled:false, strength:80 };
     } else {
         replayCracksMaterial = null;
-        if (value.material && JSON.stringify(validateCracksMaterial(contourRules.material)) !== JSON.stringify(value.material)) contourRules.material = validateCracksMaterial(value.material);
+        if (preservePreferences) {
+            if (preferenceMaterial) contourRules.material = validateCracksMaterial(preferenceMaterial);
+            else delete contourRules.material;
+            contourRules.lineColor = preferenceLineColor;
+        } else if (value.material && JSON.stringify(validateCracksMaterial(contourRules.material)) !== JSON.stringify(value.material)) contourRules.material = validateCracksMaterial(value.material);
     }
     cracksState = value.cracksState ? restoreCracksState(value.cracksState) : null;
     updateContourButtonUI();

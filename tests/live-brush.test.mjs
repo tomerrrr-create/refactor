@@ -96,7 +96,7 @@ test('macro brush packets edit the live board without taking per-packet snapshot
 });
 test('Undo ends live input and pauses the run before restoring its complete combined action; Redo restores the result',()=>{
  const events=[],initial={tiles:[{k:0}]},final={tiles:[{k:2}]};let restored;
- const c=vm.createContext({isExecutingMacroCommand:false,isLifePlaying:true,history:[],future:[],artRecipeLog:[],historyRecipeCursor:0,
+ const c=vm.createContext({isExecutingMacroCommand:false,isMacroPlaying:false,isLifePlaying:true,history:[],future:[],artRecipeLog:[],historyRecipeCursor:0,getCurrentState:()=>restored,
   finishBrushGesture:()=>events.push('finish'),windPainter:{stop:()=>events.push('wind-stop')},
   pauseLife:()=>{events.push('pause');c.isLifePlaying=false;c.history.push({id:1,before:initial,after:final});},applyState:s=>restored=s,
   window:{logArtEvent(){}},getHistorySettings:()=>({}),updateUndoRedoButtons(){}});

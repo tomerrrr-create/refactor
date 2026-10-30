@@ -72,3 +72,19 @@ test('version-1 recipes retain the board and random cursor captured from the ori
  const hash=createHash('sha256').update(JSON.stringify({board:result.ctx.currentBoardState,state:result.state})).digest('hex');
  assert.equal(hash,'b7b0358bcb508c9b35a57dd931b5822ed82e7ac7924614ffee699e08868358b2');
 });
+
+test('drawing history retains current Cracks preferences while explicit snapshots still restore recorded settings',()=>{
+ const c=harness();c.armSimulation('contour');
+ c.contourRules={sensitivity:75,lineColor:'darkest',material:{enabled:true,strength:100}};
+ c.runContourEvolution(fixture(21));const old=JSON.parse(JSON.stringify(c.getContourSnapshot()));
+ c.contourRules={sensitivity:75,lineColor:'lightest'}; // Current default: 40%.
+ c.restoreContourSnapshot(old,{preservePreferences:true});
+ assert.equal(c.getContourSnapshot().material.strength,40);assert.equal(c.contourRules.lineColor,'lightest');
+ assert.deepEqual(JSON.parse(JSON.stringify(c.cracksState)),old.cracksState,'art history still restores tips and the random cursor');
+ c.contourRules.material={enabled:false,strength:65};c.restoreContourSnapshot(old,{preservePreferences:true});
+ assert.deepEqual(JSON.parse(JSON.stringify(c.getContourSnapshot().material)),{enabled:false,strength:65});
+ c.restoreContourSnapshot(old);assert.equal(c.getContourSnapshot().material.strength,100,'project loading retains its recorded settings');
+ c.contourRules.material={enabled:false,strength:40};c.isMacroPlaying=true;c.restoreContourSnapshot(old,{preservePreferences:true});
+ assert.equal(c.getContourSnapshot().material.strength,100,'macro uses the recorded effective material');
+ assert.equal(c.contourRules.material.enabled,false,'macro does not replace the user preference');
+});
