@@ -1,3 +1,4 @@
+import { DEFAULT_CRACKS_GROWTH } from '../cracks-settings.js';
 // Experimental branching fractures. All runtime state is small and serializable;
 // board colors are the collision surface, so live drawing participates directly.
 export function createCracksState(n, seed = 0x51f15e) {
@@ -50,6 +51,7 @@ export function queueCracksGrowth(context, previous, changes) {
 }
 export function runCracksGeneration({n,currentBoardState,currentPalette,contourRules}, previous) {
     const state = previous?.n === n ? restoreCracksState(previous) : createCracksState(n);
+    const growth = state.version>=3 ? contourRules.growth ?? DEFAULT_CRACKS_GROWTH : DEFAULT_CRACKS_GROWTH;
     const random = () => { let x=state.random; x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/0x100000000; };
     const line = contourRules.lineColor === 'lightest' ? currentPalette.length-1 : 0;
     let board=currentBoardState;
@@ -88,7 +90,7 @@ export function runCracksGeneration({n,currentBoardState,currentPalette,contourR
     }
     const next=[];
     for(const tip of state.tips) {
-        let angle=tip.angle+(random()-.5)*.24;
+        let angle=tip.angle+(random()-.5)*.24*(growth.curvature/100);
         const project=direction=>{
             let x=tip.x,y=tip.y;const old=Math.round(y)*n+Math.round(x);
             for(let i=0;i<3;i++){x+=Math.cos(direction)*.65;y+=Math.sin(direction)*.65;if(Math.round(y)*n+Math.round(x)!==old)break;}
@@ -116,7 +118,7 @@ export function runCracksGeneration({n,currentBoardState,currentPalette,contourR
         const {x,y,col,row}=target;
         paint(row*n+col);const age=tip.age+1;
         next.push({x:Math.max(0,Math.min(n-1,x)),y:Math.max(0,Math.min(n-1,y)),angle,age});
-        if(age%11===0&&next.length<46&&random()<.65)next.push({x:col,y:row,angle:angle+(random()<.5?-1:1)*(0.65+random()*.55),age:0});
+        if(age%growth.branchInterval===0&&next.length<46&&random()<growth.branchChance/100)next.push({x:col,y:row,angle:angle+(random()<.5?-1:1)*(0.65+random()*.55),age:0});
     }
     state.tips=next.slice(0,48);state.steps++;
     return { nextBoardState:board, nextCracksState:state };

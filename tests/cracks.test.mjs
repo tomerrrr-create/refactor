@@ -1,4 +1,4 @@
-import { validateCracksMaterial } from '../js/cracks-settings.js';
+import { DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -30,7 +30,7 @@ test('empty and gold boards stay unchanged, light lines work and changed board s
  for(const invalid of [{...createCracksState(9),random:0},{...createCracksState(9),tips:[{x:NaN,y:0,angle:0,age:0}]},{...createCracksState(9),tips:Array(49).fill({x:0,y:0,angle:0,age:0})}])assert.throws(()=>restoreCracksState(invalid));
 });
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-function harness(){const c=vm.createContext({prepareCracksResume,createCracksState,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
+function harness(){const c=vm.createContext({DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
  c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='contour'){c.contourMode='cracks';c.cracksState=null;}};
  vm.runInContext(source.slice(source.indexOf('function getCracksMaterial()'),source.indexOf('function nextEvolutionMode(')),c);return c;}
 test('paused contour cycle includes Off, live cycle skips Off, and snapshots preserve rules and tips',()=>{
@@ -87,4 +87,15 @@ test('drawing history retains current Cracks preferences while explicit snapshot
  c.contourRules.material={enabled:false,strength:40};c.isMacroPlaying=true;c.restoreContourSnapshot(old,{preservePreferences:true});
  assert.equal(c.getContourSnapshot().material.strength,100,'macro uses the recorded effective material');
  assert.equal(c.contourRules.material.enabled,false,'macro does not replace the user preference');
+});
+
+test('new growth preferences survive old drawing snapshots, while macro overrides remain temporary',()=>{
+ const c=harness();c.armSimulation('contour');
+ const oldGrowth={branchChance:100,branchInterval:2,curvature:200};c.contourRules.growth=oldGrowth;
+ const old=JSON.parse(JSON.stringify(c.getContourSnapshot()));delete c.contourRules.growth;
+ c.restoreContourSnapshot(old,{preservePreferences:true});assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),DEFAULT_CRACKS_GROWTH);
+ const current={branchChance:25,branchInterval:30,curvature:0};c.contourRules.growth=current;c.restoreContourSnapshot(old,{preservePreferences:true});assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),current);
+ c.restoreContourSnapshot(old);assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),oldGrowth);
+ c.contourRules.growth=current;c.isMacroPlaying=true;c.restoreContourSnapshot(old,{preservePreferences:true});assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),oldGrowth);assert.deepEqual(c.contourRules.growth,current);
+ const legacy=JSON.parse(JSON.stringify(old));delete legacy.growth;delete legacy.rules.growth;c.restoreContourSnapshot(legacy);assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),DEFAULT_CRACKS_GROWTH);assert.deepEqual(c.contourRules.growth,current);
 });

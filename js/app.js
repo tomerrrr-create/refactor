@@ -1,4 +1,4 @@
-import { DEFAULT_CRACKS_MATERIAL, validateCracksMaterial } from './cracks-settings.js';
+import { DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
@@ -297,7 +297,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
-      let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null;
+      let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null, replayCracksGrowth = null;
       let contourRules = { ...C.defaultContourRules }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
@@ -1721,7 +1721,7 @@ function handleEvolutionTap(simulation, onTap) {
 
 function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     if (isLifePlaying) return;
-    if (!isExecutingMacroCommand) replayCracksMaterial = null;
+    if (!isExecutingMacroCommand) { replayCracksMaterial = null; replayCracksGrowth = null; }
 
     // --- MACRO KILL SWITCH ---
     // אם לחצו על כפתור סימולציה באופן ידני (ולא מתוך פקודת מאקרו), אנחנו משמידים את המאקרו הטעון
@@ -3374,13 +3374,18 @@ function cycleChiFlowMode() {
 function getCracksMaterial() {
     return validateCracksMaterial(replayCracksMaterial ?? contourRules.material);
 }
-function saveCracksSettings(material, lineColor) {
+function getCracksGrowth() {
+    return validateCracksGrowth(replayCracksGrowth ?? contourRules.growth);
+}
+function saveCracksSettings(material, lineColor, growth = getCracksGrowth()) {
     if (armedSimulation !== 'contour' || contourMode !== 'cracks' || isBreathing || isMacroLoaded || isMacroPlaying) return false;
     const next = validateCracksMaterial(material);
+    const nextGrowth = validateCracksGrowth(growth);
     if (!['darkest','lightest'].includes(lineColor)) return false;
     const commit = () => {
-        replayCracksMaterial = null;
-        contourRules = { ...contourRules, material:next, lineColor };
+        replayCracksMaterial = null; replayCracksGrowth = null;
+        contourRules = { ...contourRules, material:next, growth:nextGrowth, lineColor };
+        if (JSON.stringify(nextGrowth) === JSON.stringify(DEFAULT_CRACKS_GROWTH)) delete contourRules.growth;
         if (next.enabled && next.strength === DEFAULT_CRACKS_MATERIAL.strength) delete contourRules.material;
         cracksState = cracksState ? { ...restoreCracksState(cracksState), version:3, pendingSeed:cracksState.pendingSeed ?? null } : createCracksState(n);
         cracksState = prepareCracksResume({ n, currentBoardState:boardState, currentPalette:palette(), contourRules:{ ...contourRules, material:next } }, cracksState);
@@ -3393,7 +3398,7 @@ function saveCracksSettings(material, lineColor) {
     return true;
 }
 function getContourSnapshot() {
-    return { mode: contourMode, rules: { ...contourRules }, ...(contourMode === 'cracks' ? { material: getCracksMaterial() } : {}), cracksState: cracksState ? restoreCracksState(cracksState) : null };
+    return { mode: contourMode, rules: { ...contourRules }, ...(contourMode === 'cracks' ? { material: getCracksMaterial(), growth:getCracksGrowth() } : {}), cracksState: cracksState ? restoreCracksState(cracksState) : null };
 }
 function validateContourSnapshot(value) {
     if (!value || !['contours','cracks'].includes(value.mode) || !value.rules ||
@@ -3401,6 +3406,8 @@ function validateContourSnapshot(value) {
         !['darkest','lightest'].includes(value.rules.lineColor)) throw new Error('Invalid contour state');
     if (value.cracksState) restoreCracksState(value.cracksState);
     if (value.material) validateCracksMaterial(value.material);
+    if (value.growth) validateCracksGrowth(value.growth);
+    if (value.rules.growth) validateCracksGrowth(value.rules.growth);
     if (value.rules.material) validateCracksMaterial(value.rules.material);
 }
 function restoreContourSnapshot(value, { preservePreferences = false } = {}) {
@@ -3409,28 +3416,36 @@ function restoreContourSnapshot(value, { preservePreferences = false } = {}) {
     contourMode = value.mode;
     const preferenceMaterial = contourRules.material;
     const preferenceLineColor = contourRules.lineColor;
+    const preferenceGrowth = contourRules.growth;
     contourRules = { ...value.rules };
     if (isMacroPlaying || isExecutingMacroCommand) {
         if (preferenceMaterial) contourRules.material = preferenceMaterial;
         else delete contourRules.material;
+        if (preferenceGrowth) contourRules.growth = preferenceGrowth; else delete contourRules.growth;
+        replayCracksGrowth = validateCracksGrowth(value.growth ?? value.rules.growth);
         replayCracksMaterial = value.material ?? { enabled:false, strength:80 };
     } else {
-        replayCracksMaterial = null;
+        replayCracksMaterial = null; replayCracksGrowth = null;
         if (preservePreferences) {
             if (preferenceMaterial) contourRules.material = validateCracksMaterial(preferenceMaterial);
             else delete contourRules.material;
             contourRules.lineColor = preferenceLineColor;
+            if (preferenceGrowth) contourRules.growth = validateCracksGrowth(preferenceGrowth); else delete contourRules.growth;
         } else if (value.material && JSON.stringify(validateCracksMaterial(contourRules.material)) !== JSON.stringify(value.material)) contourRules.material = validateCracksMaterial(value.material);
+    }
+    if (!preservePreferences && !isMacroPlaying && !isExecutingMacroCommand && value.growth) {
+        const growth = validateCracksGrowth(value.growth);
+        if (JSON.stringify(growth) === JSON.stringify(DEFAULT_CRACKS_GROWTH)) delete contourRules.growth; else contourRules.growth = growth;
     }
     cracksState = value.cracksState ? restoreCracksState(value.cracksState) : null;
     updateContourButtonUI();
 }
 function getContourRecordingRules() {
-    return contourMode === 'cracks' ? { ...contourRules, material: getCracksMaterial(), mode: 'cracks', cracksState: cracksState ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
+    return contourMode === 'cracks' ? { ...contourRules, material: getCracksMaterial(), growth:getCracksGrowth(), mode: 'cracks', cracksState: cracksState ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
 }
 function runContourEvolution(context) {
     if (contourMode !== 'cracks') return Simulations.runContourGeneration(context);
-    const result = runCracksGeneration({ ...context, contourRules: { ...context.contourRules, material: getCracksMaterial() } }, cracksState);
+    const result = runCracksGeneration({ ...context, contourRules: { ...context.contourRules, material: getCracksMaterial(), growth:getCracksGrowth() } }, cracksState);
     cracksState = result.nextCracksState;
     return result.nextBoardState;
 }
@@ -4493,7 +4508,7 @@ function stopMacro() {
         console.error('Failed to finish macro profile capture:', error);
     }
     replayNudgeTiming = null;
-    replayCracksMaterial = null;
+    replayCracksMaterial = null; replayCracksGrowth = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
     isSelectingMacroPalette = false; 
@@ -4661,7 +4676,9 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 }
                 else if (sim === 'contour') {
                     const preferenceMaterial = contourRules.material;
-                    contourRules = { sensitivity: parsedRules.sensitivity ?? 75, lineColor: parsedRules.lineColor === 'lightest' ? 'lightest' : 'darkest', ...(preferenceMaterial ? {material:preferenceMaterial} : {}) };
+                    const preferenceGrowth = contourRules.growth;
+                    contourRules = { sensitivity: parsedRules.sensitivity ?? 75, lineColor: parsedRules.lineColor === 'lightest' ? 'lightest' : 'darkest', ...(preferenceMaterial ? {material:preferenceMaterial} : {}), ...(preferenceGrowth ? {growth:preferenceGrowth} : {}) };
+                    replayCracksGrowth = validateCracksGrowth(parsedRules.growth);
                     replayCracksMaterial = parsedRules.material ? validateCracksMaterial(parsedRules.material) : {enabled:false,strength:80};
                     contourMode = parsedRules.mode === 'cracks' ? 'cracks' : 'contours';
                     cracksState = parsedRules.cracksState ? restoreCracksState(parsedRules.cracksState) : null;
@@ -5249,7 +5266,7 @@ syncGsModeFromModal: (direction) => {
             saveEvolutionTuning,
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             canEditCracksSettings: () => armedSimulation === 'contour' && contourMode === 'cracks' && !isBreathing && !isMacroLoaded && !isMacroPlaying,
-            getCracksSettings: () => ({ ...getCracksMaterial(), ...(cracksState && cracksState.version<3 ? {enabled:false} : {}), lineColor:contourRules.lineColor }),
+            getCracksSettings: () => ({ ...getCracksMaterial(), ...(cracksState && cracksState.version<3 ? DEFAULT_CRACKS_GROWTH : getCracksGrowth()), ...(cracksState && cracksState.version<3 ? {enabled:false} : {}), lineColor:contourRules.lineColor }),
             saveCracksSettings,
             getContourRules: () => ({ ...contourRules, mode: contourMode }), setContourRules: (r) => { contourRules = { ...contourRules, ...r }; recordLiveSimulationRules('contour'); }, // <-- ADDED HERE
 

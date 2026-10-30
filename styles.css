@@ -2261,3 +2261,5 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cracksSettingsDialog h2 { margin-bottom: 0; }
 
 #cracksMaterialStrength { direction: ltr; }
+
+#cracksSettingsDialog input[type="range"] { direction:ltr; }
