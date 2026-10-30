@@ -2377,3 +2377,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; gap:10px; min-height:44px; text-align:start; }
 #cymaticsSettingsDialog .cymatics-phase input { width:18px; height:18px; accent-color:var(--gold); }
 #cymaticsSettingsDialog #cymaticsPhaseNote { margin:0 0 12px; color:#aaa; font-size:12px; line-height:1.5; }
+
+#btnCymatics > svg { display:none; }
+#btnCymatics.cymatics-patterns > [data-cymatics-icon="patterns"] { display:block; }
+#btnCymatics.cymatics-diagonal > [data-cymatics-icon="diagonal"] { display:block; }
+#btnCymatics.cymatics-grid > [data-cymatics-icon="grid"] { display:block; }
+#btnCymatics.cymatics-circular > [data-cymatics-icon="circular"] { display:block; }
+#btnCymatics.cymatics-interference > [data-cymatics-icon="interference"] { display:block; }

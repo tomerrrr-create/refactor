@@ -1,4 +1,4 @@
-import {INITIAL_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
+import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
 import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
@@ -1775,7 +1775,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     updateDlaButtonUI();
     updateErosionButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
-    if(dom.btnCymatics)dom.btnCymatics.setAttribute('aria-pressed',String(armedSimulation==='cymatics'));
+    if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     updateBreatheEvoButtonUI();
     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -1879,7 +1879,7 @@ if (simulationName === 'magnet') {
     updateGameOfLifeButtonUI();
     updateChiFlowButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
-    if(dom.btnCymatics)dom.btnCymatics.setAttribute('aria-pressed',String(armedSimulation==='cymatics'));
+    if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
 }
 
       
@@ -2115,6 +2115,7 @@ if (simulationName === 'magnet') {
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH};contourRules.lineColor='brush';}
         turingRules = { ...settings.rules.turing };
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
+        if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
         if (armedSimulation === 'magnet') magnetMode = magnetRules.method;
@@ -2478,7 +2479,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         updateGameOfLifeButtonUI();
         updateChiFlowButtonUI();
         dom.btnBrightnessEvo.title = getText('tooltip_brightnessEvo');
-        dom.btnCymatics.title=getText('tooltip_cymatics');dom.btnCymatics.setAttribute('aria-label',getText('tooltip_cymatics'));
+        updateCymaticsButtonUI();
         dom.btnGravitationalSort.title = getText('tooltip_gravitationalSort'); 
         updateErosionButtonUI();
         dom.btnDla.title = getText('tooltip_dla'); 
@@ -2595,7 +2596,7 @@ magnetMode = 'off';
 gsMode = 'off';
     updateGravitationalSortButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
-    if(dom.btnCymatics)dom.btnCymatics.setAttribute('aria-pressed',String(armedSimulation==='cymatics'));
+    if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
 
       }
 
@@ -3417,6 +3418,34 @@ function cycleChiFlowMode() {
 }
 
 // Running evolutions cycle through active modes; paused cycles retain Off.
+function updateCymaticsButtonUI(){
+    if(typeof dom==='undefined'||!dom.btnCymatics)return;
+    const button=dom.btnCymatics,rules=getCymaticsRules();
+    const map=rules.mode==='resonance'?Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===(rules.resonanceVersion??1)):'patterns';
+    for(const name of ['patterns',...Object.keys(CYMATICS_RESONANCE_MAPS)])button.classList.toggle('cymatics-'+name,name===map);
+    button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',armedSimulation==='cymatics');
+    const title=getText('tooltip_cymatics')+' — '+getText(map==='patterns'?'cymatics_'+rules.pattern:'cymatics_map_'+map);
+    button.title=title;button.setAttribute('aria-label',title);button.setAttribute('aria-pressed',String(armedSimulation==='cymatics'));
+}
+function recordCymaticsSelection(){
+    window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+}
+function cycleCymaticsMode(){
+    if(isLifePlaying&&armedSimulation!=='cymatics')return;
+    if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
+    if(armedSimulation!=='cymatics'){
+        armSimulation('cymatics');recordCymaticsSelection();return;
+    }
+    const rules=getCymaticsRules(),next=rules.mode==='resonance'?nextEvolutionMode(rules.resonanceVersion??1,['off',4,1,2,3]):4;
+    const updated={...rules,mode:'resonance',frequency:rules.frequency??INITIAL_CYMATICS_RULES.frequency,
+        resonanceVersion:next==='off'?4:next,phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion};
+    const running=isLifePlaying;
+    if(saveCymaticsSettings(updated)===false)return;
+    if(next==='off'){
+        armSimulation(null);
+        window.logArtEvent('Cymatics Mode Changed',JSON.stringify({mode:'off',...getCymaticsSnapshot()}));
+    }else if(!running)recordCymaticsSelection();
+}
 function getCymaticsRules(){return replayCymaticsRules??cymaticsRules;}
 function getCymaticsSnapshot(){return {cymaticsVersion:1,rules:{...getCymaticsRules()},state:cymaticsState?.n===n?restoreCymaticsState(cymaticsState):createCymaticsState(n)};}
 function restoreCymaticsSnapshot(value,{preservePreferences=false}={}){
@@ -3425,6 +3454,7 @@ function restoreCymaticsSnapshot(value,{preservePreferences=false}={}){
     cymaticsState=snapshot.state;
     if(isMacroPlaying||isExecutingMacroCommand)replayCymaticsRules=snapshot.rules;
     else {replayCymaticsRules=null;if(!preservePreferences)cymaticsRules=snapshot.rules;}
+    updateCymaticsButtonUI();
 }
 function runCymaticsEvolution(context){
     const result=runCymaticsGeneration({...context,cymaticsRules:getCymaticsRules()},cymaticsState);
@@ -3433,7 +3463,7 @@ function runCymaticsEvolution(context){
 function saveCymaticsSettings(rules){
     if(armedSimulation!=='cymatics'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
     cymaticsRules=validateCymaticsRules(rules);replayCymaticsRules=null;
-    recordLiveSimulationRules('cymatics');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
+    updateCymaticsButtonUI();recordLiveSimulationRules('cymatics');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
 }
 function getCracksBrush() {
     return replayCracksBrush ?? {color:selectedColor ?? null,rainbow:isRainbowModeActive};
@@ -4169,7 +4199,7 @@ function parseHistoryMacro(lines) {
         if (event.eventName === 'BRUSH_END') brushMotion = false;
         previousBrushElapsed = brushMotion ? event.brushElapsed : null;
         if (event.eventName === 'PLAY') simulationRunning = true;
-        if (event.eventName === 'PAUSE' || event.eventName === 'HISTORY_SETTINGS') simulationRunning = false;
+        if (['PAUSE','HISTORY_SETTINGS','Cymatics Mode Changed'].includes(event.eventName)) simulationRunning = false;
         return { ...event, delta };
     });
 }
@@ -4201,6 +4231,11 @@ function validateIslandsMacroAction(action) {
 }
 
 function validateCymaticsMacroAction(action){
+    if(action.eventName==='Cymatics Mode Changed'){
+        const snapshot=JSON.parse(action.details);
+        if(snapshot.mode!=='off')throw new Error('Invalid Cymatics mode');
+        validateCymaticsSnapshot(snapshot);
+    }
     if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)){
         const match=action.details.match(/^Armed: cymatics\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
         if(match)validateCymaticsSnapshot(JSON.parse(match[1]));
@@ -4252,7 +4287,7 @@ function parseMacroText(text) {
             if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) action.orphanedSimulation = true;
         }
         if (action.eventName === 'SIMULATION_RULES') hasSimulationContext = true;
-        if (['PAUSE', 'HISTORY_SETTINGS'].includes(action.eventName)) simulationRunning = false;
+        if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed'].includes(action.eventName)) simulationRunning = false;
         actions.push(action);
     }
     actions.forEach(validateIslandsMacroAction);
@@ -4602,6 +4637,7 @@ function stopMacro() {
     }
     replayNudgeTiming = null;
     replayCymaticsRules=null;
+    if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     currentMacroStep = 0;
     pendingMacroPalette = null; 
@@ -4952,6 +4988,12 @@ function executeMacroAction(action) {
     else if (action.eventName === 'PAUSE') {
         pauseLife();
     } 
+    else if (action.eventName === 'Cymatics Mode Changed') {
+        validateCymaticsMacroAction(action);
+        const snapshot=validateCymaticsSnapshot(JSON.parse(action.details));
+        if(armedSimulation==='cymatics'){if(isLifePlaying)pauseLife();armSimulation(null);}
+        replayCymaticsRules=snapshot.rules;cymaticsState=snapshot.state;updateCymaticsButtonUI();
+    }
     else if (action.eventName === 'SIMULATION_RULES') {
         applyMacroRules(action.details);
     }
@@ -5662,7 +5704,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
             [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, modals.openBrightnessSettingsModal],
             [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, modals.openBreatheSettingsModal],
-            [dom.btnCymatics,'cymatics',()=>armSimulation(armedSimulation==='cymatics'?null:'cymatics'),()=>cymaticsSettingsUI.open()],
+            [dom.btnCymatics,'cymatics',cycleCymaticsMode,()=>cymaticsSettingsUI.open()],
             [dom.btnIslands, 'islands', cycleIslandsMode, modals.openIslandsSettingsModal],
             [dom.btnErosion, 'erosion', cycleErosionMode, modals.openErosionSettingsModal],
             [dom.btnDla, 'dla', cycleDlaMode, modals.openDlaSettingsModal]
