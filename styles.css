@@ -2303,3 +2303,38 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cracksSettingsDialog [data-cracks-preset][aria-pressed="true"] { border-color:#d9ba7590; background:#d9ba7518; color:#f2d99f; box-shadow:inset 0 0 0 1px #d9ba7510; }
 #cracksSettingsDialog .cracks-preset-name { font-size:12px; font-weight:500; line-height:1.4; overflow-wrap:anywhere; }
 #cracksSettingsDialog .cracks-preset-values { font-size:10px; line-height:1.4; font-variant-numeric:tabular-nums; opacity:.72; }
+
+/* Evolution drawer: reposition the original buttons, retaining their listeners. */
+#controlsContainer #btnEvolutionDrawer { display:none; }
+#controlsContainer.sim-mode-active #btnEvolutionDrawer { display:inline-flex; align-items:center; justify-content:center; grid-area:1 / 7; width:44px; height:44px; margin:auto; padding:0; border:0; background:transparent; cursor:pointer; }
+#btnEvolutionDrawer span { width:7px; height:7px; border-radius:50%; background:#d7b65f; box-shadow:0 0 8px #d7b65f35; }
+#btnEvolutionDrawer[data-parked-active="true"] span { background:#969994; box-shadow:none; }
+#btnEvolutionDrawer:disabled { cursor:default; }
+#btnEvolutionDrawer:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:8px; }
+#controlsContainer.sim-mode-active [data-evolution-id]:not([data-evolution-slot]) { display:none !important; }
+#controlsContainer.sim-mode-active [data-evolution-slot] { display:inline-flex !important; visibility:visible !important; opacity:1 !important; grid-row:var(--evolution-row) !important; grid-column:var(--evolution-column) !important; }
+#evolutionDrawerDialog { width:min(580px,calc(100vw - 24px)); padding:18px; }
+#evolutionDrawerDialog .drawer-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#evolutionDrawerDialog h2 { margin:0; font-size:19px; }
+#evolutionDrawerDialog [data-close] { min-width:44px; min-height:44px; border:0; background:transparent; color:#c3b99e; font-size:25px; }
+#evolutionDrawerDialog .drawer-instructions { margin:10px 0 16px; font-size:12px; line-height:1.6; color:#aaa99e; }
+#evolutionDrawerDialog .drawer-slots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; direction:ltr; }
+#evolutionDrawerDialog .drawer-slots button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-width:0; min-height:72px; padding:7px 3px; border:1px solid #b28b3645; border-radius:8px; background:#111611; color:#bdb8a9; }
+#evolutionDrawerDialog .drawer-slots small { font-size:9px; color:#a49c85; }
+#evolutionDrawerDialog .drawer-slot-label { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9px; }
+#evolutionDrawerDialog h3 { font-size:13px; color:#d4c8aa; margin:20px 0 10px; font-weight:500; }
+#evolutionDrawerDialog .drawer-catalog { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+#evolutionDrawerDialog .drawer-catalog button { display:flex; align-items:center; gap:8px; min-height:56px; min-width:0; padding:8px; border:1px solid #b28b362c; border-radius:8px; background:#131711; color:#c3b99e; font-size:11px; text-align:start; }
+#evolutionDrawerDialog .drawer-catalog button > span:not(.drawer-icon) { flex:1; overflow-wrap:anywhere; }
+#evolutionDrawerDialog .drawer-catalog small { font-size:10px; color:#e3c677; }
+#evolutionDrawerDialog button[aria-pressed="true"] { border-color:#d4b865; background:#b28b3624; color:#ffe7a0; }
+#evolutionDrawerDialog .drawer-icon { display:flex; justify-content:center; flex-shrink:0; width:24px; height:24px; font-size:16px; }
+#evolutionDrawerDialog .drawer-icon svg { width:24px !important; height:24px !important; }
+#evolutionDrawerDialog button { font-family:inherit; cursor:pointer; }
+#evolutionDrawerDialog button:focus-visible { outline:2px solid #e3c677; outline-offset:2px; }
+#evolutionDrawerDialog .drawer-actions { display:flex; gap:8px; position:sticky; bottom:-18px; margin:16px -2px -2px; padding:14px 2px 2px; background:#1c1c1c; border-top:1px solid #b28b362c; }
+#evolutionDrawerDialog .drawer-actions button { flex:1; min-width:0; min-height:44px; padding:8px; border:1px solid #b28b3645; border-radius:8px; background:#121510; color:#c3b99e; font-size:11px; }
+#evolutionDrawerDialog .drawer-actions .save-btn { color:#ffe7a0; border-color:#d4b865; background:#b28b3624; }
+@media(max-width:480px) { #evolutionDrawerDialog { padding:14px; } #evolutionDrawerDialog .drawer-catalog { grid-template-columns:repeat(2,minmax(0,1fr)); } #evolutionDrawerDialog .drawer-actions { bottom:-14px; } }
+
+#controlsContainer.sim-mode-active [data-evolution-slot]:disabled { opacity:.3 !important; }

@@ -9,6 +9,13 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  drawer_title: {"en":"Evolution drawer", "he":"מגירת אבולוציות", "ru":"Ящик эволюций", "nl":"Evolutielade"},
+  drawer_instructions: {"en":"Choose one of the ten slots, then choose an evolution below. Choosing an evolution already on the panel swaps the two slots. Save to apply.", "he":"בחרו אחד מעשרת המקומות ואז אבולוציה מהרשימה. בחירה באבולוציה שכבר בלוח מחליפה בין שני המקומות. שמרו כדי להחיל.", "ru":"Выберите одно из десяти мест, затем эволюцию ниже. Уже размещённая эволюция поменяется местами с выбранной. Сохраните изменения.", "nl":"Kies een van de tien plekken en daarna een evolutie hieronder. Een evolutie die al op het paneel staat, wisselt van plek. Sla op om toe te passen."},
+  drawer_all: {"en":"All evolutions", "he":"כל האבולוציות", "ru":"Все эволюции", "nl":"Alle evoluties"},
+  drawer_slots: {"en":"Ten toolbar slots", "he":"עשרת המקומות בלוח", "ru":"Десять мест на панели", "nl":"Tien plekken op het paneel"},
+  drawer_slot: {"en":"Slot {n}", "he":"מקום {n}", "ru":"Место {n}", "nl":"Plek {n}"},
+  drawer_hidden_active: {"en":"Running evolution in the drawer: {name}", "he":"אבולוציה רצה בחניה: {name}", "ru":"Эволюция работает вне панели: {name}", "nl":"Actieve evolutie in de lade: {name}"},
+  drawer_cracks_contours: {"en":"Cracks / Contours", "he":"סדקים / קווי מתאר", "ru":"Трещины / Контуры", "nl":"Scheuren / Contouren"},
   cracks_settings_title: {"en": "Cracks settings", "he": "הגדרות סדקים", "ru": "Настройки трещин", "nl": "Instellingen voor scheuren"},
   cracks_branch_chance: {"en":"Branching chance", "he":"סיכוי להסתעפות", "ru":"Вероятность ветвления", "nl":"Kans op vertakking"},
   cracks_branch_interval: {"en":"Steps between branching opportunities", "he":"צעדים בין הזדמנויות להסתעפות", "ru":"Шаги между попытками ветвления", "nl":"Stappen tussen vertakkingskansen"},

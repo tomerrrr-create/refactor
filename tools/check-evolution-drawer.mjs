@@ -1,0 +1,53 @@
+// Browser coverage of the drawer's presentation-only contract and saved profiles.
+import {readFile,mkdir} from 'node:fs/promises';
+import {createServer} from 'node:http';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import assert from 'node:assert/strict';
+import {DEFAULT_EVOLUTION_SLOTS,assignEvolutionSlot} from '../js/evolution-drawer-settings.js';
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
+const root=fileURLToPath(new URL('../',import.meta.url)),artifacts='/tmp/evolution-drawer-check';await mkdir(artifacts,{recursive:true});
+const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.html')?'text/html':'application/octet-stream');res.end(await readFile(path.join(root,'dist',f)));}catch{res.writeHead(404);res.end();}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
+try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:320,height:568},{lang:'nl',width:844,height:390}].filter(c=>!process.env.DRAWER_LANG||c.lang===process.env.DRAWER_LANG)){
+ const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.drawerTest={
+ setup:()=>{pauseLife();resetArmedState();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=5+i%12;t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();},
+ state:()=>({slots:[...evolutionSlots],board:boardState.map(t=>t.k),logs:[...artRecipeLog],history:history.length,armed:armedSimulation,playing:isLifePlaying,gen:currentGenerationCount,loaded:isMacroLoaded,macro:isMacroPlaying,settings:getWorkspaceSettings()}),
+ open:()=>evolutionDrawer.open(),arm:armSimulation,play:togglePlayPauseLife,pause:pauseLife,tech:()=>modals.openTechnicianMenu(),loadSettings:importWorkspaceSettings,recipe:async()=>await createArtRecipeFile().text(),macro:playMacro
+ };initializeApp().then(()=>drawerTest.ready=true);`);
+ for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
+ await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>drawerTest.setup());
+ const state=()=>page.evaluate(()=>drawerTest.state()),tap=target=>config.width<600?target.tap():target.click();const trigger=page.locator('#btnEvolutionDrawer'),dialog=page.locator('#evolutionDrawerDialog');
+ async function open(){await tap(trigger);await dialog.waitFor({state:'visible'});}
+ async function assign(slot,id){await tap(dialog.locator('[data-drawer-slot="'+slot+'"]'));await tap(dialog.locator('[data-drawer-evolution="'+id+'"]'));}
+ async function visibleSlots(){return page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>Number(a.dataset.evolutionSlot)-Number(b.dataset.evolutionSlot)).map(e=>e.dataset.evolutionId));}
+ assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);const initial=await state();
+ assert.equal(await page.locator('#btnShowBreatheMenu').isVisible(),false);assert.equal(await page.locator('#btnTuring').isVisible(),false);
+ await page.evaluate(()=>window.realLifeButton=document.querySelector('#btnGameOfLife'));
+ await open();assert.equal(await dialog.getAttribute('dir'),config.lang==='he'?'rtl':'ltr');assert.equal(await dialog.locator('[data-drawer-slot]').count(),10);assert.equal(await dialog.locator('[data-drawer-evolution]').count(),14);assert.equal(await dialog.locator('.drawer-icon [id]').count(),0);assert(await dialog.evaluate(d=>{const original=document.querySelector('#btnContour .contour-original-icon'),copy=d.querySelector('[data-drawer-evolution="contour"] .contour-original-icon');return (getComputedStyle(original).display==='none')===(getComputedStyle(copy).display==='none');}));
+ assert(await dialog.evaluate(e=>{const r=e.getBoundingClientRect();return e.scrollWidth<=e.clientWidth+1&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;}));
+ await page.screenshot({path:path.join(artifacts,config.lang+'-drawer.png')});
+ await assign(0,'breathe');assert.deepEqual(await state(),initial,'draft assignment changes no live state');await tap(dialog.locator('[data-cancel]'));assert.deepEqual(await state(),initial);
+ await open();await assign(0,'breathe');await assign(1,'turing');await assign(2,'nudgeBrighter');await assign(3,'nudgeDarker');await tap(dialog.locator('[type=submit]'));
+ let custom=['breathe','turing','nudgeBrighter','nudgeDarker',...DEFAULT_EVOLUTION_SLOTS.slice(4)];assert.deepEqual(await visibleSlots(),custom);const saved=await state();assert.deepEqual(saved.board,initial.board);assert.deepEqual(saved.logs,initial.logs);assert.equal(saved.history,initial.history);assert.deepEqual(saved.settings.evolutionSlots,custom);assert(await page.evaluate(()=>document.getElementById('btnGameOfLife')===window.realLifeButton));
+ // All ten controls stay inside the same blue overlay, including formerly hidden controls.
+ assert(await page.locator('#controlsContainer').evaluate(container=>{const r=container.querySelector('#simModeBackground').getBoundingClientRect();return [...container.querySelectorAll('[data-evolution-slot]')].every(e=>{const b=e.getBoundingClientRect(),x=b.x+b.width/2,y=b.y+b.height/2;return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;});}));
+ await open();await assign(0,'turing');await tap(dialog.locator('[type=submit]'));custom=assignEvolutionSlot(custom,0,'turing');assert.deepEqual(await visibleSlots(),custom);
+ await tap(page.locator('#btnTuring'));assert.equal((await state()).armed,'turing');await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>drawerTest.state().gen>=3);assert(await trigger.isDisabled());await page.evaluate(()=>drawerTest.open());assert(!(await dialog.evaluate(d=>d.open)));await tap(page.locator('#btnPlayPauseLife'));assert(!(await trigger.isDisabled()));
+ await tap(page.locator('#btnShowBreatheMenu'));assert.equal((await state()).armed,'breathe');await tap(page.locator('#btnPlayPauseLife'));assert((await state()).playing);assert(await trigger.isDisabled());await page.waitForFunction(()=>getComputedStyle(document.querySelector('#btnTuring')).opacity==='0.3',null,{timeout:2000});await tap(page.locator('#btnPlayPauseLife'));
+ // A parked evolution still runs and global Pause remains available.
+ await page.evaluate(()=>drawerTest.arm('dla'));await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>drawerTest.state().gen>=3);await page.waitForFunction(()=>document.querySelector('#btnEvolutionDrawer').dataset.parkedActive==='true');assert(await trigger.isDisabled());assert.equal((await state()).armed,'dla');await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>!document.querySelector('#btnEvolutionDrawer').disabled);
+ // Draft Reset/Cancel, then profile separation and reload persistence.
+ await open();await tap(dialog.locator('[data-reset]'));await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,custom);
+ await page.evaluate(()=>drawerTest.tech());await page.locator('[data-profile-choice="1"]').click();assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_SLOTS);await page.locator('[data-profile-choice="0"]').click();assert.deepEqual((await state()).slots,custom);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
+ await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);assert.deepEqual((await state()).slots,custom,'saved profile layout survives reload');await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>drawerTest.setup());
+ // Replay operates by original engine IDs even when its control is parked.
+ await page.evaluate(()=>drawerTest.arm('contour'));assert.equal(await page.locator('#btnContour').isVisible(),false);await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>drawerTest.state().gen>=8);await tap(page.locator('#btnPlayPauseLife'));const result=await state(),recipe=await page.evaluate(()=>drawerTest.recipe());assert(!recipe.includes('evolutionSlots'),'toolbar preference stays outside art recipes');
+ await page.locator('#projectFileInput').setInputFiles({name:'parked-evolution.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});await page.waitForFunction(()=>drawerTest.state().loaded);assert(await trigger.isDisabled());await page.evaluate(()=>drawerTest.macro());await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,result.board);assert.deepEqual((await state()).slots,custom);
+ // Existing real controls retain their settings swipe and mode cycling.
+ await open();await assign(0,'contour');await tap(dialog.locator('[type=submit]'));const contour=page.locator('#btnContour');const r=await contour.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();assert(await page.locator('#cracksSettingsDialog').isVisible());await page.locator('#cracksSettingsDialog [data-cancel]').click();
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
+}}finally{await browser.close();server.close();}

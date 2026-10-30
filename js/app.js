@@ -1,3 +1,5 @@
+import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
+import {createEvolutionDrawer} from './evolution-drawer.js';
 import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
@@ -373,6 +375,8 @@ let magnetMode = 'off';
 
       const originalColorPickerIconHTML = dom.btnColorPicker.innerHTML;
       
+      let evolutionDrawer;
+      let evolutionSlots = [...DEFAULT_EVOLUTION_SLOTS];
       let modals;
       let settingsProfiles;
 
@@ -2049,6 +2053,7 @@ if (simulationName === 'magnet') {
 
       function getWorkspaceSettings() {
         return {
+            ...(evolutionSlots.join() === DEFAULT_EVOLUTION_SLOTS.join() ? {} : {evolutionSlots:[...evolutionSlots]}),
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
             simulationPlaybackTheme: getSimulationPlaybackTheme(),
@@ -2067,6 +2072,8 @@ if (simulationName === 'magnet') {
 
       // Applies preferences only. No board, palette, sort, history or macro state is restored.
       function applyWorkspacePreferences(settings, { startup = false } = {}) {
+        evolutionSlots = validateEvolutionSlots(settings.evolutionSlots);
+        evolutionDrawer?.applyLayout();
         if (settings.gameOfLifeGenetics === 'palette-order') gameOfLifeRules.genetics = 'palette-order';
         else delete gameOfLifeRules.genetics;
         evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
@@ -5364,9 +5371,15 @@ updateBrightnessEvoButtonUI();
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
         });
+        evolutionDrawer = createEvolutionDrawer({
+            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,
+            canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
+            getText,getLang:getCurrentLang,onLanguageChange,
+            onSave:slots=>{if(!isSimModeActive||isLifePlaying||isBreathing||isMacroLoaded||isMacroPlaying)return false;
+                evolutionSlots=validateEvolutionSlots(slots);evolutionDrawer.applyLayout();persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;}
+        });
         logCurrentStateAsInit();
 
-        
         const boardCanvas = dom.boardCanvas;
         boardCanvas.addEventListener('pointerdown', onPointerDown);
         boardCanvas.addEventListener('pointermove', onPointerMove);
