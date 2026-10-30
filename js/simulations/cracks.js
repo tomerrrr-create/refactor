@@ -1,3 +1,17 @@
+import { getLuminance } from '../colors.js';
+import { DEFAULT_CRACKS_GROWTH } from '../cracks-settings.js';
+// Original palette order breaks equal-luminance ties exactly like the default
+// stable luminance sort. Resolve its color back into the current sorted palette.
+export function getCracksLineIndex({currentPalette,originalPalette=currentPalette,contourRules}) {
+    if(contourRules.lineColor==='lightest')return currentPalette.length-1;
+    if(contourRules.lineColor!=='original-anchor')return 0;
+    let anchor=originalPalette[0],light=getLuminance(anchor);
+    for(let i=1;i<originalPalette.length;i++){
+        const candidate=getLuminance(originalPalette[i]);
+        if(candidate<light){anchor=originalPalette[i];light=candidate;}
+    }
+    return Math.max(0,currentPalette.indexOf(anchor));
+}
 // Experimental branching fractures. All runtime state is small and serializable;
 // board colors are the collision surface, so live drawing participates directly.
 export function createCracksState(n, seed = 0x51f15e) {
@@ -23,7 +37,7 @@ export function prepareCracksResume(context, previous) {
     if (!previous || previous.version < 3 || previous.steps === 0 || previous.tips.length || previous.pendingSeed !== null) return previous;
     const {n,currentBoardState:board,currentPalette,contourRules}=context;
     if (previous.n !== n) return previous;
-    const line=contourRules.lineColor==='lightest'?currentPalette.length-1:0;
+    const line=getCracksLineIndex(context);
     const available=i=>i>=0&&i<n*n&&!board[i].isGold&&board[i].k!==line&&materialResistance(previous,contourRules,currentPalette.length,board[i].k)<.5;
     const start=previous.random%(n*n);
     for(let offset=0;offset<n*n;offset++) {
@@ -41,17 +55,19 @@ export function queueCracksGrowth(context, previous, changes) {
     const {n,currentBoardState:board,currentPalette,contourRules}=context;
     const state=previous?.n===n ? previous : createCracksState(n);
     if(state.version<2)return state;
-    const line=contourRules.lineColor==='lightest'?currentPalette.length-1:0;
+    const line=getCracksLineIndex(context);
     const available=i=>Number.isInteger(i)&&i>=0&&i<n*n&&board[i]&&!board[i].isGold&&board[i].k!==line&&materialResistance(state,contourRules,currentPalette.length,board[i].k)<.5;
     let seed=available(state.pendingSeed)?state.pendingSeed:null;
     for(const change of changes)if(available(change.i)&&(seed===null||change.i<seed))seed=change.i;
     if(seed===null)return state;
     return {...state,roots:0,pendingSeed:seed};
 }
-export function runCracksGeneration({n,currentBoardState,currentPalette,contourRules}, previous) {
+export function runCracksGeneration(context, previous) {
+    const {n,currentBoardState,currentPalette,contourRules}=context;
     const state = previous?.n === n ? restoreCracksState(previous) : createCracksState(n);
+    const growth = state.version>=3 ? contourRules.growth ?? DEFAULT_CRACKS_GROWTH : DEFAULT_CRACKS_GROWTH;
     const random = () => { let x=state.random; x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/0x100000000; };
-    const line = contourRules.lineColor === 'lightest' ? currentPalette.length-1 : 0;
+    const line = getCracksLineIndex(context);
     let board=currentBoardState;
     const available = index => index>=0 && index<n*n && !board[index].isGold && board[index].k!==line;
     const resistance=index=>materialResistance(state,contourRules,currentPalette.length,board[index].k);
@@ -88,7 +104,7 @@ export function runCracksGeneration({n,currentBoardState,currentPalette,contourR
     }
     const next=[];
     for(const tip of state.tips) {
-        let angle=tip.angle+(random()-.5)*.24;
+        let angle=tip.angle+(random()-.5)*.24*(growth.curvature/100);
         const project=direction=>{
             let x=tip.x,y=tip.y;const old=Math.round(y)*n+Math.round(x);
             for(let i=0;i<3;i++){x+=Math.cos(direction)*.65;y+=Math.sin(direction)*.65;if(Math.round(y)*n+Math.round(x)!==old)break;}
@@ -116,7 +132,7 @@ export function runCracksGeneration({n,currentBoardState,currentPalette,contourR
         const {x,y,col,row}=target;
         paint(row*n+col);const age=tip.age+1;
         next.push({x:Math.max(0,Math.min(n-1,x)),y:Math.max(0,Math.min(n-1,y)),angle,age});
-        if(age%11===0&&next.length<46&&random()<.65)next.push({x:col,y:row,angle:angle+(random()<.5?-1:1)*(0.65+random()*.55),age:0});
+        if(age%growth.branchInterval===0&&next.length<46&&random()<growth.branchChance/100)next.push({x:col,y:row,angle:angle+(random()<.5?-1:1)*(0.65+random()*.55),age:0});
     }
     state.tips=next.slice(0,48);state.steps++;
     return { nextBoardState:board, nextCracksState:state };

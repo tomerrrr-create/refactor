@@ -1,4 +1,4 @@
-import { validateCracksMaterial } from '../js/cracks-settings.js';
+import { CRACKS_GROWTH_PRESETS, CRACKS_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -30,7 +30,7 @@ test('empty and gold boards stay unchanged, light lines work and changed board s
  for(const invalid of [{...createCracksState(9),random:0},{...createCracksState(9),tips:[{x:NaN,y:0,angle:0,age:0}]},{...createCracksState(9),tips:Array(49).fill({x:0,y:0,angle:0,age:0})}])assert.throws(()=>restoreCracksState(invalid));
 });
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-function harness(){const c=vm.createContext({prepareCracksResume,createCracksState,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
+function harness(){const c=vm.createContext({C:{PALETTES:[{}]},activePaletteIndex:0,CRACKS_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
  c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='contour'){c.contourMode='cracks';c.cracksState=null;}};
  vm.runInContext(source.slice(source.indexOf('function getCracksMaterial()'),source.indexOf('function nextEvolutionMode(')),c);return c;}
 test('paused contour cycle includes Off, live cycle skips Off, and snapshots preserve rules and tips',()=>{
@@ -71,4 +71,40 @@ test('version-1 recipes retain the board and random cursor captured from the ori
  const result=advance(ctx,legacy,100);
  const hash=createHash('sha256').update(JSON.stringify({board:result.ctx.currentBoardState,state:result.state})).digest('hex');
  assert.equal(hash,'b7b0358bcb508c9b35a57dd931b5822ed82e7ac7924614ffee699e08868358b2');
+});
+
+test('drawing history retains current Cracks preferences while explicit snapshots still restore recorded settings',()=>{
+ const c=harness();c.armSimulation('contour');
+ c.contourRules={sensitivity:75,lineColor:'darkest',material:{enabled:true,strength:100}};
+ c.runContourEvolution(fixture(21));const old=JSON.parse(JSON.stringify(c.getContourSnapshot()));
+ c.contourRules={sensitivity:75,lineColor:'lightest'}; // Current default: 40%.
+ c.restoreContourSnapshot(old,{preservePreferences:true});
+ assert.equal(c.getContourSnapshot().material.strength,40);assert.equal(c.contourRules.lineColor,'lightest');
+ assert.deepEqual(JSON.parse(JSON.stringify(c.cracksState)),old.cracksState,'art history still restores tips and the random cursor');
+ c.contourRules.material={enabled:false,strength:65};c.restoreContourSnapshot(old,{preservePreferences:true});
+ assert.deepEqual(JSON.parse(JSON.stringify(c.getContourSnapshot().material)),{enabled:false,strength:65});
+ c.restoreContourSnapshot(old);assert.equal(c.getContourSnapshot().material.strength,100,'project loading retains its recorded settings');
+ c.contourRules.material={enabled:false,strength:40};c.isMacroPlaying=true;c.restoreContourSnapshot(old,{preservePreferences:true});
+ assert.equal(c.getContourSnapshot().material.strength,100,'macro uses the recorded effective material');
+ assert.equal(c.contourRules.material.enabled,false,'macro does not replace the user preference');
+});
+
+test('new growth preferences survive old drawing snapshots, while macro overrides remain temporary',()=>{
+ const c=harness();c.armSimulation('contour');
+ const oldGrowth={branchChance:100,branchInterval:2,curvature:200};c.contourRules.growth=oldGrowth;
+ const old=JSON.parse(JSON.stringify(c.getContourSnapshot()));delete c.contourRules.growth;
+ c.restoreContourSnapshot(old,{preservePreferences:true});assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),DEFAULT_CRACKS_GROWTH);
+ const current={branchChance:25,branchInterval:30,curvature:0};c.contourRules.growth=current;c.restoreContourSnapshot(old,{preservePreferences:true});assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),current);
+ c.restoreContourSnapshot(old);assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),oldGrowth);
+ c.contourRules.growth=current;c.isMacroPlaying=true;c.restoreContourSnapshot(old,{preservePreferences:true});assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),oldGrowth);assert.deepEqual(c.contourRules.growth,current);
+ const legacy=JSON.parse(JSON.stringify(old));delete legacy.growth;delete legacy.rules.growth;c.restoreContourSnapshot(legacy);assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),DEFAULT_CRACKS_GROWTH);assert.deepEqual(c.contourRules.growth,current);
+});
+
+test('recorded preset values and legacy material overrides are independent of the new default',()=>{
+ const c=harness();c.armSimulation('contour');
+ for(const p of CRACKS_GROWTH_PRESETS){c.contourRules.growth={...p.values};const rules=JSON.parse(JSON.stringify(c.getContourRecordingRules()));assert.deepEqual(rules.growth,p.values);assert(!JSON.stringify(rules).includes(p.id));}
+ const legacy=JSON.parse(JSON.stringify(c.getContourSnapshot()));delete legacy.growth;delete legacy.rules.growth;delete legacy.rules.material;legacy.material={enabled:true,strength:40};
+ c.contourRules={sensitivity:75,lineColor:'darkest'};c.isMacroPlaying=true;c.restoreContourSnapshot(legacy);
+ assert.equal(c.getCracksMaterial().enabled,true,'old recorded material On overrides the new Off default');assert.equal(c.contourRules.material,undefined,'replay does not turn user preference On');assert.deepEqual(JSON.parse(JSON.stringify(c.getCracksGrowth())),DEFAULT_CRACKS_GROWTH);
+ c.isMacroPlaying=false;c.replayCracksMaterial=null;c.replayCracksGrowth=null;assert.equal(c.getCracksMaterial().enabled,false);
 });

@@ -1,4 +1,5 @@
-import { DEFAULT_CRACKS_MATERIAL, validateCracksMaterial } from './cracks-settings.js';
+import {validateEvolutionSlots} from './evolution-drawer-settings.js';
+import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
@@ -32,11 +33,13 @@ function mergeKnown(defaults, overrides, path = '') {
     if (!object(overrides)) throw new Error('Invalid settings object');
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
+        if (path === '' && key === 'evolutionSlots') { result[key] = validateEvolutionSlots(value); continue; }
         if (path === 'brush' && key === 'shape') { result[key] = clone(value); continue; }
         // Optional extension; V1’s original baseline stays unchanged.
         if (path === '' && ['separatorCycle', 'simulationTheme', 'simulationPlaybackTheme', 'evolutionTuning', 'gameOfLifeGenetics'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === 'rules.contour' && key === 'growth') { result[key] = validateCracksGrowth(value); continue; }
         if (path === 'rules.contour' && key === 'material') { result[key] = validateCracksMaterial(value); continue; }
         if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
         if (!Object.hasOwn(defaults, key)) throw new Error('Unknown settings field: ' + key);
@@ -70,8 +73,8 @@ export function validateWorkspaceSettings(value) {
         equal(normalizeSortCycle(settings.sortCycle), settings.sortCycle) && integer(settings.nudgeIntervalMs, 0, 200) &&
         (!Object.hasOwn(settings, 'gameOfLifeGenetics') || ['rgb', 'palette-order'].includes(settings.gameOfLifeGenetics)) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&
-        (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal', 'silver', 'ice'].includes(settings.simulationTheme)) &&
-        (!Object.hasOwn(settings, 'simulationPlaybackTheme') || ['blue', 'gold', 'teal', 'silver', 'ice'].includes(settings.simulationPlaybackTheme)) &&
+        (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal', 'silver', 'ice', 'pink'].includes(settings.simulationTheme)) &&
+        (!Object.hasOwn(settings, 'simulationPlaybackTheme') || ['blue', 'gold', 'teal', 'silver', 'ice', 'pink'].includes(settings.simulationPlaybackTheme)) &&
         typeof settings.smoothing.display === 'boolean' && typeof settings.smoothing.export === 'boolean' &&
         (!Object.hasOwn(settings.smoothing, 'bloom') || typeof settings.smoothing.bloom === 'boolean') &&
         (!Object.hasOwn(settings.smoothing, 'bloomIntensity') || integer(settings.smoothing.bloomIntensity, 0, 100)) &&
@@ -89,11 +92,12 @@ export function validateWorkspaceSettings(value) {
         (!Object.hasOwn(r.erosion, 'erosionPace') || integer(r.erosion.erosionPace, 1, 3)) &&
         (!Object.hasOwn(r.erosion, 'erosionStages') || validErosionStages(r.erosion.erosionStages)) &&
         Object.values(r.dla).every(v => typeof v === 'boolean') &&
-        number(r.contour.sensitivity, 0, 100) && ['darkest', 'lightest'].includes(r.contour.lineColor) &&
+        number(r.contour.sensitivity, 0, 100) && CRACKS_LINE_COLORS.includes(r.contour.lineColor) &&
         number(r.turing.feed, .01, .1) && number(r.turing.kill, .01, .07) &&
         number(r.turing.dA, 0, 1) && number(r.turing.dB, 0, 1) && number(r.turing.timeStep, 0, 1);
     if (!valid) throw new Error('Invalid workspace settings');
-    if (r.contour.material?.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
+    if (r.contour.material && r.contour.material.enabled === DEFAULT_CRACKS_MATERIAL.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
+    if (r.contour.growth && equal(r.contour.growth, DEFAULT_CRACKS_GROWTH)) delete r.contour.growth;
     return settings;
 }
 

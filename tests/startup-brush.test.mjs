@@ -1,3 +1,4 @@
+import {validateEvolutionSlots} from '../js/evolution-drawer-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -9,7 +10,7 @@ const apply = source.slice(source.indexOf('function applyWorkspacePreferences(')
 function harness() {
     const noop = () => {};
     const context = vm.createContext({
-        gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
+        validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],
         updateGravitationalSortButtonUI: noop, updateSpiralButtonUI: noop,
