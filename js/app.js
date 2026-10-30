@@ -2326,6 +2326,8 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 separatorPx = 0; selectedRelativeSeparator = 0; separatorIsSnapshot = false;
                 applySeparator();
                 goDark();
+                // A new board starts a new fracture run, even at the same size.
+                cracksState = null;
                 const currentPalette = palette();
                 const colorChoice = simulationInitSettings.brushColor || 'last';
                 selectedColorIndex = colorChoice === 'rainbow' ? -1 : colorChoice === 'first' ? 0 : colorChoice === 'lightest'

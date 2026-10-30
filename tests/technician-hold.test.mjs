@@ -80,6 +80,7 @@ test('simulation initialization preserves current symmetry by default and honors
         for (const configured of [undefined, 'off', 'horizontal', 'kaleidoscope']) for (const playing of [false,true]) {
             const events=[];
             const context = vm.createContext({
+                cracksState:{version:3,n:249,roots:16,steps:5000,tips:[],pendingSeed:null,rainbowTrail:{0:'f'.repeat(64)}},
                 symmetryMode: current, n: 249, separatorPx: 3, selectedRelativeSeparator: 3,
                 separatorIsSnapshot: true, selectedColorIndex: -1, selectedColor: null,
                 brushSize: 1, isRainbowModeActive: false, artRecipeLog: [], historyRecipeCursor: 0,
@@ -100,6 +101,7 @@ test('simulation initialization preserves current symmetry by default and honors
             assert.equal(events[0].details.liveSimulation?.generation,playing?361:undefined);
             assert.equal(context.isLifePlaying,playing);assert.equal(context.currentGenerationCount,361);
             assert.equal(context.symmetryMode, configured ?? current);
+            assert.equal(context.cracksState,null,'hold initialization clears exhausted cracks and rainbow collision memory');
             assert.equal(context.brushSize, 7);
             assert.equal(context.separatorPx, 0);
         }
