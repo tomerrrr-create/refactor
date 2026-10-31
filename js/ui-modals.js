@@ -33,6 +33,7 @@ function handlePaletteWheel(e) {
 }
 
 let app;
+let contourOpenTimer = null, contourCloseTimer = null;
 let brushPicker;
 let colorPickerReturnFocus;
 let colorPickerHoldOpeningClick = false;
@@ -177,8 +178,11 @@ function closeAdvancedColorMappingModal() {
 
 // --- START: Added for Contour Settings ---
 function closeContourSettingsModal() {
+    clearTimeout(contourOpenTimer);
+    clearTimeout(contourCloseTimer);
     app.dom.contourSettingsModal.classList.remove('modal-visible');
-    setTimeout(() => app.dom.contourSettingsModal.style.display = 'none', 300);
+    contourCloseTimer = setTimeout(() => app.dom.contourSettingsModal.style.display = 'none', 300);
+    app.dom.btnContoursAction?.focus({preventScroll:true});
     app.resetWasLongPress();
 }
 // --- END: Added for Contour Settings ---
@@ -827,12 +831,12 @@ function populateHelpModal() {
         controls: { tab: 'evolution', titleKey: 'help_category_controls', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward'] },
         evolution: { tab: 'evolution', titleKey: 'help_category_evolution_modes', buttons: ['btnCymatics', 'btnIslands', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter'] },
         advanced: { tab: 'tools', titleKey: 'help_category_advanced', buttons: ['btnOpenDebug'] },
-        tools: { tab: 'tools', titleKey: 'help_category_tools', buttons: ['btnUndo', 'btnRedo', 'btnSave', 'btnMacroPlay', 'btnResetBoard'] }
+        tools: { tab: 'tools', titleKey: 'help_category_tools', buttons: ['btnContoursAction', 'btnUndo', 'btnRedo', 'btnSave', 'btnMacroPlay', 'btnResetBoard'] }
     };
 
     const helpData = {
         btnCycleSort: app.getText('help_sort'), btnSpiral: app.getText('help_spiral'), btnMagnetModes: app.getText('help_magnet'),
-        btnContour: app.getText('help_contour'), btnSandpile: app.getText('help_sandpile'), btnTuring: app.getText('help_turing'),
+        btnContour: app.getText('help_contour'), btnContoursAction: app.getText('help_contour_action'), btnSandpile: app.getText('help_sandpile'), btnTuring: app.getText('help_turing'),
         btnNudgeBrighter: app.getText('help_nudge'), btnNudgeDarker: app.getText('help_nudge_backward'),
         btnCymatics:app.getText('help_cymatics'), btnStepForward: app.getText('help_step'), btnIslands: app.getText('help_islands'),
         btnMacroPlay: app.getText('help_macro'), btnOpenDebug: app.getText('help_technicians'),
@@ -1124,11 +1128,13 @@ function openContourSettingsModal() {
     if (app.isBreathing()) return;
 
     // 1. Set all texts from i18n
-    const cracks = app.getContourRules().mode === 'cracks';
-    app.dom.contourSensitivitySlider.disabled = cracks;
-    app.dom.contourSettingsTitle.textContent = app.getText(cracks ? 'tooltip_cracks' : 'contour_modal_title');
+    if (app.isContourReplayActive()) return;
+    clearTimeout(contourOpenTimer);
+    clearTimeout(contourCloseTimer);
+    app.dom.contourSensitivitySlider.disabled = false;
+    app.dom.contourSettingsTitle.textContent = app.getText('contour_modal_title');
     app.dom.contourSensitivityLabel.textContent = app.getText('contour_sensitivity_label');
-    app.dom.contourSensitivityDesc.textContent = app.getText(cracks ? 'cracks_settings_note' : 'contour_sensitivity_desc');
+    app.dom.contourSensitivityDesc.textContent = app.getText('contour_sensitivity_desc');
     app.dom.contourSensitivityLabelLow.textContent = app.getText('contour_sensitivity_low');
     app.dom.contourSensitivityLabelHigh.textContent = app.getText('contour_sensitivity_high');
     app.dom.contourColorLabel.textContent = app.getText('contour_color_label');
@@ -1143,7 +1149,10 @@ function openContourSettingsModal() {
 
     // 3. Show the modal
     app.dom.contourSettingsModal.style.display = 'flex';
-    setTimeout(() => app.dom.contourSettingsModal.classList.add('modal-visible'), 10);
+    contourOpenTimer = setTimeout(() => {
+        app.dom.contourSettingsModal.classList.add('modal-visible');
+        app.dom.contourSensitivitySlider.focus({preventScroll:true});
+    }, 10);
 }
 
 function populateContourSettings(rules) {
@@ -1832,6 +1841,14 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     app.dom.btnContourSettingsReset.addEventListener('click', () => populateContourSettings(defaultContourRules));
     app.dom.btnContourSettingsSave.addEventListener('click', saveContourSettings);
     app.dom.btnContourSettingsCancel.addEventListener('click', closeContourSettingsModal);
+    app.dom.contourSettingsModal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') { event.preventDefault(); closeContourSettingsModal(); }
+        if (event.key !== 'Tab') return;
+        const targets = [...app.dom.contourSettingsModal.querySelectorAll('button, input:not(:disabled)')].filter(e => e.getClientRects().length);
+        const first=targets[0],last=targets.at(-1);
+        if (event.shiftKey && document.activeElement===first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement===last) { event.preventDefault(); first.focus(); }
+    });
 
     // Listen for slider changes to update the text value
     app.dom.contourSensitivitySlider.addEventListener('input', () => {

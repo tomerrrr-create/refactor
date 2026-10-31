@@ -45,10 +45,16 @@ export const evolutionExplanations = {
         ['Magneet', 'Trek kleuren naar een ankerkleur en vorm veranderende patronen.']
     ],
     contour: [
-        ['Contours', 'Reveal color boundaries, or grow branching fractures in experimental Cracks mode.'],
-        ['קווי מתאר', 'גלו גבולות בין צבעים, או הצמיחו סדקים מסתעפים במצב הסדקים הניסיוני.'],
-        ['Контуры', 'Проявляйте границы цветов или выращивайте ветвящиеся трещины в экспериментальном режиме.'],
-        ['Contouren', 'Toon kleurgrenzen of laat vertakkende breuken groeien in de experimentele scheurenmodus.']
+        ['Cracks', 'Grow branching fractures through colored material.'],
+        ['סדקים', 'הצמיחו סדקים מסתעפים בתוך משטחי הצבע.'],
+        ['Трещины', 'Выращивайте ветвящиеся трещины в цветном материале.'],
+        ['Scheuren', 'Laat vertakkende scheuren door gekleurd materiaal groeien.']
+    ],
+    contourAction: [
+        ['Contours', 'Apply contour lines once. Swipe up for settings.'],
+        ['קווי מתאר', 'הוסיפו קווי מתאר פעם אחת. החליקו למעלה להגדרות.'],
+        ['Контуры', 'Примените контуры один раз. Смахните вверх для настроек.'],
+        ['Contouren', 'Pas contourlijnen eenmaal toe. Veeg omhoog voor instellingen.']
     ],
     turing: [
         ['Turing', 'Two interacting forces create spots, stripes and organic patterns.'],

@@ -80,7 +80,7 @@ Button cycles intentionally expose a subset of the modes in settings. Magnet cyc
 
 A small theme-colored dot above the evolution overlay opens the Evolution map while paused in the simulation interface, outside macro loading/playback. It assigns ten unique controls from a catalogue of thirteen. Select one of the ten icon-only slots, then a control: **Outside the toolbar** replaces the slot and parks its previous control; **On the toolbar** swaps positions. Selecting the current control leaves the draft unchanged. Save applies, Cancel/Escape discard, and Reset restores the original ten slots. Names remain available as hover titles and accessible labels.
 
-The default parked controls are **Breathe, Turing and Resonance**. Cracks/Contours retains its shared mode-cycle button. The original DOM buttons, IDs, settings and gestures are retained. A running parked evolution is indicated by a gray dot; global Play/Pause still controls it. There is no drag-and-drop or layout editing during a run.
+The default parked controls are **Breathe, Turing and Resonance**. Cracks has its own simulation control in the original `contour` toolbar slot. Contours is a separate one-shot control below Symmetry, outside the overlay. The original DOM buttons, IDs, settings and gestures are retained. A running parked evolution is indicated by a gray dot; global Play/Pause still controls it. There is no drag-and-drop or layout editing during a run.
 
 Layouts are optional `evolutionSlots` profile/settings preferences, separate from artwork history and recipes; legacy settings use the original ten slots. Saving a layout changes neither the board nor engine state. Each profile retains its layout across reloads.
 
@@ -420,7 +420,9 @@ Brightness/Contrast settings are session preferences rather than drawing-history
 
 **File:** `js/simulations/contour.js`
 
-An edge-detection algorithm that generates topological contour maps based on color gradients.
+An edge-detection algorithm that generates topological contour maps based on color gradients. In the simulation control panel, the fixed Contours button sits below Symmetry (or the separator utility when that position is switched), outside the evolution overlay. Tap applies one contour pass immediately without arming or replacing an evolution. If an ordinary evolution is running, the action first pauses and commits that run, then records one independent artwork action for Undo/Redo. While paused, the existing armed evolution remains selected. Swipe up opens Contours settings directly, without an armed-selection requirement. Loaded macros block manual activation and settings edits.
+
+Contours preferences are separate from Cracks: sensitivity and Darkest/Lightest line color use the optional `contourAction` settings/profile field. Legacy profiles initialize them from their old shared sensitivity and compatible line color. Save to profile retains personal Contours edits across openings. Saving settings never paints or changes Cracks rules. New one-shot recipes use version-1 `CONTOUR_APPLY` commands with explicit rules; playback uses those rules without replacing personal preferences. Legacy `contour` PLAY/STEP/SIMULATION_RULES records and saved `mode: contours` snapshots still use the original engine and generation behavior.
 
 * **Threshold Logic:**
     * The user UI defines `sensitivity` (0-100), which maps to a threshold percentage (nominally 1% to 50% of the palette length). The current implementation uses `sensitivity || 30`, so a value of zero falls back to 30 rather than reaching the nominal zero-sensitivity endpoint.
@@ -573,7 +575,7 @@ Classic uses engine version 1 and proximity version 2. Sessions serialize seed, 
 
 **File:** `js/simulations/cracks.js`
 
-The Cracks/Contours button defaults to Cracks and cycles Cracks → Contours → Off while paused; running cycles alternate Contours/Cracks without pausing. Cracks grows thin branching fractures in colored material and stops at existing line-colored cells, protected gold and the board edges. Its four line-color choices are described below; sensitivity remains exclusive to Contours. Draw colored areas and press Play or Single step. Drawing remains available during playback. The branching icon marks Cracks. This is a visual experiment, not a physical stress model. Runtime tips and the deterministic random cursor are optional project/history/macro fields; old contour recordings still use the original engine. Profile preferences and file format versions are unchanged.
+Cracks has a standalone simulation button. Tap selects/arms it without painting; while paused another tap turns it off, and tapping it during a run leaves that run playing. Use Play/Pause or Single step to evolve the board. Swipe up opens only Cracks settings. Contours is now a separate one-shot utility below Symmetry; it is never part of the new Cracks button cycle. Existing toolbar layouts retain their `contour` slot for Cracks. Cracks grows thin branching fractures in colored material and stops at existing line-colored cells, protected gold and the board edges. Its four line-color choices are described below; sensitivity remains exclusive to Contours. Draw colored areas and press Play or Single step. Drawing remains available during playback. The branching icon marks Cracks. This is a visual experiment, not a physical stress model. Runtime tips and the deterministic random cursor are optional project/history/macro fields; old contour recordings still use the original engine. Profile preferences and file format versions are unchanged.
 
 Cracks resumes growth after new brush painting, including Pause → paint over old cracks → Play. Painted material queues a local nucleus without painting during Pause, while surviving tips continue. New sessions use engine version 3; version-1 saved sessions and recipes retain finite-root behavior, and version 2 retains its original renewal behavior. Pending nuclei are included in existing snapshots for Undo/Redo, JSON and macro replay. Protected gold does not create a nucleus; in solid-color modes, painting the line color does not either.
 
@@ -595,7 +597,7 @@ Line color uses four square buttons: Darkest, Lightest, Original anchor and Brus
 
 Holding the evolution-entry control to initialize the board also discards the Cracks runtime (tips, nuclei, random cursor and rainbow collision trail), including when the board size stays unchanged. Saved Cracks rules remain intact. Undo/Redo restores the respective old/new artwork runtime, and new post-initialization recordings start from the fresh run. Existing GO_DARK recipe behavior is unchanged. Material response still treats palette index 0 as a hard barrier at influence 50% or above; initialization does not bypass that rule.
 
-Cracks now starts a freshly selected human run with a crypto-generated seed, including return from Brightness and the live Contours→Cracks cycle. Its initial random cursor exists before PLAY/STEP recording and the first history checkpoint. Pause/Play continues the same runtime; existing recording fields already serialize the cursor, so macros and restored snapshots retain the recorded sequence. `createCracksState` keeps its fixed legacy fallback; no growth rules or recording schema changed.
+Cracks now starts a freshly selected human run with a crypto-generated seed, including return from Brightness. Older recordings of live Contours→Cracks transitions retain their recorded seeds and runtimes. Its initial random cursor exists before PLAY/STEP recording and the first history checkpoint. Pause/Play continues the same runtime; existing recording fields already serialize the cursor, so macros and restored snapshots retain the recorded sequence. `createCracksState` keeps its fixed legacy fallback; no growth rules or recording schema changed.
 
 ### 15. Resonance
 
@@ -730,10 +732,13 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Game of Life genetics | `tools/check-gol-genetics.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Toolbar layout | `tools/check-evolution-drawer.mjs` |
+| Cracks/Contours separation, independent settings and legacy recordings | `tools/check-contour-separation.mjs` |
 | Brightness history and mid-run macros | `tools/check-brightness-undo.mjs`, `tools/check-midrun-macro.mjs`, `tools/check-nudge-cycle.mjs`, `tools/check-nudge-legacy.mjs` |
 | Resonance maps and compatibility | `tools/check-cymatics.mjs` |
 
 The Resonance browser check covers languages/viewports, live map changes, drawing, Undo/Redo, JSON and recipe replay. `CYMATICS_DEFAULT_ONLY=1`, `CYMATICS_FREQUENCY_ONLY=1` and `CYMATICS_CYCLE_ONLY=1` select focused flows; `CYMATICS_STRENGTH_ONLY=1` checks independent strengths, drafts/Reset, cycling, live saves, history, project/macro replay and profile reload. `CYMATICS_ORGANIC_ONLY=1` checks Clouds/Cosmological empathy, frequency changes and round trips; `CYMATICS_LANG` filters languages. `CRACKS_SETTINGS_ONLY=1` limits `check-cracks.mjs` to settings drafts, controls, Save/Cancel/Reset, layout and focus; `CRACKS_LANG` filters languages. The Cracks session-seed check also supports `CRACKS_SEED_LANG`.
+
+`check-contour-separation.mjs` captures journeys from commit `be7b937` before separation and replays them with the current build, including old shared-mode runs and non-history Contours logs. `CONTOUR_RECORD_ONLY=1` captures only the baseline fixtures, and `CONTOUR_LANG` selects one language. It also verifies one-pass equivalence, independent settings, Undo/Redo, running-engine interruption and new macro playback.
 
 These commands describe available checks, not a claim that they have passed on a particular checkout. Browser/API behavior, install/share flows, accessibility and physical-device performance need their own verification.
 

@@ -1,3 +1,4 @@
+import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour-action-settings.js';
 import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_FREQUENCIES,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
@@ -304,6 +305,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
       let replayBrightnessPreferences = null;
+      let contourActionRules = { ...DEFAULT_CONTOUR_ACTION_RULES };
       let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null, replayCracksGrowth = null, replayCracksBrush = null, lastCracksBrushKey = '';
       let contourRules = { ...C.defaultContourRules, lineColor:'brush', growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
@@ -2104,6 +2106,7 @@ if (simulationName === 'magnet') {
             ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
             ...(Object.values(cymaticsStrengths).every(value=>value===INITIAL_CYMATICS_RULES.strength)?{}:{cymaticsStrengths:{...cymaticsStrengths}}),
             ...(evolutionSlots.join() === DEFAULT_EVOLUTION_SLOTS.join() ? {} : {evolutionSlots:[...evolutionSlots]}),
+            ...(contourActionRules.sensitivity === contourRules.sensitivity && contourActionRules.lineColor === (['darkest','lightest'].includes(contourRules.lineColor) ? contourRules.lineColor : 'darkest') ? {} : { contourAction: { ...contourActionRules } }),
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
             simulationPlaybackTheme: getSimulationPlaybackTheme(),
@@ -2138,6 +2141,7 @@ if (simulationName === 'magnet') {
         erosionRules = { ...settings.rules.erosion };
         dlaRules = { ...settings.rules.dla };
         contourRules = { ...settings.rules.contour };
+        contourActionRules = validateContourActionRules(settings.contourAction ?? {sensitivity:contourRules.sensitivity,lineColor:['darkest','lightest'].includes(contourRules.lineColor)?contourRules.lineColor:'darkest'});
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH};contourRules.lineColor='brush';}
         turingRules = { ...settings.rules.turing };
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
@@ -3594,14 +3598,44 @@ function runContourEvolution(context) {
     return result.nextBoardState;
 }
 function updateContourButtonUI() {
-    const active = armedSimulation === 'contour', cracks = !active || contourMode === 'cracks';
+    const active = armedSimulation === 'contour' && contourMode === 'cracks';
     dom.btnContour.classList.toggle('simulation-active', active);
-    dom.btnContour.classList.toggle('cracks-active', cracks);
-    const title = getText(cracks ? 'tooltip_cracks' : 'tooltip_contour');
+    dom.btnContour.classList.toggle('cracks-active', true);
+    const title = getText('tooltip_cracks');
     dom.btnContour.title = title;
     dom.btnContour.setAttribute('aria-label', title);
     dom.btnContour.setAttribute('aria-pressed', String(active));
+    if (dom.btnContoursAction) { dom.btnContoursAction.title = getText('tooltip_contour'); dom.btnContoursAction.setAttribute('aria-label', getText('tooltip_contour')); }
 }
+// New human control: Cracks is a standalone simulation. Legacy engines/modes
+// below remain available to old project snapshots and recorded commands.
+function toggleCracksSimulation() {
+    if (armedSimulation === 'contour' && contourMode === 'cracks') {
+        if (!isLifePlaying) armSimulation(null);
+        return;
+    }
+    const resume = isLifePlaying;
+    if (resume) pauseLife();
+    if (armedSimulation === 'contour') armSimulation(null);
+    armSimulation('contour');
+    if (resume) togglePlayPauseLife();
+}
+
+function applyContoursOnce(rules = contourActionRules) {
+    if (isMacroLoaded && !isExecutingMacroCommand) return;
+    const effective = validateContourActionRules(rules);
+    finishBrushGesture();
+    windPainter?.stop();
+    // Finish the previous run first, so this is one separate Undo action.
+    if (isLifePlaying) pauseLife();
+    performAction(() => {
+        window.logArtEvent('CONTOUR_APPLY', JSON.stringify({version:1,rules:effective}));
+        boardState = Simulations.runContourGeneration({n,currentBoardState:boardState,currentPalette:palette(),contourRules:effective});
+        if (armedSimulation === 'dla') syncDlaCrystalState();
+    });
+    renderToScreen(null);
+}
+
 function cycleContourMode() {
     if (armedSimulation !== 'contour') { armSimulation('contour'); return; }
     if (contourMode === 'cracks') {
@@ -4242,7 +4276,9 @@ function parseHistoryMacro(lines) {
 }
 
 function validateIslandsMacroAction(action) {
-    if (action.eventName === 'INIT_STATE') {
+    if (action.eventName === 'CONTOUR_APPLY') {
+        const value=JSON.parse(action.details);if(value.version!==1)throw new Error('Unsupported Contours action');validateContourActionRules(value.rules);
+    } else if (action.eventName === 'INIT_STATE') {
         const snapshot = JSON.parse(action.details);
         if (snapshot.gold !== undefined && (!Array.isArray(snapshot.gold) || snapshot.gold.length > snapshot.n * snapshot.n ||
             snapshot.gold.some(index => !Number.isInteger(index) || index < 0 || index >= snapshot.n * snapshot.n))) {
@@ -4398,7 +4434,7 @@ function parseLegacyMacroText(text) {
 
 
     // פעולות המשנות את הלוח וניתנות לביטול (Undo)
-    const boardChangingEvents = ['DRAW_STROKE', 'GO_DARK', 'SHUFFLE_COLORS', 'STEP FORWARD', 'Invert Colors', 'NUDGE', 'Palette Change', 'ADAPT_COLORS', 'SEPARATOR_CHANGE', 'GRID_RESIZE'];
+    const boardChangingEvents = ['DRAW_STROKE', 'GO_DARK', 'SHUFFLE_COLORS', 'STEP FORWARD', 'CONTOUR_APPLY', 'Invert Colors', 'NUDGE', 'Palette Change', 'ADAPT_COLORS', 'SEPARATOR_CHANGE', 'GRID_RESIZE'];
     
 
     // --- גבולות זמן (במילי-שניות) ---
@@ -5019,6 +5055,9 @@ function executeMacroAction(action) {
         if (typeof updateSortButtonUI === 'function') updateSortButtonUI();
     }
 
+    else if (action.eventName === 'CONTOUR_APPLY') {
+        const value=JSON.parse(action.details);if(value.version!==1)throw new Error('Unsupported Contours action');applyContoursOnce(value.rules);
+    }
     else if (action.eventName === 'NUDGE_SPEED') {
         applyNudgeTiming(action.details);
     }
@@ -5274,6 +5313,7 @@ else if (action.eventName === 'Invert Colors') {
         initializeLanguage();
         onLanguageChange(updateAllUIText);
         onLanguageChange(updateNudgeButtonUI);
+        onLanguageChange(updateContourButtonUI);
         updateNudgeButtonUI();
         
         // Phase 1 Addition: Add adaptColors to the context for modals
@@ -5449,7 +5489,8 @@ syncGsModeFromModal: (direction) => {
             canEditCracksSettings: () => armedSimulation === 'contour' && contourMode === 'cracks' && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             getCracksSettings: () => ({ ...getCracksMaterial(), ...(cracksState && cracksState.version<3 ? DEFAULT_CRACKS_GROWTH : getCracksGrowth()), ...(cracksState && cracksState.version<3 ? {enabled:false} : {}), lineColor:contourRules.lineColor }),
             saveCracksSettings,
-            getContourRules: () => ({ ...contourRules, mode: contourMode }), setContourRules: (r) => { contourRules = { ...contourRules, ...r }; recordLiveSimulationRules('contour'); }, // <-- ADDED HERE
+            isContourReplayActive: () => isMacroLoaded,
+            getContourRules: () => ({ ...contourActionRules }), setContourRules: (r) => { if(isMacroLoaded)return;contourActionRules=validateContourActionRules(r);persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture(); }, // <-- ADDED HERE
 
 spiralRules,
 syncSpiralModeFromModal: (method) => {
@@ -5737,7 +5778,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         const evolutionPickers = [
             [dom.btnGameOfLife, 'gameOfLife', cycleGameOfLifeMode, modals.openGolSettingsModal],
             [dom.btnGravitationalSort, 'gravitationalSort', cycleGravitationalSortMode, modals.openGravitationalSortSettingsModal],
-            [dom.btnContour, 'contour', cycleContourMode, () => contourMode === 'cracks' ? modals.openCracksSettingsModal() : modals.openContourSettingsModal()],
+            [dom.btnContour, 'contour', toggleCracksSimulation, modals.openCracksSettingsModal],
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
             [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],
@@ -5750,7 +5791,16 @@ dom.btnColorPicker.addEventListener('keydown', event => {
             [dom.btnErosion, 'erosion', cycleErosionMode, modals.openErosionSettingsModal],
             [dom.btnDla, 'dla', cycleDlaMode, modals.openDlaSettingsModal]
         ].filter(([button]) => button);
-        const evolutionPickerButtons = new Set(evolutionPickers.map(([button]) => button));
+        bindPickerGestures(dom.btnContoursAction, {
+            onTap: () => applyContoursOnce(), onOpen: modals.openContourSettingsModal,
+            onHold: () => evolutionExplanation.show(dom.btnContoursAction, 'contourAction'),
+            canInteract: () => !isBreathing && !isMacroLoaded,
+            beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
+        });
+        dom.btnContoursAction.addEventListener('keydown', event => {
+            if(event.altKey && ['ArrowUp','ArrowDown'].includes(event.key) && !isBreathing && !isMacroLoaded){event.preventDefault();modals.openContourSettingsModal();}
+        });
+        const evolutionPickerButtons = new Set([...evolutionPickers.map(([button]) => button), dom.btnContoursAction]);
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,

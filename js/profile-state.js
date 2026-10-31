@@ -165,7 +165,7 @@ function defaultComparable(value, factory) {
 // saved. Other preferences (Startup, display, brush size/mode, etc.) still autosave.
 function withSavedSessionPreferences(draft, saved) {
     const result = clone(draft);
-    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'gameOfLifeGenetics']) {
+    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'gameOfLifeGenetics', 'contourAction']) {
         if (Object.hasOwn(saved.settings, key)) result.settings[key] = clone(saved.settings[key]);
         else delete result.settings[key];
     }
