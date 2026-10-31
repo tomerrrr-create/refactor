@@ -1,6 +1,6 @@
 // Toolbar identities only; existing engine, logger and button IDs stay unchanged.
 export const EVOLUTION_CATALOG = Object.freeze([
-    ['dla','btnDla','help_dla'],['contour','btnContour','drawer_cracks_contours'],
+    ['dla','btnDla','help_dla'],['contour','btnContour','cracks_settings_title'],
     ['gameOfLife','btnGameOfLife','help_gameOfLife'],['brightnessEvo','btnBrightnessEvo','help_brightnessEvo'],
     ['islands','btnIslands','help_islands'],['spiral','btnSpiral','help_spiral'],
     ['magnet','btnMagnetModes','help_magnet'],['gravitationalSort','btnGravitationalSort','help_gravitationalSort'],
