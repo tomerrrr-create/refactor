@@ -54,7 +54,7 @@ Sorting remaps tile indices and the selected brush color to preserve their visib
 
 Resize buttons step through preset sizes; their upward gesture opens a custom size dialog accepting **1–327**. Resizing crops or pads around the center rather than resampling the image. Startup and initialization preferences use the validated preset-size list in `constants.js`.
 
-Relative separators use **Large, Medium, Small and None**, adapting width to board density and display size. Their logical values are 5/3/1/0, not literal pixel widths. Separator settings also offer an absolute-width cycle; unavailable widths are filtered to preserve tile space. Recordings and artwork snapshots retain resolved widths, including fractional values. A profile's Medium value of 3 therefore does not mean an unconditional 3-pixel gap.
+The separator control uses its original white hash (#) icon, including when mirrored inside the brush picker. Relative separators use **Large, Medium, Small and None**, adapting width to board density and display size. Their logical values are 5/3/1/0, not literal pixel widths. Separator settings also offer an absolute-width cycle; unavailable widths are filtered to preserve tile space. Recordings and artwork snapshots retain resolved widths, including fractional values. A profile's Medium value of 3 therefore does not mean an unconditional 3-pixel gap.
 
 ### You are the wind (experiment)
 
