@@ -210,7 +210,12 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         });
         tabs.append(tab);
     }
-    host.append(tabs, description, list, current);
+    if (currentPreviewHost) {
+        const header = currentPreviewHost.parentElement;
+        header.querySelector('.palette-group-tabs')?.remove();
+        currentPreviewHost.before(tabs);
+        host.append(description, list, current);
+    } else host.append(tabs, description, list, current);
     showGroup(activeGroup);
     // The host can still be hidden while it is populated. Wait for the opening
     // layout before revealing the selected card; manual tab browsing stays at

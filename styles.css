@@ -2237,8 +2237,18 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .color-page-previous svg { transform: scaleX(-1); }
 .color-page-arrow:hover, .color-page-arrow:focus-visible { color: #f1d886; opacity: 1; }
 
-/* Current palette navigation: preview above the catalogue, details below. */
-#paletteCurrentPreview { flex-shrink: 0; margin: -8px 32px 12px; }
+/* Four category tabs surround the current palette's brush-picker shortcut. */
+.palette-picker-header {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px; flex-shrink: 0; margin: 8px 0 12px; direction: ltr;
+}
+.palette-picker-header .palette-group-tabs { display: contents; }
+.palette-picker-header .palette-group-tab { grid-row: 1; }
+.palette-picker-header .palette-group-tab:nth-child(1) { grid-column: 1; }
+.palette-picker-header .palette-group-tab:nth-child(2) { grid-column: 2; }
+.palette-picker-header .palette-group-tab:nth-child(3) { grid-column: 4; }
+.palette-picker-header .palette-group-tab:nth-child(4) { grid-column: 5; }
+#paletteCurrentPreview { grid-column: 3; grid-row: 1; display: flex; align-items: stretch; }
 .palette-current-preview {
     display: flex; align-items: center; justify-content: center; gap: 10px;
     width: 100%; min-height: 44px; padding: 8px; border: 0; border-radius: 8px;

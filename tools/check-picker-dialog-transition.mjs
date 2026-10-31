@@ -35,10 +35,10 @@ try {
  await waitForHandoff(page);assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);assert(!(await page.locator('#colorPickerModal').isVisible()));assert(await page.locator('#paletteModal').isVisible());
  const paletteLayout=await page.locator('#paletteModal').evaluate(modal=>{
   const preview=modal.querySelector('#palette-current-preview'),footer=modal.querySelector('#palette-current-summary');
-  const header=preview.getBoundingClientRect(),details=footer.querySelector('.palette-current-details').getBoundingClientRect(),bottom=footer.getBoundingClientRect(),tabs=modal.querySelector('.palette-group-tabs').getBoundingClientRect();
-  return {above:header.bottom<=tabs.top,centered:Math.abs((details.left+details.right)-(bottom.left+bottom.right))<2,headerRibbon:!!preview.querySelector('.palette-color-ribbon'),headerIcon:!!preview.querySelector('.palette-current-icon'),footerRibbon:!!footer.querySelector('.palette-color-ribbon'),headerOverflow:preview.scrollWidth>preview.clientWidth+1};
+  const header=preview.getBoundingClientRect(),details=footer.querySelector('.palette-current-details').getBoundingClientRect(),bottom=footer.getBoundingClientRect(),tabs=modal.querySelector('.palette-group-tab').getBoundingClientRect();
+  return {aligned:Math.abs(header.top-tabs.top)<1,centered:Math.abs((details.left+details.right)-(bottom.left+bottom.right))<2,headerRibbon:!!preview.querySelector('.palette-color-ribbon'),headerIcon:!!preview.querySelector('.palette-current-icon'),footerRibbon:!!footer.querySelector('.palette-color-ribbon'),headerOverflow:preview.scrollWidth>preview.clientWidth+1};
  });
- assert(paletteLayout.above&&paletteLayout.centered&&!paletteLayout.headerRibbon&&paletteLayout.headerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'preview is above the catalogue and footer details are centered');
+ assert(paletteLayout.aligned&&paletteLayout.centered&&!paletteLayout.headerRibbon&&paletteLayout.headerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'preview shares the tab row and footer details are centered');
  await page.screenshot({path:path.join(artifacts,config.lang+'-palette-layout.png')});
  // Both the new header (keyboard) and existing footer (pointer) open colors.
  await page.locator('#palette-current-preview').focus();await page.keyboard.press('Enter');await waitForHandoff(page);

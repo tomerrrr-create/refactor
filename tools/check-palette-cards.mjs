@@ -24,6 +24,15 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const before=await state();
  for(const group of ['classic','extended','continuous','archive']){
   await page.locator('#paletteModal [data-palette-group="'+group+'"]').click();
+  const header=await page.locator('#paletteModal .palette-picker-header').evaluate(header=>{
+   const buttons=[...header.querySelectorAll('button')].sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
+   return buttons.map(button=>({id:button.dataset.paletteGroup||'current',top:button.getBoundingClientRect().top}));
+  });
+  assert.deepEqual(header.map(button=>button.id),['classic','extended','current','continuous','archive']);
+  assert(Math.max(...header.map(button=>button.top))-Math.min(...header.map(button=>button.top))<1,'header controls share one row');
+  const description=await page.locator('#paletteModal .palette-group-description').textContent();
+  if(group!=='archive')assert.equal(description,{classic:'23',extended:'64',continuous:'264'}[group]);
+  else assert.equal(description,{en:'Under construction',he:'בבנייה',ru:'В разработке',nl:'In aanbouw'}[config.lang]);
   const geometry=await page.locator('#paletteModal .palette-choice-list').evaluate(list=>{
    const cards=[...list.children],rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
    return {columns:getComputedStyle(list).gridTemplateColumns.split(' ').length,overflow:list.scrollWidth>list.clientWidth+1,cards:cards.map(c=>{const mosaic=c.querySelector('.palette-color-mosaic'),r=rect(mosaic);return{...r,gap:getComputedStyle(mosaic).gap,radius:getComputedStyle(mosaic.firstElementChild).borderRadius,cells:mosaic.children.length,label:c.getAttribute('aria-label'),icon:!!c.querySelector('.palette-choice-icon'),count:!!c.querySelector('.palette-choice-count')};})};
@@ -72,6 +81,10 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   assert.deepEqual(await state(),selectedState,'opening does not change board or logs');
   await page.locator('#btnPaletteModalClose').click();
  }
+ await page.evaluate(()=>paletteTest.open());
+ await page.locator('#palette-current-preview').click();
+ await page.waitForFunction(()=>document.querySelector('#colorPickerModal').classList.contains('modal-visible'));
+ await page.keyboard.press('Escape');
  await page.evaluate(()=>paletteTest.tech());
  // Open the same shared chooser through Startup without changing the board.
  const startupButton=page.locator('#btnStartupPalette');

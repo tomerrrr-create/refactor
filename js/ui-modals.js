@@ -705,7 +705,7 @@ function openPaletteModal({ guardOpeningClick = false } = {}) {
     paletteHoldOpeningClick = guardOpeningClick;
     populatePaletteModal();
     app.dom.paletteModal.classList.add('modal-visible');
-    app.dom.paletteModalGrid.querySelector('[aria-selected="true"]')?.focus({ preventScroll: true });
+    app.dom.paletteModal.querySelector('[aria-selected="true"]')?.focus({ preventScroll: true });
 }
 
 function openPalettesFromColorPicker() {
