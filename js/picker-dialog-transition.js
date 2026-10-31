@@ -26,13 +26,27 @@ export function transitionPickerDialog({ from, to, close, open }) {
     const nextHeight = incoming.getBoundingClientRect().height;
     const outgoingBody = outgoing.querySelector('.brush-picker-body, .palette-picker-content');
     const incomingBody = incoming.querySelector('.brush-picker-body, .palette-picker-content');
+    const outgoingBodyHeight = outgoingBody.getBoundingClientRect().height;
+    const incomingBodyHeight = incomingBody.getBoundingClientRect().height;
     const timing = { duration: 180, easing: 'cubic-bezier(.2,.65,.3,1)' };
-    const heightFrames = [{ height: `${previousHeight}px` }, { height: `${nextHeight}px` }];
+    const heightFrames = [
+        { height: `${previousHeight}px`, offset: 0 },
+        { height: `${previousHeight}px`, offset: 1 / 3 },
+        { height: `${nextHeight}px`, offset: 1 }
+    ];
     const animations = [
-        outgoingBody.animate([{ opacity: 1 }, { opacity: 0 }], { ...timing, fill: 'forwards' }),
-        incomingBody.animate([{ opacity: 0 }, { opacity: 1 }], timing),
+        // Clear the old view before revealing the next; never blend two grids.
+        // Freeze body dimensions so resizing the frame cannot squeeze its content.
+        outgoingBody.animate([
+            { opacity: 1, minHeight: `${outgoingBodyHeight}px` },
+            { opacity: 0, minHeight: `${outgoingBodyHeight}px` }
+        ], { duration: 60, easing: 'ease-out', fill: 'forwards' }),
+        incomingBody.animate([
+            { opacity: 0, minHeight: `${incomingBodyHeight}px` },
+            { opacity: 1, minHeight: `${incomingBodyHeight}px` }
+        ], { duration: 110, delay: 70, easing: 'ease-out', fill: 'both' }),
         incoming.animate(heightFrames, timing),
-        outgoing.animate(heightFrames, { ...timing, fill: 'forwards' })
+        outgoing.animate([{ height: `${previousHeight}px` }, { height: `${previousHeight}px` }], { ...timing, fill: 'forwards' })
     ];
     const entry = {
         finish() {
