@@ -1,5 +1,5 @@
 import {PALETTES} from './data/palettes.js';
-import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots,assignEvolutionSlot,evolutionControlId} from './evolution-drawer-settings.js';
+import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots,assignEvolutionSlot,evolutionControlId,isFixedEvolution} from './evolution-drawer-settings.js';
 
 export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canEdit,onSave,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');trigger.id='btnEvolutionDrawer';trigger.type='button';
@@ -29,7 +29,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         refresh();
     }
     function refresh(){
-        const parked=isRunning()&&getActive()&&!getSlots().includes(evolutionControlId(getActive()));
+        const parked=isRunning()&&getActive()&&!isFixedEvolution(getActive())&&!getSlots().includes(evolutionControlId(getActive()));
         trigger.disabled=!canEdit();trigger.dataset.parkedActive=String(Boolean(parked));
         const text=parked?getText('drawer_hidden_active').replace('{name}',label(getActive())):getText('drawer_title');trigger.title=text;trigger.setAttribute('aria-label',text);
         if(dialog.open&&!canEdit())dialog.close();

@@ -46,8 +46,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const appearance=selector=>page.locator(selector).evaluate(button=>{
   const icon=[...button.querySelectorAll('svg')].find(svg=>getComputedStyle(svg).display!=='none');
   const style=getComputedStyle(icon),rect=button.getBoundingClientRect(),overlay=document.querySelector('#simModeBackground').getBoundingClientRect();
-  return {stroke:style.stroke,weight:style.strokeWidth,transform:getComputedStyle(button).transform,
-   inside:rect.left+rect.width/2>=overlay.left&&rect.right-rect.width/2<=overlay.right&&rect.top+rect.height/2>=overlay.top&&rect.bottom-rect.height/2<=overlay.bottom};
+  return {stroke:style.stroke,weight:style.strokeWidth,transform:getComputedStyle(button).transform};
  });
  const gravity=page.locator('#btnGravitationalSort');
  assert.deepEqual(await appearance('#btnNudgeBrighter'),await appearance('#btnGravitationalSort'),'idle Nudge follows overlay colors');
@@ -58,6 +57,13 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await gravity.click();await page.waitForTimeout(450);assert.deepEqual(await appearance('#btnGravitationalSort'),runningNudge,'running Nudge uses Gravity armed styling');
  await button.click();await page.waitForTimeout(450);assert.deepEqual(await appearance('#btnNudgeBrighter'),runningNudge,'live handoff restores Nudge styling');
  await page.evaluate(()=>nudgeTest.setup());await page.waitForTimeout(450);
+
+ const position=await button.evaluate(button=>{
+  const b=button.getBoundingClientRect(),c=document.querySelector('#btnColorPicker').getBoundingClientRect(),o=document.querySelector('#simModeBackground').getBoundingClientRect();
+  return {below:b.top>=c.bottom,aligned:Math.abs(b.left+b.width/2-c.left-c.width/2)<1,outside:b.right<=o.left,slot:button.hasAttribute('data-evolution-slot')};
+ });
+ assert(position.below&&position.aligned&&position.outside&&!position.slot,'Nudge is fixed below the color picker outside the overlay');
+ await page.evaluate(()=>document.querySelector('#controlsContainer').classList.remove('sim-mode-active'));assert(!(await button.isVisible()),'Nudge is hidden in creation mode');await page.evaluate(()=>document.querySelector('#controlsContainer').classList.add('sim-mode-active'));
  assert(!(await page.locator('#btnNudgeDarker').isVisible()));const initial=await state();
  await button.click();let current=await state();assert.equal(current.armed,'nudgeBrighter');assert.deepEqual(current.board,initial.board);assert.equal(current.history,0);assert(!(await step.isDisabled()));assert(!(await play.isDisabled()));
  await step.click();const bright=await state();assert.equal(bright.board[0],initial.board[0]);assert.equal(bright.board[1],initial.board[1]+1);
