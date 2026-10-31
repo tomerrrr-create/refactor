@@ -60,7 +60,7 @@ const initial=await state();assert.equal(await button.getAttribute('aria-pressed
    const before=await state();await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>cymaticsTest.state().gen>=240);
    const generation=(await state()).gen;await openSettings();await dialog.locator('#cymaticsFrequency').fill(name==='clouds'?'700':'800');await tap(dialog.locator('[type=submit]'));
    await page.waitForFunction(g=>cymaticsTest.state().gen>=g+50,generation);await tap(page.locator('#btnPlayPauseLife'));
-   const stopped=await state();assert.equal(stopped.rules.resonanceVersion,version);assert.notDeepEqual(stopped.board,before.board);
+   const stopped=await state();assert.equal(stopped.rules.resonanceVersion,version);if(name==='cosmic')assert.equal(stopped.rules.cosmicVersion,2);assert.notDeepEqual(stopped.board,before.board);
    assert.deepEqual(histogram(stopped.board),histogram(before.board));assert.equal(stopped.board[840],before.board[840]);
    await tap(page.locator('#btnUndo'));assert.deepEqual((await state()).rules,stopped.rules);await tap(page.locator('#btnRedo'));assert.deepEqual((await state()).board,stopped.board);assert.deepEqual((await state()).runtime,stopped.runtime);
    await page.screenshot({path:path.join(artifacts,config.lang+'-'+name+'.png')});
