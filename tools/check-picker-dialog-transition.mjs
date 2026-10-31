@@ -31,7 +31,7 @@ try {
  const geometry=await page.locator('.brush-picker-panel').evaluate(e=>({width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height}));
  const anchor=async(panel,icon)=>page.evaluate(({panel,icon})=>{
   const p=document.querySelector(panel).getBoundingClientRect(),i=document.querySelector(icon).getBoundingClientRect();
-  return {top:p.top,bottom:p.bottom,x:i.left+i.width/2,y:i.top+i.height/2};
+  return {top:p.top,bottom:p.bottom,width:p.width,x:i.left+i.width/2,y:i.top+i.height/2};
  },{panel,icon});
  const colorAnchor=await anchor('.brush-picker-panel','#colorPickerPaletteName');
  await page.evaluate(()=>document.getElementById('btnColorPickerPalette').click());await page.waitForTimeout(50);
@@ -39,7 +39,7 @@ try {
  assert(midway.out&&midway.in&&midway.inert);assert.equal(midway.hidden,'true');assert.equal(midway.outBackground,'rgba(0, 0, 0, 0)');assert.equal(midway.backdropOpacity,'1','backdrop does not fade to the board');assert(midway.panelOpacity>=0&&midway.panelOpacity<=1);assert(midway.animations.some(a=>a.duration===220),'panel uses the 220ms handoff animation');
  await waitForHandoff(page);assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);assert(!(await page.locator('#colorPickerModal').isVisible()));assert(await page.locator('#paletteModal').isVisible());
  const paletteAnchor=await anchor('#paletteModal .palette-picker-panel','#palette-current-preview .palette-current-icon');
- for(const key of ['top','x','y'])assert(Math.abs(colorAnchor[key]-paletteAnchor[key])<1,'picker anchor matches: '+key);
+ for(const key of ['top','width','x','y'])assert(Math.abs(colorAnchor[key]-paletteAnchor[key])<1,'picker anchor matches: '+key);
  for(const a of [colorAnchor,paletteAnchor])assert(a.top>=0&&a.bottom<=config.height,'panels stay inside viewport');
  const paletteLayout=await page.locator('#paletteModal').evaluate(modal=>{
   const preview=modal.querySelector('#palette-current-preview'),footer=modal.querySelector('#palette-current-summary');

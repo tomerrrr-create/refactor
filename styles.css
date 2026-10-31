@@ -2251,9 +2251,16 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     padding-top: var(--picker-top);
 }
 #colorPickerModal .brush-picker-panel, #paletteModal .palette-picker-panel {
+    width: min(340px, calc(100vw - 48px));
+    box-sizing: border-box;
     max-height: calc(100dvh - var(--picker-top) - 16px);
 }
-#paletteModal .palette-picker-panel { padding-top: 0; }
+#paletteModal .palette-picker-panel { --palette-panel-padding: 14px; padding-top: 0; }
+#paletteModal .palette-choice-list { gap: 8px; grid-auto-rows: max-content; }
+#paletteModal .palette-choice { gap: 6px; padding: 6px; }
+#paletteModal .palette-choice-preview { width: min(100%, 64px); margin-inline: auto; }
+#paletteModal .palette-color-mosaic { border-radius: 4px; }
+#paletteModal .palette-choice-name { font-size: .76rem; }
 #colorPickerModal .brush-picker-heading {
     height: 76px; box-sizing: border-box;
     display: flex; align-items: center; justify-content: center;
