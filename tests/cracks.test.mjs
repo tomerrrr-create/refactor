@@ -115,7 +115,7 @@ test('fresh human entries seed before recording; replay and engine defaults rema
  const engine=readFileSync(new URL('../js/simulations/cracks.js',import.meta.url),'utf8');
  vm.runInContext(engine.slice(engine.indexOf('export function createCracksSession('),engine.indexOf('export function restoreCracksState(')).replace('export ',''),c);
  c.dom.btnPlayPauseLife={};c.dom.btnStepForward={};c.dom.btnContour.id='btnContour';c.dom.btnContour.classList.remove=()=>{};c.dom.btnContour.classList.add=()=>{};c.isMacroLoaded=false;
- for(const key of ['updateBrightnessEvoButtonUI','updateDlaButtonUI','updateErosionButtonUI','updateBreatheEvoButtonUI','updateGameOfLifeButtonUI','updateChiFlowButtonUI'])c[key]=()=>{};
+ for(const key of ['updateNudgeButtonUI','updateBrightnessEvoButtonUI','updateDlaButtonUI','updateErosionButtonUI','updateBreatheEvoButtonUI','updateGameOfLifeButtonUI','updateChiFlowButtonUI'])c[key]=()=>{};
  vm.runInContext(source.slice(source.indexOf('function armSimulation('),source.indexOf('      function setBrushMode(')),c);
  c.armSimulation('contour');const first=JSON.parse(JSON.stringify(c.getContourRecordingRules()));assert.equal(first.cracksState.random,1234567);assert.equal(first.cracksState.steps,0);
  const ctx=fixture(21),expected=runCracksGeneration(ctx,first.cracksState);assert.deepEqual(c.runContourEvolution(ctx),expected.nextBoardState);assert.deepEqual(JSON.parse(JSON.stringify(c.cracksState)),expected.nextCracksState);

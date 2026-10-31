@@ -78,9 +78,9 @@ Button cycles intentionally expose a subset of the modes in settings. Magnet cyc
 
 ### Evolution map
 
-A small theme-colored dot above the evolution overlay opens the Evolution map while paused in the simulation interface, outside macro loading/playback. It assigns ten unique controls from a catalogue of fifteen. Select one of the ten icon-only slots, then a control: **Outside the toolbar** replaces the slot and parks its previous control; **On the toolbar** swaps positions. Selecting the current control leaves the draft unchanged. Save applies, Cancel/Escape discard, and Reset restores the original ten slots. Names remain available as hover titles and accessible labels.
+A small theme-colored dot above the evolution overlay opens the Evolution map while paused in the simulation interface, outside macro loading/playback. It assigns ten unique controls from a catalogue of fourteen. Select one of the ten icon-only slots, then a control: **Outside the toolbar** replaces the slot and parks its previous control; **On the toolbar** swaps positions. Selecting the current control leaves the draft unchanged. Save applies, Cancel/Escape discard, and Reset restores the original ten slots. Names remain available as hover titles and accessible labels.
 
-The default parked controls are **Breathe, Turing, Nudge brighter, Nudge darker and Resonance**. Cracks/Contours retains its shared mode-cycle button. The original DOM buttons, IDs, settings and gestures are retained. A running parked evolution is indicated by a gray dot; global Play/Pause still controls it. There is no drag-and-drop or layout editing during a run.
+The default parked controls are **Breathe, Turing, Nudge and Resonance**. Cracks/Contours retains its shared mode-cycle button. The original DOM buttons, IDs, settings and gestures are retained. A running parked evolution is indicated by a gray dot; global Play/Pause still controls it. There is no drag-and-drop or layout editing during a run.
 
 Layouts are optional `evolutionSlots` profile/settings preferences, separate from artwork history and recipes; legacy settings use the original ten slots. Saving a layout changes neither the board nor engine state. Each profile retains its layout across reloads.
 
@@ -555,7 +555,7 @@ Both avoid index zero when creating crystal cells. `emptyIndices` supports respa
 
 **Implementation:** `js/app.js` (`applyNudgeLogic`, `getNudgeTiming`, `applyNudgeTiming`).
 
-Nudge moves editable tile indices toward higher or lower entries of the current palette. Single step performs one shift; continuous playback uses the selected interval, default 100 ms. Zero selects a shift on each available frame, not an unbounded loop.
+Nudge moves editable tile indices toward higher or lower entries of the current palette. One control selects Brighter → Darker → Off while paused; selecting or changing its direction never paints a generation. Use Single step or Play to change the board. During playback, direction changes alternate Brighter/Darker without pausing or resetting the generation counter or history segment. The icon follows the active direction and resets to Brighter when unarmed. Both directions share the swipe-up speed settings. Older toolbar layouts map either Nudge identity to this control; if both were assigned, the first position is kept and the redundant position receives the first unused catalogue control. Engine IDs remain nudgeBrighter/nudgeDarker; new selection-only Nudge Mode Changed commands are separate from legacy NUDGE commands, which retain their immediate-step behavior during replay. Single step performs one shift; continuous playback uses the selected interval, default 100 ms. Zero selects a shift on each available frame, not an unbounded loop.
 
 Timing preferences use `colorGridNudge`; use Save to profile to retain session timing changes on reopening. Recorded timing uses `nudgeTimingVersion: 1`; legacy recordings without this metadata retain their original frame-counting behavior. Replay timing is separate from the saved user preference. Avoid interpreting old generation tags with the new interval semantics.
 
@@ -730,7 +730,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Game of Life genetics | `tools/check-gol-genetics.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Toolbar layout | `tools/check-evolution-drawer.mjs` |
-| Brightness history and mid-run macros | `tools/check-brightness-undo.mjs`, `tools/check-midrun-macro.mjs` |
+| Brightness history and mid-run macros | `tools/check-brightness-undo.mjs`, `tools/check-midrun-macro.mjs`, `tools/check-nudge-cycle.mjs`, `tools/check-nudge-legacy.mjs` |
 | Resonance maps and compatibility | `tools/check-cymatics.mjs` |
 
 The Resonance browser check covers languages/viewports, live map changes, drawing, Undo/Redo, JSON and recipe replay. `CYMATICS_DEFAULT_ONLY=1`, `CYMATICS_FREQUENCY_ONLY=1` and `CYMATICS_CYCLE_ONLY=1` select focused flows; `CYMATICS_STRENGTH_ONLY=1` checks independent strengths, drafts/Reset, cycling, live saves, history, project/macro replay and profile reload. `CYMATICS_ORGANIC_ONLY=1` checks Clouds/Cosmological empathy, frequency changes and round trips; `CYMATICS_LANG` filters languages. The Cracks session-seed check also supports `CRACKS_SEED_LANG`.

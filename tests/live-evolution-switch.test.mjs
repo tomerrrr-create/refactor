@@ -41,7 +41,7 @@ function harness() {
         restoreIslandsSession: r => ({...r}), syncDlaCrystalState() {}, initializeDla() {} });
     for (const name of ['updateUndoRedoButtons','updateBrightnessEvoButtonUI','updateDlaButtonUI','updateErosionButtonUI',
         'updateBreatheEvoButtonUI','updateGravitationalSortButtonUI','updateSpiralButtonUI','updateMagnetButtonUI',
-        'updateGameOfLifeButtonUI','updateChiFlowButtonUI','updateIslandsButtonUI']) c[name] = () => {};
+        'updateGameOfLifeButtonUI','updateChiFlowButtonUI','updateIslandsButtonUI','updateNudgeButtonUI']) c[name] = () => {};
     c.gameLoop = () => { c.currentGenerationCount++; c.animationFrameId = c.requestAnimationFrame(c.gameLoop); };
     vm.runInContext(section('window.logArtEvent = function', '// ------------------------------------------'), c);
     vm.runInContext(section('function pauseLife()', 'function getRandomGridPosition('), c);
@@ -51,16 +51,18 @@ function harness() {
         const fn=source.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?^\\}`, 'm'));
         vm.runInContext(fn[0], c);
     }
+    vm.runInContext(section('function isNudgeSimulation(', 'function updateNudgeButtonUI('), c);
+    vm.runInContext(section('function selectNudgeMode(', '// Keep the chosen color stable'), c);
     return c;
 }
 const selectors = {spiral:'cycleSpiralMode', gravitationalSort:'cycleGravitationalSortMode', brightnessEvo:'cycleBrightnessEvoMode',
-    magnet:'cycleMagnetMode', erosion:'cycleErosionMode', gameOfLife:'cycleGameOfLifeMode', sandpile:'cycleChiFlowMode', islands:'cycleIslandsMode', dla:'cycleDlaMode'};
+    nudgeBrighter:'cycleNudgeMode', nudgeDarker:'cycleNudgeMode', magnet:'cycleMagnetMode', erosion:'cycleErosionMode', gameOfLife:'cycleGameOfLifeMode', sandpile:'cycleChiFlowMode', islands:'cycleIslandsMode', dla:'cycleDlaMode'};
 function select(c, sim) { c.handleEvolutionTap(sim, () => selectors[sim] ? c[selectors[sim]]() : c.armSimulation(sim)); }
 
 test('all ordinary evolutions hand off on the same board with PAUSE/PLAY, independent generations and Undo segments', () => {
     const c = harness(), board=c.boardState;
     select(c,'spiral'); c.togglePlayPauseLife();
-    for (const sim of Object.keys(simulations).filter(sim=>!['breathe','spiral'].includes(sim))) {
+    for (const sim of Object.keys(simulations).filter(sim=>!['breathe','spiral','nudgeDarker'].includes(sim))) {
         c.currentGenerationCount=17; c.boardState[0].k++; const before=c.history.length;
         select(c, sim);
         assert.equal(c.armedSimulation,sim); assert.equal(c.isLifePlaying,true); assert.equal(c.runningAppearance,true); assert.equal(c.boardState,board);
@@ -140,4 +142,21 @@ test('DLA live cycling retains the current run and re-entry reinitializes its in
     select(c,'spiral');select(c,'dla');assert.equal(initializations,2);assert.notEqual(c.dlaState,state);
     c.pauseLife();assert.equal(c.isLifePlaying,false);assert.equal(c.runningAppearance,false);
     assert(Object.values(simulations).every(id=>!c.dom[id].disabled));
+});
+
+test('Nudge arms and cycles without paint; live cycling keeps the same generation and history boundary',()=>{
+ const c=harness(),before=JSON.stringify(c.boardState);
+ c.cycleNudgeMode();assert.equal(c.armedSimulation,'nudgeBrighter');
+ c.cycleNudgeMode();assert.equal(c.armedSimulation,'nudgeDarker');
+ c.cycleNudgeMode();assert.equal(c.armedSimulation,null);
+ assert.equal(JSON.stringify(c.boardState),before);assert.equal(c.history.length,0);
+ c.cycleNudgeMode();c.togglePlayPauseLife();c.currentGenerationCount=19;
+ const start=c.simulationStartState,history=c.history.length;
+ for(const expected of ['nudgeDarker','nudgeBrighter','nudgeDarker']){
+  c.handleEvolutionTap('nudgeBrighter',()=>c.cycleNudgeMode());
+  assert.equal(c.armedSimulation,expected);assert(c.isLifePlaying);assert.equal(c.currentGenerationCount,19);
+  assert.equal(c.simulationStartState,start);assert.equal(c.history.length,history);
+ }
+ assert.equal(c.artRecipeLog.filter(line=>line.includes(' PAUSE ->')).length,0);
+ assert.match(c.artRecipeLog.at(-1),/\[GEN:19\] Nudge Mode Changed -> nudgeDarker/);
 });

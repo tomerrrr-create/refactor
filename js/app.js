@@ -1068,20 +1068,41 @@ function applyNudgeLogic(direction) {
           performAction(() => applyNudgeLogic(direction));
       }
 
-      function handleNudgeBrighterClick() {
-        window.logArtEvent('NUDGE', `Brighter | Sort: ${currentSortMethod}`); 
-          nudgeColors(1);
-          armSimulation('nudgeBrighter');
+      function isNudgeSimulation(simulation = armedSimulation) {
+          return simulation === 'nudgeBrighter' || simulation === 'nudgeDarker';
       }
 
-      function handleNudgeDarkerClick() {
-        window.logArtEvent('NUDGE', `Darker | Sort: ${currentSortMethod}`); 
-          nudgeColors(-1);
-          armSimulation('nudgeDarker');
+      function updateNudgeButtonUI() {
+          const active = isNudgeSimulation();
+          const darker = armedSimulation === 'nudgeDarker';
+          const button = dom.btnNudgeBrighter;
+          button.classList.toggle('simulation-active', active);
+          button.setAttribute('aria-pressed', String(active));
+          button.dataset.nudgeMode = darker ? 'darker' : 'brighter';
+          button.querySelectorAll('svg').forEach(icon => {
+              icon.style.display = icon.classList.contains('nudge-darker-icon') === darker ? 'block' : 'none';
+          });
+          const label = getText(darker ? 'help_nudge_backward' : 'help_nudge_forward').split('\n')[0];
+          button.title = label;
+          button.setAttribute('aria-label', label);
       }
 
+      function selectNudgeMode(mode) {
+          if (!['off', 'nudgeBrighter', 'nudgeDarker'].includes(mode)) throw Error('Invalid Nudge mode');
+          if (mode === 'off') {
+              if (isNudgeSimulation()) armSimulation(null);
+          } else if (isNudgeSimulation()) {
+              // A live direction change retains its generation clock and Undo segment.
+              armedSimulation = mode;
+          } else armSimulation(mode);
+          updateNudgeButtonUI();
+      }
 
-
+      function cycleNudgeMode() {
+          const next = nextEvolutionMode(isNudgeSimulation() ? armedSimulation : 'off', ['off', 'nudgeBrighter', 'nudgeDarker']);
+          selectNudgeMode(next);
+          window.logArtEvent('Nudge Mode Changed', next);
+      }
 
 
       // Keep the chosen color stable when its palette index changes.
@@ -1730,7 +1751,7 @@ function initializeDla() {
 // Live handoff reuses PAUSE/selection/PLAY so each run keeps its own
 // generations, rules and Undo boundary. Only breathing retains manual Pause.
 function handleEvolutionTap(simulation, onTap) {
-    if (!isLifePlaying || armedSimulation === simulation) {
+    if (!isLifePlaying || armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())) {
         onTap();
         return;
     }
@@ -1876,6 +1897,7 @@ if (simulationName === 'magnet') {
 
     
     }
+    updateNudgeButtonUI();
     updateGameOfLifeButtonUI();
     updateChiFlowButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
@@ -2581,6 +2603,7 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
       
       function resetArmedState() {
         armedSimulation = null;
+        updateNudgeButtonUI();
         dlaState = null;
 turingState = null;
 
@@ -4362,13 +4385,13 @@ function parseLegacyMacroText(text) {
     const uiEvents = [
         'Sort by', 'Gravitational Sort Mode', 
         'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
+        'Nudge Mode Changed', 'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
     ];
 
     // --- הוספה שלנו: קבוצת כפתורי הסימולציה הבלעדיים ---
     const simulationEvents = [
         'Gravitational Sort Mode', 'Spiral Mode Changed', 'Magnet Mode Changed', 
-        'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
+        'Nudge Mode Changed', 'Brightness Evo Mode Changed', 'DLA Mode Changed', 'Erosion Mode Changed', 'Game of Life Mode Changed', 'Chi Flow Mode Changed', 'Islands Mode Changed'
     ];
 
 
@@ -5123,6 +5146,9 @@ function executeMacroAction(action) {
             }
             
 
+        else if (action.eventName === 'Nudge Mode Changed') {
+            selectNudgeMode(action.details);
+        }
         else if (action.eventName === 'NUDGE') {
             // מפרידים בין כיוון ההזזה לשיטת המיון (אם קיימת, לטובת תאימות לאחור)
             const parts = action.details.split(' | Sort: ');
@@ -5245,6 +5271,8 @@ else if (action.eventName === 'Invert Colors') {
         const splashScreen = document.getElementById('splashScreen'), splashText = document.getElementById('splashText');
         initializeLanguage();
         onLanguageChange(updateAllUIText);
+        onLanguageChange(updateNudgeButtonUI);
+        updateNudgeButtonUI();
         
         // Phase 1 Addition: Add adaptColors to the context for modals
         softBloom = createSoftBloom(dom.boardCanvas, document.getElementById('boardBloom'));
@@ -5712,8 +5740,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
             [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
-            [dom.btnNudgeBrighter, 'nudgeBrighter', handleNudgeBrighterClick, modals.openNudgeSettingsModal],
-            [dom.btnNudgeDarker, 'nudgeDarker', handleNudgeDarkerClick, modals.openNudgeSettingsModal],
+            [dom.btnNudgeBrighter, 'nudgeBrighter', cycleNudgeMode, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, modals.openBrightnessSettingsModal],
             [dom.btnShowBreatheMenu, 'breathe', cycleBreatheEvoMode, modals.openBreatheSettingsModal],
             [dom.btnCymatics,'cymatics',cycleCymaticsMode,()=>cymaticsSettingsUI.open()],
@@ -5725,9 +5752,9 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
-                onHold: () => evolutionExplanation.show(button, simulation),
+                onHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && armedSimulation === simulation,
+                canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });

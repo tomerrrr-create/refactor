@@ -382,12 +382,13 @@
           </button>
 
 <button id="btnNudgeBrighter" class="ctrl">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg class="nudge-brighter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M8 5 C 8 12, 8 20, 17 20"></path>
     </svg>
+    <svg class="nudge-darker-icon" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 V 20 C 20 20, 20 4, 9 4 Z"/></svg>
 </button>
 
-<button id="btnNudgeDarker" class="ctrl">
+<button id="btnNudgeDarker" class="ctrl" hidden aria-hidden="true" tabindex="-1">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 4 V 20 C 20 20, 20 4, 9 4 Z"></path>
     </svg>
