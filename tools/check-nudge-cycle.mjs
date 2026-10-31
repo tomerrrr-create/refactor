@@ -23,6 +23,23 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  await page.goto(base);await page.waitForFunction(()=>nudgeTest.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>nudgeTest.setup());
  const state=()=>page.evaluate(()=>nudgeTest.state()),button=page.locator('#btnNudgeBrighter'),step=page.locator('#btnStepForward'),play=page.locator('#btnPlayPauseLife');
+ // Nudge inherits the same overlay ink, armed weight/scale and running theme
+ // as Gravity, for both direction icons. Keep this outside the recipe flow.
+ const appearance=selector=>page.locator(selector).evaluate(button=>{
+  const icon=[...button.querySelectorAll('svg')].find(svg=>getComputedStyle(svg).display!=='none');
+  const style=getComputedStyle(icon),rect=button.getBoundingClientRect(),overlay=document.querySelector('#simModeBackground').getBoundingClientRect();
+  return {stroke:style.stroke,weight:style.strokeWidth,transform:getComputedStyle(button).transform,
+   inside:rect.left+rect.width/2>=overlay.left&&rect.right-rect.width/2<=overlay.right&&rect.top+rect.height/2>=overlay.top&&rect.bottom-rect.height/2<=overlay.bottom};
+ });
+ const gravity=page.locator('#btnGravitationalSort');
+ assert.deepEqual(await appearance('#btnNudgeBrighter'),await appearance('#btnGravitationalSort'),'idle Nudge follows overlay colors');
+ await gravity.click();await page.waitForTimeout(450);const armedGravity=await appearance('#btnGravitationalSort');
+ await button.click();await page.waitForTimeout(450);assert.deepEqual(await appearance('#btnNudgeBrighter'),armedGravity,'Brighter uses Gravity armed styling');
+ await button.click();await page.waitForTimeout(450);assert.deepEqual(await appearance('#btnNudgeBrighter'),armedGravity,'Darker uses Gravity armed styling');
+ await play.click();await page.waitForTimeout(450);const runningNudge=await appearance('#btnNudgeBrighter');
+ await gravity.click();await page.waitForTimeout(450);assert.deepEqual(await appearance('#btnGravitationalSort'),runningNudge,'running Nudge uses Gravity armed styling');
+ await button.click();await page.waitForTimeout(450);assert.deepEqual(await appearance('#btnNudgeBrighter'),runningNudge,'live handoff restores Nudge styling');
+ await page.evaluate(()=>nudgeTest.setup());await page.waitForTimeout(450);
  assert(!(await page.locator('#btnNudgeDarker').isVisible()));const initial=await state();
  await button.click();let current=await state();assert.equal(current.armed,'nudgeBrighter');assert.deepEqual(current.board,initial.board);assert.equal(current.history,0);assert(!(await step.isDisabled()));assert(!(await play.isDisabled()));
  await step.click();const bright=await state();assert.equal(bright.board[0],initial.board[0]);assert.equal(bright.board[1],initial.board[1]+1);

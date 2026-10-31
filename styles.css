@@ -893,6 +893,7 @@ body {
 #btnContour.simulation-active svg,
 #btnSpiral.simulation-active svg,
 #btnSandpile.simulation-active svg,
+#btnNudgeBrighter.simulation-active svg,
 #btnTuring.simulation-active svg {
   stroke: var(--gold);
   stroke-width: 2.5; /* Make the icon lines thicker */
@@ -1030,6 +1031,7 @@ body {
 #btnContour svg,
 #btnSpiral svg,
 #btnSandpile svg,
+#btnNudgeBrighter svg,
 #btnTuring svg,
 #btnShowBreatheMenu svg,
 #btnIslands svg {
@@ -1038,6 +1040,10 @@ body {
 
 #btnDla svg {
     fill: var(--sim-color); /* צובע את האייקון המלא של DLA בכחול */
+}
+
+#btnNudgeBrighter svg {
+    stroke-width: 1.8;
 }
 
 
