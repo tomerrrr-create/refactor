@@ -183,6 +183,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     }
     function showGroup(group) {
         activeGroup = group;
+        list.dataset.activeGroup = group.id;
         description.textContent = getText('palette_group_description_' + group.id);
         for (const tab of tabs.children) {
             const selected = tab.dataset.paletteGroup === group.id;
