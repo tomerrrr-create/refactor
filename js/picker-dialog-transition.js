@@ -27,7 +27,7 @@ export function transitionPickerDialog({ from, to, close, open }) {
     const timing = { duration: 220, easing: 'cubic-bezier(.2,.65,.3,1)' };
     const animations = [
         outgoing.animate([{ opacity: 1 }, { opacity: 0 }], { ...timing, fill: 'forwards' }),
-        incoming.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'translateY(0)' }], timing),
+        incoming.animate([{ opacity: 0 }, { opacity: 1 }], timing),
         to.animate([{ backgroundColor: oldBackground }, { backgroundColor: newBackground }], timing)
     ];
     const entry = {

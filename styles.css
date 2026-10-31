@@ -2238,9 +2238,22 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .color-page-arrow:hover, .color-page-arrow:focus-visible { color: #f1d886; opacity: 1; }
 
 /* Four category tabs surround the current palette's brush-picker shortcut. */
+#colorPickerModal, #paletteModal {
+    --picker-top: clamp(16px, 9dvh, 80px);
+    align-items: flex-start;
+    padding-top: var(--picker-top);
+}
+#colorPickerModal .brush-picker-panel, #paletteModal .palette-picker-panel {
+    max-height: calc(100dvh - var(--picker-top) - 16px);
+}
+#paletteModal .palette-picker-panel { padding-top: 0; }
+#colorPickerModal .brush-picker-heading {
+    height: 76px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+}
 .palette-picker-header {
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 4px; flex-shrink: 0; margin: 8px 0 12px; direction: ltr;
+    gap: 4px; flex-shrink: 0; margin: 0 0 12px; grid-template-rows: 76px; direction: ltr;
 }
 .palette-picker-header .palette-group-tabs { display: contents; }
 .palette-picker-header .palette-group-tab { grid-row: 1; }
@@ -2255,6 +2268,8 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     background: transparent; color: inherit; cursor: pointer;
 }
 .palette-current-preview .palette-current-icon { flex-shrink: 0; }
+#paletteCurrentPreview .palette-current-icon { width: 28px; height: 28px; font-size: 26px; }
+#paletteCurrentPreview .palette-current-icon > :is(svg,span) { width: 28px !important; height: 28px !important; font-size: 26px !important; }
 .palette-current-preview:hover { background: #d5aa4810; }
 .palette-current-preview:focus-visible { outline: 2px solid #d5aa48; outline-offset: -2px; }
 #paletteModal .palette-current-details { justify-content: center; text-align: center; }
