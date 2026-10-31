@@ -9,7 +9,6 @@ export function finishPickerDialogTransition() {
 export function transitionPickerDialog({ from, to, close, open }) {
     finishPickerDialogTransition();
     const outgoing = from.firstElementChild;
-    const oldBackground = getComputedStyle(from).backgroundColor;
     const animate = from.classList.contains('modal-visible') && outgoing &&
         !matchMedia('(prefers-reduced-motion: reduce)').matches;
     close();
@@ -17,7 +16,6 @@ export function transitionPickerDialog({ from, to, close, open }) {
     if (!animate || !to.classList.contains('modal-visible')) return;
 
     const incoming = to.firstElementChild;
-    const newBackground = getComputedStyle(to).backgroundColor;
     const oldAriaHidden = from.getAttribute('aria-hidden');
     const oldInert = from.inert;
     from.classList.add('picker-handoff-outgoing');
@@ -27,8 +25,7 @@ export function transitionPickerDialog({ from, to, close, open }) {
     const timing = { duration: 220, easing: 'cubic-bezier(.2,.65,.3,1)' };
     const animations = [
         outgoing.animate([{ opacity: 1 }, { opacity: 0 }], { ...timing, fill: 'forwards' }),
-        incoming.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'translateY(0)' }], timing),
-        to.animate([{ backgroundColor: oldBackground }, { backgroundColor: newBackground }], timing)
+        incoming.animate([{ opacity: 0 }, { opacity: 1 }], timing)
     ];
     const entry = {
         finish() {

@@ -24,12 +24,28 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const before=await state();
  for(const group of ['classic','extended','continuous','archive']){
   await page.locator('#paletteModal [data-palette-group="'+group+'"]').click();
+  const header=await page.locator('#paletteModal .palette-picker-header').evaluate(header=>{
+   const buttons=[...header.querySelectorAll('button')].sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
+   return buttons.map(button=>({id:button.dataset.paletteGroup||'current',top:button.getBoundingClientRect().top}));
+  });
+  assert.deepEqual(header.map(button=>button.id),['classic','extended','current','continuous','archive']);
+  assert(Math.max(...header.map(button=>button.top))-Math.min(...header.map(button=>button.top))<1,'header controls share one row');
+  assert.equal(await page.locator('#paletteModal .palette-group-description').count(),0);
+  await page.waitForTimeout(220);
+  const symbols=await page.locator('#paletteModal .palette-group-tab').evaluateAll(tabs=>tabs.map(tab=>{
+   const symbol=tab.querySelector('.palette-group-symbol'),style=getComputedStyle(tab),ink=getComputedStyle(symbol),r=symbol.getBoundingClientRect(),b=tab.getBoundingClientRect();
+   return {id:tab.dataset.paletteGroup,text:symbol.textContent,powers:[...symbol.querySelectorAll('sup')].map(s=>s.textContent),label:tab.getAttribute('aria-label'),title:tab.title,
+    selected:tab.getAttribute('aria-selected')==='true',background:style.backgroundColor,image:style.backgroundImage,shadow:style.boxShadow,glow:ink.textShadow,weight:ink.fontWeight,
+    fits:r.left>=b.left-1&&r.right<=b.right+1};
+  }));
+  assert.deepEqual(symbols.map(s=>[s.text,s.powers]),[['23',[]],['(23)2',['3','2']],['28+23',['8','3']],['V',[]]]);
+  for(const symbol of symbols){assert(symbol.label&&symbol.title&&symbol.fits);assert.equal(symbol.background,'rgba(0, 0, 0, 0)');assert.equal(symbol.image,'none');assert.equal(symbol.shadow,'none');assert.equal(symbol.weight,'400');assert.equal(symbol.glow==='none',!symbol.selected);}
   const geometry=await page.locator('#paletteModal .palette-choice-list').evaluate(list=>{
    const cards=[...list.children],rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
-   return {columns:getComputedStyle(list).gridTemplateColumns.split(' ').length,overflow:list.scrollWidth>list.clientWidth+1,cards:cards.map(c=>{const mosaic=c.querySelector('.palette-color-mosaic'),r=rect(mosaic);return{...r,gap:getComputedStyle(mosaic).gap,radius:getComputedStyle(mosaic.firstElementChild).borderRadius,cells:mosaic.children.length,label:c.getAttribute('aria-label'),icon:!!c.querySelector('.palette-choice-icon'),count:!!c.querySelector('.palette-choice-count')};})};
+   return {columns:getComputedStyle(list).gridTemplateColumns.split(' ').length,overflow:list.scrollWidth>list.clientWidth+1,cards:cards.map(c=>{const mosaic=c.querySelector('.palette-color-mosaic'),r=rect(mosaic);return{...r,gap:getComputedStyle(mosaic).gap,radius:getComputedStyle(mosaic.firstElementChild).borderRadius,cells:mosaic.children.length,mosaicColumns:getComputedStyle(mosaic).gridTemplateColumns.split(' ').length,order:c.querySelector('.palette-choice-icon').getBoundingClientRect().bottom<=r.y+1&&r.y+r.h<=c.querySelector('.palette-choice-name').getBoundingClientRect().top+1,label:c.getAttribute('aria-label'),icon:!!c.querySelector('.palette-choice-icon'),count:!!c.querySelector('.palette-choice-count'),nameFits:c.querySelector('.palette-choice-name').getBoundingClientRect().bottom<=c.getBoundingClientRect().bottom-3};})};
   });
   assert.equal(geometry.columns,3);assert(!geometry.overflow);assert(geometry.cards.length);
-  for(const card of geometry.cards){assert(Math.abs(card.w-card.h)<.1,'color preview is square');assert.equal(card.cells,36);assert.equal(card.gap,'0px');assert.equal(card.radius,'0px');assert(card.label&&card.icon);assert.equal(card.count,group==='archive');}
+  for(const card of geometry.cards){assert(Math.abs(card.w-card.h)<.1,'color preview is square');assert(card.w<=64.1,'minimal preview stays at most 64px wide');assert.equal(card.cells,9);assert.equal(card.mosaicColumns,3);assert(card.order,'icon, preview and name stay in vertical order');assert.equal(card.gap,'0px');assert.equal(card.radius,'0px');assert(card.label&&card.icon&&card.nameFits,'palette names stay inside their touch targets');assert.equal(card.count,group==='archive');}
   assert.deepEqual(await state(),before,'group browsing never changes board, palette or log');
   if(group==='classic')await page.screenshot({path:path.join(artifacts,config.lang+'-palette-cards.png')});
  }
@@ -72,6 +88,10 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   assert.deepEqual(await state(),selectedState,'opening does not change board or logs');
   await page.locator('#btnPaletteModalClose').click();
  }
+ await page.evaluate(()=>paletteTest.open());
+ await page.locator('#palette-current-preview').click();
+ await page.waitForFunction(()=>document.querySelector('#colorPickerModal').classList.contains('modal-visible'));
+ await page.keyboard.press('Escape');
  await page.evaluate(()=>paletteTest.tech());
  // Open the same shared chooser through Startup without changing the board.
  const startupButton=page.locator('#btnStartupPalette');

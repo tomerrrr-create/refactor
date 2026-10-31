@@ -1,5 +1,5 @@
 import {PALETTES} from './data/palettes.js';
-import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots,assignEvolutionSlot} from './evolution-drawer-settings.js';
+import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots,assignEvolutionSlot,evolutionControlId} from './evolution-drawer-settings.js';
 
 export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canEdit,onSave,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');trigger.id='btnEvolutionDrawer';trigger.type='button';
@@ -11,7 +11,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const luminance=hex=>{const channels=hex.slice(1).match(/../g).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return .2126*channels[0]+.7152*channels[1]+.0722*channels[2];};
     const darkInk='#141914',lightInk='#FFF9ED',darkLuminance=luminance(darkInk),lightLuminance=luminance(lightInk);
     let draft=null,selected=0;
-    const entry=id=>EVOLUTION_CATALOG.find(e=>e.id===id);
+    const entry=id=>EVOLUTION_CATALOG.find(e=>e.id===evolutionControlId(id));
     const label=id=>getText(entry(id).key).split('\n')[0];
     function icon(id){
         const source=document.getElementById(entry(id).button),holder=document.createElement('span');holder.className='drawer-icon';holder.setAttribute('aria-hidden','true');
@@ -29,7 +29,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         refresh();
     }
     function refresh(){
-        const parked=isRunning()&&getActive()&&!getSlots().includes(getActive());
+        const parked=isRunning()&&getActive()&&!getSlots().includes(evolutionControlId(getActive()));
         trigger.disabled=!canEdit();trigger.dataset.parkedActive=String(Boolean(parked));
         const text=parked?getText('drawer_hidden_active').replace('{name}',label(getActive())):getText('drawer_title');trigger.title=text;trigger.setAttribute('aria-label',text);
         if(dialog.open&&!canEdit())dialog.close();
