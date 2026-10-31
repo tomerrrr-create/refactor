@@ -7,7 +7,7 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),s
     const maps=dialog.querySelector('.cymatics-maps .tuning-modes');
     for(const [name,version] of Object.entries(CYMATICS_RESONANCE_MAPS)){
         const b=document.createElement('button');b.type='button';b.dataset.cymaticsMap=name;
-        const paths={diagonal:'<path d="M4 4l16 16M4 20L20 4"/>',grid:'<path d="M8 3v18M16 3v18M3 8h18M3 16h18"/>',interference:'<circle cx="6" cy="9" r="2"/><circle cx="18" cy="15" r="2"/><path d="M3 3c12 0 12 18 18 18M3 15c6 0 6-12 18-12M3 21c12 0 6-18 18-12"/>',circular:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'};
+        const paths={clouds:'<path d="M5 17a4 4 0 0 1-1-7 5 5 0 0 1 9-3 4 4 0 0 1 6 4 3 3 0 0 1-1 6Z"/>',cosmic:'<circle cx="5" cy="8" r="2"/><circle cx="18" cy="6" r="1.5"/><circle cx="15" cy="18" r="2"/><path d="M7 8c5 0 3 8 6 9M7 7l9-1M18 8c-3 3-5 5-3 8"/>',diagonal:'<path d="M5 19L19 5"/>',grid:'<path d="M8 4l4 4-4 4-4-4ZM16 4l4 4-4 4-4-4ZM8 12l4 4-4 4-4-4ZM16 12l4 4-4 4-4-4Z"/>',interference:'<circle cx="6" cy="9" r="2"/><circle cx="18" cy="15" r="2"/><path d="M3 3c12 0 12 18 18 18M3 15c6 0 6-12 18-12M3 21c12 0 6-18 18-12"/>',circular:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'};
         b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">'+paths[name]+'</svg><span></span>';
         b.addEventListener('click',()=>{const selected=selectCymaticsMap(draft,version,draftFrequencies);draft=selected.rules;draftFrequencies=selected.frequencies;render();});maps.append(b);
     }

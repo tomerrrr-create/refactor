@@ -6,7 +6,7 @@ import {validateProfileSnapshot} from '../js/profile-state.js';
 const fixture=(n=21)=>({n,currentPalette:Array(23).fill('#ffffff'),currentBoardState:Array.from({length:n*n},(_,i)=>({k:(i*17+3)%23,v:(i*17+3)%23,isGold:i===Math.floor(n*n/2)}))});
 const histogram=board=>board.reduce((m,t)=>(m[t.k]=(m[t.k]??0)+1,m),{});
 function advance(ctx,state,count){for(let i=0;i<count;i++){const r=runCymaticsGeneration(ctx,state);ctx.currentBoardState=r.nextBoardState;state=r.nextCymaticsState;}return {ctx,state};}
-test('all four standing-wave fields arrange pigments without creating colors or moving gold',()=>{
+test('all resonance fields arrange pigments without creating colors or moving gold',()=>{
  for(const resonanceVersion of Object.values(CYMATICS_RESONANCE_MAPS)){
   const ctx={...fixture(),cymaticsRules:{mode:'resonance',frequency:800,resonanceVersion,strength:100}},before=structuredClone(ctx.currentBoardState),field=getCymaticsField(ctx.n,800,resonanceVersion),energy=b=>b.reduce((sum,t,i)=>sum+t.k*field[i],0);
   const result=advance(ctx,createCymaticsState(ctx.n),100);assert(energy(result.ctx.currentBoardState)<energy(before));assert.deepEqual(histogram(result.ctx.currentBoardState),histogram(before));assert.deepEqual(result.ctx.currentBoardState[220],before[220]);assert.notDeepEqual(result.ctx.currentBoardState,before);assert.equal(result.state.steps,100);
@@ -73,7 +73,7 @@ test('expanded resonance produces axial and grid fields without a forced diagona
   assert.deepEqual(validateCymaticsSnapshot({cymaticsVersion:1,rules,state:saved.state}).rules,rules);
  }
  assert.notDeepEqual(getCymaticsField(41,40,2),getCymaticsField(41,80,2));
- assert.throws(()=>validateCymaticsRules({...legacyRules,resonanceVersion:5}));assert.throws(()=>validateCymaticsRules({pattern:'petals',strength:60,resonanceVersion:2}));
+ assert.throws(()=>validateCymaticsRules({...legacyRules,resonanceVersion:7}));assert.throws(()=>validateCymaticsRules({pattern:'petals',strength:60,resonanceVersion:2}));
 });
 test('original resonance recordings retain their exact fields',async()=>{
  const {createHash}=await import('node:crypto');
@@ -196,13 +196,13 @@ test('toolbar cycles Interference and Circular without resetting the run and onl
 
 test('per-map frequencies migrate legacy shared values and keep strength/phase shared',()=>{
  const old={pattern:'petals',strength:75,mode:'resonance',frequency:440,resonanceVersion:4,phaseMotion:false};
- let frequencies=createCymaticsFrequencies(old);assert.deepEqual(frequencies,{diagonal:440,grid:440,circular:440,interference:440});
+ let frequencies=createCymaticsFrequencies(old);assert.deepEqual(frequencies,{diagonal:440,grid:440,circular:440,interference:440,clouds:440,cosmic:440});
  frequencies=rememberCymaticsFrequency(frequencies,{...old,resonanceVersion:3,frequency:2731});
  const frozen=structuredClone(frequencies),circle=selectCymaticsMap(old,3,frequencies);assert.equal(circle.rules.frequency,2731);assert.equal(circle.rules.phaseMotion,false);assert.equal(circle.rules.strength,75);assert.deepEqual(frequencies,frozen);
  const back=selectCymaticsMap(circle.rules,4,circle.frequencies);assert.equal(back.rules.frequency,440);
  const settings=defaultWorkspaceSettings();settings.cymaticsFrequencies=frequencies;
  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).cymaticsFrequencies,frequencies);assert.deepEqual(validateProfileSnapshot({settings}).settings.cymaticsFrequencies,frequencies);
- assert.deepEqual(createCymaticsFrequencies(old,{circular:5000}),{diagonal:440,grid:440,circular:5000,interference:440});
+ assert.deepEqual(createCymaticsFrequencies(old,{circular:5000}),{diagonal:440,grid:440,circular:5000,interference:440,clouds:440,cosmic:440});
  for(const value of [null,[],{circle:440},{circular:19},{grid:20001},{diagonal:20.5},{interference:'440'}])assert.throws(()=>validateCymaticsFrequencies(value));
 });
 test('saving draft frequencies and restoring history/projects/macros do not discard other map preferences',()=>{
@@ -219,8 +219,34 @@ test('saving draft frequencies and restoring history/projects/macros do not disc
 });
 
 test('fresh per-map defaults are independent and do not replace explicit legacy frequencies',()=>{
- assert.deepEqual(createCymaticsFrequencies(),{diagonal:11831,grid:11831,circular:20000,interference:800});
+ assert.deepEqual(createCymaticsFrequencies(),{diagonal:11831,grid:11831,circular:20000,interference:800,clouds:800,cosmic:800});
  const circle=selectCymaticsMap(INITIAL_CYMATICS_RULES,3,createCymaticsFrequencies());assert.equal(circle.rules.frequency,20000);assert.equal(selectCymaticsMap(circle.rules,4,circle.frequencies).rules.frequency,800);
- const old={pattern:'petals',strength:60,mode:'resonance',frequency:11831,resonanceVersion:4,phaseMotion:true};assert.deepEqual(createCymaticsFrequencies(old),{diagonal:11831,grid:11831,circular:11831,interference:11831});
+ const old={pattern:'petals',strength:60,mode:'resonance',frequency:11831,resonanceVersion:4,phaseMotion:true};assert.deepEqual(createCymaticsFrequencies(old),{diagonal:11831,grid:11831,circular:11831,interference:11831,clouds:11831,cosmic:11831});
  assert.equal(validateCymaticsSnapshot({cymaticsVersion:1,rules:old,state:createCymaticsState(41)}).rules.frequency,11831);
+});
+
+test('Clouds and Cosmological empathy have distinct, frequency-sensitive, closed moving fields and exact replay',()=>{
+ const fields=[];
+ for(const resonanceVersion of [5,6]){
+  for(const n of [1,2,41])for(const frequency of [20,800,20000]){
+   const a=getCymaticsField(n,frequency,resonanceVersion,0);
+   assert.equal(a.length,n*n);assert([...a].every(v=>Number.isInteger(v)&&v>=0&&v<=65535));
+   assert.deepEqual(a,getCymaticsField(n,frequency,resonanceVersion,1200));
+  }
+  const field=getCymaticsField(41,800,resonanceVersion,0);fields.push(field);
+  assert.notDeepEqual(field,getCymaticsField(41,3200,resonanceVersion,0));
+  assert.notDeepEqual(field,getCymaticsField(41,800,resonanceVersion,300));
+  for(const phaseMotion of [false,true]){
+   const rules={...INITIAL_CYMATICS_RULES,resonanceVersion,phaseMotion};
+   const context={...fixture(41),cymaticsRules:rules},before=structuredClone(context.currentBoardState);
+   const run=advance(context,{...createCymaticsState(41),steps:250},75),saved=JSON.parse(JSON.stringify(run));
+   assert.deepEqual(histogram(run.ctx.currentBoardState),histogram(before));assert.deepEqual(run.ctx.currentBoardState[840],before[840]);
+   assert.notDeepEqual(run.ctx.currentBoardState,before);
+   assert.deepEqual(advance(run.ctx,run.state,60),advance(saved.ctx,saved.state,60));
+   const prefs=defaultWorkspaceSettings();prefs.rules.cymatics=rules;
+   assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(prefs)).rules.cymatics,rules);
+   assert.deepEqual(validateCymaticsSnapshot({cymaticsVersion:1,rules,state:run.state}).rules,rules);
+  }
+ }
+ assert.notDeepEqual(fields[0],fields[1]);
 });
