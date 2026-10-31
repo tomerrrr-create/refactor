@@ -2256,7 +2256,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     max-height: calc(100dvh - var(--picker-top) - 16px);
 }
 #paletteModal .palette-picker-panel { --palette-panel-padding: 14px; padding-top: 0; }
-#paletteModal .palette-choice-list { gap: 8px; grid-auto-rows: max-content; }
+#paletteModal .palette-choice-list {
+    --palette-tile-height: 152px;
+    gap: 8px; grid-auto-rows: var(--palette-tile-height);
+    /* Three rows, two row gaps and the list's 2px/5px vertical padding. */
+    max-height: calc(3 * var(--palette-tile-height) + 23px);
+}
+#paletteModal .palette-choice-list[data-active-group="archive"] { --palette-tile-height: 168px; }
 #paletteModal .palette-choice { gap: 6px; padding: 6px; }
 #paletteModal .palette-choice-title { flex-direction: column; min-height: 36px; gap: 2px; }
 #paletteModal .palette-choice-preview { width: min(100%, 64px); margin-inline: auto; }
