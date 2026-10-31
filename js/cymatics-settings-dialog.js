@@ -41,7 +41,7 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),s
     }
     strength.addEventListener('input',()=>{draft.strength=Number(strength.value);render();});
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
-    dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft={...INITIAL_CYMATICS_RULES};draftFrequencies=createCymaticsFrequencies(draft);lastMap=INITIAL_CYMATICS_RULES.resonanceVersion;lastMotion=INITIAL_CYMATICS_RULES.phaseMotion;render();});
+    dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft={...INITIAL_CYMATICS_RULES};draftFrequencies=createCymaticsFrequencies();lastMap=INITIAL_CYMATICS_RULES.resonanceVersion;lastMotion=INITIAL_CYMATICS_RULES.phaseMotion;render();});
     dialog.querySelector('form').addEventListener('submit',e=>{e.preventDefault();if(canEdit()&&saveRules(validateCymaticsRules(draft),draftFrequencies)!==false)dialog.close();});
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};let beganOutside=false;
     dialog.addEventListener('pointerdown',e=>{beganOutside=outside(e);});dialog.addEventListener('click',e=>{if(beganOutside&&outside(e))dialog.close();beganOutside=false;});
