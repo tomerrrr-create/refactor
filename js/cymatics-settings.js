@@ -2,7 +2,7 @@ export const CURRENT_RESONANCE_VERSION=2;
 export const CYMATICS_RESONANCE_MAPS=Object.freeze({diagonal:1,grid:2,circular:3,interference:4,clouds:5,cosmic:6});
 // New application/reset defaults are separate from legacy recording fallbacks.
 export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({diagonal:11831,grid:11831,circular:20000,interference:800,clouds:800,cosmic:800});
-export const INITIAL_CYMATICS_RULES = Object.freeze({strength:15,mode:'resonance',frequency:800,resonanceVersion:4,phaseMotion:true});
+export const INITIAL_CYMATICS_RULES = Object.freeze({strength:35,mode:'resonance',frequency:800,resonanceVersion:4,phaseMotion:true});
 export const DEFAULT_CYMATICS_RULES=INITIAL_CYMATICS_RULES;
 export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
     if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['pattern','strength','mode','frequency','resonanceVersion','phaseMotion'].includes(k))||

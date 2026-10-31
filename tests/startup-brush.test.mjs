@@ -67,7 +67,7 @@ test('new map defaults preserve saved frequency tables even when old default rul
 
 test('map strengths survive profile loading, including omitted flat defaults and legacy shared strength',()=>{
  const h=harness(),settings=defaultWorkspaceSettings();h.applyWorkspacePreferences(settings);
- assert.equal(h.cymaticsRules.strength,15);assert(Object.values(h.cymaticsStrengths).every(value=>value===15));
+ assert.equal(h.cymaticsRules.strength,35);assert(Object.values(h.cymaticsStrengths).every(value=>value===35));
  settings.cymaticsStrengths={interference:65,circular:25};h.applyWorkspacePreferences(settings);
  assert.equal(h.cymaticsRules.strength,65);assert.equal(h.cymaticsStrengths.circular,25);
  settings.rules.cymatics={...INITIAL_CYMATICS_RULES,strength:80,resonanceVersion:3};h.applyWorkspacePreferences(settings);

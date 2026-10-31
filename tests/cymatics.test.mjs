@@ -150,8 +150,8 @@ test('fixed resonance maps retain their pre-motion byte signatures',async()=>{
  }
 });
 
-test('Resonance defaults to 15 percent and retired preferences migrate without accepting retired recordings',()=>{
- assert.deepEqual(INITIAL_CYMATICS_RULES,{strength:15,mode:'resonance',frequency:800,resonanceVersion:4,phaseMotion:true});
+test('Resonance defaults to 35 percent and retired preferences migrate without accepting retired recordings',()=>{
+ assert.deepEqual(INITIAL_CYMATICS_RULES,{strength:35,mode:'resonance',frequency:800,resonanceVersion:4,phaseMotion:true});
  assert.deepEqual(validateCymaticsRules(),INITIAL_CYMATICS_RULES);
  const defaults=defaultWorkspaceSettings();defaults.rules.cymatics={...INITIAL_CYMATICS_RULES};
  assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(defaults)).rules.cymatics,undefined);
@@ -253,7 +253,7 @@ test('Clouds and Cosmological empathy have distinct, frequency-sensitive, closed
 
 test('per-map strengths preserve legacy shared values and migrate without changing recorded rules',()=>{
  const names=Object.keys(CYMATICS_RESONANCE_MAPS),all=value=>Object.fromEntries(names.map(name=>[name,value]));
- assert.deepEqual(createCymaticsStrengths(),all(15));
+ assert.deepEqual(createCymaticsStrengths(),all(35));
  const old={pattern:'petals',strength:60,mode:'resonance',frequency:440};
  assert.deepEqual(createCymaticsStrengths(old),all(60));assert.deepEqual(validateCymaticsRules(old),old);
  const strengths={diagonal:20,grid:30,circular:40,interference:50,clouds:60,cosmic:70},copy=structuredClone(strengths);
