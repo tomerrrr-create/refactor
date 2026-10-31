@@ -177,6 +177,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             mosaic.classList.add('palette-current-mosaic');
             preview.append(mosaic);
             currentPreviewHost.append(preview);
+            details.prepend(icon);
             current.append(details);
         } else {
             // Other palette pickers retain their combined footer.
