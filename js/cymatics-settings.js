@@ -26,3 +26,29 @@ export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
     }
     return result;
 }
+
+// Per-map frequencies are user preferences, not engine/runtime recording fields.
+export function validateCymaticsFrequencies(value={}){
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(name=>!Object.hasOwn(CYMATICS_RESONANCE_MAPS,name)||!Number.isInteger(value[name])||value[name]<20||value[name]>20000))throw new Error('Invalid Cymatics map frequencies');
+    return Object.fromEntries(Object.keys(CYMATICS_RESONANCE_MAPS).filter(name=>Object.hasOwn(value,name)).map(name=>[name,value[name]]));
+}
+export function createCymaticsFrequencies(rules=INITIAL_CYMATICS_RULES,saved={}){
+    rules=validateCymaticsRules(rules);const values=validateCymaticsFrequencies(saved),fallback=rules.mode==='resonance'?rules.frequency:INITIAL_CYMATICS_RULES.frequency;
+    return Object.fromEntries(Object.keys(CYMATICS_RESONANCE_MAPS).map(name=>[name,values[name]??fallback]));
+}
+export function rememberCymaticsFrequency(frequencies,rules){
+    const result=createCymaticsFrequencies(rules,frequencies);
+    if(rules.mode==='resonance'){
+        const name=Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===(rules.resonanceVersion??1));
+        result[name]=rules.frequency;
+    }
+    return result;
+}
+export function selectCymaticsMap(rules,version,frequencies){
+    rules=validateCymaticsRules(rules);
+    const name=Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===version);
+    if(!name)throw new Error('Invalid Cymatics map');
+    const remembered=rememberCymaticsFrequency(frequencies,rules);
+    return {rules:validateCymaticsRules({...rules,mode:'resonance',resonanceVersion:version,frequency:remembered[name],
+        phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion}),frequencies:remembered};
+}

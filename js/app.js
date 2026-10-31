@@ -1,4 +1,4 @@
-import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,validateCymaticsRules} from './cymatics-settings.js';
+import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
 import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
@@ -60,7 +60,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let recordPausedBrushMotion = loadBrushMotionRecording();
       let replayBrushBefore = null;
       let islandsSession = null;
-      let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},replayCymaticsRules=null,cymaticsSettingsUI=null;
+      let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),replayCymaticsRules=null,cymaticsSettingsUI=null;
       let evolutionTuning = validateEvolutionTuning();
       
       const ANIMATION_DURATION = 200; // ms
@@ -2077,6 +2077,7 @@ if (simulationName === 'magnet') {
 
       function getWorkspaceSettings() {
         return {
+            ...(Object.values(cymaticsFrequencies).every(value=>value===INITIAL_CYMATICS_RULES.frequency)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
             ...(evolutionSlots.join() === DEFAULT_EVOLUTION_SLOTS.join() ? {} : {evolutionSlots:[...evolutionSlots]}),
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
@@ -2115,6 +2116,7 @@ if (simulationName === 'magnet') {
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH};contourRules.lineColor='brush';}
         turingRules = { ...settings.rules.turing };
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
+        cymaticsFrequencies=rememberCymaticsFrequency(settings.cymaticsFrequencies,cymaticsRules);
         if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
@@ -3437,10 +3439,9 @@ function cycleCymaticsMode(){
     if(activating)armSimulation('cymatics');
     const rules=getCymaticsRules(),inCycle=rules.mode==='resonance'&&[4,3].includes(rules.resonanceVersion);
     const next=!inCycle?4:activating?rules.resonanceVersion:nextEvolutionMode(rules.resonanceVersion,['off',4,3]);
-    const updated={...rules,mode:'resonance',frequency:rules.frequency??INITIAL_CYMATICS_RULES.frequency,
-        resonanceVersion:next==='off'?4:next,phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion};
+    const selected=selectCymaticsMap(rules,next==='off'?4:next,cymaticsFrequencies);
     const running=isLifePlaying;
-    if(saveCymaticsSettings(updated)===false)return;
+    if(saveCymaticsSettings(selected.rules,selected.frequencies)===false)return;
     if(next==='off'){
         armSimulation(null);
         window.logArtEvent('Cymatics Mode Changed',JSON.stringify({mode:'off',...getCymaticsSnapshot()}));
@@ -3453,16 +3454,18 @@ function restoreCymaticsSnapshot(value,{preservePreferences=false}={}){
     if(armedSimulation!=='cymatics')armSimulation('cymatics');
     cymaticsState=snapshot.state;
     if(isMacroPlaying||isExecutingMacroCommand)replayCymaticsRules=snapshot.rules;
-    else {replayCymaticsRules=null;if(!preservePreferences)cymaticsRules=snapshot.rules;}
+    else {replayCymaticsRules=null;if(!preservePreferences){cymaticsRules=snapshot.rules;cymaticsFrequencies=rememberCymaticsFrequency(cymaticsFrequencies,cymaticsRules);}}
     updateCymaticsButtonUI();
 }
 function runCymaticsEvolution(context){
     const result=runCymaticsGeneration({...context,cymaticsRules:getCymaticsRules()},cymaticsState);
     cymaticsState=result.nextCymaticsState;return result.nextBoardState;
 }
-function saveCymaticsSettings(rules){
+function saveCymaticsSettings(rules,frequencies){
     if(armedSimulation!=='cymatics'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
-    cymaticsRules=validateCymaticsRules(rules);replayCymaticsRules=null;
+    const normalized=validateCymaticsRules(rules),outgoing=frequencies===undefined?rememberCymaticsFrequency(cymaticsFrequencies,cymaticsRules):frequencies;
+    const remembered=rememberCymaticsFrequency(outgoing,normalized);
+    cymaticsRules=normalized;cymaticsFrequencies=remembered;replayCymaticsRules=null;
     updateCymaticsButtonUI();recordLiveSimulationRules('cymatics');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
 }
 function getCracksBrush() {
@@ -5503,7 +5506,7 @@ updateBrightnessEvoButtonUI();
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
         });
-        cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,saveRules:saveCymaticsSettings,
+        cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,getFrequencies:()=>cymaticsFrequencies,saveRules:saveCymaticsSettings,
             canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying,
             getText,getLang:getCurrentLang,onLanguageChange});
         evolutionDrawer = createEvolutionDrawer({
