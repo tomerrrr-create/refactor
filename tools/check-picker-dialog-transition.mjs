@@ -54,6 +54,25 @@ try {
  await page.locator('#btnColorPickerPalette').click();await waitForHandoff(page);
  await page.locator('#palette-current-summary').click();await waitForHandoff(page);assert(await page.locator('#colorPickerModal').isVisible());assert(!(await page.locator('#paletteModal').isVisible()));
  assert.deepEqual(await page.locator('.brush-picker-panel').evaluate(e=>({width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height})),geometry);
+ // Sample the composed backdrop on every frame in both directions: exactly
+ // one 90% black layer must remain, without either flashing or doubling up.
+ const backdropSamples=await page.evaluate(async()=>{
+  const sample=()=>1-['colorPickerModal','paletteModal'].reduce((light,id)=>{
+   const style=getComputedStyle(document.getElementById(id));
+   if(style.visibility==='hidden')return light;
+   const color=style.backgroundColor,alpha=color.startsWith('rgba')?Number(color.match(/[\d.]+/g).at(-1)):1;
+   return light*(1-alpha*Number(style.opacity));
+  },1);
+  const samples=[sample()];
+  for(const id of ['btnColorPickerPalette','palette-current-preview']){
+   document.getElementById(id).click();
+   await new Promise(resolve=>{const start=performance.now();const frame=()=>{
+    samples.push(sample());if(performance.now()-start<350)requestAnimationFrame(frame);else resolve();
+   };frame();});
+  }
+  return samples;
+ });
+ assert(backdropSamples.length>4);assert(backdropSamples.every(alpha=>Math.abs(alpha-.9)<.001),'backdrop stays at 90% throughout both handoffs');
  // Several handoffs inside the transition must leave one interactive panel.
  for(let i=0;i<6;i++){await page.evaluate(i=>document.getElementById(i%2?'palette-current-summary':'btnColorPickerPalette').click(),i);await page.waitForTimeout(20);}
  await waitForHandoff(page);assert(await page.locator('#colorPickerModal').isVisible());assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);

@@ -2245,6 +2245,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 /* Four category tabs surround the current palette's brush-picker shortcut. */
 #colorPickerModal, #paletteModal {
+    background-color: rgba(0, 0, 0, .9);
     --picker-top: clamp(16px, 9dvh, 80px);
     align-items: flex-start;
     padding-top: var(--picker-top);
