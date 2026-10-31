@@ -1344,7 +1344,7 @@ button, .ctrl {
   text-shadow: 0 0 8px #d5aa4840;
 }
 #btnPalette, #btnColorPicker, #btnCycleSort, #btnResizeUp, #btnResizeDown,
-#btnGameOfLife, #btnGravitationalSort, #btnContour, #btnSpiral,
+#btnCymatics, #btnGameOfLife, #btnGravitationalSort, #btnContour, #btnSpiral,
 #btnMagnetModes, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker {
   touch-action: none !important;
 }
