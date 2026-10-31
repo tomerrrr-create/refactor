@@ -906,7 +906,7 @@ body {
 :root[data-simulation-running][data-simulation-effective-theme="gold"] .sim-mode-active :is(
   #btnGameOfLife, #btnMagnetModes, #btnBrightnessEvo, #btnShowBreatheMenu,
   #btnIslands, #btnGravitationalSort, #btnErosion, #btnDla, #btnContour,
-  #btnCymatics, #btnSpiral, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker
+  #btnCymatics, #btnSpiral, #btnSandpile, #btnTuring
 ):not(.simulation-active):not(:disabled) > svg {
   stroke: var(--sim-color);
 }
@@ -1031,7 +1031,6 @@ body {
 #btnContour svg,
 #btnSpiral svg,
 #btnSandpile svg,
-#btnNudgeBrighter svg,
 #btnTuring svg,
 #btnShowBreatheMenu svg,
 #btnIslands svg {
