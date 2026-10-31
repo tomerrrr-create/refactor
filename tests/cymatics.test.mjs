@@ -289,34 +289,27 @@ test('strength drafts save atomically; history/macros preserve preferences and p
  assert.deepEqual(JSON.parse(JSON.stringify(c.cymaticsStrengths)),{...strengths,interference:90});
 });
 
-test('rounded cosmic fields are versioned without changing legacy artwork, preferences or other maps',async()=>{
- const {createHash}=await import('node:crypto'),legacy={...INITIAL_CYMATICS_RULES,resonanceVersion:6,strength:60};
- for(const [step,hash] of [[0,'1d95a5b1d4856b6d1816964ee44a7148d7e953df3c354a4759a53f4156747b3e'],[300,'4dc0d4b267b79ff3c8d3ba65836d13d7718754fe9c028655dd694ecf6a3ea967']]){
-  const field=getCymaticsField(41,800,6,step);
-  assert.equal(createHash('sha256').update(new Uint8Array(field.buffer)).digest('hex'),hash);
-  assert.deepEqual(field,getCymaticsField(41,800,6,step,1));
-  assert.notDeepEqual(field,getCymaticsField(41,800,6,step,2));
+test('cosmic preferences discard retired version metadata while preserving all effective settings',()=>{
+ const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,strength:60};
+ for(const cosmicVersion of [1,2]){
+  assert.deepEqual(migrateCymaticsPreferences({...rules,cosmicVersion}),rules);
+  const settings=defaultWorkspaceSettings();settings.rules.cymatics={...rules,cosmicVersion};
+  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
  }
- assert.deepEqual(validateCymaticsSnapshot({cymaticsVersion:1,rules:legacy,state:createCymaticsState(41)}).rules,legacy);
- assert.deepEqual(migrateCymaticsPreferences(legacy),{...legacy,cosmicVersion:2});
- assert.deepEqual(migrateCymaticsPreferences({...legacy,cosmicVersion:1}),{...legacy,cosmicVersion:1});
- const selected=selectCymaticsMap(legacy,6,createCymaticsFrequencies(),createCymaticsStrengths());
- assert.equal(selected.rules.cosmicVersion,2);
- for(const version of [1,2,3,4,5])assert.equal(selectCymaticsMap(selected.rules,version,selected.frequencies,selected.strengths).rules.cosmicVersion,undefined);
- for(const cosmicVersion of [0,3,true,'2',null])assert.throws(()=>validateCymaticsRules({...legacy,cosmicVersion}));
- assert.throws(()=>validateCymaticsRules({...legacy,resonanceVersion:5,cosmicVersion:2}));
+ assert.equal(selectCymaticsMap(rules,6,createCymaticsFrequencies(),createCymaticsStrengths()).rules.cosmicVersion,undefined);
+ assert.throws(()=>validateCymaticsRules({...rules,cosmicVersion:2}));
 });
 
 test('rounded cosmic phase closes, frequencies vary, and live checkpoints resume exactly',()=>{
  for(const n of [1,2,41])for(const frequency of [20,800,20000]){
-  const field=getCymaticsField(n,frequency,6,0,2);
+  const field=getCymaticsField(n,frequency,6,0);
   assert.equal(field.length,n*n);assert([...field].every(v=>Number.isInteger(v)&&v>=0&&v<=65535));
-  assert.deepEqual(field,getCymaticsField(n,frequency,6,1200,2));
+  assert.deepEqual(field,getCymaticsField(n,frequency,6,1200));
  }
- assert.notDeepEqual(getCymaticsField(41,800,6,0,2),getCymaticsField(41,3000,6,0,2));
- assert.notDeepEqual(getCymaticsField(41,800,6,0,2),getCymaticsField(41,800,6,300,2));
+ assert.notDeepEqual(getCymaticsField(41,800,6,0),getCymaticsField(41,3000,6,0));
+ assert.notDeepEqual(getCymaticsField(41,800,6,0),getCymaticsField(41,800,6,300));
  for(const phaseMotion of [false,true]){
-  const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,cosmicVersion:2,phaseMotion,strength:75};
+  const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,phaseMotion,strength:75};
   const ctx={...fixture(41),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState);
   const first=advance(ctx,createCymaticsState(41),100),checkpoint=JSON.parse(JSON.stringify(first));
   assert.deepEqual(histogram(first.ctx.currentBoardState),histogram(before));assert.deepEqual(first.ctx.currentBoardState[840],before[840]);assert.notDeepEqual(first.ctx.currentBoardState,before);
