@@ -2305,9 +2305,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     width: 100%; min-height: 44px; padding: 8px; border: 0; border-radius: 8px;
     background: transparent; color: inherit; cursor: pointer;
 }
-.palette-current-preview .palette-current-icon { flex-shrink: 0; }
-#paletteCurrentPreview .palette-current-icon { width: 28px; height: 28px; font-size: 26px; }
-#paletteCurrentPreview .palette-current-icon > :is(svg,span) { width: 28px !important; height: 28px !important; font-size: 26px !important; }
+#paletteCurrentPreview .palette-color-ribbon {
+    width: 100%; max-width: 44px; height: 12px; flex-shrink: 0;
+    border-radius: 2px; box-shadow: 0 0 0 1px #e1c78f30;
+}
 .palette-current-preview:hover { background: #d5aa4810; }
 .palette-current-preview:focus-visible { outline: 2px solid #d5aa48; outline-offset: -2px; }
 #paletteModal .palette-current-details { justify-content: center; text-align: center; }

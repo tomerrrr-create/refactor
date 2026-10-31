@@ -53,7 +53,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   if(group==='classic')await page.screenshot({path:path.join(artifacts,config.lang+'-palette-cards.png')});
  }
  // Board sorting must never alter any group of catalogue previews or the footer.
- const preview=async()=>page.locator('#paletteModal .palette-color-mosaic, #paletteModal .palette-current-summary .palette-color-ribbon').evaluateAll(items=>items.map(item=>[...item.children].map(cell=>cell.style.backgroundColor)));
+ const preview=async()=>page.locator('#paletteModal .palette-color-mosaic, #palette-current-preview .palette-color-ribbon').evaluateAll(items=>items.map(item=>[...item.children].map(cell=>cell.style.backgroundColor)));
  for(const group of ['classic','extended','continuous','archive']){
   await page.locator('#paletteModal [data-palette-group="'+group+'"]').click();const fixed=await preview();
   for(const method of ['dark-rainbow','reversed','temperature','hue']){
