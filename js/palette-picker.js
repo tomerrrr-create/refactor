@@ -32,6 +32,13 @@ const groupMarks = {
     archive: '<path d="M3 7h18M5 7l7 14 7-14M7 3h10"/>'
 };
 
+const groupSymbols = {
+    classic: '23',
+    extended: '(2<sup>3</sup>)<sup>2</sup>',
+    continuous: '2<sup>8</sup><span class="palette-symbol-plus">+</span>2<sup>3</sup>',
+    archive: 'V'
+};
+
 function element(tag, className, text) {
     const node = document.createElement(tag);
     node.className = className;
@@ -102,7 +109,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     const list = element('div', 'palette-choice-list');
     list.id = `${idPrefix}-choice-panel`;
     list.setAttribute('role', 'tabpanel');
-    list.setAttribute('aria-describedby', description.id);
+    if (!currentPreviewHost) list.setAttribute('aria-describedby', description.id);
     list.tabIndex = 0;
 
     function choice(index, selected = false) {
@@ -193,7 +200,15 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         mark.setAttribute('aria-hidden', 'true');
         mark.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">${groupMarks[group.id] || ''}</svg>`;
         const name = getText('palette_group_' + group.id).replace(/\s*[◈✦♾️▽]+\s*$/u, '');
-        tab.append(mark, element('span', '', name));
+        if (currentPreviewHost) {
+            const symbol = element('span', 'palette-group-symbol');
+            symbol.dir = 'ltr';
+            symbol.setAttribute('aria-hidden', 'true');
+            symbol.innerHTML = groupSymbols[group.id];
+            tab.setAttribute('aria-label', name);
+            tab.title = name;
+            tab.append(symbol);
+        } else tab.append(mark, element('span', '', name));
         tab.addEventListener('click', () => showGroup(group));
         tab.addEventListener('keydown', event => {
             const position = availableGroups.indexOf(activeGroup);
@@ -214,7 +229,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const header = currentPreviewHost.parentElement;
         header.querySelector('.palette-group-tabs')?.remove();
         currentPreviewHost.before(tabs);
-        host.append(description, list, current);
+        host.append(list, current);
     } else host.append(tabs, description, list, current);
     showGroup(activeGroup);
     // The host can still be hidden while it is populated. Wait for the opening

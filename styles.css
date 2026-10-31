@@ -2263,6 +2263,23 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .palette-picker-header .palette-group-tabs { display: contents; }
 .palette-picker-header .palette-group-tab { grid-row: 1; }
+.palette-picker-header .palette-group-tab,
+.palette-picker-header .palette-group-tab[aria-selected="true"] {
+    background: transparent; border-color: transparent; box-shadow: none;
+}
+.palette-group-symbol {
+    display: inline-block; white-space: nowrap; direction: ltr; unicode-bidi: isolate;
+    font-family: Baskerville, "Palatino Linotype", "Book Antiqua", Palatino, "Times New Roman", serif;
+    font-size: clamp(18px, 4.5vw, 25px); font-weight: 400; line-height: 1;
+    letter-spacing: .015em; font-variant-numeric: lining-nums;
+    color: #92958e; transition: color .18s ease, text-shadow .18s ease;
+}
+.palette-group-symbol sup { font-size: .55em; }
+.palette-symbol-plus { margin-inline: .06em; font-size: .72em; }
+.palette-picker-header .palette-group-tab[aria-selected="true"] .palette-group-symbol {
+    font-weight: 400; color: #f1d886;
+    text-shadow: 0 0 5px #ffd70080, 0 0 13px #d5aa4866;
+}
 .palette-picker-header .palette-group-tab:nth-child(1) { grid-column: 1; }
 .palette-picker-header .palette-group-tab:nth-child(2) { grid-column: 2; }
 .palette-picker-header .palette-group-tab:nth-child(3) { grid-column: 4; }

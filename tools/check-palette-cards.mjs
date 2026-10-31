@@ -30,9 +30,16 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   });
   assert.deepEqual(header.map(button=>button.id),['classic','extended','current','continuous','archive']);
   assert(Math.max(...header.map(button=>button.top))-Math.min(...header.map(button=>button.top))<1,'header controls share one row');
-  const description=await page.locator('#paletteModal .palette-group-description').textContent();
-  if(group!=='archive')assert.equal(description,{classic:'23',extended:'64',continuous:'264'}[group]);
-  else assert.equal(description,{en:'Under construction',he:'בבנייה',ru:'В разработке',nl:'In aanbouw'}[config.lang]);
+  assert.equal(await page.locator('#paletteModal .palette-group-description').count(),0);
+  await page.waitForTimeout(220);
+  const symbols=await page.locator('#paletteModal .palette-group-tab').evaluateAll(tabs=>tabs.map(tab=>{
+   const symbol=tab.querySelector('.palette-group-symbol'),style=getComputedStyle(tab),ink=getComputedStyle(symbol),r=symbol.getBoundingClientRect(),b=tab.getBoundingClientRect();
+   return {id:tab.dataset.paletteGroup,text:symbol.textContent,powers:[...symbol.querySelectorAll('sup')].map(s=>s.textContent),label:tab.getAttribute('aria-label'),title:tab.title,
+    selected:tab.getAttribute('aria-selected')==='true',background:style.backgroundColor,image:style.backgroundImage,shadow:style.boxShadow,glow:ink.textShadow,weight:ink.fontWeight,
+    fits:r.left>=b.left-1&&r.right<=b.right+1};
+  }));
+  assert.deepEqual(symbols.map(s=>[s.text,s.powers]),[['23',[]],['(23)2',['3','2']],['28+23',['8','3']],['V',[]]]);
+  for(const symbol of symbols){assert(symbol.label&&symbol.title&&symbol.fits);assert.equal(symbol.background,'rgba(0, 0, 0, 0)');assert.equal(symbol.image,'none');assert.equal(symbol.shadow,'none');assert.equal(symbol.weight,'400');assert.equal(symbol.glow==='none',!symbol.selected);}
   const geometry=await page.locator('#paletteModal .palette-choice-list').evaluate(list=>{
    const cards=[...list.children],rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
    return {columns:getComputedStyle(list).gridTemplateColumns.split(' ').length,overflow:list.scrollWidth>list.clientWidth+1,cards:cards.map(c=>{const mosaic=c.querySelector('.palette-color-mosaic'),r=rect(mosaic);return{...r,gap:getComputedStyle(mosaic).gap,radius:getComputedStyle(mosaic.firstElementChild).borderRadius,cells:mosaic.children.length,label:c.getAttribute('aria-label'),icon:!!c.querySelector('.palette-choice-icon'),count:!!c.querySelector('.palette-choice-count')};})};
