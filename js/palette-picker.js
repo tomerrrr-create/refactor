@@ -68,14 +68,17 @@ function colorRibbon(colors) {
     return ribbon;
 }
 
-function colorMosaic(colors) {
+function colorMosaic(colors, side = 6) {
     const mosaic = element('span', 'palette-color-mosaic');
     mosaic.setAttribute('aria-hidden', 'true');
+    mosaic.style.gridTemplateColumns = `repeat(${side}, minmax(0, 1fr))`;
+    mosaic.style.gridTemplateRows = `repeat(${side}, minmax(0, 1fr))`;
     // A fixed square preview keeps every card the same size. Sample existing
     // colors in catalogue order; no interpolation or changes to palette data.
-    for (let i = 0; i < 36; i++) {
+    const count = side * side;
+    for (let i = 0; i < count; i++) {
         const cell = element('i', '');
-        cell.style.backgroundColor = colors[Math.round(i * (colors.length - 1) / 35)];
+        cell.style.backgroundColor = colors[Math.round(i * (colors.length - 1) / (count - 1))];
         mosaic.append(cell);
     }
     return mosaic;
@@ -127,12 +130,17 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const showCount = activeGroup.id === 'archive';
         title.append(name);
         const symbol = element('span', 'palette-choice-symbol');
-        if (showCount) symbol.append(count);
         symbol.append(paletteIcon(palette));
-        title.append(symbol);
         const preview = element('span', 'palette-choice-preview');
-        preview.append(colorMosaic(getPalettePreviewColors(palette)));
-        button.append(preview, title);
+        preview.append(colorMosaic(getPalettePreviewColors(palette), currentPreviewHost ? 3 : 6));
+        if (currentPreviewHost) {
+            if (showCount) title.append(count);
+            button.append(symbol, preview, title);
+        } else {
+            if (showCount) symbol.prepend(count);
+            title.append(symbol);
+            button.append(preview, title);
+        }
         if (selected) {
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
         }

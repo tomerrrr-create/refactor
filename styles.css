@@ -2258,6 +2258,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #paletteModal .palette-picker-panel { --palette-panel-padding: 14px; padding-top: 0; }
 #paletteModal .palette-choice-list { gap: 8px; grid-auto-rows: max-content; }
 #paletteModal .palette-choice { gap: 6px; padding: 6px; }
+#paletteModal .palette-choice-title { flex-direction: column; min-height: 36px; gap: 2px; }
 #paletteModal .palette-choice-preview { width: min(100%, 64px); margin-inline: auto; }
 #paletteModal .palette-color-mosaic { border-radius: 4px; }
 #paletteModal .palette-choice-name { font-size: .76rem; }
