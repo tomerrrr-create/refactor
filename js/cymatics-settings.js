@@ -54,11 +54,25 @@ export function rememberCymaticsFrequency(frequencies,rules){
     }
     return result;
 }
-export function selectCymaticsMap(rules,version,frequencies){
+// Like frequencies, map strengths belong to preferences, not runtime snapshots.
+export function validateCymaticsStrengths(value={}){
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(name=>!Object.hasOwn(CYMATICS_RESONANCE_MAPS,name)||!Number.isInteger(value[name])||value[name]<10||value[name]>100))throw new Error('Invalid Resonance map strengths');
+    return Object.fromEntries(Object.keys(CYMATICS_RESONANCE_MAPS).filter(name=>Object.hasOwn(value,name)).map(name=>[name,value[name]]));
+}
+export function createCymaticsStrengths(rules,saved={}){
+    const values=validateCymaticsStrengths(saved),fallback=rules===undefined?INITIAL_CYMATICS_RULES.strength:validateCymaticsRules(rules).strength;
+    return Object.fromEntries(Object.keys(CYMATICS_RESONANCE_MAPS).map(name=>[name,values[name]??fallback]));
+}
+export function rememberCymaticsStrength(strengths,rules){
+    const result=createCymaticsStrengths(rules,strengths);
+    const name=Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===(rules.resonanceVersion??1));
+    result[name]=rules.strength;return result;
+}
+export function selectCymaticsMap(rules,version,frequencies,strengths){
     rules=validateCymaticsRules(rules);
     const name=Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===version);
     if(!name)throw new Error('Invalid Cymatics map');
-    const remembered=rememberCymaticsFrequency(frequencies,rules);
-    return {rules:validateCymaticsRules({...rules,mode:'resonance',resonanceVersion:version,frequency:remembered[name],
-        phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion}),frequencies:remembered};
+    const remembered=rememberCymaticsFrequency(frequencies,rules),rememberedStrengths=rememberCymaticsStrength(strengths,rules);
+    return {rules:validateCymaticsRules({...rules,mode:'resonance',resonanceVersion:version,frequency:remembered[name],strength:rememberedStrengths[name],
+        phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion}),frequencies:remembered,strengths:rememberedStrengths};
 }
