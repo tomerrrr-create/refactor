@@ -1079,9 +1079,11 @@ function applyNudgeLogic(direction) {
           button.classList.toggle('simulation-active', active);
           button.setAttribute('aria-pressed', String(active));
           button.dataset.nudgeMode = darker ? 'darker' : 'brighter';
-          button.querySelectorAll('svg').forEach(icon => {
-              icon.style.display = icon.classList.contains('nudge-darker-icon') === darker ? 'block' : 'none';
-          });
+          // Keep one rendered SVG/filter layer across the complete cycle.
+          // Swapping filtered SVGs with display:none can leave hover-glow trails.
+          button.querySelector('svg path').setAttribute('d', darker
+              ? 'M9 4 V 20 C 20 20, 20 4, 9 4 Z'
+              : 'M8 5 C 8 12, 8 20, 17 20');
           const label = getText(darker ? 'help_nudge_backward' : 'help_nudge_forward').split('\n')[0];
           button.title = label;
           button.setAttribute('aria-label', label);

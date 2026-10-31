@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../',import.meta.url)),artifacts='/tmp/nudge-c
 const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.html')?'text/html':'application/octet-stream');res.end(await readFile(path.join(root,'dist',f)));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
-try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:320,height:568},{lang:'nl',width:844,height:390}]){
+try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:320,height:568},{lang:'nl',width:844,height:390}].filter(c=>!process.env.NUDGE_LANG||c.lang===process.env.NUDGE_LANG)){
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -23,6 +23,24 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  await page.goto(base);await page.waitForFunction(()=>nudgeTest.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>nudgeTest.setup());
  const state=()=>page.evaluate(()=>nudgeTest.state()),button=page.locator('#btnNudgeBrighter'),step=page.locator('#btnStepForward'),play=page.locator('#btnPlayPauseLife');
+ // Repeated hover/cycle transitions must restore the original unarmed pixels.
+ await page.mouse.move(0,0);await page.waitForTimeout(500);
+ const cleanIcon=await button.screenshot({animations:'disabled'});
+ await button.hover();await page.waitForTimeout(500);
+ const cleanHoveredIcon=await button.screenshot({animations:'disabled'});
+ await page.mouse.move(0,0);await page.waitForTimeout(500);
+ const svgHandle=await button.locator('svg').elementHandle();
+ for(let cycle=0;cycle<3;cycle++){
+  for(let tap=0;tap<3;tap++){await button.click();await page.waitForTimeout(250);}
+  await page.waitForTimeout(500);
+  assert.deepEqual(await button.screenshot({animations:'disabled'}),cleanHoveredIcon,'no residual pixels while hovering over Off');
+  await page.mouse.move(0,0);await page.waitForTimeout(500);
+  assert.equal(await button.locator('svg').count(),1,'one SVG survives the cycle');
+  assert(await svgHandle.evaluate(svg=>svg===document.querySelector('#btnNudgeBrighter > svg')));
+  assert.equal(await button.getAttribute('aria-pressed'),'false');
+  assert.deepEqual(await button.screenshot({animations:'disabled'}),cleanIcon,'no residual icon or glow pixels after returning to Off');
+ }
+ await page.evaluate(()=>nudgeTest.setup());
  // Nudge inherits the same overlay ink, armed weight/scale and running theme
  // as Gravity, for both direction icons. Keep this outside the recipe flow.
  const appearance=selector=>page.locator(selector).evaluate(button=>{
