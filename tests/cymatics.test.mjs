@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
-import {CYMATICS_RESONANCE_MAPS,CYMATICS_PATTERNS,DEFAULT_CYMATICS_RULES,INITIAL_CYMATICS_RULES,validateCymaticsRules} from '../js/cymatics-settings.js';
+import {CYMATICS_RESONANCE_MAPS,CYMATICS_PATTERNS,DEFAULT_CYMATICS_RULES,INITIAL_CYMATICS_RULES,validateCymaticsRules,validateCymaticsFrequencies,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap} from '../js/cymatics-settings.js';
 import {getCymaticsField,createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from '../js/simulations/cymatics.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 import {validateProfileSnapshot} from '../js/profile-state.js';
@@ -31,7 +31,7 @@ test('settings are optional and old V1 baselines remain byte-for-byte unchanged'
 });
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 test('saved Cymatics preferences survive drawing history while project and macro overrides retain their recorded values',()=>{
- const c=vm.createContext({n:21,cymaticsState:createCymaticsState(21),cymaticsRules:{pattern:'star',strength:30},replayCymaticsRules:null,isMacroPlaying:false,isExecutingMacroCommand:false,armedSimulation:'cymatics',createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,validateCymaticsRules,runCymaticsGeneration});c.armSimulation=sim=>c.armedSimulation=sim;
+ const c=vm.createContext({n:21,cymaticsState:createCymaticsState(21),cymaticsRules:{pattern:'star',strength:30},cymaticsFrequencies:{},replayCymaticsRules:null,isMacroPlaying:false,isExecutingMacroCommand:false,armedSimulation:'cymatics',createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap,runCymaticsGeneration});c.armSimulation=sim=>c.armedSimulation=sim;
  vm.runInContext(source.slice(source.indexOf('function updateCymaticsButtonUI('),source.indexOf('function getCracksBrush(')),c);
  const snapshot={cymaticsVersion:1,rules:{pattern:'bloom',strength:95},state:createCymaticsState(21)};
  c.restoreCymaticsSnapshot(snapshot,{preservePreferences:true});assert.equal(c.getCymaticsRules().pattern,'star');
@@ -162,9 +162,9 @@ test('new defaults select moving Interference at exactly 11831 Hz while legacy r
 
 test('toolbar cycles Interference and Circular without resetting the run and only includes Off while paused',()=>{
  const events=[],classes=new Set(),button={dataset:{},classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);}},setAttribute(name,value){this[name]=value;}};
- const c=vm.createContext({CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,cymaticsRules:{...INITIAL_CYMATICS_RULES},replayCymaticsRules:null,cymaticsState:null,n:21,
+ const c=vm.createContext({CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,cymaticsRules:{...INITIAL_CYMATICS_RULES},cymaticsFrequencies:{},replayCymaticsRules:null,cymaticsState:null,n:21,
   armedSimulation:null,isLifePlaying:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,isBreathing:false,dom:{btnCymatics:button},getText:key=>key,
-  createCymaticsState,restoreCymaticsState,validateCymaticsRules,validateCymaticsSnapshot,
+  createCymaticsState,restoreCymaticsState,validateCymaticsRules,validateCymaticsSnapshot,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap,
   window:{logArtEvent:(name,details)=>events.push({name,details})},persistWorkspaceSettings(){},getWorkspaceSettings:()=>({}),settingsProfiles:{scheduleCapture(){}}});
  c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='cymatics')c.cymaticsState=createCymaticsState(21);};
  c.getSimulationRecordingDetails=()=>JSON.stringify(c.getCymaticsSnapshot());
@@ -180,9 +180,33 @@ test('toolbar cycles Interference and Circular without resetting the run and onl
  for(const map of [3,4,3,4,3]){c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation,'cymatics');assert.equal(c.cymaticsState,state);assert.equal(c.isLifePlaying,true);assert.equal(button.dataset.cymaticsMap,Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===map));}
  assert.equal(button['aria-pressed'],'true');assert(classes.has('simulation-active'));
  c.isLifePlaying=false;c.saveCymaticsSettings({pattern:'bloom',strength:75});assert.equal(button.dataset.cymaticsMap,'patterns');c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);assert.equal(c.getCymaticsRules().strength,75);assert.equal(c.cymaticsState,state);
- c.cymaticsRules={pattern:'petals',strength:30,mode:'resonance',frequency:440};c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);assert.equal(c.getCymaticsRules().phaseMotion,false,'missing legacy phase remains off');assert.equal(c.getCymaticsRules().frequency,440);
+ c.cymaticsRules={pattern:'petals',strength:30,mode:'resonance',frequency:440};c.cymaticsFrequencies=createCymaticsFrequencies(c.cymaticsRules);c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);assert.equal(c.getCymaticsRules().phaseMotion,false,'missing legacy phase remains off');assert.equal(c.getCymaticsRules().frequency,440);
  c.saveCymaticsSettings({pattern:'petals',strength:30,mode:'resonance',frequency:440,resonanceVersion:2,phaseMotion:false});assert.equal(button.dataset.cymaticsMap,'grid');c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);assert.equal(c.getCymaticsRules().phaseMotion,false);
  c.armSimulation(null);c.cymaticsRules={pattern:'petals',strength:30,mode:'resonance',frequency:440,resonanceVersion:1};c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);assert.equal(c.getCymaticsRules().frequency,440);
  const validation=vm.createContext({validateCymaticsSnapshot});vm.runInContext(source.slice(source.indexOf('function validateCymaticsMacroAction('),source.indexOf('function parseMacroText(')),validation);
  const off=events.find(e=>e.name==='Cymatics Mode Changed');assert.doesNotThrow(()=>validation.validateCymaticsMacroAction({eventName:off.name,details:off.details}));assert.throws(()=>validation.validateCymaticsMacroAction({eventName:off.name,details:off.details.replace('"mode":"off"','"mode":"bad"')}));
+});
+
+test('per-map frequencies migrate legacy shared values and keep strength/phase shared',()=>{
+ const old={pattern:'petals',strength:75,mode:'resonance',frequency:440,resonanceVersion:4,phaseMotion:false};
+ let frequencies=createCymaticsFrequencies(old);assert.deepEqual(frequencies,{diagonal:440,grid:440,circular:440,interference:440});
+ frequencies=rememberCymaticsFrequency(frequencies,{...old,resonanceVersion:3,frequency:2731});
+ const frozen=structuredClone(frequencies),circle=selectCymaticsMap(old,3,frequencies);assert.equal(circle.rules.frequency,2731);assert.equal(circle.rules.phaseMotion,false);assert.equal(circle.rules.strength,75);assert.deepEqual(frequencies,frozen);
+ const back=selectCymaticsMap(circle.rules,4,circle.frequencies);assert.equal(back.rules.frequency,440);
+ const settings=defaultWorkspaceSettings();settings.cymaticsFrequencies=frequencies;
+ assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).cymaticsFrequencies,frequencies);assert.deepEqual(validateProfileSnapshot({settings}).settings.cymaticsFrequencies,frequencies);
+ assert.deepEqual(createCymaticsFrequencies(old,{circular:5000}),{diagonal:440,grid:440,circular:5000,interference:440});
+ for(const value of [null,[],{circle:440},{circular:19},{grid:20001},{diagonal:20.5},{interference:'440'}])assert.throws(()=>validateCymaticsFrequencies(value));
+});
+test('saving draft frequencies and restoring history/projects/macros do not discard other map preferences',()=>{
+ const base={...INITIAL_CYMATICS_RULES};const c=vm.createContext({INITIAL_CYMATICS_RULES,CYMATICS_RESONANCE_MAPS,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap,
+  validateCymaticsRules,validateCymaticsSnapshot,createCymaticsState,restoreCymaticsState,n:21,cymaticsRules:base,cymaticsFrequencies:createCymaticsFrequencies(base),replayCymaticsRules:null,cymaticsState:createCymaticsState(21),armedSimulation:'cymatics',isBreathing:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
+  recordLiveSimulationRules(){},persistWorkspaceSettings(){},getWorkspaceSettings:()=>({}),settingsProfiles:{scheduleCapture(){}}});c.armSimulation=sim=>c.armedSimulation=sim;
+ vm.runInContext(source.slice(source.indexOf('function updateCymaticsButtonUI('),source.indexOf('function getCracksBrush(')),c);
+ c.saveCymaticsSettings({...base,resonanceVersion:3,frequency:5000},{interference:440,circular:5000,diagonal:1000,grid:2000});
+ assert.equal(c.cymaticsFrequencies.interference,440,'saving a multi-map draft keeps edits to the outgoing map');assert.equal(c.cymaticsFrequencies.circular,5000);
+ const preferences=JSON.stringify(c.cymaticsFrequencies),snapshot={cymaticsVersion:1,rules:{...base,frequency:750},state:{...createCymaticsState(21),steps:25}};
+ c.restoreCymaticsSnapshot(snapshot,{preservePreferences:true});assert.equal(JSON.stringify(c.cymaticsFrequencies),preferences);assert.equal(c.getCymaticsRules().frequency,5000);
+ c.isMacroPlaying=true;c.restoreCymaticsSnapshot(snapshot);assert.equal(c.getCymaticsRules().frequency,750);assert.equal(JSON.stringify(c.cymaticsFrequencies),preferences);
+ c.isMacroPlaying=false;c.replayCymaticsRules=null;c.restoreCymaticsSnapshot(snapshot);assert.equal(c.cymaticsFrequencies.interference,750);assert.equal(c.cymaticsFrequencies.circular,5000);
 });
