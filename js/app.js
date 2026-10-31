@@ -3440,8 +3440,8 @@ function cycleCymaticsMode(){
     if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
     const activating=armedSimulation!=='cymatics';
     if(activating)armSimulation('cymatics');
-    const rules=getCymaticsRules(),inCycle=rules.mode==='resonance'&&[4,3].includes(rules.resonanceVersion);
-    const next=!inCycle?4:activating?rules.resonanceVersion:nextEvolutionMode(rules.resonanceVersion,['off',4,3]);
+    const rules=getCymaticsRules(),current=rules.resonanceVersion??1;
+    const next=activating?current:nextEvolutionMode(current,['off',4,3,1,2,5,6]);
     const selected=selectCymaticsMap(rules,next==='off'?4:next,cymaticsFrequencies);
     const running=isLifePlaying;
     if(saveCymaticsSettings(selected.rules,selected.frequencies)===false)return;
