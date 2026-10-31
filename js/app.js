@@ -1,4 +1,4 @@
-import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap} from './cymatics-settings.js';
+import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_FREQUENCIES,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
 import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
@@ -2077,7 +2077,7 @@ if (simulationName === 'magnet') {
 
       function getWorkspaceSettings() {
         return {
-            ...(Object.values(cymaticsFrequencies).every(value=>value===INITIAL_CYMATICS_RULES.frequency)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
+            ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
             ...(evolutionSlots.join() === DEFAULT_EVOLUTION_SLOTS.join() ? {} : {evolutionSlots:[...evolutionSlots]}),
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
@@ -2116,7 +2116,10 @@ if (simulationName === 'magnet') {
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH};contourRules.lineColor='brush';}
         turingRules = { ...settings.rules.turing };
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
-        cymaticsFrequencies=rememberCymaticsFrequency(settings.cymaticsFrequencies,cymaticsRules);
+        if(settings.rules.cymatics===undefined){
+            cymaticsFrequencies=createCymaticsFrequencies(undefined,settings.cymaticsFrequencies);
+            cymaticsRules={...cymaticsRules,frequency:cymaticsFrequencies.interference};
+        }else cymaticsFrequencies=rememberCymaticsFrequency(settings.cymaticsFrequencies,cymaticsRules);
         if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (armedSimulation === 'spiral') spiralMode = spiralRules.method;

@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
-import {CYMATICS_RESONANCE_MAPS,CYMATICS_PATTERNS,DEFAULT_CYMATICS_RULES,INITIAL_CYMATICS_RULES,validateCymaticsRules,validateCymaticsFrequencies,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap} from '../js/cymatics-settings.js';
+import {CYMATICS_RESONANCE_MAPS,CYMATICS_PATTERNS,DEFAULT_CYMATICS_RULES,INITIAL_CYMATICS_RULES,INITIAL_CYMATICS_FREQUENCIES,validateCymaticsRules,validateCymaticsFrequencies,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap} from '../js/cymatics-settings.js';
 import {getCymaticsField,createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from '../js/simulations/cymatics.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 import {validateProfileSnapshot} from '../js/profile-state.js';
@@ -150,8 +150,8 @@ test('fixed resonance maps retain their pre-motion byte signatures',async()=>{
  }
 });
 
-test('new defaults select moving Interference at exactly 11831 Hz while legacy recipes keep Patterns',()=>{
- assert.deepEqual(INITIAL_CYMATICS_RULES,{pattern:'petals',strength:60,mode:'resonance',frequency:11831,resonanceVersion:4,phaseMotion:true});
+test('new defaults select moving Interference at exactly 800 Hz while legacy recipes keep Patterns',()=>{
+ assert.deepEqual(INITIAL_CYMATICS_RULES,{pattern:'petals',strength:60,mode:'resonance',frequency:800,resonanceVersion:4,phaseMotion:true});
  assert.deepEqual(validateCymaticsRules(),DEFAULT_CYMATICS_RULES);assert.deepEqual(DEFAULT_CYMATICS_RULES,{pattern:'petals',strength:60});
  const defaults=defaultWorkspaceSettings();defaults.rules.cymatics={...INITIAL_CYMATICS_RULES};
  assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(defaults)).rules.cymatics,undefined,'omitted preferences inherit new application defaults');
@@ -162,7 +162,7 @@ test('new defaults select moving Interference at exactly 11831 Hz while legacy r
 
 test('toolbar cycles Interference and Circular without resetting the run and only includes Off while paused',()=>{
  const events=[],classes=new Set(),button={dataset:{},classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);}},setAttribute(name,value){this[name]=value;}};
- const c=vm.createContext({CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,cymaticsRules:{...INITIAL_CYMATICS_RULES},cymaticsFrequencies:{},replayCymaticsRules:null,cymaticsState:null,n:21,
+ const c=vm.createContext({CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,cymaticsRules:{...INITIAL_CYMATICS_RULES},cymaticsFrequencies:createCymaticsFrequencies(),replayCymaticsRules:null,cymaticsState:null,n:21,
   armedSimulation:null,isLifePlaying:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,isBreathing:false,dom:{btnCymatics:button},getText:key=>key,
   createCymaticsState,restoreCymaticsState,validateCymaticsRules,validateCymaticsSnapshot,createCymaticsFrequencies,rememberCymaticsFrequency,selectCymaticsMap,
   window:{logArtEvent:(name,details)=>events.push({name,details})},persistWorkspaceSettings(){},getWorkspaceSettings:()=>({}),settingsProfiles:{scheduleCapture(){}}});
@@ -173,7 +173,7 @@ test('toolbar cycles Interference and Circular without resetting the run and onl
  vm.runInContext(source.slice(source.indexOf('function nextEvolutionMode('),source.indexOf('function cycleBrightnessEvoMode(')),c);
  c.cycleCymaticsMode();assert.equal(c.armedSimulation,'cymatics');assert.equal(c.getCymaticsRules().resonanceVersion,4);
  for(const [map,active] of [[3,true],[4,false],[4,true]]){
-  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation==='cymatics',active);assert.equal(c.getCymaticsRules().frequency,11831);assert.equal(c.getCymaticsRules().phaseMotion,true);
+  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation==='cymatics',active);assert.equal(c.getCymaticsRules().frequency,map===3?20000:800);assert.equal(c.getCymaticsRules().phaseMotion,true);
  }
  assert(events.some(e=>e.name==='Cymatics Mode Changed'&&JSON.parse(e.details).mode==='off'));
  c.isLifePlaying=true;c.cymaticsState={...createCymaticsState(21),steps:250,random:123456};const state=c.cymaticsState;
@@ -209,4 +209,11 @@ test('saving draft frequencies and restoring history/projects/macros do not disc
  c.restoreCymaticsSnapshot(snapshot,{preservePreferences:true});assert.equal(JSON.stringify(c.cymaticsFrequencies),preferences);assert.equal(c.getCymaticsRules().frequency,5000);
  c.isMacroPlaying=true;c.restoreCymaticsSnapshot(snapshot);assert.equal(c.getCymaticsRules().frequency,750);assert.equal(JSON.stringify(c.cymaticsFrequencies),preferences);
  c.isMacroPlaying=false;c.replayCymaticsRules=null;c.restoreCymaticsSnapshot(snapshot);assert.equal(c.cymaticsFrequencies.interference,750);assert.equal(c.cymaticsFrequencies.circular,5000);
+});
+
+test('fresh per-map defaults are independent and do not replace explicit legacy frequencies',()=>{
+ assert.deepEqual(createCymaticsFrequencies(),{diagonal:11831,grid:11831,circular:20000,interference:800});
+ const circle=selectCymaticsMap(INITIAL_CYMATICS_RULES,3,createCymaticsFrequencies());assert.equal(circle.rules.frequency,20000);assert.equal(selectCymaticsMap(circle.rules,4,circle.frequencies).rules.frequency,800);
+ const old={pattern:'petals',strength:60,mode:'resonance',frequency:11831,resonanceVersion:4,phaseMotion:true};assert.deepEqual(createCymaticsFrequencies(old),{diagonal:11831,grid:11831,circular:11831,interference:11831});
+ assert.equal(validateCymaticsSnapshot({cymaticsVersion:1,rules:old,state:createCymaticsState(41)}).rules.frequency,11831);
 });
