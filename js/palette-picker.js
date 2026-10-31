@@ -55,11 +55,11 @@ function paletteIcon(palette) {
     return icon;
 }
 
-function colorRibbon(colors, limit = 40) {
+function colorRibbon(colors) {
     const ribbon = element('span', 'palette-color-ribbon');
     ribbon.setAttribute('aria-hidden', 'true');
     // Sample evenly, including both endpoints, without changing the palette.
-    const count = Math.min(colors.length, limit);
+    const count = Math.min(colors.length, 40);
     for (let i = 0; i < count; i++) {
         const swatch = element('i', '');
         swatch.style.backgroundColor = colors[Math.round(i * (colors.length - 1) / Math.max(1, count - 1))];
@@ -164,7 +164,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const icon = paletteIcon(palette);
         icon.classList.add('palette-current-icon');
         current.dir = 'ltr';
-        const ribbon = colorRibbon(getPalettePreviewColors(palette), currentPreviewHost ? 7 : 40);
+        const ribbon = colorRibbon(getPalettePreviewColors(palette));
         if (currentPreviewHost && onCurrent) {
             const preview = element('button', 'palette-current-preview');
             preview.id = `${idPrefix}-current-preview`;
@@ -173,9 +173,10 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             preview.setAttribute('aria-haspopup', 'dialog');
             preview.setAttribute('aria-label', current.getAttribute('aria-label'));
             preview.addEventListener('click', onCurrent);
-            preview.append(ribbon);
+            const mosaic = colorMosaic(getPalettePreviewColors(palette), 2);
+            mosaic.classList.add('palette-current-mosaic');
+            preview.append(mosaic);
             currentPreviewHost.append(preview);
-            details.prepend(icon);
             current.append(details);
         } else {
             // Other palette pickers retain their combined footer.

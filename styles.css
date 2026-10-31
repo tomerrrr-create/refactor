@@ -2305,9 +2305,8 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     width: 100%; min-height: 44px; padding: 8px; border: 0; border-radius: 8px;
     background: transparent; color: inherit; cursor: pointer;
 }
-#paletteCurrentPreview .palette-color-ribbon {
-    width: 100%; max-width: 44px; height: 12px; flex-shrink: 0;
-    border-radius: 2px; box-shadow: 0 0 0 1px #e1c78f30;
+#paletteCurrentPreview .palette-current-mosaic {
+    width: 28px; height: 28px; flex-shrink: 0; border-radius: 4px;
 }
 .palette-current-preview:hover { background: #d5aa4810; }
 .palette-current-preview:focus-visible { outline: 2px solid #d5aa48; outline-offset: -2px; }
