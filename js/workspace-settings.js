@@ -1,4 +1,4 @@
-import {INITIAL_CYMATICS_RULES,migrateCymaticsPreferences,validateCymaticsFrequencies} from './cymatics-settings.js';
+import {INITIAL_CYMATICS_RULES,migrateCymaticsPreferences,validateCymaticsFrequencies,validateCymaticsStrengths} from './cymatics-settings.js';
 import {validateEvolutionSlots} from './evolution-drawer-settings.js';
 import { CRACKS_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
@@ -34,6 +34,7 @@ function mergeKnown(defaults, overrides, path = '') {
     if (!object(overrides)) throw new Error('Invalid settings object');
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
+        if (path === '' && key === 'cymaticsStrengths') { result[key]=validateCymaticsStrengths(value); continue; }
         if (path === '' && key === 'cymaticsFrequencies') { result[key]=validateCymaticsFrequencies(value); continue; }
         if (path === '' && key === 'evolutionSlots') { result[key] = validateEvolutionSlots(value); continue; }
         if (path === 'rules' && key === 'cymatics') { result[key] = migrateCymaticsPreferences(value); continue; }

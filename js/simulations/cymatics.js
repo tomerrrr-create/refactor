@@ -1,4 +1,5 @@
-import {createCloudField,createCosmicField} from './cymatics-organic.js';
+import {createRoundedCosmicField} from './cymatics-cosmic-rounded.js';
+import {createCloudField} from './cymatics-organic.js';
 import {moveCymaticsField} from './cymatics-motion.js';
 import {createInterferenceField} from './cymatics-interference.js';
 import {createCircularResonanceField} from './cymatics-circular.js';
@@ -12,7 +13,7 @@ const resonanceModes=[];
 for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
 export function getCymaticsField(n,frequency,resonanceVersion,phaseStep=0){
     if(resonanceVersion===5)return createCloudField(n,frequency,phaseStep);
-    if(resonanceVersion===6)return createCosmicField(n,frequency,phaseStep);
+    if(resonanceVersion===6)return createRoundedCosmicField(n,frequency,phaseStep);
     if(resonanceVersion===4)return createInterferenceField(n,frequency,phaseStep);
     const base=getStaticCymaticsField(n,frequency,resonanceVersion);
     return frequency!==undefined&&phaseStep!==0?moveCymaticsField(base,n,resonanceVersion??1,phaseStep):base;
