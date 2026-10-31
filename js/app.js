@@ -3426,10 +3426,10 @@ function cycleChiFlowMode() {
 function updateCymaticsButtonUI(){
     if(typeof dom==='undefined'||!dom.btnCymatics)return;
     const button=dom.btnCymatics,rules=getCymaticsRules();
-    const map=rules.mode==='resonance'?Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===(rules.resonanceVersion??1)):'patterns';
-    for(const name of ['patterns',...Object.keys(CYMATICS_RESONANCE_MAPS)])button.classList.toggle('cymatics-'+name,name===map);
+    const map=Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===(rules.resonanceVersion??1));
+    for(const name of Object.keys(CYMATICS_RESONANCE_MAPS))button.classList.toggle('cymatics-'+name,name===map);
     button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',armedSimulation==='cymatics');
-    const title=getText('tooltip_cymatics')+' — '+getText(map==='patterns'?'cymatics_'+rules.pattern:'cymatics_map_'+map);
+    const title=getText('tooltip_cymatics')+' — '+getText('cymatics_map_'+map);
     button.title=title;button.setAttribute('aria-label',title);button.setAttribute('aria-pressed',String(armedSimulation==='cymatics'));
 }
 function recordCymaticsSelection(){

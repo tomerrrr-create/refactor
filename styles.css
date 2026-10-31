@@ -2364,26 +2364,21 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 :root[data-simulation-effective-theme="pink"] #btnEvolutionDrawer { --drawer-trigger-color:#c991ad; }
 
 #btnCymatics { display:none; }
-#cymaticsSettingsDialog .cymatics-note { color:#aaa99f; font-size:12px; line-height:1.6; margin:0 0 18px; }
 #cymaticsSettingsDialog .tuning-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
 #cymaticsSettingsDialog .tuning-modes button { border-radius:6px; min-height:44px; }
 
 #cymaticsSettingsDialog .tuning-modes[hidden],
 #cymaticsSettingsDialog .tuning-field[hidden] { display: none; }
 
-#cymaticsSettingsDialog .cymatics-maps[hidden] { display:none; }
 #cymaticsSettingsDialog .cymatics-maps > p { margin:12px 0 8px; color:var(--muted, #aaa); font-size:.9rem; }
 #cymaticsSettingsDialog .cymatics-maps .tuning-modes { grid-template-columns:repeat(2,minmax(0,1fr)); }
 #cymaticsSettingsDialog [data-cymatics-map] { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-height:64px; padding:8px 3px; }
 #cymaticsSettingsDialog [data-cymatics-map] svg { width:24px; height:24px; }
 
-#cymaticsSettingsDialog .cymatics-phase[hidden] { display:none; }
 #cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; gap:10px; min-height:44px; text-align:start; }
 #cymaticsSettingsDialog .cymatics-phase input { width:18px; height:18px; accent-color:var(--gold); }
-#cymaticsSettingsDialog #cymaticsPhaseNote { margin:0 0 12px; color:#aaa; font-size:12px; line-height:1.5; }
 
 #btnCymatics > svg { display:none; }
-#btnCymatics.cymatics-patterns > [data-cymatics-icon="patterns"] { display:block; }
 #btnCymatics.cymatics-diagonal > [data-cymatics-icon="diagonal"] { display:block; }
 #btnCymatics.cymatics-grid > [data-cymatics-icon="grid"] { display:block; }
 #btnCymatics.cymatics-circular > [data-cymatics-icon="circular"] { display:block; }

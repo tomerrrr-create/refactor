@@ -1,7 +1,7 @@
 import {moveCymaticsField} from './cymatics-motion.js';
 import {createInterferenceField} from './cymatics-interference.js';
 import {createCircularResonanceField} from './cymatics-circular.js';
-import {CYMATICS_PATTERNS,validateCymaticsRules} from '../cymatics-settings.js';
+import {validateCymaticsRules} from '../cymatics-settings.js';
 // Chladni-inspired square plate, not an acoustic solver. Only a derived field is
 // cached; serializable PRNG state and steps determine every particle exchange.
 let fieldSize=0,fieldPattern='',field=null;
@@ -9,12 +9,12 @@ let fieldSize=0,fieldPattern='',field=null;
 // 40 Hz is a chosen plate calibration, not a universal frequency-to-shape law.
 const resonanceModes=[];
 for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
-export function getCymaticsField(n,pattern,frequency,resonanceVersion,phaseStep=0){
+export function getCymaticsField(n,frequency,resonanceVersion,phaseStep=0){
     if(resonanceVersion===4)return createInterferenceField(n,frequency,phaseStep);
-    const base=getStaticCymaticsField(n,pattern,frequency,resonanceVersion);
+    const base=getStaticCymaticsField(n,frequency,resonanceVersion);
     return frequency!==undefined&&phaseStep!==0?moveCymaticsField(base,n,resonanceVersion??1,phaseStep):base;
 }
-function getStaticCymaticsField(n,pattern,frequency,resonanceVersion){
+function getStaticCymaticsField(n,frequency,resonanceVersion){
     if(resonanceVersion===3){
         const key='resonance-v3:'+frequency;
         if(field&&fieldSize===n&&fieldPattern===key)return field;
@@ -22,17 +22,9 @@ function getStaticCymaticsField(n,pattern,frequency,resonanceVersion){
     }
     if(resonanceVersion===2)return getVariedResonanceField(n,frequency);
     if(frequency!==undefined)return getResonanceField(n,frequency);
-    if(field&&fieldSize===n&&fieldPattern===pattern)return field;
-    const pair=CYMATICS_PATTERNS[pattern];if(!Number.isInteger(n)||n<1||n>327||!pair)throw new Error('Invalid Cymatics field');
-    const [m,k]=pair,cosM=new Float64Array(n),cosK=new Float64Array(n);
-    for(let i=0;i<n;i++){const x=Math.PI*(i+.5)/n;cosM[i]=Math.cos(m*x);cosK[i]=Math.cos(k*x);}
-    field=new Uint16Array(n*n);
-    for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-        const amplitude=cosM[x]*cosK[y]-cosK[x]*cosM[y];
-        field[y*n+x]=Math.round(Math.min(1,amplitude*amplitude/4)*65535);
-    }
-    fieldSize=n;fieldPattern=pattern;return field;
+    throw new Error('Resonance requires a frequency');
 }
+
 function getResonanceField(n,frequency){
     if(!Number.isInteger(n)||n<1||n>327||!Number.isInteger(frequency)||frequency<20||frequency>20000)throw new Error('Invalid resonance field');
     const key='resonance:'+frequency;
@@ -90,7 +82,7 @@ export function validateCymaticsSnapshot(value){
 }
 const dx=[-1,0,1,-1,1,-1,0,1],dy=[-1,-1,-1,0,0,1,1,1];
 export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,cymaticsRules},previous){
-    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.pattern,rules.mode==='resonance'?rules.frequency:undefined,rules.resonanceVersion,rules.phaseMotion?state.steps:0);
+    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.frequency,rules.resonanceVersion,rules.phaseMotion?state.steps:0);
     const random=()=>{let x=state.random;x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/4294967296;};
     const length=currentPalette.length,rank=k=>((k%length)+length)%length;
     const attempts=Math.max(1,Math.round(n*n*.5*rules.strength/100));
