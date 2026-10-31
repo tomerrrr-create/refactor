@@ -17,15 +17,14 @@ export function createCracksSettingsDialog(app) {
       <div class="cracks-settings-body">
         <section class="cracks-settings-panel cracks-presets-panel" aria-labelledby="cracksPresetsTitle">
           <div class="cracks-presets-heading"><h3 id="cracksPresetsTitle"></h3><span id="cracksPresetCustom" role="status"></span></div>
-          <div class="cracks-preset-grid" role="group" aria-labelledby="cracksPresetsTitle">${CRACKS_GROWTH_PRESETS.map(p=>`<button type="button" data-cracks-preset="${p.id}" aria-pressed="false"><span class="cracks-preset-name"></span><span class="cracks-preset-values" dir="ltr">${p.values.branchChance}% · ${p.values.branchInterval} · ${p.values.curvature}%</span></button>`).join('')}</div>
+          <div class="cracks-preset-grid" role="group" aria-labelledby="cracksPresetsTitle">${CRACKS_GROWTH_PRESETS.map(p=>`<button type="button" data-cracks-preset="${p.id}" aria-pressed="false"><span class="cracks-preset-name"></span></button>`).join('')}</div>
         </section>
         <section class="cracks-settings-panel" aria-labelledby="cracksMaterialLabel">
-          <label class="cracks-toggle" for="cracksMaterialEnabled"><span id="cracksMaterialLabel"></span><input id="cracksMaterialEnabled" type="checkbox" aria-describedby="cracksMaterialNote"></label>
-          <div class="cracks-control"><label for="cracksMaterialStrength"></label><output for="cracksMaterialStrength"></output><input id="cracksMaterialStrength" type="range" min="0" max="100" step="5" aria-describedby="cracksMaterialNote"></div>
-          <p id="cracksMaterialNote" class="cracks-settings-note"></p>
+          <label class="cracks-toggle" for="cracksMaterialEnabled"><span id="cracksMaterialLabel"></span><input id="cracksMaterialEnabled" type="checkbox"></label>
+          <div class="cracks-control"><label for="cracksMaterialStrength"></label><output for="cracksMaterialStrength"></output><input id="cracksMaterialStrength" type="range" min="0" max="100" step="5"></div>
         </section>
         <section class="cracks-settings-panel cracks-growth-panel">
-          ${growthControls.map(c=>`<div class="cracks-control"><label for="${c.id}"></label><output for="${c.id}"></output><p id="${c.id}Help" class="cracks-control-help"></p><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" aria-describedby="${c.id}Help"></div>`).join('')}
+          ${growthControls.map(c=>`<div class="cracks-control"><label for="${c.id}"></label><output for="${c.id}"></output><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}"></div>`).join('')}
         </section>
         <section class="cracks-settings-panel cracks-line-color"><h3 id="cracksLineColorLabel"></h3><div id="cracksLineColor" class="cracks-color-grid" role="group" aria-labelledby="cracksLineColorLabel">${CRACKS_LINE_COLORS.map(mode=>`<button type="button" data-cracks-color="${mode}" aria-pressed="false"><span class="cracks-color-swatch" aria-hidden="true"></span><span class="cracks-color-name"></span></button>`).join('')}</div></section>
       </div>
@@ -42,7 +41,6 @@ export function createCracksSettingsDialog(app) {
     function render(){
         dialog.dir=app.getCurrentLang()==='he'?'rtl':'ltr';
         dialog.querySelector('h2').textContent=app.getText('cracks_settings_title');
-        dialog.querySelector('#cracksMaterialNote').textContent=app.getText('cracks_material_note');
         dialog.querySelector('#cracksMaterialLabel').textContent=app.getText('cracks_material_enabled');
         dialog.querySelector('label[for="cracksMaterialStrength"]').textContent=app.getText('cracks_material_strength');
         dialog.querySelector('#cracksLineColorLabel').textContent=app.getText('contour_color_label');
@@ -53,7 +51,6 @@ export function createCracksSettingsDialog(app) {
         dialog.querySelector('[type=submit]').textContent=app.getText('gs_modal_save_close');
         for(const c of growthControls){
             dialog.querySelector(`label[for="${c.id}"]`).textContent=app.getText(c.key);
-            dialog.querySelector('#'+c.id+'Help').textContent=app.getText(c.key+'_help');
         }
         dialog.querySelector('#cracksPresetsTitle').textContent=app.getText('cracks_presets_title');
         if(!draft)return;

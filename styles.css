@@ -2311,6 +2311,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .palette-current-preview:hover { background: #d5aa4810; }
 .palette-current-preview:focus-visible { outline: 2px solid #d5aa48; outline-offset: -2px; }
 #paletteModal .palette-current-details { justify-content: center; text-align: center; }
+#paletteModal .palette-current-details[dir="rtl"] { justify-content: flex-start; text-align: start; }
 
 #btnContour .contour-cracks-icon { display: none; }
 #btnContour.cracks-active .contour-original-icon { display: none; }
@@ -2332,16 +2333,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cracksSettingsDialog [data-close] { width:44px; height:44px; padding:0; border:0; border-radius:9px; background:transparent; color:#aaa99e; font-size:24px; cursor:pointer; }
 #cracksSettingsDialog [data-close]:hover { background:#ffffff08; color:#fff0c9; }
 #cracksSettingsDialog .cracks-settings-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:18px; display:flex; flex-direction:column; gap:14px; scrollbar-width:thin; scrollbar-color:#84724c #191b17; }
-#cracksSettingsDialog .cracks-settings-panel { margin:0; padding:16px; border:1px solid #b89a5726; border-radius:12px; background:#ffffff03; }
+#cracksSettingsDialog .cracks-settings-panel { margin:0; padding:0; border:0; background:transparent; }
+#cracksSettingsDialog .cracks-settings-panel + .cracks-settings-panel { padding-top:16px; border-top:1px solid #b89a5726; }
 #cracksSettingsDialog label { font-size:13px; line-height:1.5; font-weight:500; color:#e3dccb; text-align:start; }
 #cracksSettingsDialog .cracks-toggle { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:44px; cursor:pointer; }
 #cracksSettingsDialog .cracks-toggle input { width:22px; height:22px; margin:0; flex-shrink:0; accent-color:#d9ba75; cursor:pointer; }
 #cracksSettingsDialog .cracks-control { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px 14px; }
 #cracksSettingsDialog .cracks-toggle + .cracks-control { margin-top:12px; }
 #cracksSettingsDialog .cracks-control output { min-width:48px; padding:4px 8px; box-sizing:border-box; border:1px solid #d9ba7524; border-radius:7px; background:#d9ba750a; color:#e6ca8c; font-size:12px; font-variant-numeric:tabular-nums; text-align:center; direction:ltr; }
-#cracksSettingsDialog .cracks-control-help, #cracksSettingsDialog .cracks-settings-note { margin:0; color:#aaa99f; font-size:12px; line-height:1.55; font-weight:400; }
-#cracksSettingsDialog .cracks-control-help { grid-column:1 / -1; }
-#cracksSettingsDialog .cracks-settings-note { margin-top:4px; }
 #cracksSettingsDialog .cracks-growth-panel .cracks-control + .cracks-control { margin-top:14px; padding-top:14px; border-top:1px solid #ffffff09; }
 #cracksSettingsDialog input[type="range"] { grid-column:1 / -1; width:100%; min-width:0; height:44px; margin:0; padding:0; direction:ltr; appearance:none; background:transparent; cursor:pointer; }
 #cracksSettingsDialog input[type="range"]::-webkit-slider-runnable-track { height:4px; border-radius:4px; background:linear-gradient(to right,#d9ba75 var(--range-fill),#4c4d42 var(--range-fill)); }
@@ -2351,7 +2350,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cracksSettingsDialog input[type="range"]:disabled { opacity:.35; cursor:default; }
 #cracksSettingsDialog .cracks-line-color h3 { margin:0 0 12px; font-size:13px; font-weight:500; color:#e3dccb; }
 #cracksSettingsDialog .cracks-color-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
-#cracksSettingsDialog [data-cracks-color] { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; min-width:0; min-height:44px; aspect-ratio:1; padding:6px; border:1px solid #b89a5740; border-radius:3px; background:#121510; color:#c9c2b1; font:inherit; cursor:pointer; }
+#cracksSettingsDialog [data-cracks-color] { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; min-width:0; min-height:64px; padding:6px; border:1px solid #b89a5740; border-radius:3px; background:#121510; color:#c9c2b1; font:inherit; cursor:pointer; }
 #cracksSettingsDialog [data-cracks-color][aria-pressed="true"] { border-color:#d9ba75; background:#d9ba7518; color:#f2d99f; }
 #cracksSettingsDialog .cracks-color-name { font-size:10px; line-height:1.25; text-align:center; overflow-wrap:anywhere; }
 #cracksSettingsDialog .cracks-color-swatch { width:19px; height:19px; border:1px solid #b89a5760; border-radius:50%; background:#090a09; flex-shrink:0; }
@@ -2374,11 +2373,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cracksSettingsDialog .cracks-presets-heading h3 { margin:0; font-size:13px; font-weight:500; color:#e3dccb; }
 #cracksSettingsDialog #cracksPresetCustom { font-size:11px; color:#aaa99f; }
 #cracksSettingsDialog .cracks-preset-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-#cracksSettingsDialog [data-cracks-preset] { display:flex; flex-direction:column; justify-content:center; gap:5px; min-width:0; min-height:66px; padding:10px 8px; border:1px solid #b89a5733; border-radius:9px; background:#121510; color:#bdb8a9; font-family:inherit; cursor:pointer; text-align:center; }
+#cracksSettingsDialog [data-cracks-preset] { display:flex; flex-direction:column; justify-content:center; gap:5px; min-width:0; min-height:44px; padding:8px; border:1px solid #b89a5733; border-radius:9px; background:#121510; color:#bdb8a9; font-family:inherit; cursor:pointer; text-align:center; }
 #cracksSettingsDialog [data-cracks-preset]:hover { border-color:#d9ba7560; background:#d9ba7509; }
 #cracksSettingsDialog [data-cracks-preset][aria-pressed="true"] { border-color:#d9ba7590; background:#d9ba7518; color:#f2d99f; box-shadow:inset 0 0 0 1px #d9ba7510; }
 #cracksSettingsDialog .cracks-preset-name { font-size:12px; font-weight:500; line-height:1.4; overflow-wrap:anywhere; }
-#cracksSettingsDialog .cracks-preset-values { font-size:10px; line-height:1.4; font-variant-numeric:tabular-nums; opacity:.72; }
 
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
 #controlsContainer #btnEvolutionDrawer { display:none; }
