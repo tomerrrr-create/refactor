@@ -1,31 +1,38 @@
-export const CYMATICS_PATTERNS = Object.freeze({
-    petals:Object.freeze([1,2]), star:Object.freeze([2,3]), lattice:Object.freeze([3,5]), bloom:Object.freeze([4,7])
-});
 export const CURRENT_RESONANCE_VERSION=2;
-export const CYMATICS_RESONANCE_MAPS=Object.freeze({diagonal:1,grid:2,circular:3,interference:4});
-export const DEFAULT_CYMATICS_RULES = Object.freeze({pattern:'petals',strength:60});
+export const CYMATICS_RESONANCE_MAPS=Object.freeze({diagonal:1,grid:2,circular:3,interference:4,clouds:5,cosmic:6});
 // New application/reset defaults are separate from legacy recording fallbacks.
-export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({diagonal:11831,grid:11831,circular:20000,interference:800});
-export const INITIAL_CYMATICS_RULES = Object.freeze({pattern:'petals',strength:60,mode:'resonance',frequency:800,resonanceVersion:4,phaseMotion:true});
+export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({diagonal:11831,grid:11831,circular:20000,interference:800,clouds:800,cosmic:800});
+export const INITIAL_CYMATICS_RULES = Object.freeze({strength:15,mode:'resonance',frequency:800,resonanceVersion:4,phaseMotion:true});
+export const DEFAULT_CYMATICS_RULES=INITIAL_CYMATICS_RULES;
 export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
     if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['pattern','strength','mode','frequency','resonanceVersion','phaseMotion'].includes(k))||
-       !Object.hasOwn(CYMATICS_PATTERNS,value.pattern)||!Number.isInteger(value.strength)||value.strength<10||value.strength>100)throw new Error('Invalid Cymatics settings');
-    const result={pattern:value.pattern,strength:value.strength};
-    if(value.mode!==undefined&&value.mode!=='patterns'&&value.mode!=='resonance')throw new Error('Invalid Cymatics mode');
-    if(value.frequency!==undefined&&(!Number.isInteger(value.frequency)||value.frequency<20||value.frequency>20000))throw new Error('Invalid Cymatics frequency');
-    if(value.mode==='resonance'){
-        if(value.frequency===undefined)throw new Error('Missing Cymatics frequency');
-        result.mode='resonance';result.frequency=value.frequency;
-    }else if(value.frequency!==undefined)throw new Error('Unexpected Cymatics frequency');
+       !Number.isInteger(value.strength)||value.strength<10||value.strength>100||
+       (value.pattern!==undefined&&(typeof value.pattern!=='string'||!value.pattern.length||value.pattern.length>64)))throw new Error('Invalid Resonance settings');
+    if(value.mode!=='resonance')throw new Error('The experimental Patterns mode is no longer supported');
+    if(!Number.isInteger(value.frequency)||value.frequency<20||value.frequency>20000)throw new Error('Invalid Resonance frequency');
+    // The obsolete pattern field is retained only in old resonance recordings;
+    // it never affects their field or particle movement.
+    const result={...(value.pattern===undefined?{}:{pattern:value.pattern}),strength:value.strength,mode:'resonance',frequency:value.frequency};
     if(value.resonanceVersion!==undefined){
-        if(value.mode!=='resonance'||!Object.values(CYMATICS_RESONANCE_MAPS).includes(value.resonanceVersion))throw new Error('Invalid resonance version');
+        if(!Object.values(CYMATICS_RESONANCE_MAPS).includes(value.resonanceVersion))throw new Error('Invalid resonance version');
         result.resonanceVersion=value.resonanceVersion;
     }
     if(value.phaseMotion!==undefined){
-        if(value.mode!=='resonance'||typeof value.phaseMotion!=='boolean')throw new Error('Invalid phase motion');
+        if(typeof value.phaseMotion!=='boolean')throw new Error('Invalid phase motion');
         result.phaseMotion=value.phaseMotion;
     }
     return result;
+}
+// Preference migration only. Retired recordings must fail rather than silently
+// replaying a different experiment. Other workspace/profile fields stay intact.
+export function migrateCymaticsPreferences(value){
+    if(value&&typeof value==='object'&&!Array.isArray(value)&&
+       (value.mode===undefined||value.mode==='patterns')&&typeof value.pattern==='string'&&value.pattern.length>0&&value.pattern.length<=64&&
+       Number.isInteger(value.strength)&&value.strength>=10&&value.strength<=100&&
+       Object.keys(value).every(k=>['pattern','strength','mode'].includes(k))){
+        return {...INITIAL_CYMATICS_RULES,strength:value.strength};
+    }
+    return validateCymaticsRules(value);
 }
 
 // Per-map frequencies are user preferences, not engine/runtime recording fields.

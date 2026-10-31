@@ -62,5 +62,5 @@ test('each app opening starts with Fibonacci despite saved growth; explicit prof
 test('new map defaults preserve saved frequency tables even when old default rules were omitted',()=>{
  const h=harness(),settings=defaultWorkspaceSettings();h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,800);assert.equal(h.cymaticsFrequencies.circular,20000);
  settings.cymaticsFrequencies={interference:11831,circular:5000,diagonal:4000,grid:6000};h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,11831);assert.equal(h.cymaticsFrequencies.circular,5000);
- settings.rules.cymatics={pattern:'petals',strength:60,mode:'resonance',frequency:440,resonanceVersion:4};delete settings.cymaticsFrequencies;h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,440);assert.deepEqual(JSON.parse(JSON.stringify(h.cymaticsFrequencies)),{diagonal:440,grid:440,circular:440,interference:440});
+ settings.rules.cymatics={pattern:'petals',strength:60,mode:'resonance',frequency:440,resonanceVersion:4};delete settings.cymaticsFrequencies;h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,440);assert.deepEqual(JSON.parse(JSON.stringify(h.cymaticsFrequencies)),{diagonal:440,grid:440,circular:440,interference:440,clouds:440,cosmic:440});
 });
