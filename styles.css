@@ -877,6 +877,10 @@ body {
     transform: scale(1.1); /* Make button slightly larger */
 }
 
+#btnCymatics.simulation-active {
+    transform: scale(1);
+}
+
 #btnCymatics.simulation-active svg,
 #btnGameOfLife.simulation-active svg,
 #btnMagnetModes.simulation-active svg,
