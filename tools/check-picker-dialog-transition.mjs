@@ -35,18 +35,20 @@ try {
  },{panel,icon});
  const colorAnchor=await anchor('.brush-picker-panel','#colorPickerPaletteName');
  await page.evaluate(()=>document.getElementById('btnColorPickerPalette').click());await page.waitForTimeout(50);
- const midway=await page.evaluate(()=>{const a=document.getElementById('colorPickerModal'),b=document.getElementById('paletteModal');return {out:a.classList.contains('picker-handoff-outgoing'),in:b.classList.contains('picker-handoff-incoming'),inert:a.inert,hidden:a.getAttribute('aria-hidden'),outBackground:getComputedStyle(a).backgroundColor,backdropOpacity:getComputedStyle(b).opacity,panelOpacity:Number(getComputedStyle(b.firstElementChild).opacity),animations:b.firstElementChild.getAnimations().map(a=>({time:a.currentTime,state:a.playState,duration:a.effect.getTiming().duration}))};});
- assert(midway.out&&midway.in&&midway.inert);assert.equal(midway.hidden,'true');assert.equal(midway.outBackground,'rgba(0, 0, 0, 0)');assert.equal(midway.backdropOpacity,'1','backdrop does not fade to the board');assert(midway.panelOpacity>=0&&midway.panelOpacity<=1);assert(midway.animations.some(a=>a.duration===220),'panel uses the 220ms handoff animation');
+ const midway=await page.evaluate(()=>{const a=document.getElementById('colorPickerModal'),b=document.getElementById('paletteModal');return {out:a.classList.contains('picker-handoff-outgoing'),in:b.classList.contains('picker-handoff-incoming'),inert:a.inert,hidden:a.getAttribute('aria-hidden'),outBackground:getComputedStyle(a).backgroundColor,backdropOpacity:getComputedStyle(b).opacity,panelOpacity:Number(getComputedStyle(b.firstElementChild).opacity),headerOpacity:getComputedStyle(b.querySelector('.palette-picker-header')).opacity,bodyOpacity:Number(getComputedStyle(b.querySelector('.palette-picker-content')).opacity),outHeaderVisibility:getComputedStyle(a.querySelector('.brush-picker-heading')).visibility,animations:b.querySelector('.palette-picker-content').getAnimations().map(a=>({time:a.currentTime,state:a.playState,duration:a.effect.getTiming().duration}))};});
+ assert(midway.out&&midway.in&&midway.inert);assert.equal(midway.hidden,'true');assert.equal(midway.outBackground,'rgba(0, 0, 0, 0)');assert.equal(midway.backdropOpacity,'1','backdrop does not fade to the board');assert.equal(midway.panelOpacity,1,'frame stays opaque');assert.equal(midway.headerOpacity,'1','destination header stays opaque');assert.equal(midway.outHeaderVisibility,'hidden','no duplicate header');assert.equal(midway.bodyOpacity,0,'new body waits until the old view clears');assert(midway.animations.some(a=>a.duration===110),'new body fades in over 110ms');
  await waitForHandoff(page);assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);assert(!(await page.locator('#colorPickerModal').isVisible()));assert(await page.locator('#paletteModal').isVisible());
- const paletteAnchor=await anchor('#paletteModal .palette-picker-panel','#palette-current-preview .palette-current-icon');
+ const paletteAnchor=await anchor('#paletteModal .palette-picker-panel','#palette-current-preview .palette-current-mosaic');
  for(const key of ['top','width','x','y'])assert(Math.abs(colorAnchor[key]-paletteAnchor[key])<1,'picker anchor matches: '+key);
  for(const a of [colorAnchor,paletteAnchor])assert(a.top>=0&&a.bottom<=config.height,'panels stay inside viewport');
  const paletteLayout=await page.locator('#paletteModal').evaluate(modal=>{
   const preview=modal.querySelector('#palette-current-preview'),footer=modal.querySelector('#palette-current-summary');
   const header=preview.getBoundingClientRect(),details=footer.querySelector('.palette-current-details').getBoundingClientRect(),bottom=footer.getBoundingClientRect(),tabs=modal.querySelector('.palette-group-tab').getBoundingClientRect();
-  return {aligned:Math.abs(header.top-tabs.top)<1,centered:Math.abs((details.left+details.right)-(bottom.left+bottom.right))<2,headerRibbon:!!preview.querySelector('.palette-color-ribbon'),headerIcon:!!preview.querySelector('.palette-current-icon'),footerRibbon:!!footer.querySelector('.palette-color-ribbon'),headerOverflow:preview.scrollWidth>preview.clientWidth+1};
+  const children=[...footer.querySelector('.palette-current-details').children].map(e=>e.getBoundingClientRect());
+  const contentLeft=Math.min(...children.map(r=>r.left)),contentRight=Math.max(...children.map(r=>r.right));
+  return {aligned:Math.abs(header.top-tabs.top)<1,centered:Math.abs((contentLeft+contentRight)-(bottom.left+bottom.right))<2,headerRibbon:!!preview.querySelector('.palette-color-ribbon'),headerIcon:!!preview.querySelector('.palette-current-icon'),headerGrid:preview.querySelectorAll('.palette-current-mosaic i').length,gridWidth:preview.querySelector('.palette-current-mosaic').getBoundingClientRect().width,gridHeight:preview.querySelector('.palette-current-mosaic').getBoundingClientRect().height,footerIcon:footer.querySelector('.palette-current-details')?.firstElementChild?.classList.contains('palette-current-icon'),footerRibbon:!!footer.querySelector('.palette-color-ribbon'),headerOverflow:preview.scrollWidth>preview.clientWidth+1};
  });
- assert(paletteLayout.aligned&&paletteLayout.centered&&!paletteLayout.headerRibbon&&paletteLayout.headerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'preview shares the tab row and footer details are centered');
+ assert(paletteLayout.aligned&&paletteLayout.centered&&!paletteLayout.headerRibbon&&!paletteLayout.headerIcon&&paletteLayout.headerGrid===4&&paletteLayout.gridWidth===28&&paletteLayout.gridHeight===28&&paletteLayout.footerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'28px 2 by 2 preview replaces the header icon, with the current palette icon before its footer name');
  await page.screenshot({path:path.join(artifacts,config.lang+'-palette-layout.png')});
  // Both the new header (keyboard) and existing footer (pointer) open colors.
  await page.locator('#palette-current-preview').focus();await page.keyboard.press('Enter');await waitForHandoff(page);
@@ -63,16 +65,17 @@ try {
    const color=style.backgroundColor,alpha=color.startsWith('rgba')?Number(color.match(/[\d.]+/g).at(-1)):1;
    return light*(1-alpha*Number(style.opacity));
   },1);
-  const samples=[sample()];
+  const samples=[sample()];const frames=[];
   for(const id of ['btnColorPickerPalette','palette-current-preview']){
    document.getElementById(id).click();
    await new Promise(resolve=>{const start=performance.now();const frame=()=>{
-    samples.push(sample());if(performance.now()-start<350)requestAnimationFrame(frame);else resolve();
+    samples.push(sample());const modal=document.querySelector('.picker-handoff-incoming')||document.querySelector('#colorPickerModal.modal-visible,#paletteModal.modal-visible');const panel=modal.firstElementChild;const r=panel.getBoundingClientRect();const button=modal.querySelector('#btnColorPickerPalette,#palette-current-preview').getBoundingClientRect();frames.push({top:r.top,bottom:r.bottom,x:button.x+button.width/2,y:button.y+button.height/2,opacity:getComputedStyle(panel).opacity});const oldBody=document.querySelector('.picker-handoff-outgoing .brush-picker-body,.picker-handoff-outgoing .palette-picker-content');const newBody=modal.querySelector('.brush-picker-body,.palette-picker-content');if(oldBody)frames.at(-1).overlap=Number(getComputedStyle(oldBody).opacity)>.001&&Number(getComputedStyle(newBody).opacity)>.001;if(performance.now()-start<350)requestAnimationFrame(frame);else resolve();
    };frame();});
   }
-  return samples;
+  return {samples,frames};
  });
- assert(backdropSamples.length>4);assert(backdropSamples.every(alpha=>Math.abs(alpha-.9)<.001),'backdrop stays at 90% throughout both handoffs');
+ for(const frame of backdropSamples.frames){assert(Math.abs(frame.top-colorAnchor.top)<1);assert(Math.abs(frame.x-colorAnchor.x)<1&&Math.abs(frame.y-colorAnchor.y)<1,'navigation stays fixed on every frame');assert.equal(frame.opacity,'1');assert(!frame.overlap,'old and new grids never overlap');assert(frame.bottom<=config.height+1);}
+ assert(backdropSamples.samples.length>4);assert(backdropSamples.samples.every(alpha=>Math.abs(alpha-.9)<.001),'backdrop stays at 90% throughout both handoffs');
  // Several handoffs inside the transition must leave one interactive panel.
  for(let i=0;i<6;i++){await page.evaluate(i=>document.getElementById(i%2?'palette-current-summary':'btnColorPickerPalette').click(),i);await page.waitForTimeout(20);}
  await waitForHandoff(page);assert(await page.locator('#colorPickerModal').isVisible());assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);

@@ -57,7 +57,9 @@ try {
  await drag(sym,-35);assert.equal((await state()).symmetry,'off');
  await drag(sort,-35);assert(await page.locator('#sortCycleDialog').isVisible());await page.locator('#btnCancelSortCycle').click();
  await page.evaluate(()=>pickerNavTest.sim());await drag(sym,35);assert.equal(await sym.getAttribute('data-relative-gap'),await page.locator('#btnGap').getAttribute('data-relative-gap'));
+ assert.equal(await page.locator('#btnGap svg path').getAttribute('d'),'M8 3v18M16 3v18M3 8h18M3 16h18');assert.equal(await sym.locator('svg path').getAttribute('d'),await page.locator('#btnGap svg path').getAttribute('d'),'picker mirrors the original separator hash');
  assert.equal(await sym.locator('.picker-gap-value').count(),1);await sym.click();await drag(sym,-35);assert(await page.locator('#separatorCycleDialog').isVisible());await page.locator('#btnCancelSeparatorCycle').click();await drag(sym,35);assert.equal(await sym.locator('[data-symmetry-icon]').count(),1);
+ if(process.env.PICKER_SEPARATOR_ONLY){assert.deepEqual(errors,[]);console.log(JSON.stringify({config,separatorsPassed:true}));await context.close();continue;}
  await page.evaluate(()=>pickerNavTest.play());await page.waitForTimeout(200);assert((await state()).playing);const gen=(await state()).gen;await sort.click();assert((await state()).playing);await page.waitForTimeout(200);assert((await state()).gen>gen,'sorting during simulation does not stop it');await page.evaluate(()=>pickerNavTest.pause());
  const snapshot=await state();await page.screenshot({path:path.join(artifacts,config.lang+'.png')});
  await pal.click();await page.waitForTimeout(350);assert(await page.locator('#paletteModal').isVisible());assert(!(await page.locator('#colorPickerModal').isVisible()),'palette navigation closes the color picker');

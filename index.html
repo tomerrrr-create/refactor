@@ -196,11 +196,14 @@
 
 <button id="btnContour" class="ctrl">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <g class="contour-original-icon">
-          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-          <rect x="7" y="7" width="10" height="10" rx="1"></rect>
-        </g>
         <path class="contour-cracks-icon" d="M12 3l-2 6 4 4-3 8M10 9l-6 3m10 1 6-5m-8 9 6 3"/>
+    </svg>
+</button>
+
+<button id="btnContoursAction" class="ctrl" type="button" aria-haspopup="dialog" aria-controls="contourSettingsModal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M7.3 3.1C9.3 1.2 12.2 2.6 14.1 3.8C16 4.8 19 4 20.5 6.2C22.4 9.3 21 12 20 14.4C19 17 18 20.6 14.7 21.2C12 21.8 10.2 19.9 7.7 19.5C5.2 19.2 2.4 17.5 2.3 14.7C2.1 12 3.5 10.3 4.6 8.5C5.5 6.8 5.4 4.8 7.3 3.1Z"/>
+        <path d="M8.2 10.2V8.2h2M13.8 8.2h2v2M15.8 13.8v2h-2M10.2 15.8h-2v-2"/>
     </svg>
 </button>
 
@@ -338,7 +341,7 @@
           </button>
           <button id="btnGap" class="ctrl">
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true">
-                <path d="M8 4l4 4-4 4-4-4ZM16 4l4 4-4 4-4-4ZM8 12l4 4-4 4-4-4ZM16 12l4 4-4 4-4-4Z"/>
+                <path d="M8 3v18M16 3v18M3 8h18M3 16h18"/>
               </svg>
               <span id="gapValue" aria-hidden="true">2</span>
           </button>
@@ -1158,7 +1161,7 @@
   </div>
 
   <div id="contourSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
-    <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+    <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6" role="dialog" aria-modal="true" aria-labelledby="contourSettingsTitle">
       <button id="btnContourModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
@@ -1170,7 +1173,7 @@
         <p id="contourSensitivityDesc" class="text-sm text-gray-400 text-center"></p>
         <div class="flex items-center justify-center gap-4">
             <span id="contourSensitivityLabelLow" class="text-sm text-gray-500 w-12 text-center"></span>
-            <input type="range" id="contourSensitivitySlider" min="35" max="100" value="75" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+            <input type="range" id="contourSensitivitySlider" aria-labelledby="contourSensitivityLabel" min="35" max="100" value="75" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
             <span id="contourSensitivityLabelHigh" class="text-sm text-gray-500 w-12 text-center"></span>
             <span id="contourSensitivityValue" class="text-gray-300 font-mono w-12 text-center">30%</span>
         </div>

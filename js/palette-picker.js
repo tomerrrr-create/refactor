@@ -173,8 +173,11 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             preview.setAttribute('aria-haspopup', 'dialog');
             preview.setAttribute('aria-label', current.getAttribute('aria-label'));
             preview.addEventListener('click', onCurrent);
-            preview.append(icon);
+            const mosaic = colorMosaic(getPalettePreviewColors(palette), 2);
+            mosaic.classList.add('palette-current-mosaic');
+            preview.append(mosaic);
             currentPreviewHost.append(preview);
+            details.prepend(icon);
             current.append(details);
         } else {
             // Other palette pickers retain their combined footer.

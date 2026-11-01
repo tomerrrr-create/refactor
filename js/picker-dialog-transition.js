@@ -4,13 +4,14 @@ export function finishPickerDialogTransition() {
     activeTransition?.finish();
 }
 
-// Keep one backdrop while the existing panels crossfade. No cloned controls,
-// layout animation, board snapshots, or changes to the running simulation.
+// Keep a solid shell and destination header while only the picker bodies fade.
+// Existing controls retain their handlers, focus and accessibility state.
 export function transitionPickerDialog({ from, to, close, open }) {
     finishPickerDialogTransition();
     const outgoing = from.firstElementChild;
     const animate = from.classList.contains('modal-visible') && outgoing &&
         !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const previousHeight = outgoing?.getBoundingClientRect().height;
     close();
     open();
     if (!animate || !to.classList.contains('modal-visible')) return;
@@ -22,10 +23,30 @@ export function transitionPickerDialog({ from, to, close, open }) {
     to.classList.add('picker-handoff-incoming');
     from.inert = true;
     from.setAttribute('aria-hidden', 'true');
-    const timing = { duration: 220, easing: 'cubic-bezier(.2,.65,.3,1)' };
+    const nextHeight = incoming.getBoundingClientRect().height;
+    const outgoingBody = outgoing.querySelector('.brush-picker-body, .palette-picker-content');
+    const incomingBody = incoming.querySelector('.brush-picker-body, .palette-picker-content');
+    const outgoingBodyHeight = outgoingBody.getBoundingClientRect().height;
+    const incomingBodyHeight = incomingBody.getBoundingClientRect().height;
+    const timing = { duration: 180, easing: 'cubic-bezier(.2,.65,.3,1)' };
+    const heightFrames = [
+        { height: `${previousHeight}px`, offset: 0 },
+        { height: `${previousHeight}px`, offset: 1 / 3 },
+        { height: `${nextHeight}px`, offset: 1 }
+    ];
     const animations = [
-        outgoing.animate([{ opacity: 1 }, { opacity: 0 }], { ...timing, fill: 'forwards' }),
-        incoming.animate([{ opacity: 0 }, { opacity: 1 }], timing)
+        // Clear the old view before revealing the next; never blend two grids.
+        // Freeze body dimensions so resizing the frame cannot squeeze its content.
+        outgoingBody.animate([
+            { opacity: 1, minHeight: `${outgoingBodyHeight}px` },
+            { opacity: 0, minHeight: `${outgoingBodyHeight}px` }
+        ], { duration: 60, easing: 'ease-out', fill: 'forwards' }),
+        incomingBody.animate([
+            { opacity: 0, minHeight: `${incomingBodyHeight}px` },
+            { opacity: 1, minHeight: `${incomingBodyHeight}px` }
+        ], { duration: 110, delay: 70, easing: 'ease-out', fill: 'both' }),
+        incoming.animate(heightFrames, timing),
+        outgoing.animate([{ height: `${previousHeight}px` }, { height: `${previousHeight}px` }], { ...timing, fill: 'forwards' })
     ];
     const entry = {
         finish() {

@@ -1,3 +1,4 @@
+import {validateContourActionRules} from '../js/contour-action-settings.js';
 import {INITIAL_CYMATICS_RULES,validateCymaticsRules,validateCymaticsFrequencies,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,validateCymaticsStrengths,selectCymaticsMap} from '../js/cymatics-settings.js';
 import {INITIAL_CRACKS_GROWTH} from '../js/cracks-settings.js';
 import {validateEvolutionSlots} from '../js/evolution-drawer-settings.js';
@@ -12,7 +13,7 @@ const apply = source.slice(source.indexOf('function applyWorkspacePreferences(')
 function harness() {
     const noop = () => {};
     const context = vm.createContext({
-        INITIAL_CYMATICS_RULES, validateCymaticsRules, createCymaticsFrequencies, rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength, INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
+        validateContourActionRules, INITIAL_CYMATICS_RULES, validateCymaticsRules, createCymaticsFrequencies, rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength, INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],
         updateGravitationalSortButtonUI: noop, updateSpiralButtonUI: noop,
