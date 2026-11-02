@@ -22,7 +22,7 @@ export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
         result.phaseMotion=value.phaseMotion;
     }
     if(value.cosmicFieldVersion!==undefined){
-        if(![1,2].includes(value.cosmicFieldVersion))throw new Error('Invalid cosmic field version');
+        if(![1,2,3].includes(value.cosmicFieldVersion))throw new Error('Invalid cosmic field version');
         result.cosmicFieldVersion=value.cosmicFieldVersion;
     }
     return result;
@@ -38,10 +38,10 @@ export function migrateCymaticsPreferences(value){
     }
     // Discard the retired field-version preference from the previous build.
     if(value&&value.resonanceVersion===6&&[1,2].includes(value.cosmicVersion)){
-        const {cosmicVersion,...rules}=value;return validateCymaticsRules({...rules,cosmicFieldVersion:2});
+        const {cosmicVersion,...rules}=value;return validateCymaticsRules({...rules,cosmicFieldVersion:3});
     }
     const rules=validateCymaticsRules(value);
-    return rules.resonanceVersion===6?{...rules,cosmicFieldVersion:2}:rules;
+    return rules.resonanceVersion===6?{...rules,cosmicFieldVersion:3}:rules;
 }
 
 // Per-map frequencies are user preferences, not engine/runtime recording fields.
@@ -83,6 +83,6 @@ export function selectCymaticsMap(rules,version,frequencies,strengths){
     if(!name)throw new Error('Invalid Cymatics map');
     const remembered=rememberCymaticsFrequency(frequencies,rules),rememberedStrengths=rememberCymaticsStrength(strengths,rules);
     const {cosmicFieldVersion,...otherRules}=rules;
-    return {rules:validateCymaticsRules({...otherRules,...(version===6?{cosmicFieldVersion:2}:{}),mode:'resonance',resonanceVersion:version,frequency:remembered[name],strength:rememberedStrengths[name],
+    return {rules:validateCymaticsRules({...otherRules,...(version===6?{cosmicFieldVersion:3}:{}),mode:'resonance',resonanceVersion:version,frequency:remembered[name],strength:rememberedStrengths[name],
         phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion}),frequencies:remembered,strengths:rememberedStrengths};
 }
