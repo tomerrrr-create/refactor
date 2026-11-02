@@ -1,6 +1,6 @@
 // Shared file metadata: Contours uses palette endpoints; Cracks always uses brush.
 export const CONTOUR_LINE_COLORS = Object.freeze(['darkest','lightest','brush']);
-export const DEFAULT_CRACKS_MATERIAL = Object.freeze({ enabled: false, strength: 40 });
+export const DEFAULT_CRACKS_MATERIAL = Object.freeze({ enabled: false, strength: 0 });
 export function validateCracksMaterial(value = DEFAULT_CRACKS_MATERIAL) {
     if (!value || typeof value !== 'object' || Array.isArray(value) ||
         Object.keys(value).some(key => !['enabled','strength'].includes(key)) ||

@@ -77,9 +77,9 @@ test('drawing history retains current Cracks preferences while explicit snapshot
  const c=harness();c.armSimulation('contour');
  c.contourRules={sensitivity:75,lineColor:'darkest',material:{enabled:true,strength:100}};
  c.runContourEvolution(fixture(21));const old=JSON.parse(JSON.stringify(c.getContourSnapshot()));
- c.contourRules={sensitivity:75,lineColor:'lightest'}; // Current default: 40%.
+ c.contourRules={sensitivity:75,lineColor:'lightest'}; // Current default: no material influence.
  c.restoreContourSnapshot(old,{preservePreferences:true});
- assert.equal(c.getContourSnapshot().material.strength,40);assert.equal(c.contourRules.lineColor,'lightest');
+ assert.equal(c.getContourSnapshot().material.strength,0);assert.equal(c.contourRules.lineColor,'lightest');
  assert.deepEqual(JSON.parse(JSON.stringify(c.cracksState)),old.cracksState,'art history still restores tips and the random cursor');
  c.contourRules.material={enabled:false,strength:65};c.restoreContourSnapshot(old,{preservePreferences:true});
  assert.deepEqual(JSON.parse(JSON.stringify(c.getContourSnapshot().material)),{enabled:false,strength:65});

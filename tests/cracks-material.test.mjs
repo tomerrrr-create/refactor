@@ -27,7 +27,7 @@ test('Off and zero influence preserve version-2 growth exactly, including the ra
  }
 });
 test('material settings and pending growth round trip without changing old settings files',()=>{
- assert.deepEqual(validateCracksMaterial(),DEFAULT_CRACKS_MATERIAL);assert.equal(DEFAULT_CRACKS_MATERIAL.strength,40);
+ assert.deepEqual(validateCracksMaterial(),DEFAULT_CRACKS_MATERIAL);assert.equal(DEFAULT_CRACKS_MATERIAL.strength,0);
  const settings=defaultWorkspaceSettings(),old=serializeWorkspaceSettings(settings);assert(!old.includes('material'));
  settings.rules.contour.material={...DEFAULT_CRACKS_MATERIAL};assert.equal(serializeWorkspaceSettings(settings),old,'default material settings have one canonical representation');
  settings.rules.contour.material={enabled:true,strength:80};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)),settings,'saved 80% stays explicit after the default changes');
