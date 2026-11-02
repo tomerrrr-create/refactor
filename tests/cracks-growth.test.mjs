@@ -9,7 +9,7 @@ const tip=()=>({...createCracksState(81,123),roots:5,steps:1,tips:[{x:40,y:40,an
 function run(ctx,state,count){for(let i=0;i<count;i++){const r=runCracksGeneration(ctx,state);ctx={...ctx,currentBoardState:r.nextBoardState};state=r.nextCracksState;}return {ctx,state};}
 test('default growth retains version-3 artwork and random cursors from before parameterization',()=>{
  for(const [lineColor,checksum] of [['darkest','e50fd3154ca9d0a9cfe133a9017becd150301ddbd874060a4486dc5f73aa4070'],['lightest','1d4fed35059c562124f717b93f02a9cd86a6140421d13785e61fb672954737f6']]){
-  const ctx={n:41,currentPalette:Array(23),contourRules:{lineColor,material:{enabled:true,strength:40}},currentBoardState:Array.from({length:1681},(_,i)=>({k:10+i%11,v:10+i%11,isGold:i%137===0}))};
+  const ctx={n:41,currentPalette:Array.from({length:23},(_,i)=>'#'+i.toString(16).padStart(6,'0')),cracksBrush:{color:lineColor==='lightest'?'#000016':'#000000',rainbow:false},contourRules:{lineColor:'brush',material:{enabled:true,strength:40}},currentBoardState:Array.from({length:1681},(_,i)=>({k:10+i%11,v:10+i%11,isGold:i%137===0}))};
   const result=run(ctx,createCracksState(41,123),100),hash=createHash('sha256').update(JSON.stringify({board:result.ctx.currentBoardState,state:result.state})).digest('hex');assert.equal(hash,checksum);
   const explicit=run({...ctx,contourRules:{...ctx.contourRules,growth:DEFAULT_CRACKS_GROWTH}},createCracksState(41,123),100);assert.deepEqual(explicit.ctx.currentBoardState,result.ctx.currentBoardState);assert.deepEqual(explicit.state,result.state);
  }
