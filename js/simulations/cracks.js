@@ -1,21 +1,11 @@
-import { getLuminance } from '../colors.js';
 import { DEFAULT_CRACKS_GROWTH } from '../cracks-settings.js';
-// Original palette order breaks equal-luminance ties exactly like the default
-// stable luminance sort. Resolve its color back into the current sorted palette.
-export function getCracksLineIndex({currentPalette,originalPalette=currentPalette,contourRules,cracksBrush}) {
-    if(contourRules.lineColor==='brush')return Math.max(0,currentPalette.indexOf(cracksBrush?.color));
-    if(contourRules.lineColor==='lightest')return currentPalette.length-1;
-    if(contourRules.lineColor!=='original-anchor')return 0;
-    let anchor=originalPalette[0],light=getLuminance(anchor);
-    for(let i=1;i<originalPalette.length;i++){
-        const candidate=getLuminance(originalPalette[i]);
-        if(candidate<light){anchor=originalPalette[i];light=candidate;}
-    }
-    return Math.max(0,currentPalette.indexOf(anchor));
+// The selected brush is the sole color source for Cracks.
+export function getCracksLineIndex({currentPalette,cracksBrush}) {
+    return Math.max(0,currentPalette.indexOf(cracksBrush?.color));
 }
 // Sparse immutable chunks: 256 visited cells in each 64-character hex string.
 // Copies only the small chunk directory and edited strings; history shares the rest.
-function rainbowMode(context){return context.contourRules.lineColor==='brush' && context.cracksBrush?.rainbow===true;}
+function rainbowMode(context){return context.cracksBrush?.rainbow===true;}
 function trailHas(state,index){const chunk=state?.rainbowTrail?.[Math.floor(index/256)];return !!(parseInt(chunk?.[Math.floor(index%256/4)]||'0',16)&(1<<(index%4)));}
 function trailEditor(state){
     let copied=false;

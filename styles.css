@@ -2319,66 +2319,60 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnContour.cracks-active .contour-original-icon { display: none; }
 #btnContour.cracks-active .contour-cracks-icon { display: block; }
 
-#cracksSettingsDialog {
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) {
   position:fixed; inset:0; margin:auto; padding:0; box-sizing:border-box;
-  width:min(480px, calc(100vw - 24px)); max-height:min(880px, calc(100dvh - 24px));
-  overflow:hidden; border:1px solid #b89a574d; border-radius:18px;
-  background:linear-gradient(150deg,#20221e,#151815 70%); color:#eee9df; font-family:inherit;
-  box-shadow:0 24px 90px #0009, inset 0 1px #ffffff05;
+  width:min(448px, calc(100vw - 32px)); max-height:calc(100dvh - 32px);
+  overflow:hidden; border:1px solid #b89a5745; border-radius:16px;
+  background:#1c1c1c; color:#eaeaea; font-family:inherit; box-shadow:0 24px 80px #0009;
 }
-#cracksSettingsDialog::backdrop { background:#000b; }
-#cracksSettingsDialog form { display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-height:inherit; margin:0; }
-#cracksSettingsDialog .cracks-settings-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid #cbb2731c; }
-#cracksSettingsDialog .cracks-heading { display:flex; align-items:center; gap:12px; }
-#cracksSettingsDialog .cracks-heading svg { width:24px; height:24px; flex-shrink:0; color:#d9ba75; }
-#cracksSettingsDialog h2 { margin:0; font-size:19px; font-weight:600; line-height:1.4; letter-spacing:.01em; }
-#cracksSettingsDialog [data-close] { width:44px; height:44px; padding:0; border:0; border-radius:9px; background:transparent; color:#aaa99e; font-size:24px; cursor:pointer; }
-#cracksSettingsDialog [data-close]:hover { background:#ffffff08; color:#fff0c9; }
-#cracksSettingsDialog .cracks-settings-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:18px; display:flex; flex-direction:column; gap:14px; scrollbar-width:thin; scrollbar-color:#84724c #191b17; }
-#cracksSettingsDialog .cracks-settings-panel { margin:0; padding:0; border:0; background:transparent; }
-#cracksSettingsDialog .cracks-settings-panel + .cracks-settings-panel { padding-top:16px; border-top:1px solid #b89a5726; }
-#cracksSettingsDialog label { font-size:13px; line-height:1.5; font-weight:500; color:#e3dccb; text-align:start; }
-#cracksSettingsDialog .cracks-toggle { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:44px; cursor:pointer; }
-#cracksSettingsDialog .cracks-toggle input { width:22px; height:22px; margin:0; flex-shrink:0; accent-color:#d9ba75; cursor:pointer; }
-#cracksSettingsDialog .cracks-control { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px 14px; }
-#cracksSettingsDialog .cracks-toggle + .cracks-control { margin-top:12px; }
-#cracksSettingsDialog .cracks-control output { min-width:48px; padding:4px 8px; box-sizing:border-box; border:1px solid #d9ba7524; border-radius:7px; background:#d9ba750a; color:#e6ca8c; font-size:12px; font-variant-numeric:tabular-nums; text-align:center; direction:ltr; }
-#cracksSettingsDialog .cracks-growth-panel .cracks-control + .cracks-control { margin-top:14px; padding-top:14px; border-top:1px solid #ffffff09; }
-#cracksSettingsDialog input[type="range"] { grid-column:1 / -1; width:100%; min-width:0; height:44px; margin:0; padding:0; direction:ltr; appearance:none; background:transparent; cursor:pointer; }
-#cracksSettingsDialog input[type="range"]::-webkit-slider-runnable-track { height:4px; border-radius:4px; background:linear-gradient(to right,#d9ba75 var(--range-fill),#4c4d42 var(--range-fill)); }
-#cracksSettingsDialog input[type="range"]::-moz-range-track { height:4px; border-radius:4px; background:linear-gradient(to right,#d9ba75 var(--range-fill),#4c4d42 var(--range-fill)); }
-#cracksSettingsDialog input[type="range"]::-webkit-slider-thumb { appearance:none; width:16px; height:16px; margin-top:-6px; border:3px solid #24251e; border-radius:50%; background:#e4c98e; box-shadow:0 0 0 1px #c9ab68; }
-#cracksSettingsDialog input[type="range"]::-moz-range-thumb { width:10px; height:10px; border:3px solid #24251e; border-radius:50%; background:#e4c98e; box-shadow:0 0 0 1px #c9ab68; }
-#cracksSettingsDialog input[type="range"]:disabled { opacity:.35; cursor:default; }
-#cracksSettingsDialog .cracks-line-color h3 { margin:0 0 12px; font-size:13px; font-weight:500; color:#e3dccb; }
-#cracksSettingsDialog .cracks-color-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
-#cracksSettingsDialog [data-cracks-color] { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; min-width:0; min-height:64px; padding:6px; border:1px solid #b89a5740; border-radius:3px; background:#121510; color:#c9c2b1; font:inherit; cursor:pointer; }
-#cracksSettingsDialog [data-cracks-color][aria-pressed="true"] { border-color:#d9ba75; background:#d9ba7518; color:#f2d99f; }
-#cracksSettingsDialog .cracks-color-name { font-size:10px; line-height:1.25; text-align:center; overflow-wrap:anywhere; }
-#cracksSettingsDialog .cracks-color-swatch { width:19px; height:19px; border:1px solid #b89a5760; border-radius:50%; background:#090a09; flex-shrink:0; }
-#cracksSettingsDialog [data-cracks-color="lightest"] .cracks-color-swatch { background:#fff9ed; }
-#cracksSettingsDialog [data-cracks-color="original-anchor"] .cracks-color-swatch { background:radial-gradient(circle,#d9ba75 0 25%,#151710 28% 50%,#d9ba75 53% 60%,#151710 63%); }
-#cracksSettingsDialog [data-cracks-color="brush"] .cracks-color-swatch { background:conic-gradient(#d07794,#ddb77b,#98ab80,#83aab1,#987aa7,#d07794); }
-#cracksSettingsDialog .cracks-settings-actions { display:flex; gap:8px; padding:14px 18px; border-top:1px solid #cbb2731c; background:#171a16; }
-#cracksSettingsDialog .cracks-settings-actions button { flex:1; min-width:0; min-height:44px; padding:9px 8px; border:1px solid #b89a573b; border-radius:8px; background:transparent; color:#bdb8a9; font-family:inherit; font-size:11.5px; line-height:1.45; cursor:pointer; }
-#cracksSettingsDialog .cracks-settings-actions .save-btn { border-color:#d9ba7580; background:#d9ba7518; color:#f2d99f; }
-#cracksSettingsDialog .cracks-settings-actions button:hover { background:#d9ba7512; color:#f2d99f; }
-#cracksSettingsDialog button:focus-visible, #cracksSettingsDialog input:focus-visible, #cracksSettingsDialog select:focus-visible { outline:2px solid #d9ba75; outline-offset:3px; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog)::backdrop { background:#000d; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) form { display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-height:inherit; margin:0; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-header { position:relative; display:flex; align-items:center; justify-content:center; min-height:64px; padding:10px 52px; border-bottom:1px solid #b89a572b; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) h2 { margin:0; font-size:19px; font-weight:500; line-height:1.4; text-align:center; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) [data-close] { position:absolute; top:12px; right:8px; width:44px; height:44px; padding:0; border:0; border-radius:50%; background:transparent; color:#aaa; font-size:24px; cursor:pointer; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) [data-close]:hover { background:#d5aa4810; color:#e3c677; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:16px 20px; display:flex; flex-direction:column; gap:16px; scrollbar-width:thin; scrollbar-color:#756342 transparent; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-panel { margin:0; padding:0; border:0; background:transparent; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) h3 { margin:0 0 10px; font-size:13px; font-weight:500; color:#c8c5bb; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) label { font-size:13px; line-height:1.5; font-weight:400; color:#d5d2c9; text-align:start; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-presets-heading { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) #cracksPresetCustom { font-size:11px; color:#a79774; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-preset-grid { display:grid; grid-template-columns:repeat(4,minmax(44px,1fr)); gap:10px; width:min(100%,344px); margin-inline:auto; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-presets-panel { padding-top:16px; border-top:1px solid #b89a5726; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map]) {
+    position:relative; display:flex; align-items:center; justify-content:center;
+    width:100%; aspect-ratio:1; min-height:44px; padding:10px;
+    border:1px solid #ffffff1c; border-radius:6px;
+    background:#141716; color:var(--preset-ink); cursor:pointer;
+    transition:background-color .18s, border-color .18s;
+}
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map]) > svg { width:40px; height:40px; max-width:100%; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map])[aria-pressed="true"] { border-color:var(--gold); background:#ffd70009; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map])[aria-pressed="true"]::after { content:'✓'; position:absolute; top:3px; right:5px; color:var(--gold); font:12px/1 sans-serif; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map]):not([aria-pressed="true"]):hover { border-color:var(--preset-ink); background:#ffffff06; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-control { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:2px 12px; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-control label { grid-column:1; grid-row:1; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-control output { grid-column:2; grid-row:1; color:#e4d3a4; font-size:13px; font-variant-numeric:tabular-nums; text-align:end; direction:ltr; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-growth-panel .cracks-control + .cracks-control { margin-top:8px; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) input[type="range"] { grid-column:1 / -1; grid-row:2; width:100%; min-width:0; height:44px; margin:0; padding:0 2px; direction:ltr; appearance:none; background:transparent; cursor:pointer; touch-action:pan-y; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) input[type="range"]::-webkit-slider-runnable-track { height:5px; border-radius:5px; background:linear-gradient(to right,#d9ba75 var(--range-fill),#45473d var(--range-fill)); }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) input[type="range"]::-moz-range-track { height:5px; border-radius:5px; background:linear-gradient(to right,#d9ba75 var(--range-fill),#45473d var(--range-fill)); }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) input[type="range"]::-webkit-slider-thumb { appearance:none; width:24px; height:24px; margin-top:-9.5px; border:3px solid #24251e; border-radius:50%; background:#e4c98e; box-shadow:0 0 0 1px #bda365; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) input[type="range"]::-moz-range-thumb { width:18px; height:18px; border:3px solid #24251e; border-radius:50%; background:#e4c98e; box-shadow:0 0 0 1px #bda365; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 10px; padding:14px 20px 10px; border-top:1px solid #607d8b40; background:#151817; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-actions button { min-width:0; min-height:44px; padding:8px; border:1px solid #607d8b80; border-radius:6px; background:transparent; color:#c2cbd0; font:inherit; font-size:13px; line-height:1.4; cursor:pointer; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-actions .save-btn { border-color:var(--gold); background:var(--gold); color:#171717; font-weight:600; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-actions [data-reset] { grid-column:1 / -1; grid-row:2; min-height:36px; padding:4px; border:0; color:#a79774; font-size:12px; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-actions [data-cancel]:hover { background:#607d8b24; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-actions .save-btn:hover { background:#ffe34d; border-color:#ffe34d; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-actions [data-reset]:hover { color:#dfb68f; }
+:is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is(button,input):focus-visible { outline:2px solid #d9ba75; outline-offset:2px; }
 @media (max-width:360px) {
-  #cracksSettingsDialog .cracks-settings-body { padding:12px; }
-  #cracksSettingsDialog .cracks-settings-panel { padding:13px; }
-  #cracksSettingsDialog .cracks-line-color { flex-direction:column; align-items:stretch; }
-  #cracksSettingsDialog .cracks-color-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  :is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-body { padding:14px; gap:14px; }
+  :is(#cracksSettingsDialog, #cymaticsSettingsDialog) .cracks-settings-actions { padding-inline:14px; }
 }
 
-#cracksSettingsDialog .cracks-presets-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
-#cracksSettingsDialog .cracks-presets-heading h3 { margin:0; font-size:13px; font-weight:500; color:#e3dccb; }
-#cracksSettingsDialog #cracksPresetCustom { font-size:11px; color:#aaa99f; }
-#cracksSettingsDialog .cracks-preset-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-#cracksSettingsDialog [data-cracks-preset] { display:flex; flex-direction:column; justify-content:center; gap:5px; min-width:0; min-height:44px; padding:8px; border:1px solid #b89a5733; border-radius:9px; background:#121510; color:#bdb8a9; font-family:inherit; cursor:pointer; text-align:center; }
-#cracksSettingsDialog [data-cracks-preset]:hover { border-color:#d9ba7560; background:#d9ba7509; }
-#cracksSettingsDialog [data-cracks-preset][aria-pressed="true"] { border-color:#d9ba7590; background:#d9ba7518; color:#f2d99f; box-shadow:inset 0 0 0 1px #d9ba7510; }
-#cracksSettingsDialog .cracks-preset-name { font-size:12px; font-weight:500; line-height:1.4; overflow-wrap:anywhere; }
+@media (prefers-reduced-motion:reduce) { :is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map]) { transition:none; } }
 
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
 #controlsContainer #btnEvolutionDrawer { display:none; }
@@ -2427,19 +2421,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 :root[data-simulation-effective-theme="pink"] #btnEvolutionDrawer { --drawer-trigger-color:#c991ad; }
 
 #btnCymatics { display:none; }
-#cymaticsSettingsDialog .tuning-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-#cymaticsSettingsDialog .tuning-modes button { border-radius:6px; min-height:44px; }
-
-#cymaticsSettingsDialog .tuning-modes[hidden],
-#cymaticsSettingsDialog .tuning-field[hidden] { display: none; }
-
-#cymaticsSettingsDialog .cymatics-maps > p { margin:12px 0 8px; color:var(--muted, #aaa); font-size:.9rem; }
-#cymaticsSettingsDialog .cymatics-maps .tuning-modes { grid-template-columns:repeat(2,minmax(0,1fr)); }
-#cymaticsSettingsDialog [data-cymatics-map] { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-height:64px; padding:8px 3px; }
-#cymaticsSettingsDialog [data-cymatics-map] svg { width:24px; height:24px; }
-
-#cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; gap:10px; min-height:44px; text-align:start; }
-#cymaticsSettingsDialog .cymatics-phase input { width:18px; height:18px; accent-color:var(--gold); }
+#cymaticsSettingsDialog .resonance-map-grid { grid-template-columns:repeat(3,minmax(44px,1fr)); width:min(100%,272px); }
+#cymaticsSettingsDialog #cymaticsMapLabel { margin:0 0 10px; color:#c8c5bb; font-size:13px; font-weight:500; }
+#cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; text-align:start; }
+#cymaticsSettingsDialog .cymatics-phase input { order:1; width:18px; height:18px; margin:0; flex-shrink:0; accent-color:var(--gold); }
 
 #btnCymatics > svg { display:none; }
 #btnCymatics.cymatics-diagonal > [data-cymatics-icon="diagonal"] { display:block; }
@@ -2471,3 +2456,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #colorPickerModal.picker-handoff-outgoing .brush-picker-heading,
 #paletteModal.picker-handoff-outgoing .palette-picker-header,
 #paletteModal.picker-handoff-outgoing #btnPaletteModalClose { visibility: hidden; }
+
+/* Initial settings focus announces the heading without decorating a control. */
+.settings-entry-heading:focus { outline: none; }

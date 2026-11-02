@@ -1,3 +1,5 @@
+import {createCosmicCircleField,cosmicCircleReach} from './cymatics-cosmic-circle.js';
+import {createRadialCosmicField} from './cymatics-cosmic-radial.js';
 import {createRoundedCosmicField} from './cymatics-cosmic-rounded.js';
 import {createCloudField} from './cymatics-organic.js';
 import {moveCymaticsField} from './cymatics-motion.js';
@@ -11,9 +13,9 @@ let fieldSize=0,fieldPattern='',field=null;
 // 40 Hz is a chosen plate calibration, not a universal frequency-to-shape law.
 const resonanceModes=[];
 for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
-export function getCymaticsField(n,frequency,resonanceVersion,phaseStep=0){
+export function getCymaticsField(n,frequency,resonanceVersion,phaseStep=0,cosmicFieldVersion=3){
     if(resonanceVersion===5)return createCloudField(n,frequency,phaseStep);
-    if(resonanceVersion===6)return createRoundedCosmicField(n,frequency,phaseStep);
+    if(resonanceVersion===6)return cosmicFieldVersion===1?createRoundedCosmicField(n,frequency,phaseStep):cosmicFieldVersion===2?createRadialCosmicField(n,frequency,phaseStep):createCosmicCircleField(n,frequency,phaseStep);
     if(resonanceVersion===4)return createInterferenceField(n,frequency,phaseStep);
     const base=getStaticCymaticsField(n,frequency,resonanceVersion);
     return frequency!==undefined&&phaseStep!==0?moveCymaticsField(base,n,resonanceVersion??1,phaseStep):base;
@@ -86,14 +88,30 @@ export function validateCymaticsSnapshot(value){
 }
 const dx=[-1,0,1,-1,1,-1,0,1],dy=[-1,-1,-1,0,0,1,1,1];
 export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,cymaticsRules},previous){
-    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.frequency,rules.resonanceVersion,rules.phaseMotion?state.steps:0);
+    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.frequency,rules.resonanceVersion,rules.phaseMotion?state.steps:0,rules.cosmicFieldVersion??1);
     const random=()=>{let x=state.random;x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/4294967296;};
     const length=currentPalette.length,rank=k=>((k%length)+length)%length;
+    const circle=rules.resonanceVersion===6&&rules.cosmicFieldVersion===3;
+    const reach=circle?cosmicCircleReach(rules.frequency,rules.phaseMotion?state.steps:0)*n/2:0;
     const attempts=Math.max(1,Math.round(n*n*.5*rules.strength/100));
     if(n>1&&length>1)for(let attempt=0;attempt<attempts;attempt++){
-        const i=Math.floor(random()*board.length),direction=Math.floor(random()*8),x=i%n+dx[direction],y=Math.floor(i/n)+dy[direction];
-        if(x<0||y<0||x>=n||y>=n)continue;
-        const j=y*n+x,a=board[i],b=board[j];
+        const i=Math.floor(random()*board.length);let j;
+        if(circle){
+            // Long-range exchanges connect the entire board. Disk proposals
+            // use continuous angles instead of the eight lattice directions.
+            if(random()<.25)j=Math.floor(random()*board.length);
+            else {
+                const angle=2*Math.PI*random(),distance=(1+reach)*Math.sqrt(random());
+                const x=Math.round(i%n+distance*Math.cos(angle)),y=Math.round(Math.floor(i/n)+distance*Math.sin(angle));
+                if(x<0||y<0||x>=n||y>=n)continue;
+                j=y*n+x;
+            }
+        }else{
+            const direction=Math.floor(random()*8),x=i%n+dx[direction],y=Math.floor(i/n)+dy[direction];
+            if(x<0||y<0||x>=n||y>=n)continue;
+            j=y*n+x;
+        }
+        const a=board[i],b=board[j];
         if(a.isGold||b.isGold||(rank(a.k)-rank(b.k))*(energy[i]-energy[j])<=0)continue;
         // Move existing pigments, preserving the color histogram and gold cells.
         const k=a.k,v=a.v??a.k;a.k=b.k;a.v=b.v??b.k;b.k=k;b.v=v;a.prevK=b.prevK=null;

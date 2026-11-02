@@ -1,3 +1,4 @@
+import { focusSettingsHeading } from './dialog-focus.js';
 import { erosionStageEvents, EROSION_STAGE_SYMBOLS, resolveErosionEvents, restoreErosionRules } from './erosion-settings.js';
 import { onLanguageChange } from './i18n.js';
 
@@ -90,6 +91,6 @@ export function initializeErosionModal(app) {
         draft = restoreErosionRules(app.getErosionRules());
         render();
         dialog.showModal();
-        modeButtons.find(button => button.dataset.erosionMode === draft.mode).focus();
+        focusSettingsHeading(dialog);
     };
 }

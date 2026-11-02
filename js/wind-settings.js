@@ -1,3 +1,4 @@
+import { focusSettingsHeading } from './dialog-focus.js';
 export const WIND_SETTINGS_KEY = 'colorGridWindSettingsV1';
 export const DEFAULT_WIND_SETTINGS = Object.freeze({ mode: 'ripple', strength: 3, speed: 1, range: 1, colorSpan: 1.25, trail: true });
 export const WIND_MODE_SEQUENCE = Object.freeze(['ripple', 'paint', 'displace']);
@@ -130,5 +131,5 @@ export function createWindSettingsDialog({ getText, getLang, onLanguageChange, g
     dialog.addEventListener('pointerdown', event => { startedOutside = outside(event); });
     dialog.addEventListener('click', event => { if (startedOutside && outside(event)) close(); startedOutside = false; });
     onLanguageChange(render);
-    return { dialog, open() { if (dialog.open) return; onOpen(); draft = selectWindMode(getSettings()); render(); dialog.showModal(); fields.get('speed').input.focus(); } };
+    return { dialog, open() { if (dialog.open) return; onOpen(); draft = selectWindMode(getSettings()); render(); dialog.showModal(); focusSettingsHeading(dialog); } };
 }

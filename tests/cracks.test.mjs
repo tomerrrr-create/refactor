@@ -1,11 +1,11 @@
-import { validateCracksBrush, CRACKS_GROWTH_PRESETS, CRACKS_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
+import { validateCracksBrush, CRACKS_GROWTH_PRESETS, CONTOUR_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {createHash} from 'node:crypto';
 import {createCracksState,createCracksSession,restoreCracksState,runCracksGeneration,queueCracksGrowth,prepareCracksResume} from '../js/simulations/cracks.js';
-const fixture=(n=81,color='darkest')=>({n,currentPalette:Array(23).fill('#fff'),contourRules:{sensitivity:75,lineColor:color},currentBoardState:Array.from({length:n*n},()=>({k:11,v:11,isGold:false}))});
+const fixture=(n=81,color='darkest')=>({n,currentPalette:Array.from({length:23},(_,i)=>'#'+i.toString(16).padStart(6,'0')),cracksBrush:{color:color==='lightest'?'#000016':'#000000',rainbow:false},contourRules:{sensitivity:75,lineColor:'brush'},currentBoardState:Array.from({length:n*n},()=>({k:11,v:11,isGold:false}))});
 const advance=(ctx,state,count)=>{for(let i=0;i<count;i++){const result=runCracksGeneration(ctx,state);ctx={...ctx,currentBoardState:result.nextBoardState};state=result.nextCracksState;}return {ctx,state};};
 test('cracks branch gradually, preserve protected cells and do not mutate inputs',()=>{
  const ctx=fixture();ctx.currentBoardState[0].isGold=true;const original=structuredClone(ctx),state=createCracksState(ctx.n),saved=structuredClone(state);
@@ -30,7 +30,7 @@ test('empty and gold boards stay unchanged, light lines work and changed board s
  for(const invalid of [{...createCracksState(9),random:0},{...createCracksState(9),tips:[{x:NaN,y:0,angle:0,age:0}]},{...createCracksState(9),tips:Array(49).fill({x:0,y:0,angle:0,age:0})}])assert.throws(()=>restoreCracksState(invalid));
 });
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-function harness(){const c=vm.createContext({C:{PALETTES:[{}]},validateCracksBrush,replayCracksBrush:null,selectedColor:null,isRainbowModeActive:false,activePaletteIndex:0,CRACKS_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,createCracksSession,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
+function harness(){const c=vm.createContext({C:{PALETTES:[{}]},validateCracksBrush,replayCracksBrush:null,selectedColor:null,isRainbowModeActive:false,activePaletteIndex:0,updateColorPickerButtonUI(){},updateGlowEffect(){},CONTOUR_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,createCracksSession,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
  c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='contour'){c.contourMode='cracks';c.cracksState=null;}};
  vm.runInContext(source.slice(source.indexOf('function getCracksBrush()'),source.indexOf('function nextEvolutionMode(')),c);return c;}
 test('paused contour cycle includes Off, live cycle skips Off, and snapshots preserve rules and tips',()=>{
@@ -77,9 +77,9 @@ test('drawing history retains current Cracks preferences while explicit snapshot
  const c=harness();c.armSimulation('contour');
  c.contourRules={sensitivity:75,lineColor:'darkest',material:{enabled:true,strength:100}};
  c.runContourEvolution(fixture(21));const old=JSON.parse(JSON.stringify(c.getContourSnapshot()));
- c.contourRules={sensitivity:75,lineColor:'lightest'}; // Current default: 40%.
+ c.contourRules={sensitivity:75,lineColor:'lightest'}; // Current default: no material influence.
  c.restoreContourSnapshot(old,{preservePreferences:true});
- assert.equal(c.getContourSnapshot().material.strength,40);assert.equal(c.contourRules.lineColor,'lightest');
+ assert.equal(c.getContourSnapshot().material.strength,0);assert.equal(c.contourRules.lineColor,'lightest');
  assert.deepEqual(JSON.parse(JSON.stringify(c.cracksState)),old.cracksState,'art history still restores tips and the random cursor');
  c.contourRules.material={enabled:false,strength:65};c.restoreContourSnapshot(old,{preservePreferences:true});
  assert.deepEqual(JSON.parse(JSON.stringify(c.getContourSnapshot().material)),{enabled:false,strength:65});
@@ -124,4 +124,10 @@ test('fresh human entries seed before recording; replay and engine defaults rema
  c.isLifePlaying=false;c.isExecutingMacroCommand=true;c.armSimulation('brightnessEvo');c.armSimulation('contour');assert.equal(c.cracksState,null);assert.equal(draws,3,'macro does not draw entropy');
  c.restoreContourSnapshot({mode:'cracks',rules:first,cracksState:first.cracksState});assert.equal(c.cracksState.random,1234567);assert.equal(draws,3);
  assert.equal(createCracksState(21).random,0x51f15e,'legacy fallback is unchanged');
+});
+
+test('Cracks snapshots and new recordings always carry the brush source',()=>{
+ const c=harness();c.contourMode='cracks';c.selectedColor='#123456';
+ const recorded=c.getContourRecordingRules();assert.equal(recorded.lineColor,'brush');assert.equal(recorded.brush.color,'#123456');
+ const snapshot=c.getContourSnapshot();assert.equal(snapshot.rules.lineColor,'brush');assert.equal(snapshot.brush.color,'#123456');
 });

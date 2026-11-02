@@ -33,17 +33,15 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  const canvas=page.locator('#boardCanvas'),dialog=page.locator('#cracksSettingsDialog');
  async function openSettings(){const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();await dialog.waitFor({state:'visible'});}
  if(process.env.CRACKS_DEFAULTS_ONLY){
-  await tap(button);await openSettings();await dialog.locator('[data-reset]').click();assert.equal(await dialog.locator('[data-cracks-color="brush"]').getAttribute('aria-pressed'),'true');await dialog.locator('[data-cancel]').click();assert.equal((await state()).snapshot.contourState.rules.lineColor,'darkest','Cancel retains explicit fixture preferences');
-  await openSettings();await dialog.locator('[data-cracks-color="lightest"]').click();await dialog.locator('[type=submit]').click();assert.equal((await state()).snapshot.contourState.rules.lineColor,'lightest');
+  await tap(button);await openSettings();await dialog.locator('[data-reset]').click();assert.equal(await dialog.locator('[data-cracks-color]').count(),0);await dialog.locator('[data-cancel]').click();assert.equal((await state()).snapshot.contourState.rules.lineColor,'brush','live Cracks ignores retired fixture color sources');
+  await openSettings();await dialog.locator('[type=submit]').click();assert.equal((await state()).snapshot.contourState.rules.lineColor,'brush');
   await page.reload();await page.waitForFunction(()=>window.cracksTest?.ready);assert.equal(await page.evaluate(()=>cracksTest.prefs().rules.contour.lineColor),'brush','opening overrides saved line color');assert.deepEqual(errors,[]);console.log(JSON.stringify({config,defaultsPassed:true}));await context.close();continue;
  }
  // Brush-source colors, rainbow runtime, paused painting and exact macro replay.
  await page.evaluate(()=>cracksTest.setup());await tap(button);await openSettings();
- assert.equal(await dialog.locator('select').count(),0);assert.equal(await dialog.locator('[data-cracks-color]').count(),4);
- assert(await dialog.locator('[data-cracks-color]').evaluateAll(es=>es.every(e=>{const r=e.getBoundingClientRect();return Math.abs(r.width-r.height)<1;})));
- await dialog.locator('#cracksLineColor').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(artifacts,config.lang+'-line-colors.png')});
- await dialog.locator('[data-cracks-color="brush"]').focus();await page.keyboard.press('Space');
- assert.equal(await dialog.locator('[data-cracks-color="brush"]').getAttribute('aria-pressed'),'true');
+ assert.equal(await dialog.locator('select').count(),0);assert.equal(await dialog.locator('[data-cracks-color]').count(),0);
+await page.screenshot({path:path.join(artifacts,config.lang+'-line-colors.png')});
+ assert.equal(await dialog.locator('[data-cracks-color]').count(),0);
  await dialog.locator('[data-cracks-preset="fibonacci-bloom"]').click();await dialog.locator('[type=submit]').click();
  await page.evaluate(()=>cracksTest.brush({index:8}));await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>cracksTest.state().gen>=8);
  assert((await state()).board.includes(8));await page.evaluate(()=>cracksTest.brush({index:20}));const switchGeneration=(await state()).gen;

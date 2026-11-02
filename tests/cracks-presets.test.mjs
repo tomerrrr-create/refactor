@@ -10,7 +10,7 @@ test('four unique presets match the agreed values and custom matching is derived
  assert.deepEqual(CRACKS_GROWTH_PRESETS[0].values,DEFAULT_CRACKS_GROWTH);assert.equal(getCracksPresetId({branchChance:35,branchInterval:22,curvature:100}),null);
 });
 test('material now defaults Off while explicit saved On values remain On after serialization',()=>{
- assert.deepEqual(DEFAULT_CRACKS_MATERIAL,{enabled:false,strength:40});
+ assert.deepEqual(DEFAULT_CRACKS_MATERIAL,{enabled:false,strength:0});
  const settings=defaultWorkspaceSettings(),baseline=serializeWorkspaceSettings(settings);settings.rules.contour.material={...DEFAULT_CRACKS_MATERIAL};assert.equal(serializeWorkspaceSettings(settings),baseline);
  settings.rules.contour.material={enabled:true,strength:40};const encoded=serializeWorkspaceSettings(settings);assert(encoded.includes('"material"'));assert.deepEqual(deserializeWorkspaceSettings(encoded).rules.contour.material,{enabled:true,strength:40});
 });
