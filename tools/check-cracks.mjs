@@ -40,6 +40,10 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  async function openSettings(){const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();await page.locator('#cracksSettingsDialog').waitFor({state:'visible'});
  const d=page.locator('#cracksSettingsDialog');
  assert.equal(await d.locator('details, summary').count(),0,'all settings use a flat layout');
+ const hierarchy=await d.evaluate(e=>{const preset=e.querySelector('[data-cracks-preset]'),save=e.querySelector('[type=submit]'),p=getComputedStyle(preset),s=getComputedStyle(save);return {below:preset.closest('section').getBoundingClientRect().top>=e.querySelector('#cracksMaterialStrength').getBoundingClientRect().bottom,pill:parseFloat(p.borderRadius)>parseFloat(s.borderRadius),differentFill:p.backgroundColor!==s.backgroundColor,marker:getComputedStyle(preset,'::before').content,focus:document.activeElement.id};});
+ assert(hierarchy.below&&hierarchy.pill&&hierarchy.differentFill,'preset choices sit below manual controls and look distinct from save');
+ assert.equal(hierarchy.focus,'cracksBranchChance');
+ assert.notEqual(hierarchy.marker,'none');
  for(const id of ['cracksBranchChance','cracksBranchInterval','cracksCurvature','cracksMaterialEnabled','cracksMaterialStrength'])assert(await d.locator('#'+id).isVisible(),'setting is shown directly: '+id);
  assert(await d.locator('[type=submit]').isVisible());
  await page.screenshot({path:path.join(artifacts,config.lang+'-flat-settings.png')});

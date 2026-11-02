@@ -15,10 +15,7 @@ export function createCracksSettingsDialog(app) {
         <button type="button" data-close>×</button>
       </header>
       <div class="cracks-settings-body">
-        <section class="cracks-settings-panel cracks-presets-panel" aria-labelledby="cracksPresetsTitle">
-          <div class="cracks-presets-heading"><h3 id="cracksPresetsTitle"></h3><span id="cracksPresetCustom" role="status"></span></div>
-          <div class="cracks-preset-grid" role="group" aria-labelledby="cracksPresetsTitle">${CRACKS_GROWTH_PRESETS.map(p=>`<button type="button" data-cracks-preset="${p.id}" aria-pressed="false"><span class="cracks-preset-name"></span></button>`).join('')}</div>
-        </section>
+
         <section class="cracks-settings-panel cracks-growth-panel">
           ${growthControls.map(c=>`<div class="cracks-control"><label for="${c.id}"></label><output for="${c.id}"></output><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}"></div>`).join('')}
         </section>
@@ -28,6 +25,10 @@ export function createCracksSettingsDialog(app) {
         </section>
 
 
+        <section class="cracks-settings-panel cracks-presets-panel" aria-labelledby="cracksPresetsTitle">
+          <div class="cracks-presets-heading"><h3 id="cracksPresetsTitle"></h3><span id="cracksPresetCustom" role="status"></span></div>
+          <div class="cracks-preset-grid" role="group" aria-labelledby="cracksPresetsTitle">${CRACKS_GROWTH_PRESETS.map(p=>`<button type="button" data-cracks-preset="${p.id}" aria-pressed="false"><span class="cracks-preset-name"></span></button>`).join('')}</div>
+        </section>
       </div>
       <footer class="cracks-settings-actions"><button type="button" data-cancel></button><button type="submit" class="save-btn"></button><button type="button" data-reset></button></footer>
     </form>`;
@@ -76,5 +77,5 @@ export function createCracksSettingsDialog(app) {
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};
     let startedOutside=false;dialog.addEventListener('pointerdown',e=>{startedOutside=outside(e);});dialog.addEventListener('click',e=>{if(startedOutside&&outside(e))dialog.close();startedOutside=false;});
     onLanguageChange(render);
-    return {dialog,open(){if(dialog.open||!app.canEditCracksSettings())return;draft=app.getCracksSettings();render();dialog.showModal();(dialog.querySelector('[data-cracks-preset][aria-pressed="true"]') ?? dialog.querySelector('[data-cracks-preset]')).focus();}};
+    return {dialog,open(){if(dialog.open||!app.canEditCracksSettings())return;draft=app.getCracksSettings();render();dialog.showModal();dialog.querySelector('#cracksBranchChance').focus({preventScroll:true});}};
 }
