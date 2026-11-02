@@ -14,7 +14,11 @@ export function transitionPickerDialog({ from, to, close, open }) {
     const previousHeight = outgoing?.getBoundingClientRect().height;
     close();
     open();
-    if (!animate || !to.classList.contains('modal-visible')) return;
+    const focusNavigation = () => to.querySelector('#btnColorPickerPalette, #palette-current-preview')?.focus({ preventScroll: true });
+    if (!animate || !to.classList.contains('modal-visible')) {
+        if (to.classList.contains('modal-visible')) focusNavigation();
+        return;
+    }
 
     const incoming = to.firstElementChild;
     const oldAriaHidden = from.getAttribute('aria-hidden');
@@ -28,7 +32,7 @@ export function transitionPickerDialog({ from, to, close, open }) {
     const incomingBody = incoming.querySelector('.brush-picker-body, .palette-picker-content');
     const outgoingBodyHeight = outgoingBody.getBoundingClientRect().height;
     const incomingBodyHeight = incomingBody.getBoundingClientRect().height;
-    const timing = { duration: 180, easing: 'cubic-bezier(.2,.65,.3,1)' };
+    const timing = { duration: 420, easing: 'cubic-bezier(.45,0,.55,1)' };
     const heightFrames = [
         { height: `${previousHeight}px`, offset: 0 },
         { height: `${previousHeight}px`, offset: 1 / 3 },
@@ -40,14 +44,17 @@ export function transitionPickerDialog({ from, to, close, open }) {
         outgoingBody.animate([
             { opacity: 1, minHeight: `${outgoingBodyHeight}px` },
             { opacity: 0, minHeight: `${outgoingBodyHeight}px` }
-        ], { duration: 60, easing: 'ease-out', fill: 'forwards' }),
+        ], { duration: 140, easing: 'ease-in-out', fill: 'forwards' }),
         incomingBody.animate([
             { opacity: 0, minHeight: `${incomingBodyHeight}px` },
             { opacity: 1, minHeight: `${incomingBodyHeight}px` }
-        ], { duration: 110, delay: 70, easing: 'ease-out', fill: 'both' }),
+        ], { duration: 260, delay: 160, easing: 'ease-in-out', fill: 'both' }),
         incoming.animate(heightFrames, timing),
         outgoing.animate([{ height: `${previousHeight}px` }, { height: `${previousHeight}px` }], { ...timing, fill: 'forwards' })
     ];
+    // Focus after the incoming class makes the destination visible and the
+    // outgoing panel is inert, so hiding the old view cannot discard focus.
+    focusNavigation();
     const entry = {
         finish() {
             if (activeTransition !== entry) return;
