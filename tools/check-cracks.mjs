@@ -38,14 +38,11 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  await tap(button);assert(await button.evaluate(e=>e.classList.contains('cracks-active')));
  // Cracks has its own draft-based settings; Contours retains its old modal.
  async function openSettings(){const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();await page.locator('#cracksSettingsDialog').waitFor({state:'visible'});
- const d=page.locator('#cracksSettingsDialog'),fine=d.locator('.cracks-fine-tuning');
- assert(!(await fine.evaluate(e=>e.open)),'fine tuning opens collapsed without changing saved values');
- assert(!(await d.locator('#cracksBranchChance').isVisible()));
- const compact=await d.boundingBox();if(config.height>=568)assert(compact.height<600,'ordinary choices fit in a compact dialog');
+ const d=page.locator('#cracksSettingsDialog');
+ assert.equal(await d.locator('details, summary').count(),0,'all settings use a flat layout');
+ for(const id of ['cracksBranchChance','cracksBranchInterval','cracksCurvature','cracksMaterialEnabled','cracksMaterialStrength'])assert(await d.locator('#'+id).isVisible(),'setting is shown directly: '+id);
  assert(await d.locator('[type=submit]').isVisible());
- await page.screenshot({path:path.join(artifacts,config.lang+'-compact-settings.png')});
- await fine.locator('summary').focus();await page.keyboard.press('Enter');
- assert(await fine.evaluate(e=>e.open),'fine tuning expands with the keyboard');
+ await page.screenshot({path:path.join(artifacts,config.lang+'-flat-settings.png')});
  }
  await openSettings();const dialog=page.locator('#cracksSettingsDialog'),enabled=dialog.locator('#cracksMaterialEnabled'),strength=dialog.locator('#cracksMaterialStrength'),chance=dialog.locator('#cracksBranchChance'),interval=dialog.locator('#cracksBranchInterval'),curvature=dialog.locator('#cracksCurvature');
  async function setGrowth(values){for(const [input,value] of [[chance,values.branchChance],[interval,values.branchInterval],[curvature,values.curvature]]){await input.fill(String(value));}}

@@ -40,7 +40,6 @@ export const translations = {
   cracks_branch_interval_help: {"en":"Fewer steps bring splits closer together; more steps leave longer lines between them.", "he":"פחות צעדים מצופפים את הפיצולים; יותר צעדים משאירים קווים ארוכים ביניהם.", "ru":"Меньше шагов — развилки ближе; больше шагов — длиннее линии между ними.", "nl":"Minder stappen brengen splitsingen dichter bij elkaar; meer stappen geven langere lijnen ertussen."},
   cracks_curvature_help: {"en":"Lower values make straighter lines; higher values add more organic twists.", "he":"ערך נמוך יוצר קווים ישרים יותר; ערך גבוה מוסיף פיתולים אורגניים.", "ru":"Меньше значение — прямее линии; больше — естественнее изгибы.", "nl":"Lagere waarden maken rechtere lijnen; hogere waarden geven meer organische bochten."},
   cracks_original_anchor: {"en":"Original anchor", "he":"עוגן מקורי", "ru":"Исходный якорь", "nl":"Oorspronkelijk anker"},
-  cracks_fine_tuning: {"en":"Fine tuning", "he":"כיוונון עדין", "ru":"Тонкая настройка", "nl":"Fijnafstelling"},
   cracks_presets_title: {"en":"Growth presets", "he":"פריסטים לצמיחה", "ru":"Режимы роста", "nl":"Groeipresets"},
   cracks_preset_custom: {"en":"Custom", "he":"מותאם אישית", "ru":"Свой вариант", "nl":"Aangepast"},
   cracks_preset_first_whisper: {"en":"First Whisper", "he":"לחישה ראשונה", "ru":"Первый шёпот", "nl":"Eerste fluistering"},

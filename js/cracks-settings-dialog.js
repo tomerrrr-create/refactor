@@ -11,7 +11,7 @@ export function createCracksSettingsDialog(app) {
     dialog.setAttribute('aria-labelledby','cracksSettingsTitle');
     dialog.innerHTML=`<form>
       <header class="cracks-settings-header">
-        <div class="cracks-heading"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m14 3-4 6 4 4-3 8M10 9 5 7m9 6 5-4m-7 8-6 2"/></svg><h2 id="cracksSettingsTitle"></h2></div>
+        <h2 id="cracksSettingsTitle"></h2>
         <button type="button" data-close>×</button>
       </header>
       <div class="cracks-settings-body">
@@ -19,17 +19,16 @@ export function createCracksSettingsDialog(app) {
           <div class="cracks-presets-heading"><h3 id="cracksPresetsTitle"></h3><span id="cracksPresetCustom" role="status"></span></div>
           <div class="cracks-preset-grid" role="group" aria-labelledby="cracksPresetsTitle">${CRACKS_GROWTH_PRESETS.map(p=>`<button type="button" data-cracks-preset="${p.id}" aria-pressed="false"><span class="cracks-preset-name"></span></button>`).join('')}</div>
         </section>
-        <section class="cracks-settings-panel cracks-line-color"><h3 id="cracksLineColorLabel"></h3><div id="cracksLineColor" class="cracks-color-grid" role="group" aria-labelledby="cracksLineColorLabel">${CRACKS_LINE_COLORS.map(mode=>`<button type="button" data-cracks-color="${mode}" aria-pressed="false"><span class="cracks-color-swatch" aria-hidden="true"></span><span class="cracks-color-name"></span></button>`).join('')}</div></section>
-        <details class="cracks-fine-tuning"><summary id="cracksFineTuningLabel"></summary><div class="cracks-fine-tuning-body">
+        <section class="cracks-settings-panel cracks-growth-panel">
+          ${growthControls.map(c=>`<div class="cracks-control"><label for="${c.id}"></label><output for="${c.id}"></output><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}"></div>`).join('')}
+        </section>
         <section class="cracks-settings-panel" aria-labelledby="cracksMaterialLabel">
           <label class="cracks-toggle" for="cracksMaterialEnabled"><span id="cracksMaterialLabel"></span><input id="cracksMaterialEnabled" type="checkbox"></label>
           <div class="cracks-control"><label for="cracksMaterialStrength"></label><output for="cracksMaterialStrength"></output><input id="cracksMaterialStrength" type="range" min="0" max="100" step="5"></div>
         </section>
-        <section class="cracks-settings-panel cracks-growth-panel">
-          ${growthControls.map(c=>`<div class="cracks-control"><label for="${c.id}"></label><output for="${c.id}"></output><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}"></div>`).join('')}
-        </section>
 
-        </div></details>
+
+        <section class="cracks-settings-panel cracks-line-color"><h3 id="cracksLineColorLabel"></h3><div id="cracksLineColor" class="cracks-color-grid" role="group" aria-labelledby="cracksLineColorLabel">${CRACKS_LINE_COLORS.map(mode=>`<button type="button" data-cracks-color="${mode}" aria-pressed="false"><span class="cracks-color-swatch" aria-hidden="true"></span><span class="cracks-color-name"></span></button>`).join('')}</div></section>
       </div>
       <footer class="cracks-settings-actions"><button type="button" data-cancel></button><button type="submit" class="save-btn"></button><button type="button" data-reset></button></footer>
     </form>`;
@@ -55,7 +54,6 @@ export function createCracksSettingsDialog(app) {
         for(const c of growthControls){
             dialog.querySelector(`label[for="${c.id}"]`).textContent=app.getText(c.key);
         }
-        dialog.querySelector('#cracksFineTuningLabel').textContent=app.getText('cracks_fine_tuning');
         dialog.querySelector('#cracksPresetsTitle').textContent=app.getText('cracks_presets_title');
         if(!draft)return;
         const selected=getCracksPresetId(Object.fromEntries(growthControls.map(c=>[c.field,draft[c.field]])));
@@ -82,5 +80,5 @@ export function createCracksSettingsDialog(app) {
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};
     let startedOutside=false;dialog.addEventListener('pointerdown',e=>{startedOutside=outside(e);});dialog.addEventListener('click',e=>{if(startedOutside&&outside(e))dialog.close();startedOutside=false;});
     onLanguageChange(render);
-    return {dialog,open(){if(dialog.open||!app.canEditCracksSettings())return;draft=app.getCracksSettings();dialog.querySelector('.cracks-fine-tuning').open=false;render();dialog.showModal();(dialog.querySelector('[data-cracks-preset][aria-pressed="true"]') ?? dialog.querySelector('[data-cracks-preset]')).focus();}};
+    return {dialog,open(){if(dialog.open||!app.canEditCracksSettings())return;draft=app.getCracksSettings();render();dialog.showModal();(dialog.querySelector('[data-cracks-preset][aria-pressed="true"]') ?? dialog.querySelector('[data-cracks-preset]')).focus();}};
 }
