@@ -26,7 +26,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   await page.locator('#paletteModal [data-palette-group="'+group+'"]').click();
   const header=await page.locator('#paletteModal .palette-picker-header').evaluate(header=>{
    const buttons=[...header.querySelectorAll('button')].sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
-   return buttons.map(button=>({id:button.dataset.paletteGroup||'current',top:button.getBoundingClientRect().top}));
+   return buttons.map(button=>({id:button.dataset.paletteGroup||'current',top:button.getBoundingClientRect().top+button.getBoundingClientRect().height/2}));
   });
   assert.deepEqual(header.map(button=>button.id),['classic','extended','current','continuous','archive']);
   assert(Math.max(...header.map(button=>button.top))-Math.min(...header.map(button=>button.top))<1,'header controls share one row');
@@ -53,7 +53,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   if(group==='classic')await page.screenshot({path:path.join(artifacts,config.lang+'-palette-cards.png')});
  }
  // Board sorting must never alter any group of catalogue previews or the footer.
- const preview=async()=>page.locator('#paletteModal .palette-color-mosaic, #palette-current-preview .palette-current-mosaic').evaluateAll(items=>items.map(item=>[...item.children].map(cell=>cell.style.backgroundColor)));
+ const preview=async()=>page.locator('#paletteModal .palette-color-mosaic').evaluateAll(items=>items.map(item=>[...item.children].map(cell=>cell.style.backgroundColor)));
  for(const group of ['classic','extended','continuous','archive']){
   await page.locator('#paletteModal [data-palette-group="'+group+'"]').click();const fixed=await preview();
   for(const method of ['dark-rainbow','reversed','temperature','hue']){

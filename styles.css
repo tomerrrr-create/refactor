@@ -2296,14 +2296,18 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .palette-picker-header .palette-group-tab:nth-child(2) { grid-column: 2; }
 .palette-picker-header .palette-group-tab:nth-child(3) { grid-column: 4; }
 .palette-picker-header .palette-group-tab:nth-child(4) { grid-column: 5; }
-#paletteCurrentPreview { grid-column: 3; grid-row: 1; display: flex; align-items: stretch; }
+#paletteCurrentPreview { grid-column: 3; grid-row: 1; display: flex; align-items: center; justify-content: center; }
 .palette-current-preview {
     display: flex; align-items: center; justify-content: center; gap: 10px;
     width: 100%; min-height: 44px; padding: 8px; border: 0; border-radius: 8px;
     background: transparent; color: inherit; cursor: pointer;
 }
-#paletteCurrentPreview .palette-current-mosaic {
-    width: 28px; height: 28px; flex-shrink: 0; border-radius: 4px;
+#paletteCurrentPreview .palette-current-preview { width: 44px; height: 44px; min-height: 44px; padding: 7px; color: #d5aa48; }
+#paletteCurrentPreview .palette-current-icon {
+    --icon-size: 28px; width: 28px; height: 28.5px; font-size: 26px; line-height: 1;
+}
+#paletteCurrentPreview .palette-current-icon > :is(svg, span) {
+    width: 28px !important; height: 28px !important; font-size: 26px !important;
 }
 .palette-current-preview:hover { background: #d5aa4810; }
 .palette-current-preview:focus-visible { outline: 2px solid #d5aa48; outline-offset: -2px; }

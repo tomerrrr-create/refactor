@@ -14,7 +14,11 @@ export function transitionPickerDialog({ from, to, close, open }) {
     const previousHeight = outgoing?.getBoundingClientRect().height;
     close();
     open();
-    if (!animate || !to.classList.contains('modal-visible')) return;
+    const focusNavigation = () => to.querySelector('#btnColorPickerPalette, #palette-current-preview')?.focus({ preventScroll: true });
+    if (!animate || !to.classList.contains('modal-visible')) {
+        if (to.classList.contains('modal-visible')) focusNavigation();
+        return;
+    }
 
     const incoming = to.firstElementChild;
     const oldAriaHidden = from.getAttribute('aria-hidden');
@@ -48,6 +52,9 @@ export function transitionPickerDialog({ from, to, close, open }) {
         incoming.animate(heightFrames, timing),
         outgoing.animate([{ height: `${previousHeight}px` }, { height: `${previousHeight}px` }], { ...timing, fill: 'forwards' })
     ];
+    // Focus after the incoming class makes the destination visible and the
+    // outgoing panel is inert, so hiding the old view cannot discard focus.
+    focusNavigation();
     const entry = {
         finish() {
             if (activeTransition !== entry) return;

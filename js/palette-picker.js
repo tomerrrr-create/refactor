@@ -173,9 +173,9 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             preview.setAttribute('aria-haspopup', 'dialog');
             preview.setAttribute('aria-label', current.getAttribute('aria-label'));
             preview.addEventListener('click', onCurrent);
-            const mosaic = colorMosaic(getPalettePreviewColors(palette), 2);
-            mosaic.classList.add('palette-current-mosaic');
-            preview.append(mosaic);
+            const headerIcon = paletteIcon(palette);
+            headerIcon.classList.add('palette-current-icon');
+            preview.append(headerIcon);
             currentPreviewHost.append(preview);
             details.prepend(icon);
             current.append(details);
