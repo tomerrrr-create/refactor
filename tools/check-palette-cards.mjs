@@ -38,7 +38,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
     selected:tab.getAttribute('aria-selected')==='true',background:style.backgroundColor,image:style.backgroundImage,shadow:style.boxShadow,glow:ink.textShadow,weight:ink.fontWeight,size:ink.fontSize,
     fits:r.left>=b.left-1&&r.right<=b.right+1};
   }));
-  assert.deepEqual(symbols.map(s=>[s.text,s.powers]),[['23',[]],['(23)2',['3','2']],['28+23',['8','3']],['V',[]]]);
+  assert.deepEqual(symbols.map(s=>[s.text,s.powers]),[['23',[]],['64',[]],['264',[]],['•',[]]]);
   for(const symbol of symbols){assert(symbol.label&&symbol.title&&symbol.fits);assert.equal(symbol.background,'rgba(0, 0, 0, 0)');assert.equal(symbol.image,'none');assert.equal(symbol.shadow,'none');assert.equal(symbol.weight,'400');assert.equal(symbol.size,'18px');assert.equal(symbol.glow==='none',!symbol.selected);}
   const geometry=await page.locator('#paletteModal .palette-choice-list').evaluate(list=>{
    const cards=[...list.children],rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};

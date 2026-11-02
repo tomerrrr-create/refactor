@@ -2288,8 +2288,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     letter-spacing: .015em; font-variant-numeric: lining-nums;
     color: #92958e; transition: color .18s ease, text-shadow .18s ease;
 }
-.palette-group-symbol sup { font-size: .55em; }
-.palette-symbol-plus { margin-inline: .06em; font-size: .72em; }
 .palette-picker-header .palette-group-tab[aria-selected="true"] .palette-group-symbol {
     font-weight: 400; color: #f1d886;
     text-shadow: 0 0 5px #ffd70080, 0 0 13px #d5aa4866;
