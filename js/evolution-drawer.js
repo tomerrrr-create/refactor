@@ -1,3 +1,4 @@
+import { focusSettingsHeading } from './dialog-focus.js';
 import {PALETTES} from './data/palettes.js';
 import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots,assignEvolutionSlot,evolutionControlId,isFixedEvolution} from './evolution-drawer-settings.js';
 
@@ -52,7 +53,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         EVOLUTION_CATALOG.filter(e=>!draft.includes(e.id)).forEach(e=>addChoice(e,parked));
         draft.forEach(id=>addChoice(entry(id),assigned));
     }
-    function open(){if(dialog.open||!canEdit())return;draft=validateEvolutionSlots(getSlots());selected=0;render();dialog.showModal();dialog.querySelector('[data-drawer-slot="0"]').focus();}
+    function open(){if(dialog.open||!canEdit())return;draft=validateEvolutionSlots(getSlots());selected=0;render();dialog.showModal();focusSettingsHeading(dialog);}
     trigger.addEventListener('click',open);
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
     dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft=[...DEFAULT_EVOLUTION_SLOTS];selected=0;render();});

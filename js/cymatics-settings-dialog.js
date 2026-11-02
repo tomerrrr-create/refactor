@@ -1,3 +1,4 @@
+import { focusSettingsHeading } from './dialog-focus.js';
 import {INITIAL_CYMATICS_RULES,CYMATICS_RESONANCE_MAPS,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
 export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),getStrengths=()=>({}),saveRules,canEdit,getText,getLang,onLanguageChange}){
     const dialog=document.createElement('dialog');dialog.id='cymaticsSettingsDialog';dialog.className='erosion-settings-dialog evolution-tuning-dialog';dialog.setAttribute('aria-labelledby','cymaticsSettingsTitle');
@@ -35,5 +36,5 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};let beganOutside=false;
     dialog.addEventListener('pointerdown',e=>{beganOutside=outside(e);});dialog.addEventListener('click',e=>{if(beganOutside&&outside(e))dialog.close();beganOutside=false;});
     dialog.addEventListener('close',()=>{draft=null;draftFrequencies=null;draftStrengths=null;document.getElementById('btnCymatics').focus({preventScroll:true});});onLanguageChange(()=>{if(dialog.open)render();});
-    return {dialog,open(){if(!canEdit()||dialog.open)return;const rules=getRules();draft={...rules};delete draft.pattern;draftFrequencies=rememberCymaticsFrequency(getFrequencies(),draft);draftStrengths=rememberCymaticsStrength(getStrengths(),draft);render();dialog.showModal();dialog.querySelector('[aria-pressed="true"]').focus();}};
+    return {dialog,open(){if(!canEdit()||dialog.open)return;const rules=getRules();draft={...rules};delete draft.pattern;draftFrequencies=rememberCymaticsFrequency(getFrequencies(),draft);draftStrengths=rememberCymaticsStrength(getStrengths(),draft);render();dialog.showModal();focusSettingsHeading(dialog);}};
 }

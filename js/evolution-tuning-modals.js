@@ -1,3 +1,4 @@
+import { focusSettingsHeading } from './dialog-focus.js';
 import { DEFAULT_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
 
@@ -119,7 +120,7 @@ export function initializeEvolutionTuningModals(app) {
             dialog.querySelector('.tuning-heading-icon').dataset.islandsMode = document.getElementById(definition.button).classList.contains('mode-proximity') ? 'proximity' : 'classic';
             dialog.querySelector('.tuning-heading-icon').replaceChildren(...(icon ? [icon] : []));
             render(); dialog.showModal();
-            dialog.querySelector('input').focus();
+            focusSettingsHeading(dialog);
         };
     }
     return {

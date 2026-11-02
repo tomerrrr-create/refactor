@@ -1,3 +1,4 @@
+import { focusSettingsHeading } from './dialog-focus.js';
 import { RELATIVE_SEPARATOR_LEVELS } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE } from './separator-cycle.js';
 
@@ -78,7 +79,6 @@ export function initializeSeparatorCycleModal(app) {
         draft = app.getSeparatorCycle();
         relativeDraft = app.getRelativeSeparatorMode(); relativeLevel = app.getRelativeSeparatorLevel();
         render(); dialog.showModal();
-        const activeOptions = relativeDraft ? relativeOptions : options;
-        (activeOptions.querySelector('[aria-pressed="true"]:not(:disabled)') ?? activeOptions.querySelector('button:not(:disabled)'))?.focus();
+        focusSettingsHeading(dialog);
     };
 }

@@ -1,3 +1,4 @@
+import { focusSettingsHeading } from './dialog-focus.js';
 import { createCracksSettingsDialog } from './cracks-settings-dialog.js';
 import { initializeBrushPicker } from './brush-picker.js';
 import { transitionPickerDialog, finishPickerDialogTransition } from './picker-dialog-transition.js';
@@ -1151,7 +1152,9 @@ function openContourSettingsModal() {
     app.dom.contourSettingsModal.style.display = 'flex';
     contourOpenTimer = setTimeout(() => {
         app.dom.contourSettingsModal.classList.add('modal-visible');
-        app.dom.contourSensitivitySlider.focus({preventScroll:true});
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (app.dom.contourSettingsModal.classList.contains('modal-visible')) focusSettingsHeading(app.dom.contourSettingsModal);
+        }));
     }, 10);
 }
 
@@ -1280,6 +1283,7 @@ export function initializeModals(appContext) {
         renderSortOptions();
         sortDialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         sortDialog.showModal();
+        focusSettingsHeading(sortDialog);
     }
     sortOptions.addEventListener('change', event => {
         const input = event.target;
@@ -1468,7 +1472,7 @@ export function initializeModals(appContext) {
         updateNudgeSpeedValue();
         nudgeSpeed.disabled = app.isNudgeReplayActive();
         nudgeDialog.showModal();
-        if (!nudgeSpeed.disabled) nudgeSpeed.focus();
+        focusSettingsHeading(nudgeDialog);
     }
     document.getElementById('btnCloseNudgeSettings').addEventListener('click', () => nudgeDialog.close());
     nudgeDialog.addEventListener('close', () => {

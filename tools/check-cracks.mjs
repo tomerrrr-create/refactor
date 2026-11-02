@@ -43,7 +43,7 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  assert.equal(await d.locator('details, summary').count(),0,'all settings use a flat layout');
  const hierarchy=await d.evaluate(e=>{const preset=e.querySelector('[data-cracks-preset]'),save=e.querySelector('[type=submit]'),p=getComputedStyle(preset),s=getComputedStyle(save);return {below:preset.closest('section').getBoundingClientRect().top>=e.querySelector('#cracksMaterialStrength').getBoundingClientRect().bottom,square:Math.abs(preset.getBoundingClientRect().width-preset.getBoundingClientRect().height)<1,differentFill:p.backgroundColor!==s.backgroundColor,symbol:!!preset.querySelector('svg'),namesHidden:getComputedStyle(preset.querySelector('.cracks-preset-name')).position==='absolute',focus:document.activeElement.id};});
  assert(hierarchy.below&&hierarchy.square&&hierarchy.differentFill&&hierarchy.symbol&&hierarchy.namesHidden,'preset choices sit below manual controls and look distinct from save');
- assert.equal(hierarchy.focus,'cracksBranchChance');
+ assert.equal(hierarchy.focus,'cracksSettingsTitle');
  assert.equal(await d.locator('input[type=checkbox]').count(),0,'material is controlled solely by influence');
  for(const id of ['cracksBranchChance','cracksBranchInterval','cracksCurvature','cracksMaterialStrength'])assert(await d.locator('#'+id).isVisible(),'setting is shown directly: '+id);
  assert(await d.locator('[type=submit]').isVisible());

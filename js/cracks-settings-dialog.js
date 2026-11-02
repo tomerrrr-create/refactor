@@ -1,3 +1,4 @@
+import { focusSettingsHeading } from './dialog-focus.js';
 import { onLanguageChange } from './i18n.js';
 import { INITIAL_CRACKS_GROWTH, CRACKS_GROWTH_PRESETS, getCracksPresetId, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, validateCracksGrowth } from './cracks-settings.js';
 const growthControls = [
@@ -81,5 +82,5 @@ export function createCracksSettingsDialog(app) {
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};
     let startedOutside=false;dialog.addEventListener('pointerdown',e=>{startedOutside=outside(e);});dialog.addEventListener('click',e=>{if(startedOutside&&outside(e))dialog.close();startedOutside=false;});
     onLanguageChange(render);
-    return {dialog,open(){if(dialog.open||!app.canEditCracksSettings())return;draft=app.getCracksSettings();if(!draft.enabled)draft.strength=0;render();dialog.showModal();dialog.querySelector('#cracksBranchChance').focus({preventScroll:true});}};
+    return {dialog,open(){if(dialog.open||!app.canEditCracksSettings())return;draft=app.getCracksSettings();if(!draft.enabled)draft.strength=0;render();dialog.showModal();focusSettingsHeading(dialog);}};
 }
