@@ -8,7 +8,7 @@ const histogram=board=>board.reduce((m,t)=>(m[t.k]=(m[t.k]??0)+1,m),{});
 function advance(ctx,state,count){for(let i=0;i<count;i++){const r=runCymaticsGeneration(ctx,state);ctx.currentBoardState=r.nextBoardState;state=r.nextCymaticsState;}return {ctx,state};}
 test('all resonance fields arrange pigments without creating colors or moving gold',()=>{
  for(const resonanceVersion of Object.values(CYMATICS_RESONANCE_MAPS)){
-  const ctx={...fixture(),cymaticsRules:{mode:'resonance',frequency:800,resonanceVersion,strength:100}},before=structuredClone(ctx.currentBoardState),field=getCymaticsField(ctx.n,800,resonanceVersion),energy=b=>b.reduce((sum,t,i)=>sum+t.k*field[i],0);
+  const ctx={...fixture(),cymaticsRules:{mode:'resonance',frequency:800,resonanceVersion,...(resonanceVersion===6?{cosmicFieldVersion:2}:{}),strength:100}},before=structuredClone(ctx.currentBoardState),field=getCymaticsField(ctx.n,800,resonanceVersion),energy=b=>b.reduce((sum,t,i)=>sum+t.k*field[i],0);
   const result=advance(ctx,createCymaticsState(ctx.n),100);assert(energy(result.ctx.currentBoardState)<energy(before));assert.deepEqual(histogram(result.ctx.currentBoardState),histogram(before));assert.deepEqual(result.ctx.currentBoardState[220],before[220]);assert.notDeepEqual(result.ctx.currentBoardState,before);assert.equal(result.state.steps,100);
  }
 });
@@ -292,15 +292,15 @@ test('strength drafts save atomically; history/macros preserve preferences and p
 test('cosmic preferences discard retired version metadata while preserving all effective settings',()=>{
  const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,strength:60};
  for(const cosmicVersion of [1,2]){
-  assert.deepEqual(migrateCymaticsPreferences({...rules,cosmicVersion}),rules);
+  assert.deepEqual(migrateCymaticsPreferences({...rules,cosmicVersion}),{...rules,cosmicFieldVersion:2});
   const settings=defaultWorkspaceSettings();settings.rules.cymatics={...rules,cosmicVersion};
-  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
+  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,{...rules,cosmicFieldVersion:2});
  }
  assert.equal(selectCymaticsMap(rules,6,createCymaticsFrequencies(),createCymaticsStrengths()).rules.cosmicVersion,undefined);
  assert.throws(()=>validateCymaticsRules({...rules,cosmicVersion:2}));
 });
 
-test('rounded cosmic phase closes, frequencies vary, and live checkpoints resume exactly',()=>{
+test('radial cosmic phase closes, frequencies vary, and live checkpoints resume exactly',()=>{
  for(const n of [1,2,41])for(const frequency of [20,800,20000]){
   const field=getCymaticsField(n,frequency,6,0);
   assert.equal(field.length,n*n);assert([...field].every(v=>Number.isInteger(v)&&v>=0&&v<=65535));
@@ -309,10 +309,33 @@ test('rounded cosmic phase closes, frequencies vary, and live checkpoints resume
  assert.notDeepEqual(getCymaticsField(41,800,6,0),getCymaticsField(41,3000,6,0));
  assert.notDeepEqual(getCymaticsField(41,800,6,0),getCymaticsField(41,800,6,300));
  for(const phaseMotion of [false,true]){
-  const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,phaseMotion,strength:75};
+  const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,cosmicFieldVersion:2,phaseMotion,strength:75};
   const ctx={...fixture(41),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState);
   const first=advance(ctx,createCymaticsState(41),100),checkpoint=JSON.parse(JSON.stringify(first));
   assert.deepEqual(histogram(first.ctx.currentBoardState),histogram(before));assert.deepEqual(first.ctx.currentBoardState[840],before[840]);assert.notDeepEqual(first.ctx.currentBoardState,before);
   assert.deepEqual(advance(first.ctx,first.state,60),advance(checkpoint.ctx,checkpoint.state,60));
  }
+});
+
+test('cosmic radial field is centered, reflection-symmetric and monotone with no repeated rings',()=>{
+ const n=81,c=40;
+ for(const frequency of [20,800,20000])for(const step of [0,300,900]){
+  const field=getCymaticsField(n,frequency,6,step);
+  assert.equal(field[c*n+c],0);assert.equal(field[0],65535);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+   assert.equal(field[y*n+x],field[y*n+n-1-x]);assert.equal(field[y*n+x],field[(n-1-y)*n+x]);assert.equal(field[y*n+x],field[x*n+y]);
+  }
+  const ray=Array.from({length:c+1},(_,r)=>field[c*n+c+r]);
+  assert(ray.every((v,i)=>i===0||v>=ray[i-1]));assert(new Set(ray).size>20,'one smooth gradient reaches its flat exterior');
+ }
+ const broad=getCymaticsField(n,20,6),tight=getCymaticsField(n,20000,6);assert([...broad].filter(v=>v<65535).length>[...tight].filter(v=>v<65535).length,'frequency changes radius');
+});
+test('new cosmic selection records its radial version; missing metadata retains the previous field',()=>{
+ const base={...INITIAL_CYMATICS_RULES,resonanceVersion:6};
+ const current=selectCymaticsMap(base,6,createCymaticsFrequencies(),createCymaticsStrengths()).rules;
+ assert.equal(current.cosmicFieldVersion,2);assert.equal(selectCymaticsMap(current,5,createCymaticsFrequencies(),createCymaticsStrengths()).rules.cosmicFieldVersion,undefined);
+ const old={...fixture(21),cymaticsRules:base},explicit={...structuredClone(old),cymaticsRules:{...base,cosmicFieldVersion:1}};
+ const a=advance(old,createCymaticsState(21),80),b=advance(explicit,createCymaticsState(21),80);assert.deepEqual(a.ctx.currentBoardState,b.ctx.currentBoardState);assert.deepEqual(a.state,b.state);
+ assert.notDeepEqual(getCymaticsField(41,800,6,0,1),getCymaticsField(41,800,6,0,2));
+ for(const cosmicFieldVersion of [0,3,'2',null])assert.throws(()=>validateCymaticsRules({...base,cosmicFieldVersion}));
 });

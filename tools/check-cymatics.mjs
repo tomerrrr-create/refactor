@@ -70,7 +70,7 @@ const initial=await state();assert.equal(await button.getAttribute('aria-pressed
    assert.equal(await dialog.locator('[data-cymatics-map='+name+']').getAttribute('aria-pressed'),'true');
    assert(await dialog.evaluate(e=>e.scrollWidth<=e.clientWidth+1));await tap(dialog.locator('[data-cancel]'));
    assert.equal(await button.locator('svg:visible').getAttribute('data-cymatics-icon'),name);
-   const before=await state();await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>cymaticsTest.state().gen>=240);
+   const before=await state();if(name==='cosmic')assert.equal(before.rules.cosmicFieldVersion,2,'Cosmological empathy selects the single radial field');await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>cymaticsTest.state().gen>=240);
    const generation=(await state()).gen;await openSettings();await dialog.locator('#cymaticsFrequency').fill(name==='clouds'?'700':'800');await tap(dialog.locator('[type=submit]'));
    await page.waitForFunction(g=>cymaticsTest.state().gen>=g+50,generation);await tap(page.locator('#btnPlayPauseLife'));
    const stopped=await state();assert.equal(stopped.rules.resonanceVersion,version);assert.notDeepEqual(stopped.board,before.board);
