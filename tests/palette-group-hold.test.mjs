@@ -147,10 +147,11 @@ test('adaptation status matches the operation and ignores protected tiles', () =
 
 test('brush swipes wrap all sizes, keep shape and palette, and replace stale feedback timers', () => {
     const timers = new Map(), classes = new Set(), attrs = {};
-    let id = 0, captures = 0;
+    let id = 0, captures = 0, brushUpdates = 0;
     const button = { innerHTML: '', textContent: '', title: '',
         classList: {add:c=>classes.add(c),remove:c=>classes.delete(c)},setAttribute:(k,v)=>attrs[k]=v };
     const h = vm.createContext({brushSize:1,brushShape:'ring',paletteBrushFeedbackTimer:null,
+        updateColorPickerButtonUI:()=>brushUpdates++,
         BRUSH_SIZES:[1,3,5,7,9,11,13,15,23],brushSizeLabel:n=>n===23?'XL':String(n),
         settingsProfiles:{scheduleCapture:()=>captures++},getText:k=>k,getPaletteDisplayName:p=>p.name,
         C:{PALETTES:[{name:'Journey',iconHTML:'<svg></svg>'}]},activePaletteIndex:0,dom:{btnPalette:button},
@@ -160,7 +161,7 @@ test('brush swipes wrap all sizes, keep shape and palette, and replace stale fee
     assert(classes.has('palette-brush-size-feedback'));assert.equal(timers.size,1);
     h.cyclePaletteBrushSize(1);assert.equal(h.brushSize,1);assert.equal(button.textContent,'1');assert.equal(timers.size,1);
     for(const expected of [3,5,7,9,11,13,15,23,1]){h.cyclePaletteBrushSize(1);assert.equal(h.brushSize,expected);}
-    assert.equal(h.brushShape,'ring');assert.equal(h.activePaletteIndex,0);assert.equal(captures,11);
+    assert.equal(h.brushShape,'ring');assert.equal(h.activePaletteIndex,0);assert.equal(captures,11);assert.equal(brushUpdates,11,'size changes notify live Cracks recording');
     const timer=[...timers.values()][0];assert.equal(timer.delay,900);timer.callback();
     assert(!classes.has('palette-brush-size-feedback'));assert.equal(button.innerHTML,'<svg></svg>');assert.equal(timers.size,0);
     h.cyclePaletteBrushSize(1);h.updatePaletteHeader();assert.equal(timers.size,0,'palette changes cancel obsolete size feedback');

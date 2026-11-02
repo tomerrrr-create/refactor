@@ -827,6 +827,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         const index = BRUSH_SIZES.indexOf(brushSize);
         brushSize = BRUSH_SIZES[(Math.max(0, index) + direction + BRUSH_SIZES.length) % BRUSH_SIZES.length];
         settingsProfiles?.scheduleCapture();
+        updateColorPickerButtonUI();
         updatePaletteHeader();
         dom.btnPalette.textContent = brushSizeLabel(brushSize);
         dom.btnPalette.title = `${getText('init_brush_size')}: ${brushSize}`;
@@ -3508,10 +3509,11 @@ function saveCymaticsSettings(rules,frequencies,strengths){
     updateCymaticsButtonUI();recordLiveSimulationRules('cymatics');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
 }
 function getCracksBrush() {
-    return replayCracksBrush ?? {color:selectedColor ?? null,rainbow:isRainbowModeActive};
+    return replayCracksBrush ?? {color:selectedColor ?? null,rainbow:isRainbowModeActive,size:brushSize};
 }
 function restoreCracksBrush(source){
     const brush=validateCracksBrush(source);isRainbowModeActive=brush.rainbow;
+    if(brush.size!==undefined)brushSize=brush.size;
     selectedColorIndex=brush.color===null?-1:palette().indexOf(brush.color);
     selectedColor=selectedColorIndex<0?null:palette()[selectedColorIndex];
     lastCracksBrushKey=JSON.stringify(getCracksBrush());
@@ -5447,6 +5449,7 @@ else if (action.eventName === 'Invert Colors') {
             setBrush: ({ size, shape }) => {
                 if (!BRUSH_SIZES.includes(size) || !BRUSH_SHAPES.includes(shape)) throw new RangeError('Invalid brush');
                 brushSize = size; brushShape = shape; settingsProfiles?.scheduleCapture();
+                updateColorPickerButtonUI();
             },
             switchToPalette: index => switchToPalette(index, { adapt: true }),
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
