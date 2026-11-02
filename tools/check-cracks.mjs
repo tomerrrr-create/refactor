@@ -37,7 +37,16 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  await tap(button);assert.equal((await state()).mode,'cracks');assert.equal((await state()).armed,'contour');await tap(button);assert.equal((await state()).armed,null);assert.deepEqual((await state()).board,before.board);
  await tap(button);assert(await button.evaluate(e=>e.classList.contains('cracks-active')));
  // Cracks has its own draft-based settings; Contours retains its old modal.
- async function openSettings(){const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();await page.locator('#cracksSettingsDialog').waitFor({state:'visible'});}
+ async function openSettings(){const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();await page.locator('#cracksSettingsDialog').waitFor({state:'visible'});
+ const d=page.locator('#cracksSettingsDialog'),fine=d.locator('.cracks-fine-tuning');
+ assert(!(await fine.evaluate(e=>e.open)),'fine tuning opens collapsed without changing saved values');
+ assert(!(await d.locator('#cracksBranchChance').isVisible()));
+ const compact=await d.boundingBox();if(config.height>=568)assert(compact.height<600,'ordinary choices fit in a compact dialog');
+ assert(await d.locator('[type=submit]').isVisible());
+ await page.screenshot({path:path.join(artifacts,config.lang+'-compact-settings.png')});
+ await fine.locator('summary').focus();await page.keyboard.press('Enter');
+ assert(await fine.evaluate(e=>e.open),'fine tuning expands with the keyboard');
+ }
  await openSettings();const dialog=page.locator('#cracksSettingsDialog'),enabled=dialog.locator('#cracksMaterialEnabled'),strength=dialog.locator('#cracksMaterialStrength'),chance=dialog.locator('#cracksBranchChance'),interval=dialog.locator('#cracksBranchInterval'),curvature=dialog.locator('#cracksCurvature');
  async function setGrowth(values){for(const [input,value] of [[chance,values.branchChance],[interval,values.branchInterval],[curvature,values.curvature]]){await input.fill(String(value));}}
  const defaultGrowth={branchChance:55,branchInterval:8,curvature:130},customGrowth={branchChance:35,branchInterval:7,curvature:150};
