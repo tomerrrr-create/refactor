@@ -2273,7 +2273,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .palette-picker-header {
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 4px; flex-shrink: 0; margin: 0 0 12px; grid-template-rows: 76px; direction: ltr;
+    gap: 4px; flex-shrink: 0; margin: 0 -14px 12px; padding-inline: 14px;
+    height: 76px; box-sizing: border-box; grid-template-rows: 75px; direction: ltr;
+    border-bottom: 1px solid #b89a572b;
 }
 .palette-picker-header .palette-group-tabs { display: contents; }
 .palette-picker-header .palette-group-tab { grid-row: 1; }
