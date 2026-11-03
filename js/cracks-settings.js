@@ -1,4 +1,3 @@
-import { BRUSH_SIZES } from './brush-footprint.js';
 // Shared file metadata: Contours uses palette endpoints; Cracks always uses brush.
 export const CONTOUR_LINE_COLORS = Object.freeze(['darkest','lightest','brush']);
 export const DEFAULT_CRACKS_MATERIAL = Object.freeze({ enabled: false, strength: 0 });
@@ -35,7 +34,7 @@ export function getCracksPresetId(value) {
 // Opening default is separate from legacy recipe growth constants.
 export const INITIAL_CRACKS_GROWTH = CRACKS_GROWTH_PRESETS.find(p=>p.id==='fibonacci-bloom').values;
 export function validateCracksBrush(value = {color:null,rainbow:false}) {
-    if(!value || typeof value!=='object' || Array.isArray(value) || Object.keys(value).some(k=>!['color','rainbow','size'].includes(k)) ||
-       (value.size!==undefined && !BRUSH_SIZES.includes(value.size)) || typeof value.rainbow!=='boolean' || !(value.color===null || typeof value.color==='string' && /^#[0-9a-f]{6}$/i.test(value.color))) throw new Error('Invalid cracks brush source');
-    return {color:value.color,rainbow:value.rainbow,...(value.size===undefined?{}:{size:value.size})};
+    if(!value || typeof value!=='object' || Array.isArray(value) || Object.keys(value).some(k=>!['color','rainbow'].includes(k)) ||
+       typeof value.rainbow!=='boolean' || !(value.color===null || typeof value.color==='string' && /^#[0-9a-f]{6}$/i.test(value.color))) throw new Error('Invalid cracks brush source');
+    return {color:value.color,rainbow:value.rainbow};
 }

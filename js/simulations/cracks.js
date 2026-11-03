@@ -1,4 +1,3 @@
-import { BRUSH_SIZES, getBrushTiles } from '../brush-footprint.js';
 import { DEFAULT_CRACKS_GROWTH } from '../cracks-settings.js';
 // The selected brush is the sole color source for Cracks.
 export function getCracksLineIndex({currentPalette,cracksBrush}) {
@@ -29,21 +28,6 @@ function validTrail(value,n){
         return true;
     });
 }
-// A short immutable footprint history lets a tip overlap its own round cap,
-// including after narrowing the brush, without crossing another crack.
-const RECENT_LIMIT=26;
-function validRecent(recent,n){
-    return recent===undefined || Array.isArray(recent)&&recent.length<=RECENT_LIMIT&&recent.every(p=>
-        p&&Number.isInteger(p.i)&&p.i>=0&&p.i<n*n&&BRUSH_SIZES.includes(p.size));
-}
-function containsRecent(recent,index,n){
-    const x=index%n,y=Math.floor(index/n);
-    return recent.some(p=>(x-p.i%n)**2+(y-Math.floor(p.i/n))**2<=Math.floor(p.size/2)**2);
-}
-function brushSize(context){return context.cracksBrush?.size??1;}
-function footprintAvailable(context,index,available){
-    return getBrushTiles(index,context.n,brushSize(context)).every(available);
-}
 // Experimental branching fractures. All runtime state is small and serializable;
 // board colors are the collision surface, so live drawing participates directly.
 export function createCracksState(n, seed = 0x51f15e) {
@@ -62,8 +46,8 @@ export function restoreCracksState(value) {
         !validTrail(value.rainbowTrail,value.n) ||
         !Array.isArray(value.tips) || value.tips.length > 48 || value.tips.some(t =>
             ![t.x,t.y,t.angle].every(Number.isFinite) || t.x < 0 || t.x >= value.n || t.y < 0 || t.y >= value.n ||
-            !Number.isSafeInteger(t.age) || t.age < 0 || !validRecent(t.recent,value.n))) throw new Error('Invalid cracks state');
-    return { ...value, ...(value.rainbowTrail ? {rainbowTrail:{...value.rainbowTrail}} : {}), tips: value.tips.map(t => ({...t,...(t.recent?{recent:t.recent.map(p=>({...p}))}:{})})) };
+            !Number.isSafeInteger(t.age) || t.age < 0)) throw new Error('Invalid cracks state');
+    return { ...value, ...(value.rainbowTrail ? {rainbowTrail:{...value.rainbowTrail}} : {}), tips: value.tips.map(t => ({...t})) };
 }
 function materialResistance(state, rules, paletteLength, k) {
     if(state.version<3 || !rules.material?.enabled || !rules.material.strength)return 0;
@@ -80,7 +64,7 @@ export function prepareCracksResume(context, previous) {
     const start=previous.random%(n*n);
     for(let offset=0;offset<n*n;offset++) {
         const i=(start+offset)%(n*n),x=i%n,y=Math.floor(i/n);
-        if(available(i)&&footprintAvailable(context,i,available)&&((x>0&&available(i-1))||(x<n-1&&available(i+1))||(y>0&&available(i-n))||(y<n-1&&available(i+n)))) {
+        if(available(i)&&((x>0&&available(i-1))||(x<n-1&&available(i+1))||(y>0&&available(i-n))||(y<n-1&&available(i+n)))) {
             return {...previous,roots:0,pendingSeed:i};
         }
     }
@@ -98,16 +82,14 @@ export function queueCracksGrowth(context, previous, changes) {
     const painted=[...changes];for(const change of painted)if(Number.isInteger(change.i)&&change.i>=0&&change.i<n*n)edit(change.i,false);
     const line=getCracksLineIndex(context);
     const available=i=>Number.isInteger(i)&&i>=0&&i<n*n&&board[i]&&!board[i].isGold&&(rainbowMode(context)?!trailHas(state,i):board[i].k!==line)&&materialResistance(state,contourRules,currentPalette.length,board[i].k)<.5;
-    const eligible=i=>available(i)&&footprintAvailable(context,i,available);
-    let seed=eligible(state.pendingSeed)?state.pendingSeed:null;
-    for(const change of painted)if(eligible(change.i)&&(seed===null||change.i<seed))seed=change.i;
+    let seed=available(state.pendingSeed)?state.pendingSeed:null;
+    for(const change of painted)if(available(change.i)&&(seed===null||change.i<seed))seed=change.i;
     if(seed===null)return state;
     return {...state,roots:0,pendingSeed:seed};
 }
 export function runCracksGeneration(context, previous) {
     const {n,currentBoardState,currentPalette,contourRules}=context;
     const state = previous?.n === n ? restoreCracksState(previous) : createCracksState(n);
-    const size=brushSize(context),track=context.cracksBrush?.size!==undefined;
     const growth = state.version>=3 ? contourRules.growth ?? DEFAULT_CRACKS_GROWTH : DEFAULT_CRACKS_GROWTH;
     const random = () => { let x=state.random; x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/0x100000000; };
     const line = getCracksLineIndex(context),rainbow=rainbowMode(context),editTrail=trailEditor(state);
@@ -138,13 +120,12 @@ export function runCracksGeneration(context, previous) {
                     if(x>0&&y>0&&x<n-1&&y<n-1&&[i,i-1,i+1,i-n,i+n].every(materialAvailable)){index=i;break search;}
                 }
             } else index=Math.floor(random()*n*n);
-            if(!materialAvailable(index)||!footprintAvailable(context,index,materialAvailable))continue;
+            if(!materialAvailable(index))continue;
             const x=index%n,y=Math.floor(index/n);
             const inside=x>0&&y>0&&x<n-1&&y<n-1&&[index-1,index+1,index-n,index+n].every(materialAvailable);
             if(!inside&&attempt<80&&!(paintedSeed!==null&&attempt===0))continue;
-            for(const i of getBrushTiles(index,n,size))paint(i);
-            const angle=random()*Math.PI*2,recent=track?{recent:[{i:index,size}]}:{};
-            state.tips.push({x,y,angle,age:0,...recent},{x,y,angle:angle+Math.PI,age:0,...recent});state.roots++;break;
+            paint(index);const angle=random()*Math.PI*2;
+            state.tips.push({x,y,angle,age:0},{x,y,angle:angle+Math.PI,age:0});state.roots++;break;
         }
     }
     const next=[];
@@ -157,48 +138,6 @@ export function runCracksGeneration(context, previous) {
             return {x,y,col,row,index:row*n+col,valid:col>=0&&col<n&&row>=0&&row<n};
         };
         let target=project(angle);
-        const recent=tip.recent??[{i:Math.round(tip.y)*n+Math.round(tip.x),size:1}];
-        const wide=size>1||recent.some(p=>p.size>1);
-        // Sibling tips share only their nearby junction. Include already painted
-        // sibling caps there so thick branches can separate instead of blocking
-        // one another on the very first step. Unrelated fractures still collide.
-        const clearance=[...recent];
-        if(wide){
-            const keys=new Map(recent.map(p=>[`${p.i}:${p.size}`,p]));
-            for(const sibling of [...state.tips,...next]){
-                if(sibling===tip||!sibling.recent)continue;
-                const junctions=sibling.recent.filter(p=>keys.has(`${p.i}:${p.size}`));
-                for(const cap of sibling.recent)if(junctions.some(p=>
-                    (cap.i%n-p.i%n)**2+(Math.floor(cap.i/n)-Math.floor(p.i/n))**2<=Math.max(cap.size,p.size)**2))clearance.push(cap);
-            }
-        }
-        const footprint=target=>{
-            if(!target.valid)return null;
-            const cells=[];let cost=0;
-            for(const i of getBrushTiles(target.index,n,size)){
-                if(board[i].isGold)return null;
-                if(containsRecent(clearance,i,n))continue;
-                if(!available(i)||resistance(i)>=.5)return null;
-                cells.push(i);cost=Math.max(cost,resistance(i));
-            }
-            return {cells,cost};
-        };
-        if(wide){
-            let surface=footprint(target);
-            if(state.version>=3&&contourRules.material?.enabled&&contourRules.material.strength>0){
-                let best=target,bestAngle=angle,bestCost=surface?.cost??Infinity;
-                if(!surface||surface.cost>.2)for(const turn of [-.45,.45,-.9,.9,-1.35,1.35]){
-                    const candidate=project(angle+turn),nextSurface=footprint(candidate);
-                    if(!nextSurface)continue;
-                    const score=nextSurface.cost+Math.abs(turn)*.12;
-                    if(!surface||score<bestCost-.04){best=candidate;bestAngle=angle+turn;bestCost=score;surface=nextSurface;}
-                }
-                target=best;angle=bestAngle;
-                if(surface&&random()<surface.cost*.8){next.push({...tip,angle});continue;}
-            }
-            if(!surface)continue;
-            for(const i of surface.cells)paint(i);
-        }else{
         // Original collision rules still apply to line-colored and gold cells.
         if(!target.valid||!available(target.index))continue;
         if(state.version>=3&&contourRules.material?.enabled&&contourRules.material.strength>0){
@@ -216,12 +155,10 @@ export function runCracksGeneration(context, previous) {
             // Slow down in resistant material, retaining the live tip to retry.
             if(random()<resistance(target.index)*.8){next.push({...tip,angle});continue;}
         }
-        paint(target.index);
-        }
-        const {x,y,col,row}=target,age=tip.age+1;
-        const history=track||tip.recent?{recent:[...recent,{i:target.index,size}].slice(-RECENT_LIMIT)}:{};
-        next.push({x:Math.max(0,Math.min(n-1,x)),y:Math.max(0,Math.min(n-1,y)),angle,age,...history});
-        if(age%growth.branchInterval===0&&next.length<46&&random()<growth.branchChance/100)next.push({x:col,y:row,angle:angle+(random()<.5?-1:1)*(0.65+random()*.55),age:0,...history});
+        const {x,y,col,row}=target;
+        paint(row*n+col);const age=tip.age+1;
+        next.push({x:Math.max(0,Math.min(n-1,x)),y:Math.max(0,Math.min(n-1,y)),angle,age});
+        if(age%growth.branchInterval===0&&next.length<46&&random()<growth.branchChance/100)next.push({x:col,y:row,angle:angle+(random()<.5?-1:1)*(0.65+random()*.55),age:0});
     }
     state.tips=next.slice(0,48);state.steps++;
     return { nextBoardState:board, nextCracksState:state };
