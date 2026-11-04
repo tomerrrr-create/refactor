@@ -1314,7 +1314,7 @@ function handlePaletteSwitch(backwards = false) {
 
 
 function syncDlaCrystalState() {
-    if (!dlaState) {
+    if (!dlaState || dlaState.n !== n) {
         initializeDla();
         return;
     }
@@ -1328,6 +1328,9 @@ function syncDlaCrystalState() {
 dlaState.emptyIndices.push(index);
         }
     });
+    // Undo, resizing or Contours may reopen a board whose walkers ran out.
+    // Rebuild only then; ordinary drawing and mode cycling retain live walkers.
+    if (!dlaState.walkers.length && dlaState.emptyIndices.length) initializeDla();
 }
 
 
@@ -1758,7 +1761,7 @@ function initializeDla() {
         }
         
         // 3. Store the list of empty indices in the simulation state
-        dlaState = { crystal: initialCrystal, walkers: initialWalkers, emptyIndices: emptyIndices, isInitialized: true, isFinished: false, lastWalkerIndex: 0 };
+        dlaState = { n, crystal: initialCrystal, walkers: initialWalkers, emptyIndices: emptyIndices, isInitialized: true, isFinished: false, lastWalkerIndex: 0 };
         // --- END: NEW EFFICIENT LOGIC ---
         
         renderToScreen(null);

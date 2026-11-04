@@ -553,7 +553,7 @@ The button cycles Genetics → No genetics:
 - Genetics averages valid neighboring crystal colors, finds the nearest palette entry and retains a successful-color fallback.
 - No genetics derives the entry from crystal size modulo palette length.
 
-Both avoid index zero when creating crystal cells. `emptyIndices` supports respawning on crowded boards. A fresh DLA entry rebuilds crystal and walkers from the current board; live Genetics/No genetics changes retain that runtime. Brush samples and replayed strokes synchronize crystal/empty-cell indexes. Gold is not universally protected: sticking can overwrite a gold cell. DLA uses `Math.random`, so recipes do not promise identical pixels, and JSON does not retain walkers. The `fastMode` branch currently returns the state unchanged; do not assume it is an implemented faster variant.
+Both avoid index zero when creating crystal cells. `emptyIndices` supports respawning on crowded boards. A fresh DLA entry rebuilds crystal and walkers from the current board; live Genetics/No genetics changes retain that runtime. Brush samples and replayed strokes synchronize crystal/empty-cell indexes. Before resuming or stepping after a size change (including Undo/Redo), DLA rebuilds walkers for the current dimensions without painting. If Undo, drawing or Contours reopens cells after all walkers are exhausted, synchronization repopulates walkers so growth can continue from the current artwork; ordinary same-size edits retain surviving walkers. Undo/Redo restores the exact visible board, not the subsequent random walker path. Gold is not universally protected: sticking can overwrite a gold cell. DLA uses `Math.random`, so recipes do not promise identical pixels, and JSON does not retain walkers. The `fastMode` branch currently returns the state unchanged; do not assume it is an implemented faster variant.
 
 ### 12. Nudge
 
@@ -732,6 +732,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | --- | --- |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
+| DLA resizing, exhausted growth, Contours and Undo/Redo | `tools/check-dla-history.mjs` |
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
 | Palette controls and transitions | `tools/check-palette-cards.mjs`, `tools/check-palette-hold-colors.mjs`, `tools/check-color-page-swipe.mjs`, `tools/check-picker-dialog-transition.mjs` |
 | Game of Life genetics | `tools/check-gol-genetics.mjs` |
