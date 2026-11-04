@@ -732,7 +732,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | --- | --- |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
-| DLA resizing, exhausted growth, Contours and Undo/Redo | `tools/check-dla-history.mjs` |
+| DLA resizing, exhausted growth, Contours, Undo/Redo and logger replay | `tools/check-dla-history.mjs` |
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
 | Palette controls and transitions | `tools/check-palette-cards.mjs`, `tools/check-palette-hold-colors.mjs`, `tools/check-color-page-swipe.mjs`, `tools/check-picker-dialog-transition.mjs` |
 | Game of Life genetics | `tools/check-gol-genetics.mjs` |
