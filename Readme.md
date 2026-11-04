@@ -52,7 +52,7 @@ Sorting remaps tile indices and the selected brush color to preserve their visib
 
 ### Board size and separators
 
-Resize buttons step through preset sizes; their upward gesture opens a custom size dialog accepting **1–327**. Resizing crops or pads around the center rather than resampling the image. Startup and initialization preferences use the validated preset-size list in `constants.js`.
+Resize buttons step through preset sizes; their upward gesture opens a custom size dialog accepting **1–327**. Resizing crops or pads around the center rather than resampling the image. Both preset and custom size changes are separate Undo/Redo actions: after resizing and drawing, Undo removes the drawing before undoing the resize; Redo restores them in order, including cropped or padded cells and protected gold. Resizing during playback closes the old-size simulation segment and immediately resumes on the new size with a separate history segment. Human size changes reset the Cracks/Resonance runtime for the new dimensions. Cracks snapshots never attach an old-size runtime to the resized board; Undo restores its earlier runtime with the earlier board. Startup and initialization preferences use the validated preset-size list in `constants.js`.
 
 The separator control uses its original white hash (#) icon, including when mirrored inside the brush picker. Relative separators use **Large, Medium, Small and None**, adapting width to board density and display size. Their logical values are 5/3/1/0, not literal pixel widths. Separator settings also offer an absolute-width cycle; unavailable widths are filtered to preserve tile space. Recordings and artwork snapshots retain resolved widths, including fractional values. A profile's Medium value of 3 therefore does not mean an unconditional 3-pixel gap.
 
@@ -731,6 +731,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Area | Examples |
 | --- | --- |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
+| Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
 | Palette controls and transitions | `tools/check-palette-cards.mjs`, `tools/check-palette-hold-colors.mjs`, `tools/check-color-page-swipe.mjs`, `tools/check-picker-dialog-transition.mjs` |
 | Game of Life genetics | `tools/check-gol-genetics.mjs` |

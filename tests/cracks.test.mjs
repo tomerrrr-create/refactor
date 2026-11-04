@@ -131,3 +131,10 @@ test('Cracks snapshots and new recordings always carry the brush source',()=>{
  const recorded=c.getContourRecordingRules();assert.equal(recorded.lineColor,'brush');assert.equal(recorded.brush.color,'#123456');
  const snapshot=c.getContourSnapshot();assert.equal(snapshot.rules.lineColor,'brush');assert.equal(snapshot.brush.color,'#123456');
 });
+
+
+test('resized boards never serialize a Cracks runtime from the previous dimensions',()=>{
+ const c=harness();c.contourMode='cracks';c.cracksState=createCracksState(21);const original=JSON.stringify(c.cracksState);
+ c.n=27;assert.equal(c.getContourSnapshot().cracksState,null);assert.equal(c.getContourRecordingRules().cracksState.n,27);assert.equal(JSON.stringify(c.cracksState),original);
+ c.n=21;assert.equal(c.getContourSnapshot().cracksState.n,21,'old-size history still retains its runtime');
+});

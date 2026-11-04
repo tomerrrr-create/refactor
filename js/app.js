@@ -1276,6 +1276,25 @@ function handlePaletteSwitch(backwards = false) {
         if (separatorPx !== oldSeparator) window.logArtEvent('SEPARATOR_CHANGE', separatorPx);
       }
 
+      function resizeBoard(newSize) {
+        if (newSize === n || isAnimating) return;
+        return animateBoardTransition(() => {
+            finishBrushGesture();
+            windPainter?.stop();
+            // Close the old-size run before recording the resize. Restart with
+            // a new history segment so Undo cannot span two board dimensions.
+            const resume = isLifePlaying;
+            if (resume) pauseLife();
+            performAction(() => {
+                window.logArtEvent('GRID_RESIZE', newSize);
+                _performResize(newSize);
+                cracksState = null;
+                cymaticsState = null;
+            });
+            if (resume) togglePlayPauseLife();
+        });
+      }
+
       function resizeGrid(increase = false) {
         const seq = C.SIZES;
         let newSize;
@@ -1286,11 +1305,7 @@ function handlePaletteSwitch(backwards = false) {
             newSize = seq.find(size => size < n);
             if (newSize === undefined) newSize = seq[seq.length - 1];
         }
-        if (newSize === n) return;
-        animateBoardTransition(() => performAction(() => {
-            window.logArtEvent('GRID_RESIZE', newSize); // השורה שהוספנו
-            _performResize(newSize);
-        }));
+        return resizeBoard(newSize);
     
     }
       
@@ -3543,7 +3558,7 @@ function saveCracksSettings(material, growth = getCracksGrowth()) {
     return true;
 }
 function getContourSnapshot() {
-    return { mode: contourMode, rules: { ...contourRules, ...(contourMode==='cracks'?{lineColor:'brush'}:{}) }, ...(contourMode === 'cracks' ? { material: getCracksMaterial(), growth:getCracksGrowth(), brush:getCracksBrush() } : {}), cracksState: cracksState ? restoreCracksState(cracksState) : null };
+    return { mode: contourMode, rules: { ...contourRules, ...(contourMode==='cracks'?{lineColor:'brush'}:{}) }, ...(contourMode === 'cracks' ? { material: getCracksMaterial(), growth:getCracksGrowth(), brush:getCracksBrush() } : {}), cracksState: cracksState?.n === n ? restoreCracksState(cracksState) : null };
 }
 function validateContourSnapshot(value) {
     if (!value || !['contours','cracks'].includes(value.mode) || !value.rules ||
@@ -3589,7 +3604,7 @@ function restoreContourSnapshot(value, { preservePreferences = false } = {}) {
     updateContourButtonUI();
 }
 function getContourRecordingRules() {
-    return contourMode === 'cracks' ? { ...contourRules, lineColor:'brush', material: getCracksMaterial(), growth:getCracksGrowth(), brush:getCracksBrush(), mode: 'cracks', cracksState: cracksState ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
+    return contourMode === 'cracks' ? { ...contourRules, lineColor:'brush', material: getCracksMaterial(), growth:getCracksGrowth(), brush:getCracksBrush(), mode: 'cracks', cracksState: cracksState?.n === n ? restoreCracksState(cracksState) : createCracksState(n) } : { ...contourRules };
 }
 function runContourEvolution(context) {
     if (contourMode !== 'cracks') return Simulations.runContourGeneration(context);
@@ -5432,7 +5447,7 @@ else if (action.eventName === 'Invert Colors') {
                 return persisted;
             },
             getN: () => n, isBreathing: () => isBreathing, isLifePlaying: () => isLifePlaying,
-            _performResize, animateBoardTransition,
+            _performResize, resizeBoard, animateBoardTransition,
             setColorPickerPage: (p) => { colorPickerPage = p; }, getColorPickerPage: () => colorPickerPage,
             getActivePaletteIndex: () => activePaletteIndex, createRainbowIconSVG, navigateColorPages,
             setSelectedColor: (c) => { 
