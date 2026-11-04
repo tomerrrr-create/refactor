@@ -2459,3 +2459,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 /* Initial settings focus announces the heading without decorating a control. */
 .settings-entry-heading:focus { outline: none; }
+
+/* A quiet segmented choice, distinct from colored growth presets and footer actions. */
+#cracksSettingsDialog .cracks-area-panel h3 { margin:0 0 10px; color:#c3b99e; font-size:14px; font-weight:400; }
+#cracksSettingsDialog .cracks-area-options { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:4px; border:1px solid #b89a572b; border-radius:12px; background:#080a0b; }
+#cracksSettingsDialog [data-cracks-area] { min-height:44px; padding:8px; border:1px solid transparent; border-radius:8px; color:#9c998f; background:transparent; font:inherit; font-size:13px; line-height:1.35; }
+#cracksSettingsDialog [data-cracks-area][aria-pressed="true"] { color:#e5cc91; border-color:#b89a5766; background:#b89a5714; }
+#cracksSettingsDialog .cracks-settings-panel[hidden] { display:none; }

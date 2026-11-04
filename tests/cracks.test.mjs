@@ -138,3 +138,11 @@ test('resized boards never serialize a Cracks runtime from the previous dimensio
  c.n=27;assert.equal(c.getContourSnapshot().cracksState,null);assert.equal(c.getContourRecordingRules().cracksState.n,27);assert.equal(JSON.stringify(c.cracksState),original);
  c.n=21;assert.equal(c.getContourSnapshot().cracksState.n,21,'old-size history still retains its runtime');
 });
+
+
+test('Undo into another growth area retains preferences but renews incompatible tips without changing the random cursor',()=>{
+ const c=harness();c.contourMode='cracks';c.armedSimulation='contour';c.contourRules.growth={...DEFAULT_CRACKS_GROWTH,area:'dead'};
+ const old={...createCracksState(21,9981),steps:8,roots:3,tips:[{x:4,y:4,angle:0,age:5}]};
+ c.restoreContourSnapshot({mode:'cracks',rules:{sensitivity:75,lineColor:'brush'},growth:DEFAULT_CRACKS_GROWTH,cracksState:old},{preservePreferences:true});
+ assert.equal(c.getCracksGrowth().area,'dead');assert.equal(c.cracksState.random,9981);assert.equal(c.cracksState.roots,0);assert.equal(c.cracksState.tips.length,0);assert.equal(old.tips.length,1,'history snapshot remains immutable');
+});
