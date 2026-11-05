@@ -3964,6 +3964,12 @@ function cycleMagnetMode() {
 
 
 
+      function selectKaleidoscope() {
+          symmetryMode = 'kaleidoscope';
+          updateSymmetryUI();
+          settingsProfiles?.scheduleCapture();
+      }
+
       function cycleSymmetryMode() {
           const currentIndex = C.SYMMETRY_MODES.indexOf(symmetryMode);
           symmetryMode = C.SYMMETRY_MODES[(currentIndex + 1) % C.SYMMETRY_MODES.length];
@@ -5696,7 +5702,7 @@ bindPickerGestures(dom.btnPalette, {
         dom.btnTutorial.addEventListener('click', (e) => handleCtrlClick(e, modals.openHelpModal));
         initializeWindMode();
         bindPickerGestures(dom.btnSymmetry, {
-            onTap: cycleSymmetryMode,
+            onTap: cycleSymmetryMode, onHold: selectKaleidoscope,
             onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
             onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
             canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
@@ -5738,7 +5744,7 @@ initializeBrushPickerNavigation({
         beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
     },
     symmetryGestures: {
-        onTap: cycleSymmetryMode, onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
+        onTap: cycleSymmetryMode, onHold: selectKaleidoscope, onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
         onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
         canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
     },

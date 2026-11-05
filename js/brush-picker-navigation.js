@@ -29,6 +29,7 @@ export function initializeBrushPickerNavigation({
     const utility = () => usesSeparators() ? separatorGestures : symmetryGestures;
     bindPickerGestures(utilityButton, {
         onTap: () => utility().onTap(),
+        onHold: () => utility().onHold?.(),
         onOpen: () => utility().onOpen(),
         onSwipeDown: () => utility().onSwipeDown(),
         canSwipeDown: () => utility().canSwipeDown(),
