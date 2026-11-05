@@ -165,11 +165,11 @@ Technicians offers three fixed settings profiles, each with an explicitly saved 
 
 ### Factory startup defaults
 
-On a fresh installation, FYI opens profile 1 with luminance sorting and a size-1 continuous brush. Random startup resolves a non-archived palette once per opening and avoids the previous random palette when storage works and another palette exists. The preference remains Random; recordings receive the resolved palette. Saved personal Startup choices take precedence. Module defaults in `startup-settings.js` are validation fallbacks, not the complete profile-1 opening configuration.
+On a fresh installation, FYI opens profile 1 with luminance sorting, Small relative separators and a size-1 continuous brush. Previous profile-1 Medium defaults migrate once to Small; other separator values and profiles are retained. Choosing Medium again after that upgrade remains a personal setting. Random startup resolves a non-archived palette once per opening and avoids the previous random palette when storage works and another palette exists. The preference remains Random; recordings receive the resolved palette. Saved personal Startup choices take precedence. Module defaults in `startup-settings.js` are validation fallbacks, not the complete profile-1 opening configuration.
 
 | Profile | Opening palette | Board / fill | Relative separators | Opening brush color | Interface / resting theme | Initialization brush |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Random active palette | 21×21 / random | Medium | None | Creation / Blue | Size 1; final current entry, retain symmetry |
+| 1 | Random active palette | 21×21 / random | Small | None | Creation / Blue | Size 1; final current entry, retain symmetry |
 | 2 | Golden Midnight Extended | 11×11 / random | Small | Current palette index 0 | Simulation / Gold | Size 11; first entry, symmetry Off |
 | 3 | Ancient 264 | 15×15 / random | None | Brightest by luminance | Simulation / Smoky turquoise | Size 1; rainbow, left/right reflection |
 
