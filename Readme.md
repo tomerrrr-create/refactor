@@ -86,8 +86,6 @@ Layouts are optional `evolutionSlots` profile/settings preferences, separate fro
 
 ### Undo and redo
 
-Cracks and Resonance history retains their full deterministic runtime as well as pixels. A single step remains an Undo action when the board looks unchanged but the engine advances its random cursor, tips or step counter; Redo restores that exact runtime. Personal settings remain independent of drawing history.
-
 Undo/Redo retains up to **20 artwork actions**. A standalone brush gesture is one action. During playback, the first painted sample of each new gesture checkpoints the simulation immediately before that stroke, without pausing or resetting its generation counter. Undo pauses the run and returns to the latest brush boundary, preserving earlier generations; further Undo can remove earlier segments. Redo restores the saved result. Wind batches join the current running segment instead of adding overlapping snapshots. Pointer cancellation and unrelated controls finalize active gestures without adding a release tap.
 
 Artwork Undo/Redo retains current personal **Brightness, Cracks and Resonance** preferences; their settings saves are not ordinary drawing-history actions. Runtime artwork state still follows snapshots. Explicit project loads and macro commands use recorded values. Other evolution settings retain their own history behavior. Saving a settings dialog is distinct from **Save to profile** for persistence across openings.
@@ -742,7 +740,6 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
 | Palette controls and transitions | `tools/check-palette-cards.mjs`, `tools/check-palette-hold-colors.mjs`, `tools/check-color-page-swipe.mjs`, `tools/check-picker-dialog-transition.mjs` |
 | Game of Life genetics | `tools/check-gol-genetics.mjs` |
-| Cracks and all six Resonance maps: repeated steps, live drawing/settings, resize, runtime Undo/Redo and logger replay | `tools/check-evolution-history.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Settings entry focus and keyboard navigation | `tools/check-settings-focus.mjs` |
 | Toolbar layout | `tools/check-evolution-drawer.mjs` |

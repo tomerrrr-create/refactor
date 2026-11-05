@@ -457,7 +457,7 @@ currentSortMethod,
         if(JSON.stringify(stateA.cymaticsState)!==JSON.stringify(stateB.cymaticsState))return false;
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
         if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
-        if (JSON.stringify(stateA.contourState?.cracksState) !== JSON.stringify(stateB.contourState?.cracksState)) return false;
+        if (JSON.stringify(stateA.contourState?.cracksState?.rainbowTrail) !== JSON.stringify(stateB.contourState?.cracksState?.rainbowTrail)) return false;
         if (JSON.stringify(stateA.evolutionTuning) !== JSON.stringify(stateB.evolutionTuning) ||
             stateA.brightnessEvoMode !== stateB.brightnessEvoMode || stateA.breatheEvoMode !== stateB.breatheEvoMode || stateA.dlaMode !== stateB.dlaMode) return false;
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
