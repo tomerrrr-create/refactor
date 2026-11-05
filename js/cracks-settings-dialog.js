@@ -1,6 +1,6 @@
 import { focusSettingsHeading } from './dialog-focus.js';
 import { onLanguageChange } from './i18n.js';
-import { INITIAL_CRACKS_GROWTH, CRACKS_GROWTH_PRESETS, getCracksPresetId, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, validateCracksGrowth } from './cracks-settings.js';
+import { INITIAL_CRACKS_GROWTH, CRACKS_GROWTH_PRESETS, getCracksPresetId, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, validateCracksGrowth, validateCracksArea } from './cracks-settings.js';
 const growthControls = [
     {field:'branchChance',id:'cracksBranchChance',key:'cracks_branch_chance',min:0,max:100,step:5,percent:true},
     {field:'branchInterval',id:'cracksBranchInterval',key:'cracks_branch_interval',min:1,max:40,step:1},
@@ -24,6 +24,10 @@ export function createCracksSettingsDialog(app) {
       </header>
       <div class="cracks-settings-body">
 
+        <section class="cracks-settings-panel cracks-area-panel" aria-labelledby="cracksAreaLabel">
+          <h3 id="cracksAreaLabel"></h3>
+          <div class="cracks-area-options" role="group" aria-labelledby="cracksAreaLabel"><button type="button" data-cracks-area="all"></button><button type="button" data-cracks-area="dead"></button></div>
+        </section>
         <section class="cracks-settings-panel cracks-growth-panel">
           ${growthControls.map(c=>`<div class="cracks-control"><label for="${c.id}"></label><output for="${c.id}"></output><input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}"></div>`).join('')}
         </section>
@@ -59,7 +63,14 @@ export function createCracksSettingsDialog(app) {
             dialog.querySelector(`label[for="${c.id}"]`).textContent=app.getText(c.key);
         }
         dialog.querySelector('#cracksPresetsTitle').textContent=app.getText('cracks_presets_title');
+        dialog.querySelector('#cracksAreaLabel').textContent=app.getText('cracks_area');
         if(!draft)return;
+        const area=validateCracksArea(draft.area);
+        for(const button of dialog.querySelectorAll('[data-cracks-area]')){
+            button.textContent=app.getText('cracks_area_'+button.dataset.cracksArea);
+            button.setAttribute('aria-pressed',String(button.dataset.cracksArea===area));
+        }
+        strength.closest('section').hidden=area==='dead';
         const selected=getCracksPresetId(Object.fromEntries(growthControls.map(c=>[c.field,draft[c.field]])));
         const custom=dialog.querySelector('#cracksPresetCustom');custom.textContent=app.getText('cracks_preset_custom');custom.hidden=selected!==null;
         for(const p of CRACKS_GROWTH_PRESETS){
@@ -73,11 +84,12 @@ export function createCracksSettingsDialog(app) {
         setRange(strength,draft.strength,draft.strength+'%');
     }
     for(const p of CRACKS_GROWTH_PRESETS)dialog.querySelector('[data-cracks-preset="'+p.id+'"]').addEventListener('click',()=>{Object.assign(draft,p.values);render();});
+    for(const button of dialog.querySelectorAll('[data-cracks-area]'))button.addEventListener('click',()=>{draft.area=button.dataset.cracksArea;render();});
     strength.addEventListener('input',()=>{draft.strength=Number(strength.value);draft.enabled=draft.strength>0;render();});
     for(const c of growthControls)dialog.querySelector('#'+c.id).addEventListener('input',event=>{draft[c.field]=Number(event.target.value);render();});
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
     dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft={...DEFAULT_CRACKS_MATERIAL,...INITIAL_CRACKS_GROWTH};render();});
-    dialog.querySelector('form').addEventListener('submit',event=>{event.preventDefault();const material=validateCracksMaterial({enabled:draft.strength>0,strength:draft.strength});const growth=validateCracksGrowth(Object.fromEntries(growthControls.map(c=>[c.field,draft[c.field]])));if(app.saveCracksSettings(material,growth)!==false)dialog.close();});
+    dialog.querySelector('form').addEventListener('submit',event=>{event.preventDefault();const material=validateCracksMaterial({enabled:draft.strength>0,strength:draft.strength});const growth=validateCracksGrowth({...Object.fromEntries(growthControls.map(c=>[c.field,draft[c.field]])),area:validateCracksArea(draft.area)});if(app.saveCracksSettings(material,growth)!==false)dialog.close();});
     dialog.addEventListener('close',()=>{draft=null;app.dom.btnContour.focus({preventScroll:true});});
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};
     let startedOutside=false;dialog.addEventListener('pointerdown',e=>{startedOutside=outside(e);});dialog.addEventListener('click',e=>{if(startedOutside&&outside(e))dialog.close();startedOutside=false;});

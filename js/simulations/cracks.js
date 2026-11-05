@@ -50,9 +50,11 @@ export function restoreCracksState(value) {
     return { ...value, ...(value.rainbowTrail ? {rainbowTrail:{...value.rainbowTrail}} : {}), tips: value.tips.map(t => ({...t})) };
 }
 function materialResistance(state, rules, paletteLength, k) {
-    if(state.version<3 || !rules.material?.enabled || !rules.material.strength)return 0;
+    if(state.version<3 || rules.growth?.area==='dead' || !rules.material?.enabled || !rules.material.strength)return 0;
     return (1-Math.max(0,Math.min(1,k/Math.max(1,paletteLength-1))))*rules.material.strength/100;
 }
+// Dead means rank zero in the current palette, independently of luminance.
+function inGrowthArea(context,state,index){return state.version<3||context.contourRules.growth?.area!=='dead'||context.currentBoardState[index].k===0;}
 // Explicit Play/settings changes can revive an exhausted run. Search only on
 // those actions, never per frame, and leave surviving tips/old recipes intact.
 export function prepareCracksResume(context, previous) {
@@ -60,7 +62,7 @@ export function prepareCracksResume(context, previous) {
     const {n,currentBoardState:board,currentPalette,contourRules}=context;
     if (previous.n !== n) return previous;
     const line=getCracksLineIndex(context);
-    const available=i=>i>=0&&i<n*n&&!board[i].isGold&&(rainbowMode(context)?!trailHas(previous,i):board[i].k!==line)&&materialResistance(previous,contourRules,currentPalette.length,board[i].k)<.5;
+    const available=i=>i>=0&&i<n*n&&!board[i].isGold&&inGrowthArea(context,previous,i)&&(rainbowMode(context)?!trailHas(previous,i):board[i].k!==line)&&materialResistance(previous,contourRules,currentPalette.length,board[i].k)<.5;
     const start=previous.random%(n*n);
     for(let offset=0;offset<n*n;offset++) {
         const i=(start+offset)%(n*n),x=i%n,y=Math.floor(i/n);
@@ -81,7 +83,7 @@ export function queueCracksGrowth(context, previous, changes) {
     const edit=trailEditor(state);
     const painted=[...changes];for(const change of painted)if(Number.isInteger(change.i)&&change.i>=0&&change.i<n*n)edit(change.i,false);
     const line=getCracksLineIndex(context);
-    const available=i=>Number.isInteger(i)&&i>=0&&i<n*n&&board[i]&&!board[i].isGold&&(rainbowMode(context)?!trailHas(state,i):board[i].k!==line)&&materialResistance(state,contourRules,currentPalette.length,board[i].k)<.5;
+    const available=i=>Number.isInteger(i)&&i>=0&&i<n*n&&board[i]&&!board[i].isGold&&inGrowthArea(context,state,i)&&(rainbowMode(context)?!trailHas(state,i):board[i].k!==line)&&materialResistance(state,contourRules,currentPalette.length,board[i].k)<.5;
     let seed=available(state.pendingSeed)?state.pendingSeed:null;
     for(const change of painted)if(available(change.i)&&(seed===null||change.i<seed))seed=change.i;
     if(seed===null)return state;
@@ -94,7 +96,7 @@ export function runCracksGeneration(context, previous) {
     const random = () => { let x=state.random; x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/0x100000000; };
     const line = getCracksLineIndex(context),rainbow=rainbowMode(context),editTrail=trailEditor(state);
     let board=currentBoardState;
-    const available = index => index>=0 && index<n*n && !board[index].isGold && (rainbow?!trailHas(state,index):board[index].k!==line);
+    const available = index => index>=0 && index<n*n && !board[index].isGold && (growth.area!=='dead'||board[index].k===0) && (rainbow?!trailHas(state,index):board[index].k!==line);
     const resistance=index=>materialResistance(state,contourRules,currentPalette.length,board[index].k);
     const materialAvailable=index=>available(index)&&resistance(index)<.5;
     const paint = index => {
@@ -140,7 +142,7 @@ export function runCracksGeneration(context, previous) {
         let target=project(angle);
         // Original collision rules still apply to line-colored and gold cells.
         if(!target.valid||!available(target.index))continue;
-        if(state.version>=3&&contourRules.material?.enabled&&contourRules.material.strength>0){
+        if(state.version>=3&&growth.area!=='dead'&&contourRules.material?.enabled&&contourRules.material.strength>0){
             let best=target,bestAngle=angle,cost=resistance(target.index),found=cost<.5;
             // Hard colors are barriers. Nearby softer lanes may bend the tip;
             // there is no board scan or random mutation of the existing artwork.

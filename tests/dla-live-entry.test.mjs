@@ -46,3 +46,20 @@ test('brush seeding after empty entry lets the existing DLA walkers grow; fresh 
     assert.equal(c.dlaState.walkers.length,0);assert.equal(c.dlaState.emptyIndices.length,0);
     assert.equal(c.dlaState.crystal.size,49);
 });
+
+test('DLA can resume after Undo or Contours creates empty space on a previously full board',t=>{
+ const c=setup(empty().map(t=>({...t,k:1,v:1})));assert.equal(c.dlaState.walkers.length,0);
+ c.boardState[0].k=c.boardState[0].v=0;c.syncDlaCrystalState();
+ assert(c.dlaState.walkers.length>0,'newly empty cells need walkers even after the previous run exhausted them');
+ assert.deepEqual([...c.dlaState.emptyIndices],[0]);assert(!c.dlaState.crystal.has(0));
+ const random=Math.random;t.after(()=>{Math.random=random;});Math.random=()=>.5;
+ const result=runDlaGeneration({n:7,currentBoardState:c.boardState,currentPalette:palette,dlaState:c.dlaState,dlaRules:{colorGenetics:false,fastMode:false},dlaTuning:{batchSize:1}});assert(result.nextBoardState[0].k>0,'recovered walkers actually grow into reopened space');
+});
+
+test('DLA resizing rebuilds walkers for the current dimensions without painting',()=>{
+ const c=setup(empty().map(t=>({...t,k:1,v:1})));c.n=9;c.boardState=Array.from({length:81},(_,i)=>({k:i===40?1:0,v:i===40?1:0,isGold:false}));
+ const before=structuredClone(c.boardState);c.syncDlaCrystalState();assert(c.dlaState.walkers.length>0);assert.deepEqual(c.boardState,before);
+ c.n=3;c.boardState=Array.from({length:9},(_,i)=>({k:i===4?1:0,v:i===4?1:0,isGold:false}));c.syncDlaCrystalState();
+ assert.equal(c.dlaState.n,3);assert.equal(c.dlaState.walkers.length,Math.round(1.2*3*Math.sqrt(3)));
+ assert(c.dlaState.walkers.every(w=>w.x>=0&&w.x<3&&w.y>=0&&w.y<3),'shrinking cannot retain out-of-board walkers');assert.deepEqual([...c.dlaState.crystal],[4]);
+});
