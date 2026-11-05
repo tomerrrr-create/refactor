@@ -14,14 +14,15 @@ test('Wind toggle preserves a running simulation without disabling panel buttons
  c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['flash','commit','flash']);
  assert.equal(c.isLifePlaying,true);c.isSimModeActive=true;c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);
 });
-test('Symmetry stays independent of Wind and has no hold trigger',()=>{
+test('Symmetry cycling, Kaleidoscope hold and Off stay independent of Wind',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnSymmetry:{}},windMode:true,isBreathing:false,symmetryMode:'vertical',
- hideLongPressDisplay(){},swapSimulationUtilityControl(){},isSimModeActive:false,cycleSymmetryMode:()=>events.push('cycle'),updateSymmetryUI:()=>events.push('symmetry'),
+ settingsProfiles:{scheduleCapture(){}},hideLongPressDisplay(){},swapSimulationUtilityControl(){},isSimModeActive:false,cycleSymmetryMode:()=>events.push('cycle'),updateSymmetryUI:()=>events.push('symmetry'),
  bindPickerGestures:(button,options)=>{gestures=options;}});
+ vm.runInContext(source.slice(source.indexOf('      function selectKaleidoscope('),source.indexOf('      function cycleSymmetryMode(')),c);
  const start=source.indexOf('        bindPickerGestures(dom.btnSymmetry,');
  vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnCycleSort,',start)),c);
- gestures.onTap();assert.equal(gestures.onHold,undefined);gestures.onOpen();assert.equal(c.symmetryMode,'off');assert(c.windMode);
- assert.deepEqual(events,['cycle','symmetry']);
+ gestures.onTap();gestures.onHold();assert.equal(c.symmetryMode,'kaleidoscope');assert(c.windMode);gestures.onOpen();assert.equal(c.symmetryMode,'off');assert(c.windMode);
+ assert.deepEqual(events,['cycle','symmetry','symmetry']);
 });
 test('shared color control routes tap, swipe, and holds by active tool without changing brush choices in Wind',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnColorPicker:{addEventListener(){}}},windMode:false,isBreathing:false,isLifePlaying:false,armedSimulation:null,

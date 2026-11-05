@@ -51,7 +51,7 @@ const PROFILE_EROSION_STAGES = [
 
 function applyProfileOneDefaults(snapshot) {
     Object.assign(snapshot.settings.startup, {
-        paletteName: RANDOM_STARTUP_PALETTE, fill: 'random', brushColor: 'none', brushSize: 1, separatorPx: 3, boardSize: 21, symmetry: 'off', interfaceMode: 'creative'
+        paletteName: RANDOM_STARTUP_PALETTE, fill: 'random', brushColor: 'none', brushSize: 1, separatorPx: 2, boardSize: 21, symmetry: 'off', interfaceMode: 'creative'
     });
     snapshot.settings.brush.symmetry = 'off';
     snapshot.settings.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => clone(CHI_FLOW_PRESETS[name]));
@@ -180,7 +180,7 @@ export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
     const factories = [0, 1, 2].map(factoryProfileSnapshot);
     const defaults = factories.map(value => defaultComparable(value, value));
-    let state = { version: 1, defaultsVersion: 11, selected: 0,
+    let state = { version: 1, defaultsVersion: 12, selected: 0,
         profiles: defaultProfileSnapshots(initial).map((snapshot, index) => {
             const baseline = withSavedSessionPreferences(snapshot, factories[index]);
             return { saved: clone(baseline), draft: clone(baseline) };
@@ -194,7 +194,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 11, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 12, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -340,6 +340,13 @@ export function createProfileState(initial, storage) {
                     for (const key of Object.keys(previous)) {
                         if (startup[key] === previous[key]) startup[key] = next[key];
                     }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 12) {
+                // Small uses the existing stored value 2, mapped to relative level 1.
+                for (const kind of ['saved', 'draft']) {
+                    const startup = state.profiles[0][kind].settings.startup;
+                    if (startup.separatorPx === 3) startup.separatorPx = 2;
                 }
             }
             for (const profile of state.profiles) {

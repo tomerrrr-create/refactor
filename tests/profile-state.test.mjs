@@ -127,7 +127,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     const expected = initial().settings;
     expected.simulationPlaybackTheme = 'gold';
     expected.rules.erosion.erosionStages.channels = 4;
-    Object.assign(expected.startup, { paletteName: '@random', fill: 'random', brushColor: 'none', separatorPx: 3, boardSize: 21, symmetry: 'off' });
+    Object.assign(expected.startup, { paletteName: '@random', fill: 'random', brushColor: 'none', separatorPx: 2, boardSize: 21, symmetry: 'off' });
     expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
     assert.deepEqual(one, expected);
     assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
@@ -279,7 +279,7 @@ test('startup resolves profile separators and board size before rendering, inclu
         disk.setItem(STARTUP_PROFILE_KEY, String(selected));
         disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 3, selected, profiles }));
         const startup = loadProfileStartup(initial().settings.startup, disk);
-        assert.equal(startup.separatorPx, [3, 2, 0][selected]);
+        assert.equal(startup.separatorPx, [2, 2, 0][selected]);
         assert.equal(startup.boardSize, [21, 11, 15][selected]);
     }
     profiles[1].draft.settings.startup.boardSize = 21;
@@ -289,7 +289,7 @@ test('startup resolves profile separators and board size before rendering, inclu
     const personal = loadProfileStartup(initial().settings.startup, disk);
     assert.equal(personal.boardSize, 21); assert.equal(personal.separatorPx, 3);
     assert.equal(defaultProfileSnapshots(initial())[2].settings.startup.separatorPx, 0);
-    assert.equal(factoryProfileSnapshot(0).settings.startup.separatorPx, 3);
+    assert.equal(factoryProfileSnapshot(0).settings.startup.separatorPx, 2);
     assert.equal(factoryProfileSnapshot(1).settings.startup.separatorPx, 2);
 });
 
@@ -368,10 +368,10 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
     assert.equal(loadProfileStartup(initial().settings.startup, storage()).paletteName, '@random');
 });
 
-test('profile one opens at 21 with medium separators and symmetry off without changing other profiles', () => {
+test('profile one opens at 21 with small separators and symmetry off without changing other profiles', () => {
     const first = factoryProfileSnapshot(0);
     assert.equal(first.settings.startup.boardSize, 21);
-    assert.equal(first.settings.startup.separatorPx, 3);
+    assert.equal(first.settings.startup.separatorPx, 2);
     assert.equal(first.settings.startup.symmetry, 'off');
     assert.equal(first.settings.brush.symmetry, 'off');
     const disk = storage();
@@ -410,7 +410,7 @@ test('version 11 updates former profile-one defaults without losing custom draft
     disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:10,selected:0,profiles}));
     const state=createProfileState(initial(),disk);state.persist();
     const saved=JSON.parse(disk.getItem(PROFILE_STORAGE_KEY));
-    assert.equal(saved.defaultsVersion,11);
+    assert.equal(saved.defaultsVersion,12);
     assert.deepEqual(saved.profiles[0].saved.settings.startup,factoryProfileSnapshot(0).settings.startup);
     assert.deepEqual(state.draft(),profiles[0].draft);
     assert.deepEqual(state.draft(1),profiles[1].draft);assert.deepEqual(state.draft(2),profiles[2].draft);
@@ -455,4 +455,18 @@ test('shared Game of Life genetics returns to RGB unless explicitly saved, and r
     assert.equal(createProfileState(initial(),disk).draft().settings.gameOfLifeGenetics,undefined);
     assert(state.save());assert.equal(createProfileState(initial(),disk).draft().settings.gameOfLifeGenetics,'palette-order');
     state.replace(factoryProfileSnapshot(0));assert.equal(state.draft().settings.gameOfLifeGenetics,undefined);assert(!state.dirty(0));
+});
+
+
+test('small startup separators replace former Medium defaults once while preserving other choices and profiles',()=>{
+ for(const value of [0,2,3,5,6]){
+  const disk=storage(),profiles=[0,1,2].map(i=>({saved:factoryProfileSnapshot(i),draft:factoryProfileSnapshot(i)}));
+  for(const kind of ['saved','draft'])profiles[0][kind].settings.startup.separatorPx=value;
+  disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:11,selected:0,profiles}));
+  const state=createProfileState(initial(),disk);state.persist();const stored=JSON.parse(disk.getItem(PROFILE_STORAGE_KEY));
+  for(const kind of ['saved','draft'])assert.equal(stored.profiles[0][kind].settings.startup.separatorPx,value===3?2:value);
+  assert.deepEqual(state.draft(1),profiles[1].draft);assert.deepEqual(state.draft(2),profiles[2].draft);
+  stored.profiles[0].saved.settings.startup.separatorPx=3;stored.profiles[0].draft.settings.startup.separatorPx=3;disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify(stored));
+  assert.equal(createProfileState(initial(),disk).draft().settings.startup.separatorPx,3,'explicit Medium after upgrading remains a personal choice');
+ }
 });
