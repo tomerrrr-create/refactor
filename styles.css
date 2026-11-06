@@ -2440,14 +2440,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; text-align:start; }
 #cymaticsSettingsDialog .cymatics-phase input { order:1; width:18px; height:18px; margin:0; flex-shrink:0; accent-color:var(--gold); }
 
-#btnCymatics > svg { display:none; }
-#btnCymatics.cymatics-diagonal > [data-cymatics-icon="diagonal"] { display:block; }
-#btnCymatics.cymatics-grid > [data-cymatics-icon="grid"] { display:block; }
-#btnCymatics.cymatics-circular > [data-cymatics-icon="circular"] { display:block; }
-#btnCymatics.cymatics-interference > [data-cymatics-icon="interference"] { display:block; }
-
-#btnCymatics.cymatics-clouds > [data-cymatics-icon="clouds"] { display:block; }
-#btnCymatics.cymatics-cosmic > [data-cymatics-icon="cosmic"] { display:block; }
+/* One stable audio waveform; only the small upper-right map badge changes. */
+#btnCymatics [data-cymatics-map-mark] { display:none; }
+#btnCymatics.cymatics-diagonal [data-cymatics-map-mark="diagonal"],
+#btnCymatics.cymatics-grid [data-cymatics-map-mark="grid"],
+#btnCymatics.cymatics-circular [data-cymatics-map-mark="circular"],
+#btnCymatics.cymatics-interference [data-cymatics-map-mark="interference"],
+#btnCymatics.cymatics-clouds [data-cymatics-map-mark="clouds"],
+#btnCymatics.cymatics-cosmic [data-cymatics-map-mark="cosmic"] { display:inline; }
 
 /* Legacy DOM identity retained for old integrations; Nudge has one control. */
 #btnNudgeDarker { display: none !important; }

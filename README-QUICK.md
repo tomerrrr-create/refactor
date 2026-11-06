@@ -22,7 +22,7 @@ Game of Life and Chi Flow each have three configurable cycle positions, shown wi
 
 Brightness smoothing starts at 10%. Cracks defaults to whole-board growth; its button cycles between whole-board and dead-cell growth, with Off available while paused. Cracks always uses the selected brush color and starts with Fibonacci Bloom growth defaults. Its settings use manual controls followed by colored preset tiles.
 
-Resonance starts in the second drawer. Its toolbar cycle contains Interference, Circular and Cosmological empathy; all six maps remain available in settings. Each map remembers its own Frequency and Strength, while Phase motion is shared. Cosmological empathy uses a circular gradient across the board; older recordings retain their recorded map behavior.
+Resonance starts in the second drawer. Its toolbar cycle is Circular → Interference, with Off while paused; all six maps, including Cosmological empathy, remain available in settings. A fixed audio-waveform icon has a small upper-right badge for the selected map. Each map remembers its own Frequency and Strength, while Phase motion is shared. Cosmological empathy uses a circular gradient across the board; older recordings retain their recorded map behavior.
 
 ## Two simulation drawers
 
