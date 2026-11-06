@@ -347,7 +347,6 @@ body {
 .sim-mode-active #btnIslands            { grid-area: 2 / 7; }
 .sim-mode-active #btnShowBreatheMenu    { grid-area: 1 / 7; }
 .sim-mode-active #btnWind              { grid-area: 2 / 1; }
-.sim-mode-active #btnNudgeBrighter     { grid-area: 3 / 1; }
 
 /* שורה 3 - (משמאל לימין) */
 .sim-mode-active #btnResizeDown        { grid-area: 3 / 1; }
@@ -911,7 +910,7 @@ body {
 :root[data-simulation-running][data-simulation-effective-theme="gold"] .sim-mode-active :is(
   #btnGameOfLife, #btnMagnetModes, #btnBrightnessEvo, #btnShowBreatheMenu,
   #btnIslands, #btnGravitationalSort, #btnErosion, #btnDla, #btnContour,
-  #btnCymatics, #btnSpiral, #btnSandpile, #btnTuring
+  #btnCymatics, #btnSpiral, #btnSandpile, #btnTuring, #btnNudgeBrighter
 ):not(.simulation-active):not(:disabled) > svg {
   stroke: var(--sim-color);
 }
@@ -1038,6 +1037,7 @@ body {
 #btnSandpile svg,
 #btnTuring svg,
 #btnShowBreatheMenu svg,
+#btnNudgeBrighter svg,
 #btnIslands svg {
     stroke: var(--sim-color); /* צובע את קווי המתאר של האייקון בכחול */
 }

@@ -1,7 +1,7 @@
 import { focusSettingsHeading } from './dialog-focus.js';
 import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
-import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId, isFixedEvolution } from './evolution-drawer-settings.js';
+import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId } from './evolution-drawer-settings.js';
 
 export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,onSave,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
@@ -56,7 +56,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     }
     function refresh(){
         const active=getActive(),slots=validateEvolutionSlots(getSlots());
-        const at=active&&!isFixedEvolution(active)?slots.indexOf(evolutionControlId(active)):-1;
+        const at=active?slots.indexOf(evolutionControlId(active)):-1;
         const otherPage=at>=0&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);
         trigger.querySelectorAll('[data-drawer-page-dot]').forEach((dot,index)=>dot.dataset.active=String(index===page));

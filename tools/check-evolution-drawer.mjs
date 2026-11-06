@@ -44,18 +44,18 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert(Math.abs(dotSize.width-20)<.1&&Math.abs(dotSize.height-10)<.1);
  const frame=await page.locator('#simModeBackground').boundingBox();
  await page.evaluate(()=>window.realLifeButton=document.getElementById('btnGameOfLife'));
- await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics']);assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.map(e=>Number(e.dataset.evolutionSlot)).sort((a,b)=>a-b)),[11,12,13]);
+ await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics','nudgeBrighter']);assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.map(e=>Number(e.dataset.evolutionSlot)).sort((a,b)=>a-b)),[11,12,13,17]);
  assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'1');
  assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
  if(config.lang==='en'){
   await trigger.focus();await page.keyboard.press('Alt+ArrowUp');await dialog.waitFor({state:'visible'});await page.keyboard.press('Escape');
-  await trigger.press('Space');assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics']);await trigger.press('Enter');unchanged(initial,await state());
+  await trigger.press('Space');assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics','nudgeBrighter']);await trigger.press('Enter');unchanged(initial,await state());
   await page.emulateMedia({reducedMotion:'reduce'});await tap(trigger);
   assert.equal(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.flatMap(e=>e.getAnimations()).length),0);
   await tap(trigger);await page.emulateMedia({reducedMotion:'no-preference'});
  }
- await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-empty').count(),7);
+ await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-empty').count(),6);
  assert.equal(await dialog.evaluate(d=>d.scrollWidth>d.clientWidth+1),false);
  const tiles=await dialog.locator('[data-drawer-slot]').evaluateAll(es=>es.map(e=>({w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height,label:e.getAttribute('aria-label')})));
  assert(tiles.every(t=>t.w>=43&&t.h>=43&&Math.abs(t.w-t.h)<1&&t.label));
@@ -83,7 +83,12 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  // Existing two-drawer files retain even the former left-aligned factory layout.
  const previous=[...DEFAULT_EVOLUTION_SLOTS,'breathe','turing','cymatics',...Array(7).fill(null)];
  await page.locator('#projectFileInput').setInputFiles({name:'saved-two-drawers.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{evolutionSlots:previous}}))});
- await page.waitForFunction(()=>drawerTest.state().slots[10]==='breathe');assert.deepEqual((await state()).slots,previous);
+ await page.waitForFunction(()=>drawerTest.state().slots[10]==='breathe');const migratedPrevious=[...previous];migratedPrevious[17]='nudgeBrighter';assert.deepEqual((await state()).slots,migratedPrevious);
+ const occupied=[...previous];[occupied[0],occupied[17]]=[occupied[17],occupied[0]];
+ await page.locator('#projectFileInput').setInputFiles({name:'occupied-nudge-destination.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{evolutionSlots:occupied}}))});
+ await page.waitForFunction(()=>drawerTest.state().slots[0]==='nudgeBrighter');assert.equal((await state()).slots[17],'dla');
+ for(let i=0;i<20;i++)if(occupied[i]!==null)assert.equal((await state()).slots[i],occupied[i]);
+
 
  await open();await tap(dialog.locator('[data-reset]'));await tap(dialog.locator('[type=submit]'));
  // Move Life to page two. Its selected mode and run survive navigation away.
@@ -108,5 +113,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual((await state()).board,result.board,'macro replays identically with Life on the other page');assert.deepEqual((await state()).slots,custom);
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());
  await tap(trigger);assert((await state()).playing,'navigation also works during Breathe');await page.evaluate(()=>drawerTest.pause());
+
+ // Both engine directions belong to the same movable drawer control and marker.
+ await page.evaluate(()=>drawerTest.arm('nudgeDarker'));
+ if(await page.locator('#controlsContainer').getAttribute('data-evolution-page')!=='0')await tap(trigger);
+ assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);
+ const nudge=page.locator('#btnNudgeBrighter');assert(await nudge.isVisible());assert.equal(await nudge.getAttribute('data-evolution-slot'),'17');
+ assert.deepEqual(await nudge.evaluate(e=>[getComputedStyle(e).gridRowStart,getComputedStyle(e).gridColumnStart]),['3','5']);
+ assert.equal(await nudge.getAttribute('data-nudge-mode'),'darker');
+ const nudgeBefore=await state();await open();await move(17,0);await tap(dialog.locator('[type=submit]'));
+ const movedNudge=moveEvolutionSlot(custom,17,0);assert.deepEqual((await state()).slots,movedNudge);unchanged(nudgeBefore,await state());
+ assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());assert.equal(await nudge.getAttribute('data-evolution-slot'),'0');
+ await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});assert.deepEqual((await state()).slots,movedNudge);
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}
