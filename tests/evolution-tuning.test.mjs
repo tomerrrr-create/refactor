@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from '../js/evolution-tuning.js';
+import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from '../js/evolution-tuning.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration } from '../js/simulations/islands.js';
 import { runBrightnessEvolution, runContrastGeneration } from '../js/simulations/brightness.js';
@@ -16,7 +16,7 @@ test('optional tuning round trips through settings and profiles without changing
         islands: { activity: .2 }, dla: { batchSize: 500 } }) };
     assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
     assert.deepEqual(validateProfileSnapshot({settings}).settings.evolutionTuning, settings.evolutionTuning);
-    for (let i = 0; i < 3; i++) assert.equal('evolutionTuning' in factoryProfileSnapshot(i).settings, false);
+    for (let i = 0; i < 3; i++) assert.equal(factoryProfileSnapshot(i).settings.evolutionTuning.brightnessEvo.smoothing, .1);
     assert.deepEqual(validateEvolutionTuning(), DEFAULT_EVOLUTION_TUNING);
 });
 test('invalid tuning is rejected before it can be saved or restored', () => {

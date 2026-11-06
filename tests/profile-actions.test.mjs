@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createProfileState, factoryProfileSnapshot, PROFILE_STORAGE_KEY } from '../js/profile-state.js';
-import { DEFAULT_EVOLUTION_TUNING } from '../js/evolution-tuning.js';
+import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING } from '../js/evolution-tuning.js';
 const storage = () => { const values=new Map(); return { getItem:key=>values.get(key)??null, setItem:(key,value)=>values.set(key,value) }; };
 const initial = () => factoryProfileSnapshot(0);
 const edit = (value, change) => { const next=structuredClone(value); change(next); return next; };
@@ -17,7 +17,7 @@ test('default star compares each profile with its factory, survives Save and reo
 });
 test('equivalent optional defaults and preset label identities do not create a false star',()=>{
  const state=createProfileState(initial(),storage());
- const snapshot=initial();snapshot.settings.evolutionTuning=structuredClone(DEFAULT_EVOLUTION_TUNING);
+ const snapshot=initial();snapshot.settings.evolutionTuning=structuredClone(INITIAL_EVOLUTION_TUNING);
  snapshot.settings.separatorCycle=[5,3,1,0];snapshot.identity.chiFlow.sources=['custom-0','custom-1','custom-2'];
  state.replace(snapshot);assert.equal(state.modified(0),false);
 });

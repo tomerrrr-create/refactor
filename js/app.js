@@ -14,7 +14,7 @@ import { openStudio } from './studio-link.js';
 import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWindMode, nextWindEffect, createWindModeIcon } from './wind-settings.js';
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
-import { DEFAULT_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
+import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, getSimulationPlaybackTheme, applySimulationPlaybackTheme, setSimulationRunning } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
@@ -62,7 +62,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let replayBrushBefore = null;
       let islandsSession = null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
-      let evolutionTuning = validateEvolutionTuning();
+      let evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
       
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
@@ -3562,7 +3562,8 @@ function cycleCymaticsMode(){
     const activating=armedSimulation!=='cymatics';
     if(activating)armSimulation('cymatics');
     const rules=getCymaticsRules(),current=rules.resonanceVersion??1;
-    const next=activating?current:nextEvolutionMode(current,['off',4,3,1,2,5,6]);
+    const cycle=['off',4,3,6];
+    const next=activating?current:(cycle.includes(current)?nextEvolutionMode(current,cycle):4);
     const selected=selectCymaticsMap(rules,next==='off'?4:next,cymaticsFrequencies,cymaticsStrengths);
     const running=isLifePlaying;
     if(saveCymaticsSettings(selected.rules,selected.frequencies,selected.strengths)===false)return;
