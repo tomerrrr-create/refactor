@@ -43,7 +43,7 @@ The editor shows both grids, side by side on wide screens and stacked on mobile.
 
 **Save** applies both drawers. **Cancel**, Escape or closing without saving discards the draft. **Reset** restores the factory draft until saved. Each profile autosaves its drawer layout across reloads without requiring Save to profile. Layout changes do not alter artwork, engine state, Undo/Redo or recipes.
 
-Nudge stays below Wind in the former minus slot, and one-shot Contours stays below Symmetry, both outside the drawers. Nudge cycles Brighter → Darker → Off while paused, skips Off while running, and acts through Single step or Play. Contours applies one pass immediately; swipe upward for its settings.
+Nudge stays below Wind in the former minus slot, and one-shot Contours stays below Symmetry, both outside the drawers. Nudge cycles Brighter → Darker → Off while paused, skips Off while running, and acts through Single step or Play. Contours applies one pass immediately; swipe upward for its settings. In Simulation, swipe/drag down on Contours to replace it with Separators; swipe down on Separators to return. Symmetry stays visible and no longer switches to Separators.
 
 ## Settings profiles
 

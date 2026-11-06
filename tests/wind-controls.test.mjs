@@ -21,7 +21,7 @@ test('Symmetry cycling, Kaleidoscope hold and Off stay independent of Wind',()=>
  vm.runInContext(source.slice(source.indexOf('      function selectKaleidoscope('),source.indexOf('      function cycleSymmetryMode(')),c);
  const start=source.indexOf('        bindPickerGestures(dom.btnSymmetry,');
  vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnCycleSort,',start)),c);
- gestures.onTap();gestures.onHold();assert.equal(c.symmetryMode,'kaleidoscope');assert(c.windMode);gestures.onOpen();assert.equal(c.symmetryMode,'off');assert(c.windMode);
+ assert.equal(gestures.onSwipeDown,undefined);gestures.onTap();gestures.onHold();assert.equal(c.symmetryMode,'kaleidoscope');assert(c.windMode);gestures.onOpen();assert.equal(c.symmetryMode,'off');assert(c.windMode);
  assert.deepEqual(events,['cycle','symmetry','symmetry']);
 });
 test('color control retains brush actions and has no Wind toggle gesture',()=>{
@@ -58,13 +58,13 @@ test('ordinary panel events commit pending ripples without consuming or blocking
 
 test('leaving the simulation panel exits Wind instead of hiding its active control',()=>{
  const control=()=>{const classes=new Set();return {style:{},classList:{contains:c=>classes.has(c),toggle(c,on=!classes.has(c)){if(on)classes.add(c);else classes.delete(c);}}};};
- const dom=Object.fromEntries(['controlsContainer','btnSymmetry','btnBrushMode','btnGap','btnResetBoard','btnTutorial','btnSpecialReset','btnPlayPauseLife','btnToggleSimMode'].map(key=>[key,control()]));
+ const dom=Object.fromEntries(['controlsContainer','btnSymmetry','btnContoursAction','btnBrushMode','btnGap','btnResetBoard','btnTutorial','btnSpecialReset','btnPlayPauseLife','btnToggleSimMode'].map(key=>[key,control()]));
  let pauses=0,resets=0;
  const c=vm.createContext({dom,windMode:true,isSimModeActive:false,setTimeout:callback=>callback(),
   setWindMode(value){c.windMode=value;},pauseLife(){pauses++;},resetArmedState(){resets++;}});
  vm.runInContext(source.slice(source.indexOf('      function updateSimulationUtilityControl()'),source.indexOf('      function resetArmedState()')),c);
  c.toggleSimMode();assert.equal(c.isSimModeActive,true);assert.equal(c.windMode,true);assert.equal(dom.controlsContainer.style.opacity,'1');
- c.swapSimulationUtilityControl();assert(dom.btnSymmetry.classList.contains('control-hidden'));assert(!dom.btnGap.classList.contains('control-hidden'));assert(c.windMode);
+ c.swapSimulationUtilityControl();assert(dom.btnContoursAction.classList.contains('control-hidden'));assert(!dom.btnSymmetry.classList.contains('control-hidden'));assert(!dom.btnGap.classList.contains('control-hidden'));assert(c.windMode);
  c.toggleSimMode();assert(!dom.btnSymmetry.classList.contains('control-hidden'));assert(!dom.btnGap.classList.contains('control-hidden'));assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,false);assert.equal(pauses,2);assert.equal(resets,2);
 });
 

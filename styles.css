@@ -368,8 +368,7 @@ body {
 
 /* Right Panel (Col 9) */
 .sim-mode-active #btnSymmetry      { grid-area: 1 / 9; }
-.sim-mode-active.sim-separator-control #btnGap { display: inline-flex; grid-area: 1 / 9; }
-.sim-mode-active.sim-separator-control #btnSymmetry { display: none; }
+.sim-mode-active.sim-separator-control #btnGap { display: inline-flex; grid-area: 2 / 9; }
 .sim-mode-active #btnUndo          { grid-area: 4 / 9; }
 
 #btnBrushMode svg path {
@@ -2462,6 +2461,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* One-shot Contours lives below Symmetry, outside the evolution overlay. */
 #btnContoursAction { display: none; color: inherit; }
 #controlsContainer.sim-mode-active #btnContoursAction { display: inline-flex; grid-area: 2 / 9; }
+#controlsContainer.sim-mode-active.sim-separator-control #btnContoursAction { display: none; }
 #btnContoursAction svg { stroke: currentColor; width: var(--side-icon-size); height: var(--side-icon-size); }
 
 #contourSettingsModal > div { max-height: calc(100dvh - 32px); overflow-y: auto; box-sizing: border-box; }

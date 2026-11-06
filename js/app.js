@@ -2610,7 +2610,8 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
       function updateSimulationUtilityControl() {
           const showSeparators = isSimModeActive && dom.controlsContainer.classList.contains('sim-separator-control');
           dom.btnGap.classList.toggle('control-hidden', isSimModeActive && !showSeparators);
-          dom.btnSymmetry.classList.toggle('control-hidden', showSeparators);
+          dom.btnContoursAction.classList.toggle('control-hidden', showSeparators);
+          dom.btnSymmetry.classList.toggle('control-hidden', false);
       }
 
       function swapSimulationUtilityControl() {
@@ -5753,7 +5754,6 @@ bindPickerGestures(dom.btnPalette, {
         initializeWindMode();
         bindPickerGestures(dom.btnSymmetry, {
             onTap: cycleSymmetryMode, onHold: selectKaleidoscope,
-            onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
             onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
             canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
         });
@@ -5795,7 +5795,6 @@ initializeBrushPickerNavigation({
     },
     symmetryGestures: {
         onTap: cycleSymmetryMode, onHold: selectKaleidoscope, onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
-        onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
         canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
     },
     separatorGestures: {
@@ -5880,6 +5879,7 @@ dom.btnWind.addEventListener('keydown', event => {
         ].filter(([button]) => button);
         bindPickerGestures(dom.btnContoursAction, {
             onTap: () => applyContoursOnce(), onOpen: modals.openContourSettingsModal,
+            onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
             onHold: () => evolutionExplanation.show(dom.btnContoursAction, 'contourAction'),
             canInteract: () => !isBreathing && !isMacroLoaded,
             beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
