@@ -3557,6 +3557,7 @@ function saveCracksSettings(material, growth = getCracksGrowth()) {
     };
     // Saved Cracks preferences belong to the profile, not drawing history.
     commit();
+    updateContourButtonUI();
     recordLiveSimulationRules('contour');
     persistWorkspaceSettings(getWorkspaceSettings());
     settingsProfiles?.scheduleCapture();
@@ -3627,7 +3628,10 @@ function updateContourButtonUI() {
     const active = armedSimulation === 'contour' && contourMode === 'cracks';
     dom.btnContour.classList.toggle('simulation-active', active);
     dom.btnContour.classList.toggle('cracks-active', true);
-    const title = getText('tooltip_cracks');
+    const area = active ? (getCracksGrowth().area ?? 'all') : 'all';
+    dom.btnContour.dataset.cracksArea = area;
+    dom.btnContour.querySelector('.cracks-area-mark')?.setAttribute('opacity', area==='dead' ? '1' : '0');
+    const title = getText('tooltip_cracks') + (active ? ' · ' + getText('cracks_area_' + area) : '');
     dom.btnContour.title = title;
     dom.btnContour.setAttribute('aria-label', title);
     dom.btnContour.setAttribute('aria-pressed', String(active));
@@ -3636,14 +3640,29 @@ function updateContourButtonUI() {
 // New human control: Cracks is a standalone simulation. Legacy engines/modes
 // below remain available to old project snapshots and recorded commands.
 function toggleCracksSimulation() {
-    if (armedSimulation === 'contour' && contourMode === 'cracks') {
-        if (!isLifePlaying) armSimulation(null);
+    if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
+    const active = armedSimulation === 'contour' && contourMode === 'cracks';
+    const current = active ? (getCracksGrowth().area ?? 'all') : 'off';
+    const next = nextEvolutionMode(current, ['off', 'all', 'dead']);
+    if (next === 'off') {
+        armSimulation(null);
+        window.logArtEvent('Cracks Mode Changed', JSON.stringify({version:1,mode:'off'}));
+        updateContourButtonUI();
         return;
     }
-    const resume = isLifePlaying;
+    const resume = !active && isLifePlaying;
     if (resume) pauseLife();
-    if (armedSimulation === 'contour') armSimulation(null);
-    armSimulation('contour');
+    if (!active) {
+        if (armedSimulation === 'contour') armSimulation(null);
+        armSimulation('contour');
+    }
+    if ((getCracksGrowth().area ?? 'all') !== next) {
+        saveCracksSettings(getCracksMaterial(), { ...getCracksGrowth(), area:next });
+    }
+    updateContourButtonUI();
+    // Live area changes already record their effective rules in Save. Paused
+    // selection uses the same context command as Resonance, without painting.
+    if (!isLifePlaying) window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
     if (resume) togglePlayPauseLife();
 }
 
@@ -4302,7 +4321,7 @@ function parseHistoryMacro(lines) {
         if (event.eventName === 'BRUSH_END') brushMotion = false;
         previousBrushElapsed = brushMotion ? event.brushElapsed : null;
         if (event.eventName === 'PLAY') simulationRunning = true;
-        if (['PAUSE','HISTORY_SETTINGS','Cymatics Mode Changed'].includes(event.eventName)) simulationRunning = false;
+        if (['PAUSE','HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed'].includes(event.eventName)) simulationRunning = false;
         return { ...event, delta };
     });
 }
@@ -4310,6 +4329,9 @@ function parseHistoryMacro(lines) {
 function validateIslandsMacroAction(action) {
     if (action.eventName === 'CONTOUR_APPLY') {
         const value=JSON.parse(action.details);if(value.version!==1)throw new Error('Unsupported Contours action');validateContourActionRules(value.rules);
+    } else if (action.eventName === 'Cracks Mode Changed') {
+        const value=JSON.parse(action.details);
+        if(value.version!==1||value.mode!=='off')throw new Error('Invalid Cracks mode');
     } else if (action.eventName === 'INIT_STATE') {
         const snapshot = JSON.parse(action.details);
         if (snapshot.gold !== undefined && (!Array.isArray(snapshot.gold) || snapshot.gold.length > snapshot.n * snapshot.n ||
@@ -4392,7 +4414,7 @@ function parseMacroText(text) {
             if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) action.orphanedSimulation = true;
         }
         if (action.eventName === 'SIMULATION_RULES') hasSimulationContext = true;
-        if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed'].includes(action.eventName)) simulationRunning = false;
+        if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed'].includes(action.eventName)) simulationRunning = false;
         actions.push(action);
     }
     actions.forEach(validateIslandsMacroAction);
@@ -4744,6 +4766,7 @@ function stopMacro() {
     replayCymaticsRules=null;
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
+    if(typeof updateContourButtonUI==='function')updateContourButtonUI();
     currentMacroStep = 0;
     pendingMacroPalette = null; 
     isSelectingMacroPalette = false; 
@@ -5096,6 +5119,10 @@ function executeMacroAction(action) {
     else if (action.eventName === 'PAUSE') {
         pauseLife();
     } 
+    else if (action.eventName === 'Cracks Mode Changed') {
+        if(armedSimulation==='contour'&&contourMode==='cracks'){if(isLifePlaying)pauseLife();armSimulation(null);}
+        updateContourButtonUI();
+    }
     else if (action.eventName === 'Cymatics Mode Changed') {
         validateCymaticsMacroAction(action);
         const snapshot=validateCymaticsSnapshot(JSON.parse(action.details));

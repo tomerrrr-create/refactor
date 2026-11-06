@@ -1,4 +1,4 @@
-import { validateCracksBrush, CRACKS_GROWTH_PRESETS, CONTOUR_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
+import { DEFAULT_CRACKS_MATERIAL, validateCracksBrush, CRACKS_GROWTH_PRESETS, CONTOUR_LINE_COLORS, DEFAULT_CRACKS_GROWTH, validateCracksGrowth, validateCracksMaterial } from '../js/cracks-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -30,7 +30,7 @@ test('empty and gold boards stay unchanged, light lines work and changed board s
  for(const invalid of [{...createCracksState(9),random:0},{...createCracksState(9),tips:[{x:NaN,y:0,angle:0,age:0}]},{...createCracksState(9),tips:Array(49).fill({x:0,y:0,angle:0,age:0})}])assert.throws(()=>restoreCracksState(invalid));
 });
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-function harness(){const c=vm.createContext({C:{PALETTES:[{}]},validateCracksBrush,replayCracksBrush:null,selectedColor:null,isRainbowModeActive:false,activePaletteIndex:0,updateColorPickerButtonUI(){},updateGlowEffect(){},CONTOUR_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,createCracksSession,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
+function harness(){const c=vm.createContext({C:{PALETTES:[{}]},validateCracksBrush,replayCracksBrush:null,selectedColor:null,isRainbowModeActive:false,activePaletteIndex:0,updateColorPickerButtonUI(){},updateGlowEffect(){},CONTOUR_LINE_COLORS,DEFAULT_CRACKS_GROWTH,validateCracksGrowth,replayCracksGrowth:null,prepareCracksResume,createCracksState,createCracksSession,restoreCracksState,runCracksGeneration,validateCracksMaterial,replayCracksMaterial:null,isMacroPlaying:false,isExecutingMacroCommand:false,n:21,contourMode:'contours',cracksState:null,contourRules:{sensitivity:75,lineColor:'darkest',material:{enabled:false,strength:80}},armedSimulation:null,isLifePlaying:false,dom:{btnContour:{dataset:{},querySelector:()=>null,classList:{toggle(){}},setAttribute(){}}},getText:k=>k,recordLiveSimulationRules:()=>{c.recorded=c.getContourRecordingRules();},Simulations:{runContourGeneration:()=>['original']}});
  c.armSimulation=sim=>{c.armedSimulation=sim;if(sim==='contour'){c.contourMode='cracks';c.cracksState=null;}};
  vm.runInContext(source.slice(source.indexOf('function getCracksBrush()'),source.indexOf('function nextEvolutionMode(')),c);return c;}
 test('paused contour cycle includes Off, live cycle skips Off, and snapshots preserve rules and tips',()=>{
@@ -145,4 +145,20 @@ test('Undo into another growth area retains preferences but renews incompatible 
  const old={...createCracksState(21,9981),steps:8,roots:3,tips:[{x:4,y:4,angle:0,age:5}]};
  c.restoreContourSnapshot({mode:'cracks',rules:{sensitivity:75,lineColor:'brush'},growth:DEFAULT_CRACKS_GROWTH,cracksState:old},{preservePreferences:true});
  assert.equal(c.getCracksGrowth().area,'dead');assert.equal(c.cracksState.random,9981);assert.equal(c.cracksState.roots,0);assert.equal(c.cracksState.tips.length,0);assert.equal(old.tips.length,1,'history snapshot remains immutable');
+});
+
+function cycleHarness(){
+ const c=harness(),ctx=fixture(21),events=[];Object.assign(c,{DEFAULT_CRACKS_MATERIAL,isMacroLoaded:false,isBreathing:false,boardState:ctx.currentBoardState,palette:()=>ctx.currentPalette,settingsProfiles:null,persistWorkspaceSettings(){},getWorkspaceSettings:()=>({rules:{contour:c.contourRules}}),getSimulationRecordingDetails:()=>JSON.stringify(c.getContourRecordingRules()),window:{logArtEvent:(name,details)=>events.push({name,details})}});c.C.PALETTES[0].originalColors=ctx.currentPalette;
+ vm.runInContext(source.slice(source.indexOf('function nextEvolutionMode('),source.indexOf('function cycleBrightnessEvoMode(')),c);return {c,events};
+}
+test('human Cracks cycles Whole board / Dead cells / Off while paused, starts on Whole board and never paints',()=>{
+ const {c,events}=cycleHarness();c.contourRules.growth={...DEFAULT_CRACKS_GROWTH,area:'dead'};const original=JSON.stringify(c.boardState);
+ for(const expected of ['all','dead','off','all']){c.toggleCracksSimulation();assert.equal(c.armedSimulation===null?'off':c.getCracksGrowth().area??'all',expected);assert.equal(c.dom.btnContour.dataset.cracksArea,expected==='off'?'all':expected);assert.equal(JSON.stringify(c.boardState),original);}
+ assert(events.some(e=>e.name==='Cracks Mode Changed'&&JSON.parse(e.details).mode==='off'));
+ assert(events.filter(e=>e.name==='SIMULATION_RULES').length>=3);
+});
+test('live Cracks cycling skips Off without pause, re-arm, painting or generation/cursor reset',()=>{
+ const {c}=cycleHarness();c.armedSimulation='contour';c.contourMode='cracks';c.isLifePlaying=true;c.currentGenerationCount=35;c.cracksState={...createCracksState(21,7788),steps:9};const original=JSON.stringify(c.boardState);
+ c.pauseLife=()=>{throw Error('live mode change must not pause');};c.armSimulation=()=>{throw Error('live mode change must not re-arm');};c.togglePlayPauseLife=()=>{throw Error('live mode change must not restart');};
+ for(const expected of ['dead','all','dead','all']){c.toggleCracksSimulation();assert.equal(c.getCracksGrowth().area??'all',expected);assert(c.isLifePlaying);assert.equal(c.currentGenerationCount,35);assert.equal(c.cracksState.random,7788);assert.equal(c.cracksState.steps,9);assert.equal(JSON.stringify(c.boardState),original);assert.equal(c.recorded.growth.area??'all',expected);}
 });
