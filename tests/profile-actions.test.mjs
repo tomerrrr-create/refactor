@@ -124,3 +124,15 @@ test('runtime brush-only Cracks defaults do not leave a false star after profile
  const changed=structuredClone(runtime);changed.settings.rules.contour.growth.branchChance=23;state.replace(changed);assert.equal(state.modified(0),true);
  const legacy=initial();legacy.settings.rules.contour.lineColor='lightest';state.replace(legacy);assert.equal(state.modified(0),true,'legacy non-default Contours color remains distinguishable');
 });
+
+test('drawer defaults compare by effective layout and custom drawers autosave independently from rule edits',async()=>{
+ const {DEFAULT_EVOLUTION_LAYOUT,DEFAULT_EVOLUTION_SLOTS,moveEvolutionSlot}=await import('../js/evolution-drawer-settings.js');
+ const disk=storage(),state=createProfileState(initial(),disk);
+ const oldDefault=initial();oldDefault.settings.evolutionSlots=[...DEFAULT_EVOLUTION_SLOTS];
+ state.replace(oldDefault);assert.equal(state.modified(0),false,'legacy first drawer plus its implicit second matches defaults');
+ const edited=initial();edited.settings.evolutionSlots=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,0,19);
+ state.observe(initial());state.capture(edited);state.persist();
+ const reopened=createProfileState(initial(),disk);
+ assert.deepEqual(reopened.draft(0).settings.evolutionSlots,edited.settings.evolutionSlots);
+ assert.equal(reopened.draft(1).settings.evolutionSlots,undefined,'other profile keeps its own default layout');
+});
