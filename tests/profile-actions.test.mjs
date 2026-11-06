@@ -117,3 +117,10 @@ test('legacy auto-saved shapes are discarded, explicit saved shapes are retained
   assert.equal(reopened.settings.brush.shape,shape);assert.equal(reopened.settings.brush.size,9);
  }
 });
+
+test('runtime brush-only Cracks defaults do not leave a false star after profile Reset',()=>{
+ const state=createProfileState(initial(),storage()),runtime=initial();runtime.settings.rules.contour.lineColor='brush';
+ state.replace(runtime);assert.equal(state.modified(0),false);
+ const changed=structuredClone(runtime);changed.settings.rules.contour.growth.branchChance=23;state.replace(changed);assert.equal(state.modified(0),true);
+ const legacy=initial();legacy.settings.rules.contour.lineColor='lightest';state.replace(legacy);assert.equal(state.modified(0),true,'legacy non-default Contours color remains distinguishable');
+});

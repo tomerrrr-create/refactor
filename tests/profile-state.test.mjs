@@ -1,3 +1,4 @@
+import { INITIAL_CRACKS_GROWTH, DEFAULT_CRACKS_GROWTH } from '../js/cracks-settings.js';
 import { INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from '../js/evolution-tuning.js';
 import { STARTUP_PROFILE_KEY } from '../js/startup-profile.js';
 import test from 'node:test';
@@ -358,8 +359,12 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
     assert.equal(state.draft().settings.startup.paletteName, 'Ancient 264');
     assert.equal(state.draft().settings.startup.brushColor, 'none');
     assert.equal(state.draft().settings.cycles.chiFlow[1].reach, 3);
-    assert.deepEqual(state.draft(1), {...profiles[1].draft,settings:{...profiles[1].draft.settings,evolutionTuning:validateEvolutionTuning(INITIAL_EVOLUTION_TUNING)}});
-    assert.deepEqual(state.draft(2), {...profiles[2].draft,settings:{...profiles[2].draft.settings,evolutionTuning:validateEvolutionTuning(INITIAL_EVOLUTION_TUNING)}});
+    for(const index of [1,2]) {
+        const expected=structuredClone(profiles[index].draft);
+        expected.settings.evolutionTuning=validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
+        expected.settings.rules.contour.growth=structuredClone(INITIAL_CRACKS_GROWTH);
+        assert.deepEqual(state.draft(index),expected);
+    }
     state.persist();
     assert.deepEqual(createProfileState(initial(), disk).draft(), state.draft());
     const factory = factoryProfileSnapshot(0);
@@ -411,7 +416,7 @@ test('version 11 updates former profile-one defaults without losing custom draft
     disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:10,selected:0,profiles}));
     const state=createProfileState(initial(),disk);state.persist();
     const saved=JSON.parse(disk.getItem(PROFILE_STORAGE_KEY));
-    assert.equal(saved.defaultsVersion,13);
+    assert.equal(saved.defaultsVersion,14);
     assert.deepEqual(saved.profiles[0].saved.settings.startup,factoryProfileSnapshot(0).settings.startup);
     assert.deepEqual(state.draft(),profiles[0].draft);
     assert.deepEqual(state.draft(1),profiles[1].draft);assert.deepEqual(state.draft(2),profiles[2].draft);
@@ -503,4 +508,25 @@ test('profiles saved by retired swipes retain active choices, Yours and unrelate
  loaded.persist();assert.deepEqual(createProfileState(initial(),disk).draft(),value);
  const withoutIdentity=validateProfileSnapshot({settings:saved.settings});assert.equal(withoutIdentity.identity.gameOfLife.index,0);assert.deepEqual(withoutIdentity.settings.cycles.gameOfLife[0],saved.settings.evolutionSelections.gameOfLife);
  assert.throws(()=>validateProfileSnapshot({...saved,identity:{}}));
+});
+
+test('profile Cracks defaults migrate once without overriding explicit custom or legacy growth',()=>{
+ const disk=storage(),profiles=[0,1,2].map(i=>({saved:factoryProfileSnapshot(i),draft:factoryProfileSnapshot(i)}));
+ const custom={branchChance:23,branchInterval:17,curvature:45,area:'dead'};
+ for(const kind of ['saved','draft']){
+  delete profiles[0][kind].settings.rules.contour.growth;
+  profiles[0][kind].settings.nudgeIntervalMs=37;
+  profiles[1][kind].settings.rules.contour.growth=structuredClone(custom);
+  profiles[2][kind].settings.rules.contour.growth=structuredClone(DEFAULT_CRACKS_GROWTH);
+ }
+ disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:13,selected:0,profiles}));
+ const state=createProfileState(initial(),disk);
+ assert.deepEqual(state.draft(0).settings.rules.contour.growth,INITIAL_CRACKS_GROWTH);
+ assert.deepEqual(state.draft(1).settings.rules.contour.growth,custom);
+ assert.equal(state.draft(2).settings.rules.contour.growth,undefined,'explicit legacy values keep the canonical legacy fallback');
+ assert.equal(state.draft(0).settings.nudgeIntervalMs,37);
+ state.observe(state.draft());const legacy=state.draft();delete legacy.settings.rules.contour.growth;state.capture(legacy);state.save();
+ const reopened=createProfileState(initial(),disk);assert.equal(reopened.draft(0).settings.rules.contour.growth,undefined,'later legacy preset choices cannot migrate back to Fibonacci');
+ assert.deepEqual(reopened.draft(1).settings.rules.contour.growth,custom);
+ for(const i of [0,1,2])assert.deepEqual(factoryProfileSnapshot(i).settings.rules.contour.growth,INITIAL_CRACKS_GROWTH);
 });

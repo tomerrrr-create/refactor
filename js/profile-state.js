@@ -1,3 +1,4 @@
+import { INITIAL_CRACKS_GROWTH } from './cracks-settings.js';
 import { INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { DEFAULT_SEPARATOR_CYCLE } from './separator-cycle.js';
 import { resolveSavedBloom } from './soft-bloom.js';
@@ -128,6 +129,7 @@ export function factoryProfileSnapshot(index) {
     if (!Number.isInteger(index) || index < 0 || index > 2) throw Error('Invalid profile');
     const settings = defaultWorkspaceSettings();
     settings.evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
+    settings.rules.contour.growth = clone(INITIAL_CRACKS_GROWTH);
     Object.assign(settings.smoothing, { display: DEFAULT_SMOOTH_RENDERING,
         bloom: DEFAULT_SOFT_BLOOM, bloomIntensity: DEFAULT_BLOOM_INTENSITY });
     const identity = {};
@@ -158,6 +160,8 @@ function mergeChanges(draft, previous, current) {
 function defaultComparable(value, factory) {
     const snapshot = validateProfileSnapshot(value);
     const settings = snapshot.settings;
+    // The old default color field and the live brush-only Cracks color are equivalent.
+    if (settings.rules.contour.lineColor === 'darkest') settings.rules.contour.lineColor = 'brush';
     settings.evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
     settings.gameOfLifeGenetics ??= 'rgb';
     settings.separatorCycle ??= [...DEFAULT_SEPARATOR_CYCLE];
@@ -189,7 +193,7 @@ export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
     const factories = [0, 1, 2].map(factoryProfileSnapshot);
     const defaults = factories.map(value => defaultComparable(value, value));
-    let state = { version: 1, defaultsVersion: 13, selected: 0,
+    let state = { version: 1, defaultsVersion: 14, selected: 0,
         profiles: defaultProfileSnapshots(initial).map((snapshot, index) => {
             const baseline = withSavedSessionPreferences(snapshot, factories[index]);
             return { saved: clone(baseline), draft: clone(baseline) };
@@ -203,7 +207,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 13, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 14, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -365,6 +369,15 @@ export function createProfileState(initial, storage) {
                         const tuning = validateEvolutionTuning(settings.evolutionTuning);
                         tuning.brightnessEvo.smoothing = INITIAL_EVOLUTION_TUNING.brightnessEvo.smoothing;
                         settings.evolutionTuning = tuning;
+                    }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 14) {
+                // Fill only absent profile defaults once. Explicit growth values,
+                // including the canonical legacy preset, retain their meaning.
+                for (const [index, profile] of state.profiles.entries()) for (const kind of ['saved','draft']) {
+                    if (value.profiles[index][kind].settings.rules?.contour?.growth === undefined) {
+                        profile[kind].settings.rules.contour.growth = clone(INITIAL_CRACKS_GROWTH);
                     }
                 }
             }
