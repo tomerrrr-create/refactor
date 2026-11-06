@@ -342,10 +342,11 @@
 
           <button id="btnResizeUp" class="ctrl">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6" />
+                  <path data-resize-plus-stem stroke-linecap="round" d="M12 6v12" />
               </svg>
           </button>
-          <button id="btnResizeDown" class="ctrl">
+          <button id="btnResizeDown" class="ctrl" hidden aria-hidden="true" tabindex="-1">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6" />
               </svg>

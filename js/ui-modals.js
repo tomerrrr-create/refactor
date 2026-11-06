@@ -872,7 +872,7 @@ function populateHelpModal() {
 
     const categories = {
         inspiration: { tab: 'creation', titleKey: 'help_category_inspiration', buttons: ['btnPalette', 'btnRandom', 'btnInvert', 'btnSpecialReset'] },
-        order: { tab: 'creation', titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnResizeDown', 'btnGap', 'btnDark'] },
+        order: { tab: 'creation', titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnGap', 'btnDark'] },
         touch: { tab: 'creation', titleKey: 'help_category_touch', buttons: ['btnBrushMode', 'btnSymmetry', 'btnColorPicker'] },
         controls: { tab: 'evolution', titleKey: 'help_category_controls', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward'] },
         evolution: { tab: 'evolution', titleKey: 'help_category_evolution_modes', buttons: ['btnCymatics', 'btnIslands', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter'] },

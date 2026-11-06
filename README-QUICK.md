@@ -10,6 +10,7 @@ For complete interactions, engine behavior, compatibility and maintenance instru
 - Tap the palette, color or sorting controls for their ordinary actions; swipe upward for their pickers/settings. Hold Color for 600 ms to select the first palette entry, or 1,200 ms total for rainbow.
 - The color and palette pickers share a frame, backdrop and top navigation anchor. Their top palette icon switches between the two views. Palette categories are **23, 64, 264 and •**.
 - Palette sorting preserves visible board colors and the selected paint color while changing their palette indices.
+- A single board-size button starts at **+**. Tap to resize in its displayed direction; swipe down to toggle **+ / −** without resizing, or up for the exact-size dialog. It returns to + on a fresh app load.
 - Holding Symmetry for 600 ms selects Kaleidoscope directly. Ordinary taps still cycle symmetry modes.
 
 ## Select and run an evolution

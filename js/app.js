@@ -347,6 +347,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let hasTriggeredFirstNudge = false;
       let hasUsedRandomize = false;
       let isAnimating = false;
+      let resizeIncreasing = true; // Direction is presentation-only and resets on a fresh app load.
       // isBreathing is now defined globally at the top
       let isSimModeActive = false;
       let selectedColor = null;
@@ -1293,6 +1294,18 @@ function handlePaletteSwitch(backwards = false) {
             });
             if (resume) togglePlayPauseLife();
         });
+      }
+
+      function updateResizeButtonUI() {
+        dom.btnResizeUp.dataset.resizeDirection = resizeIncreasing ? 'increase' : 'decrease';
+        const label = getText(resizeIncreasing ? 'tooltip_resizeUp' : 'tooltip_resizeDown');
+        dom.btnResizeUp.title = label;
+        dom.btnResizeUp.setAttribute('aria-label', label);
+      }
+
+      function toggleResizeDirection() {
+        resizeIncreasing = !resizeIncreasing;
+        updateResizeButtonUI();
       }
 
       function resizeGrid(increase = false) {
@@ -2532,8 +2545,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         dom.btnSpecialReset.title = getText('tooltip_specialReset');
         dom.btnResetBoard.title = getText('tooltip_resetBoard');
         dom.btnResetBoard.setAttribute('aria-label', getText('tooltip_resetBoard'));
-        dom.btnResizeUp.title = getText('tooltip_resizeUp');
-        dom.btnResizeDown.title = getText('tooltip_resizeDown'); 
+        updateResizeButtonUI();
         dom.btnSave.title = getText('tooltip_save');
         updateBreatheEvoButtonUI();
         dom.btnTutorial.title = getText('tooltip_tutorial');
@@ -5717,13 +5729,12 @@ bindPickerGestures(dom.btnPalette, {
             onError: () => alert(getText('studio_transfer_failed'))
         })));
         dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
-        for (const [button, increase] of [[dom.btnResizeUp, true], [dom.btnResizeDown, false]]) {
-            bindPickerGestures(button, {
-                onTap: () => resizeGrid(increase), onOpen: modals.openResizeModal,
-                canInteract: () => !isBreathing,
-                beforeStart: hideLongPressDisplay
-            });
-        }
+        bindPickerGestures(dom.btnResizeUp, {
+            onTap: () => resizeGrid(resizeIncreasing), onOpen: modals.openResizeModal,
+            onSwipeDown: toggleResizeDirection,
+            canInteract: () => !isBreathing,
+            beforeStart: hideLongPressDisplay
+        });
         dom.btnSave.addEventListener('click', (e) => handleCtrlClick(e, openSaveModalWithPreview));
         bindPickerGestures(dom.btnGap, {
             onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
