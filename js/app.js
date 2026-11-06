@@ -843,6 +843,9 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
               : `${getText('tooltip_gap')}: ${separatorPx}`;
           dom.btnGap.title = label;
           dom.btnGap.setAttribute('aria-label', label);
+          const isOff = isRelativeSeparatorMode ? level === 0 : separatorPx === 0;
+          dom.btnGap.querySelector('svg').setAttribute('stroke', isOff ? '#424242' : '#fff');
+          dom.gapValue.style.color = isOff ? '#424242' : '';
           dom.gapValue.hidden = isRelativeSeparatorMode && level === 0;
           dom.gapValue.textContent = isRelativeSeparatorMode
               ? ({ 5: 'L', 3: 'M', 1: 'S', 0: '' }[level])

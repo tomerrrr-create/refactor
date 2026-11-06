@@ -39,7 +39,9 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
  assert.equal(await trigger.locator('[data-drawer-page-dot]').count(),2);
  assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'0');
- assert.equal(await trigger.evaluate(e=>getComputedStyle(e).color),'rgb(255, 215, 0)');
+ assert.equal(await trigger.evaluate(e=>getComputedStyle(e).color),'rgb(156, 163, 175)');
+ const dotSize=await trigger.locator('.drawer-page-dots').evaluate(e=>({width:parseFloat(getComputedStyle(e).width),height:parseFloat(getComputedStyle(e).height)}));
+ assert(Math.abs(dotSize.width-20)<.1&&Math.abs(dotSize.height-10)<.1);
  const frame=await page.locator('#simModeBackground').boundingBox();
  await page.evaluate(()=>window.realLifeButton=document.getElementById('btnGameOfLife'));
  await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics']);

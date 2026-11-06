@@ -2390,10 +2390,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
 #controlsContainer #btnEvolutionDrawer { display:none; }
 #controlsContainer.sim-mode-active #btnEvolutionDrawer { display:inline-flex; align-items:center; justify-content:center; grid-area:1 / 7; width:44px; height:44px; margin:auto; padding:0; border:0; background:transparent; cursor:pointer; }
-#btnEvolutionDrawer { position:relative; color:var(--gold); direction:ltr; touch-action:none; }
-#btnEvolutionDrawer .drawer-page-dots { width:24px; height:12px; pointer-events:none; }
+#btnEvolutionDrawer { position:relative; color:#9ca3af; direction:ltr; touch-action:none; }
+#btnEvolutionDrawer .drawer-page-dots { width:20px; height:10px; pointer-events:none; }
 #btnEvolutionDrawer [data-drawer-page-dot] { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.45; transition:opacity 160ms ease,fill 160ms ease; }
-#btnEvolutionDrawer [data-drawer-page-dot][data-active="true"] { fill:currentColor; opacity:1; }
+#btnEvolutionDrawer [data-drawer-page-dot][data-active="true"] { fill:currentColor; opacity:.85; }
 @media(prefers-reduced-motion:reduce) { #btnEvolutionDrawer [data-drawer-page-dot] { transition:none; } }
 #btnEvolutionDrawer .drawer-active-mark { display:none; position:absolute; bottom:7px; width:3px; height:3px; border-radius:50%; background:var(--gold); }
 #btnEvolutionDrawer[data-parked-active="true"] .drawer-active-mark { display:block; }
