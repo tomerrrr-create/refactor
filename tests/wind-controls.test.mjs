@@ -8,7 +8,7 @@ test('Wind toggle preserves a running simulation without disabling panel buttons
  const button={pressed:'false',inert:false,disabled:false,setAttribute(name,value){if(name==='aria-pressed')this.pressed=value;}},events=[];
  const c=vm.createContext({windSettings:{...DEFAULT_WIND_SETTINGS,mode:'paint'},selectWindMode,saveWindSettings(){},updateColorPickerButtonUI(){},windMode:false,isLifePlaying:true,isSimModeActive:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
  pointerState:{id:null},windSettingsUI:null,windPointerId:null,windPainter:{stop:()=>events.push('commit')},pauseLife(){throw Error('tool changes must not pause the simulation');},
- document:{body:{classList:{toggle(){}}}},dom:{btnColorPicker:button},flashToolMode:()=>events.push('flash')});
+ document:{body:{classList:{toggle(){}}}},dom:{btnWind:button},flashToolMode:()=>events.push('flash')});
  vm.runInContext(source.slice(source.indexOf('function setWindMode('),source.indexOf('let windPointerId =')),c);
  c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.windSettings.mode,'ripple');assert.equal(button.inert,false);assert.equal(button.disabled,false);
  c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['flash','commit','flash']);
@@ -24,21 +24,28 @@ test('Symmetry cycling, Kaleidoscope hold and Off stay independent of Wind',()=>
  gestures.onTap();gestures.onHold();assert.equal(c.symmetryMode,'kaleidoscope');assert(c.windMode);gestures.onOpen();assert.equal(c.symmetryMode,'off');assert(c.windMode);
  assert.deepEqual(events,['cycle','symmetry','symmetry']);
 });
-test('shared color control routes tap, swipe, and holds by active tool without changing brush choices in Wind',()=>{
- let gestures;const events=[],c=vm.createContext({dom:{btnColorPicker:{addEventListener(){}}},windMode:false,isBreathing:false,isLifePlaying:false,armedSimulation:null,
+test('color control retains brush actions and has no Wind toggle gesture',()=>{
+ let gestures;const events=[],c=vm.createContext({dom:{btnColorPicker:{}},windMode:false,isBreathing:false,isLifePlaying:false,armedSimulation:null,
  selectedColorIndex:3,selectedColor:'color3',isRainbowModeActive:false,
  C:{LONG_PRESS_SHOW_MS:600},hideLongPressDisplay(){},palette:()=>['color0'],
- handleColorPickerClick:()=>events.push('color'),cycleWindEffect:()=>events.push('wind-cycle'),
- modals:{openColorPickerModal:()=>events.push('color-settings')},windSettingsUI:{open:()=>events.push('wind-settings')},
- setWindMode:value=>{c.windMode=value;events.push(value);},updateGlowEffect(){},updateColorPickerButtonUI(){},
- bindPickerGestures:(button,options)=>{gestures=options;}});
+ handleColorPickerClick:()=>events.push('color'),modals:{openColorPickerModal:()=>events.push('color-settings')},
+ updateGlowEffect(){},updateColorPickerButtonUI(){},bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('bindPickerGestures(dom.btnColorPicker,');
+ vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnWind,',start)),c);
+ assert.equal(gestures.onSwipeDown,undefined);gestures.onTap();gestures.onOpen();
+ gestures.onHold();assert.equal(c.selectedColorIndex,0);gestures.onExtendedHold();assert(c.isRainbowModeActive);
+ c.windMode=true;gestures.onTap();gestures.onOpen();assert(c.windMode);
+ assert.deepEqual(events,['color','color-settings','color','color-settings']);
+ c.isLifePlaying=true;c.armedSimulation='breathe';assert(!gestures.canOpen());
+});
+test('dedicated Wind gestures use settings only while active and block macro interaction',()=>{
+ let gestures;const events=[],c=vm.createContext({dom:{btnWind:{addEventListener(){}}},windMode:false,isSimModeActive:true,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
+ cycleWindEffect:()=>events.push('cycle'),windSettingsUI:{open:()=>events.push('settings')},hideLongPressDisplay(){},bindPickerGestures:(button,options)=>{gestures=options;}});
+ const start=source.indexOf('bindPickerGestures(dom.btnWind,');
  vm.runInContext(source.slice(start,source.indexOf("        dom.btnDark.addEventListener",start)),c);
- gestures.onTap();gestures.onOpen();gestures.onSwipeDown();assert(c.windMode);
- gestures.onTap();gestures.onOpen();gestures.onHold();gestures.onExtendedHold();assert.equal(c.selectedColorIndex,3);assert.equal(c.selectedColor,'color3');assert.equal(c.isRainbowModeActive,false);
- gestures.onSwipeDown();assert(!c.windMode);gestures.onHold();assert.equal(c.selectedColorIndex,0);gestures.onExtendedHold();assert(c.isRainbowModeActive);
- assert.deepEqual(events,['color','color-settings',true,'wind-cycle','wind-settings',false]);
- c.isLifePlaying=true;c.armedSimulation='breathe';assert(gestures.canInteract());assert(!gestures.canOpen());gestures.onSwipeDown();assert(c.windMode);assert(gestures.canOpen());
+ assert(gestures.canInteract());assert(!gestures.canOpen());gestures.onTap();c.windMode=true;assert(gestures.canOpen());gestures.onOpen();
+ assert.deepEqual(events,['cycle','settings']);for(const flag of ['isMacroLoaded','isMacroPlaying','isExecutingMacroCommand']){c[flag]=true;assert(!gestures.canInteract());c[flag]=false;}
+ c.isSimModeActive=false;assert(!gestures.canInteract());
 });
 test('ordinary panel events commit pending ripples without consuming or blocking the event',()=>{
  const listeners=new Map(),events=[],c=vm.createContext({finishBrushGesture(){},windMode:true,windPainter:{stop:()=>events.push('commit')},dom:{controlsContainer:{addEventListener:(name,handler)=>listeners.set(name,handler)}}});
@@ -49,31 +56,32 @@ test('ordinary panel events commit pending ripples without consuming or blocking
  c.windMode=false;listeners.get('click')(event);assert.equal(events.length,3);
 });
 
-test('switching interfaces preserves active Wind in both directions',()=>{
+test('leaving the simulation panel exits Wind instead of hiding its active control',()=>{
  const control=()=>{const classes=new Set();return {style:{},classList:{contains:c=>classes.has(c),toggle(c,on=!classes.has(c)){if(on)classes.add(c);else classes.delete(c);}}};};
  const dom=Object.fromEntries(['controlsContainer','btnSymmetry','btnBrushMode','btnGap','btnResetBoard','btnTutorial','btnSpecialReset','btnPlayPauseLife','btnToggleSimMode'].map(key=>[key,control()]));
  let pauses=0,resets=0;
  const c=vm.createContext({dom,windMode:true,isSimModeActive:false,setTimeout:callback=>callback(),
-  setWindMode(){throw Error('interface changes must not toggle Wind');},pauseLife(){pauses++;},resetArmedState(){resets++;}});
+  setWindMode(value){c.windMode=value;},pauseLife(){pauses++;},resetArmedState(){resets++;}});
  vm.runInContext(source.slice(source.indexOf('      function updateSimulationUtilityControl()'),source.indexOf('      function resetArmedState()')),c);
  c.toggleSimMode();assert.equal(c.isSimModeActive,true);assert.equal(c.windMode,true);assert.equal(dom.controlsContainer.style.opacity,'1');
  c.swapSimulationUtilityControl();assert(dom.btnSymmetry.classList.contains('control-hidden'));assert(!dom.btnGap.classList.contains('control-hidden'));assert(c.windMode);
- c.toggleSimMode();assert(!dom.btnSymmetry.classList.contains('control-hidden'));assert(!dom.btnGap.classList.contains('control-hidden'));assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,true);assert.equal(pauses,2);assert.equal(resets,2);
+ c.toggleSimMode();assert(!dom.btnSymmetry.classList.contains('control-hidden'));assert(!dom.btnGap.classList.contains('control-hidden'));assert.equal(c.isSimModeActive,false);assert.equal(c.windMode,false);assert.equal(pauses,2);assert.equal(resets,2);
 });
 
-test('Wind cycles through three active effects with separate preferences, without pausing a concurrent simulation or changing symmetry',()=>{
+test('Wind cycles through three effects then Off, retaining preferences and concurrent simulation',()=>{
  const events=[];
  let settings=selectWindMode(undefined,'ripple');settings.modes.ripple.strength=5;settings.strength=5;
  settings.modes.paint.colorSpan=2.5;settings.modes.displace.strength=2;
  const c=vm.createContext({windMode:true,windSettings:settings,symmetryMode:'horizontal',isLifePlaying:true,
  windPainter:{stop:()=>events.push('commit')},selectWindMode,nextWindEffect,
- saveWindSettings:()=>events.push('save'),updateColorPickerButtonUI:()=>events.push('ui'),pauseLife(){throw Error('must keep playing');}});
+ setWindMode(value){c.windMode=value;events.push(value);},saveWindSettings:()=>events.push('save'),updateColorPickerButtonUI:()=>events.push('ui'),pauseLife(){throw Error('must keep playing');}});
  vm.runInContext(source.slice(source.indexOf('function cycleWindEffect('),source.indexOf('let windPointerId =')),c);
  c.cycleWindEffect();assert.equal(c.windSettings.mode,'paint');assert.equal(c.windSettings.colorSpan,2.5);
  c.cycleWindEffect();assert.equal(c.windSettings.mode,'displace');assert.equal(c.windSettings.strength,2);
- c.cycleWindEffect();assert.equal(c.windSettings.mode,'ripple');assert.equal(c.windSettings.strength,5);
+ c.cycleWindEffect();assert.equal(c.windMode,false);assert.equal(c.windSettings.modes.ripple.strength,5);
+ c.cycleWindEffect();assert.equal(c.windMode,true);
  assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);assert.equal(c.symmetryMode,'horizontal');
- assert.deepEqual(events,['commit','save','ui','commit','save','ui','commit','save','ui']);
+ assert.deepEqual(events,['commit','save','ui','commit','save','ui',false,true]);
 });
 test('side swipe uses the existing empty-brush reset, preserving size, symmetry, board and running simulation',()=>{
  let gestures,flashes=0;
@@ -83,7 +91,7 @@ test('side swipe uses the existing empty-brush reset, preserving size, symmetry,
  bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('bindPickerGestures(dom.btnColorPicker,');
  vm.runInContext(source.slice(source.indexOf('      function resetSelectedColor()'),source.indexOf('      function resetToGoldAndDefaultPalette()'))+
- source.slice(start,source.indexOf("        dom.btnDark.addEventListener",start)),c);
+ source.slice(start,source.indexOf('bindPickerGestures(dom.btnWind,',start)),c);
  assert(gestures.canSwipeSide());gestures.onSwipeSide();assert.equal(c.selectedColor,null);assert.equal(c.selectedColorIndex,-1);assert(!c.isRainbowModeActive);assert.equal(flashes,1);
  gestures.onSwipeSide();assert.equal(flashes,1);
  c.isRainbowModeActive=true;gestures.onSwipeSide();assert(!c.isRainbowModeActive);assert.equal(flashes,2);

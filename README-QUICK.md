@@ -25,6 +25,8 @@ Brightness smoothing starts at 10%. Cracks defaults to whole-board growth; its b
 
 Resonance starts in the second drawer. Its toolbar cycle is Circular → Interference, with Off while paused; all six maps, including Cosmological empathy, remain available in settings. A fixed audio-waveform icon has a small upper-right badge for the selected map. Each map remembers its own Frequency and Strength, while Phase motion is shared. Cosmological empathy uses a circular gradient across the board; older recordings retain their recorded map behavior.
 
+Wind has a dedicated button in the simulation panel above Nudge. Tap to cycle Local ripple → Paint color rings → Move existing colors → Off; active Wind is gold. Swipe up while active for settings. The former downward swipe on Color/brush is removed. Nudge now sits in the former minus position.
+
 ## Two simulation drawers
 
 The simulation overlay has **two drawers**, each with ten fixed places in two rows of five. All thirteen evolutions appear exactly once across them. Empty places are invisible on the control panel, and the frame keeps the same size.
@@ -41,7 +43,7 @@ The editor shows both grids, side by side on wide screens and stacked on mobile.
 
 **Save** applies both drawers. **Cancel**, Escape or closing without saving discards the draft. **Reset** restores the factory draft until saved. Each profile autosaves its drawer layout across reloads without requiring Save to profile. Layout changes do not alter artwork, engine state, Undo/Redo or recipes.
 
-Nudge stays below the color picker, and one-shot Contours stays below Symmetry, both outside the drawers. Nudge cycles Brighter → Darker → Off while paused, skips Off while running, and acts through Single step or Play. Contours applies one pass immediately; swipe upward for its settings.
+Nudge stays below Wind in the former minus slot, and one-shot Contours stays below Symmetry, both outside the drawers. Nudge cycles Brighter → Darker → Off while paused, skips Off while running, and acts through Single step or Play. Contours applies one pass immediately; swipe upward for its settings.
 
 ## Settings profiles
 

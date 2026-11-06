@@ -206,6 +206,7 @@ body {
 #btnSpiral,
 #btnMagnetModes,
 #btnNudgeBrighter,
+#btnWind,
 #btnNudgeDarker,
 #btnCycleSort {
     opacity: 0;
@@ -306,6 +307,7 @@ body {
 .sim-mode-active #btnTuring,
 .sim-mode-active #btnSpiral,
 .sim-mode-active #btnNudgeBrighter,
+.sim-mode-active #btnWind,
 .sim-mode-active #btnNudgeDarker,
 .sim-mode-active #btnRandom,
 .sim-mode-active #btnCycleSort {
@@ -344,7 +346,8 @@ body {
 .sim-mode-active #btnBrightnessEvo     { grid-area: 2 / 6; }
 .sim-mode-active #btnIslands            { grid-area: 2 / 7; }
 .sim-mode-active #btnShowBreatheMenu    { grid-area: 1 / 7; }
-.sim-mode-active #btnNudgeBrighter     { grid-area: 2 / 1; }
+.sim-mode-active #btnWind              { grid-area: 2 / 1; }
+.sim-mode-active #btnNudgeBrighter     { grid-area: 3 / 1; }
 
 /* שורה 3 - (משמאל לימין) */
 .sim-mode-active #btnResizeDown        { grid-area: 3 / 1; }
@@ -1354,7 +1357,7 @@ button, .ctrl {
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 8px #d5aa4840;
 }
-#btnPalette, #btnColorPicker, #btnCycleSort, #btnResizeUp, #btnResizeDown,
+#btnPalette, #btnColorPicker, #btnWind, #btnCycleSort, #btnResizeUp, #btnResizeDown,
 #btnCymatics, #btnGameOfLife, #btnGravitationalSort, #btnContour, #btnSpiral,
 #btnMagnetModes, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker {
   touch-action: none !important;
@@ -1995,7 +1998,7 @@ body.wind-mode #board { cursor: crosshair; }
 .tuning-modes.wind-mode-buttons button { display: grid; place-items: center; width: 52px; height: 52px; padding: 10px; border-radius: 50%; flex-shrink: 0; }
 .wind-mode-buttons svg { width: 28px; height: 28px; }
 #btnColorPicker { border-radius: 50%; }
-#btnColorPicker.wind-active { color: var(--gold); }
+#btnWind.wind-active { color: var(--gold); }
 .wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }
 
 /* Breathing mode pickers reuse the control panel's four original symbols. */

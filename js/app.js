@@ -2627,6 +2627,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
                 pauseLife();
                 resetArmedState();
             } else {
+                if (windMode) setWindMode(false);
                 pauseLife();
                 resetArmedState();
             }
@@ -2848,10 +2849,11 @@ function setWindMode(enabled) {
     windMode = enabled;
     document.body.classList.toggle('wind-mode', enabled);
     updateColorPickerButtonUI();
-    flashToolMode(dom.btnColorPicker);
+    flashToolMode(dom.btnWind);
 }
 function cycleWindEffect() {
-    if (!windMode) return;
+    if (!windMode) { setWindMode(true); return; }
+    if (nextWindEffect(windSettings.mode) === 'ripple') { setWindMode(false); return; }
     windPainter?.stop();
     windSettings = selectWindMode(windSettings, nextWindEffect(windSettings.mode));
     saveWindSettings(windSettings);
@@ -2882,7 +2884,7 @@ function initializeWindMode() {
     window.addEventListener('blur', () => { finishBrushGesture(); if (windMode) setWindMode(false); });
     windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
         getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); updateColorPickerButtonUI(); },
-        onOpen: () => windPainter.stop(), trigger: dom.btnColorPicker });
+        onOpen: () => windPainter.stop(), trigger: dom.btnWind });
     windPainter = createWindPainter({
         settings: () => windSettings,
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
@@ -3214,17 +3216,13 @@ function updateLayout() {
             recordLiveSimulationRules('contour');
         }
         lastCracksBrushKey=brushKey;
-        dom.btnColorPicker.classList.toggle('wind-active', windMode);
-        dom.btnColorPicker.setAttribute('aria-pressed', String(windMode));
-        dom.btnColorPicker.setAttribute('aria-keyshortcuts', 'Alt+ArrowDown');
-        if (windMode) {
-            dom.btnColorPicker.replaceChildren(createWindModeIcon(windSettings.mode));
-            dom.btnColorPicker.dataset.windMode = windSettings.mode;
-            dom.btnColorPicker.title = `${getText('wind_mode_' + windSettings.mode)} — ${getText('tooltip_wind_cycle')}`;
-            dom.btnColorPicker.setAttribute('aria-label', dom.btnColorPicker.title);
-            return;
-        }
-        delete dom.btnColorPicker.dataset.windMode;
+        dom.btnWind.classList.toggle('wind-active', windMode);
+        dom.btnWind.setAttribute('aria-pressed', String(windMode));
+        dom.btnWind.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp');
+        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : 'ripple'));
+        dom.btnWind.dataset.windMode = windMode ? windSettings.mode : 'off';
+        dom.btnWind.title = `${getText(windMode ? 'wind_mode_' + windSettings.mode : 'erosion_off')} — ${getText('tooltip_wind_cycle')}`;
+        dom.btnWind.setAttribute('aria-label', dom.btnWind.title);
         dom.btnColorPicker.title = getText('tooltip_colorPicker');
         dom.btnColorPicker.setAttribute('aria-label', dom.btnColorPicker.title);
         // 1. האם אנחנו במצב קשת?
@@ -5808,18 +5806,16 @@ initializeBrushPickerNavigation({
 });
 bindPickerGestures(dom.btnColorPicker, {
     onTap: () => {
-        if (windMode) cycleWindEffect();
-        else if (!(isLifePlaying && armedSimulation === 'breathe')) handleColorPickerClick();
+        if (!(isLifePlaying && armedSimulation === 'breathe')) handleColorPickerClick();
     },
-    onOpen: () => windMode ? windSettingsUI.open() : modals.openColorPickerModal(),
-    onSwipeDown: () => setWindMode(!windMode),
+    onOpen: () => modals.openColorPickerModal(),
     canSwipeSide: () => !windMode,
     onSwipeSide: () => {
         if (windMode || (!selectedColor && !isRainbowModeActive)) return;
         resetSelectedColor();
         dom.btnColorPicker.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 250 });
     },
-    canOpen: () => windMode || !(isLifePlaying && armedSimulation === 'breathe'),
+    canOpen: () => !(isLifePlaying && armedSimulation === 'breathe'),
     onHold: () => {
         if (windMode || (isLifePlaying && armedSimulation === 'breathe')) return;
         selectedColorIndex = 0;
@@ -5837,9 +5833,16 @@ bindPickerGestures(dom.btnColorPicker, {
     canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
-dom.btnColorPicker.addEventListener('keydown', event => {
-    if (event.altKey && event.key === 'ArrowDown' && !isBreathing) {
-        event.preventDefault(); setWindMode(!windMode);
+bindPickerGestures(dom.btnWind, {
+    onTap: cycleWindEffect,
+    onOpen: () => windSettingsUI.open(),
+    canOpen: () => windMode,
+    canInteract: () => isSimModeActive && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
+    beforeStart: hideLongPressDisplay
+});
+dom.btnWind.addEventListener('keydown', event => {
+    if (event.altKey && event.key === 'ArrowUp' && isSimModeActive && windMode && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand) {
+        event.preventDefault(); windSettingsUI.open();
     }
 });
         dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
@@ -5904,7 +5907,7 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnWind || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 
