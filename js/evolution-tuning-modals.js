@@ -1,5 +1,5 @@
 import { focusSettingsHeading } from './dialog-focus.js';
-import { DEFAULT_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
+import { INITIAL_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
 
 const definitions = {
@@ -89,7 +89,7 @@ export function initializeEvolutionTuningModals(app) {
         dialog.querySelector('[data-close]').addEventListener('click', close);
         dialog.querySelector('[data-cancel]').addEventListener('click', close);
         dialog.querySelector('[data-reset]').addEventListener('click', () => {
-            draft = { ...DEFAULT_EVOLUTION_TUNING[simulation] }; render();
+            draft = { ...INITIAL_EVOLUTION_TUNING[simulation] }; render();
         });
         dialog.querySelector('form').addEventListener('submit', event => {
             event.preventDefault();

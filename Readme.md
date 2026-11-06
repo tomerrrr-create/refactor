@@ -127,11 +127,11 @@ Nudge's interval defaults to 100 ms and can be set from 0 to 200 ms in its selec
 
 ### Brightness, Breathe, Islands and DLA settings
 
-Swipe/drag up on the **selected** evolution while paused or running. The gold swipe glow appears only when opening is available. Save commits the draft; Cancel, Escape and outside dismissal discard it. Reset restores original parameter values in the draft and retains the selected mode. Tuning is included in supported project snapshots and settings exports; Save to profile retains session tuning on reopening. Opening or saving does not start playback. Live changes are recorded at their generation without restarting the run; Brightness preferences are retained across artwork Undo/Redo as described above.
+Swipe/drag up on the **selected** evolution while paused or running. The gold swipe glow appears only when opening is available. Save commits the draft; Cancel, Escape and outside dismissal discard it. Reset restores application defaults in the draft and retains the selected mode. Tuning is included in supported project snapshots and settings exports; Save to profile retains session tuning on reopening. Opening or saving does not start playback. Live changes are recorded at their generation without restarting the run; Brightness preferences are retained across artwork Undo/Redo as described above.
 
-| Evolution | Parameter | Range | Original default |
+| Evolution | Parameter | Range | Opening / Reset default |
 | --- | --- | --- | --- |
-| Brightness | Smoothing strength (Brightness mode) | 5–100% of the distance to the local average per generation | 50% |
+| Brightness | Smoothing strength (Brightness mode) | 5–100% of the distance to the local average per generation | 10% |
 | Brightness | Contrast strength (Contrast mode) | 1–100% of one palette-index step per generation | 10% |
 | Breathe | Rate | 25–300% of the original rhythm | 100% |
 | Breathe | Depth | 25–150% of the original brightness deviation | 100% |
@@ -140,7 +140,7 @@ Swipe/drag up on the **selected** evolution while paused or running. The gold sw
 
 Brightness, Breathe and DLA also allow selection among their modes. Islands cycles Classic → Sort proximity → Off while paused and alternates its active modes while running. Its dotted leaf marks Sort proximity. Both use the same activity setting; increasing activity or DLA steps increases computational work as well as potential movement. See [Islands](#13-islands) for the copying rule and versioned replay state.
 
-Old settings and recipes use the original tuning values when absent. Brightness/Breathe recipes retain mode and tuning; old `Mode:` records remain readable. Breathe's random rhythms and DLA's randomness are not made deterministic by recording tuning. This is an optional extension of the V1 settings format; compatibility defaults remain intact.
+Brightness opening and Reset smoothing is 10%. Existing profile preferences without an explicit smoothing value migrate to 10%; explicitly saved values remain intact. Old imported settings and recipes use the original tuning values when absent (50% smoothing). Brightness/Breathe recipes retain mode and tuning; old `Mode:` records remain readable. Breathe's random rhythms and DLA's randomness are not made deterministic by recording tuning. This is an optional extension of the V1 settings format; compatibility defaults remain intact.
 
 ### Save, load and help
 
@@ -408,7 +408,7 @@ These models simulate cellular smoothing and contrasting by treating the color i
 
 * **Brightness Evolution (Smoothing):**
     * Calculates the average `v` over the valid 3×3 neighborhood, including the cell itself and excluding gold tiles.
-    * Smooths the current cell's value towards the local average using configurable `smoothingFactor` (default 0.5).
+    * Smooths the current cell's value towards the local average using configurable `smoothingFactor` (opening/Reset default 0.1; legacy recordings without tuning retain 0.5).
     * Mathematically mimics a blur or diffusion effect over time.
 * **Contrast Generation (Sharpening):**
     * Calculates the valid neighboring average excluding the center and gold tiles.

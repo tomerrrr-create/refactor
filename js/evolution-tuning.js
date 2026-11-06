@@ -6,6 +6,12 @@ export const DEFAULT_EVOLUTION_TUNING = Object.freeze({
     dla: Object.freeze({ batchSize: 100 })
 });
 
+// Opening/Reset preferences are separate from legacy file and engine fallbacks.
+export const INITIAL_EVOLUTION_TUNING = Object.freeze({
+    ...DEFAULT_EVOLUTION_TUNING,
+    brightnessEvo: Object.freeze({ smoothing: .1, contrast: .1 })
+});
+
 export const EVOLUTION_TUNING_LIMITS = {
     brightnessEvo: { smoothing: [.05, 1, .05], contrast: [.01, 1, .01] },
     breathe: { speed: [.25, 3, .05], depth: [.25, 1.5, .05] },

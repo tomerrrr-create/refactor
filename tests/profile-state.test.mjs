@@ -1,3 +1,4 @@
+import { INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from '../js/evolution-tuning.js';
 import { STARTUP_PROFILE_KEY } from '../js/startup-profile.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -357,8 +358,8 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
     assert.equal(state.draft().settings.startup.paletteName, 'Ancient 264');
     assert.equal(state.draft().settings.startup.brushColor, 'none');
     assert.equal(state.draft().settings.cycles.chiFlow[1].reach, 3);
-    assert.deepEqual(state.draft(1), profiles[1].draft);
-    assert.deepEqual(state.draft(2), profiles[2].draft);
+    assert.deepEqual(state.draft(1), {...profiles[1].draft,settings:{...profiles[1].draft.settings,evolutionTuning:validateEvolutionTuning(INITIAL_EVOLUTION_TUNING)}});
+    assert.deepEqual(state.draft(2), {...profiles[2].draft,settings:{...profiles[2].draft.settings,evolutionTuning:validateEvolutionTuning(INITIAL_EVOLUTION_TUNING)}});
     state.persist();
     assert.deepEqual(createProfileState(initial(), disk).draft(), state.draft());
     const factory = factoryProfileSnapshot(0);
@@ -410,7 +411,7 @@ test('version 11 updates former profile-one defaults without losing custom draft
     disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:10,selected:0,profiles}));
     const state=createProfileState(initial(),disk);state.persist();
     const saved=JSON.parse(disk.getItem(PROFILE_STORAGE_KEY));
-    assert.equal(saved.defaultsVersion,12);
+    assert.equal(saved.defaultsVersion,13);
     assert.deepEqual(saved.profiles[0].saved.settings.startup,factoryProfileSnapshot(0).settings.startup);
     assert.deepEqual(state.draft(),profiles[0].draft);
     assert.deepEqual(state.draft(1),profiles[1].draft);assert.deepEqual(state.draft(2),profiles[2].draft);
@@ -429,8 +430,8 @@ test('saved fixed startup palettes survive the random factory default', () => {
     state.persist();
     assert.equal(loadProfileStartup(initial().settings.startup, disk).paletteName, 'Hearts');
     assert.equal(factoryProfileSnapshot(0).settings.startup.paletteName, '@random');
-    assert.deepEqual(state.draft(1), profiles[1].draft);
-    assert.deepEqual(state.draft(2), profiles[2].draft);
+    assert.deepEqual(state.draft(1), {...profiles[1].draft,settings:{...profiles[1].draft.settings,evolutionTuning:validateEvolutionTuning(INITIAL_EVOLUTION_TUNING)}});
+    assert.deepEqual(state.draft(2), {...profiles[2].draft,settings:{...profiles[2].draft.settings,evolutionTuning:validateEvolutionTuning(INITIAL_EVOLUTION_TUNING)}});
 });
 
 test('saved random and personal startup choices survive the random default', () => {
@@ -469,4 +470,21 @@ test('small startup separators replace former Medium defaults once while preserv
   stored.profiles[0].saved.settings.startup.separatorPx=3;stored.profiles[0].draft.settings.startup.separatorPx=3;disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify(stored));
   assert.equal(createProfileState(initial(),disk).draft().settings.startup.separatorPx,3,'explicit Medium after upgrading remains a personal choice');
  }
+});
+
+test('brightness default migration changes only missing smoothing and retains explicit values',()=>{
+ const disk=storage(),profiles=[0,1,2].map(i=>({saved:factoryProfileSnapshot(i),draft:factoryProfileSnapshot(i)}));
+ for(const kind of ['saved','draft']){
+  profiles[0][kind].settings.evolutionTuning={brightnessEvo:{contrast:.7},breathe:{speed:2}};
+  profiles[1][kind].settings.evolutionTuning.brightnessEvo.smoothing=.5;
+  profiles[2][kind].settings.evolutionTuning.brightnessEvo.smoothing=.75;
+ }
+ disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:12,selected:0,profiles}));
+ const state=createProfileState(initial(),disk);
+ assert.equal(state.draft(0).settings.evolutionTuning.brightnessEvo.smoothing,.1);
+ assert.equal(state.draft(0).settings.evolutionTuning.brightnessEvo.contrast,.7);
+ assert.equal(state.draft(0).settings.evolutionTuning.breathe.speed,2);
+ assert.equal(state.draft(1).settings.evolutionTuning.brightnessEvo.smoothing,.5);
+ assert.equal(state.draft(2).settings.evolutionTuning.brightnessEvo.smoothing,.75);
+ state.persist();assert.deepEqual(createProfileState(initial(),disk).draft(),state.draft());
 });
