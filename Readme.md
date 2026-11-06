@@ -101,21 +101,13 @@ Game of Life and Chi Flow have three configurable cycle positions, represented b
 | Chi Flow, profile 1 | Harmony | Nova | Alexis |
 | Chi Flow, profiles 2/3 | Electric | Harmony | Alexis |
 
-While **Game of Life or Chi Flow is selected**, swipe its toolbar button horizontally to browse the full built-in preset list in the settings dialog's display order: right selects the next preset, left the previous, wrapping at either end. Directions stay physical in RTL languages. From unmatched custom rules, right starts at the first preset and left at the last. A brief localized name appears above the control. This shortcut leaves all three configured cycle slots and Yours untouched; ordinary taps continue the configured cycle from its retained position. During the current session, leaving either evolution and returning restores its last effective preset/rules and cycle position, including choices made by swiping or in settings. Selecting it again after switching away does not advance a slot or paint a generation. Explicitly reaching Off through the tap cycle still resets its next entry to the first position. Fresh app/profile settings still establish the opening choices; recipe execution retains the original activation defaults and then restores its recorded rules. Browsing while paused only changes effective rules; during Play it changes them at the current generation without restarting. Upward settings gestures and hold explanations remain available. Manual browsing is disabled for loaded/playing recipes. Other evolutions have no horizontal preset shortcut.
-
-The compact bronze preset panels have the cycle control **to the left** of each preset name. Rule counts are square grids: Game of Life uses 0–8; Chi Flow's existing rule choices are 1–8. Selected rule tiles are gold.
-
-- **Unavailable:** a dim bronze icon when all three positions are occupied; it cannot be added.
-- **Available:** a faint cool icon carrying the star count of the vacant position.
-- **Assigned:** a lit gold icon carrying its existing position's star count.
-
-Click an assigned icon to free its position, then an available icon to fill it. Only one position can be vacant at a time, and Save is disabled until it is filled. Membership does not apply a generation or immediately change the running app. Save commits the draft; Cancel discards it. Name selection and cycle membership are separate controls.
-
-**Yours always appears first** and retains the last personal rules, even if it is removed from the cycle or another preset is displayed. It can occupy any cycle position. Ordinary saved rule edits update the personal choice; when Yours is assigned, its position receives those edited rules. Other custom snapshots already present in a cycle can appear as additional Yours entries. Rule snapshots and their source identities are saved separately so a personal choice can match a named preset without losing its identity.
-
-Available/unavailable icons and stars transition softly over about half a second. Their enabled state changes immediately. Reduced-motion preferences disable these transitions.
+The settings toolbar has three symbol buttons for the assigned cycle positions, followed by a reset dot. Opening retains the selected position. Choosing a preset or editing neighbor rules changes that position’s draft; selecting another position retains its pending edits. Save commits all three slots and the selected position; Cancel discards the entire draft. The reset dot explicitly restores all three default assignments while retaining the selected position; the main rule Reset edits the current slot. Last manual rules remain in the compatible Yours metadata.
 
 The low-level Chi Flow fallback Yours → Ripples → Nova is not the fresh profile-1 cycle. Save to profile to retain session rule/cycle edits on reopening; dialog Save applies the working choices.
+
+Horizontal preset swipes and their independent active-choice state have been removed from Game of Life and Chi Flow. Ordinary taps cycle the three assigned shortcuts (with Off only while paused); upward swipes open settings. Returning from another evolution starts at the first shortcut as before. Settings preset/manual edits apply to the selected shortcut on Save; Cancel discards the draft.
+
+Settings/profiles saved by the removed feature remain readable: their optional `evolutionSelections` rules are folded into the corresponding shortcut (saved profile position, or the current position for a settings import; standalone profiles without identity use the first position), preserving the other slots, Yours and unrelated preferences. Subsequent saves use ordinary shortcut snapshots. Existing recipe `presetBrowse` metadata is accepted as inert metadata; replay uses its recorded effective rules, so the removed gesture is not needed to play a journey.
 
 ### Technician settings and initialization
 
@@ -210,7 +202,8 @@ The code is modularized to separate logic, state, and UI:
 * **`js/i18n.js`**: English, Hebrew, Russian and Dutch translations. Update all four when changing interface text.
 * **`js/data/palettes.js`**: Palette colors, stable original names, icons and archive flags.
 * **`js/picker-gestures.js`**: Shared pointer gestures, hold stages, click suppression and picker glow.
-* **`js/preset-cycle-membership.js`**: Draft preset membership, vacancy rules and retained UI nodes for fades.
+* **`js/preset-cycle-editor.js`**: Three assigned shortcut drafts, preset/manual edits and Save/Cancel.
+* **`js/preset-cycle-membership.js`**: Retained legacy membership helper.
 * **`js/evolution-cycle-settings.js`**: Rule snapshot validation, storage and preset/Yours source identities.
 * **`js/startup-settings.js`**, **`js/sim-init-settings.js`**, **`js/sort-cycle-settings.js`**: Validated startup, initialization and sorting-cycle preferences.
 * **`js/profile-state.js`**, **`js/profile-controls.js`**, **`js/workspace-settings.js`**: Saved/draft profiles, configuration validation and settings TXT import/export.
@@ -347,7 +340,7 @@ Preferences use `localStorage`, with validation and defaults when stored data is
 
 These compatibility storage keys do not override the profile saved/session policy. Not every default is in `constants.js`: startup/init defaults have dedicated modules, and Nudge's interval remains in `app.js`. Default rule arrays and both preset registries are in `constants.js`.
 
-`preset-cycle-membership.js` maintains a modal draft with one possible vacancy. It retains rendered glyph/button nodes across refreshes, allowing opacity, color and star transitions to interpolate instead of abruptly rebuilding the UI. Functional enable/disable changes remain immediate. Dialog Save commits complete slots and personal identity to working preferences; Save to profile retains these session choices on reopening. Cancelling discards the modal draft.
+`preset-cycle-editor.js` edits a modal-local copy of the three assigned rule snapshots. Preset/manual edits belong to the selected slot, and Save uses the existing recording API. Cancel leaves runtime rules untouched. `migrateEvolutionSelections` is a reader-only bridge for settings exported by the removed horizontal-swipe feature; it folds each saved choice into the appropriate slot before import, without reintroducing independent active choices.
 
 Different modals use dialogs, visibility classes or inline display state. Follow the existing modal's lifecycle rather than applying one universal close/open recipe. Dependency-injected getters/setters from `initializeModals(context)` keep UI modules from importing `app.js`.
 
@@ -599,6 +592,8 @@ Cracks settings use a flat layout like the other evolution dialogs: centered tit
 
 Cracks growth presets are First Whisper (65% / 11 / 100%), Quiet Flow (40% / 22 / 100%), Crystal Paths (40% / 22 / 0%) and Fibonacci Bloom (55% / 8 / 130%), listed as branching chance / interval / curvature. The four buttons edit only the growth draft; Material and the selected brush stay unchanged. Exact values determine the selected preset; other values show Custom. Save persists numeric values without a preset identifier, and Cancel discards the draft. Reset restores Fibonacci Bloom with Whole board growth, material influence at 0% and Brush color as the line source. Explicit material On values in files/recipes remain On; missing growth in old recipes retains the original 65% / 11 / 100% behavior.
 
+Profiles explicitly default Cracks growth to Fibonacci Bloom; older local profiles missing growth receive those defaults once, while explicitly stored values retain their meaning. Later explicit selections of the legacy preset remain valid even when represented by omitted canonical growth. The profile default-star comparison treats the historical default line-color field and the current brush-only Cracks color as equivalent. Settings/recipe compatibility fallbacks remain unchanged.
+
 Cracks opens with Fibonacci Bloom (55% branching / 8 steps / 130% curvature) and Brush color as its line source on every app entry, after applying stored startup/profile settings. Session edits and explicit profile, project and macro loads still use their own values. Legacy missing-growth recipes retain 65% / 11 / 100%; the opening default never rewrites those rules.
 
 Cracks always follows the live selected brush; an empty brush falls back to Darkest. Existing pixels keep their colors. Rainbow chooses a deterministic palette color per new cell and uses an optional sparse visited-trail map for collisions instead of color equality. The map is ignored for solid colors and survives project/history/recipe round trips. Painting over visited cells clears those marks without advancing a paused simulation. Returning from a solid color to rainbow retains the remaining rainbow trail; solid-color modes keep their original color-based collision behavior. Live brush-source changes are recorded as simulation rules independently of the brush chosen during replay. Saved Cracks settings remain independent of drawing Undo/Redo.
@@ -664,7 +659,7 @@ Live brush input emits `DRAW_STROKE` packets as pointer events paint, using the 
 
 Events carry timestamps, and generation-based actions include `[GEN:n]`. The logger records board strokes/diffs, palette and sorting changes, play, pause, single steps, live mode changes, Nudge timing and history metadata. Logging has some overhead and does not make the entire application allocation-free.
 
-`PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys. Catalogue browsing uses the existing mode events with an optional `presetBrowse: true` marker when effective rules differ from the retained cycle slot; restoration keeps those slots intact. Older recordings without the marker retain their original restoration behavior.
+`PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys.
 
 Save the journey through the save modal, using `exportArtRecipeLog()`. Current TXT filenames use `Intuition_Path_<palette>_<line-count>.txt`. Save/Play long presses no longer export or reset the logger. `resetArtRecipeLog()` requires confirmation and a successful backup share/download flow before clearing the log and capturing a new start; cancelling sharing preserves the old log. See [Save, load and help](#save-load-and-help). New `INIT_STATE` records can also retain protected gold indices and a live simulation context (rules, generation and elapsed time).
 
@@ -739,8 +734,8 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Cracks growth-area drafts, presets, material interaction, profiles and replay | `tools/check-cracks-area.mjs` |
+| Retired preset-swipe rollback: old profile/settings migration, old/new recipes, settings, cycles and history | `tools/check-preset-rollback.mjs` |
 | Cracks paused/live button cycles, settings synchronization, history and recipe replay | `tools/check-cracks-cycle.mjs` |
-| Game of Life / Chi Flow horizontal preset browsing, settings, live rules, history and recipe replay | `tools/check-preset-swipes.mjs` |
 | DLA resizing, exhausted growth, Contours, Undo/Redo and logger replay | `tools/check-dla-history.mjs` |
 | Symmetry hold, mirrored controls, eight-way painting and recipe replay | `tools/check-symmetry-hold.mjs` |
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
@@ -756,6 +751,8 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 The Resonance browser check covers languages/viewports, live map changes, drawing, Undo/Redo, JSON and recipe replay. `CYMATICS_LAYOUT_ONLY=1` checks the settings hierarchy, map symbols and real pointer/touch slider dragging. `CYMATICS_DEFAULT_ONLY=1`, `CYMATICS_FREQUENCY_ONLY=1` and `CYMATICS_CYCLE_ONLY=1` select focused flows; `CYMATICS_STRENGTH_ONLY=1` checks independent strengths, drafts/Reset, cycling, live saves, history, project/macro replay and profile reload. `CYMATICS_CIRCLE_ONLY=1` checks whole-board circular settling, exterior movement and exact new-circle replay. `CYMATICS_ORGANIC_ONLY=1` checks Clouds/Cosmological empathy, frequency changes and round trips; `CYMATICS_LANG` filters languages. `CRACKS_SETTINGS_ONLY=1` limits `check-cracks.mjs` to settings drafts, controls, Save/Cancel/Reset, layout and focus; `CRACKS_LANG` filters languages. The Cracks session-seed check also supports `CRACKS_SEED_LANG`.
 
 `check-contour-separation.mjs` captures journeys from commit `be7b937` before separation and replays them with the current build, including old shared-mode runs and non-history Contours logs. `CONTOUR_RECORD_ONLY=1` captures only the baseline fixtures, and `CONTOUR_LANG` selects one language. It also verifies one-pass equivalence, independent settings, Undo/Redo, running-engine interruption and new macro playback.
+
+The preset rollback check includes real recipe/profile fixtures recorded with commit `91e8d2a`; its browser RNG is fixed per Single step solely to compare Chi replay reliably. `PRESET_CAPTURE_BASELINE` optionally points to that historical source checkout to regenerate those fixtures.
 
 These commands describe available checks, not a claim that they have passed on a particular checkout. Browser/API behavior, install/share flows, accessibility and physical-device performance need their own verification.
 

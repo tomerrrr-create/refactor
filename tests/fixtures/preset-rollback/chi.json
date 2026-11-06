@@ -1,0 +1,2066 @@
+{
+  "sourceCommit": "91e8d2adfe0fc1424c1a9df1da55d3d665f3c2d0",
+  "recipe": "[07:55:54.908] INIT_STATE -> {\"recipeVersion\":2,\"n\":21,\"pal\":0,\"sort\":\"luminance\",\"sep\":1,\"board\":\"1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6,1x0,1x1,1x2,1x3,1x4,1x5,1x6\",\"gold\":[0]}\n[07:55:54.942] Chi Flow Mode Changed -> {\"awakening\":[3,4,5,6,7,8],\"flow\":[2,3],\"reach\":3,\"cycleMode\":\"personal\",\"presetBrowse\":true,\"personalRules\":{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},\"cycleSlots\":[{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},{\"awakening\":[3,4,5,6,7,8],\"flow\":[1,2],\"reach\":3},{\"awakening\":[4,5,6,7,8],\"flow\":[4,5,6,7,8],\"reach\":12}],\"cycleSources\":[\"Harmony\",\"Nova\",\"Alexis\"],\"mode\":\"personal\"}\n[07:55:54.944] Chi Flow Mode Changed -> {\"awakening\":[1,2,3,4,5,6,7,8],\"flow\":[1,2,3,4,5,6,7,8],\"reach\":3,\"cycleMode\":\"personal\",\"presetBrowse\":true,\"personalRules\":{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},\"cycleSlots\":[{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},{\"awakening\":[3,4,5,6,7,8],\"flow\":[1,2],\"reach\":3},{\"awakening\":[4,5,6,7,8],\"flow\":[4,5,6,7,8],\"reach\":12}],\"cycleSources\":[\"Harmony\",\"Nova\",\"Alexis\"],\"mode\":\"personal\"}\n[07:55:54.947] STEP FORWARD -> Armed: sandpile | Sort: luminance | Rules: {\"awakening\":[1,2,3,4,5,6,7,8],\"flow\":[1,2,3,4,5,6,7,8],\"reach\":3,\"cycleMode\":\"personal\",\"presetBrowse\":true,\"personalRules\":{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},\"cycleSlots\":[{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},{\"awakening\":[3,4,5,6,7,8],\"flow\":[1,2],\"reach\":3},{\"awakening\":[4,5,6,7,8],\"flow\":[4,5,6,7,8],\"reach\":12}],\"cycleSources\":[\"Harmony\",\"Nova\",\"Alexis\"]}\n[07:55:54.948] HISTORY_ACTION -> {\"recipeVersion\":2,\"id\":1,\"from\":0,\"to\":4}\n[07:55:54.949] Chi Flow Mode Changed -> {\"awakening\":[3,4,5,6,7,8],\"flow\":[1],\"reach\":3,\"cycleMode\":\"personal\",\"presetBrowse\":true,\"personalRules\":{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},\"cycleSlots\":[{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},{\"awakening\":[3,4,5,6,7,8],\"flow\":[1,2],\"reach\":3},{\"awakening\":[4,5,6,7,8],\"flow\":[4,5,6,7,8],\"reach\":12}],\"cycleSources\":[\"Harmony\",\"Nova\",\"Alexis\"],\"mode\":\"personal\"}\n[07:55:54.949] STEP FORWARD -> Armed: sandpile | Sort: luminance | Rules: {\"awakening\":[3,4,5,6,7,8],\"flow\":[1],\"reach\":3,\"cycleMode\":\"personal\",\"presetBrowse\":true,\"personalRules\":{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},\"cycleSlots\":[{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},{\"awakening\":[3,4,5,6,7,8],\"flow\":[1,2],\"reach\":3},{\"awakening\":[4,5,6,7,8],\"flow\":[4,5,6,7,8],\"reach\":12}],\"cycleSources\":[\"Harmony\",\"Nova\",\"Alexis\"]}\n[07:55:54.950] STEP FORWARD -> Armed: sandpile | Sort: luminance | Rules: {\"awakening\":[3,4,5,6,7,8],\"flow\":[1],\"reach\":3,\"cycleMode\":\"personal\",\"presetBrowse\":true,\"personalRules\":{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},\"cycleSlots\":[{\"awakening\":[3,4,5,6,7,8],\"flow\":[3,5,7],\"reach\":3},{\"awakening\":[3,4,5,6,7,8],\"flow\":[1,2],\"reach\":3},{\"awakening\":[4,5,6,7,8],\"flow\":[4,5,6,7,8],\"reach\":12}],\"cycleSources\":[\"Harmony\",\"Nova\",\"Alexis\"]}\n[07:55:54.963] UNDO -> {\"recipeVersion\":2,\"id\":1,\"settings\":{\"n\":21,\"activePaletteIndex\":0,\"separatorPx\":1,\"currentSortMethod\":\"luminance\",\"evolutionTuning\":{\"brightnessEvo\":{\"smoothing\":0.1,\"contrast\":0.1},\"breathe\":{\"speed\":1,\"depth\":1},\"islands\":{\"activity\":0.05},\"dla\":{\"batchSize\":100}},\"brightnessEvoMode\":\"off\",\"breatheEvoMode\":\"off\",\"dlaMode\":\"off\"}}\n[07:55:54.965] REDO -> {\"recipeVersion\":2,\"id\":1,\"settings\":{\"n\":21,\"activePaletteIndex\":0,\"separatorPx\":1,\"currentSortMethod\":\"luminance\",\"evolutionTuning\":{\"brightnessEvo\":{\"smoothing\":0.1,\"contrast\":0.1},\"breathe\":{\"speed\":1,\"depth\":1},\"islands\":{\"activity\":0.05},\"dla\":{\"batchSize\":100}},\"brightnessEvoMode\":\"off\",\"breatheEvoMode\":\"off\",\"dlaMode\":\"off\"}}",
+  "settings": "FYI_SETTINGS_V1\n{\n  \"version\": 1,\n  \"settings\": {\n    \"startup\": {\n      \"boardSize\": 21\n    },\n    \"simulationInit\": {\n      \"brushSize\": 1\n    },\n    \"smoothing\": {\n      \"display\": true,\n      \"bloom\": true,\n      \"bloomIntensity\": 32\n    },\n    \"cycles\": {\n      \"chiFlow\": [\n        {\n          \"awakening\": [\n            3,\n            4,\n            5,\n            6,\n            7,\n            8\n          ],\n          \"flow\": [\n            3,\n            5,\n            7\n          ],\n          \"reach\": 0\n        },\n        {\n          \"awakening\": [\n            3,\n            4,\n            5,\n            6,\n            7,\n            8\n          ],\n          \"flow\": [\n            1,\n            2\n          ],\n          \"reach\": 0\n        },\n        {\n          \"awakening\": [\n            4,\n            5,\n            6,\n            7,\n            8\n          ],\n          \"flow\": [\n            4,\n            5,\n            6,\n            7,\n            8\n          ],\n          \"reach\": 0,\n          \"reachPercent\": 400\n        }\n      ]\n    },\n    \"rules\": {\n      \"erosion\": {\n        \"erosionStages\": {\n          \"channels-solid\": 0,\n          \"channels\": 4\n        }\n      },\n      \"contour\": {\n        \"lineColor\": \"brush\",\n        \"growth\": {\n          \"branchChance\": 55,\n          \"branchInterval\": 8,\n          \"curvature\": 130\n        }\n      }\n    },\n    \"evolutionSelections\": {\n      \"chiFlow\": {\n        \"awakening\": [\n          3,\n          4,\n          5,\n          6,\n          7,\n          8\n        ],\n        \"flow\": [\n          1\n        ],\n        \"reach\": 0\n      }\n    },\n    \"simulationTheme\": \"blue\",\n    \"simulationPlaybackTheme\": \"gold\",\n    \"evolutionTuning\": {\n      \"brightnessEvo\": {\n        \"smoothing\": 0.1,\n        \"contrast\": 0.1\n      },\n      \"breathe\": {\n        \"speed\": 1,\n        \"depth\": 1\n      },\n      \"islands\": {\n        \"activity\": 0.05\n      },\n      \"dla\": {\n        \"batchSize\": 100\n      }\n    }\n  }\n}\n",
+  "store": {
+    "version": 1,
+    "defaultsVersion": 13,
+    "selected": 0,
+    "profiles": [
+      {
+        "saved": {
+          "settings": {
+            "evolutionSelections": {
+              "chiFlow": {
+                "awakening": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "flow": [
+                  1
+                ],
+                "reach": 0
+              }
+            },
+            "startup": {
+              "paletteName": "@random",
+              "boardSize": 21,
+              "separatorPx": 2,
+              "sortMethod": "luminance",
+              "fill": "random",
+              "brushSize": 1,
+              "brushMode": "continuous",
+              "brushColor": "none",
+              "symmetry": "off",
+              "interfaceMode": "creative"
+            },
+            "simulationInit": {
+              "boardSize": 249,
+              "brushSize": 1
+            },
+            "simulationTheme": "blue",
+            "simulationPlaybackTheme": "gold",
+            "sortCycle": [
+              "luminance",
+              "dark-rainbow",
+              "reversed",
+              "center-out",
+              "temperature",
+              "outside-in"
+            ],
+            "nudgeIntervalMs": 100,
+            "evolutionTuning": {
+              "brightnessEvo": {
+                "smoothing": 0.1,
+                "contrast": 0.1
+              },
+              "breathe": {
+                "speed": 1,
+                "depth": 1
+              },
+              "islands": {
+                "activity": 0.05
+              },
+              "dla": {
+                "batchSize": 100
+              }
+            },
+            "smoothing": {
+              "display": true,
+              "export": false,
+              "bloom": true,
+              "bloomIntensity": 32
+            },
+            "brush": {
+              "size": 1,
+              "mode": "continuous",
+              "symmetry": "off"
+            },
+            "cycles": {
+              "gameOfLife": [
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ]
+                },
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    4,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3,
+                    5
+                  ]
+                },
+                {
+                  "survival": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3
+                  ]
+                }
+              ],
+              "chiFlow": [
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    3,
+                    5,
+                    7
+                  ],
+                  "reach": 0
+                },
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    1,
+                    2
+                  ],
+                  "reach": 0
+                },
+                {
+                  "awakening": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                }
+              ]
+            },
+            "rules": {
+              "gravity": {
+                "direction": "up",
+                "strength": 0.6
+              },
+              "spiral": {
+                "method": "b"
+              },
+              "magnet": {
+                "method": "magnet",
+                "anchorColorIndex": -1
+              },
+              "erosion": {
+                "mode": "legacy",
+                "erosionStrength": 0.1,
+                "erosionStages": {
+                  "channels-solid": 0,
+                  "channels": 4
+                }
+              },
+              "dla": {
+                "colorGenetics": true,
+                "injectFromEdges": false,
+                "fastMode": false
+              },
+              "contour": {
+                "sensitivity": 75,
+                "lineColor": "brush",
+                "growth": {
+                  "branchChance": 55,
+                  "branchInterval": 8,
+                  "curvature": 130
+                }
+              },
+              "turing": {
+                "feed": 0.034,
+                "kill": 0.056,
+                "dA": 1,
+                "dB": 0.5,
+                "timeStep": 1
+              }
+            }
+          },
+          "identity": {
+            "gameOfLife": {
+              "index": 0,
+              "sources": [
+                "yours",
+                "btnGolPresetShuffle",
+                "btnGolPresetCoral"
+              ],
+              "yoursRules": {
+                "survival": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "birth": [
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ]
+              }
+            },
+            "chiFlow": {
+              "index": 0,
+              "sources": [
+                "Harmony",
+                "Nova",
+                "Alexis"
+              ],
+              "yoursRules": {
+                "awakening": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "flow": [
+                  3,
+                  5,
+                  7
+                ],
+                "reach": 0
+              }
+            }
+          }
+        },
+        "draft": {
+          "settings": {
+            "evolutionSelections": {
+              "chiFlow": {
+                "awakening": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "flow": [
+                  1
+                ],
+                "reach": 0
+              }
+            },
+            "startup": {
+              "paletteName": "@random",
+              "boardSize": 21,
+              "separatorPx": 2,
+              "sortMethod": "luminance",
+              "fill": "random",
+              "brushSize": 1,
+              "brushMode": "continuous",
+              "brushColor": "none",
+              "symmetry": "off",
+              "interfaceMode": "creative"
+            },
+            "simulationInit": {
+              "boardSize": 249,
+              "brushSize": 1
+            },
+            "simulationTheme": "blue",
+            "simulationPlaybackTheme": "gold",
+            "sortCycle": [
+              "luminance",
+              "dark-rainbow",
+              "reversed",
+              "center-out",
+              "temperature",
+              "outside-in"
+            ],
+            "nudgeIntervalMs": 100,
+            "evolutionTuning": {
+              "brightnessEvo": {
+                "smoothing": 0.1,
+                "contrast": 0.1
+              },
+              "breathe": {
+                "speed": 1,
+                "depth": 1
+              },
+              "islands": {
+                "activity": 0.05
+              },
+              "dla": {
+                "batchSize": 100
+              }
+            },
+            "smoothing": {
+              "display": true,
+              "export": false,
+              "bloom": true,
+              "bloomIntensity": 32
+            },
+            "brush": {
+              "size": 1,
+              "mode": "continuous",
+              "symmetry": "off"
+            },
+            "cycles": {
+              "gameOfLife": [
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ]
+                },
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    4,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3,
+                    5
+                  ]
+                },
+                {
+                  "survival": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3
+                  ]
+                }
+              ],
+              "chiFlow": [
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    3,
+                    5,
+                    7
+                  ],
+                  "reach": 0
+                },
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    1,
+                    2
+                  ],
+                  "reach": 0
+                },
+                {
+                  "awakening": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                }
+              ]
+            },
+            "rules": {
+              "gravity": {
+                "direction": "up",
+                "strength": 0.6
+              },
+              "spiral": {
+                "method": "b"
+              },
+              "magnet": {
+                "method": "magnet",
+                "anchorColorIndex": -1
+              },
+              "erosion": {
+                "mode": "legacy",
+                "erosionStrength": 0.1,
+                "erosionStages": {
+                  "channels-solid": 0,
+                  "channels": 4
+                }
+              },
+              "dla": {
+                "colorGenetics": true,
+                "injectFromEdges": false,
+                "fastMode": false
+              },
+              "contour": {
+                "sensitivity": 75,
+                "lineColor": "brush",
+                "growth": {
+                  "branchChance": 55,
+                  "branchInterval": 8,
+                  "curvature": 130
+                }
+              },
+              "turing": {
+                "feed": 0.034,
+                "kill": 0.056,
+                "dA": 1,
+                "dB": 0.5,
+                "timeStep": 1
+              }
+            }
+          },
+          "identity": {
+            "gameOfLife": {
+              "index": 0,
+              "sources": [
+                "yours",
+                "btnGolPresetShuffle",
+                "btnGolPresetCoral"
+              ],
+              "yoursRules": {
+                "survival": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "birth": [
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ]
+              }
+            },
+            "chiFlow": {
+              "index": 0,
+              "sources": [
+                "Harmony",
+                "Nova",
+                "Alexis"
+              ],
+              "yoursRules": {
+                "awakening": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "flow": [
+                  3,
+                  5,
+                  7
+                ],
+                "reach": 0
+              }
+            }
+          }
+        }
+      },
+      {
+        "saved": {
+          "settings": {
+            "startup": {
+              "paletteName": "Golden Midnight Extended",
+              "boardSize": 11,
+              "separatorPx": 2,
+              "sortMethod": "luminance",
+              "fill": "random",
+              "brushSize": 1,
+              "brushMode": "continuous",
+              "brushColor": "first",
+              "symmetry": "off",
+              "interfaceMode": "simulation"
+            },
+            "simulationInit": {
+              "boardSize": 249,
+              "brushSize": 11,
+              "symmetry": "off",
+              "brushColor": "first"
+            },
+            "sortCycle": [
+              "luminance",
+              "dark-rainbow",
+              "reversed",
+              "center-out",
+              "rainbow-fold",
+              "zig-zag"
+            ],
+            "nudgeIntervalMs": 100,
+            "smoothing": {
+              "display": true,
+              "export": false,
+              "bloom": true,
+              "bloomIntensity": 32
+            },
+            "brush": {
+              "size": 1,
+              "mode": "continuous",
+              "symmetry": "off"
+            },
+            "cycles": {
+              "gameOfLife": [
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ]
+                },
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    4,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3,
+                    5
+                  ]
+                },
+                {
+                  "survival": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3
+                  ]
+                }
+              ],
+              "chiFlow": [
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    1
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                },
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    3,
+                    5,
+                    7
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                },
+                {
+                  "awakening": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                }
+              ]
+            },
+            "rules": {
+              "gravity": {
+                "direction": "up",
+                "strength": 0.6
+              },
+              "spiral": {
+                "method": "b"
+              },
+              "magnet": {
+                "method": "magnet",
+                "anchorColorIndex": -1
+              },
+              "erosion": {
+                "mode": "legacy",
+                "erosionStrength": 0.1,
+                "erosionStages": {
+                  "channels-solid": 2,
+                  "channels": 4
+                }
+              },
+              "dla": {
+                "colorGenetics": true,
+                "injectFromEdges": false,
+                "fastMode": false
+              },
+              "contour": {
+                "sensitivity": 75,
+                "lineColor": "darkest"
+              },
+              "turing": {
+                "feed": 0.034,
+                "kill": 0.056,
+                "dA": 1,
+                "dB": 0.5,
+                "timeStep": 1
+              }
+            },
+            "evolutionTuning": {
+              "brightnessEvo": {
+                "smoothing": 0.1,
+                "contrast": 0.1
+              },
+              "breathe": {
+                "speed": 1,
+                "depth": 1
+              },
+              "islands": {
+                "activity": 0.05
+              },
+              "dla": {
+                "batchSize": 100
+              }
+            },
+            "simulationTheme": "gold",
+            "simulationPlaybackTheme": "gold"
+          },
+          "identity": {
+            "gameOfLife": {
+              "index": 0,
+              "sources": [
+                "yours",
+                "btnGolPresetShuffle",
+                "btnGolPresetCoral"
+              ],
+              "yoursRules": {
+                "survival": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "birth": [
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ]
+              }
+            },
+            "chiFlow": {
+              "index": 0,
+              "sources": [
+                "Electric",
+                "Harmony",
+                "Alexis"
+              ],
+              "yoursRules": {
+                "awakening": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "flow": [
+                  1
+                ],
+                "reach": 0,
+                "reachPercent": 400
+              }
+            }
+          }
+        },
+        "draft": {
+          "settings": {
+            "startup": {
+              "paletteName": "Golden Midnight Extended",
+              "boardSize": 11,
+              "separatorPx": 2,
+              "sortMethod": "luminance",
+              "fill": "random",
+              "brushSize": 1,
+              "brushMode": "continuous",
+              "brushColor": "first",
+              "symmetry": "off",
+              "interfaceMode": "simulation"
+            },
+            "simulationInit": {
+              "boardSize": 249,
+              "brushSize": 11,
+              "symmetry": "off",
+              "brushColor": "first"
+            },
+            "sortCycle": [
+              "luminance",
+              "dark-rainbow",
+              "reversed",
+              "center-out",
+              "rainbow-fold",
+              "zig-zag"
+            ],
+            "nudgeIntervalMs": 100,
+            "smoothing": {
+              "display": true,
+              "export": false,
+              "bloom": true,
+              "bloomIntensity": 32
+            },
+            "brush": {
+              "size": 1,
+              "mode": "continuous",
+              "symmetry": "off"
+            },
+            "cycles": {
+              "gameOfLife": [
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ]
+                },
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    4,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3,
+                    5
+                  ]
+                },
+                {
+                  "survival": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3
+                  ]
+                }
+              ],
+              "chiFlow": [
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    1
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                },
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    3,
+                    5,
+                    7
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                },
+                {
+                  "awakening": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                }
+              ]
+            },
+            "rules": {
+              "gravity": {
+                "direction": "up",
+                "strength": 0.6
+              },
+              "spiral": {
+                "method": "b"
+              },
+              "magnet": {
+                "method": "magnet",
+                "anchorColorIndex": -1
+              },
+              "erosion": {
+                "mode": "legacy",
+                "erosionStrength": 0.1,
+                "erosionStages": {
+                  "channels-solid": 2,
+                  "channels": 4
+                }
+              },
+              "dla": {
+                "colorGenetics": true,
+                "injectFromEdges": false,
+                "fastMode": false
+              },
+              "contour": {
+                "sensitivity": 75,
+                "lineColor": "darkest"
+              },
+              "turing": {
+                "feed": 0.034,
+                "kill": 0.056,
+                "dA": 1,
+                "dB": 0.5,
+                "timeStep": 1
+              }
+            },
+            "evolutionTuning": {
+              "brightnessEvo": {
+                "smoothing": 0.1,
+                "contrast": 0.1
+              },
+              "breathe": {
+                "speed": 1,
+                "depth": 1
+              },
+              "islands": {
+                "activity": 0.05
+              },
+              "dla": {
+                "batchSize": 100
+              }
+            },
+            "simulationTheme": "gold",
+            "simulationPlaybackTheme": "gold"
+          },
+          "identity": {
+            "gameOfLife": {
+              "index": 0,
+              "sources": [
+                "yours",
+                "btnGolPresetShuffle",
+                "btnGolPresetCoral"
+              ],
+              "yoursRules": {
+                "survival": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "birth": [
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ]
+              }
+            },
+            "chiFlow": {
+              "index": 0,
+              "sources": [
+                "Electric",
+                "Harmony",
+                "Alexis"
+              ],
+              "yoursRules": {
+                "awakening": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "flow": [
+                  1
+                ],
+                "reach": 0,
+                "reachPercent": 400
+              }
+            }
+          }
+        }
+      },
+      {
+        "saved": {
+          "settings": {
+            "startup": {
+              "paletteName": "Ancient 264",
+              "boardSize": 15,
+              "separatorPx": 0,
+              "sortMethod": "luminance",
+              "fill": "random",
+              "brushSize": 1,
+              "brushMode": "continuous",
+              "brushColor": "lightest",
+              "symmetry": "off",
+              "interfaceMode": "simulation"
+            },
+            "simulationInit": {
+              "boardSize": 249,
+              "brushSize": 1,
+              "brushColor": "rainbow",
+              "symmetry": "horizontal"
+            },
+            "sortCycle": [
+              "luminance",
+              "dark-rainbow",
+              "reversed",
+              "center-out",
+              "temperature",
+              "outside-in"
+            ],
+            "nudgeIntervalMs": 100,
+            "smoothing": {
+              "display": true,
+              "export": false,
+              "bloom": true,
+              "bloomIntensity": 32
+            },
+            "brush": {
+              "size": 1,
+              "mode": "continuous",
+              "symmetry": "off"
+            },
+            "cycles": {
+              "gameOfLife": [
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ]
+                },
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    4,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3,
+                    5
+                  ]
+                },
+                {
+                  "survival": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3
+                  ]
+                }
+              ],
+              "chiFlow": [
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    1
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                },
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    3,
+                    5,
+                    7
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                },
+                {
+                  "awakening": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                }
+              ]
+            },
+            "rules": {
+              "gravity": {
+                "direction": "up",
+                "strength": 0.6
+              },
+              "spiral": {
+                "method": "b"
+              },
+              "magnet": {
+                "method": "magnet",
+                "anchorColorIndex": -1
+              },
+              "erosion": {
+                "mode": "legacy",
+                "erosionStrength": 0.1,
+                "erosionStages": {
+                  "channels-solid": 3,
+                  "channels": 4
+                }
+              },
+              "dla": {
+                "colorGenetics": true,
+                "injectFromEdges": false,
+                "fastMode": false
+              },
+              "contour": {
+                "sensitivity": 75,
+                "lineColor": "darkest"
+              },
+              "turing": {
+                "feed": 0.034,
+                "kill": 0.056,
+                "dA": 1,
+                "dB": 0.5,
+                "timeStep": 1
+              }
+            },
+            "evolutionTuning": {
+              "brightnessEvo": {
+                "smoothing": 0.1,
+                "contrast": 0.1
+              },
+              "breathe": {
+                "speed": 1,
+                "depth": 1
+              },
+              "islands": {
+                "activity": 0.05
+              },
+              "dla": {
+                "batchSize": 100
+              }
+            },
+            "simulationTheme": "teal",
+            "simulationPlaybackTheme": "gold"
+          },
+          "identity": {
+            "gameOfLife": {
+              "index": 0,
+              "sources": [
+                "btnGolPresetPaint2",
+                "btnGolPresetShuffle",
+                "btnGolPresetCoral"
+              ],
+              "yoursRules": {
+                "survival": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "birth": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ]
+              }
+            },
+            "chiFlow": {
+              "index": 0,
+              "sources": [
+                "Electric",
+                "Harmony",
+                "Alexis"
+              ],
+              "yoursRules": {
+                "awakening": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "flow": [
+                  1
+                ],
+                "reach": 0,
+                "reachPercent": 400
+              }
+            }
+          }
+        },
+        "draft": {
+          "settings": {
+            "startup": {
+              "paletteName": "Ancient 264",
+              "boardSize": 15,
+              "separatorPx": 0,
+              "sortMethod": "luminance",
+              "fill": "random",
+              "brushSize": 1,
+              "brushMode": "continuous",
+              "brushColor": "lightest",
+              "symmetry": "off",
+              "interfaceMode": "simulation"
+            },
+            "simulationInit": {
+              "boardSize": 249,
+              "brushSize": 1,
+              "brushColor": "rainbow",
+              "symmetry": "horizontal"
+            },
+            "sortCycle": [
+              "luminance",
+              "dark-rainbow",
+              "reversed",
+              "center-out",
+              "temperature",
+              "outside-in"
+            ],
+            "nudgeIntervalMs": 100,
+            "smoothing": {
+              "display": true,
+              "export": false,
+              "bloom": true,
+              "bloomIntensity": 32
+            },
+            "brush": {
+              "size": 1,
+              "mode": "continuous",
+              "symmetry": "off"
+            },
+            "cycles": {
+              "gameOfLife": [
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ]
+                },
+                {
+                  "survival": [
+                    0,
+                    1,
+                    2,
+                    4,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3,
+                    5
+                  ]
+                },
+                {
+                  "survival": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "birth": [
+                    3
+                  ]
+                }
+              ],
+              "chiFlow": [
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    1
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                },
+                {
+                  "awakening": [
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    3,
+                    5,
+                    7
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                },
+                {
+                  "awakening": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "flow": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ],
+                  "reach": 0,
+                  "reachPercent": 400
+                }
+              ]
+            },
+            "rules": {
+              "gravity": {
+                "direction": "up",
+                "strength": 0.6
+              },
+              "spiral": {
+                "method": "b"
+              },
+              "magnet": {
+                "method": "magnet",
+                "anchorColorIndex": -1
+              },
+              "erosion": {
+                "mode": "legacy",
+                "erosionStrength": 0.1,
+                "erosionStages": {
+                  "channels-solid": 3,
+                  "channels": 4
+                }
+              },
+              "dla": {
+                "colorGenetics": true,
+                "injectFromEdges": false,
+                "fastMode": false
+              },
+              "contour": {
+                "sensitivity": 75,
+                "lineColor": "darkest"
+              },
+              "turing": {
+                "feed": 0.034,
+                "kill": 0.056,
+                "dA": 1,
+                "dB": 0.5,
+                "timeStep": 1
+              }
+            },
+            "evolutionTuning": {
+              "brightnessEvo": {
+                "smoothing": 0.1,
+                "contrast": 0.1
+              },
+              "breathe": {
+                "speed": 1,
+                "depth": 1
+              },
+              "islands": {
+                "activity": 0.05
+              },
+              "dla": {
+                "batchSize": 100
+              }
+            },
+            "simulationTheme": "teal",
+            "simulationPlaybackTheme": "gold"
+          },
+          "identity": {
+            "gameOfLife": {
+              "index": 0,
+              "sources": [
+                "btnGolPresetPaint2",
+                "btnGolPresetShuffle",
+                "btnGolPresetCoral"
+              ],
+              "yoursRules": {
+                "survival": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "birth": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ]
+              }
+            },
+            "chiFlow": {
+              "index": 0,
+              "sources": [
+                "Electric",
+                "Harmony",
+                "Alexis"
+              ],
+              "yoursRules": {
+                "awakening": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "flow": [
+                  1
+                ],
+                "reach": 0,
+                "reachPercent": 400
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "board": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    6
+  ],
+  "rules": {
+    "awakening": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "flow": [
+      1
+    ],
+    "reach": 0
+  },
+  "replayRules": {
+    "awakening": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "flow": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "reach": 3
+  }
+}

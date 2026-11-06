@@ -42,7 +42,7 @@ function mergeKnown(defaults, overrides, path = '') {
         if (path === 'rules' && key === 'cymatics') { result[key] = migrateCymaticsPreferences(value); continue; }
         if (path === 'brush' && key === 'shape') { result[key] = clone(value); continue; }
         // Optional extension; V1’s original baseline stays unchanged.
-        if (path === '' && ['separatorCycle', 'simulationTheme', 'simulationPlaybackTheme', 'evolutionTuning', 'gameOfLifeGenetics'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === '' && ['separatorCycle', 'simulationTheme', 'simulationPlaybackTheme', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'rules.contour' && key === 'growth') { result[key] = validateCracksGrowth(value); continue; }
@@ -68,6 +68,19 @@ function validCycle(slots, chi) {
     });
 }
 
+// Read compatibility for the removed swipe feature. Keep the saved active
+// choice by folding it into its existing shortcut; new saves use ordinary slots.
+export function migrateEvolutionSelections(settings, indices = {}) {
+    if (!settings.evolutionSelections) return settings;
+    const result = clone(settings);
+    for (const [name, rules] of Object.entries(result.evolutionSelections)) {
+        const index = integer(indices[name], 0, 2) ? indices[name] : 0;
+        result.cycles[name][index] = clone(rules);
+    }
+    delete result.evolutionSelections;
+    return result;
+}
+
 export function validateWorkspaceSettings(value) {
     const settings = mergeKnown(defaultWorkspaceSettings(), value);
     settings.brush.size = normalizeBrushSize(settings.brush.size);
@@ -87,6 +100,8 @@ export function validateWorkspaceSettings(value) {
         BRUSH_SIZES.includes(settings.brush.size) &&
         (!Object.hasOwn(settings.brush, 'shape') || BRUSH_SHAPES.includes(settings.brush.shape)) &&
         ['paint', 'continuous', 'copy'].includes(settings.brush.mode) && C.SYMMETRY_MODES.includes(settings.brush.symmetry) &&
+        (!Object.hasOwn(settings, 'evolutionSelections') || object(settings.evolutionSelections) &&
+            Object.entries(settings.evolutionSelections).every(([name, rules]) => ['gameOfLife','chiFlow'].includes(name) && validCycle([rules,rules,rules],name==='chiFlow'))) &&
         validCycle(settings.cycles.gameOfLife, false) && validCycle(settings.cycles.chiFlow, true) &&
         ['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'].includes(r.gravity.direction) && number(r.gravity.strength, 0, 1) &&
         ['b', 'a', 'vortex', 'radial', 'down', 'left', 'black_hole'].includes(r.spiral.method) &&
