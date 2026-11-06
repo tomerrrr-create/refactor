@@ -31,8 +31,8 @@ export function initializeBrushPickerNavigation({
         onTap: () => utility().onTap(),
         onHold: () => utility().onHold?.(),
         onOpen: () => utility().onOpen(),
-        onSwipeDown: () => utility().onSwipeDown(),
-        canSwipeDown: () => utility().canSwipeDown(),
+        onSwipeDown: () => utility().onSwipeDown?.(),
+        canSwipeDown: () => utility().canSwipeDown?.() ?? false,
         canInteract: () => utility().canInteract(),
         beforeStart: () => utility().beforeStart()
     });

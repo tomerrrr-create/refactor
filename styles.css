@@ -230,9 +230,9 @@ body {
 #btnRandom         { grid-area: 4 / 6; }
 #btnCycleSort      { grid-area: 4 / 7; }
 
-#btnColorPicker    { grid-area: 2 / 4; }
+#btnColorPicker    { grid-area: 3 / 4; }
 #btnSymmetry       { grid-area: 1 / 9; }
-#btnBrushMode      { grid-area: 2 / 6; }
+#btnBrushMode      { grid-area: 3 / 6; }
 
 
 #btnRedo           { grid-area: 4 / 1; }
@@ -347,7 +347,6 @@ body {
 .sim-mode-active #btnIslands            { grid-area: 2 / 7; }
 .sim-mode-active #btnShowBreatheMenu    { grid-area: 1 / 7; }
 .sim-mode-active #btnWind              { grid-area: 2 / 1; }
-.sim-mode-active #btnNudgeBrighter     { grid-area: 3 / 1; }
 
 /* שורה 3 - (משמאל לימין) */
 .sim-mode-active #btnResizeDown        { grid-area: 3 / 1; }
@@ -368,19 +367,19 @@ body {
 
 /* Right Panel (Col 9) */
 .sim-mode-active #btnSymmetry      { grid-area: 1 / 9; }
-.sim-mode-active.sim-separator-control #btnGap { display: inline-flex; grid-area: 1 / 9; }
-.sim-mode-active.sim-separator-control #btnSymmetry { display: none; }
+.sim-mode-active.sim-separator-control #btnGap { display: inline-flex; grid-area: 2 / 9; }
 .sim-mode-active #btnUndo          { grid-area: 4 / 9; }
 
 #btnBrushMode svg path {
     transition: fill 0.2s ease-in-out;
 }
 #btnBrushMode.brush-on svg path {
-    fill: #fff;
-}
-#btnBrushMode.brush-continuous svg path {
     fill: var(--gold);
     stroke: var(--gold);
+}
+#btnBrushMode.brush-continuous svg path {
+    fill: #fff;
+    stroke: #fff;
 }
 .app-shell {
   width: min(85vmin, 720px);
@@ -911,7 +910,7 @@ body {
 :root[data-simulation-running][data-simulation-effective-theme="gold"] .sim-mode-active :is(
   #btnGameOfLife, #btnMagnetModes, #btnBrightnessEvo, #btnShowBreatheMenu,
   #btnIslands, #btnGravitationalSort, #btnErosion, #btnDla, #btnContour,
-  #btnCymatics, #btnSpiral, #btnSandpile, #btnTuring
+  #btnCymatics, #btnSpiral, #btnSandpile, #btnTuring, #btnNudgeBrighter
 ):not(.simulation-active):not(:disabled) > svg {
   stroke: var(--sim-color);
 }
@@ -1038,6 +1037,7 @@ body {
 #btnSandpile svg,
 #btnTuring svg,
 #btnShowBreatheMenu svg,
+#btnNudgeBrighter svg,
 #btnIslands svg {
     stroke: var(--sim-color); /* צובע את קווי המתאר של האייקון בכחול */
 }
@@ -1983,6 +1983,13 @@ button, .ctrl {
 
 /* Wind never dims or locks the control panel. */
 body.wind-mode #board { cursor: crosshair; }
+body.wind-mode :is(#btnColorPicker, #btnSymmetry, #btnColorPickerSymmetry):disabled {
+  opacity: .18 !important;
+  pointer-events: none;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: transparent;
+}
 .wind-settings-dialog h2 { color: var(--gold); font-size: 20px; text-align: center; margin-bottom: 22px; }
 .wind-settings-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 22px 0; }
 .wind-settings-field label { font-size: 14px; color: #eaeaea; }
@@ -2461,6 +2468,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* One-shot Contours lives below Symmetry, outside the evolution overlay. */
 #btnContoursAction { display: none; color: inherit; }
 #controlsContainer.sim-mode-active #btnContoursAction { display: inline-flex; grid-area: 2 / 9; }
+#controlsContainer.sim-mode-active.sim-separator-control #btnContoursAction { display: none; }
 #btnContoursAction svg { stroke: currentColor; width: var(--side-icon-size); height: var(--side-icon-size); }
 
 #contourSettingsModal > div { max-height: calc(100dvh - 32px); overflow-y: auto; box-sizing: border-box; }

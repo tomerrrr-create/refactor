@@ -27,7 +27,7 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  if(touch){const cdp=await ctx.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y+dy*i/5}]});await page.waitForTimeout(25);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}
  else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:5});await page.mouse.up();}await page.waitForTimeout(80);}
  assert.deepEqual(await page.locator('#btnWind').evaluate(e=>[getComputedStyle(e).gridRowStart,getComputedStyle(e).gridColumnStart]),['2','1']);
- assert.deepEqual(await page.locator('#btnNudgeBrighter').evaluate(e=>[getComputedStyle(e).gridRowStart,getComputedStyle(e).gridColumnStart]),['3','1']);
+ assert.deepEqual(await page.locator('#btnNudgeBrighter').evaluate(e=>[getComputedStyle(e).gridRowStart,getComputedStyle(e).gridColumnStart]),['3','5']);
  const initial=await state(),colorIcon=await page.locator('#btnColorPicker').innerHTML();
  await swipe('#btnColorPicker',35);assert.equal((await state()).wind,false);
  await page.locator('#btnColorPicker').focus();await page.keyboard.press('Alt+ArrowDown');assert.equal((await state()).wind,false);

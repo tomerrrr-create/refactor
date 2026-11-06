@@ -6,7 +6,7 @@ For complete interactions, engine behavior, compatibility and maintenance instru
 
 ## Create and choose colors
 
-- The brush cycles through **Paint → Continuous → Copy**. Continuous connects points while dragging; Copy transfers a source color to the brush footprint.
+- The brush cycles through **Paint → Continuous → Copy**. Continuous (white triangle, factory default) connects points while dragging; ordinary Paint uses a gold triangle. Copy keeps its outlined triangle and transfers a source color to the brush footprint.
 - Tap the palette, color or sorting controls for their ordinary actions; swipe upward for their pickers/settings. Hold Color for 600 ms to select the first palette entry, or 1,200 ms total for rainbow.
 - The color and palette pickers share a frame, backdrop and top navigation anchor. Their top palette icon switches between the two views. Palette categories are **23, 64, 264 and •**.
 - Palette sorting preserves visible board colors and the selected paint color while changing their palette indices.
@@ -25,17 +25,17 @@ Brightness smoothing starts at 10%. Cracks defaults to whole-board growth; its b
 
 Resonance starts in the second drawer. Its toolbar cycle is Circular → Interference, with Off while paused; all six maps, including Cosmological empathy, remain available in settings. A fixed audio-waveform icon has a small upper-right badge for the selected map. Each map remembers its own Frequency and Strength, while Phase motion is shared. Cosmological empathy uses a circular gradient across the board; older recordings retain their recorded map behavior.
 
-Wind has a dedicated button in the simulation panel above Nudge. Tap to cycle Local ripple → Paint color rings → Move existing colors → Off; active Wind is gold. Swipe up while active for settings. The former downward swipe on Color/brush is removed. Nudge now sits in the former minus position.
+Wind has a dedicated button in the simulation panel above Nudge. Tap to cycle Local ripple → Paint color rings → Move existing colors → Off; active Wind is gold. Swipe up while active for settings. Color/brush and Symmetry are strongly dimmed and unavailable during Wind; switching Wind off restores their previous choices. The former downward swipe on Color/brush is removed. Nudge now sits in the former minus position.
 
 ## Two simulation drawers
 
-The simulation overlay has **two drawers**, each with ten fixed places in two rows of five. All thirteen evolutions appear exactly once across them. Empty places are invisible on the control panel, and the frame keeps the same size.
+The simulation overlay has **two drawers**, each with ten fixed places in two rows of five. All fourteen evolutions appear exactly once across them. Empty places are invisible on the control panel, and the frame keeps the same size.
 
 - Tap the **two small gray dots** above the overlay to switch drawers. The current drawer has a filled dot; the other has an outlined dot.
 - Switching changes visibility only. It does not select, pause, restart or step an evolution, change its cycle mode, or reset its generation counter.
 - Global Play/Pause and Single step still control the selected evolution when its button is in the other drawer. A small gold marker and tooltip identify that situation.
 - Navigation works during playback, including Breathe. The current drawer is retained during the session; a new app load starts at drawer one.
-- The factory second drawer contains **Breathe, Turing and Resonance**, centered in top-row positions **2, 3 and 4**. Saved layouts retain their positions. Existing personal layouts keep their original ten positions in drawer one; the missing evolutions are appended to drawer two.
+- The factory second drawer contains **Breathe, Turing and Resonance**, centered in top-row positions **2, 3 and 4**. Nudge starts in the bottom center (slot 8) of that drawer. Existing saved assignments retain their positions; a missing Nudge is added there if empty, or to another empty place. Existing personal layouts keep their original ten positions in drawer one; the missing evolutions are appended to drawer two.
 
 Swipe upward on the drawer switch to open **Evolution map**, or use **Alt+ArrowUp** on a keyboard. Editing is available while paused, outside macro loading/playback.
 
@@ -43,7 +43,7 @@ The editor shows both grids, side by side on wide screens and stacked on mobile.
 
 **Save** applies both drawers. **Cancel**, Escape or closing without saving discards the draft. **Reset** restores the factory draft until saved. Each profile autosaves its drawer layout across reloads without requiring Save to profile. Layout changes do not alter artwork, engine state, Undo/Redo or recipes.
 
-Nudge stays below Wind in the former minus slot, and one-shot Contours stays below Symmetry, both outside the drawers. Nudge cycles Brighter → Darker → Off while paused, skips Off while running, and acts through Single step or Play. Contours applies one pass immediately; swipe upward for its settings.
+Nudge is a movable simulation inside the drawers with the same idle, armed and playback colors as the others. One-shot Contours stays below Symmetry outside the drawers. Nudge cycles Brighter → Darker → Off while paused, skips Off while running, and acts through Single step or Play. Contours applies one pass immediately; swipe upward for its settings. In Simulation, swipe/drag down on Contours to replace it with Separators; swipe down on Separators to return. Symmetry stays visible and no longer switches to Separators.
 
 ## Settings profiles
 

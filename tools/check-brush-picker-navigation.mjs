@@ -27,7 +27,7 @@ try {
  state:()=>({sort:currentSortMethod,symmetry:symmetryMode,palette:activePaletteIndex,colors:boardState.map(t=>palette()[t.k]),gen:currentGenerationCount,playing:isLifePlaying,logs:[...artRecipeLog],shape:brushShape,size:brushSize}),
  sim:()=>{isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');armSimulation('gameOfLife');updateSimulationUtilityControl();},
  play:()=>togglePlayPauseLife(),pause:pauseLife,
- page:()=>colorPickerPage,pages:size=>{activePaletteIndex=C.PALETTES.findIndex(p=>size==='large'?p.colors.length>80:p.originalName==='Journey');updatePaletteHeader();modals.openColorPickerModal();},mainSymmetry:cycleSymmetryMode
+ page:()=>colorPickerPage,pages:size=>{activePaletteIndex=C.PALETTES.findIndex(p=>size==='large'?p.colors.length>80:p.originalName==='Journey');updatePaletteHeader();modals.openColorPickerModal();},mainUtility:swapSimulationUtilityControl,mainSymmetry:cycleSymmetryMode
  };initializeApp().then(()=>pickerNavTest.ready=true);`);
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.pickerNavTest?.ready);await page.waitForTimeout(500);
  await page.evaluate(()=>{pickerNavTest.setup();pickerNavTest.open();});await page.waitForTimeout(350);
@@ -56,7 +56,7 @@ try {
  async function drag(button,dy){const r=await button.boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:5});await page.mouse.up();await page.waitForTimeout(100);}
  await drag(sym,-35);assert.equal((await state()).symmetry,'off');
  await drag(sort,-35);assert(await page.locator('#sortCycleDialog').isVisible());await page.locator('#btnCancelSortCycle').click();
- await page.evaluate(()=>pickerNavTest.sim());await drag(sym,35);assert.equal(await sym.getAttribute('data-relative-gap'),await page.locator('#btnGap').getAttribute('data-relative-gap'));
+ await page.evaluate(()=>pickerNavTest.sim());const beforeDown=await sym.innerHTML();await drag(sym,35);assert.equal(await sym.innerHTML(),beforeDown,'down on mirrored Symmetry no longer swaps controls');await page.evaluate(()=>pickerNavTest.mainUtility());await page.waitForTimeout(30);assert.equal(await sym.getAttribute('data-relative-gap'),await page.locator('#btnGap').getAttribute('data-relative-gap'));
  assert.equal(await page.locator('#btnGap svg path').getAttribute('d'),'M8 3v18M16 3v18M3 8h18M3 16h18');assert.equal(await sym.locator('svg path').getAttribute('d'),await page.locator('#btnGap svg path').getAttribute('d'),'picker mirrors the original separator hash');
  assert.equal(await sym.locator('.picker-gap-value').count(),1);await sym.click();await drag(sym,-35);assert(await page.locator('#separatorCycleDialog').isVisible());await page.locator('#btnCancelSeparatorCycle').click();await drag(sym,35);assert.equal(await sym.locator('[data-symmetry-icon]').count(),1);
  if(process.env.PICKER_SEPARATOR_ONLY){assert.deepEqual(errors,[]);console.log(JSON.stringify({config,separatorsPassed:true}));await context.close();continue;}

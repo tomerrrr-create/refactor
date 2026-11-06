@@ -2610,7 +2610,8 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
       function updateSimulationUtilityControl() {
           const showSeparators = isSimModeActive && dom.controlsContainer.classList.contains('sim-separator-control');
           dom.btnGap.classList.toggle('control-hidden', isSimModeActive && !showSeparators);
-          dom.btnSymmetry.classList.toggle('control-hidden', showSeparators);
+          dom.btnContoursAction.classList.toggle('control-hidden', showSeparators);
+          dom.btnSymmetry.classList.toggle('control-hidden', false);
       }
 
       function swapSimulationUtilityControl() {
@@ -2849,6 +2850,8 @@ function setWindMode(enabled) {
         windPointerId = null;
     }
     windMode = enabled;
+    dom.btnColorPicker.disabled = enabled;
+    dom.btnSymmetry.disabled = enabled;
     document.body.classList.toggle('wind-mode', enabled);
     updateColorPickerButtonUI();
 }
@@ -5753,9 +5756,8 @@ bindPickerGestures(dom.btnPalette, {
         initializeWindMode();
         bindPickerGestures(dom.btnSymmetry, {
             onTap: cycleSymmetryMode, onHold: selectKaleidoscope,
-            onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
             onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
-            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
+            canInteract: () => !windMode && !isBreathing, beforeStart: hideLongPressDisplay
         });
 bindPickerGestures(dom.btnCycleSort, {
     onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
@@ -5795,8 +5797,7 @@ initializeBrushPickerNavigation({
     },
     symmetryGestures: {
         onTap: cycleSymmetryMode, onHold: selectKaleidoscope, onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
-        onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
-        canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
+        canInteract: () => !windMode && !isBreathing, beforeStart: hideLongPressDisplay
     },
     separatorGestures: {
         onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
@@ -5816,7 +5817,7 @@ bindPickerGestures(dom.btnColorPicker, {
         resetSelectedColor();
         dom.btnColorPicker.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 250 });
     },
-    canOpen: () => !(isLifePlaying && armedSimulation === 'breathe'),
+    canOpen: () => !windMode && !(isLifePlaying && armedSimulation === 'breathe'),
     onHold: () => {
         if (windMode || (isLifePlaying && armedSimulation === 'breathe')) return;
         selectedColorIndex = 0;
@@ -5831,7 +5832,7 @@ bindPickerGestures(dom.btnColorPicker, {
         isRainbowModeActive = true;
         updateGlowEffect(); updateColorPickerButtonUI();
     },
-    canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
+    canInteract: () => !windMode && !isBreathing, beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
 bindPickerGestures(dom.btnWind, {
@@ -5880,6 +5881,7 @@ dom.btnWind.addEventListener('keydown', event => {
         ].filter(([button]) => button);
         bindPickerGestures(dom.btnContoursAction, {
             onTap: () => applyContoursOnce(), onOpen: modals.openContourSettingsModal,
+            onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
             onHold: () => evolutionExplanation.show(dom.btnContoursAction, 'contourAction'),
             canInteract: () => !isBreathing && !isMacroLoaded,
             beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
