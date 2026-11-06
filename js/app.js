@@ -5387,6 +5387,9 @@ else if (action.eventName === 'Invert Colors') {
         softBloom.setIntensity(softBloomIntensity);
         softBloom.setEnabled(isSoftBloom);
         const contextForModals = {
+            canBrowseEvolutionPreset: simulation => ['gameOfLife','sandpile'].includes(simulation) &&
+                isSimModeActive && armedSimulation === simulation && !isBreathing &&
+                !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             refreshProfiles: () => settingsProfiles?.refresh(),
             isSimulationMode: () => isSimModeActive,
             SORT_MODES,
@@ -5871,6 +5874,8 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
+                onSwipeSide: ['gameOfLife','sandpile'].includes(simulation) ? direction => modals.browseEvolutionPreset(simulation,direction) : undefined,
+                canSwipeSide: () => contextForModals.canBrowseEvolutionPreset(simulation) && !evolutionExplanation.isOpen(),
                 onHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),

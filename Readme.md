@@ -107,9 +107,13 @@ The settings toolbar has three symbol buttons for the assigned cycle positions, 
 
 The low-level Chi Flow fallback Yours → Ripples → Nova is not the fresh profile-1 cycle. Save to profile to retain session rule/cycle edits on reopening; dialog Save applies the working choices.
 
-Horizontal preset swipes and their independent active-choice state have been removed from Game of Life and Chi Flow. Ordinary taps cycle the three assigned shortcuts (with Off only while paused); upward swipes open settings. Returning from another evolution starts at the first shortcut as before. Settings preset/manual edits apply to the selected shortcut on Save; Cancel discards the draft.
+When Game of Life or Chi Flow is selected, swipe its button **right for the next preset** or **left for the previous preset**, wrapping at both ends. Physical directions stay the same in every language and in either simulation drawer. Swipes are inactive for unselected evolutions and during macro loading/playback. A completed swipe commits exactly the same three-slot snapshot as choosing that preset in settings and pressing Save: only the active shortcut changes, its zero/one/two-star position stays selected, the other shortcuts and Yours remain unchanged, and Game of Life retains its genetics setting. A brief nonblocking label shows the localized preset name without shading the board or controls.
 
-Settings/profiles saved by the removed feature remain readable: their optional `evolutionSelections` rules are folded into the corresponding shortcut (saved profile position, or the current position for a settings import; standalone profiles without identity use the first position), preserving the other slots, Yours and unrelated preferences. Subsequent saves use ordinary shortcut snapshots. Existing recipe `presetBrowse` metadata is accepted as inert metadata; replay uses its recorded effective rules, so the removed gesture is not needed to play a journey.
+Both the dialog and navigation read the preset buttons in DOM order, rather than constants insertion order. Game of Life begins Paint 4 → Paint 1 → Shuffle → Harmonic; Chi Flow begins Nova → Harmony → Topography → Fluent. Reordering those buttons changes navigation as well. A retained named source identifies the current preset even when a profile supplies a different Chi Reach; otherwise matching rule values identify it. Unmatched custom rules go to the first preset on a right swipe or the last on a left swipe. Choosing a Chi preset applies its entire rule set, including its own Magnetic Reach, exactly like the dialog.
+
+Paused swipes do not paint or advance a generation. During playback the new rules apply on the next generation without pausing, restarting or resetting the counter. The existing mode-change recording stores effective rules and generation tags, so playback does not depend on catalogue order; no new independent selection preference or recipe command is introduced. A settings Save with no further edits retains the committed choice; Cancel discards only subsequent dialog edits. Ordinary taps still cycle the three assigned shortcuts (Off only while paused), upward swipes open settings, and holds show explanations. Leaving and returning starts at shortcut one as before, with all edited shortcut assignments retained. Dialog Save applies session choices; Save to profile is still required to retain simulation edits on reopening.
+
+Settings/profiles saved by the earlier independent-selection experiment remain readable: their optional `evolutionSelections` rules are folded into the corresponding shortcut (saved profile position, or the current position for a settings import; standalone profiles without identity use the first position), preserving the other slots, Yours and unrelated preferences. Subsequent saves use ordinary shortcut snapshots. Existing recipe `presetBrowse` metadata is accepted as inert metadata; replay uses its recorded effective rules, so the removed gesture is not needed to play a journey.
 
 ### Technician settings and initialization
 
@@ -740,12 +744,13 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Cracks growth-area drafts, presets, material interaction, profiles and replay | `tools/check-cracks-area.mjs` |
-| Retired preset-swipe rollback: old profile/settings migration, old/new recipes, settings, cycles and history | `tools/check-preset-rollback.mjs` |
+| Legacy independent-selection compatibility: old profile/settings migration, old/new recipes, settings, cycles and history | `tools/check-preset-rollback.mjs` |
 | Cracks paused/live button cycles, settings synchronization, history and recipe replay | `tools/check-cracks-cycle.mjs` |
 | DLA resizing, exhausted growth, Contours, Undo/Redo and logger replay | `tools/check-dla-history.mjs` |
 | Symmetry hold, mirrored controls, eight-way painting and recipe replay | `tools/check-symmetry-hold.mjs` |
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
 | Palette controls and transitions | `tools/check-palette-cards.mjs`, `tools/check-palette-hold-colors.mjs`, `tools/check-color-page-swipe.mjs`, `tools/check-picker-dialog-transition.mjs` |
+| Game of Life / Chi preset swipes: modal-Save equivalence, all shortcut positions, live rules, profiles and replay | `tools/check-preset-swipes.mjs` (`PRESET_LANG` filters languages) |
 | Game of Life genetics | `tools/check-gol-genetics.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Settings entry focus and keyboard navigation | `tools/check-settings-focus.mjs` |
