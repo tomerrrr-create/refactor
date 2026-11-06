@@ -1,4 +1,5 @@
 import { INITIAL_CRACKS_GROWTH } from './cracks-settings.js';
+import { DEFAULT_EVOLUTION_LAYOUT } from './evolution-drawer-settings.js';
 import { INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { DEFAULT_SEPARATOR_CYCLE } from './separator-cycle.js';
 import { resolveSavedBloom } from './soft-bloom.js';
@@ -160,6 +161,7 @@ function mergeChanges(draft, previous, current) {
 function defaultComparable(value, factory) {
     const snapshot = validateProfileSnapshot(value);
     const settings = snapshot.settings;
+    if (JSON.stringify(settings.evolutionSlots) === JSON.stringify(DEFAULT_EVOLUTION_LAYOUT)) delete settings.evolutionSlots;
     // The old default color field and the live brush-only Cracks color are equivalent.
     if (settings.rules.contour.lineColor === 'darkest') settings.rules.contour.lineColor = 'brush';
     settings.evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);

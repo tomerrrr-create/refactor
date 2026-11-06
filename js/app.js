@@ -2,7 +2,7 @@ import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour
 import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_FREQUENCIES,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
-import {DEFAULT_EVOLUTION_SLOTS,validateEvolutionSlots} from './evolution-drawer-settings.js';
+import {DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,validateEvolutionSlots} from './evolution-drawer-settings.js';
 import {createEvolutionDrawer} from './evolution-drawer.js';
 import { CONTOUR_LINE_COLORS, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, createCracksSession, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
@@ -383,7 +383,7 @@ let magnetMode = 'off';
       const originalColorPickerIconHTML = dom.btnColorPicker.innerHTML;
       
       let evolutionDrawer;
-      let evolutionSlots = [...DEFAULT_EVOLUTION_SLOTS];
+      let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
       let modals;
       let settingsProfiles;
 
@@ -2123,7 +2123,7 @@ if (simulationName === 'magnet') {
         return {
             ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
             ...(Object.values(cymaticsStrengths).every(value=>value===INITIAL_CYMATICS_RULES.strength)?{}:{cymaticsStrengths:{...cymaticsStrengths}}),
-            ...(evolutionSlots.join() === DEFAULT_EVOLUTION_SLOTS.join() ? {} : {evolutionSlots:[...evolutionSlots]}),
+            ...(evolutionSlots.join() === DEFAULT_EVOLUTION_LAYOUT.join() ? {} : {evolutionSlots:[...evolutionSlots]}),
             ...(contourActionRules.sensitivity === contourRules.sensitivity && contourActionRules.lineColor === 'darkest' ? {} : { contourAction: { ...contourActionRules } }),
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
@@ -5657,6 +5657,7 @@ updateBrightnessEvoButtonUI();
             getText,getLang:getCurrentLang,onLanguageChange});
         evolutionDrawer = createEvolutionDrawer({
             controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,
+            canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             getText,getLang:getCurrentLang,onLanguageChange,
             onSave:slots=>{if(!isSimModeActive||isLifePlaying||isBreathing||isMacroLoaded||isMacroPlaying)return false;

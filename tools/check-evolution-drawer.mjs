@@ -4,7 +4,7 @@ import {createServer} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
-import {DEFAULT_EVOLUTION_SLOTS,assignEvolutionSlot} from '../js/evolution-drawer-settings.js';
+import {DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,moveEvolutionSlot} from '../js/evolution-drawer-settings.js';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../',import.meta.url)),artifacts='/tmp/evolution-drawer-check';await mkdir(artifacts,{recursive:true});
 const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.html')?'text/html':'application/octet-stream');res.end(await readFile(path.join(root,'dist',f)));}catch{res.writeHead(404);res.end();}});
@@ -21,46 +21,81 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>drawerTest.setup());
  const state=()=>page.evaluate(()=>drawerTest.state()),tap=target=>config.width<600?target.tap():target.click();const trigger=page.locator('#btnEvolutionDrawer'),dialog=page.locator('#evolutionDrawerDialog');
- async function open(){await tap(trigger);await dialog.waitFor({state:'visible'});}
- async function assign(slot,id){await tap(dialog.locator('[data-drawer-slot="'+slot+'"]'));await tap(dialog.locator('[data-drawer-evolution="'+id+'"]'));}
- async function visibleSlots(){return page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>Number(a.dataset.evolutionSlot)-Number(b.dataset.evolutionSlot)).map(e=>e.dataset.evolutionId));}
- if(config.lang==='en'){
-  for(const [theme,color] of [['pink','rgb(201, 145, 173)'],['gold','rgb(165, 139, 84)'],['teal','rgb(104, 189, 181)'],['silver','rgb(137, 144, 153)'],['ice','rgb(145, 184, 203)'],['blue','rgb(51, 65, 85)']]){await page.evaluate(theme=>drawerTest.theme(theme),theme);assert.equal(await trigger.locator('span').evaluate(e=>getComputedStyle(e).backgroundColor),color);}
+ async function open(){
+  const r=await trigger.boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
+  if(config.width<600){
+   const cdp=await context.newCDPSession(page);
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+   for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-i*7}]});await page.waitForTimeout(25);}
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();
+  }else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y-35,{steps:5});await page.mouse.up();}
+  await dialog.waitFor({state:'visible'});await page.waitForTimeout(350);
  }
- assert(await trigger.locator('span').evaluate(e=>Math.abs(parseFloat(getComputedStyle(e).width)-5)<.1));
- assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);const initial=await state();
- assert.equal(await page.locator('#btnShowBreatheMenu').isVisible(),false);assert.equal(await page.locator('#btnTuring').isVisible(),false);
- await page.evaluate(()=>window.realLifeButton=document.querySelector('#btnGameOfLife'));
- await open();assert.equal(await dialog.getAttribute('dir'),config.lang==='he'?'rtl':'ltr');assert.equal(await dialog.locator('[data-drawer-slot]').count(),10);assert.equal(await dialog.locator('[data-drawer-evolution]').count(),13);assert.equal(await dialog.locator('.drawer-icon [id]').count(),0);assert.equal(await dialog.locator('[data-drawer-evolution=contour] .contour-cracks-icon').count(),1);
- assert(await dialog.evaluate(e=>{const r=e.getBoundingClientRect();return e.scrollWidth<=e.clientWidth+1&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;}));
- assert.equal(await dialog.locator('.drawer-instructions').count(),0);assert.equal(await dialog.locator('.drawer-slots small').count(),0);
- assert(await dialog.locator('.drawer-slots').evaluate(slots=>{const r=slots.getBoundingClientRect(),dialog=slots.closest('dialog'),d=dialog.getBoundingClientRect(),scale=d.width/dialog.offsetWidth;return Math.abs((r.left+r.right)/2-(d.left+(dialog.clientLeft+dialog.clientWidth/2)*scale))<2&&[...slots.children].every(b=>{const r=b.getBoundingClientRect(),width=parseFloat(getComputedStyle(b).width);return Math.abs(r.width-r.height)<1&&width>=43.9&&width<=49;});}));
- assert.equal(new Set(await dialog.locator('[data-drawer-slot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).backgroundColor))).size,10);
- assert.equal(await dialog.locator('.drawer-slots .drawer-slot-label').count(),0);assert.equal(await dialog.locator('.drawer-mark svg').count(),1);
- assert(await dialog.locator('[data-drawer-slot="0"]').getAttribute('aria-label'));assert.equal(await dialog.locator('[data-drawer-evolution] > :not(.drawer-icon)').count(),0);
- assert.deepEqual(await dialog.locator('[data-drawer-group=parked] [data-drawer-evolution]').evaluateAll(es=>es.map(e=>e.dataset.drawerEvolution)),['breathe','turing','cymatics']);
- assert.deepEqual(await dialog.locator('[data-drawer-group=assigned] [data-drawer-evolution]').evaluateAll(es=>es.map(e=>e.dataset.drawerEvolution)),DEFAULT_EVOLUTION_SLOTS);
- assert(await dialog.locator('[data-drawer-evolution]').evaluateAll(es=>es.every(e=>{const r=e.getBoundingClientRect();return Math.abs(r.width-r.height)<1&&!!e.getAttribute('aria-label')&&!!e.title;})));
- await page.screenshot({path:path.join(artifacts,config.lang+'-drawer.png')});
- if(process.env.DRAWER_VISUAL_ONLY){assert.deepEqual(await state(),initial);assert.deepEqual(errors,[]);console.log(JSON.stringify({config,visualPassed:true}));await context.close();continue;}
- await assign(0,'breathe');assert.equal(await dialog.locator('[data-drawer-group=parked] [data-drawer-evolution=dla]').count(),1);assert.equal(await dialog.locator('[data-drawer-group=assigned] [data-drawer-evolution=breathe]').count(),1);assert.equal(await dialog.locator('[data-drawer-group=parked] [data-drawer-evolution]').count(),3);assert.deepEqual(await state(),initial,'draft assignment changes no live state');await tap(dialog.locator('[data-cancel]'));assert.deepEqual(await state(),initial);
- await open();await assign(0,'breathe');await assign(1,'turing');await assign(2,'cymatics');await tap(dialog.locator('[type=submit]'));
- let custom=['breathe','turing','cymatics',...DEFAULT_EVOLUTION_SLOTS.slice(3)];assert.deepEqual(await visibleSlots(),custom);const saved=await state();assert.deepEqual(saved.board,initial.board);assert.deepEqual(saved.logs,initial.logs);assert.equal(saved.history,initial.history);assert.deepEqual(saved.settings.evolutionSlots,custom);assert(await page.evaluate(()=>document.getElementById('btnGameOfLife')===window.realLifeButton));
- // All ten controls stay inside the same blue overlay, including formerly hidden controls.
- assert(await page.locator('#controlsContainer').evaluate(container=>{const r=container.querySelector('#simModeBackground').getBoundingClientRect();return [...container.querySelectorAll('[data-evolution-slot]')].every(e=>{const b=e.getBoundingClientRect(),x=b.x+b.width/2,y=b.y+b.height/2;return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;});}));
- await open();const parkedBeforeSwap=await dialog.locator('[data-drawer-group=parked] [data-drawer-evolution]').evaluateAll(es=>es.map(e=>e.dataset.drawerEvolution));await assign(0,'turing');assert.deepEqual(await dialog.locator('[data-drawer-group=parked] [data-drawer-evolution]').evaluateAll(es=>es.map(e=>e.dataset.drawerEvolution)),parkedBeforeSwap);await assign(0,'turing');await tap(dialog.locator('[type=submit]'));custom=assignEvolutionSlot(custom,0,'turing');assert.deepEqual(await visibleSlots(),custom);
- await tap(page.locator('#btnTuring'));assert.equal((await state()).armed,'turing');await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>drawerTest.state().gen>=3);assert(await trigger.isDisabled());await page.evaluate(()=>drawerTest.open());assert(!(await dialog.evaluate(d=>d.open)));await tap(page.locator('#btnPlayPauseLife'));assert(!(await trigger.isDisabled()));
- await tap(page.locator('#btnShowBreatheMenu'));assert.equal((await state()).armed,'breathe');await tap(page.locator('#btnPlayPauseLife'));assert((await state()).playing);assert(await trigger.isDisabled());await page.waitForFunction(()=>getComputedStyle(document.querySelector('#btnTuring')).opacity==='0.3',null,{timeout:2000});await tap(page.locator('#btnPlayPauseLife'));
- // A parked evolution still runs and global Pause remains available.
- await page.evaluate(()=>drawerTest.arm('dla'));await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>drawerTest.state().gen>=3);await page.waitForFunction(()=>document.querySelector('#btnEvolutionDrawer').dataset.parkedActive==='true');assert(await trigger.isDisabled());assert.equal(await trigger.locator('span').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(150, 153, 148)');assert.equal((await state()).armed,'dla');await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>!document.querySelector('#btnEvolutionDrawer').disabled);
- // Draft Reset/Cancel, then profile separation and reload persistence.
- await open();await tap(dialog.locator('[data-reset]'));await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,custom);
- await page.evaluate(()=>drawerTest.tech());await page.locator('[data-profile-choice="1"]').click();assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_SLOTS);await page.locator('[data-profile-choice="0"]').click();assert.deepEqual((await state()).slots,custom);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
- await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);assert.deepEqual((await state()).slots,custom,'saved profile layout survives reload');await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>drawerTest.setup());
- // Replay operates by original engine IDs even when its control is parked.
- await page.evaluate(()=>drawerTest.arm('contour'));assert.equal(await page.locator('#btnContour').isVisible(),false);await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>drawerTest.state().gen>=8);await tap(page.locator('#btnPlayPauseLife'));const result=await state(),recipe=await page.evaluate(()=>drawerTest.recipe());assert(!recipe.includes('evolutionSlots'),'toolbar preference stays outside art recipes');
- await page.locator('#projectFileInput').setInputFiles({name:'parked-evolution.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});await page.waitForFunction(()=>drawerTest.state().loaded);assert(await trigger.isDisabled());await page.evaluate(()=>drawerTest.macro());await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,result.board);assert.deepEqual((await state()).slots,custom);
- // Existing real controls retain their settings swipe and mode cycling.
- await open();await assign(0,'contour');await tap(dialog.locator('[type=submit]'));const contour=page.locator('#btnContour');const r=await contour.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();assert(await page.locator('#cracksSettingsDialog').isVisible());await page.locator('#cracksSettingsDialog [data-cancel]').click();
+ const slot=i=>dialog.locator(`[data-drawer-slot="${i}"]`);
+ async function move(from,to){await tap(slot(from));await tap(slot(to));}
+ const visibleSlots=()=>page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>+a.dataset.evolutionSlot-+b.dataset.evolutionSlot).map(e=>e.dataset.evolutionId));
+ const unchanged=(a,b)=>{assert.deepEqual(a.board,b.board);assert.deepEqual(a.logs,b.logs);assert.equal(a.history,b.history);assert.equal(a.armed,b.armed);};
+ const initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
+ assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
+ const frame=await page.locator('#simModeBackground').boundingBox();
+ await page.evaluate(()=>window.realLifeButton=document.getElementById('btnGameOfLife'));
+ await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics']);
+ assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ await tap(trigger);assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
+ if(config.lang==='en'){
+  await trigger.focus();await page.keyboard.press('Alt+ArrowUp');await dialog.waitFor({state:'visible'});await page.keyboard.press('Escape');
+  await trigger.press('Space');assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics']);await trigger.press('Enter');unchanged(initial,await state());
+  await page.emulateMedia({reducedMotion:'reduce'});await tap(trigger);
+  assert.equal(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.flatMap(e=>e.getAnimations()).length),0);
+  await tap(trigger);await page.emulateMedia({reducedMotion:'no-preference'});
+ }
+ await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-empty').count(),7);
+ assert.equal(await dialog.evaluate(d=>d.scrollWidth>d.clientWidth+1),false);
+ const tiles=await dialog.locator('[data-drawer-slot]').evaluateAll(es=>es.map(e=>({w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height,label:e.getAttribute('aria-label')})));
+ assert(tiles.every(t=>t.w>=43&&t.h>=43&&Math.abs(t.w-t.h)<1&&t.label));
+ await move(0,12);await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,initial.slots);
+ await open();await move(0,12);await move(2,19);
+ let custom=moveEvolutionSlot(moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,0,12),2,19);
+ await page.screenshot({path:path.join(artifacts,config.lang+'-two-drawers-editor.png'),animations:'disabled'});
+ await tap(dialog.locator('[type=submit]'));assert.deepEqual((await state()).slots,custom);unchanged(initial,await state());
+ assert(await page.evaluate(()=>document.getElementById('btnGameOfLife')===window.realLifeButton));
+ await tap(trigger);assert(await page.locator('#btnGameOfLife').isVisible());
+ await page.screenshot({path:path.join(artifacts,config.lang+'-second-drawer.png'),animations:'disabled'});
+ await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});
+ assert.deepEqual((await state()).slots,custom);assert.equal(await trigger.locator('.drawer-page-number').textContent(),'1/2');
+ // Layouts autosave per profile independently from simulation-rule Save to profile.
+ await page.evaluate(()=>drawerTest.tech());await tap(page.locator('[data-profile-choice="1"]'));assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT);
+ await tap(page.locator('[data-profile-choice="0"]'));assert.deepEqual((await state()).slots,custom);
+ await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
+ await open();await tap(dialog.locator('[data-reset]'));await page.keyboard.press('Escape');assert.deepEqual((await state()).slots,custom);
+ await open();await tap(dialog.locator('[data-reset]'));await tap(dialog.locator('[type=submit]'));assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT);
+ // A genuine old ten-slot TXT preserves its first page, with no lost controls.
+ const legacy=['cymatics',...DEFAULT_EVOLUTION_SLOTS.slice(1)];
+ await page.locator('#projectFileInput').setInputFiles({name:'legacy-layout.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{evolutionSlots:legacy}}))});
+ await page.waitForFunction(()=>drawerTest.state().slots[0]==='cymatics');
+ assert.deepEqual((await state()).slots.slice(0,10),legacy);assert.deepEqual((await state()).slots.slice(10,13),['dla','breathe','turing']);
+ await open();await tap(dialog.locator('[data-reset]'));await tap(dialog.locator('[type=submit]'));
+ // Move Life to page two. Its selected mode and run survive navigation away.
+ await open();await move(2,19);await tap(dialog.locator('[type=submit]'));custom=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,2,19);
+ await tap(trigger);await tap(page.locator('#btnGameOfLife'));await tap(page.locator('#btnGameOfLife'));
+ const selected=await state();assert.equal(selected.armed,'gameOfLife');
+ const lifeClass=await page.locator('#btnGameOfLife').getAttribute('class');
+ await tap(trigger);assert.equal(await trigger.getAttribute('data-parked-active'),'true');unchanged(selected,await state());
+ await tap(page.locator('#btnStepForward'));assert.equal((await state()).armed,'gameOfLife');
+ await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>drawerTest.state().gen>=4);
+ assert(await trigger.isEnabled());await tap(trigger);const running=await state();assert(running.playing);assert.equal(running.armed,'gameOfLife');
+ assert.equal(await page.locator('#btnGameOfLife').getAttribute('class'),lifeClass);
+ await page.evaluate(()=>drawerTest.open());assert.equal(await dialog.isVisible(),false,'editing stays locked during playback');
+ await tap(trigger);await page.waitForFunction(g=>drawerTest.state().gen>g,running.gen);
+ await tap(page.locator('#btnPlayPauseLife'));const result=await state();assert.equal(result.playing,false);
+ await open();await move(0,13);await tap(dialog.locator('[type=submit]'));custom=moveEvolutionSlot(custom,0,13);unchanged(result,await state());assert.equal((await state()).gen,result.gen,'editing preserves paused generation');
+ await tap(page.locator('#btnUndo'));await tap(page.locator('#btnRedo'));assert.deepEqual((await state()).board,result.board);
+ const recipe=await page.evaluate(()=>drawerTest.recipe());assert(!recipe.includes('evolutionSlots'),'layout never enters artwork recipes');
+ await page.locator('#projectFileInput').setInputFiles({name:'two-drawers-journey.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});
+ await page.waitForFunction(()=>drawerTest.state().loaded);assert(await trigger.isDisabled());
+ await page.evaluate(()=>drawerTest.macro());await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});
+ assert.deepEqual((await state()).board,result.board,'macro replays identically with Life on the other page');assert.deepEqual((await state()).slots,custom);
+ await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());
+ await tap(trigger);assert((await state()).playing,'navigation also works during Breathe');await page.evaluate(()=>drawerTest.pause());
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}

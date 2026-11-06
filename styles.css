@@ -2384,21 +2384,29 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
 #controlsContainer #btnEvolutionDrawer { display:none; }
 #controlsContainer.sim-mode-active #btnEvolutionDrawer { display:inline-flex; align-items:center; justify-content:center; grid-area:1 / 7; width:44px; height:44px; margin:auto; padding:0; border:0; background:transparent; cursor:pointer; }
-#btnEvolutionDrawer span { width:5px; height:5px; border-radius:50%; background:var(--drawer-trigger-color,#334155); }
+#btnEvolutionDrawer { position:relative; color:var(--drawer-trigger-color,#899099); font:14px Georgia,serif; letter-spacing:.05em; direction:ltr; touch-action:none; }
+#btnEvolutionDrawer .drawer-active-mark { display:none; position:absolute; bottom:7px; width:3px; height:3px; border-radius:50%; background:var(--gold); }
 :root[data-simulation-effective-theme="gold"] #btnEvolutionDrawer { --drawer-trigger-color:#a58b54; }
 :root[data-simulation-effective-theme="teal"] #btnEvolutionDrawer { --drawer-trigger-color:#68bdb5; }
 :root[data-simulation-effective-theme="silver"] #btnEvolutionDrawer { --drawer-trigger-color:#899099; }
 :root[data-simulation-effective-theme="ice"] #btnEvolutionDrawer { --drawer-trigger-color:#91b8cb; }
-#btnEvolutionDrawer[data-parked-active="true"] span { background:#969994; box-shadow:none; }
+#btnEvolutionDrawer[data-parked-active="true"] .drawer-active-mark { display:block; }
 #btnEvolutionDrawer:disabled { cursor:default; }
 #btnEvolutionDrawer:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:8px; }
 #controlsContainer.sim-mode-active [data-evolution-id]:not([data-evolution-slot]) { display:none !important; }
 #controlsContainer.sim-mode-active [data-evolution-slot] { display:inline-flex !important; visibility:visible !important; opacity:1 !important; grid-row:var(--evolution-row) !important; grid-column:var(--evolution-column) !important; }
-#evolutionDrawerDialog { width:min(580px,calc(100vw - 24px)); padding:18px; }
+#evolutionDrawerDialog { width:min(640px,calc(100vw - 24px)); padding:18px; }
+#controlsContainer.sim-mode-active [data-evolution-page-hidden] { display:none !important; }
+#evolutionDrawerDialog .drawer-pages { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; direction:ltr; }
+#evolutionDrawerDialog[dir="rtl"] .drawer-pages h3 { text-align:right; direction:rtl; }
+#drawerInstructions { color:#c3b99e; font-size:12px; line-height:1.6; margin:18px 0 0; }
+#evolutionDrawerDialog .drawer-selection { min-height:20px; color:#e3c677; text-align:center; font-size:12px; margin:18px 0 0; }
+#evolutionDrawerDialog .drawer-slots .drawer-empty { background:transparent; color:#827f71; border:1px dashed #b28b3645; font-size:22px; font-weight:200; }
+@media(max-width:600px) { #evolutionDrawerDialog .drawer-pages { grid-template-columns:1fr; gap:4px; } }
 #evolutionDrawerDialog .drawer-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 #evolutionDrawerDialog h2 { margin:0; font-size:19px; }
 #evolutionDrawerDialog [data-close] { min-width:44px; min-height:44px; border:0; background:transparent; color:#c3b99e; font-size:25px; }
-#evolutionDrawerDialog .drawer-slots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); width:min(100%,272px); margin:22px auto 6px; gap:8px; direction:ltr; }
+#evolutionDrawerDialog .drawer-slots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); width:min(100%,272px); margin:10px auto 6px; gap:8px; direction:ltr; }
 #evolutionDrawerDialog .drawer-slots button { display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; aspect-ratio:1; padding:0; border:1px solid transparent; border-radius:2px; }
 #evolutionDrawerDialog .drawer-slots button[aria-pressed="true"] { outline:2px solid #e3c677; outline-offset:2px; }
 #evolutionDrawerDialog h3 { font-size:13px; color:#d4c8aa; margin:20px 0 10px; font-weight:500; }
