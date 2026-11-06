@@ -2466,3 +2466,25 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cracksSettingsDialog [data-cracks-area] { min-height:44px; padding:8px; border:1px solid transparent; border-radius:8px; color:#9c998f; background:transparent; font:inherit; font-size:13px; line-height:1.35; }
 #cracksSettingsDialog [data-cracks-area][aria-pressed="true"] { color:#e5cc91; border-color:#b89a5766; background:#b89a5714; }
 #cracksSettingsDialog .cracks-settings-panel[hidden] { display:none; }
+
+/* Brief, non-interactive feedback for horizontal preset browsing. */
+#evolutionPresetFeedback {
+    position: fixed;
+    z-index: 100;
+    max-width: 170px;
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    border: 1px solid #d5aa4844;
+    border-radius: 12px;
+    background: #11151ef2;
+    color: #ead6a4;
+    font-size: 12px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 180ms ease;
+}
+#evolutionPresetFeedback.visible { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+    #evolutionPresetFeedback { transition: none; }
+}

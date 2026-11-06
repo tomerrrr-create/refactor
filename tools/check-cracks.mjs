@@ -34,7 +34,7 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  const state=()=>page.evaluate(()=>cracksTest.state()),button=page.locator('#btnContour'),before=await state();
  const tap=target=>config.width<600?target.tap():target.click();
  assert(await button.evaluate(e=>e.classList.contains('cracks-active')),'idle icon defaults to Cracks');
- await tap(button);assert.equal((await state()).mode,'cracks');assert.equal((await state()).armed,'contour');await tap(button);assert.equal((await state()).armed,null);assert.deepEqual((await state()).board,before.board);
+ await tap(button);assert.equal((await state()).mode,'cracks');assert.equal((await state()).armed,'contour');await tap(button);assert.equal((await state()).snapshot.contourState.growth.area,'dead');await tap(button);assert.equal((await state()).armed,null);assert.deepEqual((await state()).board,before.board);
  await tap(button);assert(await button.evaluate(e=>e.classList.contains('cracks-active')));
  // Cracks has its own draft-based settings; Contours retains its old modal.
  let sliderGestureChecked=false;

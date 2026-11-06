@@ -213,3 +213,10 @@ test('new mid-run snapshots restore recorded simulation rules and starting gener
     assert.equal(actions[2].isGenBased,true);assert.equal(actions[2].targetGen,363);
     assert.throws(()=>parse(text.replace('"generation":361','"generation":-1')),/Invalid initial simulation/);
 });
+
+test('Cracks Off is a validated selection command rather than a drawing-history action',()=>{
+ const off={eventName:'Cracks Mode Changed',details:JSON.stringify({version:1,mode:'off'})};
+ assert.doesNotThrow(()=>context.validateIslandsMacroAction(off));
+ for(const details of ['{"version":2,"mode":"off"}','{"version":1,"mode":"dead"}','null'])assert.throws(()=>context.validateIslandsMacroAction({...off,details}));
+ const parsed=parse(`[00:00:00.000] INIT_STATE -> ${JSON.stringify(init)}\n[00:00:00.100] Cracks Mode Changed -> ${off.details}`);assert(parsed.some(a=>a.eventName==='Cracks Mode Changed'));
+});

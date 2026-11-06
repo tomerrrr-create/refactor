@@ -126,3 +126,47 @@ test('palette genetics is shared across all cycle slots and old snapshots restor
     delete snapshot.genetics;c.restoreGameOfLifeRules(snapshot);assert.equal(c.gameOfLifeRules.genetics,undefined);
     c.gameOfLifeRules.genetics='palette-order';c.applyMacroRules('Armed: gameOfLife | Rules: No specific rules mapping');assert.equal(c.gameOfLifeRules.genetics,undefined);
 });
+
+function browseHarness() {
+ const c=harness();c.armedSimulation='gameOfLife';c.isBreathing=false;c.isMacroLoaded=false;c.isMacroPlaying=false;
+ const order=['btnGolPresetPaint', 'btnGolPresetPaint2', 'btnGolPresetShuffle', 'btnGolPresetHarmonic', 'btnGolPresetNaive', 'btnGolPresetCoral', 'btnGolPresetSpace', 'btnGolPresetAmoeba', 'btnGolPresetHive', 'btnGolPresetLivingTexture', 'btnGolPresetJoelson', 'btnGolPresetCharlie', 'btnGolPresetMeditation', 'btnGolPresetContinuum', 'btnGolPresetVibration'];
+ c.document={querySelectorAll:()=>order.map(id=>({id:id,textContent:id}))};
+ c.dom={btnGameOfLife:{}};c.showPresetFeedback=()=>{};
+ vm.runInContext(fn('browseEvolutionPreset'),c);
+ return {c,order};
+}
+test('preset browsing follows display order, wraps, guards selection and preserves Yours and cycle slots',()=>{
+ const {c,order}=browseHarness();const slots=plain(c.gameOfLifeCycle),yours=plain(c.personalGameOfLifeRules);
+ c.browseEvolutionPreset('gameOfLife',1);assert.deepEqual(plain(c.gameOfLifeRules),plain(presets[order[0]]));
+ c.browseEvolutionPreset('gameOfLife',1);assert.deepEqual(plain(c.gameOfLifeRules),plain(presets[order[1]]));
+ c.browseEvolutionPreset('gameOfLife',-1);c.browseEvolutionPreset('gameOfLife',-1);assert.deepEqual(plain(c.gameOfLifeRules),plain(presets[order.at(-1)]));
+ assert.deepEqual(plain(c.gameOfLifeCycle),slots);assert.deepEqual(plain(c.personalGameOfLifeRules),yours);
+ c.gameOfLifeRules=plain(personal);c.browseEvolutionPreset('gameOfLife',-1);assert.deepEqual(plain(c.gameOfLifeRules),plain(presets[order.at(-1)]));
+ const before=plain(c.gameOfLifeRules);for(const block of ['isMacroLoaded','isMacroPlaying','isBreathing']){c[block]=true;c.browseEvolutionPreset('gameOfLife',1);assert.deepEqual(plain(c.gameOfLifeRules),before);c[block]=false;}
+ c.armedSimulation=null;c.browseEvolutionPreset('gameOfLife',1);assert.deepEqual(plain(c.gameOfLifeRules),before);
+});
+test('live browsing records effective rules without rearming; replay retains the configured slots and next tap',()=>{
+ const {c}=browseHarness();c.isLifePlaying=true;c.currentGenerationCount=17;const slots=plain(c.gameOfLifeCycle);
+ c.browseEvolutionPreset('gameOfLife',1);const snapshot=plain(c.getGameOfLifeRecordingRules());assert.equal(snapshot.presetBrowse,true);assert.equal(c.armCalls,0);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,17);
+ assert(c.artRecipeLog.at(-1).includes('[GEN:17]'));
+ const replay=harness();replay.restoreGameOfLifeRules(snapshot);assert.deepEqual(plain(replay.gameOfLifeCycle),slots);assert.deepEqual(plain(replay.getGameOfLifeRecordingRules()),snapshot);
+ c.cycleGameOfLifeMode();assert.deepEqual(plain(c.gameOfLifeRules),slots[1]);assert.deepEqual(plain(c.gameOfLifeCycle),slots);
+});
+
+test('preset swipes preserve palette-order genetics independently of the selected preset',()=>{
+ const {c}=browseHarness();c.gameOfLifeRules.genetics='palette-order';
+ c.browseEvolutionPreset('gameOfLife',1);c.browseEvolutionPreset('gameOfLife',-1);
+ assert.equal(c.gameOfLifeRules.genetics,'palette-order');
+ const snapshot=plain(c.getGameOfLifeRecordingRules());c.restoreGameOfLifeRules(snapshot);
+ assert.equal(c.gameOfLifeRules.genetics,'palette-order');
+});
+
+test('returning restores browsed rules and saved cycle position without changing Yours or slots',()=>{
+ const {c}=browseHarness();c.browseEvolutionPreset('gameOfLife',1);c.browseEvolutionPreset('gameOfLife',1);
+ const before=plain(c.getGameOfLifeRecordingRules());c.armedSimulation='spiral';c.cycleGameOfLifeMode();
+ assert.equal(c.armedSimulation,'gameOfLife');assert.deepEqual(plain(c.getGameOfLifeRecordingRules()),before);assert.equal(c.isLifePlaying,false);
+ const slots=plain(c.gameOfLifeCycle);c.setGameOfLifeCycle(slots,1);const saved=plain(c.getGameOfLifeRecordingRules());
+ c.armedSimulation='magnet';c.cycleGameOfLifeMode();assert.deepEqual(plain(c.getGameOfLifeRecordingRules()),saved);
+ c.isExecutingMacroCommand=true;c.armedSimulation='spiral';c.cycleGameOfLifeMode();
+ assert.equal(c.gameOfLifeMode,'personal');assert.deepEqual(plain(c.gameOfLifeRules),slots[0]);
+});

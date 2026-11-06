@@ -1783,7 +1783,7 @@ function handleEvolutionTap(simulation, onTap) {
     if (armedSimulation === simulation && !isLifePlaying) togglePlayPauseLife();
 }
 
-function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
+function armSimulation(simulationName, { recordIslandsStart = true, retainPreset = false } = {}) {
     if (isLifePlaying) return;
     if (!isExecutingMacroCommand) { replayCymaticsRules=null; replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
 
@@ -1857,11 +1857,11 @@ if (!isTogglingOff && simulationName !== null) {
 
 
         // הגדרת דיפולט (ברירת מחדל) לכפתורים מחזוריים כשהם נדלקים
-        if (simulationName === 'sandpile') {
+        if (simulationName === 'sandpile' && !retainPreset) {
             chiFlowMode = 'personal';
             chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
         }
-        if (simulationName === 'gameOfLife') {
+        if (simulationName === 'gameOfLife' && !retainPreset) {
             const genetics = gameOfLifeRules.genetics;
             gameOfLifeMode = 'personal';
             gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
@@ -3324,13 +3324,14 @@ function cloneGameOfLifeRules(rules) {
 function getGameOfLifeRecordingRules() {
     return { ...cloneGameOfLifeRules(gameOfLifeRules),
         ...(gameOfLifeRules.genetics === 'palette-order' ? { genetics: 'palette-order' } : {}), cycleMode: gameOfLifeMode,
+        ...(JSON.stringify(cloneGameOfLifeRules(gameOfLifeRules)) !== JSON.stringify(gameOfLifeCycle[['personal','shuffle','coral'].indexOf(gameOfLifeMode)]) ? {presetBrowse:true} : {}),
         personalRules: cloneGameOfLifeRules(personalGameOfLifeRules), cycleSlots: gameOfLifeCycle.map(cloneGameOfLifeRules), cycleSources: [...gameOfLifeSources] };
 }
 
 function updateGameOfLifeButtonUI() {
     const active = armedSimulation === 'gameOfLife';
     dom.btnGameOfLife.classList.toggle('simulation-active', active);
-    const stars = active && gameOfLifeMode !== 'personal' ? (gameOfLifeMode === 'shuffle' ? 1 : 2) : 0;
+    const stars = active && !getGameOfLifeRecordingRules().presetBrowse && gameOfLifeMode !== 'personal' ? (gameOfLifeMode === 'shuffle' ? 1 : 2) : 0;
     dom.btnGameOfLife.querySelectorAll('[data-gol-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
@@ -3372,7 +3373,7 @@ function restoreGameOfLifeRules(snapshot) {
     // Older recordings have one personal snapshot and two fixed preset shortcuts.
     const legacySlots = [snapshot.personalRules || snapshot, ...defaultGolCycle.slice(1)];
     gameOfLifeCycle = normalizeEvolutionCycle(snapshot.cycleSlots || legacySlots, defaultGolCycle);
-    gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode)] = cloneGameOfLifeRules(snapshot);
+    if (snapshot.presetBrowse !== true) gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode)] = cloneGameOfLifeRules(snapshot);
     gameOfLifeSources = normalizeCycleSources(snapshot.cycleSources, gameOfLifeCycle, C.GAME_OF_LIFE_PRESETS);
     personalGameOfLifeRules = cloneGameOfLifeRules(snapshot.personalRules || snapshot);
     updateGameOfLifeButtonUI();
@@ -3381,15 +3382,25 @@ function restoreGameOfLifeRules(snapshot) {
 function cycleGameOfLifeMode() {
     if (isLifePlaying && armedSimulation !== 'gameOfLife') return;
     const current = armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off';
-    const next = nextEvolutionMode(current, ['off', 'personal', 'shuffle', 'coral']);
+    const returning = current === 'off' && !isExecutingMacroCommand;
+    const next = returning ? gameOfLifeMode : nextEvolutionMode(current, ['off', 'personal', 'shuffle', 'coral']);
     if (next === 'off') {
         armSimulation(null);
+        // Explicit Off completes the tap cycle; switching away retains selection.
+        if (!isExecutingMacroCommand) {
+            const genetics = gameOfLifeRules.genetics;
+            gameOfLifeMode = 'personal';
+            gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
+            if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+        }
     } else {
         const genetics = gameOfLifeRules.genetics;
-        if (current === 'off') armSimulation('gameOfLife');
-        gameOfLifeMode = next;
-        gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(next)]);
-        if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+        if (current === 'off') armSimulation('gameOfLife', {retainPreset:returning});
+        if (!returning) {
+            gameOfLifeMode = next;
+            gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(next)]);
+            if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+        }
     }
     updateGameOfLifeButtonUI();
     window.logArtEvent('Game of Life Mode Changed', JSON.stringify({ ...getGameOfLifeRecordingRules(), mode: next }));
@@ -3406,6 +3417,7 @@ function getChiFlowRecordingRules() {
         reach: resolveChiReach(rules, paletteLen()) });
     const slots = chiFlowCycle.map(recorded);
     return { ...recorded(chiFlowRules), cycleMode: chiFlowMode,
+        ...(JSON.stringify(recorded(chiFlowRules)) !== JSON.stringify(slots[['personal','ripples','nova'].indexOf(chiFlowMode)]) ? {presetBrowse:true} : {}),
         personalRules: recorded(personalChiFlowRules), cycleSlots: slots,
         cycleSources: normalizeCycleSources(chiFlowSources, slots, C.CHI_FLOW_PRESETS) };
 }
@@ -3413,13 +3425,13 @@ function getChiFlowRecordingRules() {
 function updateChiFlowButtonUI() {
     const active = armedSimulation === 'sandpile';
     dom.btnSandpile.classList.toggle('simulation-active', active);
-    const stars = active && chiFlowMode !== 'personal' ? (chiFlowMode === 'ripples' ? 1 : 2) : 0;
+    const stars = active && !getChiFlowRecordingRules().presetBrowse && chiFlowMode !== 'personal' ? (chiFlowMode === 'ripples' ? 1 : 2) : 0;
     dom.btnSandpile.querySelectorAll('[data-chi-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
-    const source = chiFlowSources[['personal', 'ripples', 'nova'].indexOf(chiFlowMode)];
+    const source = getChiFlowRecordingRules().presetBrowse ? null : chiFlowSources[['personal', 'ripples', 'nova'].indexOf(chiFlowMode)];
     const preset = C.CHI_FLOW_PRESETS[source] ? source :
-        Object.entries(C.CHI_FLOW_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(chiFlowRules))?.[0];
+        Object.entries(C.CHI_FLOW_PRESETS).find(([, rules]) => JSON.stringify([rules.awakening,rules.flow]) === JSON.stringify([chiFlowRules.awakening,chiFlowRules.flow]))?.[0];
     const name = preset ? getText('chi_preset_' + preset.toLowerCase()) : getText('cycle_custom');
     dom.btnSandpile.title = getText('chi_modal_title') + (active ? ': ' + name : '');
     dom.btnSandpile.setAttribute('aria-label', dom.btnSandpile.title);
@@ -3453,7 +3465,7 @@ function restoreChiFlowRules(snapshot) {
     // Older recordings have one personal snapshot and two fixed preset shortcuts.
     const legacySlots = [snapshot.personalRules || snapshot, ...defaultChiCycle.slice(1)];
     chiFlowCycle = normalizeEvolutionCycle(snapshot.cycleSlots || legacySlots, defaultChiCycle);
-    chiFlowCycle[['personal', 'ripples', 'nova'].indexOf(chiFlowMode)] = cloneChiFlowRules(snapshot);
+    if (snapshot.presetBrowse !== true) chiFlowCycle[['personal', 'ripples', 'nova'].indexOf(chiFlowMode)] = cloneChiFlowRules(snapshot);
     chiFlowSources = normalizeCycleSources(snapshot.cycleSources, chiFlowCycle, C.CHI_FLOW_PRESETS);
     personalChiFlowRules = cloneChiFlowRules(snapshot.personalRules || snapshot);
     updateChiFlowButtonUI();
@@ -3463,16 +3475,72 @@ function restoreChiFlowRules(snapshot) {
 function cycleChiFlowMode() {
     if (isLifePlaying && armedSimulation !== 'sandpile') return;
     const current = armedSimulation === 'sandpile' ? chiFlowMode : 'off';
-    const next = nextEvolutionMode(current, ['off', 'personal', 'ripples', 'nova']);
+    const returning = current === 'off' && !isExecutingMacroCommand;
+    const next = returning ? chiFlowMode : nextEvolutionMode(current, ['off', 'personal', 'ripples', 'nova']);
     if (next === 'off') {
         armSimulation(null);
+        // Explicit Off completes the tap cycle; switching away retains selection.
+        if (!isExecutingMacroCommand) {
+            chiFlowMode = 'personal';
+            chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
+        }
     } else {
-        if (current === 'off') armSimulation('sandpile');
-        chiFlowMode = next;
-        chiFlowRules = cloneChiFlowRules(chiFlowCycle[['personal', 'ripples', 'nova'].indexOf(next)]);
+        if (current === 'off') armSimulation('sandpile', {retainPreset:returning});
+        if (!returning) {
+            chiFlowMode = next;
+            chiFlowRules = cloneChiFlowRules(chiFlowCycle[['personal', 'ripples', 'nova'].indexOf(next)]);
+        }
     }
     updateChiFlowButtonUI();
     window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
+}
+
+// Browse the catalogue without rewriting any saved cycle slot or Yours.
+function browseEvolutionPreset(simulation, direction) {
+    if (!['gameOfLife','sandpile'].includes(simulation) || armedSimulation !== simulation ||
+        isBreathing || isMacroLoaded || isMacroPlaying) return;
+    const gol = simulation === 'gameOfLife';
+    const registry = gol ? C.GAME_OF_LIFE_PRESETS : C.CHI_FLOW_PRESETS;
+    // Display order is intentional: the registry's insertion order differs.
+    const buttons = [...document.querySelectorAll(gol ? '#gameOfLifeSettingsModal .gol-preset-btn' : '#chiFlowSettingsModal .gol-preset-btn')]
+        .filter(button => gol ? Object.hasOwn(registry,button.id) : Object.hasOwn(registry,button.id.replace('btnChiPreset','')));
+    const entries = buttons.map(button => ({button, rules:registry[gol ? button.id : button.id.replace('btnChiPreset','')]}));
+    if (!entries.length) return;
+    const current = gol ? cloneGameOfLifeRules(gameOfLifeRules) : cloneChiFlowRules(chiFlowRules);
+    const index = entries.findIndex(({rules}) => gol
+        ? JSON.stringify(rules) === JSON.stringify(current)
+        : JSON.stringify([rules.awakening,rules.flow]) === JSON.stringify([current.awakening,current.flow]));
+    const next = index < 0 ? (direction > 0 ? 0 : entries.length-1) : (index + direction + entries.length) % entries.length;
+    if (gol) {
+        const genetics = gameOfLifeRules.genetics;
+        gameOfLifeRules = cloneGameOfLifeRules(entries[next].rules);
+        if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+        updateGameOfLifeButtonUI();
+    } else {
+        chiFlowRules = cloneChiFlowRules(entries[next].rules);
+        updateChiFlowButtonUI();
+    }
+    window.logArtEvent(gol ? 'Game of Life Mode Changed' : 'Chi Flow Mode Changed', JSON.stringify({
+        ...(gol ? getGameOfLifeRecordingRules() : getChiFlowRecordingRules()), mode:gol ? gameOfLifeMode : chiFlowMode
+    }));
+    showPresetFeedback(gol ? dom.btnGameOfLife : dom.btnSandpile, entries[next].button.textContent.trim());
+}
+
+let presetFeedbackTimer;
+function showPresetFeedback(button, name) {
+    let label = document.getElementById('evolutionPresetFeedback');
+    if (!label) {
+        label = document.createElement('div');label.id='evolutionPresetFeedback';
+        label.setAttribute('role','status');label.setAttribute('aria-live','polite');
+        document.body.append(label);
+    }
+    clearTimeout(presetFeedbackTimer);
+    const rect=button.getBoundingClientRect();
+    label.textContent=name;
+    label.style.left=Math.max(88,Math.min(window.innerWidth-88,rect.left+rect.width/2))+'px';
+    label.style.top=Math.max(12,rect.top-38)+'px';
+    label.classList.add('visible');
+    presetFeedbackTimer=setTimeout(()=>label.classList.remove('visible'),1600);
 }
 
 // Running evolutions cycle through active modes; paused cycles retain Off.
@@ -3557,6 +3625,7 @@ function saveCracksSettings(material, growth = getCracksGrowth()) {
     };
     // Saved Cracks preferences belong to the profile, not drawing history.
     commit();
+    updateContourButtonUI();
     recordLiveSimulationRules('contour');
     persistWorkspaceSettings(getWorkspaceSettings());
     settingsProfiles?.scheduleCapture();
@@ -3627,7 +3696,10 @@ function updateContourButtonUI() {
     const active = armedSimulation === 'contour' && contourMode === 'cracks';
     dom.btnContour.classList.toggle('simulation-active', active);
     dom.btnContour.classList.toggle('cracks-active', true);
-    const title = getText('tooltip_cracks');
+    const area = active ? (getCracksGrowth().area ?? 'all') : 'all';
+    dom.btnContour.dataset.cracksArea = area;
+    dom.btnContour.querySelector('.cracks-area-mark')?.setAttribute('opacity', area==='dead' ? '1' : '0');
+    const title = getText('tooltip_cracks') + (active ? ' · ' + getText('cracks_area_' + area) : '');
     dom.btnContour.title = title;
     dom.btnContour.setAttribute('aria-label', title);
     dom.btnContour.setAttribute('aria-pressed', String(active));
@@ -3636,14 +3708,29 @@ function updateContourButtonUI() {
 // New human control: Cracks is a standalone simulation. Legacy engines/modes
 // below remain available to old project snapshots and recorded commands.
 function toggleCracksSimulation() {
-    if (armedSimulation === 'contour' && contourMode === 'cracks') {
-        if (!isLifePlaying) armSimulation(null);
+    if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
+    const active = armedSimulation === 'contour' && contourMode === 'cracks';
+    const current = active ? (getCracksGrowth().area ?? 'all') : 'off';
+    const next = nextEvolutionMode(current, ['off', 'all', 'dead']);
+    if (next === 'off') {
+        armSimulation(null);
+        window.logArtEvent('Cracks Mode Changed', JSON.stringify({version:1,mode:'off'}));
+        updateContourButtonUI();
         return;
     }
-    const resume = isLifePlaying;
+    const resume = !active && isLifePlaying;
     if (resume) pauseLife();
-    if (armedSimulation === 'contour') armSimulation(null);
-    armSimulation('contour');
+    if (!active) {
+        if (armedSimulation === 'contour') armSimulation(null);
+        armSimulation('contour');
+    }
+    if ((getCracksGrowth().area ?? 'all') !== next) {
+        saveCracksSettings(getCracksMaterial(), { ...getCracksGrowth(), area:next });
+    }
+    updateContourButtonUI();
+    // Live area changes already record their effective rules in Save. Paused
+    // selection uses the same context command as Resonance, without painting.
+    if (!isLifePlaying) window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
     if (resume) togglePlayPauseLife();
 }
 
@@ -4302,7 +4389,7 @@ function parseHistoryMacro(lines) {
         if (event.eventName === 'BRUSH_END') brushMotion = false;
         previousBrushElapsed = brushMotion ? event.brushElapsed : null;
         if (event.eventName === 'PLAY') simulationRunning = true;
-        if (['PAUSE','HISTORY_SETTINGS','Cymatics Mode Changed'].includes(event.eventName)) simulationRunning = false;
+        if (['PAUSE','HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed'].includes(event.eventName)) simulationRunning = false;
         return { ...event, delta };
     });
 }
@@ -4310,6 +4397,9 @@ function parseHistoryMacro(lines) {
 function validateIslandsMacroAction(action) {
     if (action.eventName === 'CONTOUR_APPLY') {
         const value=JSON.parse(action.details);if(value.version!==1)throw new Error('Unsupported Contours action');validateContourActionRules(value.rules);
+    } else if (action.eventName === 'Cracks Mode Changed') {
+        const value=JSON.parse(action.details);
+        if(value.version!==1||value.mode!=='off')throw new Error('Invalid Cracks mode');
     } else if (action.eventName === 'INIT_STATE') {
         const snapshot = JSON.parse(action.details);
         if (snapshot.gold !== undefined && (!Array.isArray(snapshot.gold) || snapshot.gold.length > snapshot.n * snapshot.n ||
@@ -4392,7 +4482,7 @@ function parseMacroText(text) {
             if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) action.orphanedSimulation = true;
         }
         if (action.eventName === 'SIMULATION_RULES') hasSimulationContext = true;
-        if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed'].includes(action.eventName)) simulationRunning = false;
+        if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed'].includes(action.eventName)) simulationRunning = false;
         actions.push(action);
     }
     actions.forEach(validateIslandsMacroAction);
@@ -4744,6 +4834,7 @@ function stopMacro() {
     replayCymaticsRules=null;
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
+    if(typeof updateContourButtonUI==='function')updateContourButtonUI();
     currentMacroStep = 0;
     pendingMacroPalette = null; 
     isSelectingMacroPalette = false; 
@@ -5096,6 +5187,10 @@ function executeMacroAction(action) {
     else if (action.eventName === 'PAUSE') {
         pauseLife();
     } 
+    else if (action.eventName === 'Cracks Mode Changed') {
+        if(armedSimulation==='contour'&&contourMode==='cracks'){if(isLifePlaying)pauseLife();armSimulation(null);}
+        updateContourButtonUI();
+    }
     else if (action.eventName === 'Cymatics Mode Changed') {
         validateCymaticsMacroAction(action);
         const snapshot=validateCymaticsSnapshot(JSON.parse(action.details));
@@ -5836,6 +5931,8 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
+                onSwipeSide: ['gameOfLife','sandpile'].includes(simulation) ? direction => browseEvolutionPreset(simulation,direction) : undefined,
+                canSwipeSide: () => armedSimulation === simulation && !isMacroLoaded && !isMacroPlaying && !evolutionExplanation.isOpen(),
                 onHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),
