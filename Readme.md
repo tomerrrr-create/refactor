@@ -101,6 +101,8 @@ Game of Life and Chi Flow have three configurable cycle positions, represented b
 | Chi Flow, profile 1 | Harmony | Nova | Alexis |
 | Chi Flow, profiles 2/3 | Electric | Harmony | Alexis |
 
+While **Game of Life or Chi Flow is selected**, swipe its toolbar button horizontally to browse the full built-in preset list in the settings dialog's display order: right selects the next preset, left the previous, wrapping at either end. Directions stay physical in RTL languages. From unmatched custom rules, right starts at the first preset and left at the last. A brief localized name appears above the control. This shortcut leaves all three configured cycle slots and Yours untouched; ordinary taps continue the configured cycle from its retained position. Browsing while paused only changes effective rules; during Play it changes them at the current generation without restarting. Upward settings gestures and hold explanations remain available. Manual browsing is disabled for loaded/playing recipes. Other evolutions have no horizontal preset shortcut.
+
 The compact bronze preset panels have the cycle control **to the left** of each preset name. Rule counts are square grids: Game of Life uses 0–8; Chi Flow's existing rule choices are 1–8. Selected rule tiles are gold.
 
 - **Unavailable:** a dim bronze icon when all three positions are occupied; it cannot be added.
@@ -662,7 +664,7 @@ Live brush input emits `DRAW_STROKE` packets as pointer events paint, using the 
 
 Events carry timestamps, and generation-based actions include `[GEN:n]`. The logger records board strokes/diffs, palette and sorting changes, play, pause, single steps, live mode changes, Nudge timing and history metadata. Logging has some overhead and does not make the entire application allocation-free.
 
-`PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys.
+`PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys. Catalogue browsing uses the existing mode events with an optional `presetBrowse: true` marker when effective rules differ from the retained cycle slot; restoration keeps those slots intact. Older recordings without the marker retain their original restoration behavior.
 
 Save the journey through the save modal, using `exportArtRecipeLog()`. Current TXT filenames use `Intuition_Path_<palette>_<line-count>.txt`. Save/Play long presses no longer export or reset the logger. `resetArtRecipeLog()` requires confirmation and a successful backup share/download flow before clearing the log and capturing a new start; cancelling sharing preserves the old log. See [Save, load and help](#save-load-and-help). New `INIT_STATE` records can also retain protected gold indices and a live simulation context (rules, generation and elapsed time).
 
@@ -738,6 +740,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Cracks growth-area drafts, presets, material interaction, profiles and replay | `tools/check-cracks-area.mjs` |
 | Cracks paused/live button cycles, settings synchronization, history and recipe replay | `tools/check-cracks-cycle.mjs` |
+| Game of Life / Chi Flow horizontal preset browsing, settings, live rules, history and recipe replay | `tools/check-preset-swipes.mjs` |
 | DLA resizing, exhausted growth, Contours, Undo/Redo and logger replay | `tools/check-dla-history.mjs` |
 | Symmetry hold, mirrored controls, eight-way painting and recipe replay | `tools/check-symmetry-hold.mjs` |
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |

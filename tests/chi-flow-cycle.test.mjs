@@ -132,3 +132,43 @@ test('new recordings contain final absolute Reach only and replay without percen
     assert.deepEqual(plain(replay.getChiFlowRecordingRules()),snapshot);
     assert.equal(replay.chiFlowCycle[2].reach,40);
 });
+
+function browseHarness() {
+ const c=harness();c.armedSimulation='sandpile';c.isBreathing=false;c.isMacroLoaded=false;c.isMacroPlaying=false;
+ const order=['Nova', 'Harmony', 'Topography', 'Fluent', 'Electric', 'Ripples', 'Crystals', 'Wildfire', 'Alexis', 'Zen'];
+ c.document={querySelectorAll:()=>order.map(id=>({id:'btnChiPreset'+id,textContent:id}))};
+ c.dom={btnSandpile:{}};c.showPresetFeedback=()=>{};
+ vm.runInContext(fn('browseEvolutionPreset'),c);
+ return {c,order};
+}
+test('preset browsing follows display order, wraps, guards selection and preserves Yours and cycle slots',()=>{
+ const {c,order}=browseHarness();const slots=plain(c.chiFlowCycle),yours=plain(c.personalChiFlowRules);
+ c.browseEvolutionPreset('sandpile',1);assert.deepEqual(plain(c.chiFlowRules),plain(presets[order[0]]));
+ c.browseEvolutionPreset('sandpile',1);assert.deepEqual(plain(c.chiFlowRules),plain(presets[order[1]]));
+ c.browseEvolutionPreset('sandpile',-1);c.browseEvolutionPreset('sandpile',-1);assert.deepEqual(plain(c.chiFlowRules),plain(presets[order.at(-1)]));
+ assert.deepEqual(plain(c.chiFlowCycle),slots);assert.deepEqual(plain(c.personalChiFlowRules),yours);
+ c.chiFlowRules=plain(personal);c.browseEvolutionPreset('sandpile',-1);assert.deepEqual(plain(c.chiFlowRules),plain(presets[order.at(-1)]));
+ const before=plain(c.chiFlowRules);for(const block of ['isMacroLoaded','isMacroPlaying','isBreathing']){c[block]=true;c.browseEvolutionPreset('sandpile',1);assert.deepEqual(plain(c.chiFlowRules),before);c[block]=false;}
+ c.armedSimulation=null;c.browseEvolutionPreset('sandpile',1);assert.deepEqual(plain(c.chiFlowRules),before);
+});
+test('live browsing records effective rules without rearming; replay retains the configured slots and next tap',()=>{
+ const {c}=browseHarness();c.isLifePlaying=true;c.currentGenerationCount=17;const slots=plain(c.chiFlowCycle);
+ c.browseEvolutionPreset('sandpile',1);const snapshot=plain(c.getChiFlowRecordingRules());assert.equal(snapshot.presetBrowse,true);assert.equal(c.armCalls,0);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,17);
+ assert(c.artRecipeLog.at(-1).includes('[GEN:17]'));
+ const replay=harness();replay.restoreChiFlowRules(snapshot);assert.deepEqual(plain(replay.chiFlowCycle),snapshot.cycleSlots);assert.deepEqual(plain(replay.getChiFlowRecordingRules()),snapshot);
+ c.cycleChiFlowMode();assert.deepEqual(plain(c.chiFlowRules),slots[1]);assert.deepEqual(plain(c.chiFlowCycle),slots);
+});
+
+test('browsing compares effective Reach consistently across recorded rule representations',()=>{
+ const {c}=browseHarness();c.chiFlowRules=plain(presets.Nova);
+ c.chiFlowCycle[0]={...plain(presets.Nova),reachPercent:100};
+ const snapshot=plain(c.getChiFlowRecordingRules());assert.equal(snapshot.presetBrowse,undefined);
+ c.restoreChiFlowRules(snapshot);assert.deepEqual(plain(c.getChiFlowRecordingRules()),snapshot);
+});
+
+test('Chi swipes locate the current named preset even with a personal Magnetic Reach',()=>{
+ const {c}=browseHarness();c.chiFlowRules={...plain(presets.Electric),reachPercent:400};
+ c.browseEvolutionPreset('sandpile',1);assert.deepEqual(plain(c.chiFlowRules),plain(presets.Ripples));
+ c.chiFlowRules={...plain(presets.Electric),reach:17};
+ c.browseEvolutionPreset('sandpile',-1);assert.deepEqual(plain(c.chiFlowRules),plain(presets.Fluent));
+});
