@@ -157,8 +157,10 @@ function defaultComparable(value, factory) {
     Object.assign(settings.smoothing, { bloom: bloom.enabled, bloomIntensity: bloom.intensity });
     const identity = Object.fromEntries(['gameOfLife', 'chiFlow'].map(name => [name, {
         index: snapshot.identity?.[name].index ?? 0,
-        yoursRules: snapshot.identity?.[name].yoursRules ?? factory.identity[name].yoursRules
+        yoursRules: snapshot.identity?.[name].yoursRules ?? factory.identity[name].yoursRules,
+        activeRules: settings.evolutionSelections?.[name] ?? settings.cycles[name][snapshot.identity?.[name].index ?? 0]
     }]));
+    delete settings.evolutionSelections;
     return { settings, identity };
 }
 
@@ -166,7 +168,7 @@ function defaultComparable(value, factory) {
 // saved. Other preferences (Startup, display, brush size/mode, etc.) still autosave.
 function withSavedSessionPreferences(draft, saved) {
     const result = clone(draft);
-    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'gameOfLifeGenetics', 'contourAction']) {
+    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics', 'contourAction']) {
         if (Object.hasOwn(saved.settings, key)) result.settings[key] = clone(saved.settings[key]);
         else delete result.settings[key];
     }

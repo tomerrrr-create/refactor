@@ -1,5 +1,22 @@
 import { cloneCycleRules } from './evolution-cycle-settings.js';
 
+// Auto Reach and its explicit 100% spelling represent the same setting.
+export function sameEditorRules(a, b) {
+    const canonical = rules => {
+        const value = cloneCycleRules(rules);
+        if (Number.isInteger(value.reachPercent)) {
+            value.reach = 0;
+            delete value.reachOffset;
+            if (value.reachPercent === 100) delete value.reachPercent;
+        } else if (Number.isInteger(value.reachOffset)) {
+            value.reach = 0;
+            if (value.reachOffset === 0) delete value.reachOffset;
+        }
+        return JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b))));
+    };
+    return canonical(a) === canonical(b);
+}
+
 // Modal-local rules only. Saving uses the existing evolution snapshot API.
 export function createCycleEditorDraft(state, defaults, defaultSources) {
     return {
@@ -7,8 +24,9 @@ export function createCycleEditorDraft(state, defaults, defaultSources) {
         // Retain the recording API's personal snapshot for backward compatibility.
         yoursRules: cloneCycleRules(state.yoursRules),
         index: state.index >= 0 && state.index < 3 ? state.index : 0,
+        assigning: false,
         selectSlot(index) {
-            if (Number.isInteger(index) && index >= 0 && index < 3) this.index = index;
+            if (Number.isInteger(index) && index >= 0 && index < 3) { this.index = index; this.assigning = true; }
         },
         assign(rules, source) {
             this.slots[this.index] = cloneCycleRules(rules);
@@ -16,7 +34,7 @@ export function createCycleEditorDraft(state, defaults, defaultSources) {
         },
         manualChange(rules) {
             this.yoursRules = cloneCycleRules(rules);
-            this.assign(rules, 'custom-' + this.index);
+            if (this.assigning) this.assign(rules, 'custom-' + this.index);
         },
         reset() {
             this.slots = defaults.map(cloneCycleRules);
@@ -27,6 +45,7 @@ export function createCycleEditorDraft(state, defaults, defaultSources) {
 
 export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, defaults, defaultSources, readRules, writeRules, save, getText }) {
     const draft = createCycleEditorDraft(state, defaults, defaultSources);
+    const initialRules = cloneCycleRules(readRules());
     toolbar.replaceChildren();
     const buttons = [];
     function refresh() {
@@ -36,16 +55,17 @@ export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, def
             reset.setAttribute('aria-label', reset.title);
         }
         buttons.forEach((button, index) => {
-            button.setAttribute('aria-pressed', String(draft.index === index));
+            const matches = sameEditorRules(readRules(), draft.slots[index]);
+            button.setAttribute('aria-pressed', String(draft.index === index && (draft.assigning || matches)));
             const preset = presets.find(p => (p.source || p.button.id) === draft.sources[index]) ||
                 presets.find(p => JSON.stringify(p.rules) === JSON.stringify(draft.slots[index]));
             const name = preset?.button.textContent || getText('cycle_manual');
-            button.title = `${getText('cycle_position')} ${index + 1}: ${name}`;
+            button.title = `${getText('cycle_position')} ${index + 1}: ${name}\n${getText('cycle_assign_hint')}`;
             button.setAttribute('aria-label', button.title);
         });
     }
     function selectPreset(source, rules) {
-        draft.assign(rules, source);
+        if (draft.assigning) draft.assign(rules, source);
         writeRules(cloneCycleRules(rules));
         refresh();
     }
@@ -85,6 +105,12 @@ export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, def
     return {
         refresh, selectPreset,
         manualChange() { draft.manualChange(readRules()); refresh(); },
-        commit() { save(draft.slots.map(cloneCycleRules), draft.index, [...draft.sources], cloneCycleRules(draft.yoursRules)); return true; }
+        commit() {
+            const rules = readRules();
+            let activeRules = sameEditorRules(rules, initialRules) ? (state.activeRules || rules) : rules;
+            if (draft.assigning && sameEditorRules(activeRules, draft.slots[draft.index])) activeRules = draft.slots[draft.index];
+            save(draft.slots.map(cloneCycleRules), draft.index, [...draft.sources], cloneCycleRules(draft.yoursRules), cloneCycleRules(activeRules));
+            return true;
+        }
     };
 }

@@ -170,3 +170,10 @@ test('returning restores browsed rules and saved cycle position without changing
  c.isExecutingMacroCommand=true;c.armedSimulation='spiral';c.cycleGameOfLifeMode();
  assert.equal(c.gameOfLifeMode,'personal');assert.deepEqual(plain(c.gameOfLifeRules),slots[0]);
 });
+
+test('settings Save accepts an independent active selection and replay keeps shortcuts/Yours intact',()=>{
+ const {c}=browseHarness();c.browseEvolutionPreset('gameOfLife',1);c.browseEvolutionPreset('gameOfLife',1);
+ const chosen=plain(c.gameOfLifeRules),slots=plain(c.gameOfLifeCycle),sources=plain(c.gameOfLifeSources),yours=plain(c.personalGameOfLifeRules);
+ c.setGameOfLifeCycle(slots,0,sources,yours,chosen);assert.deepEqual(plain(c.gameOfLifeRules),chosen);assert.deepEqual(plain(c.gameOfLifeCycle),slots);assert.deepEqual(plain(c.personalGameOfLifeRules),yours);
+ const snapshot=plain(c.getGameOfLifeRecordingRules()),replay=harness();replay.restoreGameOfLifeRules(snapshot);assert.deepEqual(plain(replay.getGameOfLifeRecordingRules()),snapshot);
+});

@@ -103,19 +103,13 @@ Game of Life and Chi Flow have three configurable cycle positions, represented b
 
 While **Game of Life or Chi Flow is selected**, swipe its toolbar button horizontally to browse the full built-in preset list in the settings dialog's display order: right selects the next preset, left the previous, wrapping at either end. Directions stay physical in RTL languages. From unmatched custom rules, right starts at the first preset and left at the last. A brief localized name appears above the control. This shortcut leaves all three configured cycle slots and Yours untouched; ordinary taps continue the configured cycle from its retained position. During the current session, leaving either evolution and returning restores its last effective preset/rules and cycle position, including choices made by swiping or in settings. Selecting it again after switching away does not advance a slot or paint a generation. Explicitly reaching Off through the tap cycle still resets its next entry to the first position. Fresh app/profile settings still establish the opening choices; recipe execution retains the original activation defaults and then restores its recorded rules. Browsing while paused only changes effective rules; during Play it changes them at the current generation without restarting. Upward settings gestures and hold explanations remain available. Manual browsing is disabled for loaded/playing recipes. Other evolutions have no horizontal preset shortcut.
 
-The compact bronze preset panels have the cycle control **to the left** of each preset name. Rule counts are square grids: Game of Life uses 0–8; Chi Flow's existing rule choices are 1–8. Selected rule tiles are gold.
+The settings window always opens with the active rules. Choosing a preset or editing rules changes only the draft active choice; Save applies exactly those rules, and Cancel discards only changes inside the window. A no-edit Save retains the swiped preset and its exact settings. Named preset selection does not overwrite Yours; manual edits update the retained personal rules.
 
-- **Unavailable:** a dim bronze icon when all three positions are occupied; it cannot be added.
-- **Available:** a faint cool icon carrying the star count of the vacant position.
-- **Assigned:** a lit gold icon carrying its existing position's star count.
+The three symbol buttons above the rules are personal cycle shortcuts. To change one, explicitly select its position and then choose a preset or edit its rules. Only that shortcut changes on Save. Without that explicit selection, ordinary preset browsing, manual edits and Save leave all three shortcuts intact. The selected position is highlighted when it matches the active choice or is explicitly being edited. The adjacent reset dot explicitly resets the three shortcut assignments. The main Reset action edits the rule draft rather than silently rewriting shortcuts.
 
-Click an assigned icon to free its position, then an available icon to fill it. Only one position can be vacant at a time, and Save is disabled until it is filled. Membership does not apply a generation or immediately change the running app. Save commits the draft; Cancel discards it. Name selection and cycle membership are separate controls.
+Profile session drafts and explicit profile Save retain the active Game of Life/Chi Flow rules separately from the three shortcut snapshots, using the optional `evolutionSelections` settings extension. Switching profiles restores its active choice; Save to profile retains it across reopening. Older settings/profiles without this extension continue to use their selected shortcut. Existing recipe events still store effective rules, `presetBrowse`, cycle slots and Yours; no recorded engine identifiers change.
 
-**Yours always appears first** and retains the last personal rules, even if it is removed from the cycle or another preset is displayed. It can occupy any cycle position. Ordinary saved rule edits update the personal choice; when Yours is assigned, its position receives those edited rules. Other custom snapshots already present in a cycle can appear as additional Yours entries. Rule snapshots and their source identities are saved separately so a personal choice can match a named preset without losing its identity.
-
-Available/unavailable icons and stars transition softly over about half a second. Their enabled state changes immediately. Reduced-motion preferences disable these transitions.
-
-The low-level Chi Flow fallback Yours → Ripples → Nova is not the fresh profile-1 cycle. Save to profile to retain session rule/cycle edits on reopening; dialog Save applies the working choices.
+The low-level Chi Flow fallback Yours → Ripples → Nova is not the fresh profile-1 cycle.
 
 ### Technician settings and initialization
 
@@ -210,7 +204,8 @@ The code is modularized to separate logic, state, and UI:
 * **`js/i18n.js`**: English, Hebrew, Russian and Dutch translations. Update all four when changing interface text.
 * **`js/data/palettes.js`**: Palette colors, stable original names, icons and archive flags.
 * **`js/picker-gestures.js`**: Shared pointer gestures, hold stages, click suppression and picker glow.
-* **`js/preset-cycle-membership.js`**: Draft preset membership, vacancy rules and retained UI nodes for fades.
+* **`js/preset-cycle-editor.js`**: Independent active-rule drafts and explicit assignment to the three cycle shortcuts.
+* **`js/preset-cycle-membership.js`**: Retained legacy membership helper and its compatibility tests.
 * **`js/evolution-cycle-settings.js`**: Rule snapshot validation, storage and preset/Yours source identities.
 * **`js/startup-settings.js`**, **`js/sim-init-settings.js`**, **`js/sort-cycle-settings.js`**: Validated startup, initialization and sorting-cycle preferences.
 * **`js/profile-state.js`**, **`js/profile-controls.js`**, **`js/workspace-settings.js`**: Saved/draft profiles, configuration validation and settings TXT import/export.
@@ -347,7 +342,7 @@ Preferences use `localStorage`, with validation and defaults when stored data is
 
 These compatibility storage keys do not override the profile saved/session policy. Not every default is in `constants.js`: startup/init defaults have dedicated modules, and Nudge's interval remains in `app.js`. Default rule arrays and both preset registries are in `constants.js`.
 
-`preset-cycle-membership.js` maintains a modal draft with one possible vacancy. It retains rendered glyph/button nodes across refreshes, allowing opacity, color and star transitions to interpolate instead of abruptly rebuilding the UI. Functional enable/disable changes remain immediate. Dialog Save commits complete slots and personal identity to working preferences; Save to profile retains these session choices on reopening. Cancelling discards the modal draft.
+`preset-cycle-editor.js` keeps the three shortcut snapshots and the active rule draft separate. Selecting a shortcut explicitly enables assignment; browsing presets alone does not. Save passes both the shortcut snapshots and effective rules to the existing simulation recording APIs. Cancel discards the modal-local draft. Profile persistence stores an optional active selection only when it differs from the retained shortcut, without changing the legacy settings baseline.
 
 Different modals use dialogs, visibility classes or inline display state. Follow the existing modal's lifecycle rather than applying one universal close/open recipe. Dependency-injected getters/setters from `initializeModals(context)` keep UI modules from importing `app.js`.
 
@@ -355,7 +350,7 @@ Different modals use dialogs, visibility classes or inline display state. Follow
 | --- | --- |
 | Artwork / Undo stack | In memory; explicit PNG/JSON/recipe exports |
 | Profile saved baseline | `colorGridProfileDraftsV1`; explicit Save/import/copy |
-| Simulation rules/cycles/tuning, Nudge timing, genetics, brush shape | Working profile session; unsaved values revert on reopening |
+| Simulation rules/cycles/active selections/tuning, Nudge timing, genetics, brush shape | Working profile session; unsaved values revert on reopening |
 | Other profile draft preferences | Automatically persisted according to `profile-state.js` |
 | Opening profile | `colorGridStartupProfile`; independent of last-used profile |
 | Workspace settings export | `FYI_SETTINGS_V1`; persisted compatibility copy in `colorGridWorkspaceSettings` |
@@ -740,7 +735,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Cracks growth-area drafts, presets, material interaction, profiles and replay | `tools/check-cracks-area.mjs` |
 | Cracks paused/live button cycles, settings synchronization, history and recipe replay | `tools/check-cracks-cycle.mjs` |
-| Game of Life / Chi Flow horizontal preset browsing, settings, live rules, history and recipe replay | `tools/check-preset-swipes.mjs` |
+| Game of Life / Chi Flow horizontal preset browsing, settings, live rules, history and recipe replay | `tools/check-preset-swipes.mjs`, `tools/check-preset-settings-sync.mjs` |
 | DLA resizing, exhausted growth, Contours, Undo/Redo and logger replay | `tools/check-dla-history.mjs` |
 | Symmetry hold, mirrored controls, eight-way painting and recipe replay | `tools/check-symmetry-hold.mjs` |
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |

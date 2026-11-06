@@ -52,3 +52,11 @@ test('optional profile themes round-trip without changing legacy V1 settings sem
     }
     assert.throws(() => serializeWorkspaceSettings({ ...defaultWorkspaceSettings(), simulationTheme: 'unknown' }));
 });
+
+test('active evolution selections round-trip independently and reject malformed rules',()=>{
+ const settings=defaultWorkspaceSettings(),slots=structuredClone(settings.cycles);
+ settings.evolutionSelections={gameOfLife:{survival:[1,8],birth:[0,4]},chiFlow:{awakening:[2,3],flow:[4],reach:0,reachPercent:400}};
+ assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).evolutionSelections,settings.evolutionSelections);
+ assert.deepEqual(settings.cycles,slots);
+ for(const bad of [null,[],{unknown:{}},{gameOfLife:{survival:[9],birth:[]}},{chiFlow:{awakening:[0],flow:[],reach:0}},{gameOfLife:{survival:[],birth:[],extra:1}}])assert.throws(()=>serializeWorkspaceSettings({...settings,evolutionSelections:bad}));
+});

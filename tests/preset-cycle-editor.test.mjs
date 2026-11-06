@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCycleEditorDraft } from '../js/preset-cycle-editor.js';
+import { createCycleEditorDraft, sameEditorRules } from '../js/preset-cycle-editor.js';
 
 const slots = [0, 1, 2].map(i => ({ survival: [i], birth: [3] }));
 const defaults = slots.map(x => structuredClone(x));
@@ -10,7 +10,7 @@ const make = (index = 2) => createCycleEditorDraft(state(index), defaults, ['pai
 for (const index of [0, 1, 2]) {
     test(`opening slot ${index} retains the entry position for preset and manual edits`, () => {
         const draft = make(index), named = { survival: [8], birth: [] };
-        assert.equal(draft.index, index); draft.assign(named, 'named');
+        assert.equal(draft.index, index); draft.selectSlot(index); draft.assign(named, 'named');
         assert.equal(draft.index, index); assert.deepEqual(draft.slots[index], named);
         const custom = { survival: [], birth: [7] }; draft.manualChange(custom);
         assert.equal(draft.sources[index], 'custom-' + index); assert.deepEqual(draft.slots[index], custom);
@@ -19,7 +19,7 @@ for (const index of [0, 1, 2]) {
 }
 test('switching selected positions preserves all pending edits', () => {
     const draft = make(0), first = { survival: [6], birth: [4] }, third = { survival: [5], birth: [7] };
-    draft.manualChange(first); draft.selectSlot(2); draft.assign(third, 'other'); draft.selectSlot(0);
+    draft.selectSlot(0); draft.manualChange(first); draft.selectSlot(2); draft.assign(third, 'other'); draft.selectSlot(0);
     assert.deepEqual(draft.slots[0], first); assert.deepEqual(draft.slots[2], third);
     draft.selectSlot(99); assert.equal(draft.index, 0);
 });
@@ -34,4 +34,17 @@ test('discarded drafts never mutate saved snapshots or source identity', () => {
 });
 test('no active entry position falls back to the first position', () => {
     assert.equal(make(-1).index,0);
+});
+
+test('manual settings remain separate from shortcuts until assignment is explicit',()=>{
+ const draft=make(1),before=structuredClone(draft.slots),custom={survival:[7],birth:[0]};
+ draft.manualChange(custom);assert.deepEqual(draft.slots,before);assert.deepEqual(draft.yoursRules,custom);
+ draft.selectSlot(2);draft.manualChange(custom);assert.deepEqual(draft.slots[2],custom);assert.deepEqual(draft.slots[1],before[1]);
+});
+
+test('Auto Reach and explicit 100% compare equally without erasing other settings',()=>{
+ const base={awakening:[1],flow:[2],reach:0};assert(sameEditorRules(base,{...base,reachPercent:100}));
+ assert(sameEditorRules(base,{...base,reach:7,reachOffset:0}));assert(!sameEditorRules({...base,reach:7},{...base,reach:7,reachOffset:0}));
+ assert(sameEditorRules(base,{...base,reach:7,reachOffset:2,reachPercent:100}));
+ assert(!sameEditorRules(base,{...base,reachPercent:400}));assert(!sameEditorRules(base,{...base,flow:[3]}));
 });

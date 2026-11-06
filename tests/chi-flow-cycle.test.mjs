@@ -182,3 +182,10 @@ test('returning restores browsed rules and saved cycle position without changing
  c.isExecutingMacroCommand=true;c.armedSimulation='spiral';c.cycleChiFlowMode();
  assert.equal(c.chiFlowMode,'personal');assert.deepEqual(plain(c.chiFlowRules),slots[0]);
 });
+
+test('settings Save accepts an independent active selection and replay keeps shortcuts/Yours intact',()=>{
+ const {c}=browseHarness();c.browseEvolutionPreset('sandpile',1);c.browseEvolutionPreset('sandpile',1);
+ const chosen=plain(c.chiFlowRules),slots=plain(c.chiFlowCycle),sources=plain(c.chiFlowSources),yours=plain(c.personalChiFlowRules);
+ c.setChiFlowCycle(slots,0,sources,yours,chosen);assert.deepEqual(plain(c.chiFlowRules),chosen);assert.deepEqual(plain(c.chiFlowCycle),slots);assert.deepEqual(plain(c.personalChiFlowRules),yours);
+ const snapshot=plain(c.getChiFlowRecordingRules()),replay=harness();replay.restoreChiFlowRules(snapshot);assert.deepEqual(plain(replay.getChiFlowRecordingRules()),snapshot);
+});
