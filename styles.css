@@ -222,7 +222,7 @@ body {
 #btnSave           { grid-area: 2 / 1; }
 #btnResetBoard     { grid-area: 3 / 1; }
 #btnTutorial       { grid-area: 1 / 1; }
-#btnSpecialReset   { grid-area: 4 / 1; }
+#btnSpecialReset   { grid-area: 3 / 4; }
 
 
 /* Center Panel */
@@ -235,8 +235,8 @@ body {
 #btnBrushMode      { grid-area: 2 / 5; }
 
 
-#btnRedo           { grid-area: 3 / 3; }
-#btnUndo           { grid-area: 3 / 5; }
+#btnRedo           { grid-area: 4 / 1; }
+#btnUndo           { grid-area: 4 / 7; }
 
 #btnToggleSimMode  { grid-area: 4 / 4; }
 
@@ -246,7 +246,7 @@ body {
 #btnResizeDown { display:none !important; }
 #btnResizeUp[data-resize-direction="decrease"] [data-resize-plus-stem] { display:none; }
 #btnGap            { grid-area: 2 / 7; }
-#btnDark { grid-area: 4 / 7; }
+#btnDark { grid-area: 2 / 4; }
 
 #btnPlayPauseLife {
   grid-area: 1 / 5;
