@@ -27,12 +27,24 @@ try{for(const config of [{width:1280,height:900,lang:'en',touch:false},{width:39
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(`http://127.0.0.1:${server.address().port}`);await page.waitForFunction(()=>window.dlaHistory?.ready);
  const state=()=>page.evaluate(()=>dlaHistory.state()),board=s=>({n:s.n,tiles:s.tiles}),tap=t=>config.touch?t.tap():t.click();
+
+ async function resizeGesture(dy){
+  const r=await page.locator('#btnResizeUp').boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
+  if(config.touch){const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y+dy*i/5}]});await page.waitForTimeout(25);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}
+  else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:5});await page.mouse.up();}
+  await page.waitForTimeout(350);
+ }
+ async function resizeInDirection(method){
+  const button=page.locator('#btnResizeUp'),direction=method==='up'?'increase':'decrease';
+  if(await button.getAttribute('data-resize-direction')!==direction)await resizeGesture(35);
+  assert.equal(await button.getAttribute('data-resize-direction'),direction);await tap(button);
+ }
  async function undo(){await tap(page.locator('#btnUndo'));}async function redo(){await tap(page.locator('#btnRedo'));}
  for(const genetics of (process.env.DLA_CONTOURS_ONLY?[]:[true,false]))for(const live of [false,true])for(const method of ['up','down','custom']){
   await page.evaluate(g=>dlaHistory.setup(g),genetics);const initial=board(await state());
   if(live){await page.evaluate(()=>dlaHistory.play());await page.waitForFunction(()=>dlaHistory.state().gen>=2);}
-  if(method==='custom'){const r=await page.locator('#btnResizeUp').boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();await page.locator('#resizeInput').fill('31');await tap(page.locator('#btnConfirmResize'));}
-  else await tap(page.locator(method==='up'?'#btnResizeUp':'#btnResizeDown'));
+  if(method==='custom'){await resizeGesture(-35);await page.locator('#resizeInput').fill('31');await tap(page.locator('#btnConfirmResize'));}
+  else await resizeInDirection(method);
   await page.waitForFunction(()=>!dlaHistory.state().anim&&dlaHistory.state().n!==21);if(live)await page.evaluate(()=>dlaHistory.pause());
   const resized=board(await state()),cell=Math.floor(resized.n*.4),index=cell*resized.n+cell;
   await page.evaluate(i=>dlaHistory.paintColor(i),(resized.tiles[index].k+1)%23);

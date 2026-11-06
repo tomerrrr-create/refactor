@@ -242,6 +242,8 @@ body {
 /* Right Panel */
 #btnResizeUp       { grid-area: 1 / 7; }
 #btnResizeDown     { grid-area: 2 / 7; }
+#btnResizeDown { display:none !important; }
+#btnResizeUp[data-resize-direction="decrease"] [data-resize-plus-stem] { display:none; }
 #btnGap            { grid-area: 3 / 7; }
 #btnDark { grid-area: 4 / 7; }
 
