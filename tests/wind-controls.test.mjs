@@ -4,24 +4,24 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {selectWindMode,nextWindEffect,DEFAULT_WIND_SETTINGS} from '../js/wind-settings.js';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-test('Wind toggle preserves a running simulation without disabling panel buttons',()=>{
+test('Wind disables only brush and Symmetry controls while preserving the running simulation',()=>{
  const button={pressed:'false',inert:false,disabled:false,setAttribute(name,value){if(name==='aria-pressed')this.pressed=value;}},events=[];
  const c=vm.createContext({windSettings:{...DEFAULT_WIND_SETTINGS,mode:'paint'},selectWindMode,saveWindSettings(){},updateColorPickerButtonUI(){},windMode:false,isLifePlaying:true,isSimModeActive:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
  pointerState:{id:null},windSettingsUI:null,windPointerId:null,windPainter:{stop:()=>events.push('commit')},pauseLife(){throw Error('tool changes must not pause the simulation');},
- document:{body:{classList:{toggle(){}}}},dom:{btnWind:button}});
+ document:{body:{classList:{toggle(){}}}},dom:{btnWind:button,btnColorPicker:{disabled:false},btnSymmetry:{disabled:false}}});
  vm.runInContext(source.slice(source.indexOf('function setWindMode('),source.indexOf('let windPointerId =')),c);
- c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.windSettings.mode,'ripple');assert.equal(button.inert,false);assert.equal(button.disabled,false);
- c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['commit']);
+ c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.windSettings.mode,'ripple');assert.equal(button.inert,false);assert.equal(button.disabled,false);assert(c.dom.btnColorPicker.disabled);assert(c.dom.btnSymmetry.disabled);
+ c.setWindMode(false);assert.equal(c.windMode,false);assert(!c.dom.btnColorPicker.disabled);assert(!c.dom.btnSymmetry.disabled);assert.deepEqual(events,['commit']);
  assert.equal(c.isLifePlaying,true);c.isSimModeActive=true;c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);
 });
-test('Symmetry cycling, Kaleidoscope hold and Off stay independent of Wind',()=>{
+test('Symmetry gestures are unavailable during Wind and retain their normal behavior afterwards',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnSymmetry:{}},windMode:true,isBreathing:false,symmetryMode:'vertical',
  settingsProfiles:{scheduleCapture(){}},hideLongPressDisplay(){},swapSimulationUtilityControl(){},isSimModeActive:false,cycleSymmetryMode:()=>events.push('cycle'),updateSymmetryUI:()=>events.push('symmetry'),
  bindPickerGestures:(button,options)=>{gestures=options;}});
  vm.runInContext(source.slice(source.indexOf('      function selectKaleidoscope('),source.indexOf('      function cycleSymmetryMode(')),c);
  const start=source.indexOf('        bindPickerGestures(dom.btnSymmetry,');
  vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnCycleSort,',start)),c);
- assert.equal(gestures.onSwipeDown,undefined);gestures.onTap();gestures.onHold();assert.equal(c.symmetryMode,'kaleidoscope');assert(c.windMode);gestures.onOpen();assert.equal(c.symmetryMode,'off');assert(c.windMode);
+ assert(!gestures.canInteract());c.windMode=false;assert(gestures.canInteract());assert.equal(gestures.onSwipeDown,undefined);gestures.onTap();gestures.onHold();assert.equal(c.symmetryMode,'kaleidoscope');assert(!c.windMode);gestures.onOpen();assert.equal(c.symmetryMode,'off');assert(!c.windMode);
  assert.deepEqual(events,['cycle','symmetry','symmetry']);
 });
 test('color control retains brush actions and has no Wind toggle gesture',()=>{
@@ -34,8 +34,8 @@ test('color control retains brush actions and has no Wind toggle gesture',()=>{
  vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnWind,',start)),c);
  assert.equal(gestures.onSwipeDown,undefined);gestures.onTap();gestures.onOpen();
  gestures.onHold();assert.equal(c.selectedColorIndex,0);gestures.onExtendedHold();assert(c.isRainbowModeActive);
- c.windMode=true;gestures.onTap();gestures.onOpen();assert(c.windMode);
- assert.deepEqual(events,['color','color-settings','color','color-settings']);
+ c.windMode=true;assert(!gestures.canInteract());assert(!gestures.canOpen());c.windMode=false;assert(gestures.canInteract());
+ assert.deepEqual(events,['color','color-settings']);
  c.isLifePlaying=true;c.armedSimulation='breathe';assert(!gestures.canOpen());
 });
 test('dedicated Wind gestures use settings only while active and block macro interaction',()=>{

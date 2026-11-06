@@ -2850,6 +2850,8 @@ function setWindMode(enabled) {
         windPointerId = null;
     }
     windMode = enabled;
+    dom.btnColorPicker.disabled = enabled;
+    dom.btnSymmetry.disabled = enabled;
     document.body.classList.toggle('wind-mode', enabled);
     updateColorPickerButtonUI();
 }
@@ -5755,7 +5757,7 @@ bindPickerGestures(dom.btnPalette, {
         bindPickerGestures(dom.btnSymmetry, {
             onTap: cycleSymmetryMode, onHold: selectKaleidoscope,
             onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
-            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
+            canInteract: () => !windMode && !isBreathing, beforeStart: hideLongPressDisplay
         });
 bindPickerGestures(dom.btnCycleSort, {
     onTap: cycleSortMethod, onOpen: modals.openSortCycleModal,
@@ -5795,7 +5797,7 @@ initializeBrushPickerNavigation({
     },
     symmetryGestures: {
         onTap: cycleSymmetryMode, onHold: selectKaleidoscope, onOpen: () => { symmetryMode = 'off'; updateSymmetryUI(); },
-        canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay
+        canInteract: () => !windMode && !isBreathing, beforeStart: hideLongPressDisplay
     },
     separatorGestures: {
         onTap: cycleSeparator, onOpen: modals.openSeparatorCycleModal,
@@ -5815,7 +5817,7 @@ bindPickerGestures(dom.btnColorPicker, {
         resetSelectedColor();
         dom.btnColorPicker.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 250 });
     },
-    canOpen: () => !(isLifePlaying && armedSimulation === 'breathe'),
+    canOpen: () => !windMode && !(isLifePlaying && armedSimulation === 'breathe'),
     onHold: () => {
         if (windMode || (isLifePlaying && armedSimulation === 'breathe')) return;
         selectedColorIndex = 0;
@@ -5830,7 +5832,7 @@ bindPickerGestures(dom.btnColorPicker, {
         isRainbowModeActive = true;
         updateGlowEffect(); updateColorPickerButtonUI();
     },
-    canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
+    canInteract: () => !windMode && !isBreathing, beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
 bindPickerGestures(dom.btnWind, {

@@ -25,7 +25,7 @@ Brightness smoothing starts at 10%. Cracks defaults to whole-board growth; its b
 
 Resonance starts in the second drawer. Its toolbar cycle is Circular → Interference, with Off while paused; all six maps, including Cosmological empathy, remain available in settings. A fixed audio-waveform icon has a small upper-right badge for the selected map. Each map remembers its own Frequency and Strength, while Phase motion is shared. Cosmological empathy uses a circular gradient across the board; older recordings retain their recorded map behavior.
 
-Wind has a dedicated button in the simulation panel above Nudge. Tap to cycle Local ripple → Paint color rings → Move existing colors → Off; active Wind is gold. Swipe up while active for settings. The former downward swipe on Color/brush is removed. Nudge now sits in the former minus position.
+Wind has a dedicated button in the simulation panel above Nudge. Tap to cycle Local ripple → Paint color rings → Move existing colors → Off; active Wind is gold. Swipe up while active for settings. Color/brush and Symmetry are strongly dimmed and unavailable during Wind; switching Wind off restores their previous choices. The former downward swipe on Color/brush is removed. Nudge now sits in the former minus position.
 
 ## Two simulation drawers
 
