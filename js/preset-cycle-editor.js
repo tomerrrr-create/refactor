@@ -1,7 +1,34 @@
 import { cloneCycleRules } from './evolution-cycle-settings.js';
 
+// Modal Save and quick preset selection commit the same three-slot snapshot.
+export function commitCycleEditorDraft(draft, save) {
+    return save(draft.slots.map(cloneCycleRules), draft.index, [...draft.sources], cloneCycleRules(draft.yoursRules)) !== false;
+}
+
+export function orderedCyclePresets(container, presets) {
+    const byId = new Map(presets.map(preset => [preset.button.id, preset]));
+    return [...container.querySelectorAll('button')].filter(button => byId.has(button.id)).map(button => byId.get(button.id));
+}
+
+function comparableRules(rules) {
+    const value = cloneCycleRules(rules);
+    delete value.genetics; // Genetics is a shared GoL preference, not a preset.
+    if (value.reach === 0 && value.reachOffset === undefined) value.reachPercent ??= 100;
+    return JSON.stringify(Object.fromEntries(Object.keys(value).sort().map(key => [key,
+        Array.isArray(value[key]) ? [...value[key]].sort((a,b)=>a-b) : value[key]])));
+}
+
+export function adjacentCyclePreset(state, presets, direction) {
+    if (!presets.length || ![-1,1].includes(direction) || ![0,1,2].includes(state.index)) return null;
+    const source = state.sources[state.index];
+    let index = presets.findIndex(preset => (preset.source || preset.button.id) === source);
+    if (index < 0) index = presets.findIndex(preset => comparableRules(preset.rules) === comparableRules(state.slots[state.index]));
+    if (index < 0) return presets[direction > 0 ? 0 : presets.length - 1];
+    return presets[(index + direction + presets.length) % presets.length];
+}
+
 // Modal-local rules only. Saving uses the existing evolution snapshot API.
-export function createCycleEditorDraft(state, defaults, defaultSources) {
+export function createCycleEditorDraft(state, defaults = state.slots, defaultSources = state.sources) {
     return {
         slots: state.slots.map(cloneCycleRules), sources: [...state.sources],
         // Retain the recording API's personal snapshot for backward compatibility.
@@ -85,6 +112,6 @@ export function bindPresetCycleEditor({ toolbar, presets, iconButton, state, def
     return {
         refresh, selectPreset,
         manualChange() { draft.manualChange(readRules()); refresh(); },
-        commit() { save(draft.slots.map(cloneCycleRules), draft.index, [...draft.sources], cloneCycleRules(draft.yoursRules)); return true; }
+        commit() { return commitCycleEditorDraft(draft, save); }
     };
 }

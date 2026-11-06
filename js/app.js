@@ -3498,9 +3498,11 @@ function cycleCymaticsMode(){
     const activating=armedSimulation!=='cymatics';
     if(activating)armSimulation('cymatics');
     const rules=getCymaticsRules(),current=rules.resonanceVersion??1;
-    const cycle=['off',4,3,6];
-    const next=activating?current:(cycle.includes(current)?nextEvolutionMode(current,cycle):4);
-    const selected=selectCymaticsMap(rules,next==='off'?4:next,cymaticsFrequencies,cymaticsStrengths);
+    const first=CYMATICS_RESONANCE_MAPS.circular;
+    const cycle=['off',first,CYMATICS_RESONANCE_MAPS.interference];
+    // Settings-only maps remain selectable/restorable; the toolbar shortcuts start with Circular.
+    const next=activating?(cycle.includes(current)?first:current):(cycle.includes(current)?nextEvolutionMode(current,cycle):first);
+    const selected=selectCymaticsMap(rules,next==='off'?first:next,cymaticsFrequencies,cymaticsStrengths);
     const running=isLifePlaying;
     if(saveCymaticsSettings(selected.rules,selected.frequencies,selected.strengths)===false)return;
     if(next==='off'){
@@ -5387,6 +5389,9 @@ else if (action.eventName === 'Invert Colors') {
         softBloom.setIntensity(softBloomIntensity);
         softBloom.setEnabled(isSoftBloom);
         const contextForModals = {
+            canBrowseEvolutionPreset: simulation => ['gameOfLife','sandpile'].includes(simulation) &&
+                isSimModeActive && armedSimulation === simulation && !isBreathing &&
+                !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             refreshProfiles: () => settingsProfiles?.refresh(),
             isSimulationMode: () => isSimModeActive,
             SORT_MODES,
@@ -5871,6 +5876,8 @@ dom.btnColorPicker.addEventListener('keydown', event => {
         evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
             bindPickerGestures(button, {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
+                onSwipeSide: ['gameOfLife','sandpile'].includes(simulation) ? direction => modals.browseEvolutionPreset(simulation,direction) : undefined,
+                canSwipeSide: () => contextForModals.canBrowseEvolutionPreset(simulation) && !evolutionExplanation.isOpen(),
                 onHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),

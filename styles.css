@@ -2384,12 +2384,12 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
 #controlsContainer #btnEvolutionDrawer { display:none; }
 #controlsContainer.sim-mode-active #btnEvolutionDrawer { display:inline-flex; align-items:center; justify-content:center; grid-area:1 / 7; width:44px; height:44px; margin:auto; padding:0; border:0; background:transparent; cursor:pointer; }
-#btnEvolutionDrawer { position:relative; color:var(--drawer-trigger-color,#899099); font:14px Georgia,serif; letter-spacing:.05em; direction:ltr; touch-action:none; }
+#btnEvolutionDrawer { position:relative; color:var(--gold); direction:ltr; touch-action:none; }
+#btnEvolutionDrawer .drawer-page-dots { width:24px; height:12px; pointer-events:none; }
+#btnEvolutionDrawer [data-drawer-page-dot] { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.45; transition:opacity 160ms ease,fill 160ms ease; }
+#btnEvolutionDrawer [data-drawer-page-dot][data-active="true"] { fill:currentColor; opacity:1; }
+@media(prefers-reduced-motion:reduce) { #btnEvolutionDrawer [data-drawer-page-dot] { transition:none; } }
 #btnEvolutionDrawer .drawer-active-mark { display:none; position:absolute; bottom:7px; width:3px; height:3px; border-radius:50%; background:var(--gold); }
-:root[data-simulation-effective-theme="gold"] #btnEvolutionDrawer { --drawer-trigger-color:#a58b54; }
-:root[data-simulation-effective-theme="teal"] #btnEvolutionDrawer { --drawer-trigger-color:#68bdb5; }
-:root[data-simulation-effective-theme="silver"] #btnEvolutionDrawer { --drawer-trigger-color:#899099; }
-:root[data-simulation-effective-theme="ice"] #btnEvolutionDrawer { --drawer-trigger-color:#91b8cb; }
 #btnEvolutionDrawer[data-parked-active="true"] .drawer-active-mark { display:block; }
 #btnEvolutionDrawer:disabled { cursor:default; }
 #btnEvolutionDrawer:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:8px; }
@@ -2433,7 +2433,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 :root[data-simulation-effective-theme="pink"] .sim-mode-active #simModeBackground { border-color:#c991ad45; }
 :root[data-simulation-effective-theme="pink"] #simModeBackground .sim-theme-pink { opacity:1; }
 .simulation-theme-preview[data-theme="pink"] { --preview-color:#c991ad; --preview-border:#c991ad45; --preview-background:linear-gradient(135deg,#2a1821,#100c0f); }
-:root[data-simulation-effective-theme="pink"] #btnEvolutionDrawer { --drawer-trigger-color:#c991ad; }
 
 #btnCymatics { display:none; }
 #cymaticsSettingsDialog .resonance-map-grid { grid-template-columns:repeat(3,minmax(44px,1fr)); width:min(100%,272px); }
@@ -2441,14 +2440,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; text-align:start; }
 #cymaticsSettingsDialog .cymatics-phase input { order:1; width:18px; height:18px; margin:0; flex-shrink:0; accent-color:var(--gold); }
 
-#btnCymatics > svg { display:none; }
-#btnCymatics.cymatics-diagonal > [data-cymatics-icon="diagonal"] { display:block; }
-#btnCymatics.cymatics-grid > [data-cymatics-icon="grid"] { display:block; }
-#btnCymatics.cymatics-circular > [data-cymatics-icon="circular"] { display:block; }
-#btnCymatics.cymatics-interference > [data-cymatics-icon="interference"] { display:block; }
-
-#btnCymatics.cymatics-clouds > [data-cymatics-icon="clouds"] { display:block; }
-#btnCymatics.cymatics-cosmic > [data-cymatics-icon="cosmic"] { display:block; }
+/* One stable audio waveform; only the small upper-right map badge changes. */
+#btnCymatics [data-cymatics-map-mark] { display:none; }
+#btnCymatics.cymatics-diagonal [data-cymatics-map-mark="diagonal"],
+#btnCymatics.cymatics-grid [data-cymatics-map-mark="grid"],
+#btnCymatics.cymatics-circular [data-cymatics-map-mark="circular"],
+#btnCymatics.cymatics-interference [data-cymatics-map-mark="interference"],
+#btnCymatics.cymatics-clouds [data-cymatics-map-mark="clouds"],
+#btnCymatics.cymatics-cosmic [data-cymatics-map-mark="cosmic"] { display:inline; }
 
 /* Legacy DOM identity retained for old integrations; Nudge has one control. */
 #btnNudgeDarker { display: none !important; }
@@ -2481,3 +2480,11 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cracksSettingsDialog [data-cracks-area] { min-height:44px; padding:8px; border:1px solid transparent; border-radius:8px; color:#9c998f; background:transparent; font:inherit; font-size:13px; line-height:1.35; }
 #cracksSettingsDialog [data-cracks-area][aria-pressed="true"] { color:#e5cc91; border-color:#b89a5766; background:#b89a5714; }
 #cracksSettingsDialog .cracks-settings-panel[hidden] { display:none; }
+
+/* Nonblocking acknowledgement of a committed preset; never shades the controls. */
+.preset-swipe-feedback {
+  position:fixed; z-index:70; max-width:calc(100vw - 24px);
+  padding:4px 9px; border:1px solid #d4b86545; border-radius:7px;
+  background:rgba(10,12,10,.95); color:#e3c677; font:12px/1.5 sans-serif;
+  text-align:center; pointer-events:none; overflow-wrap:anywhere;
+}

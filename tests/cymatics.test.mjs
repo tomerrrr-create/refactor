@@ -167,7 +167,7 @@ test('Resonance defaults to 35 percent and retired preferences migrate without a
  assert.deepEqual(validateCymaticsRules(old),old,'old resonance fields and explicit strength retain their meaning');
 });
 
-test('toolbar cycles three shortcut maps while retaining all six settings maps without resetting the run and only includes Off while paused',()=>{
+test('toolbar cycles Circular and Interference while retaining all six settings maps without resetting the run and only includes Off while paused',()=>{
  const events=[],classes=new Set(),button={dataset:{},classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);}},setAttribute(name,value){this[name]=value;}};
  const c=vm.createContext({CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,cymaticsRules:{...INITIAL_CYMATICS_RULES},cymaticsFrequencies:createCymaticsFrequencies(),cymaticsStrengths:createCymaticsStrengths(),replayCymaticsRules:null,cymaticsState:null,n:21,
   armedSimulation:null,isLifePlaying:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,isBreathing:false,dom:{btnCymatics:button},getText:key=>key,
@@ -178,24 +178,24 @@ test('toolbar cycles three shortcut maps while retaining all six settings maps w
  c.recordLiveSimulationRules=()=>{if(c.isLifePlaying)events.push({name:'SIMULATION_RULES',details:c.getSimulationRecordingDetails()});};
  vm.runInContext(source.slice(source.indexOf('function updateCymaticsButtonUI('),source.indexOf('function getCracksBrush(')),c);
  vm.runInContext(source.slice(source.indexOf('function nextEvolutionMode('),source.indexOf('function cycleBrightnessEvoMode(')),c);
- c.cycleCymaticsMode();assert.equal(c.armedSimulation,'cymatics');assert.equal(c.getCymaticsRules().resonanceVersion,4);
- for(const [map,active] of [[3,true],[6,true],[4,false],[4,true]]){
+ c.cycleCymaticsMode();assert.equal(c.armedSimulation,'cymatics');assert.equal(c.getCymaticsRules().resonanceVersion,3);
+ for(const [map,active] of [[4,true],[3,false],[3,true]]){
   c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation==='cymatics',active);assert.equal(c.getCymaticsRules().frequency,INITIAL_CYMATICS_FREQUENCIES[Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===map)]);assert.equal(c.getCymaticsRules().phaseMotion,true);
  }
  assert(events.some(e=>e.name==='Cymatics Mode Changed'&&JSON.parse(e.details).mode==='off'));
  c.isLifePlaying=true;c.cymaticsState={...createCymaticsState(21),steps:250,random:123456};const state=c.cymaticsState;
- for(const map of [3,6,4,3,6,4]){c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation,'cymatics');assert.equal(c.cymaticsState,state);assert.equal(c.isLifePlaying,true);assert.equal(button.dataset.cymaticsMap,Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===map));}
+ for(const map of [4,3,4,3,4,3]){c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation,'cymatics');assert.equal(c.cymaticsState,state);assert.equal(c.isLifePlaying,true);assert.equal(button.dataset.cymaticsMap,Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===map));}
  assert.equal(button['aria-pressed'],'true');assert(classes.has('simulation-active'));
  c.isLifePlaying=false;assert.throws(()=>c.saveCymaticsSettings({pattern:'retired',strength:75}),/no longer supported/);assert.equal(c.cymaticsState,state);
- c.cymaticsRules={pattern:'petals',strength:30,mode:'resonance',frequency:440};c.cymaticsFrequencies=createCymaticsFrequencies(c.cymaticsRules);c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);assert.equal(c.getCymaticsRules().phaseMotion,false,'missing legacy phase remains off');assert.equal(c.getCymaticsRules().frequency,440);
- c.saveCymaticsSettings({pattern:'petals',strength:30,mode:'resonance',frequency:440,resonanceVersion:2,phaseMotion:false});assert.equal(button.dataset.cymaticsMap,'grid');c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);assert.equal(c.getCymaticsRules().phaseMotion,false);
+ c.cymaticsRules={pattern:'petals',strength:30,mode:'resonance',frequency:440};c.cymaticsFrequencies=createCymaticsFrequencies(c.cymaticsRules);c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,3);assert.equal(c.getCymaticsRules().phaseMotion,false,'missing legacy phase remains off');assert.equal(c.getCymaticsRules().frequency,440);
+ c.saveCymaticsSettings({pattern:'petals',strength:30,mode:'resonance',frequency:440,resonanceVersion:2,phaseMotion:false});assert.equal(button.dataset.cymaticsMap,'grid');c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,3);assert.equal(c.getCymaticsRules().phaseMotion,false);
  c.armSimulation(null);c.cymaticsRules={pattern:'petals',strength:30,mode:'resonance',frequency:440,resonanceVersion:1};c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,1);assert.equal(c.getCymaticsRules().frequency,440);
- for(const map of [1,2,5]){
+ for(const map of [1,2,5,6]){
   c.armSimulation(null);c.cymaticsRules={...INITIAL_CYMATICS_RULES,resonanceVersion:map};
   c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map,'explicit settings-only maps still activate');
-  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4,'next tap returns to shortcut cycle');
+  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,3,'next tap returns to shortcut cycle');
   c.saveCymaticsSettings({...INITIAL_CYMATICS_RULES,resonanceVersion:map});c.isLifePlaying=true;const retained=c.cymaticsState;
-  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);assert.equal(c.cymaticsState,retained);assert(c.isLifePlaying);c.isLifePlaying=false;
+  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,3);assert.equal(c.cymaticsState,retained);assert(c.isLifePlaying);c.isLifePlaying=false;
  }
  const validation=vm.createContext({validateCymaticsSnapshot});vm.runInContext(source.slice(source.indexOf('function validateCymaticsMacroAction('),source.indexOf('function parseMacroText(')),validation);
  const off=events.find(e=>e.name==='Cymatics Mode Changed');assert.doesNotThrow(()=>validation.validateCymaticsMacroAction({eventName:off.name,details:off.details}));assert.throws(()=>validation.validateCymaticsMacroAction({eventName:off.name,details:off.details.replace('"mode":"off"','"mode":"bad"')}));

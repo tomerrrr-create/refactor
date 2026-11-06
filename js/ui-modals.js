@@ -9,7 +9,7 @@ import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
 import { renderPalettePicker } from './palette-picker.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
-import { bindPresetCycleEditor } from './preset-cycle-editor.js';
+import { bindPresetCycleEditor, createCycleEditorDraft, commitCycleEditorDraft, orderedCyclePresets, adjacentCyclePreset } from './preset-cycle-editor.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS, defaultContourRules } from './constants.js';
 import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
@@ -38,6 +38,55 @@ let contourOpenTimer = null, contourCloseTimer = null;
 let brushPicker;
 let colorPickerReturnFocus;
 let colorPickerHoldOpeningClick = false;
+let presetFeedback, presetFeedbackTimer;
+
+function presetCycleDefinition(simulation) {
+    const gol = simulation === 'gameOfLife';
+    if (!gol && simulation !== 'sandpile') return null;
+    const container = gol ? app.dom.gameOfLifeSettingsModal : app.dom.chiFlowSettingsModal;
+    const presets = gol ? Object.entries(GAME_OF_LIFE_PRESETS).map(([id,rules]) => ({button:document.getElementById(id),source:id,rules}))
+        : Object.entries(CHI_FLOW_PRESETS).map(([source,rules]) => ({button:document.getElementById('btnChiPreset'+source),source,rules}));
+    return {
+        presets: orderedCyclePresets(container, presets.filter(preset=>preset.button)),
+        state: gol ? app.getGameOfLifeCycle() : app.getChiFlowCycle(),
+        save: gol ? app.setGameOfLifeCycle : app.setChiFlowCycle,
+        iconButton: gol ? app.dom.btnGameOfLife : app.dom.btnSandpile
+    };
+}
+
+function hidePresetFeedback() {
+    clearTimeout(presetFeedbackTimer);
+    if (presetFeedback) presetFeedback.hidden = true;
+}
+
+function showPresetFeedback(button, name) {
+    if (!presetFeedback) {
+        presetFeedback = document.createElement('div');
+        presetFeedback.className = 'preset-swipe-feedback';
+        presetFeedback.setAttribute('role','status');presetFeedback.setAttribute('aria-live','polite');
+        presetFeedback.setAttribute('aria-atomic','true');document.body.append(presetFeedback);
+        document.addEventListener('pointerdown',hidePresetFeedback,true);
+        window.addEventListener('resize',hidePresetFeedback);window.addEventListener('blur',hidePresetFeedback);
+    }
+    clearTimeout(presetFeedbackTimer);presetFeedback.textContent = name;presetFeedback.hidden = false;
+    const anchor = button.getBoundingClientRect(),box = presetFeedback.getBoundingClientRect();
+    presetFeedback.style.left = Math.max(12,Math.min(anchor.left+anchor.width/2-box.width/2,window.innerWidth-box.width-12))+'px';
+    presetFeedback.style.top = Math.max(8,anchor.top-box.height-7)+'px';
+    presetFeedbackTimer = setTimeout(hidePresetFeedback,1200);
+}
+
+function browseEvolutionPreset(simulation, direction) {
+    if (!app.canBrowseEvolutionPreset(simulation)) return false;
+    const definition = presetCycleDefinition(simulation);
+    if (!definition) return false;
+    const preset = adjacentCyclePreset(definition.state,definition.presets,direction);
+    if (!preset) return false;
+    const draft = createCycleEditorDraft(definition.state);
+    draft.assign(preset.rules,preset.source);
+    if (!commitCycleEditorDraft(draft,definition.save)) return false;
+    showPresetFeedback(definition.iconButton,preset.button.textContent.trim());
+    return true;
+}
 
 // --- Internal Helper Functions ---
 
@@ -389,12 +438,11 @@ app.dom.btnChiPresetElectric.textContent = app.getText('chi_preset_electric');
 updateActiveChiPresetButton();
         const defaultChiCycle = app.getDefaultChiFlowCycle();
         chiCycleMembership = bindPresetCycleEditor({
+            ...presetCycleDefinition('sandpile'),
             toolbar: document.getElementById('chiCycleToolbar'),
             defaults: defaultChiCycle.slots, defaultSources: defaultChiCycle.sources,
-            iconButton: app.dom.btnSandpile,
-            presets: Object.entries(CHI_PRESETS).map(([name, rules]) => ({ button: document.getElementById('btnChiPreset' + name), rules, source: name })),
-            state: app.getChiFlowCycle(), readRules: readChiCycleRules, writeRules: writeChiCycleRules,
-            save: app.setChiFlowCycle, saveButton: app.dom.btnChiSettingsSave, getText: app.getText
+            readRules: readChiCycleRules, writeRules: writeChiCycleRules,
+            saveButton: app.dom.btnChiSettingsSave, getText: app.getText
         });
         app.dom.chiFlowSettingsModal.classList.remove('hidden');
         refreshLocalizedModalText();
@@ -1046,11 +1094,10 @@ updateActivePresetButton();
     // --- END: MODIFICATION ---
     
     golCycleMembership = bindPresetCycleEditor({
+        ...presetCycleDefinition('gameOfLife'),
         toolbar: document.getElementById('golCycleToolbar'),
         defaults: [app.C.defaultGameOfLifeRules, PRESET_RULES.btnGolPresetShuffle, PRESET_RULES.btnGolPresetCoral], defaultSources: ['btnGolPresetPaint', 'btnGolPresetShuffle', 'btnGolPresetCoral'],
-        iconButton: app.dom.btnGameOfLife,
-        presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
-        state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
+        readRules: readGolCycleRules,
         writeRules: rules => applyGolPreset(rules.survival, rules.birth),
         save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots, index, sources, yoursRules, golGeneticsDraft),
         saveButton: app.dom.btnGolSettingsSave, getText: app.getText
@@ -2163,6 +2210,7 @@ function saveMagnetSettings() {
 
 
 return {
+        browseEvolutionPreset,
         refreshLocalizedModalText,
         refreshTechnicianSettings: () => {
             refreshSmoothControl();

@@ -37,9 +37,13 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const unchanged=(a,b)=>{assert.deepEqual(a.board,b.board);assert.deepEqual(a.logs,b.logs);assert.equal(a.history,b.history);assert.equal(a.armed,b.armed);};
  const initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
  assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
+ assert.equal(await trigger.locator('[data-drawer-page-dot]').count(),2);
+ assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'0');
+ assert.equal(await trigger.evaluate(e=>getComputedStyle(e).color),'rgb(255, 215, 0)');
  const frame=await page.locator('#simModeBackground').boundingBox();
  await page.evaluate(()=>window.realLifeButton=document.getElementById('btnGameOfLife'));
  await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics']);
+ assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'1');
  assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
  if(config.lang==='en'){
@@ -62,7 +66,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);assert(await page.locator('#btnGameOfLife').isVisible());
  await page.screenshot({path:path.join(artifacts,config.lang+'-second-drawer.png'),animations:'disabled'});
  await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});
- assert.deepEqual((await state()).slots,custom);assert.equal(await trigger.locator('.drawer-page-number').textContent(),'1/2');
+ assert.deepEqual((await state()).slots,custom);assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'0');
  // Layouts autosave per profile independently from simulation-rule Save to profile.
  await page.evaluate(()=>drawerTest.tech());await tap(page.locator('[data-profile-choice="1"]'));assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT);
  await tap(page.locator('[data-profile-choice="0"]'));assert.deepEqual((await state()).slots,custom);

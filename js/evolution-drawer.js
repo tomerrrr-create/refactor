@@ -8,7 +8,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     trigger.id='btnEvolutionDrawer';trigger.type='button';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
     trigger.setAttribute('aria-keyshortcuts','Alt+ArrowUp');
-    trigger.innerHTML='<span class="drawer-page-number" aria-hidden="true"></span><span class="drawer-active-mark" aria-hidden="true"></span>';
+    trigger.innerHTML='<svg class="drawer-page-dots" viewBox="0 0 24 12" aria-hidden="true"><circle data-drawer-page-dot="0" cx="6" cy="6" r="2.5"/><circle data-drawer-page-dot="1" cx="18" cy="6" r="2.5"/></svg><span class="drawer-active-mark" aria-hidden="true"></span>';
     controls.append(trigger);
     const dialog=document.createElement('dialog');
     dialog.id='evolutionDrawerDialog';
@@ -59,7 +59,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const at=active&&!isFixedEvolution(active)?slots.indexOf(evolutionControlId(active)):-1;
         const otherPage=at>=0&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);
-        trigger.querySelector('.drawer-page-number').textContent=`${page+1}/2`;
+        trigger.querySelectorAll('[data-drawer-page-dot]').forEach((dot,index)=>dot.dataset.active=String(index===page));
         const text=getText('drawer_navigation').replace('{n}',page+1);
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.title=[text,activeText,getText('drawer_open_hint')].filter(Boolean).join(' — ');

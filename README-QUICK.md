@@ -18,17 +18,17 @@ Select an evolution, then use **Single step** or **Play/Pause**. Selection alone
 
 Tap a cycling evolution to change its mode. Paused cycles include Off; running cycles skip Off. Hold an evolution for its explanation, or swipe upward for supported settings while it is selected, including during playback. Breathe is a visual animation without Single step and pauses when its mode changes.
 
-Game of Life and Chi Flow each have three configurable cycle positions, shown with zero, one or two stars. In their settings, select a position, then choose a preset or edit its rules. **Save** commits the draft; **Cancel** discards it. Ordinary taps cycle the assigned positions. Horizontal preset browsing is not currently available.
+Game of Life and Chi Flow each have three configurable cycle positions, shown with zero, one or two stars. In their settings, select a position, then choose a preset or edit its rules. **Save** commits the draft; **Cancel** discards it. Ordinary taps cycle the assigned positions. When its evolution is selected, swipe right/left to commit the next/previous preset to the active cycle position, exactly like selecting it in settings and saving. The number of stars stays unchanged, and other positions retain their presets. The order follows the preset buttons in settings, wraps at either end and stays physically right/left in every language. Chi Flow loads the selected preset’s full Magnetic Reach. Paused swipes do not paint; running swipes retain playback and the generation counter. Swipes are blocked during macro loading/playback.
 
 Brightness smoothing starts at 10%. Cracks defaults to whole-board growth; its button cycles between whole-board and dead-cell growth, with Off available while paused. Cracks always uses the selected brush color and starts with Fibonacci Bloom growth defaults. Its settings use manual controls followed by colored preset tiles.
 
-Resonance starts in the second drawer. Its toolbar cycle contains Interference, Circular and Cosmological empathy; all six maps remain available in settings. Each map remembers its own Frequency and Strength, while Phase motion is shared. Cosmological empathy uses a circular gradient across the board; older recordings retain their recorded map behavior.
+Resonance starts in the second drawer. Its toolbar cycle is Circular → Interference, with Off while paused; all six maps, including Cosmological empathy, remain available in settings. A fixed audio-waveform icon has a small upper-right badge for the selected map. Each map remembers its own Frequency and Strength, while Phase motion is shared. Cosmological empathy uses a circular gradient across the board; older recordings retain their recorded map behavior.
 
 ## Two simulation drawers
 
 The simulation overlay has **two drawers**, each with ten fixed places in two rows of five. All thirteen evolutions appear exactly once across them. Empty places are invisible on the control panel, and the frame keeps the same size.
 
-- Tap **1/2** or **2/2** above the overlay to switch drawers.
+- Tap the **two gold dots** above the overlay to switch drawers. The current drawer has a filled dot; the other has an outlined dot.
 - Switching changes visibility only. It does not select, pause, restart or step an evolution, change its cycle mode, or reset its generation counter.
 - Global Play/Pause and Single step still control the selected evolution when its button is in the other drawer. A small gold marker and tooltip identify that situation.
 - Navigation works during playback, including Breathe. The current drawer is retained during the session; a new app load starts at drawer one.
