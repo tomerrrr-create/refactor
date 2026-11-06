@@ -36,7 +36,6 @@ import { resolveChiReach } from './chi-reach.js';
 // js/app.js
 
 import { loadEvolutionCycle, persistEvolutionCycle, normalizeEvolutionCycle, normalizeCycleSources, loadCycleIdentity } from './evolution-cycle-settings.js';
-import { flashToolMode } from './tool-mode-glow.js';
 import { bindPickerGestures } from './picker-gestures.js';
 import { createEvolutionExplanation } from './evolution-explanation.js';
 import { capturePaletteGroupBoard, showPaletteGroupTransition } from './palette-group-transition.js';
@@ -2849,7 +2848,6 @@ function setWindMode(enabled) {
     windMode = enabled;
     document.body.classList.toggle('wind-mode', enabled);
     updateColorPickerButtonUI();
-    flashToolMode(dom.btnWind);
 }
 function cycleWindEffect() {
     if (!windMode) { setWindMode(true); return; }

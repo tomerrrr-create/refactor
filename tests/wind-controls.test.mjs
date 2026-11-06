@@ -8,10 +8,10 @@ test('Wind toggle preserves a running simulation without disabling panel buttons
  const button={pressed:'false',inert:false,disabled:false,setAttribute(name,value){if(name==='aria-pressed')this.pressed=value;}},events=[];
  const c=vm.createContext({windSettings:{...DEFAULT_WIND_SETTINGS,mode:'paint'},selectWindMode,saveWindSettings(){},updateColorPickerButtonUI(){},windMode:false,isLifePlaying:true,isSimModeActive:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
  pointerState:{id:null},windSettingsUI:null,windPointerId:null,windPainter:{stop:()=>events.push('commit')},pauseLife(){throw Error('tool changes must not pause the simulation');},
- document:{body:{classList:{toggle(){}}}},dom:{btnWind:button},flashToolMode:()=>events.push('flash')});
+ document:{body:{classList:{toggle(){}}}},dom:{btnWind:button}});
  vm.runInContext(source.slice(source.indexOf('function setWindMode('),source.indexOf('let windPointerId =')),c);
  c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.windSettings.mode,'ripple');assert.equal(button.inert,false);assert.equal(button.disabled,false);
- c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['flash','commit','flash']);
+ c.setWindMode(false);assert.equal(c.windMode,false);assert.deepEqual(events,['commit']);
  assert.equal(c.isLifePlaying,true);c.isSimModeActive=true;c.setWindMode(true);assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);
 });
 test('Symmetry cycling, Kaleidoscope hold and Off stay independent of Wind',()=>{
