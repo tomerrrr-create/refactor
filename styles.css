@@ -1561,6 +1561,13 @@ button, .ctrl {
 }
 .technician-option-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .technician-option-heading bdi { font: 21px monospace; color: #e3c677; }
+/* Compact settings typography, scoped away from the page heading and other dialogs. */
+#technicianSettingsScroll { font-size: 14px; line-height: 1.5; }
+#technicianSettingsScroll .technician-option-heading bdi,
+#technicianSettingsScroll .technician-effect-heading { font-size: 15px; }
+/* Keep native selects readable without triggering focus zoom on iOS. */
+#technicianSettingsScroll select { font-size: 16px; }
+
 .technician-badge { font-size: 11px; border: 1px solid #b28b3645; padding: 4px 8px; border-radius: 20px; }
 .technician-option-title { font-size: 16px; }
 .smooth-rendering-option { margin-bottom: 12px; }
