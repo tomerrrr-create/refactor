@@ -35,7 +35,7 @@ The simulation overlay has **two drawers**, each with ten fixed places in two ro
 - Switching changes visibility only. It does not select, pause, restart or step an evolution, change its cycle mode, or reset its generation counter.
 - Global Play/Pause and Single step still control the selected evolution when its button is in the other drawer. A small gold marker and tooltip identify that situation.
 - Navigation works during playback, including Breathe. The current drawer is retained during the session; a new app load starts at drawer one.
-- The factory second drawer contains **Breathe, Turing and Resonance**. Existing personal layouts keep their original ten positions in drawer one; the missing evolutions are appended to drawer two.
+- The factory second drawer contains **Breathe, Turing and Resonance**, centered in top-row positions **2, 3 and 4**. Saved layouts retain their positions. Existing personal layouts keep their original ten positions in drawer one; the missing evolutions are appended to drawer two.
 
 Swipe upward on the drawer switch to open **Evolution map**, or use **Alt+ArrowUp** on a keyboard. Editing is available while paused, outside macro loading/playback.
 

@@ -44,7 +44,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert(Math.abs(dotSize.width-20)<.1&&Math.abs(dotSize.height-10)<.1);
  const frame=await page.locator('#simModeBackground').boundingBox();
  await page.evaluate(()=>window.realLifeButton=document.getElementById('btnGameOfLife'));
- await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics']);
+ await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics']);assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.map(e=>Number(e.dataset.evolutionSlot)).sort((a,b)=>a-b)),[11,12,13]);
  assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'1');
  assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
@@ -80,6 +80,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.locator('#projectFileInput').setInputFiles({name:'legacy-layout.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{evolutionSlots:legacy}}))});
  await page.waitForFunction(()=>drawerTest.state().slots[0]==='cymatics');
  assert.deepEqual((await state()).slots.slice(0,10),legacy);assert.deepEqual((await state()).slots.slice(10,13),['dla','breathe','turing']);
+ // Existing two-drawer files retain even the former left-aligned factory layout.
+ const previous=[...DEFAULT_EVOLUTION_SLOTS,'breathe','turing','cymatics',...Array(7).fill(null)];
+ await page.locator('#projectFileInput').setInputFiles({name:'saved-two-drawers.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{evolutionSlots:previous}}))});
+ await page.waitForFunction(()=>drawerTest.state().slots[10]==='breathe');assert.deepEqual((await state()).slots,previous);
+
  await open();await tap(dialog.locator('[data-reset]'));await tap(dialog.locator('[type=submit]'));
  // Move Life to page two. Its selected mode and run survive navigation away.
  await open();await move(2,19);await tap(dialog.locator('[type=submit]'));custom=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,2,19);

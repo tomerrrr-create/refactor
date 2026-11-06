@@ -7,7 +7,7 @@ const unique=slots=>slots.filter(id=>id!==null);
 test('two ten-place drawers contain every evolution once, preserving the original first drawer',()=>{
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,20);
  assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),DEFAULT_EVOLUTION_SLOTS);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10,13),['breathe','turing','cymatics']);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),[null,'breathe','turing','cymatics',null,null,null,null,null,null]);
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.filter(id=>id===null).length,7);
  assert.equal(new Set(unique(DEFAULT_EVOLUTION_LAYOUT)).size,EVOLUTION_CATALOG.length);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
@@ -23,12 +23,12 @@ test('legacy custom layouts retain all ten positions and append only the missing
 });
 test('moves swap occupied places or leave a vacancy, across either drawer, without losing controls',()=>{
  const original=[...DEFAULT_EVOLUTION_LAYOUT];
- const swap=moveEvolutionSlot(original,0,12);assert.equal(swap[0],'cymatics');assert.equal(swap[12],'dla');
- const moved=moveEvolutionSlot(swap,12,19);assert.equal(moved[12],null);assert.equal(moved[19],'dla');
+ const swap=moveEvolutionSlot(original,0,13);assert.equal(swap[0],'cymatics');assert.equal(swap[13],'dla');
+ const moved=moveEvolutionSlot(swap,13,19);assert.equal(moved[13],null);assert.equal(moved[19],'dla');
  assert.equal(new Set(unique(moved)).size,13);assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);
  assert.deepEqual(moveEvolutionSlot(moved,19,19),moved);
  assert.deepEqual(assignEvolutionSlot(original,19,'dla'),moveEvolutionSlot(original,0,19));
- for(const [from,to] of [[-1,0],[0,20],[.5,0],[13,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
+ for(const [from,to] of [[-1,0],[0,20],[.5,0],[10,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
 });
 test('new layouts round-trip through settings and old settings migrate without touching rules',()=>{
  const settings=defaultWorkspaceSettings(),legacy=serializeWorkspaceSettings(settings);assert(!legacy.includes('evolutionSlots'));
@@ -48,4 +48,14 @@ test('legacy Nudge slots migrate outside both drawers without losing other assig
  assert(!migrated.some(id=>id?.startsWith('nudge')));assert.equal(new Set(unique(migrated)).size,13);
  assert.deepEqual(validateEvolutionSlots(migrated),migrated);assert.equal(old[3],'nudgeDarker');
  assert.throws(()=>assignEvolutionSlot(migrated,0,'nudgeBrighter'));
+});
+
+test('saved twenty-slot layouts keep their exact positions, including the former factory layout',()=>{
+ const previous=[...DEFAULT_EVOLUTION_SLOTS,'breathe','turing','cymatics',...Array(7).fill(null)];
+ const edited=moveEvolutionSlot(previous,0,19);
+ for(const saved of [previous,edited]){
+  assert.deepEqual(validateEvolutionSlots(saved),saved);
+  const settings={...defaultWorkspaceSettings(),evolutionSlots:saved};
+  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).evolutionSlots,saved);
+ }
 });
