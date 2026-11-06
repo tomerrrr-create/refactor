@@ -28,7 +28,7 @@ Resonance starts in the second drawer. Its toolbar cycle contains Interference, 
 
 The simulation overlay has **two drawers**, each with ten fixed places in two rows of five. All thirteen evolutions appear exactly once across them. Empty places are invisible on the control panel, and the frame keeps the same size.
 
-- Tap **1/2** or **2/2** above the overlay to switch drawers.
+- Tap the **two gold dots** above the overlay to switch drawers. The current drawer has a filled dot; the other has an outlined dot.
 - Switching changes visibility only. It does not select, pause, restart or step an evolution, change its cycle mode, or reset its generation counter.
 - Global Play/Pause and Single step still control the selected evolution when its button is in the other drawer. A small gold marker and tooltip identify that situation.
 - Navigation works during playback, including Breathe. The current drawer is retained during the session; a new app load starts at drawer one.
