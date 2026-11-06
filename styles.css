@@ -68,7 +68,7 @@ body {
 #controlsContainer {
     position: relative;
     display: grid;
-    grid-template-columns: 50px 1fr 50px 50px 50px 1fr 50px;
+    grid-template-columns: 50px 1fr 50px 50px 50px 50px 50px 1fr 50px;
     grid-template-rows: repeat(4, 50px);
     gap: 8px 6px; /* row-gap | column-gap */
     justify-content: center;
@@ -207,8 +207,7 @@ body {
 #btnMagnetModes,
 #btnNudgeBrighter,
 #btnWind,
-#btnNudgeDarker,
-#btnCycleSort {
+#btnNudgeDarker {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
@@ -219,34 +218,35 @@ body {
 
 /* --- Default Layout --- */
 /* Left Panel */
-#btnSave           { grid-area: 2 / 1; }
+#btnSave           { grid-area: 4 / 3; }
 #btnResetBoard     { grid-area: 3 / 1; }
 #btnTutorial       { grid-area: 1 / 1; }
-#btnSpecialReset   { grid-area: 3 / 4; }
+#btnSpecialReset   { grid-area: 3 / 5; }
 
 
 /* Center Panel */
-#btnInvert         { grid-area: 1 / 3; }
-#btnPalette        { grid-area: 1 / 4; }
-#btnRandom         { grid-area: 1 / 5; }
+#btnInvert         { grid-area: 4 / 4; }
+#btnPalette        { grid-area: 1 / 5; }
+#btnRandom         { grid-area: 4 / 6; }
+#btnCycleSort      { grid-area: 4 / 7; }
 
-#btnColorPicker    { grid-area: 2 / 3; }
-#btnSymmetry       { grid-area: 1 / 7; }
-#btnBrushMode      { grid-area: 2 / 5; }
+#btnColorPicker    { grid-area: 2 / 4; }
+#btnSymmetry       { grid-area: 1 / 9; }
+#btnBrushMode      { grid-area: 2 / 6; }
 
 
 #btnRedo           { grid-area: 4 / 1; }
-#btnUndo           { grid-area: 4 / 7; }
+#btnUndo           { grid-area: 4 / 9; }
 
-#btnToggleSimMode  { grid-area: 4 / 4; }
+#btnToggleSimMode  { grid-area: 4 / 5; }
 
 /* Right Panel */
-#btnResizeUp       { grid-area: 3 / 7; }
-#btnResizeDown     { grid-area: 2 / 7; }
+#btnResizeUp       { grid-area: 3 / 9; }
+#btnResizeDown     { grid-area: 2 / 9; }
 #btnResizeDown { display:none !important; }
 #btnResizeUp[data-resize-direction="decrease"] [data-resize-plus-stem] { display:none; }
-#btnGap            { grid-area: 2 / 7; }
-#btnDark { grid-area: 2 / 4; }
+#btnGap            { grid-area: 2 / 9; }
+#btnDark { grid-area: 2 / 5; }
 
 #btnPlayPauseLife {
   grid-area: 1 / 5;
@@ -539,7 +539,7 @@ body {
 
 @media (max-width: 480px) {
   #controlsContainer {
-    grid-template-columns: 44px 1fr 44px 44px 44px 1fr 44px;
+    grid-template-columns: 44px 1fr 44px 44px 44px 44px 44px 1fr 44px;
     grid-template-rows: repeat(4, 44px);
   }
   .ctrl { width: 44px; height: 44px; }
@@ -2019,14 +2019,14 @@ body.wind-mode #board { cursor: crosshair; }
 }
 #appContainer[data-ui-zoom] #controlsContainer {
   zoom: var(--ui-zoom);
-  grid-template-columns: minmax(0,50px) 1fr minmax(0,50px) minmax(0,50px) minmax(0,50px) 1fr minmax(0,50px);
+  grid-template-columns: minmax(0,50px) 1fr repeat(5,minmax(0,50px)) 1fr minmax(0,50px);
 }
 #appContainer[data-ui-zoom] #controlsContainer.sim-mode-active {
   grid-template-columns: minmax(0,50px) 1fr repeat(5,minmax(0,50px)) 1fr minmax(0,50px);
 }
 #appContainer[data-ui-zoom] .ctrl { max-width: 100%; }
 @media (max-width: 480px) {
-  #appContainer[data-ui-zoom] #controlsContainer { grid-template-columns: minmax(0,44px) 1fr repeat(3,minmax(0,44px)) 1fr minmax(0,44px); }
+  #appContainer[data-ui-zoom] #controlsContainer { grid-template-columns: minmax(0,44px) 1fr repeat(5,minmax(0,44px)) 1fr minmax(0,44px); }
   #appContainer[data-ui-zoom] #controlsContainer.sim-mode-active { grid-template-columns: minmax(0,44px) 1fr repeat(5,minmax(0,44px)) 1fr minmax(0,44px); }
 }
 .interface-zoom-option { display: block; }
