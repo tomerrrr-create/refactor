@@ -230,7 +230,7 @@ body {
 #btnRandom         { grid-area: 1 / 5; }
 
 #btnColorPicker    { grid-area: 2 / 3; }
-#btnSymmetry       { grid-area: 2 / 4; }
+#btnSymmetry       { grid-area: 1 / 7; }
 #btnBrushMode      { grid-area: 2 / 5; }
 
 
@@ -240,11 +240,11 @@ body {
 #btnToggleSimMode  { grid-area: 4 / 4; }
 
 /* Right Panel */
-#btnResizeUp       { grid-area: 1 / 7; }
+#btnResizeUp       { grid-area: 3 / 7; }
 #btnResizeDown     { grid-area: 2 / 7; }
 #btnResizeDown { display:none !important; }
 #btnResizeUp[data-resize-direction="decrease"] [data-resize-plus-stem] { display:none; }
-#btnGap            { grid-area: 3 / 7; }
+#btnGap            { grid-area: 2 / 7; }
 #btnDark { grid-area: 4 / 7; }
 
 #btnPlayPauseLife {
