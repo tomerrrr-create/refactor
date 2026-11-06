@@ -160,3 +160,13 @@ test('preset swipes preserve palette-order genetics independently of the selecte
  const snapshot=plain(c.getGameOfLifeRecordingRules());c.restoreGameOfLifeRules(snapshot);
  assert.equal(c.gameOfLifeRules.genetics,'palette-order');
 });
+
+test('returning restores browsed rules and saved cycle position without changing Yours or slots',()=>{
+ const {c}=browseHarness();c.browseEvolutionPreset('gameOfLife',1);c.browseEvolutionPreset('gameOfLife',1);
+ const before=plain(c.getGameOfLifeRecordingRules());c.armedSimulation='spiral';c.cycleGameOfLifeMode();
+ assert.equal(c.armedSimulation,'gameOfLife');assert.deepEqual(plain(c.getGameOfLifeRecordingRules()),before);assert.equal(c.isLifePlaying,false);
+ const slots=plain(c.gameOfLifeCycle);c.setGameOfLifeCycle(slots,1);const saved=plain(c.getGameOfLifeRecordingRules());
+ c.armedSimulation='magnet';c.cycleGameOfLifeMode();assert.deepEqual(plain(c.getGameOfLifeRecordingRules()),saved);
+ c.isExecutingMacroCommand=true;c.armedSimulation='spiral';c.cycleGameOfLifeMode();
+ assert.equal(c.gameOfLifeMode,'personal');assert.deepEqual(plain(c.gameOfLifeRules),slots[0]);
+});

@@ -172,3 +172,13 @@ test('Chi swipes locate the current named preset even with a personal Magnetic R
  c.chiFlowRules={...plain(presets.Electric),reach:17};
  c.browseEvolutionPreset('sandpile',-1);assert.deepEqual(plain(c.chiFlowRules),plain(presets.Fluent));
 });
+
+test('returning restores browsed rules and saved cycle position without changing Yours or slots',()=>{
+ const {c}=browseHarness();c.browseEvolutionPreset('sandpile',1);c.browseEvolutionPreset('sandpile',1);
+ const before=plain(c.getChiFlowRecordingRules());c.armedSimulation='spiral';c.cycleChiFlowMode();
+ assert.equal(c.armedSimulation,'sandpile');assert.deepEqual(plain(c.getChiFlowRecordingRules()),before);assert.equal(c.isLifePlaying,false);
+ const slots=plain(c.chiFlowCycle);c.setChiFlowCycle(slots,1);const saved=plain(c.getChiFlowRecordingRules());
+ c.armedSimulation='magnet';c.cycleChiFlowMode();assert.deepEqual(plain(c.getChiFlowRecordingRules()),saved);
+ c.isExecutingMacroCommand=true;c.armedSimulation='spiral';c.cycleChiFlowMode();
+ assert.equal(c.chiFlowMode,'personal');assert.deepEqual(plain(c.chiFlowRules),slots[0]);
+});

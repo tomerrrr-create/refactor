@@ -1783,7 +1783,7 @@ function handleEvolutionTap(simulation, onTap) {
     if (armedSimulation === simulation && !isLifePlaying) togglePlayPauseLife();
 }
 
-function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
+function armSimulation(simulationName, { recordIslandsStart = true, retainPreset = false } = {}) {
     if (isLifePlaying) return;
     if (!isExecutingMacroCommand) { replayCymaticsRules=null; replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
 
@@ -1857,11 +1857,11 @@ if (!isTogglingOff && simulationName !== null) {
 
 
         // הגדרת דיפולט (ברירת מחדל) לכפתורים מחזוריים כשהם נדלקים
-        if (simulationName === 'sandpile') {
+        if (simulationName === 'sandpile' && !retainPreset) {
             chiFlowMode = 'personal';
             chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
         }
-        if (simulationName === 'gameOfLife') {
+        if (simulationName === 'gameOfLife' && !retainPreset) {
             const genetics = gameOfLifeRules.genetics;
             gameOfLifeMode = 'personal';
             gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
@@ -3382,15 +3382,25 @@ function restoreGameOfLifeRules(snapshot) {
 function cycleGameOfLifeMode() {
     if (isLifePlaying && armedSimulation !== 'gameOfLife') return;
     const current = armedSimulation === 'gameOfLife' ? gameOfLifeMode : 'off';
-    const next = nextEvolutionMode(current, ['off', 'personal', 'shuffle', 'coral']);
+    const returning = current === 'off' && !isExecutingMacroCommand;
+    const next = returning ? gameOfLifeMode : nextEvolutionMode(current, ['off', 'personal', 'shuffle', 'coral']);
     if (next === 'off') {
         armSimulation(null);
+        // Explicit Off completes the tap cycle; switching away retains selection.
+        if (!isExecutingMacroCommand) {
+            const genetics = gameOfLifeRules.genetics;
+            gameOfLifeMode = 'personal';
+            gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
+            if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+        }
     } else {
         const genetics = gameOfLifeRules.genetics;
-        if (current === 'off') armSimulation('gameOfLife');
-        gameOfLifeMode = next;
-        gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(next)]);
-        if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+        if (current === 'off') armSimulation('gameOfLife', {retainPreset:returning});
+        if (!returning) {
+            gameOfLifeMode = next;
+            gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(next)]);
+            if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+        }
     }
     updateGameOfLifeButtonUI();
     window.logArtEvent('Game of Life Mode Changed', JSON.stringify({ ...getGameOfLifeRecordingRules(), mode: next }));
@@ -3465,13 +3475,21 @@ function restoreChiFlowRules(snapshot) {
 function cycleChiFlowMode() {
     if (isLifePlaying && armedSimulation !== 'sandpile') return;
     const current = armedSimulation === 'sandpile' ? chiFlowMode : 'off';
-    const next = nextEvolutionMode(current, ['off', 'personal', 'ripples', 'nova']);
+    const returning = current === 'off' && !isExecutingMacroCommand;
+    const next = returning ? chiFlowMode : nextEvolutionMode(current, ['off', 'personal', 'ripples', 'nova']);
     if (next === 'off') {
         armSimulation(null);
+        // Explicit Off completes the tap cycle; switching away retains selection.
+        if (!isExecutingMacroCommand) {
+            chiFlowMode = 'personal';
+            chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
+        }
     } else {
-        if (current === 'off') armSimulation('sandpile');
-        chiFlowMode = next;
-        chiFlowRules = cloneChiFlowRules(chiFlowCycle[['personal', 'ripples', 'nova'].indexOf(next)]);
+        if (current === 'off') armSimulation('sandpile', {retainPreset:returning});
+        if (!returning) {
+            chiFlowMode = next;
+            chiFlowRules = cloneChiFlowRules(chiFlowCycle[['personal', 'ripples', 'nova'].indexOf(next)]);
+        }
     }
     updateChiFlowButtonUI();
     window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
