@@ -30,6 +30,7 @@ export const dom = {
   btnDark: document.getElementById('btnDark'),
   btnSymmetry: document.getElementById('btnSymmetry'),
   btnColorPicker: document.getElementById('btnColorPicker'),
+  btnWind: document.getElementById('btnWind'),
   btnResetBoard: document.getElementById('btnResetBoard'),
   btnResizeUp: document.getElementById('btnResizeUp'),
   btnResizeDown: document.getElementById('btnResizeDown'),

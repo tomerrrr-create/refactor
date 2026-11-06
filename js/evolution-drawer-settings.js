@@ -11,7 +11,7 @@ export const EVOLUTION_CATALOG = Object.freeze([
 export const DEFAULT_EVOLUTION_SLOTS = Object.freeze(EVOLUTION_CATALOG.slice(0,10).map(e=>e.id));
 export const EVOLUTION_PAGE_SIZE = 10;
 export const DEFAULT_EVOLUTION_LAYOUT = Object.freeze([
-    ...DEFAULT_EVOLUTION_SLOTS, ...EVOLUTION_CATALOG.slice(10).map(e=>e.id), ...Array(7).fill(null)
+    ...DEFAULT_EVOLUTION_SLOTS, null, ...EVOLUTION_CATALOG.slice(10).map(e=>e.id), ...Array(6).fill(null)
 ]);
 export const isFixedEvolution = id => id === 'nudgeBrighter' || id === 'nudgeDarker';
 export const evolutionControlId = id => id === 'nudgeDarker' ? 'nudgeBrighter' : id;

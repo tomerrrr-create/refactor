@@ -129,7 +129,9 @@ test('drawer defaults compare by effective layout and custom drawers autosave in
  const {DEFAULT_EVOLUTION_LAYOUT,DEFAULT_EVOLUTION_SLOTS,moveEvolutionSlot}=await import('../js/evolution-drawer-settings.js');
  const disk=storage(),state=createProfileState(initial(),disk);
  const oldDefault=initial();oldDefault.settings.evolutionSlots=[...DEFAULT_EVOLUTION_SLOTS];
- state.replace(oldDefault);assert.equal(state.modified(0),false,'legacy first drawer plus its implicit second matches defaults');
+ state.replace(oldDefault);assert.equal(state.modified(0),true,'the preserved legacy layout differs from the new centered factory layout');
+ const centered=initial();centered.settings.evolutionSlots=[...DEFAULT_EVOLUTION_LAYOUT];
+ state.replace(centered);assert.equal(state.modified(0),false,'the explicit centered layout matches factory defaults');
  const edited=initial();edited.settings.evolutionSlots=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,0,19);
  state.observe(initial());state.capture(edited);state.persist();
  const reopened=createProfileState(initial(),disk);
