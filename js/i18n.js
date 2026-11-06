@@ -549,7 +549,6 @@ chi_preset_electric: { en: "Electric", he: "חשמל", ru: "Электричес
  chi_preset_nova: { en: "Nova", he: "נובה", ru: "Нова", nl: "Nova" },
   cycle_add: { en: "Add to cycle", he: "הוספה לסייקל", ru: "Добавить в цикл", nl: "Toevoegen aan cyclus" },
   cycle_remove: { en: "Remove from cycle", he: "הוצאה מהסייקל", ru: "Убрать из цикла", nl: "Uit cyclus verwijderen" },
-  cycle_assign_hint: {en:"Select this shortcut, then a preset to assign it.",he:"בחר קיצור זה, ואז פריסט לשיוך אליו.",ru:"Выберите этот ярлык, затем пресет для назначения.",nl:"Selecteer deze snelkeuze en daarna een voorinstelling om toe te wijzen."},
   cycle_custom: { en: "Yours", he: "שלך", ru: "Ваши", nl: "Jouw" },
   cycle_position: { en: "Cycle position", he: "מקום בסייקל", ru: "Место в цикле", nl: "Plek in cyclus" },
   chi_mode_personal: { en: "Personal", he: "אישי", ru: "Личный", nl: "Persoonlijk" },

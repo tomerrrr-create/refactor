@@ -117,17 +117,3 @@ test('legacy auto-saved shapes are discarded, explicit saved shapes are retained
   assert.equal(reopened.settings.brush.shape,shape);assert.equal(reopened.settings.brush.size,9);
  }
 });
-
-test('active selection is session-only until Save and survives profile switches and reopening',()=>{
- const disk=storage(),state=createProfileState(initial(),disk),base=state.draft();state.observe(base);
- const chosen=edit(base,s=>{s.settings.evolutionSelections={gameOfLife:{survival:[1],birth:[4]}};});
- state.capture(chosen);assert.equal(state.modified(0),true);assert.deepEqual(state.draft().settings.cycles,base.settings.cycles);
- assert.equal(createProfileState(initial(),disk).draft().settings.evolutionSelections,undefined,'unsaved choice does not leak to next opening');
- state.save();const reopened=createProfileState(initial(),disk);assert.deepEqual(reopened.draft().settings.evolutionSelections,chosen.settings.evolutionSelections);
- reopened.select(1);reopened.select(0);assert.deepEqual(reopened.draft().settings.evolutionSelections,chosen.settings.evolutionSelections);
- reopened.copyTo(2,chosen);assert.deepEqual(reopened.draft(2).settings.evolutionSelections,chosen.settings.evolutionSelections);
- const replayed=edit(chosen,s=>{s.settings.evolutionSelections.gameOfLife={survival:[8],birth:[0]};});
- reopened.beginReplay(chosen);reopened.endReplay(replayed);reopened.capture(replayed);assert.deepEqual(reopened.draft().settings.evolutionSelections,chosen.settings.evolutionSelections,'replay observation cannot become a personal selection');
- const equivalent=edit(base,s=>{s.settings.evolutionSelections={gameOfLife:structuredClone(s.settings.cycles.gameOfLife[0])};});
- reopened.replace(equivalent);assert.equal(reopened.modified(0),false,'explicit active rule matching its shortcut has no false star');
-});

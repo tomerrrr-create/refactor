@@ -2,7 +2,7 @@ import { INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from '../js/evoluti
 import { STARTUP_PROFILE_KEY } from '../js/startup-profile.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, loadProfileStartup, PROFILE_STORAGE_KEY, readProfileFile } from '../js/profile-state.js';
+import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, loadProfileStartup, PROFILE_STORAGE_KEY, readProfileFile, validateProfileSnapshot } from '../js/profile-state.js';
 import { CHI_FLOW_PRESETS } from '../js/constants.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
@@ -487,4 +487,20 @@ test('brightness default migration changes only missing smoothing and retains ex
  assert.equal(state.draft(1).settings.evolutionTuning.brightnessEvo.smoothing,.5);
  assert.equal(state.draft(2).settings.evolutionTuning.brightnessEvo.smoothing,.75);
  state.persist();assert.deepEqual(createProfileState(initial(),disk).draft(),state.draft());
+});
+
+test('profiles saved by retired swipes retain active choices, Yours and unrelated preferences',()=>{
+ const disk=storage(),profiles=[0,1,2].map(i=>({saved:factoryProfileSnapshot(i),draft:factoryProfileSnapshot(i)}));
+ const saved=profiles[0].saved,yours=structuredClone(saved.identity.gameOfLife.yoursRules),slots=structuredClone(saved.settings.cycles);
+ saved.settings.nudgeIntervalMs=37;saved.identity.gameOfLife.index=2;saved.identity.chiFlow.index=1;
+ saved.settings.evolutionSelections={gameOfLife:{survival:[1,8],birth:[0,4]},chiFlow:{awakening:[2,3],flow:[4],reach:0,reachPercent:400}};
+ profiles[0].draft=structuredClone(saved);disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:13,selected:0,profiles}));
+ const loaded=createProfileState(initial(),disk);assert.equal(loaded.storageError,false);const value=loaded.draft();
+ assert.equal(value.settings.evolutionSelections,undefined);assert.equal(value.settings.nudgeIntervalMs,37);
+ assert.deepEqual(value.settings.cycles.gameOfLife[2],saved.settings.evolutionSelections.gameOfLife);
+ assert.deepEqual(value.settings.cycles.chiFlow[1],saved.settings.evolutionSelections.chiFlow);
+ assert.deepEqual(value.settings.cycles.gameOfLife[0],slots.gameOfLife[0]);assert.deepEqual(value.identity.gameOfLife.yoursRules,yours);
+ loaded.persist();assert.deepEqual(createProfileState(initial(),disk).draft(),value);
+ const withoutIdentity=validateProfileSnapshot({settings:saved.settings});assert.equal(withoutIdentity.identity.gameOfLife.index,0);assert.deepEqual(withoutIdentity.settings.cycles.gameOfLife[0],saved.settings.evolutionSelections.gameOfLife);
+ assert.throws(()=>validateProfileSnapshot({...saved,identity:{}}));
 });

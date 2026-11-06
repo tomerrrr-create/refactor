@@ -3,7 +3,7 @@ import { DEFAULT_SEPARATOR_CYCLE } from './separator-cycle.js';
 import { resolveSavedBloom } from './soft-bloom.js';
 import { loadStartupProfile } from './startup-profile.js';
 import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
-import { validateWorkspaceSettings, deserializeWorkspaceSettings, defaultWorkspaceSettings } from './workspace-settings.js';
+import { validateWorkspaceSettings, deserializeWorkspaceSettings, defaultWorkspaceSettings, migrateEvolutionSelections } from './workspace-settings.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS, defaultGameOfLifeRules } from './constants.js';
 import { normalizeCycleSources, inferCycleSources } from './evolution-cycle-settings.js';
 
@@ -20,21 +20,29 @@ const canonical = value => JSON.stringify(value, function (key, item) {
 const equal = (a, b) => canonical(a) === canonical(b);
 
 export function validateProfileSnapshot(value) {
-    const settings = validateWorkspaceSettings(value.settings);
+    const original = validateWorkspaceSettings(value.settings);
+    const selections = original.evolutionSelections;
+    const settings = migrateEvolutionSelections(original, Object.fromEntries(
+        ['gameOfLife','chiFlow'].map(name => [name, value.identity?.[name]?.index ?? 0])));
     settings.simulationTheme ??= 'blue';
     settings.simulationPlaybackTheme ??= 'gold';
     const snapshot = { settings };
-    if (value.identity) {
+    if (value.identity || selections) {
         snapshot.identity = {};
         for (const [name, presets] of [['gameOfLife', GAME_OF_LIFE_PRESETS], ['chiFlow', CHI_FLOW_PRESETS]]) {
-            const identity = value.identity[name];
+            const identity = value.identity ? value.identity[name] : {
+                index: 0, yoursRules: original.cycles[name][0], sources: inferCycleSources(settings.cycles[name], presets)
+            };
             if (!identity || !Number.isInteger(identity.index) || identity.index < 0 || identity.index > 2) throw Error('Invalid profile identity');
             const cycles = clone(settings.cycles);
             cycles[name][0] = identity.yoursRules;
             const checked = validateWorkspaceSettings({ ...settings, cycles });
+            const sources = [...(identity.sources || [])];
+            if (selections?.[name]) sources[identity.index] = Object.entries(presets)
+                .find(([, rules]) => equal(rules, selections[name]))?.[0] || 'custom-' + identity.index;
             snapshot.identity[name] = {
                 index: identity.index,
-                sources: normalizeCycleSources(identity.sources, settings.cycles[name], presets),
+                sources: normalizeCycleSources(sources, settings.cycles[name], presets),
                 yoursRules: checked.cycles[name][0]
             };
         }
@@ -157,10 +165,8 @@ function defaultComparable(value, factory) {
     Object.assign(settings.smoothing, { bloom: bloom.enabled, bloomIntensity: bloom.intensity });
     const identity = Object.fromEntries(['gameOfLife', 'chiFlow'].map(name => [name, {
         index: snapshot.identity?.[name].index ?? 0,
-        yoursRules: snapshot.identity?.[name].yoursRules ?? factory.identity[name].yoursRules,
-        activeRules: settings.evolutionSelections?.[name] ?? settings.cycles[name][snapshot.identity?.[name].index ?? 0]
+        yoursRules: snapshot.identity?.[name].yoursRules ?? factory.identity[name].yoursRules
     }]));
-    delete settings.evolutionSelections;
     return { settings, identity };
 }
 
@@ -168,7 +174,7 @@ function defaultComparable(value, factory) {
 // saved. Other preferences (Startup, display, brush size/mode, etc.) still autosave.
 function withSavedSessionPreferences(draft, saved) {
     const result = clone(draft);
-    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics', 'contourAction']) {
+    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'gameOfLifeGenetics', 'contourAction']) {
         if (Object.hasOwn(saved.settings, key)) result.settings[key] = clone(saved.settings[key]);
         else delete result.settings[key];
     }

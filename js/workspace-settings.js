@@ -68,6 +68,19 @@ function validCycle(slots, chi) {
     });
 }
 
+// Read compatibility for the removed swipe feature. Keep the saved active
+// choice by folding it into its existing shortcut; new saves use ordinary slots.
+export function migrateEvolutionSelections(settings, indices = {}) {
+    if (!settings.evolutionSelections) return settings;
+    const result = clone(settings);
+    for (const [name, rules] of Object.entries(result.evolutionSelections)) {
+        const index = integer(indices[name], 0, 2) ? indices[name] : 0;
+        result.cycles[name][index] = clone(rules);
+    }
+    delete result.evolutionSelections;
+    return result;
+}
+
 export function validateWorkspaceSettings(value) {
     const settings = mergeKnown(defaultWorkspaceSettings(), value);
     settings.brush.size = normalizeBrushSize(settings.brush.size);

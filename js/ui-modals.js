@@ -1052,7 +1052,7 @@ updateActivePresetButton();
         presets: Object.entries(PRESET_RULES).map(([id, rules]) => ({ button: document.getElementById(id), rules })),
         state: app.getGameOfLifeCycle(), readRules: readGolCycleRules,
         writeRules: rules => applyGolPreset(rules.survival, rules.birth),
-        save: (slots, index, sources, yoursRules, activeRules) => app.setGameOfLifeCycle(slots, index, sources, yoursRules, golGeneticsDraft, activeRules),
+        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots, index, sources, yoursRules, golGeneticsDraft),
         saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
     const geneticsButton = document.createElement('button');
