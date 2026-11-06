@@ -686,6 +686,10 @@ Replay preserves operations, effective rules and generation targets. Determinism
 
 Manual canvas painting is blocked while a macro is loaded or playing. Board clicks during playback can switch fullscreen presentation. Loading a macro pauses an existing evolution first.
 
+Stopping or completing a macro releases its control-panel overlay independently of fullscreen animations. If a board transition is already running, fullscreen exits immediately; otherwise the usual exit animation remains. A pending fullscreen-entry callback does nothing after playback has stopped, and an exit callback never re-enters fullscreen after Escape.
+
+`tools/check-macro-overlay.mjs` checks real TXT loading, completion before/during/after fullscreen entry, manual Stop and Escape during exit on desktop and mobile, plus Undo/Redo and the first Random click after cleanup.
+
 `armSimulation` can cancel a loaded macro when the user manually arms an evolution while paused. Playback sets `isExecutingMacroCommand` to bypass that kill switch and suppress duplicate logging. Do not assume every possible button interaction cancels a running macro; check the handler and its playback guards.
 
 ## FYI installation and offline use
