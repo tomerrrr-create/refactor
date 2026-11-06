@@ -230,9 +230,9 @@ body {
 #btnRandom         { grid-area: 4 / 6; }
 #btnCycleSort      { grid-area: 4 / 7; }
 
-#btnColorPicker    { grid-area: 2 / 4; }
+#btnColorPicker    { grid-area: 3 / 4; }
 #btnSymmetry       { grid-area: 1 / 9; }
-#btnBrushMode      { grid-area: 2 / 6; }
+#btnBrushMode      { grid-area: 3 / 6; }
 
 
 #btnRedo           { grid-area: 4 / 1; }
@@ -376,11 +376,12 @@ body {
     transition: fill 0.2s ease-in-out;
 }
 #btnBrushMode.brush-on svg path {
-    fill: #fff;
-}
-#btnBrushMode.brush-continuous svg path {
     fill: var(--gold);
     stroke: var(--gold);
+}
+#btnBrushMode.brush-continuous svg path {
+    fill: #fff;
+    stroke: #fff;
 }
 .app-shell {
   width: min(85vmin, 720px);

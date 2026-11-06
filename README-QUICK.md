@@ -6,7 +6,7 @@ For complete interactions, engine behavior, compatibility and maintenance instru
 
 ## Create and choose colors
 
-- The brush cycles through **Paint → Continuous → Copy**. Continuous connects points while dragging; Copy transfers a source color to the brush footprint.
+- The brush cycles through **Paint → Continuous → Copy**. Continuous (white triangle, factory default) connects points while dragging; ordinary Paint uses a gold triangle. Copy keeps its outlined triangle and transfers a source color to the brush footprint.
 - Tap the palette, color or sorting controls for their ordinary actions; swipe upward for their pickers/settings. Hold Color for 600 ms to select the first palette entry, or 1,200 ms total for rainbow.
 - The color and palette pickers share a frame, backdrop and top navigation anchor. Their top palette icon switches between the two views. Palette categories are **23, 64, 264 and •**.
 - Palette sorting preserves visible board colors and the selected paint color while changing their palette indices.
