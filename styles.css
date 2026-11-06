@@ -1998,6 +1998,7 @@ body.wind-mode #board { cursor: crosshair; }
 .tuning-modes.wind-mode-buttons button { display: grid; place-items: center; width: 52px; height: 52px; padding: 10px; border-radius: 50%; flex-shrink: 0; }
 .wind-mode-buttons svg { width: 28px; height: 28px; }
 #btnColorPicker { border-radius: 50%; }
+#btnWind { color: #424242; }
 #btnWind.wind-active { color: var(--gold); }
 .wind-mode-field p { margin-top: 10px; color: #b7b2a8; font-size: 12px; line-height: 1.6; }
 
