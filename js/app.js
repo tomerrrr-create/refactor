@@ -3562,7 +3562,8 @@ function cycleCymaticsMode(){
     const activating=armedSimulation!=='cymatics';
     if(activating)armSimulation('cymatics');
     const rules=getCymaticsRules(),current=rules.resonanceVersion??1;
-    const next=activating?current:nextEvolutionMode(current,['off',4,3,1,2,5,6]);
+    const cycle=['off',4,3,6];
+    const next=activating?current:(cycle.includes(current)?nextEvolutionMode(current,cycle):4);
     const selected=selectCymaticsMap(rules,next==='off'?4:next,cymaticsFrequencies,cymaticsStrengths);
     const running=isLifePlaying;
     if(saveCymaticsSettings(selected.rules,selected.frequencies,selected.strengths)===false)return;
