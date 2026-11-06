@@ -2956,7 +2956,7 @@ function onPointerDown(e) {
 
     if (isMacroPlaying) {
         animateBoardTransition(() => {
-            toggleMacroFullScreen();
+            if (isMacroPlaying) toggleMacroFullScreen();
         });
         return;
     }
@@ -4776,15 +4776,17 @@ function stopMacro() {
     pendingMacroPalette = null; 
     isSelectingMacroPalette = false; 
     
-    // --- תוספת: יציאה ממסך מלא אוטומטית עם אנימציה חלקה ---
+    // Releasing controls must never depend on an animation accepting its callback.
+    dom.macroOverlay.classList.remove('active', 'running');
     if (typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen) {
-        animateBoardTransition(() => {
+        if (isAnimating) {
             toggleMacroFullScreen();
-            dom.macroOverlay.classList.remove('active', 'running');
-        });
+        } else {
+            animateBoardTransition(() => {
+                if (isMacroFullscreen) toggleMacroFullScreen();
+            });
+        }
     } else {
-        // מעלים את הכל בלחיצה (במידה ולא היינו במסך מלא)
-        dom.macroOverlay.classList.remove('active', 'running');
         dom.boardOverlay.style.opacity = '0';
     }
 }
