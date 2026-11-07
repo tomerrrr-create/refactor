@@ -9,10 +9,6 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  baby_enter: {en:"Baby mode",he:"מצב תינוק",ru:"Детский режим",nl:"Babymodus"},
-  baby_exit_hold: {en:"Hold for 3 seconds to exit Baby mode",he:"החזיקו 3 שניות ליציאה ממצב תינוק",ru:"Удерживайте 3 секунды для выхода из детского режима",nl:"Houd 3 seconden vast om de babymodus te verlaten"},
-  baby_exit_title: {en:"Leave Baby mode?",he:"לצאת ממצב תינוק?",ru:"Выйти из детского режима?",nl:"Babymodus verlaten?"},
-  baby_exit_confirm: {en:"Leave",he:"יציאה",ru:"Выйти",nl:"Verlaten"},
   tooltip_cymatics: {"en":"Resonance","he":"תהודה","ru":"Резонанс","nl":"Resonantie"},
   help_cymatics: {"en":"Resonance\nDraw colors, select Resonance and press Play. Tap again to cycle all six resonance maps; paused cycles also include Off. Swipe up for all six maps and settings. Gold cells remain protected.","he":"תהודה\nציירו צבעים, בחרו תהודה ולחצו Play. לחיצות נוספות מחליפות בין כל שש מפות התהודה; בהשהיה המחזור כולל גם כיבוי. החליקו למעלה לבחירה מכל שש המפות ולהגדרות. תאי הזהב מוגנים.","ru":"Резонанс\nНарисуйте цвета, выберите резонанс и нажмите Play. Нажатия переключают все шесть карт резонанса; на паузе доступно выключение. Смахните вверх для всех шести карт и настроек. Золотые клетки защищены.","nl":"Resonantie\nTeken kleuren, kies Resonantie en druk op Play. Tik opnieuw voor alle zes resonantiekaarten; gepauzeerd volgt ook Uit. Veeg omhoog voor alle zes kaarten en instellingen. Gouden cellen blijven beschermd."},
   cymatics_map_clouds: {"en":"Clouds","he":"עננים","ru":"Облака","nl":"Wolken"},

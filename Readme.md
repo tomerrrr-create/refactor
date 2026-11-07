@@ -1,6 +1,6 @@
 # Follow Your Intuition — Extended User and Maintainer Guide
 
-Follow Your Intuition is a browser-based canvas for meditative pixel art and evolving color patterns. Its regular control panels are **creation** and **evolution**, with a simplified **Baby mode** available from the technician menu. Draw, copy, reorder colors and explore cellular or spatial behaviors on the same square board.
+Follow Your Intuition is a browser-based canvas for meditative pixel art and evolving color patterns. Its two working modes are **creation** and **evolution**. Draw, copy, reorder colors and explore cellular or spatial behaviors on the same square board.
 
 This is the complete guide to the application's current interactions, defaults, engine behavior and file compatibility. [README-QUICK.md](README-QUICK.md) is a shorter overview; use the details here when its older summaries differ. Internal identifiers are shown where they matter for maintenance; displayed names may differ.
 
@@ -28,20 +28,6 @@ The brush cycles **Paint → Continuous → Copy**. The white filled triangle in
 The brush picker offers **Circle, Square, Diamond, Ring and a horizontal Line**, in sizes **1, 3, 5, 7, 9, 11, 13, 15 and XL (23 cells)**. Older XL=21 preferences migrate to 23. Footprints clip at board edges. With no selected color, tapping advances a tile's palette entry or removes its protected gold flag; painting a drag uses its source color. Rainbow chooses random palette entries while painting.
 
 Brushes also work while a simulation runs: taps and drags change the current board, and the simulation continues from those edits. Wind and brushes are mutually exclusive board tools; switch Wind off to return to the brush. Loaded macros block manual painting.
-
-### Baby mode
-
-Enter **Baby mode** from the technician menu. It is a temporary view in the same app, not a separate branch or profile. The toolbar shows exactly seven controls: Play/Pause, Color/brush, Wind, Brightness evolution, Islands, Gravity and Nudge. There is no Single step, drawer switch, resize, sorting or technician control in this view. The existing simulation cycles, settings and live handoffs remain available. Brightness evolution starts selected and paused. Color/brush opens its picker on a tap as well as a swipe up; palettes, brush shapes and widths remain accessible there. The picker's Sort and mirrored Symmetry/Separators controls are hidden.
-
-Entry centers the existing cells on a **249×249** board without resampling: smaller artwork is padded with the existing resize background (palette entry zero), and larger artwork is cropped evenly at the edges. Existing cell colors and protected gold are preserved. Sorting is fixed to **Dark Rainbow**, separators are zero, symmetry is off and the brush starts in Continuous Rainbow mode using the current shape/width. Palette/color/brush choices can then be changed normally. Entry records ordinary resize, sorting and separator operations, with a history boundary; it does not introduce a new recipe format.
-
-Several fingers can paint simultaneously, including during playback. Each has its own continuous line and source color; removing, cancelling or moving a finger off the board stops only that finger. The overlapping group owns one paused Undo action and, when progressive recording is on, one BRUSH_START/BRUSH_END group. Live groups retain the existing simulation-checkpoint boundaries. Baby brush samples set both pigment rank and fractional brightness to the recorded rank, including unchanged-rank targets, so replaying a sample during Brightness evolution has the same effect. Already-sampled cells are committed on interruption, blur or before opening controls; secondary fingers never connect their paths to each other. Ordinary-mode input still accepts only its existing single pointer. Wind keeps its original input rules and full Off/ripple/paint/displace cycle; Color/brush remains disabled and dimmed during Wind.
-
-A small gray lock is the only additional control. Hold it continuously for three seconds, then confirm to exit. A short tap, early release, leaving its target, cancellation, blur or hiding the page does not unlock it. Keyboard users can hold Space/Enter for the same interval. The confirmation closes with Cancel or Escape and keeps Baby mode active. Opening this confirmation finalizes drawing and pending Wind fronts.
-
-Exit pauses playback, disables Wind and keeps the resulting **249×249 artwork**, current palette and brush color/shape/width. The previous regular panel, drawer assignments, brush-mode/symmetry and sort order return; restoring sort remaps indices to preserve visible colors. Baby mode does not overwrite saved profile/startup choices and does not persist across a page reload. Existing export/storage behavior is unchanged: keep the app open or export after exit to retain artwork across reloads. Entry is unavailable during a loaded/playing macro or board transition.
-
-The regular technician menu also contains **Branches** links to Production and Work. Both open their existing Vercel URLs in a new tab, leaving the current drawing open; these are links, not a transfer of artwork between origins.
 
 ### Controls and gestures
 
@@ -224,7 +210,6 @@ The code is modularized to separate logic, state, and UI:
 * **`js/dom-elements.js`**: A central `dom` object mapping all required HTML elements. This avoids repetitive DOM lookups and keeps the code clean.
 * **`js/simulations.js`**: Re-exports several engines from `simulations/`; Islands, Cracks and Resonance are imported directly by `app.js`. It is not the complete engine registry.
 * **`js/simulations/*.js`**: Engine implementations. Some return copied state; others deliberately mutate the current board or retain reusable buffers.
-* **`js/baby-mode.js`**, **`js/multi-pointer-brush.js`**: Session-only reduced controls, parent exit and independent simultaneous brush pointers; `app.js` owns artwork/history integration.
 * **`js/ui-modals.js`**: Coordinates many modal windows and delegates to specialized dialog modules (Settings, Color Picker, Help) using Dependency Injection.
 * **`js/i18n.js`**: English, Hebrew, Russian and Dutch translations. Update all four when changing interface text.
 * **`js/data/palettes.js`**: Palette colors, stable original names, icons and archive flags.
@@ -664,7 +649,7 @@ Input is handled via a unified Pointer Event system supporting mouse and touch:
 * **Brush Mode**: `isBrushModeOn` selects painting; `isContinuousBrushOn` adds line completion between successive anchors. Copy mode tracks a dragged source and applies it at the destination. Gesture cancellation and suppressed compatibility clicks prevent duplicate actions.
 * **Symmetry**: Holding its control for 600 ms selects Kaleidoscope directly from any mode, including when Kaleidoscope is already selected. Releasing the hold does not advance the cycle. This also works on the mirrored Symmetry control in the brush picker; when that control shows Separators instead, holding it does not change symmetry. Ordinary taps still cycle modes and swipe up still turns symmetry off. Selecting symmetry does not paint or pause an ordinary running evolution; brush packets already record the expanded target cells for macro replay. All manual interactions automatically trigger the `getSymmetricIndices` helper to apply changes across the Vertical, Horizontal, Mandala, or Kaleidoscope axes.
 * **Live brushes**: Painting, continuous lines, copying, rainbow, brush radius and symmetry work during simulation playback. A running simulation is not paused by drawing. Holding the board while running does not reset the selected color or open a picker; those board shortcuts remain available when paused. This is separate from holds on the Color control. Macro playback retains its existing full-screen tap behavior and accepts no live painting.
-* **Gesture boundaries**: A control action, Pause, pointer cancellation/capture loss, blur or hiding the page finalizes an active brush gesture without adding a release tap. Outside Baby mode, secondary pointers cannot replace its owner. Baby mode groups simultaneous pointers as described above. Wind exclusively receives board input while enabled; disabling it stops and commits every pending front before brush input resumes.
+* **Gesture boundaries**: A control action, Pause, pointer cancellation/capture loss, blur or hiding the page finalizes an active brush gesture without adding a release tap. Secondary pointers cannot replace its owner. Wind exclusively receives board input while enabled; disabling it stops and commits every pending front before brush input resumes.
 * **History boundaries:** The first painted sample of each live brush gesture checkpoints earlier simulation generations; the current segment owns the subsequent stroke and evolution. See [Undo and redo](#undo-and-redo). DLA crystal/empty-cell indexes synchronize after live brush samples and replayed strokes.
 
 ### Styling and animations (`styles.css`)
@@ -777,7 +762,6 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Settings entry focus and keyboard navigation | `tools/check-settings-focus.mjs` |
 | Toolbar layout | `tools/check-evolution-drawer.mjs` |
-| Baby mode, centered crop/padding, simultaneous touches, Wind, parent exit, history and recipe replay | `tools/check-baby-mode.mjs` (`BABY_LANG` filters languages) |
 | Dedicated Wind cycle, settings, removed color gesture, mouse/touch, history and recipe replay | `tools/check-wind-button.mjs` |
 | Wind-only disabled/dimmed brush and Symmetry controls, keyboard/hold/swipe blocking and restored choices | `tools/check-wind-disabled-controls.mjs` |
 | Contours/Separators utility swap, independent Symmetry, pointer/touch, settings, history and macro replay | `tools/check-contour-utility.mjs` |

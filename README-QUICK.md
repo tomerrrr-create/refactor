@@ -27,12 +27,6 @@ Resonance starts in the second drawer. Its toolbar cycle is Circular → Interfe
 
 Wind has a dedicated button in the simulation panel above Nudge. Tap to cycle Local ripple → Paint color rings → Move existing colors → Off; active Wind is gold. Swipe up while active for settings. Color/brush and Symmetry are strongly dimmed and unavailable during Wind; switching Wind off restores their previous choices. The former downward swipe on Color/brush is removed. Nudge now sits in the former minus position.
 
-## Baby mode
-
-Open **Baby mode** in the technician menu for seven controls: Play/Pause, Color/brush, Wind, Brightness evolution, Islands, Gravity and Nudge. Existing artwork is centered without resampling on a fixed **249×249** canvas; larger boards are cropped at the edges. Start with Continuous Rainbow painting, Dark Rainbow sorting, no separators and Brightness evolution selected but paused. Several fingers can draw independently at once, including during Play. Color/brush opens the color, palette and brush choices; Wind retains its usual cycles and temporarily disables Color/brush. There is no Single step.
-
-To exit, hold the small gray lock for **three seconds** and confirm. Exit retains the resulting artwork at 249×249, pauses playback and restores the regular panel. The mode is session-only and does not automatically save artwork. The technician menu's **Branches** links open Production or Work in a separate tab.
-
 ## Two simulation drawers
 
 The simulation overlay has **two drawers**, each with ten fixed places in two rows of five. All fourteen evolutions appear exactly once across them. Empty places are invisible on the control panel, and the frame keeps the same size.

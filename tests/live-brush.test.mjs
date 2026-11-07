@@ -3,16 +3,14 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import {getBrushTiles} from '../js/brush-footprint.js';
-import {createMultiPointerBrush} from '../js/multi-pointer-brush.js';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 const copy=value=>JSON.parse(JSON.stringify(value));
-function harness({live=true,continuous=false,brush=1,shape='circle',symmetry='off',progressive=false,baby=false}={}){
+function harness({live=true,continuous=false,brush=1,shape='circle',symmetry='off',progressive=false}={}){
  const logs=[],checkpoints=[],history=[],captures=new Set(),timers=new Map();let snapshots=0,serial=0,syncs=0;
  const rng=Object.create(Math);rng.random=()=>.75;
  const canvas={setPointerCapture:id=>captures.add(id),hasPointerCapture:id=>captures.has(id),releasePointerCapture:id=>captures.delete(id),getBoundingClientRect:()=>({left:0,top:0,right:90,bottom:90})};
  const c=vm.createContext({clearPaletteColorTransition() {}, capturePaletteColors() { return null; }, showPaletteColorTransition() {}, dom: { board: {} }, n:9,boardState:Array.from({length:81},()=>({k:3,v:3,isGold:false})),isLifePlaying:live,
   recordPausedBrushMotion:progressive,replayBrushBefore:null,simulationStartState:live?{}:null,simulationHasBrushInput:false,isBreathing:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
-  isBabyMode:baby,createMultiPointerBrush,document:{querySelector:()=>null},
   windMode:false,windPainter:{down:()=>true,move(){},up(){}},windPointerId:null,canvas,brushSize:brush,brushShape:shape,getBrushTiles,symmetryMode:symmetry,
   isBrushModeOn:true,isContinuousBrushOn:continuous,isRainbowModeActive:false,selectedColorIndex:0,selectedColor:'#000000',
   armedSimulation:'gravitationalSort',dlaState:null,performance:{now:()=>100},Math:rng,Map,Set,
@@ -238,46 +236,4 @@ test('each live stroke creates its own boundary, but cancelled untouched input c
  const second=copy(h.c.boardState);h.down(35,15);h.up(35,15);
  assert.equal(h.snapshots,2);assert.equal(h.checkpoints.length,4);
  h.c.undo();assert.deepEqual(h.c.boardState,second);h.c.undo();assert.deepEqual(h.c.boardState,first);
-});
-
-test('Baby multitouch paints independent continuous paths and commits one paused history action',()=>{
- const h=harness({live:false,baby:true,continuous:true,progressive:true});
- h.down(5,5,1);h.down(5,75,2,{isPrimary:false});
- assert.equal(h.history.length,0);assert.equal(h.timers.size,0);
- h.move(65,5,1);h.up(65,5,1);
- assert.equal(h.history.length,0,'lifting the first finger keeps the group open');
- h.move(65,75,2);h.up(85,75,2);
- assert.equal(h.history.length,1);assert.equal(h.captures.size,0);
- const painted=h.c.boardState.map((tile,i)=>tile.k===0?i:-1).filter(i=>i>=0);
- assert.deepEqual(painted,[0,1,2,3,4,5,6,63,64,65,66,67,68,69,70,71]);
- assert.equal(h.logs.filter(e=>e.name==='BRUSH_START').length,1);
- assert.equal(h.logs.filter(e=>e.name==='BRUSH_END').length,1);
- const packets=h.logs.filter(e=>e.name==='DRAW_STROKE').flatMap(e=>e.data);
- assert(packets.some(t=>t.i===0));assert(packets.some(t=>t.i===71));
-});
-test('Baby pointer cancellation or leaving the board stops only that finger; controls finalize the group',()=>{
- const h=harness({live:false,baby:true,continuous:true});
- h.down(5,5,1);h.down(5,75,2,{isPrimary:false});
- h.move(-5,5,1);assert.equal(h.history.length,0);
- h.move(25,75,2);h.up(25,75,2,'pointercancel');
- assert.equal(h.history.length,1);assert.equal(h.captures.size,0);
- assert.equal(h.c.boardState[1].k,3,'no line is drawn outside or back from the other finger');
- h.down(25,25,3);h.down(45,45,4,{isPrimary:false});h.c.finishBrushGesture();
- assert.equal(h.history.length,2);assert.equal(h.captures.size,0);
-});
-test('Baby live multitouch shares one simulation checkpoint and records only brush targets',()=>{
- const h=harness({live:true,baby:true,continuous:true});
- h.down(5,5,1);h.down(5,75,2,{isPrimary:false});h.move(25,75,2);h.up(5,5,1);h.up(25,75,2);
- assert.equal(h.checkpoints.filter(e=>e.name==='BRUSH_CHECKPOINT').length,1);
- assert.equal(h.history.length,1,'only the preceding simulation segment is committed until Pause');
- assert.equal(h.c.simulationHasBrushInput,true);
- assert.equal(h.logs.filter(e=>e.name==='DRAW_STROKE').flatMap(e=>e.data).some(t=>t.i===40),false);
-});
-
-test('Baby paint of an unchanged rank resets its fractional brightness just as its recorded packet does',()=>{
- const h=harness({live:true,baby:true,continuous:true});
- h.c.boardState[0].k=0;h.c.boardState[0].v=.4;
- h.down(5,5,1);h.up(5,5,1);
- assert.equal(h.c.boardState[0].k,0);assert.equal(h.c.boardState[0].v,0);
- assert.equal(h.logs.find(e=>e.name==='DRAW_STROKE').data[0].k,0);
 });
