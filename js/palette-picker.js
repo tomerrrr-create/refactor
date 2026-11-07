@@ -136,7 +136,8 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const symbol = element('span', 'palette-choice-symbol');
         symbol.append(paletteIcon(palette));
         const preview = element('span', 'palette-choice-preview');
-        preview.append(colorMosaic(getPalettePreviewColors(palette), currentPreviewHost ? 3 : 6));
+        const previewSide = currentPreviewHost ? ({ extended: 4, continuous: 7 }[activeGroup.id] ?? 3) : 6;
+        preview.append(colorMosaic(getPalettePreviewColors(palette), previewSide));
         preview.hidden = deferredSelection && index !== pendingIndex;
         button.classList.toggle('is-preview', deferredSelection && index === pendingIndex);
         if (currentPreviewHost) {
