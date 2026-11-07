@@ -220,6 +220,7 @@ let paletteHoldOpeningClick = false;
 
 function closePaletteModal() {
     finishPickerDialogTransition();
+    app.cancelMacroPaletteSelection?.();
     paletteHoldOpeningClick = false;
     app.dom.paletteModal.classList.remove('modal-visible');
     app.dom.btnPalette.focus({ preventScroll: true });
@@ -804,6 +805,8 @@ function populatePaletteModal() {
         getText: app.getText,
         rtl: app.getCurrentLang() === 'he',
         showCurrentLabel: false,
+        deferredSelection: true,
+        allowCurrentSelection: app.isSelectingMacroPalette(),
         currentPreviewHost: document.getElementById('paletteCurrentPreview'),
         onCurrent() {
             transitionPickerDialog({ from: app.dom.paletteModal, to: app.dom.colorPickerModal,
@@ -1839,7 +1842,7 @@ export function initializeModals(appContext) {
         if (event.key === 'Escape') { event.preventDefault(); closePaletteModal(); }
         if (event.key === 'Tab') {
             const targets = [...app.dom.paletteModal.querySelectorAll('button, [tabindex="0"]')]
-                .filter(node => node.tabIndex >= 0 && node.getClientRects().length);
+                .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);
             const first = targets[0], last = targets[targets.length - 1];
             if (event.shiftKey && document.activeElement === first) {
                 event.preventDefault(); last?.focus();

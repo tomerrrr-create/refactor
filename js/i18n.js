@@ -9,6 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  palette_apply: {en:"Apply",he:"החלה",ru:"Применить",nl:"Toepassen"},
+  palette_preview: {en:"Preview",he:"תצוגה מקדימה",ru:"Предпросмотр",nl:"Voorbeeld"},
   branches_title: {en:"Branches",he:"ענפים",ru:"Ветки",nl:"Versies"},
   branches_work: {en:"Work",he:"עבודה",ru:"Рабочая",nl:"Werk"},
   branches_baby: {en:"Baby mode",he:"מצב תינוק",ru:"Детская",nl:"Babymodus"},

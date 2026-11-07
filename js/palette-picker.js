@@ -85,8 +85,9 @@ function colorMosaic(colors, side = 6) {
 }
 
 // Presentation only: group navigation never changes the board or records actions.
-export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, onCurrent, currentPreviewHost = null, showCurrentLabel = true, rtl = false, idPrefix = 'palette' }) {
+export function renderPalettePicker(host, { palettes, groups, selectedIndex, getText, onSelect, onCurrent, currentPreviewHost = null, showCurrentLabel = true, rtl = false, idPrefix = 'palette', deferredSelection = false, allowCurrentSelection = false }) {
     host.replaceChildren();
+    host.classList.toggle('palette-picker-deferred', deferredSelection);
     currentPreviewHost?.replaceChildren();
     host.dir = rtl ? 'rtl' : 'ltr';
     const availableGroups = groups.filter(group => group.indexes.length);
@@ -100,14 +101,17 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     const description = element('p', 'palette-group-description');
     description.id = `${idPrefix}-group-description`;
     description.setAttribute('aria-live', 'polite');
-    const current = element(onCurrent ? 'button' : 'div', 'palette-current-summary');
+    let pendingIndex = null;
+    const current = element(onCurrent && !deferredSelection ? 'button' : 'div', 'palette-current-summary');
     current.id = `${idPrefix}-current-summary`;
     current.hidden = !palettes[selectedIndex];
     if (onCurrent) {
-        current.type = 'button';
-        current.setAttribute('aria-haspopup', 'dialog');
         current.setAttribute('aria-label', `${getText('brush_picker_title')} — ${palettes[selectedIndex] ? getPaletteDisplayName(palettes[selectedIndex]) : ''}`);
-        current.addEventListener('click', onCurrent);
+        if (!deferredSelection) {
+            current.type = 'button';
+            current.setAttribute('aria-haspopup', 'dialog');
+            current.addEventListener('click', onCurrent);
+        }
     }
     const list = element('div', 'palette-choice-list');
     list.id = `${idPrefix}-choice-panel`;
@@ -120,7 +124,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const button = element('button', 'palette-choice' + (selected ? ' is-current' : ''));
         button.type = 'button';
         button.dataset.paletteIndex = index;
-        button.setAttribute('aria-pressed', String(index === selectedIndex));
+        button.setAttribute('aria-pressed', String(deferredSelection ? index === pendingIndex : index === selectedIndex));
         button.setAttribute('aria-label', `${getPaletteDisplayName(palette)}, ${palette.colors.length} ${getText('palette_colors')}`);
         const title = element('span', 'palette-choice-title');
         title.dir = 'ltr';
@@ -133,9 +137,11 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         symbol.append(paletteIcon(palette));
         const preview = element('span', 'palette-choice-preview');
         preview.append(colorMosaic(getPalettePreviewColors(palette), currentPreviewHost ? 3 : 6));
+        preview.hidden = deferredSelection && index !== pendingIndex;
+        button.classList.toggle('is-preview', deferredSelection && index === pendingIndex);
         if (currentPreviewHost) {
             if (showCount) title.append(count);
-            button.append(symbol, preview, title);
+            button.append(symbol, title, preview);
         } else {
             if (showCount) symbol.prepend(count);
             title.append(symbol);
@@ -144,8 +150,32 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         if (selected) {
             button.id = idPrefix === 'palette' ? 'active-palette-preview' : `${idPrefix}-active-palette-preview`;
         }
-        button.addEventListener('click', () => onSelect(index));
+        button.addEventListener('click', () => {
+            if (!deferredSelection) { onSelect(index); return; }
+            pendingIndex = pendingIndex === index ? null : index;
+            refreshPendingSelection();
+        });
         return button;
+    }
+    function refreshPendingSelection() {
+        for (const button of list.children) {
+            const selected = Number(button.dataset.paletteIndex) === pendingIndex;
+            button.classList.toggle('is-preview', selected);
+            button.setAttribute('aria-pressed', String(selected));
+            button.querySelector('.palette-choice-preview').hidden = !selected;
+        }
+        const palette = palettes[pendingIndex ?? selectedIndex];
+        const details = current.querySelector('.palette-current-details');
+        if (palette && details) {
+            const name = getPaletteDisplayName(palette);
+            const icon = paletteIcon(palette); icon.classList.add('palette-current-icon');
+            details.querySelector('.palette-current-icon')?.replaceWith(icon);
+            const label = details.querySelector('.palette-current-name');
+            label.textContent = name; label.title = name;
+            details.querySelector('.palette-choice-count').textContent = `${palette.colors.length} ${getText('palette_colors')}`;
+            current.setAttribute('aria-label', getText(pendingIndex === null ? 'palette_current' : 'palette_preview') + ' — ' + name);
+        }
+        applyButton.disabled = pendingIndex === null || (!allowCurrentSelection && pendingIndex === selectedIndex);
     }
 
     if (palettes[selectedIndex]) {
@@ -184,6 +214,26 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
             current.append(details, ribbon, icon);
         }
     }
+    let applyButton;
+    if (deferredSelection) {
+        current.removeAttribute('aria-label');
+        const details = current.querySelector('.palette-current-details');
+        details.setAttribute('aria-live', 'polite');
+        details.id = `${idPrefix}-pending-name`;
+        applyButton = element('button', 'palette-apply', getText('palette_apply'));
+        applyButton.type = 'button'; applyButton.id = `${idPrefix}-apply`;
+        applyButton.setAttribute('aria-describedby', details.id);
+        applyButton.disabled = true;
+        applyButton.addEventListener('click', () => {
+            if (!applyButton.disabled && pendingIndex !== null) {
+                applyButton.disabled = true;
+                onSelect(pendingIndex);
+            }
+        });
+        current.append(applyButton);
+        refreshPendingSelection();
+    }
+
     function showGroup(group) {
         activeGroup = group;
         list.dataset.activeGroup = group.id;
@@ -247,7 +297,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     // The host can still be hidden while it is populated. Wait for the opening
     // layout before revealing the selected card; manual tab browsing stays at
     // the top of each group as before.
-    const selectedCard = list.querySelector('[aria-pressed="true"]');
+    const selectedCard = list.querySelector('.is-current');
     if (selectedCard) requestAnimationFrame(() => {
         if (selectedCard.isConnected && selectedCard.getClientRects().length) {
             selectedCard.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });

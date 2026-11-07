@@ -46,19 +46,19 @@ try {
  const paletteLayout=await page.locator('#paletteModal').evaluate(modal=>{
   const preview=modal.querySelector('#palette-current-preview'),footer=modal.querySelector('#palette-current-summary');
   const header=preview.getBoundingClientRect(),details=footer.querySelector('.palette-current-details').getBoundingClientRect(),bottom=footer.getBoundingClientRect(),tabs=modal.querySelector('.palette-group-tab').getBoundingClientRect();
-  const children=[...footer.querySelector('.palette-current-details').children].map(e=>e.getBoundingClientRect());
+  const children=[...footer.querySelector('.palette-current-details').children].filter(e=>e.getClientRects().length).map(e=>e.getBoundingClientRect());
   const contentLeft=Math.min(...children.map(r=>r.left)),contentRight=Math.max(...children.map(r=>r.right));
-  return {aligned:Math.abs(header.top+header.height/2-tabs.top-tabs.height/2)<1,centered:Math.abs((contentLeft+contentRight)-(bottom.left+bottom.right))<2,headerRibbon:!!preview.querySelector('.palette-color-ribbon'),headerIcon:!!preview.querySelector('.palette-current-icon'),headerGrid:preview.querySelectorAll('.palette-current-mosaic i').length,iconWidth:preview.querySelector('.palette-current-icon').getBoundingClientRect().width,iconHeight:preview.querySelector('.palette-current-icon').getBoundingClientRect().height,buttonWidth:header.width,buttonHeight:header.height,icon:preview.querySelector('.palette-current-icon').innerHTML,footerIcon:footer.querySelector('.palette-current-details')?.firstElementChild?.classList.contains('palette-current-icon'),footerRibbon:!!footer.querySelector('.palette-color-ribbon'),headerOverflow:preview.scrollWidth>preview.clientWidth+1};
+  return {aligned:Math.abs(header.top+header.height/2-tabs.top-tabs.height/2)<1,footerFits:contentLeft>=bottom.left&&contentRight<=bottom.right,headerRibbon:!!preview.querySelector('.palette-color-ribbon'),headerIcon:!!preview.querySelector('.palette-current-icon'),headerGrid:preview.querySelectorAll('.palette-current-mosaic i').length,iconWidth:preview.querySelector('.palette-current-icon').getBoundingClientRect().width,iconHeight:preview.querySelector('.palette-current-icon').getBoundingClientRect().height,buttonWidth:header.width,buttonHeight:header.height,icon:preview.querySelector('.palette-current-icon').innerHTML,footerIcon:footer.querySelector('.palette-current-details')?.firstElementChild?.classList.contains('palette-current-icon'),footerRibbon:!!footer.querySelector('.palette-color-ribbon'),headerOverflow:preview.scrollWidth>preview.clientWidth+1};
  });
- assert(paletteLayout.aligned&&paletteLayout.centered&&!paletteLayout.headerRibbon&&paletteLayout.headerIcon&&paletteLayout.headerGrid===0&&paletteLayout.iconWidth===28&&paletteLayout.iconHeight===28.5&&paletteLayout.buttonWidth===44&&paletteLayout.buttonHeight===44&&paletteLayout.footerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'matching 28px palette icon and 44px navigation button, with the footer icon retained');
+ assert(paletteLayout.aligned&&paletteLayout.footerFits&&!paletteLayout.headerRibbon&&paletteLayout.headerIcon&&paletteLayout.headerGrid===0&&paletteLayout.iconWidth===28&&paletteLayout.iconHeight===28.5&&paletteLayout.buttonWidth===44&&paletteLayout.buttonHeight===44&&paletteLayout.footerIcon&&!paletteLayout.footerRibbon&&!paletteLayout.headerOverflow,'matching 28px palette icon and 44px navigation button, with the footer icon retained');
  assert.equal(paletteLayout.icon,await page.locator('#colorPickerPaletteName').innerHTML(),'same palette artwork in both headers');
  assert.equal(await page.evaluate(()=>document.activeElement.id),'palette-current-preview','focus follows the navigation anchor');
  await page.screenshot({path:path.join(artifacts,config.lang+'-palette-layout.png')});
- // Both the new header (keyboard) and existing footer (pointer) open colors.
+ // The header supports both keyboard and pointer navigation; the footer confirms a draft.
  await page.locator('#palette-current-preview').focus();await page.keyboard.press('Enter');await waitForHandoff(page);
  assert(await page.locator('#colorPickerModal').isVisible());
  await page.locator('#btnColorPickerPalette').click();await waitForHandoff(page);
- await page.locator('#palette-current-summary').click();await waitForHandoff(page);assert(await page.locator('#colorPickerModal').isVisible());assert(!(await page.locator('#paletteModal').isVisible()));
+ await page.locator('#palette-current-preview').click();await waitForHandoff(page);assert(await page.locator('#colorPickerModal').isVisible());assert(!(await page.locator('#paletteModal').isVisible()));
  assert.deepEqual(await page.locator('.brush-picker-panel').evaluate(e=>({width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height})),geometry);
  // Sample the composed backdrop on every frame in both directions: exactly
  // one 90% black layer must remain, without either flashing or doubling up.
@@ -81,7 +81,7 @@ try {
  for(const frame of backdropSamples.frames){assert(Math.abs(frame.top-colorAnchor.top)<1);assert(Math.abs(frame.x-colorAnchor.x)<1&&Math.abs(frame.y-colorAnchor.y)<1,'navigation stays fixed on every frame');assert.equal(frame.opacity,'1');assert(!frame.overlap,'old and new grids never overlap');assert(frame.bottom<=config.height+1);}
  assert(backdropSamples.samples.length>4);assert(backdropSamples.samples.every(alpha=>Math.abs(alpha-.9)<.001),'backdrop stays at 90% throughout both handoffs');
  // Several handoffs inside the transition must leave one interactive panel.
- for(let i=0;i<6;i++){await page.evaluate(i=>document.getElementById(i%2?'palette-current-summary':'btnColorPickerPalette').click(),i);await page.waitForTimeout(20);}
+ for(let i=0;i<6;i++){await page.evaluate(i=>document.getElementById(i%2?'palette-current-preview':'btnColorPickerPalette').click(),i);await page.waitForTimeout(20);}
  await waitForHandoff(page);assert(await page.locator('#colorPickerModal').isVisible());assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);
  assert(await page.locator('#colorPickerModal').evaluate(e=>!e.inert&&!e.hasAttribute('aria-hidden')));
  // Closing the destination during a handoff must not resurrect either picker.
@@ -96,7 +96,7 @@ try {
  await page.waitForTimeout(350);
  assert(!(await page.locator('#colorPickerModal').isVisible()));assert(!(await page.locator('#paletteModal').isVisible()));
  assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);
- await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>pickerTransitionTest.open());await page.locator('#btnColorPickerPalette').click();assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);await page.locator('#palette-current-summary').click();assert(await page.locator('#colorPickerModal').isVisible());assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);
+ await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>pickerTransitionTest.open());await page.locator('#btnColorPickerPalette').click();assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);await page.locator('#palette-current-preview').click();assert(await page.locator('#colorPickerModal').isVisible());assert.equal(await page.locator('.picker-handoff-incoming,.picker-handoff-outgoing').count(),0);
  assert.deepEqual(await page.evaluate(()=>pickerTransitionTest.state()),before,'handoffs do not alter painting, settings or logger');assert.deepEqual(errors,[]);
  await page.screenshot({path:path.join(artifacts,config.lang+'.png')});results.push({config,passed:true});console.log(JSON.stringify(results.at(-1)));await context.close();
  }

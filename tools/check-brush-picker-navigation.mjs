@@ -30,7 +30,7 @@ try {
  page:()=>colorPickerPage,pages:size=>{activePaletteIndex=C.PALETTES.findIndex(p=>size==='large'?p.colors.length>80:p.originalName==='Journey');updatePaletteHeader();modals.openColorPickerModal();},mainUtility:swapSimulationUtilityControl,mainSymmetry:cycleSymmetryMode
  };initializeApp().then(()=>pickerNavTest.ready=true);`);
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.pickerNavTest?.ready);await page.waitForTimeout(500);
- await page.evaluate(()=>{pickerNavTest.setup();pickerNavTest.open();});await page.waitForTimeout(350);
+ await page.evaluate(()=>{pickerNavTest.setup();pickerNavTest.open();});await page.waitForTimeout(450);
  const state=()=>page.evaluate(()=>pickerNavTest.state());
  const sort=page.locator('#btnColorPickerSort'),sym=page.locator('#btnColorPickerSymmetry'),pal=page.locator('#btnColorPickerPalette');
  const boxes=await Promise.all([sort,pal,sym].map(b=>b.boundingBox()));assert(boxes[0].x<boxes[1].x&&boxes[1].x<boxes[2].x,'physical left sort / center palette / right symmetry in every language');assert(boxes.every(b=>b.width>=44&&b.height>=44));
@@ -62,20 +62,15 @@ try {
  if(process.env.PICKER_SEPARATOR_ONLY){assert.deepEqual(errors,[]);console.log(JSON.stringify({config,separatorsPassed:true}));await context.close();continue;}
  await page.evaluate(()=>pickerNavTest.play());await page.waitForTimeout(200);assert((await state()).playing);const gen=(await state()).gen;await sort.click();assert((await state()).playing);await page.waitForTimeout(200);assert((await state()).gen>gen,'sorting during simulation does not stop it');await page.evaluate(()=>pickerNavTest.pause());
  const snapshot=await state();await page.screenshot({path:path.join(artifacts,config.lang+'.png')});
- await pal.click();await page.waitForTimeout(350);assert(await page.locator('#paletteModal').isVisible());assert(!(await page.locator('#colorPickerModal').isVisible()),'palette navigation closes the color picker');
- const footer=page.locator('#palette-current-summary');assert.equal(await footer.evaluate(e=>e.tagName),'BUTTON');assert.equal(await footer.locator('.palette-current-label').count(),0);
- const footerBefore=await state();
- for(const selector of ['.palette-current-icon','.palette-color-ribbon','.palette-current-name','.palette-choice-count',null]){
-   if(selector)await footer.locator(selector).click();else await footer.click({position:{x:3,y:3}});
-   await page.waitForTimeout(350);assert(await page.locator('#colorPickerModal').isVisible());assert(!(await page.locator('#paletteModal').isVisible()));assert.deepEqual(await state(),footerBefore,'footer navigation does not alter the board, brush, sorting or logger');
-   await pal.click();await page.waitForTimeout(350);
- }
- await footer.focus();await page.keyboard.press('Space');await page.waitForTimeout(350);assert(await page.locator('#colorPickerModal').isVisible(),'native keyboard activation opens colors');await pal.click();await page.waitForTimeout(350);
+ await pal.click();await page.waitForTimeout(450);assert(await page.locator('#paletteModal').isVisible());assert(!(await page.locator('#colorPickerModal').isVisible()),'palette navigation closes the color picker');
+ const footer=page.locator('#palette-current-summary');assert.equal(await footer.evaluate(e=>e.tagName),'DIV');assert.equal(await footer.locator('.palette-current-label').count(),0);
+ const footerBefore=await state();assert(await page.locator('#palette-apply').isDisabled());
+ await page.locator('#palette-current-preview').focus();await page.keyboard.press('Space');await page.waitForTimeout(450);assert(await page.locator('#colorPickerModal').isVisible(),'header keyboard activation opens colors');assert.deepEqual(await state(),footerBefore,'navigation never applies a draft');await pal.click();await page.waitForTimeout(450);
  await page.screenshot({path:path.join(artifacts,config.lang+'-palette-footer.png')});
  const choices=page.locator('#paletteModalGrid [data-palette-index]');
  // Choose another visible palette using the actual picker cards.
  const cards=page.locator('#paletteModalGrid .palette-choice');
- if(await cards.count()>1){await cards.nth(1).click();await page.waitForTimeout(350);assert(!(await page.locator('#paletteModal').isVisible()));}
+ if(await cards.count()>1){const next=page.locator('#paletteModalGrid .palette-choice:not(.is-current)').first();await next.click();await page.locator('#palette-apply').click();await page.waitForTimeout(450);assert(!(await page.locator('#paletteModal').isVisible()));}
  else{await page.locator('#btnPaletteModalClose').click();}
  await page.evaluate(()=>pickerNavTest.open());await page.waitForTimeout(300);assert(await pal.getAttribute('aria-label'));assert.equal((await state()).size,snapshot.size);assert.equal((await state()).shape,snapshot.shape);
  assert.equal(await page.locator('#colorPickerModal [id="sortIconGroup"]').count(),0,'mirrored SVG has no duplicate IDs');assert.deepEqual(errors,[]);
