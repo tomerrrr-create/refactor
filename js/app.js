@@ -5522,6 +5522,8 @@ else if (action.eventName === 'Invert Colors') {
             _performResize, resizeBoard, animateBoardTransition,
             setColorPickerPage: (p) => { colorPickerPage = p; }, getColorPickerPage: () => colorPickerPage,
             getActivePaletteIndex: () => activePaletteIndex, createRainbowIconSVG, navigateColorPages,
+            isSelectingMacroPalette: () => isSelectingMacroPalette,
+            cancelMacroPaletteSelection: () => { isSelectingMacroPalette = false; },
             setSelectedColor: (c) => { 
                 selectedColor = c; 
                 selectedColorIndex = c ? palette().indexOf(c) : -1;
