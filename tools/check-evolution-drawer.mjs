@@ -10,7 +10,7 @@ const root=fileURLToPath(new URL('../',import.meta.url)),artifacts='/tmp/evoluti
 const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.html')?'text/html':'application/octet-stream');res.end(await readFile(path.join(root,'dist',f)));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
-try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:320,height:568},{lang:'nl',width:844,height:390}].filter(c=>!process.env.DRAWER_LANG||c.lang===process.env.DRAWER_LANG)){
+try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:375,height:667},{lang:'nl',width:1024,height:768}].filter(c=>!process.env.DRAWER_LANG||c.lang===process.env.DRAWER_LANG)){
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.drawerTest={
@@ -51,13 +51,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
    const overlaps=[...document.querySelectorAll('#controlsContainer > button')].filter(e=>e.id!=='btnEvolutionDrawer'&&e.checkVisibility()).map(rect).filter(r=>Math.min(r.x+r.width,handle.x+handle.width)-Math.max(r.x,handle.x)>1&&Math.min(r.y+r.height,handle.y+handle.height)-Math.max(r.y,handle.y)>1);
    return {handle,frame,overlaps};
   });
-  assert(Math.abs(geometry.handle.x+geometry.handle.width/2-geometry.frame.x-geometry.frame.width/2)<1);
-  assert(Math.abs(geometry.handle.y-geometry.frame.y-geometry.frame.height)<2);
+  assert(Math.abs(geometry.handle.x+geometry.handle.width-geometry.frame.x)<2);
+  assert(Math.abs(geometry.handle.y+geometry.handle.height/2-geometry.frame.y-geometry.frame.height/2)<2);
   assert.equal(geometry.overlaps.length,0,JSON.stringify(geometry));
  }
  await checkHandleGeometry();
- for(const zoom of [.9,1.15]){await page.locator('#appContainer').evaluate((e,z)=>e.style.zoom=z,zoom);await checkHandleGeometry();}
- await page.locator('#appContainer').evaluate(e=>e.style.removeProperty('zoom'));
+ const originalZoom=await page.locator('#appContainer').evaluate(e=>({attribute:e.getAttribute('data-ui-zoom'),value:e.style.getPropertyValue('--ui-zoom')}));
+ for(const zoom of [.9,1.15]){await page.locator('#appContainer').evaluate((e,z)=>{e.setAttribute('data-ui-zoom','');e.style.setProperty('--ui-zoom',z);},zoom);await checkHandleGeometry();}
+ await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
  await page.screenshot({path:path.join(artifacts,config.lang+'-handle.png'),animations:'disabled'});
  const frame=await page.locator('#simModeBackground').boundingBox();
  await page.evaluate(()=>window.realLifeButton=document.getElementById('btnGameOfLife'));

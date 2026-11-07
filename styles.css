@@ -2419,11 +2419,11 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
 #controlsContainer #btnEvolutionDrawer { display:none; }
-/* Keep all four toolbar rows fixed; the handle occupies the existing 8px gap. */
-#controlsContainer.sim-mode-active #btnEvolutionDrawer { display:flex; align-items:center; justify-content:center; grid-area:3 / 4 / 4 / 7; align-self:end; justify-self:center; transform:translateY(8px); width:64px; height:8px; padding:0; border:0; background:transparent; cursor:pointer; z-index:1; }
+/* Keep all four toolbar rows fixed; use the free gutter left of the frame. */
+#controlsContainer.sim-mode-active #btnEvolutionDrawer { display:flex; align-items:center; justify-content:center; grid-area:2 / 2 / 4 / 3; align-self:center; justify-self:end; transform:translateX(6px); width:min(44px,calc(100% + 8px)); height:44px; padding:0; border:0; background:transparent; cursor:pointer; z-index:1; }
 #btnEvolutionDrawer { position:relative; color:#9ca3af; direction:ltr; touch-action:none; }
-#btnEvolutionDrawer .drawer-handle { position:relative; display:flex; align-items:center; justify-content:center; box-sizing:border-box; width:60px; height:9px; margin-top:-1px; border:1px solid #334155; border-top:0; border-radius:0 0 8px 8px; background:linear-gradient(#070c16,#05080d); pointer-events:none; }
-#btnEvolutionDrawer .drawer-handle svg { width:32px; height:8px; opacity:.8; }
+#btnEvolutionDrawer .drawer-handle { position:absolute; display:flex; align-items:center; justify-content:center; box-sizing:border-box; right:-1px; width:18px; height:34px; border:1px solid #334155; border-right:0; border-radius:10px 0 0 10px; background:linear-gradient(#070c16,#05080d); pointer-events:none; }
+#btnEvolutionDrawer .drawer-handle svg { width:14px; height:24px; opacity:.85; }
 :root[data-simulation-effective-theme="gold"] #btnEvolutionDrawer .drawer-handle { border-color:#b28b3645; background:linear-gradient(#15150f,#0d0e0c); }
 :root[data-simulation-effective-theme="teal"] #btnEvolutionDrawer .drawer-handle { border-color:#68bdb545; background:linear-gradient(#142724,#0a100f); }
 #btnEvolutionDrawer .drawer-active-mark { display:none; position:absolute; bottom:2px; width:2px; height:2px; border-radius:50%; background:var(--gold); }
