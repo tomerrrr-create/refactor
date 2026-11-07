@@ -2238,6 +2238,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .brush-signature { display: block; width: 104px; height: 28px; }
 #colorPickerModal .color-swatch { padding: 0; aspect-ratio: 1; min-width: 0; }
 #colorPickerModal #colorPickerSwatches { width: min(100%, 272px); margin-inline: auto; gap: 8px; touch-action: pan-y; }
+#colorPickerModal .rainbow-palette-count { position:absolute; left:-13px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; align-items:center; width:8px; color:#b2b5ac; font-size:9px; font-weight:400; line-height:1.05; font-variant-numeric:tabular-nums; direction:ltr; pointer-events:none; }
 #colorPickerModal .color-swatch:hover { transform: none; }
 #colorPickerModal .color-swatch:focus-visible, .brush-picker-panel button:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
 .brush-picker-panel .brush-shape-options button:focus-visible { outline-color: #9aa7b2; }
@@ -2331,7 +2332,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     font-family: Baskerville, "Palatino Linotype", "Book Antiqua", Palatino, "Times New Roman", serif;
     font-size: 18px; font-weight: 400; line-height: 1;
     letter-spacing: .015em; font-variant-numeric: lining-nums;
-    color: #92958e; transition: color .18s ease, text-shadow .18s ease;
+    color: #686d65; transition: color .18s ease, text-shadow .18s ease;
 }
 .palette-picker-header .palette-group-tab[aria-selected="true"] .palette-group-symbol {
     font-weight: 400; color: #f1d886;

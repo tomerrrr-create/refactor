@@ -27,10 +27,22 @@ try {
  state:()=>({sort:currentSortMethod,symmetry:symmetryMode,palette:activePaletteIndex,colors:boardState.map(t=>palette()[t.k]),gen:currentGenerationCount,playing:isLifePlaying,logs:[...artRecipeLog],shape:brushShape,size:brushSize}),
  sim:()=>{isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');armSimulation('gameOfLife');updateSimulationUtilityControl();},
  play:()=>togglePlayPauseLife(),pause:pauseLife,
+ count:size=>{activePaletteIndex=C.PALETTES.findIndex(p=>p.colors.length===size);updatePaletteHeader();modals.openColorPickerModal();},
  page:()=>colorPickerPage,pages:size=>{activePaletteIndex=C.PALETTES.findIndex(p=>size==='large'?p.colors.length>80:p.originalName==='Journey');updatePaletteHeader();modals.openColorPickerModal();},mainUtility:swapSimulationUtilityControl,mainSymmetry:cycleSymmetryMode
  };initializeApp().then(()=>pickerNavTest.ready=true);`);
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.pickerNavTest?.ready);await page.waitForTimeout(500);
  await page.evaluate(()=>{pickerNavTest.setup();pickerNavTest.open();});await page.waitForTimeout(450);
+
+ for(const count of [23,64,264]){
+  await page.evaluate(n=>pickerNavTest.count(n),count);
+  const number=page.locator('.rainbow-palette-count');
+  assert.equal(await number.textContent(),String(count));
+  const geometry=await number.evaluate(e=>{const tile=e.parentElement.getBoundingClientRect(),r=e.getBoundingClientRect(),modal=document.getElementById('colorPickerModal').getBoundingClientRect();return {left:r.left,right:r.right,tileLeft:tile.left,top:r.top,bottom:r.bottom,tileTop:tile.top,tileBottom:tile.bottom,modalLeft:modal.left,digits:[...e.children].map(d=>d.getBoundingClientRect().top),label:e.parentElement.getAttribute('aria-label')};});
+  assert(geometry.right<=geometry.tileLeft&&geometry.left>=geometry.modalLeft,'count sits left of rainbow inside modal');
+  assert(geometry.top>=geometry.tileTop&&geometry.bottom<=geometry.tileBottom,'count fits tile height');
+  assert(geometry.digits.every((y,i,a)=>i===0||y>a[i-1]),'digits run top to bottom');assert(geometry.label.includes(String(count)));
+ }
+ await page.evaluate(()=>{pickerNavTest.setup();pickerNavTest.open();});
  const state=()=>page.evaluate(()=>pickerNavTest.state());
  const sort=page.locator('#btnColorPickerSort'),sym=page.locator('#btnColorPickerSymmetry'),pal=page.locator('#btnColorPickerPalette');
  const boxes=await Promise.all([sort,pal,sym].map(b=>b.boundingBox()));assert(boxes[0].x<boxes[1].x&&boxes[1].x<boxes[2].x,'physical left sort / center palette / right symmetry in every language');assert(boxes.every(b=>b.width>=44&&b.height>=44));
@@ -63,6 +75,8 @@ try {
  await page.evaluate(()=>pickerNavTest.play());await page.waitForTimeout(200);assert((await state()).playing);const gen=(await state()).gen;await sort.click();assert((await state()).playing);await page.waitForTimeout(200);assert((await state()).gen>gen,'sorting during simulation does not stop it');await page.evaluate(()=>pickerNavTest.pause());
  const snapshot=await state();await page.screenshot({path:path.join(artifacts,config.lang+'.png')});
  await pal.click();await page.waitForTimeout(450);assert(await page.locator('#paletteModal').isVisible());assert(!(await page.locator('#colorPickerModal').isVisible()),'palette navigation closes the color picker');
+ const inks=await page.locator('#paletteModal .palette-group-tab').evaluateAll(es=>es.map(e=>({active:e.getAttribute('aria-selected')==='true',color:getComputedStyle(e.querySelector('.palette-group-symbol')).color})));
+ assert(inks.every(e=>e.color===(e.active?'rgb(241, 216, 134)':'rgb(104, 109, 101)')),'active gold stays unchanged and inactive categories are darker');
  const footer=page.locator('#palette-current-summary');assert.equal(await footer.evaluate(e=>e.tagName),'DIV');assert.equal(await footer.locator('.palette-current-label').count(),0);
  const footerBefore=await state();assert(await page.locator('#palette-apply').isDisabled());
  await page.locator('#palette-current-preview').focus();await page.keyboard.press('Space');await page.waitForTimeout(450);assert(await page.locator('#colorPickerModal').isVisible(),'header keyboard activation opens colors');assert.deepEqual(await state(),footerBefore,'navigation never applies a draft');await pal.click();await page.waitForTimeout(450);
