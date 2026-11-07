@@ -706,6 +706,8 @@ Stopping or completing a macro releases its control-panel overlay independently 
 
 ## FYI installation and offline use
 
+The technician menu's **Branches** section links to the public Vercel versions of **Work**, **Baby mode** and **Main**. Each opens in a separate tab; it does not replace the current board or transfer artwork/settings between the different origins. Baby mode remains on its separate Git branch.
+
 Install FYI from Safari on iPhone (Share → Add to Home Screen) or Chrome on Android (Install app / Add to home screen), subject to browser support. Open it online once and allow offline resources to finish downloading before disconnecting. Service-worker registration requires a secure context such as HTTPS or a suitable local development origin. No store or application backend is required.
 
 The checked-in manifest uses FYI eclipse icon assets. A Vercel build with `VERCEL_GIT_COMMIT_REF=work` produces **FYI Work** and substitutes the social-preview icon; social sharing metadata remains separate. Merely selecting a local Git branch does not choose the Work build variant.

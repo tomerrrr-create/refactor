@@ -2490,3 +2490,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   max-width: min(260px, calc(100vw - 24px));
   transform: translateX(-50%);
 }
+
+.technician-branches { margin: 20px 0; padding-top: 18px; border-top: 1px solid #b28b3630; }
+.technician-branches h3 { margin: 0 0 10px; color: #a6a695; font-size: 13px; font-weight: normal; }
+.technician-branches nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.technician-branches a { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 4px; border: 1px solid #b28b363d; border-radius: 9px; background: #b28b3608; color: #e3c677; font-size: 13px; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
+.technician-branches a:hover { background: #b28b3618; }
+.technician-branches a:focus-visible { outline: 2px solid #d4b865; outline-offset: 3px; }

@@ -9,6 +9,10 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  branches_title: {en:"Branches",he:"ענפים",ru:"Ветки",nl:"Versies"},
+  branches_work: {en:"Work",he:"עבודה",ru:"Рабочая",nl:"Werk"},
+  branches_baby: {en:"Baby mode",he:"מצב תינוק",ru:"Детская",nl:"Babymodus"},
+  branches_main: {en:"Main",he:"ראשי",ru:"Основная",nl:"Hoofdversie"},
   tooltip_cymatics: {"en":"Resonance","he":"תהודה","ru":"Резонанс","nl":"Resonantie"},
   help_cymatics: {"en":"Resonance\nDraw colors, select Resonance and press Play. Tap again to cycle all six resonance maps; paused cycles also include Off. Swipe up for all six maps and settings. Gold cells remain protected.","he":"תהודה\nציירו צבעים, בחרו תהודה ולחצו Play. לחיצות נוספות מחליפות בין כל שש מפות התהודה; בהשהיה המחזור כולל גם כיבוי. החליקו למעלה לבחירה מכל שש המפות ולהגדרות. תאי הזהב מוגנים.","ru":"Резонанс\nНарисуйте цвета, выберите резонанс и нажмите Play. Нажатия переключают все шесть карт резонанса; на паузе доступно выключение. Смахните вверх для всех шести карт и настроек. Золотые клетки защищены.","nl":"Resonantie\nTeken kleuren, kies Resonantie en druk op Play. Tik opnieuw voor alle zes resonantiekaarten; gepauzeerd volgt ook Uit. Veeg omhoog voor alle zes kaarten en instellingen. Gouden cellen blijven beschermd."},
   cymatics_map_clouds: {"en":"Clouds","he":"עננים","ru":"Облака","nl":"Wolken"},
