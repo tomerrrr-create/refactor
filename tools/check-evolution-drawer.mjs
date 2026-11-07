@@ -20,9 +20,9 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  };initializeApp().then(()=>drawerTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>drawerTest.setup());
- const state=()=>page.evaluate(()=>drawerTest.state()),tap=target=>config.width<600?target.tap():target.click();const trigger=page.locator('#btnEvolutionDrawer'),dialog=page.locator('#evolutionDrawerDialog');
- async function open(){
-  const r=await trigger.boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
+ const state=()=>page.evaluate(()=>drawerTest.state()),tap=target=>config.width<600?target.tap():target.click();const trigger=page.locator('#btnEvolutionDrawer'),rightTrigger=page.locator('#btnEvolutionDrawerRight'),dialog=page.locator('#evolutionDrawerDialog');
+ async function open(handle=trigger){
+  const r=await handle.boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
   if(config.width<600){
    const cdp=await context.newCDPSession(page);
    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
@@ -47,12 +47,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  async function checkHandleGeometry(){
   const geometry=await page.evaluate(()=>{
    const rect=e=>{const r=e.getBoundingClientRect();return {id:e.id,x:r.x,y:r.y,width:r.width,height:r.height};};
-   const handle=rect(document.getElementById('btnEvolutionDrawer')),frame=rect(document.getElementById('simModeBackground'));
-   const overlaps=[...document.querySelectorAll('#controlsContainer > button')].filter(e=>e.id!=='btnEvolutionDrawer'&&e.checkVisibility()).map(rect).filter(r=>Math.min(r.x+r.width,handle.x+handle.width)-Math.max(r.x,handle.x)>1&&Math.min(r.y+r.height,handle.y+handle.height)-Math.max(r.y,handle.y)>1);
-   return {handle,frame,overlaps};
+   const handle=rect(document.getElementById('btnEvolutionDrawer')),right=rect(document.getElementById('btnEvolutionDrawerRight')),frame=rect(document.getElementById('simModeBackground'));
+   const overlaps=[...document.querySelectorAll('#controlsContainer > button')].filter(e=>!e.classList.contains('evolution-drawer-trigger')&&e.checkVisibility()).map(rect).filter(r=>[handle,right].some(h=>Math.min(r.x+r.width,h.x+h.width)-Math.max(r.x,h.x)>1&&Math.min(r.y+r.height,h.y+h.height)-Math.max(r.y,h.y)>1));
+   return {handle,right,frame,overlaps};
   });
   assert(Math.abs(geometry.handle.x+geometry.handle.width-geometry.frame.x)<2);
   assert(Math.abs(geometry.handle.y+geometry.handle.height/2-geometry.frame.y-geometry.frame.height/2)<2);
+  assert(Math.abs(geometry.right.x-geometry.frame.x-geometry.frame.width)<2);
+  assert(Math.abs(geometry.right.y-geometry.handle.y)<1&&Math.abs(geometry.right.width-geometry.handle.width)<1&&Math.abs(geometry.right.height-geometry.handle.height)<1,'mirrored handle targets are symmetric');
   assert.equal(geometry.overlaps.length,0,JSON.stringify(geometry));
  }
  await checkHandleGeometry();
@@ -60,6 +62,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  for(const zoom of [.9,1.15]){await page.locator('#appContainer').evaluate((e,z)=>{e.setAttribute('data-ui-zoom','');e.style.setProperty('--ui-zoom',z);},zoom);await checkHandleGeometry();}
  await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
  await page.screenshot({path:path.join(artifacts,config.lang+'-handle.png'),animations:'disabled'});
+ await tap(rightTrigger);assert.equal(await trigger.getAttribute('data-page'),'1');assert.equal(await rightTrigger.getAttribute('data-page'),'1');
+ await tap(rightTrigger);assert.equal(await trigger.getAttribute('data-page'),'0');
+ await open(rightTrigger);await page.keyboard.press('Escape');assert(await rightTrigger.evaluate(e=>document.activeElement===e),'right opener regains focus');
+
  const frame=await page.locator('#simModeBackground').boundingBox();
  await page.evaluate(()=>window.realLifeButton=document.getElementById('btnGameOfLife'));
  await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics','nudgeBrighter']);assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.map(e=>Number(e.dataset.evolutionSlot)).sort((a,b)=>a-b)),[11,12,13,17]);
@@ -117,7 +123,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);assert.equal(await trigger.getAttribute('data-parked-active'),'true');unchanged(selected,await state());
  await tap(page.locator('#btnStepForward'));assert.equal((await state()).armed,'gameOfLife');
  await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>drawerTest.state().gen>=4);
- assert(await trigger.isEnabled());await tap(trigger);const running=await state();assert(running.playing);assert.equal(running.armed,'gameOfLife');
+ assert(await trigger.isEnabled());await tap(rightTrigger);const running=await state();assert(running.playing);assert.equal(running.armed,'gameOfLife');
  assert.equal(await page.locator('#btnGameOfLife').getAttribute('class'),lifeClass);
  await page.evaluate(()=>drawerTest.open());assert.equal(await dialog.isVisible(),false,'editing stays locked during playback');
  await tap(trigger);await page.waitForFunction(g=>drawerTest.state().gen>g,running.gen);
@@ -126,7 +132,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(page.locator('#btnUndo'));await tap(page.locator('#btnRedo'));assert.deepEqual((await state()).board,result.board);
  const recipe=await page.evaluate(()=>drawerTest.recipe());assert(!recipe.includes('evolutionSlots'),'layout never enters artwork recipes');
  await page.locator('#projectFileInput').setInputFiles({name:'two-drawers-journey.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});
- await page.waitForFunction(()=>drawerTest.state().loaded);assert(await trigger.isDisabled());
+ await page.waitForFunction(()=>drawerTest.state().loaded);assert(await trigger.isDisabled());assert(await rightTrigger.isDisabled());
  await page.evaluate(()=>drawerTest.macro());await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});
  assert.deepEqual((await state()).board,result.board,'macro replays identically with Life on the other page');assert.deepEqual((await state()).slots,custom);
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());
