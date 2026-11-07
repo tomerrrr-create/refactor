@@ -2238,6 +2238,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .brush-signature { display: block; width: 104px; height: 28px; }
 #colorPickerModal .color-swatch { padding: 0; aspect-ratio: 1; min-width: 0; }
 #colorPickerModal #colorPickerSwatches { width: min(100%, 272px); margin-inline: auto; gap: 8px; touch-action: pan-y; }
+#colorPickerModal .rainbow-palette-count { position:absolute; left:-13px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; align-items:center; width:8px; color:#b2b5ac; font-size:9px; font-weight:400; line-height:1.05; font-variant-numeric:tabular-nums; direction:ltr; pointer-events:none; }
 #colorPickerModal .color-swatch:hover { transform: none; }
 #colorPickerModal .color-swatch:focus-visible, .brush-picker-panel button:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
 .brush-picker-panel .brush-shape-options button:focus-visible { outline-color: #9aa7b2; }
@@ -2331,7 +2332,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     font-family: Baskerville, "Palatino Linotype", "Book Antiqua", Palatino, "Times New Roman", serif;
     font-size: 18px; font-weight: 400; line-height: 1;
     letter-spacing: .015em; font-variant-numeric: lining-nums;
-    color: #92958e; transition: color .18s ease, text-shadow .18s ease;
+    color: #686d65; transition: color .18s ease, text-shadow .18s ease;
 }
 .palette-picker-header .palette-group-tab[aria-selected="true"] .palette-group-symbol {
     font-weight: 400; color: #f1d886;
@@ -2390,6 +2391,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     transition:background-color .18s, border-color .18s;
 }
 :is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map]) > svg { width:40px; height:40px; max-width:100%; }
+/* Five Cracks symbols share the existing preset-row width; Resonance is unchanged. */
+#cracksSettingsDialog .cracks-preset-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+#cracksSettingsDialog [data-cracks-preset] { min-width:0; min-height:0; padding:6px; }
+#cracksSettingsDialog [data-cracks-preset] > svg { width:32px; height:32px; }
 :is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map])[aria-pressed="true"] { border-color:var(--gold); background:#ffd70009; }
 :is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map])[aria-pressed="true"]::after { content:'✓'; position:absolute; top:3px; right:5px; color:var(--gold); font:12px/1 sans-serif; }
 :is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map]):not([aria-pressed="true"]):hover { border-color:var(--preset-ink); background:#ffffff06; }
@@ -2418,17 +2423,22 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 @media (prefers-reduced-motion:reduce) { :is(#cracksSettingsDialog, #cymaticsSettingsDialog) :is([data-cracks-preset], [data-cymatics-map]) { transition:none; } }
 
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
-#controlsContainer #btnEvolutionDrawer { display:none; }
-#controlsContainer.sim-mode-active #btnEvolutionDrawer { display:inline-flex; align-items:center; justify-content:center; grid-area:1 / 7; width:44px; height:44px; margin:auto; padding:0; border:0; background:transparent; cursor:pointer; }
-#btnEvolutionDrawer { position:relative; color:#9ca3af; direction:ltr; touch-action:none; }
-#btnEvolutionDrawer .drawer-page-dots { width:20px; height:10px; pointer-events:none; }
-#btnEvolutionDrawer [data-drawer-page-dot] { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.45; transition:opacity 160ms ease,fill 160ms ease; }
-#btnEvolutionDrawer [data-drawer-page-dot][data-active="true"] { fill:currentColor; opacity:.85; }
-@media(prefers-reduced-motion:reduce) { #btnEvolutionDrawer [data-drawer-page-dot] { transition:none; } }
-#btnEvolutionDrawer .drawer-active-mark { display:none; position:absolute; bottom:7px; width:3px; height:3px; border-radius:50%; background:var(--gold); }
-#btnEvolutionDrawer[data-parked-active="true"] .drawer-active-mark { display:block; }
-#btnEvolutionDrawer:disabled { cursor:default; }
-#btnEvolutionDrawer:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:8px; }
+#controlsContainer .evolution-drawer-trigger { display:none; }
+/* Keep all four toolbar rows fixed; use the free gutters on both sides of the frame. */
+#controlsContainer.sim-mode-active .evolution-drawer-trigger { display:flex; align-items:center; justify-content:center; grid-area:2 / 2 / 4 / 3; align-self:center; justify-self:end; transform:translateX(6px); width:min(44px,calc(100% + 8px)); height:44px; padding:0; border:0; background:transparent; cursor:pointer; z-index:1; }
+.evolution-drawer-trigger { position:relative; color:#9ca3af; direction:ltr; touch-action:none; }
+.evolution-drawer-trigger .drawer-handle { position:absolute; display:flex; align-items:center; justify-content:center; box-sizing:border-box; right:-1px; width:18px; height:34px; border:1px solid #334155; border-right:0; border-radius:10px 0 0 10px; background:linear-gradient(#070c16,#05080d); pointer-events:none; }
+.evolution-drawer-trigger .drawer-handle svg { width:14px; height:24px; opacity:.85; }
+:root[data-simulation-effective-theme="gold"] .evolution-drawer-trigger .drawer-handle { border-color:#b28b3645; background:linear-gradient(#15150f,#0d0e0c); }
+:root[data-simulation-effective-theme="teal"] .evolution-drawer-trigger .drawer-handle { border-color:#68bdb545; background:linear-gradient(#142724,#0a100f); }
+.evolution-drawer-trigger .drawer-active-mark { display:none; position:absolute; bottom:2px; width:2px; height:2px; border-radius:50%; background:var(--gold); }
+.evolution-drawer-trigger[data-parked-active="true"] .drawer-active-mark { display:block; }
+.evolution-drawer-trigger:disabled { cursor:default; opacity:.3; }
+.evolution-drawer-trigger:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:10px; }
+@media(hover:hover) { .evolution-drawer-trigger:hover:not(:disabled) .drawer-handle svg { opacity:1; } }
+#controlsContainer.sim-mode-active .evolution-drawer-trigger[data-side="right"] { grid-area:2 / 8 / 4 / 9; justify-self:start; transform:translateX(-6px); }
+.evolution-drawer-trigger[data-side="right"] .drawer-handle { right:auto; left:-1px; border-right:1px solid #334155; border-left:0; border-radius:0 10px 10px 0; }
+.evolution-drawer-trigger[data-side="right"] .drawer-handle svg { transform:scaleX(-1); }
 #controlsContainer.sim-mode-active [data-evolution-id]:not([data-evolution-slot]) { display:none !important; }
 #controlsContainer.sim-mode-active [data-evolution-slot] { display:inline-flex !important; visibility:visible !important; opacity:1 !important; grid-row:var(--evolution-row) !important; grid-column:var(--evolution-column) !important; }
 #evolutionDrawerDialog { width:min(640px,calc(100vw - 24px)); padding:18px; }

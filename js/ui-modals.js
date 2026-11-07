@@ -696,7 +696,16 @@ function renderColorPickerContent() {
     rainbowSwatchInner.className = 'color-swatch-inner';
     rainbowSwatchInner.innerHTML = app.createRainbowIconSVG();
     rainbowSwatch.appendChild(rainbowSwatchInner);
-    rainbowSwatch.setAttribute('aria-label', app.getText('colorPicker_rainbow'));
+    const paletteCount = document.createElement('span');
+    paletteCount.className = 'rainbow-palette-count';
+    paletteCount.setAttribute('aria-hidden', 'true');
+    for (const digit of String(colors.length)) {
+        const line = document.createElement('span');
+        line.textContent = digit;
+        paletteCount.appendChild(line);
+    }
+    rainbowSwatch.appendChild(paletteCount);
+    rainbowSwatch.setAttribute('aria-label', app.getText('colorPicker_rainbow') + ' — ' + colors.length + ' ' + app.getText('palette_colors'));
     rainbowSwatch.addEventListener('click', () => selectRainbow());
     frag.appendChild(rainbowSwatch);
 

@@ -5,11 +5,14 @@ import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, EVOLUTION_PAGE_SIZE, valid
 
 export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,onSave,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
-    trigger.id='btnEvolutionDrawer';trigger.type='button';
+    trigger.id='btnEvolutionDrawer';trigger.type='button';trigger.className='evolution-drawer-trigger';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
     trigger.setAttribute('aria-keyshortcuts','Alt+ArrowUp');
-    trigger.innerHTML='<svg class="drawer-page-dots" viewBox="0 0 24 12" aria-hidden="true"><circle data-drawer-page-dot="0" cx="6" cy="6" r="2.5"/><circle data-drawer-page-dot="1" cx="18" cy="6" r="2.5"/></svg><span class="drawer-active-mark" aria-hidden="true"></span>';
-    controls.append(trigger);
+    trigger.innerHTML='<span class="drawer-handle" aria-hidden="true"><svg viewBox="0 0 16 28" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5-4 4 4 4m-2 2 4 4-4 4"/></svg><span class="drawer-active-mark"></span></span>';
+    const rightTrigger=trigger.cloneNode(true);rightTrigger.id='btnEvolutionDrawerRight';
+    rightTrigger.dataset.side='right';
+    const triggers=[trigger,rightTrigger];
+    controls.append(...triggers);
     const dialog=document.createElement('dialog');
     dialog.id='evolutionDrawerDialog';
     dialog.className='erosion-settings-dialog evolution-drawer-dialog';
@@ -20,7 +23,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const tilePalette=PALETTES.find(p=>p.originalName==='Autumn into Winter 264');
     const luminance=hex=>{const channels=hex.slice(1).match(/../g).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return .2126*channels[0]+.7152*channels[1]+.0722*channels[2];};
     const darkInk='#141914',lightInk='#FFF9ED',darkLuminance=luminance(darkInk),lightLuminance=luminance(lightInk);
-    let draft=null,selected=null,page=0,pageAnimations=[];
+    let draft=null,selected=null,page=0,pageAnimations=[],opener=trigger;
     const entry=id=>EVOLUTION_CATALOG.find(e=>e.id===evolutionControlId(id));
     const label=id=>getText(entry(id).key).split('\n')[0];
     const pageLabel=index=>getText('drawer_page').replace('{n}',index+1);
@@ -58,12 +61,13 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const active=getActive(),slots=validateEvolutionSlots(getSlots());
         const at=active?slots.indexOf(evolutionControlId(active)):-1;
         const otherPage=at>=0&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
-        trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);
-        trigger.querySelectorAll('[data-drawer-page-dot]').forEach((dot,index)=>dot.dataset.active=String(index===page));
         const text=getText('drawer_navigation').replace('{n}',page+1);
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
-        trigger.title=[text,activeText,getText('drawer_open_hint')].filter(Boolean).join(' — ');
-        trigger.setAttribute('aria-label',trigger.title);
+        for(const button of triggers){
+            button.disabled=!navigateAllowed();button.dataset.parkedActive=String(otherPage);button.dataset.page=String(page);
+            button.title=[text,activeText,getText('drawer_open_hint')].filter(Boolean).join(' — ');
+            button.setAttribute('aria-label',button.title);
+        }
         if(dialog.open&&!canEdit())dialog.close();
     }
     function nextPage(){
@@ -73,7 +77,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
             for(const button of controls.querySelectorAll('[data-evolution-slot]:not([data-evolution-page-hidden])')){
                 const ink=[...button.children].find(child=>getComputedStyle(child).display!=='none');
-                if(ink)pageAnimations.push(ink.animate([{opacity:.35},{opacity:1}],{duration:180,easing:'ease-out'}));
+                if(ink)pageAnimations.push(ink.animate([{opacity:0,translate:page===1?'12px 0':'-12px 0'},{opacity:1,translate:'0 0'}],{duration:240,easing:'cubic-bezier(.2,.65,.3,1)'}));
             }
         }
     }
@@ -117,21 +121,24 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
             section.append(grid);pages.append(section);
         }
     }
-    function open(){
+    function open(source=trigger){
         if(dialog.open||!canEdit())return;
+        opener=source;
         draft=validateEvolutionSlots(getSlots());selected=null;render();dialog.showModal();focusSettingsHeading(dialog);
     }
-    bindPickerGestures(trigger,{onTap:nextPage,onOpen:open,canInteract:navigateAllowed,canOpen:canEdit});
-    trigger.addEventListener('keydown',event=>{
-        if(event.altKey&&event.key==='ArrowUp'&&canEdit()){event.preventDefault();open();}
-    });
+    for(const button of triggers){
+        bindPickerGestures(button,{onTap:nextPage,onOpen:()=>open(button),canInteract:navigateAllowed,canOpen:canEdit});
+        button.addEventListener('keydown',event=>{
+            if(event.altKey&&event.key==='ArrowUp'&&canEdit()){event.preventDefault();open(button);}
+        });
+    }
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
     dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft=[...DEFAULT_EVOLUTION_LAYOUT];selected=null;render();});
     dialog.querySelector('form').addEventListener('submit',event=>{
         event.preventDefault();if(!canEdit())return;
         if(onSave(validateEvolutionSlots(draft))!==false)dialog.close();
     });
-    dialog.addEventListener('close',()=>{draft=null;selected=null;trigger.focus({preventScroll:true});});
+    dialog.addEventListener('close',()=>{draft=null;selected=null;opener.focus({preventScroll:true});});
     dialog.addEventListener('click',event=>{const r=dialog.getBoundingClientRect();if(event.target===dialog&&(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom))dialog.close();});
     const observer=new MutationObserver(refresh);
     observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-simulation-running']});
