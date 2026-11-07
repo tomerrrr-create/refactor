@@ -2291,8 +2291,8 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #paletteModal .palette-choice { align-items: center; gap: 6px; padding: 6px; }
 #paletteModal .palette-choice-title { flex-direction: column; min-height: 36px; gap: 2px; }
 #paletteModal .palette-choice-preview { width: min(100%, 24px); margin-inline: auto; }
-#paletteModal .palette-choice .palette-choice-icon { --icon-size: 28px; width: 32px; height: 32px; font-size: 28px; }
-#paletteModal .palette-choice .palette-choice-icon > :is(svg, span) { width: 28px !important; height: 28px !important; font-size: 28px !important; }
+#paletteModal .palette-choice .palette-choice-icon { --icon-size: 40px; width: 44px; height: 44px; font-size: 40px; }
+#paletteModal .palette-choice .palette-choice-icon > :is(svg, span) { width: 40px !important; height: 40px !important; font-size: 40px !important; }
 #paletteModal .palette-color-mosaic { border-radius: 4px; }
 #paletteModal .palette-choice-name { font-size: .76rem; }
 #paletteModal .palette-picker-deferred .palette-choice { justify-content: center; transition: background-color .18s; }
