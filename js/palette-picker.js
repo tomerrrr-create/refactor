@@ -135,7 +135,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         preview.append(colorMosaic(getPalettePreviewColors(palette), currentPreviewHost ? 3 : 6));
         if (currentPreviewHost) {
             if (showCount) title.append(count);
-            button.append(symbol, preview, title);
+            button.append(symbol, title, preview);
         } else {
             if (showCount) symbol.prepend(count);
             title.append(symbol);
