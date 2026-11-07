@@ -11,7 +11,8 @@ const presetArt = {
     'first-whisper': { ink:'#CD853F', path:'M20 36C18 27 20 17 25 9M20 27C12 26 10 21 9 17M21 21C29 21 33 17 35 12' },
     'quiet-flow': { ink:'#607D8B', path:'M7 18C15 7 25 29 37 16M7 29C15 18 25 40 37 27' },
     'crystal-paths': { ink:'#91A0A6', path:'M22 37V8M22 20 12 10M22 28 34 16M22 33 11 26M22 12 29 6' },
-    'fibonacci-bloom': { ink:'#6B8E23', path:'M22 23C22 19 28 19 28 24C28 31 17 32 14 25C9 14 25 6 34 15C47 28 28 46 12 34C-2 23 9 6 20 5' }
+    'fibonacci-bloom': { ink:'#6B8E23', path:'M22 23C22 19 28 19 28 24C28 31 17 32 14 25C9 14 25 6 34 15C47 28 28 46 12 34C-2 23 9 6 20 5' },
+    'parsley': { ink:'#8F9779', path:'M22 38V17M22 30C14 29 9 24 8 17M14 26 7 25M12 23 13 15M22 25C30 24 35 20 36 13M30 23 36 25M33 20 29 14M22 20C15 17 15 10 18 6M17 14 11 11M22 20C28 16 29 10 25 6M28 13 34 8M22 17 22 5' }
 };
 export function createCracksSettingsDialog(app) {
     const dialog=document.createElement('dialog');

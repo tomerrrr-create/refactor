@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {CRACKS_GROWTH_PRESETS,getCracksPresetId,DEFAULT_CRACKS_GROWTH,DEFAULT_CRACKS_MATERIAL,validateCracksGrowth} from '../js/cracks-settings.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 import {createCracksState,runCracksGeneration,restoreCracksState} from '../js/simulations/cracks.js';
-const expected=[{branchChance:65,branchInterval:11,curvature:100},{branchChance:40,branchInterval:22,curvature:100},{branchChance:40,branchInterval:22,curvature:0},{branchChance:55,branchInterval:8,curvature:130}];
-test('four unique presets match the agreed values and custom matching is derived from actual settings',()=>{
- assert.equal(CRACKS_GROWTH_PRESETS.length,4);assert.equal(new Set(CRACKS_GROWTH_PRESETS.map(p=>p.id)).size,4);
+const expected=[{branchChance:65,branchInterval:11,curvature:100},{branchChance:40,branchInterval:22,curvature:100},{branchChance:40,branchInterval:22,curvature:0},{branchChance:55,branchInterval:8,curvature:130},{branchChance:90,branchInterval:3,curvature:140}];
+test('five unique presets match the agreed values and custom matching is derived from actual settings',()=>{
+ assert.equal(CRACKS_GROWTH_PRESETS.length,5);assert.equal(new Set(CRACKS_GROWTH_PRESETS.map(p=>p.id)).size,5);
  CRACKS_GROWTH_PRESETS.forEach((p,i)=>{assert.deepEqual(validateCracksGrowth(p.values),expected[i]);assert.equal(getCracksPresetId({...p.values}),p.id);assert(Object.isFrozen(p.values));});
  assert.deepEqual(CRACKS_GROWTH_PRESETS[0].values,DEFAULT_CRACKS_GROWTH);assert.equal(getCracksPresetId({branchChance:35,branchInterval:22,curvature:100}),null);
 });

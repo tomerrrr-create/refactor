@@ -30,7 +30,8 @@ export const CRACKS_GROWTH_PRESETS = Object.freeze([
     Object.freeze({id:'first-whisper',key:'cracks_preset_first_whisper',values:DEFAULT_CRACKS_GROWTH}),
     Object.freeze({id:'quiet-flow',key:'cracks_preset_quiet_flow',values:Object.freeze({branchChance:40,branchInterval:22,curvature:100})}),
     Object.freeze({id:'crystal-paths',key:'cracks_preset_crystal_paths',values:Object.freeze({branchChance:40,branchInterval:22,curvature:0})}),
-    Object.freeze({id:'fibonacci-bloom',key:'cracks_preset_fibonacci_bloom',values:Object.freeze({branchChance:55,branchInterval:8,curvature:130})})
+    Object.freeze({id:'fibonacci-bloom',key:'cracks_preset_fibonacci_bloom',values:Object.freeze({branchChance:55,branchInterval:8,curvature:130})}),
+    Object.freeze({id:'parsley',key:'cracks_preset_parsley',values:Object.freeze({branchChance:90,branchInterval:3,curvature:140})})
 ]);
 export function getCracksPresetId(value) {
     const growth=validateCracksGrowth(value);

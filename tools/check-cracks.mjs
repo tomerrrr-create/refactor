@@ -58,8 +58,13 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  await openSettings();const dialog=page.locator('#cracksSettingsDialog'),strength=dialog.locator('#cracksMaterialStrength'),chance=dialog.locator('#cracksBranchChance'),interval=dialog.locator('#cracksBranchInterval'),curvature=dialog.locator('#cracksCurvature');
  async function setGrowth(values){for(const [input,value] of [[chance,values.branchChance],[interval,values.branchInterval],[curvature,values.curvature]]){await input.fill(String(value));}}
  const defaultGrowth={branchChance:55,branchInterval:8,curvature:130},customGrowth={branchChance:35,branchInterval:7,curvature:150};
- const presets=[['first-whisper',{branchChance:65,branchInterval:11,curvature:100}],['quiet-flow',{branchChance:40,branchInterval:22,curvature:100}],['crystal-paths',{branchChance:40,branchInterval:22,curvature:0}],['fibonacci-bloom',{branchChance:55,branchInterval:8,curvature:130}]];
- assert.equal(await dialog.locator('[data-cracks-preset]').count(),4);assert.equal(await dialog.locator('[data-cracks-preset][aria-pressed="true"]').getAttribute('data-cracks-preset'),'first-whisper');
+ const presets=[['first-whisper',{branchChance:65,branchInterval:11,curvature:100}],['quiet-flow',{branchChance:40,branchInterval:22,curvature:100}],['crystal-paths',{branchChance:40,branchInterval:22,curvature:0}],['fibonacci-bloom',{branchChance:55,branchInterval:8,curvature:130}],['parsley',{branchChance:90,branchInterval:3,curvature:140}]];
+ assert.equal(await dialog.locator('[data-cracks-preset]').count(),5);assert.equal(await dialog.locator('[data-cracks-preset][aria-pressed="true"]').getAttribute('data-cracks-preset'),'first-whisper');
+ const presetBounds=await dialog.locator('[data-cracks-preset]').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
+ assert(presetBounds.every(r=>Math.abs(r.y-presetBounds[0].y)<1&&Math.abs(r.w-r.h)<1),'five square presets stay in one row');
+ assert.equal(await dialog.evaluate(e=>e.scrollWidth>e.clientWidth+1),false,'fifth preset does not widen the dialog');
+ await dialog.locator('[data-cracks-area="dead"]').click();await dialog.locator('[data-cracks-preset="parsley"]').click();assert.equal(await dialog.locator('[data-cracks-area="dead"]').getAttribute('aria-pressed'),'true');
+ await dialog.locator('[data-cracks-area="all"]').click();
  const presetDraftBefore=await state();
  for(const [id,values] of presets){await dialog.locator('[data-cracks-preset="'+id+'"]').click();assert.equal(await chance.inputValue(),String(values.branchChance));assert.equal(await interval.inputValue(),String(values.branchInterval));assert.equal(await curvature.inputValue(),String(values.curvature));assert(!(Number(await strength.inputValue())>0));assert.equal(await dialog.locator('[data-cracks-color], #cracksLineColor').count(),0);assert.deepEqual((await state()).snapshot,presetDraftBefore.snapshot,'preset selection remains a draft');}
  await dialog.locator('[data-cracks-preset="quiet-flow"]').click();await curvature.fill('0');assert.equal(await dialog.locator('[data-cracks-preset][aria-pressed="true"]').getAttribute('data-cracks-preset'),'crystal-paths');await chance.fill('35');assert.equal(await dialog.locator('[data-cracks-preset][aria-pressed="true"]').count(),0);assert(await dialog.locator('#cracksPresetCustom').isVisible());await dialog.locator('[data-cancel]').click();await openSettings();
@@ -76,6 +81,8 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  await openSettings();await dialog.locator('[type=submit]').click();assert.equal((await state()).snapshot.contourState.rules.lineColor,'brush');assert.equal((await state()).historyDepth,settingsBefore.historyDepth);
  await openSettings();assert(await dialog.evaluate(e=>{const r=e.getBoundingClientRect();return e.scrollWidth<=e.clientWidth+1&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;}));await dialog.evaluate(async e=>{await Promise.all(e.getAnimations().map(a=>a.finished.catch(()=>{})));});await page.screenshot({path:path.join(artifacts,config.lang+'-material-settings.png')});await dialog.locator('[data-cancel]').click();assert(await button.evaluate(e=>document.activeElement===e));
  if(process.env.CRACKS_SETTINGS_ONLY){assert.deepEqual(errors,[]);console.log(JSON.stringify({config,settingsPassed:true}));await context.close();continue;}
+ // Run the focused settings/preset contract independently of the legacy full journey.
+ if(!process.env.CRACKS_PRESETS_ONLY){
  await tap(page.locator('#btnStepForward'));await page.waitForFunction(()=>cracksTest.state().snapshot.contourState?.cracksState?.steps>0);assert((await state()).board.some(k=>k===0));const runStart=await state();
  await page.evaluate(()=>cracksTest.play());await page.waitForFunction(()=>cracksTest.state().gen>=20);await tap(button);assert((await state()).playing);assert.equal((await state()).mode,'cracks');
  await openSettings();assert((await state()).playing);const liveGeneration=(await state()).gen;await strength.fill('0');await dialog.locator('[data-cracks-preset="quiet-flow"]').click();await dialog.locator('[type=submit]').click();assert((await state()).playing);assert((await state()).gen>=liveGeneration);assert.deepEqual((await state()).snapshot.contourState.growth,{branchChance:40,branchInterval:22,curvature:100});assert.equal((await state()).snapshot.contourState.material.enabled,false);
@@ -143,6 +150,7 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  const historyRecipe=await page.evaluate(()=>cracksTest.recipe());await page.locator('#projectFileInput').setInputFiles({name:'cracks-preferences-history.txt',mimeType:'text/plain',buffer:Buffer.from(historyRecipe)});await page.waitForFunction(()=>cracksTest.state().loaded);await page.evaluate(()=>cracksTest.macro());await page.waitForFunction(()=>!cracksTest.state().loaded&&!cracksTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,historyResult.board,'Undo/Redo recipe uses the retained settings');assert.deepEqual(errors,[]);
  // Original anchor keeps the luminance-zero color as sort positions change.
 
+ }
  // Every preset saves actual values, retains settings across Undo/Redo and
  // replays exactly. First preset also exercises a pre-tuning recipe (no growth).
  for(const [id,values] of presets){
