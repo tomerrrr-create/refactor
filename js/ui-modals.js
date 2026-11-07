@@ -39,6 +39,18 @@ let brushPicker;
 let colorPickerReturnFocus;
 let colorPickerHoldOpeningClick = false;
 let presetFeedback, presetFeedbackTimer;
+let presetTooltipButton = null;
+
+function restorePresetTooltip(force = false) {
+    const button = presetTooltipButton;
+    if (!button || (!force && ((!presetFeedback?.hidden) || button.matches(':hover')))) return;
+    button.removeEventListener('pointerleave', onPresetPointerLeave);
+    button.removeAttribute('data-preset-tooltip-suppressed');
+    button.title = button.getAttribute('aria-label') || '';
+    presetTooltipButton = null;
+}
+
+function onPresetPointerLeave() { restorePresetTooltip(); }
 
 function presetCycleDefinition(simulation) {
     const gol = simulation === 'gameOfLife';
@@ -57,6 +69,7 @@ function presetCycleDefinition(simulation) {
 function hidePresetFeedback() {
     clearTimeout(presetFeedbackTimer);
     if (presetFeedback) presetFeedback.hidden = true;
+    restorePresetTooltip();
 }
 
 function showPresetFeedback(button, name) {
@@ -69,8 +82,23 @@ function showPresetFeedback(button, name) {
         window.addEventListener('resize',hidePresetFeedback);window.addEventListener('blur',hidePresetFeedback);
     }
     clearTimeout(presetFeedbackTimer);presetFeedback.textContent = name;presetFeedback.hidden = false;
+    const desktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    presetFeedback.classList.toggle('preset-swipe-feedback-desktop', desktop);
+    if (presetTooltipButton && (!desktop || presetTooltipButton !== button)) restorePresetTooltip(true);
+    if (desktop) {
+        if (!presetTooltipButton) {
+            presetTooltipButton = button;
+            button.addEventListener('pointerleave', onPresetPointerLeave);
+        }
+        button.setAttribute('data-preset-tooltip-suppressed', '');
+        button.removeAttribute('title');
+        // Measure intrinsic text width, independent of the previous label's left edge.
+        presetFeedback.style.left = '0px';
+    }
     const anchor = button.getBoundingClientRect(),box = presetFeedback.getBoundingClientRect();
-    presetFeedback.style.left = Math.max(12,Math.min(anchor.left+anchor.width/2-box.width/2,window.innerWidth-box.width-12))+'px';
+    presetFeedback.style.left = desktop
+        ? Math.max(12+box.width/2,Math.min(anchor.left+anchor.width/2,window.innerWidth-box.width/2-12))+'px'
+        : Math.max(12,Math.min(anchor.left+anchor.width/2-box.width/2,window.innerWidth-box.width-12))+'px';
     presetFeedback.style.top = Math.max(8,anchor.top-box.height-7)+'px';
     presetFeedbackTimer = setTimeout(hidePresetFeedback,1200);
 }

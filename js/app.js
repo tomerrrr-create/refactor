@@ -3354,8 +3354,9 @@ function updateGameOfLifeButtonUI() {
     });
     const preset = Object.entries(C.GAME_OF_LIFE_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(cloneGameOfLifeRules(gameOfLifeRules)))?.[0];
     const name = preset ? document.getElementById(preset)?.textContent.trim() : getText('cycle_custom');
-    dom.btnGameOfLife.title = getText('tooltip_gameOfLife') + (active ? ': ' + name : '');
-    dom.btnGameOfLife.setAttribute('aria-label', dom.btnGameOfLife.title);
+    const label = getText('tooltip_gameOfLife') + (active ? ': ' + name : '');
+    dom.btnGameOfLife.setAttribute('aria-label', label);
+    if (!dom.btnGameOfLife.hasAttribute('data-preset-tooltip-suppressed')) dom.btnGameOfLife.title = label;
 }
 
 function setPersonalGameOfLifeRules(rules) {
@@ -3439,8 +3440,9 @@ function updateChiFlowButtonUI() {
     const preset = C.CHI_FLOW_PRESETS[source] ? source :
         Object.entries(C.CHI_FLOW_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(chiFlowRules))?.[0];
     const name = preset ? getText('chi_preset_' + preset.toLowerCase()) : getText('cycle_custom');
-    dom.btnSandpile.title = getText('chi_modal_title') + (active ? ': ' + name : '');
-    dom.btnSandpile.setAttribute('aria-label', dom.btnSandpile.title);
+    const label = getText('chi_modal_title') + (active ? ': ' + name : '');
+    dom.btnSandpile.setAttribute('aria-label', label);
+    if (!dom.btnSandpile.hasAttribute('data-preset-tooltip-suppressed')) dom.btnSandpile.title = label;
 }
 
 function setPersonalChiFlowRules(rules) {

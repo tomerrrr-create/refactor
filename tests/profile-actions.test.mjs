@@ -58,7 +58,7 @@ test('all simulation groups are session-only until Save; display and Startup sti
   s.identity.gameOfLife.index=2;s.identity.gameOfLife.yoursRules.birth=[2];
   s.settings.evolutionTuning=structuredClone(DEFAULT_EVOLUTION_TUNING);s.settings.evolutionTuning.breathe.speed=2;
   s.settings.nudgeIntervalMs=30;s.settings.startup.boardSize=27;
-  s.settings.simulationTheme='silver';s.settings.brush.size=23;
+  s.settings.simulationTheme='teal';s.settings.brush.size=23;
  });
  state.capture(edited);
  state.select(1);state.observe(state.draft());state.select(0);
@@ -68,7 +68,7 @@ test('all simulation groups are session-only until Save; display and Startup sti
  const reopened=createProfileState(initial(),disk).draft();
  for(const key of ['rules','cycles','evolutionTuning','nudgeIntervalMs'])assert.deepEqual(reopened.settings[key],baseline.settings[key],key);
  assert.deepEqual(reopened.identity,baseline.identity);
- assert.equal(reopened.settings.startup.boardSize,27);assert.equal(reopened.settings.simulationTheme,'silver');assert.equal(reopened.settings.brush.size,23);
+ assert.equal(reopened.settings.startup.boardSize,27);assert.equal(reopened.settings.simulationTheme,'teal');assert.equal(reopened.settings.brush.size,23);
  state.save();const saved=createProfileState(initial(),disk);assert.deepEqual(saved.draft(),edited);
  saved.observe(saved.draft());saved.capture(edit(edited,s=>{s.settings.rules.erosion.erosionStages.channels=1;}));
  assert.deepEqual(createProfileState(initial(),disk).draft(),edited,'later experiments do not overwrite the saved version');

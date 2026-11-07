@@ -113,7 +113,7 @@ The settings toolbar has three symbol buttons for the assigned cycle positions, 
 
 The low-level Chi Flow fallback Yours → Ripples → Nova is not the fresh profile-1 cycle. Save to profile to retain session rule/cycle edits on reopening; dialog Save applies the working choices.
 
-When Game of Life or Chi Flow is selected, swipe its button **right for the next preset** or **left for the previous preset**, wrapping at both ends. Physical directions stay the same in every language and in either simulation drawer. Swipes are inactive for unselected evolutions and during macro loading/playback. A completed swipe commits exactly the same three-slot snapshot as choosing that preset in settings and pressing Save: only the active shortcut changes, its zero/one/two-star position stays selected, the other shortcuts and Yours remain unchanged, and Game of Life retains its genetics setting. A brief nonblocking label shows the localized preset name without shading the board or controls.
+When Game of Life or Chi Flow is selected, swipe its button **right for the next preset** or **left for the previous preset**, wrapping at both ends. Physical directions stay the same in every language and in either simulation drawer. Swipes are inactive for unselected evolutions and during macro loading/playback. A completed swipe commits exactly the same three-slot snapshot as choosing that preset in settings and pressing Save: only the active shortcut changes, its zero/one/two-star position stays selected, the other shortcuts and Yours remain unchanged, and Game of Life retains its genetics setting. A brief nonblocking label shows the localized preset name without shading the board or controls. On desktop, the label stays centered above the button (clamped only at screen edges), independently of pointer position or name length. Its native tooltip is suppressed during feedback and until the pointer leaves, while its accessible label stays current. Touch feedback retains its existing positioning and behavior.
 
 Both the dialog and navigation read the preset buttons in DOM order, rather than constants insertion order. Game of Life begins Paint 4 → Paint 1 → Shuffle → Harmonic; Chi Flow begins Nova → Harmony → Topography → Fluent. Reordering those buttons changes navigation as well. A retained named source identifies the current preset even when a profile supplies a different Chi Reach; otherwise matching rule values identify it. Unmatched custom rules go to the first preset on a right swipe or the last on a left swipe. Choosing a Chi preset applies its entire rule set, including its own Magnetic Reach, exactly like the dialog.
 
@@ -197,7 +197,7 @@ Profiles contain settings, not drawings. Switching/importing applies preferences
 
 Capture runs after committed UI events and logged actions, and on page hide/visibility change; it does not poll or run in engine/render loops. Unsubmitted modal fields and board pixels do not enter a profile. Comparisons ignore object key order. Capture merges changes relative to the last runtime observation, keeping temporary replay rules out of drafts. Macro load suspends capture; completion/cancellation rebases the observation without saving replay values.
 
-Resting and running interface colors are separate profile preferences: Gold, Blue, Smoky turquoise, Smoky silver, Ice and Pink. The running default is Gold. Play/Pause selects the effective color without rewriting either preference or artwork. Interface zoom, Wind parameters, language and paused brush-motion recording have separate device-local policies; see [Preferences and modal drafts](#preferences-and-modal-drafts).
+Resting and running interface colors are separate profile preferences with exactly three choices: Blue, Gold and Smoky turquoise. The resting default is Blue and the running default is Gold. Retired appearance IDs in old device preferences, profiles and settings files fall back independently to those defaults without resetting other settings; their buttons, translations and overlay styling are removed. Play/Pause selects the effective color without rewriting either preference or artwork. Interface zoom, Wind parameters, language and paused brush-motion recording have separate device-local policies; see [Preferences and modal drafts](#preferences-and-modal-drafts).
 
 ## 1. Project structure
 
@@ -706,6 +706,8 @@ Stopping or completing a macro releases its control-panel overlay independently 
 
 ## FYI installation and offline use
 
+The technician menu's **Branches** section links to the public Vercel versions of **Work**, **Baby mode** and **Main**. Each opens in a separate tab; it does not replace the current board or transfer artwork/settings between the different origins. Baby mode remains on its separate Git branch.
+
 Install FYI from Safari on iPhone (Share → Add to Home Screen) or Chrome on Android (Install app / Add to home screen), subject to browser support. Open it online once and allow offline resources to finish downloading before disconnecting. Service-worker registration requires a secure context such as HTTPS or a suitable local development origin. No store or application backend is required.
 
 The checked-in manifest uses FYI eclipse icon assets. A Vercel build with `VERCEL_GIT_COMMIT_REF=work` produces **FYI Work** and substitutes the social-preview icon; social sharing metadata remains separate. Merely selecting a local Git branch does not choose the Work build variant.
@@ -748,6 +750,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Area | Examples |
 | --- | --- |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
+| Three technician themes, resting/playback colors, reload and retired theme migration | `tools/check-simulation-themes.mjs` |
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Cracks growth-area drafts, presets, material interaction, profiles and replay | `tools/check-cracks-area.mjs` |
 | Legacy independent-selection compatibility: old profile/settings migration, old/new recipes, settings, cycles and history | `tools/check-preset-rollback.mjs` |

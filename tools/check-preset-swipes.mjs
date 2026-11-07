@@ -39,6 +39,21 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
    await swipe(button,direction*35);const swiped=await state();sameBoard(before,swiped);assert.equal(swiped[key].index,index);assert.equal(swiped[key].sources[index],keyFor(target));assert.deepEqual(swiped[key].yoursRules,before[key].yoursRules);
    assert.equal(swiped.genetics,'palette-order');for(const other of [0,1,2].filter(i=>i!==index))assert.deepEqual(swiped[key].slots[other],before[key].slots[other]);
    assert.equal(await page.locator('.preset-swipe-feedback').textContent(),await page.locator('#'+target).textContent());
+   const feedback = await page.evaluate(id=>{
+    const button=document.getElementById(id),label=document.querySelector('.preset-swipe-feedback'),b=button.getBoundingClientRect(),r=label.getBoundingClientRect();
+    return {desktop:matchMedia('(hover: hover) and (pointer: fine)').matches,centered:label.classList.contains('preset-swipe-feedback-desktop'),center:r.x+r.width/2,target:Math.max(12+r.width/2,Math.min(b.x+b.width/2,innerWidth-r.width/2-12)),bottom:r.bottom,top:b.top,title:button.hasAttribute('title'),accessible:button.getAttribute('aria-label')};
+   },id);
+   assert.equal(feedback.centered,feedback.desktop);
+   assert(feedback.accessible);
+   if(feedback.desktop){assert(Math.abs(feedback.center-feedback.target)<1,'desktop feedback stays centered');assert(Math.abs(feedback.bottom-(feedback.top-7))<1,'desktop feedback stays above the button');assert.equal(feedback.title,false);}
+   else assert.equal(feedback.title,true,'touch tooltip behavior unchanged');
+   if(index===0&&direction===1&&feedback.desktop){
+    await button.hover();await page.waitForTimeout(1250);
+    assert.equal(await button.getAttribute('title'),null,'native tooltip stays suppressed under resting pointer');
+    await page.mouse.move(0,0);
+    assert.equal(await button.getAttribute('title'),await button.getAttribute('aria-label'),'latest accessible label restores on pointer leave');
+    await swipe(button,-35);await swipe(button,35);
+   }
    if(index===0&&direction===1)await page.screenshot({path:path.join(artifacts,config.lang+'-'+sim+'-feedback.png'),animations:'disabled'});
    const swipeLog=swiped.logs.at(-1).split(' -> ')[1];
    await open();assert.equal(await modal.locator('[data-cycle-slot="'+index+'"]').getAttribute('aria-pressed'),'true');assert((await page.locator('#'+target).getAttribute('class')).includes('active'));
