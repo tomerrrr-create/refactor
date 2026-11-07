@@ -275,10 +275,10 @@ body {
   display: block;
   grid-column: 3 / 8; 
   grid-row: 2 / span 2;    
-  background: linear-gradient(to bottom, #0f172a, #000000);
-  border-radius: 12px;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background: radial-gradient(ellipse at 50% 0%, #7397b50c, transparent 65%), linear-gradient(180deg, #0b121b, #030609);
+  border-radius: 18px;
+  border: 1px solid #47667f;
+  box-shadow: inset 0 1px 0 #c4e2fa12, inset 0 -1px 0 #7298b60a, 0 4px 20px #0008, 0 0 8px #658fb80c;
 }
 
 /* --- Simulation Mode Layout Overrides --- */
@@ -1897,7 +1897,7 @@ button, .ctrl {
 .sim-mode-active #simModeBackground {
   position: relative;
   isolation: isolate;
-  border-color: #334155;
+  border-color: #47667f;
   transition: border-color 400ms ease-in-out, box-shadow 400ms ease-in-out;
 }
 .sim-mode-active #simModeBackground::before,
@@ -1910,13 +1910,13 @@ button, .ctrl {
   opacity: 0;
   transition: opacity 400ms ease-in-out;
 }
-.sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
-.sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
+.sim-mode-active #simModeBackground::before { background: radial-gradient(ellipse at 50% 0%,#b19b650d,transparent 65%),linear-gradient(180deg,#12120e,#060705); }
+.sim-mode-active #simModeBackground::after { background: radial-gradient(ellipse at 50% 0%,#77bdb50d,transparent 65%),linear-gradient(180deg,#0b1515,#030809); }
 :root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: #766741; }
 :root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }
-:root[data-simulation-effective-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
-:root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
+:root[data-simulation-effective-theme="gold"] .sim-mode-active #simModeBackground { border-color: #8d7758; }
+:root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #4e807d; }
 :root[data-simulation-effective-theme="gold"] #simModeBackground::before,
 :root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
 .technician-display-settings .simulation-theme-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
@@ -2426,18 +2426,20 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #controlsContainer .evolution-drawer-trigger { display:none; }
 /* Keep all four toolbar rows fixed; use the free gutters on both sides of the frame. */
 #controlsContainer.sim-mode-active .evolution-drawer-trigger { display:flex; align-items:center; justify-content:center; grid-area:2 / 2 / 4 / 3; align-self:center; justify-self:end; transform:translateX(6px); width:min(44px,calc(100% + 8px)); height:44px; padding:0; border:0; background:transparent; cursor:pointer; z-index:1; }
-.evolution-drawer-trigger { position:relative; color:#9ca3af; direction:ltr; touch-action:none; }
-.evolution-drawer-trigger .drawer-handle { position:absolute; display:flex; align-items:center; justify-content:center; box-sizing:border-box; right:-1px; width:18px; height:34px; border:1px solid #334155; border-right:0; border-radius:10px 0 0 10px; background:linear-gradient(#070c16,#05080d); pointer-events:none; }
+.evolution-drawer-trigger { position:relative; color:#abc1d2; direction:ltr; touch-action:none; }
+.evolution-drawer-trigger .drawer-handle { position:absolute; display:flex; align-items:center; justify-content:center; box-sizing:border-box; right:-1px; width:18px; height:34px; border:1px solid #47667f; border-right:0; border-radius:12px 0 0 12px; background:linear-gradient(180deg,#0c141e,#050a10); box-shadow:inset 0 1px 0 #c4e2fa12,0 0 6px #658fb80a; pointer-events:none; }
 .evolution-drawer-trigger .drawer-handle svg { width:14px; height:24px; opacity:.85; }
-:root[data-simulation-effective-theme="gold"] .evolution-drawer-trigger .drawer-handle { border-color:#b28b3645; background:linear-gradient(#15150f,#0d0e0c); }
-:root[data-simulation-effective-theme="teal"] .evolution-drawer-trigger .drawer-handle { border-color:#68bdb545; background:linear-gradient(#142724,#0a100f); }
+:root[data-simulation-effective-theme="gold"] .evolution-drawer-trigger .drawer-handle { border-color:#8d7758; background:linear-gradient(#14150f,#070805); }
+:root[data-simulation-effective-theme="teal"] .evolution-drawer-trigger .drawer-handle { border-color:#4e807d; background:linear-gradient(#0d1818,#040a0a); }
+.evolution-drawer-trigger .drawer-handle::before { content:''; position:absolute; right:0; top:50%; transform:translateY(-50%); width:1px; height:12px; background:linear-gradient(transparent,#e6c981a6,transparent); box-shadow:0 0 4px #d5aa4833; pointer-events:none; }
+.evolution-drawer-trigger[data-side="right"] .drawer-handle::before { right:auto; left:0; }
 .evolution-drawer-trigger .drawer-active-mark { display:none; position:absolute; bottom:2px; width:2px; height:2px; border-radius:50%; background:var(--gold); }
 .evolution-drawer-trigger[data-parked-active="true"] .drawer-active-mark { display:block; }
 .evolution-drawer-trigger:disabled { cursor:default; opacity:.3; }
 .evolution-drawer-trigger:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:10px; }
 @media(hover:hover) { .evolution-drawer-trigger:hover:not(:disabled) .drawer-handle svg { opacity:1; } }
 #controlsContainer.sim-mode-active .evolution-drawer-trigger[data-side="right"] { grid-area:2 / 8 / 4 / 9; justify-self:start; transform:translateX(-6px); }
-.evolution-drawer-trigger[data-side="right"] .drawer-handle { right:auto; left:-1px; border-right:1px solid #334155; border-left:0; border-radius:0 10px 10px 0; }
+.evolution-drawer-trigger[data-side="right"] .drawer-handle { right:auto; left:-1px; border-right:1px solid #47667f; border-left:0; border-radius:0 12px 12px 0; }
 .evolution-drawer-trigger[data-side="right"] .drawer-handle svg { transform:scaleX(-1); }
 #controlsContainer.sim-mode-active [data-evolution-id]:not([data-evolution-slot]) { display:none !important; }
 #controlsContainer.sim-mode-active [data-evolution-slot] { display:inline-flex !important; visibility:visible !important; opacity:1 !important; grid-row:var(--evolution-row) !important; grid-column:var(--evolution-column) !important; }

@@ -43,7 +43,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
  assert.equal(await trigger.locator('.drawer-handle svg').count(),1);
  assert.equal(await trigger.getAttribute('data-page'),'0');
- assert.equal(await trigger.evaluate(e=>getComputedStyle(e).color),'rgb(156, 163, 175)');
+ assert.equal(await trigger.evaluate(e=>getComputedStyle(e).color),'rgb(171, 193, 210)');
  async function checkHandleGeometry(){
   const geometry=await page.evaluate(()=>{
    const rect=e=>{const r=e.getBoundingClientRect();return {id:e.id,x:r.x,y:r.y,width:r.width,height:r.height};};
@@ -61,6 +61,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const originalZoom=await page.locator('#appContainer').evaluate(e=>({attribute:e.getAttribute('data-ui-zoom'),value:e.style.getPropertyValue('--ui-zoom')}));
  for(const zoom of [.9,1.15]){await page.locator('#appContainer').evaluate((e,z)=>{e.setAttribute('data-ui-zoom','');e.style.setProperty('--ui-zoom',z);},zoom);await checkHandleGeometry();}
  await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
+ const beforeThemes=await state();
+ for(const theme of ['gold','teal','blue']){
+  await page.evaluate(t=>drawerTest.theme(t),theme);await page.waitForTimeout(450);await checkHandleGeometry();
+  const finish=await page.evaluate(()=>{const frame=getComputedStyle(document.getElementById('simModeBackground'));const handles=[...document.querySelectorAll('.drawer-handle')].map(e=>({border:getComputedStyle(e).borderTopColor,glint:getComputedStyle(e,'::before').backgroundImage}));return {radius:frame.borderRadius,border:frame.borderTopColor,handles};});
+  assert.equal(finish.radius,'18px');assert(finish.handles.every(h=>h.border===finish.border&&h.glint.includes('gradient')),'both handles match the theme rim with subtle gold seams');
+  await page.screenshot({path:path.join(artifacts,config.lang+'-obsidian-'+theme+'.png'),animations:'disabled'});
+ }
+ unchanged(beforeThemes,await state());
  await page.screenshot({path:path.join(artifacts,config.lang+'-handle.png'),animations:'disabled'});
  await tap(rightTrigger);assert.equal(await trigger.getAttribute('data-page'),'1');assert.equal(await rightTrigger.getAttribute('data-page'),'1');
  await tap(rightTrigger);assert.equal(await trigger.getAttribute('data-page'),'0');

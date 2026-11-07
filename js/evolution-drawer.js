@@ -8,7 +8,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     trigger.id='btnEvolutionDrawer';trigger.type='button';trigger.className='evolution-drawer-trigger';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
     trigger.setAttribute('aria-keyshortcuts','Alt+ArrowUp');
-    trigger.innerHTML='<span class="drawer-handle" aria-hidden="true"><svg viewBox="0 0 16 28" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5-4 4 4 4m-2 2 4 4-4 4"/></svg><span class="drawer-active-mark"></span></span>';
+    trigger.innerHTML='<span class="drawer-handle" aria-hidden="true"><svg viewBox="0 0 16 28" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 9-4 5 4 5m5-10-4 5 4 5"/></svg><span class="drawer-active-mark"></span></span>';
     const rightTrigger=trigger.cloneNode(true);rightTrigger.id='btnEvolutionDrawerRight';
     rightTrigger.dataset.side='right';
     const triggers=[trigger,rightTrigger];
