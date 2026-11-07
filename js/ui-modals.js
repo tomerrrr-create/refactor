@@ -222,7 +222,7 @@ function closePaletteModal() {
     finishPickerDialogTransition();
     paletteHoldOpeningClick = false;
     app.dom.paletteModal.classList.remove('modal-visible');
-    app.dom.btnPalette.focus({ preventScroll: true });
+    (app.isBabyMode?.() ? app.dom.btnColorPicker : app.dom.btnPalette).focus({ preventScroll: true });
     app.resetWasLongPress(); // <-- תוספת תיקון הבאג
 }
 
@@ -1618,6 +1618,7 @@ export function initializeModals(appContext) {
         if (app.dom.technicianDialog.open) smoothRenderingToggle.focus({ preventScroll: true });
     });
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
+        if (app.isBabyMode?.()) return;
         technicianReturnFocus = trigger;
         app.refreshProfiles();
         hideWorkspaceResetConfirmation();

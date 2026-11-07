@@ -2490,3 +2490,44 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   max-width: min(260px, calc(100vw - 24px));
   transform: translateX(-50%);
 }
+
+/* Baby mode is a session-only view, independent of saved drawer positions. */
+body.baby-mode #controlsContainer.sim-mode-active {
+  grid-template-columns: repeat(4, minmax(44px, 1fr)) !important;
+  grid-template-rows: repeat(2, 52px) !important;
+  gap: 10px;
+  max-width: 360px;
+  margin: 24px auto 0;
+  direction: ltr;
+}
+body.baby-mode #controlsContainer.sim-mode-active > * { display: none !important; }
+body.baby-mode #controlsContainer.sim-mode-active > .ctrl[data-baby-control] {
+  display: inline-flex !important; visibility: visible !important;
+  opacity: 1 !important; transform: none; pointer-events: auto;
+  width: 48px; height: 48px; margin: auto;
+}
+body.baby-mode #controlsContainer.sim-mode-active > #btnColorPicker { grid-area: 1 / 1 !important; }
+body.baby-mode #controlsContainer.sim-mode-active > #btnPlayPauseLife { grid-area: 1 / 2 / 2 / 4 !important; }
+body.baby-mode #controlsContainer.sim-mode-active > #btnWind { grid-area: 1 / 4 !important; }
+body.baby-mode #controlsContainer.sim-mode-active > #btnBrightnessEvo { grid-area: 2 / 1 !important; }
+body.baby-mode #controlsContainer.sim-mode-active > #btnIslands { grid-area: 2 / 2 !important; }
+body.baby-mode #controlsContainer.sim-mode-active > #btnGravitationalSort { grid-area: 2 / 3 !important; }
+body.baby-mode #controlsContainer.sim-mode-active > #btnNudgeBrighter { grid-area: 2 / 4 !important; }
+body.baby-mode #controlsContainer.sim-mode-active > .ctrl[data-baby-control]:disabled { opacity: .18 !important; }
+body.baby-mode :is(#btnColorPickerSort, #btnColorPickerSymmetry) { display: none !important; }
+#btnBabyExit {
+  position: fixed; top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right));
+  z-index: 60; width: 44px; height: 44px; padding: 12px; color: #686a68;
+  border: 0; border-radius: 50%; background: transparent; touch-action: none;
+}
+#btnBabyExit svg { width: 100%; height: 100%; }
+#btnBabyExit.holding { color: #d4b865; background: #d4b86512; }
+.baby-exit-actions { display: flex; gap: 12px; padding: 16px 24px 24px; }
+.baby-exit-actions button { flex: 1; min-height: 44px; border: 1px solid #b28b3659; border-radius: 10px; color: #c3b99e; background: #171914; }
+.baby-exit-actions [data-confirm] { color: #e3c677; }
+.technician-baby-settings { margin-bottom: 20px; }
+.technician-baby-settings button { width: 100%; }
+.technician-branches { padding: 0 0 20px; margin-bottom: 20px; border-bottom: 1px solid #b28b3630; }
+.technician-branches h3 { color: #a6a695; font-size: 13px; margin-bottom: 10px; }
+.technician-branches > div { display: flex; gap: 12px; }
+.technician-branches a { flex: 1; text-align: center; padding: 10px; border-radius: 9px; border: 1px solid #b28b3630; color: #e3c677; font-size: 13px; }

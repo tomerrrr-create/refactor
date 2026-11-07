@@ -608,6 +608,14 @@
     </div>
   </dialog>
 
+  <button id="btnBabyExit" type="button" hidden aria-haspopup="dialog" aria-controls="babyExitDialog">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15" r="1" fill="currentColor"/></svg>
+  </button>
+  <dialog id="babyExitDialog" class="save-reset-dialog" aria-labelledby="babyExitTitle">
+    <div class="save-reset-card"><h2 id="babyExitTitle"></h2></div>
+    <div class="baby-exit-actions"><button type="button" data-cancel></button><button type="button" data-confirm></button></div>
+  </dialog>
+
   <dialog id="technicianDialog" class="technician-dialog" aria-labelledby="technicianTitle" aria-describedby="technicianSubtitle">
     <div class="modal-dismiss-bar"><button id="btnTechnicianCloseTop" type="button" class="modal-dismiss" data-i18n-title="saveModal_close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
@@ -650,6 +658,13 @@
         </div>
         <input id="profileSettingsFile" type="file" accept=".txt,text/plain" hidden>
         <p id="profileStatus" class="init-settings-note" role="status" aria-live="polite"></p>
+      </section>
+      <section class="technician-baby-settings">
+        <button id="btnBabyMode" type="button" class="technician-back"></button>
+      </section>
+      <section class="technician-branches" aria-labelledby="branchesTitle">
+        <h3 id="branchesTitle">Branches</h3>
+        <div><a href="https://refactor-eta-liard.vercel.app/" target="_blank" rel="noopener noreferrer">Production</a><a href="https://refactor-git-work-tomer-3e22.vercel.app/" target="_blank" rel="noopener noreferrer">Work</a></div>
       </section>
       <section class="technician-display-settings">
       <div id="simulationThemeSettings" class="technician-option simulation-theme-option">

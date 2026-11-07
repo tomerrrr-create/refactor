@@ -1,3 +1,5 @@
+import { BABY_BOARD_SIZE, initializeBabyMode } from './baby-mode.js';
+import { createMultiPointerBrush } from './multi-pointer-brush.js';
 import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour-action-settings.js';
 import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_FREQUENCIES,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
@@ -386,6 +388,7 @@ let magnetMode = 'off';
       let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
       let modals;
       let settingsProfiles;
+      let isBabyMode = false, babyReturnState = null;
 
       function palette() { return C.PALETTES[activePaletteIndex].colors; }
       function getErosionRecordingRules() { return recordErosionRules(erosionRules, palette().length); }
@@ -2621,6 +2624,7 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
       }
 
       function toggleSimMode() {
+        if (isBabyMode) return;
         const duration = 500;
         dom.controlsContainer.style.opacity = '0';
         setTimeout(() => {
@@ -2646,6 +2650,57 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
         }, duration);
       }
       
+      function enterBabyMode() {
+        if (isBabyMode || isAnimating || isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
+        finishBrushGesture();
+        if (windMode) setWindMode(false);
+        pauseLife();
+        babyReturnState = { panel: isSimModeActive, symmetry: symmetryMode,
+            brush: isBrushModeOn, continuous: isContinuousBrushOn, sort: currentSortMethod,
+            hidden: [...dom.controlsContainer.children].map(element => [element, element.classList.contains('control-hidden')]) };
+        performAction(() => {
+            if (n !== BABY_BOARD_SIZE) {
+                window.logArtEvent('GRID_RESIZE', BABY_BOARD_SIZE);
+                _performResize(BABY_BOARD_SIZE);
+                cracksState = null; cymaticsState = null;
+            }
+            applySortMethod('dark-rainbow');
+            restoreSeparatorWidth(0); applySeparator();
+            window.logArtEvent('SEPARATOR_CHANGE', 0);
+            symmetryMode = 'off'; updateSymmetryUI();
+            selectedColor = null; selectedColorIndex = -1; isRainbowModeActive = true;
+            setBrushMode(true, true);
+        });
+        isBabyMode = true;
+        isSimModeActive = true;
+        dom.controlsContainer.classList.add('sim-mode-active');
+        dom.btnPlayPauseLife.classList.remove('control-hidden');
+        resetArmedState(); armSimulation('brightnessEvo');
+        updateColorPickerButtonUI(); updateGlowEffect(); updateSortButtonUI();
+        return true;
+      }
+
+      function leaveBabyMode() {
+        finishBrushGesture();
+        if (windMode) setWindMode(false);
+        pauseLife();
+        if (dom.colorPickerModal.classList.contains('modal-visible')) document.getElementById('btnColorPickerCloseTop').click();
+        if (dom.paletteModal.classList.contains('modal-visible')) dom.btnPaletteModalClose.click();
+        isBabyMode = false;
+        const previous = babyReturnState; babyReturnState = null;
+        if (!previous) return;
+        performAction(() => applySortMethod(previous.sort));
+        symmetryMode = previous.symmetry; updateSymmetryUI();
+        setBrushMode(previous.brush, previous.continuous);
+        isSimModeActive = previous.panel;
+        dom.controlsContainer.classList.toggle('sim-mode-active', isSimModeActive);
+        previous.hidden.forEach(([element, hidden]) => element.classList.toggle('control-hidden', hidden));
+        if (!isSimModeActive) resetArmedState();
+        updateSimulationUtilityControl();
+        evolutionDrawer?.refresh();
+        updateColorPickerButtonUI(); updateGlowEffect(); updateSortButtonUI();
+      }
+
       function resetArmedState() {
         armedSimulation = null;
         updateNudgeButtonUI();
@@ -2724,7 +2779,9 @@ function applyActionToTiles(indices, actionFn) {
                 // --- START: BUG FIX ---
                 // If the action function changed the color index (k),
                 // we must also update the float value (v) to match it.
-                if (boardState[idx].k !== oldK) {
+                // Baby samples, like DRAW_STROKE replay, set the full pigment
+                // value even if a live brightness sample already has this rank.
+                if (boardState[idx].k !== oldK || isBabyMode) {
                     boardState[idx].v = boardState[idx].k;
                 }
                 // --- END: BUG FIX ---
@@ -2957,7 +3014,31 @@ function flushLiveBrushChanges() {
     if (armedSimulation === 'dla' && dlaState) syncDlaCrystalState();
 }
 
+const babyBrush = createMultiPointerBrush({
+    canDraw: () => isBabyMode && !windMode && !isBreathing && !isMacroLoaded && !isMacroPlaying &&
+        !document.querySelector('dialog[open], .modal-visible'),
+    indexAt: getTileIndexFromCoords,
+    begin: (event, index) => {
+        Object.assign(pointerState, { id: event.pointerId, downIndex: index, downX: event.clientX, downY: event.clientY,
+            suppressClick: true, isDragging: true, dragSourceIndex: index, lastPaintedIndex: -1,
+            lineAnchorIndex: -1, lineRestartPending: false, beforeState: isLifePlaying && simulationStartState ? null : getCurrentState(),
+            changes: new Map(), liveRecording: isLifePlaying || recordPausedBrushMotion,
+            pausedMotion: !isLifePlaying && recordPausedBrushMotion, motionStarted: false, liveCheckpoint: false });
+    },
+    paint: (pointer, index) => {
+        pointerState.lastPaintedIndex = pointer.last;
+        pointerState.dragSourceIndex = pointer.source;
+        if (pointer.last < 0 || !isContinuousBrushOn) handleDragPaint(index);
+        else paintBrushLine(pointer.anchor, index);
+        pointer.last = pointerState.lastPaintedIndex;
+        flushLiveBrushChanges();
+    },
+    finish: () => onPointerUp({ type: 'pointercancel', pointerId: pointerState.id,
+        clientX: pointerState.downX, clientY: pointerState.downY, babyFinished: true })
+});
+
 function finishBrushGesture() {
+    if (babyBrush.active) { babyBrush.finish(); return; }
     if (pointerState.id === null) return;
     onPointerUp({ type: 'pointercancel', pointerId: pointerState.id,
         clientX: pointerState.downX, clientY: pointerState.downY });
@@ -2965,6 +3046,7 @@ function finishBrushGesture() {
 
 function onPointerDown(e) {
     clearPaletteColorTransition(dom.board);
+    if (isBabyMode && !windMode) { babyBrush.down(e); return; }
     if (windMode) {
         if (e.button !== 0 || e.isPrimary === false) return;
         const index = getTileIndexFromCoords(e.clientX, e.clientY);
@@ -3002,6 +3084,7 @@ function onPointerDown(e) {
 }
 
 function onPointerMove(e) {
+    if (isBabyMode && !windMode) { babyBrush.move(e); return; }
     if (windMode) { windPainter.move(e.pointerId, getTileIndexFromCoords(e.clientX, e.clientY)); return; }
     if (pointerState.id !== e.pointerId) return;
     const currentIndex = getTileIndexFromCoords(e.clientX, e.clientY);
@@ -3027,6 +3110,7 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
+    if (isBabyMode && !windMode && !e.babyFinished) { babyBrush.up(e); return; }
     if (windMode) { windPainter.up(e.pointerId); if (windPointerId === e.pointerId) windPointerId = null; return; }
     if (pointerState.id !== e.pointerId) return;
     clearTimeout(pointerState.longPressTimer);
@@ -5410,6 +5494,7 @@ else if (action.eventName === 'Invert Colors') {
                 !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             refreshProfiles: () => settingsProfiles?.refresh(),
             isSimulationMode: () => isSimModeActive,
+            isBabyMode: () => isBabyMode,
             SORT_MODES,
             getRelativeSeparatorMode: () => isRelativeSeparatorMode,
             getRelativeSeparatorLevel: () => isRelativeSeparatorMode ? selectedRelativeSeparator : relativeSeparatorLevel(separatorPx),
@@ -5678,12 +5763,14 @@ updateBrightnessEvoButtonUI();
             getText,getLang:getCurrentLang,onLanguageChange});
         evolutionDrawer = createEvolutionDrawer({
             controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,
-            canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
-            canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
+            canNavigate:()=>!isBabyMode&&isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
+            canEdit:()=>!isBabyMode&&isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             getText,getLang:getCurrentLang,onLanguageChange,
             onSave:slots=>{if(!isSimModeActive||isLifePlaying||isBreathing||isMacroLoaded||isMacroPlaying)return false;
                 evolutionSlots=validateEvolutionSlots(slots);evolutionDrawer.applyLayout();persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;}
         });
+        initializeBabyMode({ enter: enterBabyMode, leave: leaveBabyMode,
+            finishInput: () => { finishBrushGesture(); windPainter?.stop(); }, getText, onLanguageChange });
         logCurrentStateAsInit();
 
         const boardCanvas = dom.boardCanvas;
@@ -5810,7 +5897,8 @@ initializeBrushPickerNavigation({
 });
 bindPickerGestures(dom.btnColorPicker, {
     onTap: () => {
-        if (!(isLifePlaying && armedSimulation === 'breathe')) handleColorPickerClick();
+        if (isBabyMode) modals.openColorPickerModal();
+        else if (!(isLifePlaying && armedSimulation === 'breathe')) handleColorPickerClick();
     },
     onOpen: () => modals.openColorPickerModal(),
     canSwipeSide: () => !windMode,

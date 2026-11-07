@@ -30,6 +30,7 @@ test('color control retains brush actions and has no Wind toggle gesture',()=>{
  C:{LONG_PRESS_SHOW_MS:600},hideLongPressDisplay(){},palette:()=>['color0'],
  handleColorPickerClick:()=>events.push('color'),modals:{openColorPickerModal:()=>events.push('color-settings')},
  updateGlowEffect(){},updateColorPickerButtonUI(){},bindPickerGestures:(button,options)=>{gestures=options;}});
+ c.isBabyMode=false;
  const start=source.indexOf('bindPickerGestures(dom.btnColorPicker,');
  vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnWind,',start)),c);
  assert.equal(gestures.onSwipeDown,undefined);gestures.onTap();gestures.onOpen();
@@ -60,7 +61,7 @@ test('leaving the simulation panel exits Wind instead of hiding its active contr
  const control=()=>{const classes=new Set();return {style:{},classList:{contains:c=>classes.has(c),toggle(c,on=!classes.has(c)){if(on)classes.add(c);else classes.delete(c);}}};};
  const dom=Object.fromEntries(['controlsContainer','btnSymmetry','btnContoursAction','btnBrushMode','btnGap','btnResetBoard','btnTutorial','btnSpecialReset','btnPlayPauseLife','btnToggleSimMode'].map(key=>[key,control()]));
  let pauses=0,resets=0;
- const c=vm.createContext({dom,windMode:true,isSimModeActive:false,setTimeout:callback=>callback(),
+ const c=vm.createContext({dom,windMode:true,isSimModeActive:false,isBabyMode:false,setTimeout:callback=>callback(),
   setWindMode(value){c.windMode=value;},pauseLife(){pauses++;},resetArmedState(){resets++;}});
  vm.runInContext(source.slice(source.indexOf('      function updateSimulationUtilityControl()'),source.indexOf('      function resetArmedState()')),c);
  c.toggleSimMode();assert.equal(c.isSimModeActive,true);assert.equal(c.windMode,true);assert.equal(dom.controlsContainer.style.opacity,'1');
