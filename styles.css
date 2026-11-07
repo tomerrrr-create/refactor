@@ -1901,8 +1901,7 @@ button, .ctrl {
   transition: border-color 400ms ease-in-out, box-shadow 400ms ease-in-out;
 }
 .sim-mode-active #simModeBackground::before,
-.sim-mode-active #simModeBackground::after,
-.sim-mode-active #simModeBackground .sim-theme-layer {
+.sim-mode-active #simModeBackground::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -1913,14 +1912,6 @@ button, .ctrl {
 }
 .sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
 .sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
-.sim-mode-active #simModeBackground .sim-theme-silver { background: linear-gradient(135deg,#191b1f,#0b0c0e); }
-.sim-mode-active #simModeBackground .sim-theme-ice { background: linear-gradient(135deg,#0e1b24,#080d12); }
-:root[data-simulation-effective-theme="silver"] { --sim-color: #899099; }
-:root[data-simulation-effective-theme="ice"] { --sim-color: #91b8cb; }
-:root[data-simulation-effective-theme="silver"] .sim-mode-active #simModeBackground { border-color: #89909945; }
-:root[data-simulation-effective-theme="ice"] .sim-mode-active #simModeBackground { border-color: #91b8cb45; }
-:root[data-simulation-effective-theme="silver"] #simModeBackground .sim-theme-silver,
-:root[data-simulation-effective-theme="ice"] #simModeBackground .sim-theme-ice { opacity: 1; }
 :root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: #766741; }
 :root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }
@@ -1933,8 +1924,7 @@ button, .ctrl {
   :root,
   .sim-mode-active #simModeBackground,
   .sim-mode-active #simModeBackground::before,
-  .sim-mode-active #simModeBackground::after,
-  .sim-mode-active #simModeBackground .sim-theme-layer { transition: none; }
+  .sim-mode-active #simModeBackground::after { transition: none; }
 }
 
 .simulation-theme-option .technician-option-heading { flex-wrap: wrap; gap: 14px; }
@@ -1949,8 +1939,6 @@ button, .ctrl {
 }
 .simulation-theme-preview[data-theme="teal"] { --preview-color: #68BDB5; --preview-border: #68bdb545; --preview-background: linear-gradient(135deg, #142724, #0a100f); }
 .simulation-theme-preview[data-theme="gold"] { --preview-color: #a58b54; --preview-border: #b28b3645; --preview-background: linear-gradient(135deg, #1c1a12, #0d0e0c); }
-.simulation-theme-preview[data-theme="silver"] { --preview-color: #899099; --preview-border: #89909945; --preview-background: linear-gradient(135deg,#191b1f,#0b0c0e); }
-.simulation-theme-preview[data-theme="ice"] { --preview-color: #91b8cb; --preview-border: #91b8cb45; --preview-background: linear-gradient(135deg,#0e1b24,#080d12); }
 .simulation-theme-preview[data-theme="blue"] { --preview-color: #3F51B5; --preview-border: #334155; --preview-background: linear-gradient(to bottom, #0f172a, #000); }
 .simulation-theme-preview svg { width: 26px; height: 26px; pointer-events: none; }
 .simulation-theme-preview[aria-pressed="true"] { opacity: 1; filter: none; border-color: var(--preview-color); box-shadow: 0 0 10px color-mix(in srgb, var(--preview-color) 25%, transparent); }
@@ -2441,11 +2429,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog .drawer-mark { display:grid; place-items:center; width:40px; height:40px; flex-shrink:0; border:1px solid #d4b86533; border-radius:12px; color:#e3c677; background:linear-gradient(140deg,#d4b86512,#d4b86503); }
 #evolutionDrawerDialog .drawer-mark svg { width:28px; height:28px; }
 
-.sim-mode-active #simModeBackground .sim-theme-pink { background:linear-gradient(135deg,#2a1821,#100c0f); }
-:root[data-simulation-effective-theme="pink"] { --sim-color:#c991ad; }
-:root[data-simulation-effective-theme="pink"] .sim-mode-active #simModeBackground { border-color:#c991ad45; }
-:root[data-simulation-effective-theme="pink"] #simModeBackground .sim-theme-pink { opacity:1; }
-.simulation-theme-preview[data-theme="pink"] { --preview-color:#c991ad; --preview-border:#c991ad45; --preview-background:linear-gradient(135deg,#2a1821,#100c0f); }
 
 #btnCymatics { display:none; }
 #cymaticsSettingsDialog .resonance-map-grid { grid-template-columns:repeat(3,minmax(44px,1fr)); width:min(100%,272px); }

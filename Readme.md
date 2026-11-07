@@ -197,7 +197,7 @@ Profiles contain settings, not drawings. Switching/importing applies preferences
 
 Capture runs after committed UI events and logged actions, and on page hide/visibility change; it does not poll or run in engine/render loops. Unsubmitted modal fields and board pixels do not enter a profile. Comparisons ignore object key order. Capture merges changes relative to the last runtime observation, keeping temporary replay rules out of drafts. Macro load suspends capture; completion/cancellation rebases the observation without saving replay values.
 
-Resting and running interface colors are separate profile preferences: Gold, Blue, Smoky turquoise, Smoky silver, Ice and Pink. The running default is Gold. Play/Pause selects the effective color without rewriting either preference or artwork. Interface zoom, Wind parameters, language and paused brush-motion recording have separate device-local policies; see [Preferences and modal drafts](#preferences-and-modal-drafts).
+Resting and running interface colors are separate profile preferences with exactly three choices: Blue, Gold and Smoky turquoise. The resting default is Blue and the running default is Gold. Retired appearance IDs in old device preferences, profiles and settings files fall back independently to those defaults without resetting other settings; their buttons, translations and overlay styling are removed. Play/Pause selects the effective color without rewriting either preference or artwork. Interface zoom, Wind parameters, language and paused brush-motion recording have separate device-local policies; see [Preferences and modal drafts](#preferences-and-modal-drafts).
 
 ## 1. Project structure
 
@@ -748,6 +748,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Area | Examples |
 | --- | --- |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
+| Three technician themes, resting/playback colors, reload and retired theme migration | `tools/check-simulation-themes.mjs` |
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Cracks growth-area drafts, presets, material interaction, profiles and replay | `tools/check-cracks-area.mjs` |
 | Legacy independent-selection compatibility: old profile/settings migration, old/new recipes, settings, cycles and history | `tools/check-preset-rollback.mjs` |
