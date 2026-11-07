@@ -8,7 +8,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     trigger.id='btnEvolutionDrawer';trigger.type='button';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
     trigger.setAttribute('aria-keyshortcuts','Alt+ArrowUp');
-    trigger.innerHTML='<svg class="drawer-page-dots" viewBox="0 0 24 12" aria-hidden="true"><circle data-drawer-page-dot="0" cx="6" cy="6" r="2.5"/><circle data-drawer-page-dot="1" cx="18" cy="6" r="2.5"/></svg><span class="drawer-active-mark" aria-hidden="true"></span>';
+    trigger.innerHTML='<span class="drawer-handle" aria-hidden="true"><svg viewBox="0 0 40 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 4-4 4 4 4m24-8 4 4-4 4"/><path d="M17 5h8v8h-8zM15 3h8"/></svg><span class="drawer-active-mark"></span></span>';
     controls.append(trigger);
     const dialog=document.createElement('dialog');
     dialog.id='evolutionDrawerDialog';
@@ -59,7 +59,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const at=active?slots.indexOf(evolutionControlId(active)):-1;
         const otherPage=at>=0&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);
-        trigger.querySelectorAll('[data-drawer-page-dot]').forEach((dot,index)=>dot.dataset.active=String(index===page));
+        trigger.dataset.page=String(page);
         const text=getText('drawer_navigation').replace('{n}',page+1);
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.title=[text,activeText,getText('drawer_open_hint')].filter(Boolean).join(' — ');
@@ -73,7 +73,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
             for(const button of controls.querySelectorAll('[data-evolution-slot]:not([data-evolution-page-hidden])')){
                 const ink=[...button.children].find(child=>getComputedStyle(child).display!=='none');
-                if(ink)pageAnimations.push(ink.animate([{opacity:.35},{opacity:1}],{duration:180,easing:'ease-out'}));
+                if(ink)pageAnimations.push(ink.animate([{opacity:0,translate:page===1?'12px 0':'-12px 0'},{opacity:1,translate:'0 0'}],{duration:240,easing:'cubic-bezier(.2,.65,.3,1)'}));
             }
         }
     }

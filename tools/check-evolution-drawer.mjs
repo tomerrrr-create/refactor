@@ -36,16 +36,33 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const visibleSlots=()=>page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>+a.dataset.evolutionSlot-+b.dataset.evolutionSlot).map(e=>e.dataset.evolutionId));
  const unchanged=(a,b)=>{assert.deepEqual(a.board,b.board);assert.deepEqual(a.logs,b.logs);assert.equal(a.history,b.history);assert.equal(a.armed,b.armed);};
  const initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
+ // The handle must not add a row or move the existing bottom action row.
+ const layout=await page.locator('#controlsContainer').evaluate(e=>({rows:getComputedStyle(e).gridTemplateRows.split(' '),bottom:['btnSave','btnInvert','btnToggleSimMode','btnRandom','btnCycleSort','btnUndo','btnRedo'].map(id=>getComputedStyle(document.getElementById(id)).gridRowStart)}));
+ assert.equal(layout.rows.length,4);assert(layout.bottom.every(row=>row==='4'));
+
  assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
- assert.equal(await trigger.locator('[data-drawer-page-dot]').count(),2);
- assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'0');
+ assert.equal(await trigger.locator('.drawer-handle svg').count(),1);
+ assert.equal(await trigger.getAttribute('data-page'),'0');
  assert.equal(await trigger.evaluate(e=>getComputedStyle(e).color),'rgb(156, 163, 175)');
- const dotSize=await trigger.locator('.drawer-page-dots').evaluate(e=>({width:parseFloat(getComputedStyle(e).width),height:parseFloat(getComputedStyle(e).height)}));
- assert(Math.abs(dotSize.width-20)<.1&&Math.abs(dotSize.height-10)<.1);
+ async function checkHandleGeometry(){
+  const geometry=await page.evaluate(()=>{
+   const rect=e=>{const r=e.getBoundingClientRect();return {id:e.id,x:r.x,y:r.y,width:r.width,height:r.height};};
+   const handle=rect(document.getElementById('btnEvolutionDrawer')),frame=rect(document.getElementById('simModeBackground'));
+   const overlaps=[...document.querySelectorAll('#controlsContainer > button')].filter(e=>e.id!=='btnEvolutionDrawer'&&e.checkVisibility()).map(rect).filter(r=>Math.min(r.x+r.width,handle.x+handle.width)-Math.max(r.x,handle.x)>1&&Math.min(r.y+r.height,handle.y+handle.height)-Math.max(r.y,handle.y)>1);
+   return {handle,frame,overlaps};
+  });
+  assert(Math.abs(geometry.handle.x+geometry.handle.width/2-geometry.frame.x-geometry.frame.width/2)<1);
+  assert(Math.abs(geometry.handle.y-geometry.frame.y-geometry.frame.height)<2);
+  assert.equal(geometry.overlaps.length,0,JSON.stringify(geometry));
+ }
+ await checkHandleGeometry();
+ for(const zoom of [.9,1.15]){await page.locator('#appContainer').evaluate((e,z)=>e.style.zoom=z,zoom);await checkHandleGeometry();}
+ await page.locator('#appContainer').evaluate(e=>e.style.removeProperty('zoom'));
+ await page.screenshot({path:path.join(artifacts,config.lang+'-handle.png'),animations:'disabled'});
  const frame=await page.locator('#simModeBackground').boundingBox();
  await page.evaluate(()=>window.realLifeButton=document.getElementById('btnGameOfLife'));
  await tap(trigger);assert.deepEqual(await visibleSlots(),['breathe','turing','cymatics','nudgeBrighter']);assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.map(e=>Number(e.dataset.evolutionSlot)).sort((a,b)=>a-b)),[11,12,13,17]);
- assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'1');
+ assert.equal(await trigger.getAttribute('data-page'),'1');
  assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
  if(config.lang==='en'){
@@ -68,7 +85,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);assert(await page.locator('#btnGameOfLife').isVisible());
  await page.screenshot({path:path.join(artifacts,config.lang+'-second-drawer.png'),animations:'disabled'});
  await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});
- assert.deepEqual((await state()).slots,custom);assert.equal(await trigger.locator('[data-drawer-page-dot][data-active=true]').getAttribute('data-drawer-page-dot'),'0');
+ assert.deepEqual((await state()).slots,custom);assert.equal(await trigger.getAttribute('data-page'),'0');
  // Layouts autosave per profile independently from simulation-rule Save to profile.
  await page.evaluate(()=>drawerTest.tech());await tap(page.locator('[data-profile-choice="1"]'));assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT);
  await tap(page.locator('[data-profile-choice="0"]'));assert.deepEqual((await state()).slots,custom);

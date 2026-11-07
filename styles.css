@@ -2419,16 +2419,18 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 /* Evolution drawer: reposition the original buttons, retaining their listeners. */
 #controlsContainer #btnEvolutionDrawer { display:none; }
-#controlsContainer.sim-mode-active #btnEvolutionDrawer { display:inline-flex; align-items:center; justify-content:center; grid-area:1 / 7; width:44px; height:44px; margin:auto; padding:0; border:0; background:transparent; cursor:pointer; }
+/* Keep all four toolbar rows fixed; the handle occupies the existing 8px gap. */
+#controlsContainer.sim-mode-active #btnEvolutionDrawer { display:flex; align-items:center; justify-content:center; grid-area:3 / 4 / 4 / 7; align-self:end; justify-self:center; transform:translateY(8px); width:64px; height:8px; padding:0; border:0; background:transparent; cursor:pointer; z-index:1; }
 #btnEvolutionDrawer { position:relative; color:#9ca3af; direction:ltr; touch-action:none; }
-#btnEvolutionDrawer .drawer-page-dots { width:20px; height:10px; pointer-events:none; }
-#btnEvolutionDrawer [data-drawer-page-dot] { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.45; transition:opacity 160ms ease,fill 160ms ease; }
-#btnEvolutionDrawer [data-drawer-page-dot][data-active="true"] { fill:currentColor; opacity:.85; }
-@media(prefers-reduced-motion:reduce) { #btnEvolutionDrawer [data-drawer-page-dot] { transition:none; } }
-#btnEvolutionDrawer .drawer-active-mark { display:none; position:absolute; bottom:7px; width:3px; height:3px; border-radius:50%; background:var(--gold); }
+#btnEvolutionDrawer .drawer-handle { position:relative; display:flex; align-items:center; justify-content:center; box-sizing:border-box; width:60px; height:9px; margin-top:-1px; border:1px solid #334155; border-top:0; border-radius:0 0 8px 8px; background:linear-gradient(#070c16,#05080d); pointer-events:none; }
+#btnEvolutionDrawer .drawer-handle svg { width:32px; height:8px; opacity:.8; }
+:root[data-simulation-effective-theme="gold"] #btnEvolutionDrawer .drawer-handle { border-color:#b28b3645; background:linear-gradient(#15150f,#0d0e0c); }
+:root[data-simulation-effective-theme="teal"] #btnEvolutionDrawer .drawer-handle { border-color:#68bdb545; background:linear-gradient(#142724,#0a100f); }
+#btnEvolutionDrawer .drawer-active-mark { display:none; position:absolute; bottom:2px; width:2px; height:2px; border-radius:50%; background:var(--gold); }
 #btnEvolutionDrawer[data-parked-active="true"] .drawer-active-mark { display:block; }
-#btnEvolutionDrawer:disabled { cursor:default; }
-#btnEvolutionDrawer:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:8px; }
+#btnEvolutionDrawer:disabled { cursor:default; opacity:.3; }
+#btnEvolutionDrawer:focus-visible { outline:2px solid #d7b65f; outline-offset:1px; border-radius:10px; }
+@media(hover:hover) { #btnEvolutionDrawer:hover:not(:disabled) .drawer-handle svg { opacity:1; } }
 #controlsContainer.sim-mode-active [data-evolution-id]:not([data-evolution-slot]) { display:none !important; }
 #controlsContainer.sim-mode-active [data-evolution-slot] { display:inline-flex !important; visibility:visible !important; opacity:1 !important; grid-row:var(--evolution-row) !important; grid-column:var(--evolution-column) !important; }
 #evolutionDrawerDialog { width:min(640px,calc(100vw - 24px)); padding:18px; }
