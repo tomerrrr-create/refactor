@@ -102,6 +102,7 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
     description.id = `${idPrefix}-group-description`;
     description.setAttribute('aria-live', 'polite');
     let pendingIndex = null;
+    let previewIndex = null;
     const current = element(onCurrent && !deferredSelection ? 'button' : 'div', 'palette-current-summary');
     current.id = `${idPrefix}-current-summary`;
     current.hidden = !palettes[selectedIndex];
@@ -124,7 +125,8 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const button = element('button', 'palette-choice' + (selected ? ' is-current' : ''));
         button.type = 'button';
         button.dataset.paletteIndex = index;
-        button.setAttribute('aria-pressed', String(deferredSelection ? index === pendingIndex : index === selectedIndex));
+        button.setAttribute('aria-pressed', String(index === (pendingIndex ?? selectedIndex)));
+        button.classList.toggle('is-selected', deferredSelection && index === (pendingIndex ?? selectedIndex));
         button.setAttribute('aria-label', `${getPaletteDisplayName(palette)}, ${palette.colors.length} ${getText('palette_colors')}`);
         const title = element('span', 'palette-choice-title');
         title.dir = 'ltr';
@@ -138,8 +140,8 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         const preview = element('span', 'palette-choice-preview');
         const previewSide = currentPreviewHost ? ({ extended: 4, continuous: 7 }[activeGroup.id] ?? 3) : 6;
         preview.append(colorMosaic(getPalettePreviewColors(palette), previewSide));
-        preview.hidden = deferredSelection && index !== pendingIndex;
-        button.classList.toggle('is-preview', deferredSelection && index === pendingIndex);
+        preview.hidden = deferredSelection && index !== previewIndex;
+        button.classList.toggle('is-preview', deferredSelection && index === previewIndex);
         if (currentPreviewHost) {
             if (showCount) title.append(count);
             button.append(symbol, title, preview);
@@ -153,17 +155,20 @@ export function renderPalettePicker(host, { palettes, groups, selectedIndex, get
         }
         button.addEventListener('click', () => {
             if (!deferredSelection) { onSelect(index); return; }
-            pendingIndex = pendingIndex === index ? null : index;
+            previewIndex = pendingIndex === index && previewIndex === index ? null : index;
+            pendingIndex = index;
             refreshPendingSelection();
         });
         return button;
     }
     function refreshPendingSelection() {
         for (const button of list.children) {
-            const selected = Number(button.dataset.paletteIndex) === pendingIndex;
-            button.classList.toggle('is-preview', selected);
+            const index = Number(button.dataset.paletteIndex);
+            const selected = index === (pendingIndex ?? selectedIndex);
+            button.classList.toggle('is-selected', selected);
+            button.classList.toggle('is-preview', index === previewIndex);
             button.setAttribute('aria-pressed', String(selected));
-            button.querySelector('.palette-choice-preview').hidden = !selected;
+            button.querySelector('.palette-choice-preview').hidden = index !== previewIndex;
         }
         const palette = palettes[pendingIndex ?? selectedIndex];
         const details = current.querySelector('.palette-current-details');

@@ -2295,11 +2295,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #paletteModal .palette-choice .palette-choice-icon > :is(svg, span) { width: 28px !important; height: 28px !important; font-size: 28px !important; }
 #paletteModal .palette-color-mosaic { border-radius: 4px; }
 #paletteModal .palette-choice-name { font-size: .76rem; }
-#paletteModal .palette-picker-deferred .palette-choice { justify-content: center; }
+#paletteModal .palette-picker-deferred .palette-choice { justify-content: center; transition: background-color .18s; }
 #paletteModal .palette-picker-deferred .palette-choice-preview { width: min(100%, 80px); }
 #paletteModal .palette-picker-deferred .palette-choice-preview[hidden],
 #paletteModal .palette-picker-deferred .is-preview > :is(.palette-choice-symbol, .palette-choice-title) { display: none; }
-#paletteModal .palette-picker-deferred .palette-choice.is-preview { border-color: #d5aa48; background: #d5aa4810; }
+#paletteModal .palette-picker-deferred .palette-choice.is-current { border-color: #ffffff0e; background: #ffffff03; }
+#paletteModal .palette-picker-deferred .palette-choice.is-current .palette-choice-name { color: #dddcd3; }
+#paletteModal .palette-picker-deferred .palette-choice.is-selected { border-color: #ffd700b3; background: #ffd7000d; }
+#paletteModal .palette-picker-deferred .palette-choice.is-selected .palette-choice-name { color: var(--gold); }
 #paletteModal .palette-picker-deferred .palette-current-summary { align-items: center; }
 #paletteModal .palette-picker-deferred .palette-current-details { justify-content: flex-start; }
 #paletteModal .palette-picker-deferred .palette-current-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
