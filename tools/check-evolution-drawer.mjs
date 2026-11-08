@@ -43,9 +43,13 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual(await visibleSlots(),['dla','contour','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort','sandpile','erosion']);
  assert.equal(await page.locator('.drawer-recess').count(),0,'overlay is a complete rounded rectangle');
  const yinColors=()=>internal.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill));
- assert.deepEqual(await yinColors(),['rgb(222, 222, 208)','rgb(48, 57, 54)']);
+ assert.deepEqual(await yinColors(),['rgb(212, 184, 101)','rgb(10, 12, 11)']);
+ const yinGeometry=await internal.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>{const r=e.getBBox();return {width:r.width,height:r.height,length:e.getTotalLength()};}));
+ assert(Math.abs(yinGeometry[0].width-yinGeometry[1].width)<.01&&Math.abs(yinGeometry[0].height-yinGeometry[1].height)<.01&&Math.abs(yinGeometry[0].length-yinGeometry[1].length)<.01,'yin-yang halves retain equal geometry');
+ assert.deepEqual(await internal.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>e.getAttribute('r'))),['1.65','1.65']);
+
  const internalBefore=await state(),internalPosition=await internal.boundingBox();
- await tap(internal);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(48, 57, 54)','rgb(222, 222, 208)']);assert.deepEqual(await internal.boundingBox(),internalPosition);assert(await page.locator('#btnSpiral').isVisible());assert(await page.locator('#btnCymatics').isVisible());
+ await tap(internal);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(10, 12, 11)','rgb(212, 184, 101)']);assert.deepEqual(await internal.boundingBox(),internalPosition);assert(await page.locator('#btnSpiral').isVisible());assert(await page.locator('#btnCymatics').isVisible());
  await tap(internal);unchanged(internalBefore,await state());
  assert.deepEqual(await internal.evaluate(e=>[getComputedStyle(e).gridRowStart,getComputedStyle(e).gridColumnStart]),['3','5']);
  const hit=await internal.evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e;});assert(hit,'navigation owns its entire central target');
