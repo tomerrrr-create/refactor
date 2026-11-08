@@ -1919,7 +1919,6 @@ button, .ctrl {
 :root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
 :root[data-simulation-effective-theme="gold"] #simModeBackground::before,
 :root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
-.technician-display-settings .simulation-theme-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
 @media (prefers-reduced-motion: reduce) {
   :root,
   .sim-mode-active #simModeBackground,
@@ -2035,7 +2034,6 @@ body.wind-mode :is(#btnColorPicker, #btnSymmetry, #btnColorPickerSymmetry):disab
 .technician-display-settings .technician-option { min-height: 52px; margin: 0; padding: 4px 0; gap: 8px; justify-content: center; border-bottom: 1px solid #b28b3630; }
 .technician-display-settings .technician-option:last-child { border-bottom: 0; }
 .technician-display-settings .technician-option-heading { width: 100%; min-width: 0; gap: 8px; }
-.technician-display-settings .simulation-theme-option .technician-option-heading { gap: 6px; }
 #technicianSettingsScroll .technician-display-settings :is(.technician-effect-heading, .technician-option-heading bdi) { font-size: 13px; white-space: nowrap; }
 .technician-display-settings .technician-effect-heading { gap: 6px; flex-shrink: 0; margin: 0; color: #e3c677; }
 .technician-display-settings .technician-effect-heading .technician-badge { flex: 0 0 20px; width: 20px; min-height: 24px; padding: 0; border: 0; }
@@ -2530,18 +2528,29 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* Permanent central drawer navigation; same full target as its neighbors. */
 #controlsContainer .evolution-drawer-internal { display:none; }
 #controlsContainer.sim-mode-active .evolution-drawer-internal { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; grid-area:3 / 5; width:50px; max-width:100%; height:50px; padding:0; border:0; background:transparent; color:#c5cbc5; cursor:pointer; touch-action:none; }
-.drawer-internal-symbol { position:relative; display:grid; place-items:center; box-sizing:border-box; width:34px; height:34px; pointer-events:none; }
+.drawer-internal-symbol { position:relative; display:grid; place-items:center; box-sizing:border-box; width:34px; height:34px; border:1px solid #89908b50; border-radius:50%; background-color:#141719; background-image:linear-gradient(180deg,#ffffff08,transparent 55%,#00000018); box-shadow:inset 0 1px 0 #e1e7e914,0 2px 4px #0006; transition:border-color 150ms ease; pointer-events:none; }
 .drawer-internal-symbol svg { width:30px; height:30px; }
 .drawer-yin-half { fill:none; transition:stroke 260ms ease-in-out; }
 [data-yin-half="0"] { stroke:#c6ad74; }
 [data-yin-half="1"] { stroke:#555d63; }
 .evolution-drawer-internal[data-page="1"] [data-yin-half="0"] { stroke:#555d63; }
 .evolution-drawer-internal[data-page="1"] [data-yin-half="1"] { stroke:#c6ad74; }
-@media(prefers-reduced-motion:reduce) { .drawer-yin-half { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .drawer-yin-half, .drawer-internal-symbol { transition:none; } }
 .evolution-drawer-internal .drawer-active-mark { display:none; position:absolute; bottom:2px; width:2px; height:2px; border-radius:50%; background:var(--gold); }
 .evolution-drawer-internal[data-parked-active="true"] .drawer-active-mark { display:block; }
 .evolution-drawer-internal:disabled { opacity:.3; cursor:default; }
+@media(hover:hover) { .evolution-drawer-internal:hover:not(:disabled) .drawer-internal-symbol { border-color:#a8afa880; } }
 .evolution-drawer-internal:focus-visible { outline:2px solid #d7b65f; outline-offset:-2px; border-radius:10px; }
 @media(max-width:480px) { #controlsContainer.sim-mode-active .evolution-drawer-internal { width:44px; height:44px; } }
 #evolutionDrawerDialog .drawer-reserved-slot { color:#abb0ac; background:#9ca3af09; border:1px dashed #abb0ac40; cursor:default; }
 #evolutionDrawerDialog .drawer-reserved-slot svg { width:24px; height:24px; }
+
+/* Compact appearance controls belong to Evolution map, with original listeners. */
+#evolutionDrawerDialog .drawer-appearance { display:grid; gap:0; margin-top:12px; padding-top:8px; border-top:1px solid #b28b3630; }
+#evolutionDrawerDialog .simulation-theme-option { min-width:0; margin:0; padding:0; }
+#evolutionDrawerDialog .simulation-theme-option .technician-option-heading { width:100%; min-height:44px; gap:8px; }
+#evolutionDrawerDialog .drawer-appearance .technician-effect-heading { min-width:0; color:#b7b4a8; }
+#evolutionDrawerDialog .drawer-appearance bdi { font-family:inherit; font-size:12px; line-height:1.4; font-weight:400; color:#b7b4a8; }
+#evolutionDrawerDialog .drawer-appearance .technician-badge { display:none; }
+#evolutionDrawerDialog .drawer-appearance .simulation-theme-preview::before { inset:12px; }
+#evolutionDrawerDialog .drawer-appearance .simulation-theme-preview svg { width:16px; height:16px; }

@@ -43,9 +43,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const originalZoom=await page.locator('#appContainer').evaluate(e=>({attribute:e.getAttribute('data-ui-zoom'),value:e.style.getPropertyValue('--ui-zoom')}));
  for(const zoom of [.9,1.15]){
   await page.locator('#appContainer').evaluate((e,z)=>{e.setAttribute('data-ui-zoom','');e.style.setProperty('--ui-zoom',z);},zoom);
-  assert(await trigger.evaluate(e=>{const r=e.getBoundingClientRect();return getComputedStyle(e).gridRowStart==='3'&&getComputedStyle(e).gridColumnStart==='5'&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e;}),'central navigation remains independently clickable at interface zoom');
+  assert(await trigger.evaluate(e=>{const r=e.getBoundingClientRect();const island=e.querySelector('.drawer-internal-symbol').getBoundingClientRect();return island.left>=r.left-1&&island.right<=r.right+1&&getComputedStyle(e).gridRowStart==='3'&&getComputedStyle(e).gridColumnStart==='5'&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e;}),'central navigation remains independently clickable at interface zoom');
  }
  await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
+ const island=await trigger.locator('.drawer-internal-symbol').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),b=e.parentElement.getBoundingClientRect();return {w:s.width,h:s.height,radius:s.borderRadius,background:s.backgroundColor,image:s.backgroundImage,shadow:s.boxShadow,fits:r.left>=b.left&&r.right<=b.right&&r.top>=b.top&&r.bottom<=b.bottom};});
+ assert(Math.abs(parseFloat(island.w)-34)<.1&&Math.abs(parseFloat(island.h)-34)<.1);assert.equal(island.radius,'50%');assert.equal(island.background,'rgb(20, 23, 25)');assert(island.image.includes('gradient')&&island.shadow!=='none'&&island.fits,'neutral island stays inside the original tap target');
  const yinColors=()=>trigger.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).stroke));
  assert.deepEqual(await yinColors(),['rgb(198, 173, 116)','rgb(85, 93, 99)']);
  assert.deepEqual(await trigger.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),['none','none']);
