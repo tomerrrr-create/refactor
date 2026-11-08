@@ -2546,7 +2546,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* Session experiment: the internal view can be removed independently of handles. */
 #controlsContainer .evolution-drawer-internal { display:none; }
 #controlsContainer.sim-mode-active[data-drawer-view="internal"] .evolution-drawer-trigger { display:none; }
-#controlsContainer.sim-mode-active[data-drawer-view="internal"] .evolution-drawer-internal { display:flex; align-items:center; justify-content:center; grid-area:3 / 5; width:50px; max-width:100%; height:50px; padding:0; border:0; background:transparent; color:#c5cbc5; cursor:pointer; touch-action:none; }
+#controlsContainer.sim-mode-active[data-drawer-view="internal"] .evolution-drawer-internal { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; grid-area:3 / 5; width:50px; max-width:100%; height:50px; padding:0; border:0; background:transparent; color:#c5cbc5; cursor:pointer; touch-action:none; }
 .drawer-internal-symbol { position:relative; display:grid; place-items:center; box-sizing:border-box; width:34px; height:34px; pointer-events:none; }
 .drawer-internal-symbol svg { width:30px; height:30px; }
 .drawer-eclipse-orbit { transform-origin:16px 16px; transition:transform 260ms ease-in-out; }
@@ -2564,3 +2564,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .drawer-view-option button[aria-pressed="true"] { color:#e3c677; border-color:#b28b3659; background:#d5aa4810; }
 #evolutionDrawerDialog .drawer-reserved-slot { color:#abb0ac; background:#9ca3af09; border:1px dashed #abb0ac40; cursor:default; }
 #evolutionDrawerDialog .drawer-reserved-slot svg { width:24px; height:24px; }
+
+/* A decorative grid layer cuts the navigation bay out of the simulation surface.
+   It never receives events or inherits the navigation button's disabled opacity. */
+#controlsContainer.sim-mode-active[data-drawer-view="internal"]::after {
+    content:''; grid-area:3 / 5; position:relative; z-index:0; pointer-events:none;
+    margin:-2px -3px -1px; background:#000; border:1px solid #334155; border-bottom:0;
+    border-radius:50% 50% 0 0; transition:border-color 400ms ease-in-out;
+}
+:root[data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active[data-drawer-view="internal"]::after { border-color:#b28b3645; }
+:root[data-simulation-effective-theme="teal"] #controlsContainer.sim-mode-active[data-drawer-view="internal"]::after { border-color:#68bdb545; }
+@media(prefers-reduced-motion:reduce) { #controlsContainer.sim-mode-active[data-drawer-view="internal"]::after { transition:none; } }
