@@ -41,12 +41,12 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await container.getAttribute('data-drawer-view'),'internal');
  assert(await internal.isVisible());assert(!(await trigger.isVisible()));assert(!(await rightTrigger.isVisible()));
  assert.deepEqual(await visibleSlots(),['dla','contour','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort','sandpile','erosion']);
- async function checkRecess(){
-  const shape=await page.evaluate(()=>{const node=document.querySelector('.drawer-recess'),style=getComputedStyle(node),rim=node.querySelector('.drawer-recess-rim'),frame=getComputedStyle(document.getElementById('simModeBackground'));return {display:style.display,pointer:style.pointerEvents,row:style.gridRowStart,column:style.gridColumnStart,stroke:getComputedStyle(rim).stroke,frame:frame.borderTopColor,curve:rim.getAttribute('d'),constantStroke:rim.getAttribute('vector-effect')};});
-  assert.equal(shape.display,'block');assert.equal(shape.pointer,'none');assert.equal(shape.row,'3');assert.equal(shape.column,'5');assert.equal(shape.stroke,shape.frame);assert.equal(shape.constantStroke,'non-scaling-stroke');assert(shape.curve.startsWith('M0 99C9 99 13 99 13 87'),'rounded foot starts tangent to the horizontal edge');
+ async function checkRecess(theme){
+  const shape=await page.evaluate(()=>{const node=document.querySelector('.drawer-recess'),style=getComputedStyle(node),rim=node.querySelector('.drawer-recess-rim'),frame=getComputedStyle(document.getElementById('simModeBackground'));return {display:style.display,pointer:style.pointerEvents,row:style.gridRowStart,column:style.gridColumnStart,stroke:getComputedStyle(rim).stroke,frame:frame.borderTopColor,curve:rim.getAttribute('d'),constantStroke:rim.getAttribute('vector-effect'),fill:getComputedStyle(node.querySelector('.drawer-recess-surface')).fill};});
+  assert.equal(shape.fill,({blue:'rgb(2, 4, 10)',gold:'rgb(6, 5, 2)',teal:'rgb(2, 6, 5)'})[theme]);assert.equal(shape.display,'block');assert.equal(shape.pointer,'none');assert.equal(shape.row,'3');assert.equal(shape.column,'5');assert.equal(shape.stroke,shape.frame);assert.equal(shape.constantStroke,'non-scaling-stroke');assert(shape.curve.startsWith('M0 99C9 99 13 99 13 87'),'rounded foot starts tangent to the horizontal edge');
  }
  const beforeRecess=await state();
- for(const theme of ['gold','teal','blue']){await page.evaluate(t=>drawerTest.theme(t),theme);await page.waitForTimeout(450);await checkRecess();}
+ for(const theme of ['gold','teal','blue']){await page.evaluate(t=>drawerTest.theme(t),theme);await page.waitForTimeout(450);await checkRecess(theme);await page.screenshot({path:path.join(artifacts,config.lang+'-recess-'+theme+'.png'),animations:'disabled'});}
  unchanged(beforeRecess,await state());
  const internalBefore=await state(),internalPosition=await internal.boundingBox();
  await tap(internal);assert.deepEqual(await internal.boundingBox(),internalPosition);assert(await page.locator('#btnSpiral').isVisible());assert(await page.locator('#btnCymatics').isVisible());
