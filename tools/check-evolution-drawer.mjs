@@ -42,8 +42,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert(await internal.isVisible());assert(!(await trigger.isVisible()));assert(!(await rightTrigger.isVisible()));
  assert.deepEqual(await visibleSlots(),['dla','contour','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort','sandpile','erosion']);
  async function checkRecess(){
-  const shape=await page.evaluate(()=>{const c=document.getElementById('controlsContainer'),style=getComputedStyle(c,'::after'),frame=getComputedStyle(document.getElementById('simModeBackground'));return {content:style.content,bg:style.backgroundColor,pointer:style.pointerEvents,row:style.gridRowStart,column:style.gridColumnStart,radius:style.borderTopLeftRadius,border:style.borderTopColor,frame:frame.borderTopColor};});
-  assert.equal(shape.content,'""');assert.equal(shape.bg,'rgb(0, 0, 0)');assert.equal(shape.pointer,'none');assert.equal(shape.row,'3');assert.equal(shape.column,'5');assert.equal(shape.radius,'50%');assert.equal(shape.border,shape.frame);
+  const shape=await page.evaluate(()=>{const node=document.querySelector('.drawer-recess'),style=getComputedStyle(node),rim=node.querySelector('.drawer-recess-rim'),frame=getComputedStyle(document.getElementById('simModeBackground'));return {display:style.display,pointer:style.pointerEvents,row:style.gridRowStart,column:style.gridColumnStart,stroke:getComputedStyle(rim).stroke,frame:frame.borderTopColor,curve:rim.getAttribute('d'),constantStroke:rim.getAttribute('vector-effect')};});
+  assert.equal(shape.display,'block');assert.equal(shape.pointer,'none');assert.equal(shape.row,'3');assert.equal(shape.column,'5');assert.equal(shape.stroke,shape.frame);assert.equal(shape.constantStroke,'non-scaling-stroke');assert(shape.curve.startsWith('M0 99C9 99 13 99 13 87'),'rounded foot starts tangent to the horizontal edge');
  }
  const beforeRecess=await state();
  for(const theme of ['gold','teal','blue']){await page.evaluate(t=>drawerTest.theme(t),theme);await page.waitForTimeout(450);await checkRecess();}
@@ -71,7 +71,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  // The handle must not add a row or move the existing bottom action row.
  const layout=await page.locator('#controlsContainer').evaluate(e=>({rows:getComputedStyle(e).gridTemplateRows.split(' '),bottom:['btnSave','btnInvert','btnToggleSimMode','btnRandom','btnCycleSort','btnUndo','btnRedo'].map(id=>getComputedStyle(document.getElementById(id)).gridRowStart)}));
  assert.equal(layout.rows.length,4);assert(layout.bottom.every(row=>row==='4'));
- assert.equal(await container.evaluate(e=>getComputedStyle(e,'::after').content),'none','Handles has no central recess');
+ assert.equal(await page.locator('.drawer-recess').isVisible(),false,'Handles has no central recess');
 
  assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
  assert.equal(await trigger.locator('.drawer-handle svg').count(),1);

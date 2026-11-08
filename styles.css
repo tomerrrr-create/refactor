@@ -2565,13 +2565,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog .drawer-reserved-slot { color:#abb0ac; background:#9ca3af09; border:1px dashed #abb0ac40; cursor:default; }
 #evolutionDrawerDialog .drawer-reserved-slot svg { width:24px; height:24px; }
 
-/* A decorative grid layer cuts the navigation bay out of the simulation surface.
-   It never receives events or inherits the navigation button's disabled opacity. */
-#controlsContainer.sim-mode-active[data-drawer-view="internal"]::after {
-    content:''; grid-area:3 / 5; position:relative; z-index:0; pointer-events:none;
-    margin:-2px -3px -1px; background:#000; border:1px solid #334155; border-bottom:0;
-    border-radius:50% 50% 0 0; transition:border-color 400ms ease-in-out;
+/* Noninteractive SVG bay: tangent foot curves join the arch to the lower rim. */
+.drawer-recess { display:none; }
+#controlsContainer.sim-mode-active[data-drawer-view="internal"] .drawer-recess {
+    display:block; grid-area:3 / 5; position:relative; z-index:0; pointer-events:none;
+    margin:-2px -9px 0; color:#334155; transition:color 400ms ease-in-out;
 }
-:root[data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active[data-drawer-view="internal"]::after { border-color:#b28b3645; }
-:root[data-simulation-effective-theme="teal"] #controlsContainer.sim-mode-active[data-drawer-view="internal"]::after { border-color:#68bdb545; }
-@media(prefers-reduced-motion:reduce) { #controlsContainer.sim-mode-active[data-drawer-view="internal"]::after { transition:none; } }
+.drawer-recess svg { display:block; width:100%; height:100%; }
+:root[data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active[data-drawer-view="internal"] .drawer-recess { color:#b28b3645; }
+:root[data-simulation-effective-theme="teal"] #controlsContainer.sim-mode-active[data-drawer-view="internal"] .drawer-recess { color:#68bdb545; }
+@media(prefers-reduced-motion:reduce) { #controlsContainer.sim-mode-active[data-drawer-view="internal"] .drawer-recess { transition:none; } }
