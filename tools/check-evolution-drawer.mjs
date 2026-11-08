@@ -41,15 +41,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await container.getAttribute('data-drawer-view'),'internal');
  assert(await internal.isVisible());assert(!(await trigger.isVisible()));assert(!(await rightTrigger.isVisible()));
  assert.deepEqual(await visibleSlots(),['dla','contour','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort','sandpile','erosion']);
- async function checkRecess(){
-  const shape=await page.evaluate(()=>{const node=document.querySelector('.drawer-recess'),style=getComputedStyle(node),rim=node.querySelector('.drawer-recess-rim'),frame=getComputedStyle(document.getElementById('simModeBackground'));return {display:style.display,pointer:style.pointerEvents,row:style.gridRowStart,column:style.gridColumnStart,stroke:getComputedStyle(rim).stroke,frame:frame.borderTopColor,curve:rim.getAttribute('d'),constantStroke:rim.getAttribute('vector-effect')};});
-  assert.equal(shape.display,'block');assert.equal(shape.pointer,'none');assert.equal(shape.row,'3');assert.equal(shape.column,'5');assert.equal(shape.stroke,shape.frame);assert.equal(shape.constantStroke,'non-scaling-stroke');assert(shape.curve.startsWith('M0 99C9 99 13 99 13 87'),'rounded foot starts tangent to the horizontal edge');
- }
- const beforeRecess=await state();
- for(const theme of ['gold','teal','blue']){await page.evaluate(t=>drawerTest.theme(t),theme);await page.waitForTimeout(450);await checkRecess();}
- unchanged(beforeRecess,await state());
+ assert.equal(await page.locator('.drawer-recess').count(),0,'overlay is a complete rounded rectangle');
+ const yinColors=()=>internal.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill));
+ assert.deepEqual(await yinColors(),['rgb(222, 222, 208)','rgb(48, 57, 54)']);
  const internalBefore=await state(),internalPosition=await internal.boundingBox();
- await tap(internal);assert.deepEqual(await internal.boundingBox(),internalPosition);assert(await page.locator('#btnSpiral').isVisible());assert(await page.locator('#btnCymatics').isVisible());
+ await tap(internal);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(48, 57, 54)','rgb(222, 222, 208)']);assert.deepEqual(await internal.boundingBox(),internalPosition);assert(await page.locator('#btnSpiral').isVisible());assert(await page.locator('#btnCymatics').isVisible());
  await tap(internal);unchanged(internalBefore,await state());
  assert.deepEqual(await internal.evaluate(e=>[getComputedStyle(e).gridRowStart,getComputedStyle(e).gridColumnStart]),['3','5']);
  const hit=await internal.evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e;});assert(hit,'navigation owns its entire central target');
@@ -71,7 +67,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  // The handle must not add a row or move the existing bottom action row.
  const layout=await page.locator('#controlsContainer').evaluate(e=>({rows:getComputedStyle(e).gridTemplateRows.split(' '),bottom:['btnSave','btnInvert','btnToggleSimMode','btnRandom','btnCycleSort','btnUndo','btnRedo'].map(id=>getComputedStyle(document.getElementById(id)).gridRowStart)}));
  assert.equal(layout.rows.length,4);assert(layout.bottom.every(row=>row==='4'));
- assert.equal(await page.locator('.drawer-recess').isVisible(),false,'Handles has no central recess');
+ assert.equal(await page.locator('.drawer-recess').count(),0);
 
  assert.deepEqual(await visibleSlots(),DEFAULT_EVOLUTION_SLOTS);
  assert.equal(await trigger.locator('.drawer-handle svg').count(),1);

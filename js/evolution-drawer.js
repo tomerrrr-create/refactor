@@ -13,14 +13,9 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const rightTrigger=trigger.cloneNode(true);rightTrigger.id='btnEvolutionDrawerRight';
     rightTrigger.dataset.side='right';
     const internalTrigger=trigger.cloneNode(true);internalTrigger.id='btnEvolutionDrawerInternal';internalTrigger.className='evolution-drawer-internal';
-    internalTrigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g class="drawer-eclipse-orbit"><path d="M25.7 9A12 12 0 1 0 25.7 23" stroke-width=".85" opacity=".55"/><circle cx="28" cy="16" r="1.15" fill="#dbc183" stroke="none"/></g><path d="M19.6 9.5a7.5 7.5 0 1 0 0 13a8.5 8.5 0 0 1 0-13Z" fill="#ded8bd12" stroke-width="1.15"/><path d="M16 1.2v1.6M16 29.2v1.6" stroke-width=".85" opacity=".6"/></svg><span class="drawer-active-mark"></span></span>';
+    internalTrigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path class="drawer-yin-half" data-yin-half="0" d="M16 4A12 12 0 0 0 16 28A6 6 0 0 1 16 16A6 6 0 0 0 16 4Z" stroke="none"/><path class="drawer-yin-half" data-yin-half="1" d="M16 4A12 12 0 0 1 16 28A6 6 0 0 1 16 16A6 6 0 0 0 16 4Z" stroke="none"/><circle cx="16" cy="16" r="12" stroke-width=".85" opacity=".65"/><path d="M16 4a6 6 0 0 1 0 12a6 6 0 0 0 0 12" stroke-width=".75" opacity=".45"/><circle class="drawer-yin-dot" data-yin-dot="0" cx="16" cy="10" r="1.65" stroke="none"/><circle class="drawer-yin-dot" data-yin-dot="1" cx="16" cy="22" r="1.65" stroke="none"/></svg><span class="drawer-active-mark"></span></span>';
     const triggers=[trigger,rightTrigger,internalTrigger];
     controls.append(...triggers);
-    const recess=document.createElement('div');recess.className='drawer-recess';recess.setAttribute('aria-hidden','true');
-    const recessCurve='M0 99C9 99 13 99 13 87V51C13 23 29 1 50 1S87 23 87 51V87C87 99 91 99 100 99';
-    recess.innerHTML=`<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${recessCurve}L100 102H0Z" fill="#000"/><path class="drawer-recess-rim" d="${recessCurve}" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>`;
-    controls.append(recess);
-
     const dialog=document.createElement('dialog');
     dialog.id='evolutionDrawerDialog';
     dialog.className='erosion-settings-dialog evolution-drawer-dialog';
