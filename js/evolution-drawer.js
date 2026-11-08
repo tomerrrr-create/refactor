@@ -13,7 +13,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const rightTrigger=trigger.cloneNode(true);rightTrigger.id='btnEvolutionDrawerRight';
     rightTrigger.dataset.side='right';
     const internalTrigger=trigger.cloneNode(true);internalTrigger.id='btnEvolutionDrawerInternal';internalTrigger.className='evolution-drawer-internal';
-    internalTrigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="3"/><path d="M18 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2M13 15h6m-2-2 2 2-2 2"/></svg><span class="drawer-active-mark"></span></span>';
+    internalTrigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g class="drawer-eclipse-orbit"><path d="M25.7 9A12 12 0 1 0 25.7 23" stroke-width=".85" opacity=".55"/><circle cx="28" cy="16" r="1.15" fill="#dbc183" stroke="none"/></g><path d="M19.6 9.5a7.5 7.5 0 1 0 0 13a8.5 8.5 0 0 1 0-13Z" fill="#ded8bd12" stroke-width="1.15"/><path d="M16 1.2v1.6M16 29.2v1.6" stroke-width=".85" opacity=".6"/></svg><span class="drawer-active-mark"></span></span>';
     const triggers=[trigger,rightTrigger,internalTrigger];
     controls.append(...triggers);
     const dialog=document.createElement('dialog');
