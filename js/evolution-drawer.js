@@ -18,7 +18,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     controls.append(...triggers);
     const recess=document.createElement('div');recess.className='drawer-recess';recess.setAttribute('aria-hidden','true');
     const recessCurve='M0 99C9 99 13 99 13 87V51C13 23 29 1 50 1S87 23 87 51V87C87 99 91 99 100 99';
-    recess.innerHTML=`<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path class="drawer-recess-surface" d="${recessCurve}L100 102H0Z"/><path class="drawer-recess-rim" d="${recessCurve}" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>`;
+    recess.innerHTML=`<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${recessCurve}L100 102H0Z" fill="#000"/><path class="drawer-recess-rim" d="${recessCurve}" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>`;
     controls.append(recess);
 
     const dialog=document.createElement('dialog');
