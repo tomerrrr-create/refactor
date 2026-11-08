@@ -2542,3 +2542,25 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .technician-branches a { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 4px; border: 1px solid #b28b363d; border-radius: 9px; background: #b28b3608; color: #e3c677; font-size: 13px; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
 .technician-branches a:hover { background: #b28b3618; }
 .technician-branches a:focus-visible { outline: 2px solid #d4b865; outline-offset: 3px; }
+
+/* Session experiment: the internal view can be removed independently of handles. */
+#controlsContainer .evolution-drawer-internal { display:none; }
+#controlsContainer.sim-mode-active[data-drawer-view="internal"] .evolution-drawer-trigger { display:none; }
+#controlsContainer.sim-mode-active[data-drawer-view="internal"] .evolution-drawer-internal { display:flex; align-items:center; justify-content:center; grid-area:3 / 5; width:50px; max-width:100%; height:50px; padding:0; border:0; background:transparent; color:#c5cbc5; cursor:pointer; touch-action:none; }
+.drawer-internal-symbol { position:relative; display:grid; place-items:center; box-sizing:border-box; width:34px; height:34px; pointer-events:none; }
+.drawer-internal-symbol svg { width:30px; height:30px; }
+.drawer-eclipse-orbit { transform-origin:16px 16px; transition:transform 260ms ease-in-out; }
+.evolution-drawer-internal[data-page="1"] .drawer-eclipse-orbit { transform:rotate(180deg); }
+@media(prefers-reduced-motion:reduce) { .drawer-eclipse-orbit { transition:none; } }
+.evolution-drawer-internal .drawer-active-mark { display:none; position:absolute; bottom:2px; width:2px; height:2px; border-radius:50%; background:var(--gold); }
+.evolution-drawer-internal[data-parked-active="true"] .drawer-active-mark { display:block; }
+.evolution-drawer-internal:disabled { opacity:.3; cursor:default; }
+.evolution-drawer-internal:focus-visible { outline:2px solid #d7b65f; outline-offset:-2px; border-radius:10px; }
+@media(max-width:480px) { #controlsContainer.sim-mode-active[data-drawer-view="internal"] .evolution-drawer-internal { width:44px; height:44px; } }
+@media(hover:hover) { .evolution-drawer-internal:hover:not(:disabled) .drawer-internal-symbol { color:#e1e3d9; } }
+.drawer-view-option { display:flex; align-items:center; justify-content:space-between; gap:8px; padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid #b28b3630; }
+.drawer-view-option > div { display:flex; gap:4px; }
+.drawer-view-option button { min-height:44px; padding:4px 8px; font-size:11px; border:1px solid transparent; border-radius:8px; background:transparent; color:#8f948d; cursor:pointer; }
+.drawer-view-option button[aria-pressed="true"] { color:#e3c677; border-color:#b28b3659; background:#d5aa4810; }
+#evolutionDrawerDialog .drawer-reserved-slot { color:#abb0ac; background:#9ca3af09; border:1px dashed #abb0ac40; cursor:default; }
+#evolutionDrawerDialog .drawer-reserved-slot svg { width:24px; height:24px; }
