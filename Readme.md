@@ -167,6 +167,33 @@ Export uses native file sharing when supported, with download behavior depending
 
 WTF/help groups guidance into Creation, Evolution and Tools. English is the primary interface language; Hebrew, Russian and Dutch are also supported. A separate interactive quick-start guide is available, and holding an evolution shows its explanation.
 
+## Studio macro editing (MVP preview)
+
+The new editor is developed on `feature/macro-editor`, separately from `work` and `main`. Studio has **Create video** and **Edit Macro** tabs. The editor is imported only when its tab opens, and its isolated controlled-clock engine is created only when a macro is loaded. The main app and its offline cache do not load the editor modules. Studio currently provides English and Hebrew, with English fallback for other app languages.
+
+### Choose the range
+
+1. Load a journey TXT. See its initial board and the complete effective action list in plain language, after the existing parser resolves Undo/Redo. Each paused brush gesture and Wind batch is grouped into one row; expand for details. The list is paginated in groups of 100 to keep long recordings manageable. Opening details never seeks playback.
+2. Choose **Start here** directly beside a valid fresh simulation start. It is available immediately, before playback, and remains available after the playhead has passed that row. The original beginning is also a selectable row. There is no global disabled Start button, preparatory Pause-before-start control or timing-dependent click sequence.
+3. To shorten the end, **Play original**, pause, then **End here**. Without an end mark, the original ending is retained. An end before the chosen start is rejected. During a selection preview the End button is unavailable; Play original returns to the source to choose an end there.
+4. The range summary always names the chosen start and end. Clear marks restores both original boundaries without changing the file.
+
+### Preview and save
+
+**Preview selection** and **Save new macro** prepare the chosen starting board automatically when necessary. The ordinary replay engine calculates the preceding actions and generations; the user need not manually restart, play up to a boundary or stop at the correct instant. Preparation shows progress and provides **Cancel preparation**, which retains the source and selected marks. No arbitrary user-facing seek or skipped simulation logic is introduced.
+
+Preview plays the resulting range on the canvas. Save downloads an `_edited.txt` copy and never overwrites the original. The downloaded copy can be opened in the app or in Studio's existing video tab. There is no extra video-transfer control in this MVP.
+
+Ordinary preview Pause freezes the engine clock, including simulation, Wind and brush timers. A tab/document change pauses ordinary playback; leaving the editor tab during preparation cancels that preparation. A fresh file/restart clears isolated replay history and engine buffers so one preview cannot contaminate another. User preferences and profiles on the shared app origin remain untouched.
+
+### Valid starting points and compatibility
+
+A new start must precede generation one of a genuinely fresh run. Pause → Play of an existing run, a nonzero serialized session cursor, a live INIT resumption, and a boundary inside a brush/Wind gesture are excluded. Files without eligible fresh starts clearly explain that the original beginning can be retained while shortening the end. The runtime verifies that the chosen boundary has no active simulation, Wind batch or brush gesture before capturing it.
+
+Fresh-start exports use existing recipe commands with rebased timestamps, an INIT_STATE and HISTORY_SETTINGS checkpoint. Optional INIT_STATE `values` preserves each tile's finite working value, and `freshStart: true` explicitly clears engine buffers from an earlier run. Legacy INIT_STATE files without these fields retain their previous behavior (`v=k`). Ends close unfinished brush/Wind gestures and terminate evolutions at the selected generation; synthetic live-INIT PLAY commands are not duplicated. Replay retains the original engines' determinism limits and does not add a universal random seed.
+
+Changing parameters, deleting/reordering actions, recording a new continuation and background checkpoint optimizations are outside this MVP. `tests/studio-macro-editor.test.mjs` covers boundary classification, range serialization and history compatibility. After a shared build, `tools/check-macro-editor.mjs` checks immediate row selection, automatic preparation/cancellation, source/selection replay, partial gestures, preference isolation, edited-file replay in the ordinary app, video export, and desktop/RTL mobile layout.
+
 ## Three settings profiles
 
 Technicians offers three fixed settings profiles, each with an explicitly saved baseline and an in-session working draft. Switching profiles restores the current session draft. The **star means “different from this profile's factory defaults”**, not “unsaved”: saving a customized profile does not remove its star. Resetting or manually returning to equivalent defaults does. Stars on other profiles remain visible.
@@ -675,7 +702,7 @@ Events carry timestamps, and generation-based actions include `[GEN:n]`. The log
 
 `PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys.
 
-Save the journey through the save modal, using `exportArtRecipeLog()`. Current TXT filenames use `Intuition_Path_<palette>_<line-count>.txt`. Save/Play long presses no longer export or reset the logger. `resetArtRecipeLog()` requires confirmation and a successful backup share/download flow before clearing the log and capturing a new start; cancelling sharing preserves the old log. See [Save, load and help](#save-load-and-help). New `INIT_STATE` records can also retain protected gold indices and a live simulation context (rules, generation and elapsed time).
+Save the journey through the save modal, using `exportArtRecipeLog()`. Current TXT filenames use `Intuition_Path_<palette>_<line-count>.txt`. Save/Play long presses no longer export or reset the logger. `resetArtRecipeLog()` requires confirmation and a successful backup share/download flow before clearing the log and capturing a new start; cancelling sharing preserves the old log. See [Save, load and help](#save-load-and-help). New `INIT_STATE` records can also retain protected gold indices and a live simulation context (rules, generation and elapsed time). Studio fresh-start exports may additionally carry validated per-tile working `values`; older files continue to use `v=k`.
 
 ### Playback and history compatibility
 
@@ -756,6 +783,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Cracks growth-area drafts, presets, material interaction, profiles and replay | `tools/check-cracks-area.mjs` |
 | Legacy independent-selection compatibility: old profile/settings migration, old/new recipes, settings, cycles and history | `tools/check-preset-rollback.mjs` |
+| Studio macro editing, fresh-start/end cuts, paused clock, original-file isolation and video handoff | `tools/check-macro-editor.mjs` |
 | Cracks paused/live button cycles, settings synchronization, history and recipe replay | `tools/check-cracks-cycle.mjs` |
 | DLA resizing, exhausted growth, Contours, Undo/Redo and logger replay | `tools/check-dla-history.mjs` |
 | Symmetry hold, mirrored controls, eight-way painting and recipe replay | `tools/check-symmetry-hold.mjs` |

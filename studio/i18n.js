@@ -3,6 +3,7 @@ let saved;
 try { saved = localStorage.getItem('userLanguage'); } catch { /* English fallback. */ }
 export const language = (requested || saved) === 'he' ? 'he' : 'en';
 const english = {
+ 'עריכת מקרו':'Edit Macro',
  'לוגו Follow Your Intuition':'Follow Your Intuition logo',
  'היצירה שלך, בתנועה.':'Your creation, in motion.',
  'המרת מקרו לווידאו':'Macro to video',

@@ -4357,6 +4357,12 @@ function validateIslandsMacroAction(action) {
         if(value.version!==1||value.mode!=='off')throw new Error('Invalid Cracks mode');
     } else if (action.eventName === 'INIT_STATE') {
         const snapshot = JSON.parse(action.details);
+        if (snapshot.freshStart !== undefined && typeof snapshot.freshStart !== 'boolean') throw new Error('Invalid initial simulation reset');
+        // Optional working values in Studio start checkpoints. Legacy logs keep v=k.
+        if (snapshot.values !== undefined && (!Array.isArray(snapshot.values) ||
+            snapshot.values.length !== snapshot.n * snapshot.n || snapshot.values.some(value => !Number.isFinite(value)))) {
+            throw new Error('Invalid initial working values');
+        }
         if (snapshot.gold !== undefined && (!Array.isArray(snapshot.gold) || snapshot.gold.length > snapshot.n * snapshot.n ||
             snapshot.gold.some(index => !Number.isInteger(index) || index < 0 || index >= snapshot.n * snapshot.n))) {
             throw new Error('Invalid initial gold cells');
@@ -5012,6 +5018,10 @@ function executeMacroAction(action) {
     if (action.eventName === 'INIT_STATE') {
         try {
             const initState = JSON.parse(action.details);
+            if (initState.freshStart === true) {
+                if (isLifePlaying) pauseLife();
+                resetArmedState();
+            }
             
 
             // 1. הגדרת משתני הסביבה ההתחלתיים
@@ -5048,6 +5058,7 @@ function executeMacroAction(action) {
             });
 
             for (const index of initState.gold ?? []) boardState[index].isGold = true;
+            if (initState.values) boardState.forEach((tile, index) => { tile.v = initState.values[index]; });
 
             // 3. עדכון הממשק (UI)
             updatePaletteHeader();
