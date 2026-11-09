@@ -27,24 +27,5 @@ window.macroVideoEngine = {
  },
  stop() { stopMacro(); }
 };
-initializeApp().then(async () => {
- if(new URLSearchParams(location.search).get('editor') === '1') {
-  const {createMacroEditorEngine,makeCheckpoint}=await import('../../macro-editor-engine.js');
-  window.macroEditorEngine=createMacroEditorEngine({
-   parse:parseMacroText,previewInit:action=>{if(action)executeMacroAction(action);},
-   load(text,queue){window.macroVideoError=null;window.macroVideoEngine.start(text,520);pauseMacro();resetArmedState();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;macroQueue=queue;currentMacroStep=0;},
-   info:()=>({macroPlaying:isMacroPlaying,generation:currentGenerationCount,
-    simulation:isLifePlaying?armedSimulation:null,wind:Boolean(windReplay?.activeWaves||replayWindBatch),brush:Boolean(replayBrushBefore),windElapsed:replayWindBatch?Math.max(0,performance.now()-replayWindBatch.time):null}),
-   snapshot(){const state=getCurrentState(),init=makeCheckpoint(state),settings=getHistorySettings(state);
-    const effects=window.macroVideoEngine.recorded;
-    const smoothing={...(typeof effects.smooth==='boolean'?{display:effects.smooth}:{}),
-     ...(typeof effects.glow==='boolean'?{bloom:effects.glow}:{}),...(Number.isFinite(effects.intensity)?{bloomIntensity:effects.intensity}:{})};
-    if(Object.keys(smoothing).length){init.smoothing=smoothing;settings.smoothing=smoothing;}
-    return {init,settings};},
-   error:()=>window.macroVideoError,now:()=>performance.now(),tick:ms=>window.exportClock.tickAsync(ms),pause:pauseMacro,play:playMacro,
-   draw:()=>window.macroVideoEngine.draw(),output:()=>window.macroVideoEngine.output,stop:stopMacro
-  });
- }
- window.macroVideoEngine.ready = true;
-}).catch(error => {window.macroVideoError=error.message;});
+initializeApp().then(() => { window.macroVideoEngine.ready = true; }).catch(error => {window.macroVideoError=error.message;});
 
