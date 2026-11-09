@@ -207,3 +207,30 @@ $('start').addEventListener('click',async()=>{
   }
 });
 loadEngine(false).then(async()=>{$('status').textContent=t('מוכן. בחר קובץ מקרו.');await inspectFileEffects();return checkOptions();}).catch(showError);
+
+// The editor and its controlled-clock player are fetched only on this tab.
+let macroEditor=null,editorLoading=false;
+async function showStudioTab(edit){
+ if(running||editorLoading)return;
+ editorLoading=true;
+ try {
+  if(edit&&!macroEditor){const {mountEditor}=await import('./editor.js');
+   macroEditor=await mountEditor($('editorPanel'),{file:currentFile(),onVideo:async file=>{
+    receivedFile=file;$('importedRecipe').textContent=t('נטען מהאפליקציה: ')+file.name;
+    await showStudioTab(false);await inspectFileEffects();await checkOptions();
+   }});
+  }
+  if(!edit)macroEditor?.pause();
+  $('editorPanel').hidden=!edit;$('videoPanel').hidden=edit;
+  for(const [id,active] of [['editorTab',edit],['videoTab',!edit]]){
+   $(id).setAttribute('aria-selected',String(active));$(id).tabIndex=active?0:-1;
+  }
+ }catch(error){showError(error);}finally{editorLoading=false;}
+}
+$('editorTab').addEventListener('click',()=>showStudioTab(true));
+$('videoTab').addEventListener('click',()=>showStudioTab(false));
+for(const id of ['editorTab','videoTab'])$(id).addEventListener('keydown',event=>{
+ if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+ event.preventDefault();const edit=event.key==='End'||(event.key!=='Home'&&id==='videoTab');
+ showStudioTab(edit).then(()=>$(edit?'editorTab':'videoTab').focus());
+});

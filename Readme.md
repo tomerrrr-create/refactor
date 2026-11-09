@@ -167,6 +167,22 @@ Export uses native file sharing when supported, with download behavior depending
 
 WTF/help groups guidance into Creation, Evolution and Tools. English is the primary interface language; Hebrew, Russian and Dutch are also supported. A separate interactive quick-start guide is available, and holding an evolution shows its explanation.
 
+## Studio macro editing (MVP)
+
+Studio has **Create video** and **Edit Macro** tabs. The editor module is dynamically imported only when its tab is opened; its separate controlled-clock replay engine is created only when a macro is loaded for editing. The main app and its offline asset list never import or cache these editor modules. The existing video export remains available independently.
+
+Open a journey TXT to see a board preview and a paginated list of its effective playback actions, after the existing parser resolves Undo/Redo. Paused brush packets are grouped into a single stroke row; Wind waves are grouped into a gesture. Expand a row for details. The playing action is highlighted on its list page; expanding a row does not seek playback. Lists show 100 grouped actions per page to avoid creating an unbounded DOM. Studio currently provides English and Hebrew UI, with English fallback for other app languages.
+
+- **Play/Pause** advances or freezes the engine clock itself, including simulation, brush and Wind timers. No simulation restart is used to pause the preview. Hiding the tab/document also pauses editing playback.
+- **Start here** is limited to a fresh simulation run before generation one. Eligible PLAY rows expose **Pause before start**; choose one, then Play to reach it. The player holds before executing that PLAY, and Start here captures the board, settings, working `v` values and protected gold cells. Pause → Play of an existing run, starts with a nonzero serialized session cursor, live INIT resumptions, and boundaries inside brush/Wind gestures are not eligible. The engine also verifies that no simulation, stroke or Wind batch is active at the held boundary. Restart playback to revisit an earlier start; this MVP does not implement arbitrary seeking or engine snapshots halfway through a run.
+- **End here** captures the paused playhead, including generation or elapsed Wind timing. Exports close any retained open stroke/Wind gesture and terminate a running evolution at the selected generation. Start and end can be marked independently; absent marks retain the corresponding original boundary. An end before the start is rejected.
+- **Preview selection** plays a separate copy of the selected range. **Restart** returns to the source with marks retained; **Clear marks** returns to the original beginning without marks.
+- **Save new macro** downloads an `_edited.txt` copy. The original file is never overwritten. **Use for video** passes that edited copy into the existing video tab, without changing the source selected in the editor.
+
+Exports use the existing recipe TXT commands with resolved history actions and rebased timestamps. Fresh-start exports add an INIT_STATE and HISTORY_SETTINGS checkpoint; INIT_STATE `freshStart: true` resets prior engine buffers for this new run, and optional `values` retains one finite working value per tile (validated before replay). Existing INIT_STATE recordings without this field still initialize `v=k`. Synthetic PLAY commands from a live INIT_STATE are not serialized twice. Cropped files can be loaded by the app, edited again or rendered by Studio. Replay retains the original engines' determinism limits: these features do not introduce a universal random seed or promise that every stochastic engine reproduces an earlier viewing pixel for pixel.
+
+The editor does not support changing parameters, deleting/reordering arbitrary actions, recording a new continuation, arbitrary seeking or background checkpoint optimizations. Its source models and adapters are under `studio/`; the shared app change is limited to accepting optional initial working values and the explicit fresh-start engine reset; legacy INIT_STATE behavior is unchanged. `tests/studio-macro-editor.test.mjs` covers fresh boundary classification, range serialization and history compatibility. After a shared build, `tools/check-macro-editor.mjs` exercises lazy loading, desktop/RTL mobile layout, frozen playback, checkpoint and partial-gesture replay, and actual video export.
+
 ## Three settings profiles
 
 Technicians offers three fixed settings profiles, each with an explicitly saved baseline and an in-session working draft. Switching profiles restores the current session draft. The **star means “different from this profile's factory defaults”**, not “unsaved”: saving a customized profile does not remove its star. Resetting or manually returning to equivalent defaults does. Stars on other profiles remain visible.
@@ -675,7 +691,7 @@ Events carry timestamps, and generation-based actions include `[GEN:n]`. The log
 
 `PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys.
 
-Save the journey through the save modal, using `exportArtRecipeLog()`. Current TXT filenames use `Intuition_Path_<palette>_<line-count>.txt`. Save/Play long presses no longer export or reset the logger. `resetArtRecipeLog()` requires confirmation and a successful backup share/download flow before clearing the log and capturing a new start; cancelling sharing preserves the old log. See [Save, load and help](#save-load-and-help). New `INIT_STATE` records can also retain protected gold indices and a live simulation context (rules, generation and elapsed time).
+Save the journey through the save modal, using `exportArtRecipeLog()`. Current TXT filenames use `Intuition_Path_<palette>_<line-count>.txt`. Save/Play long presses no longer export or reset the logger. `resetArtRecipeLog()` requires confirmation and a successful backup share/download flow before clearing the log and capturing a new start; cancelling sharing preserves the old log. See [Save, load and help](#save-load-and-help). New `INIT_STATE` records can also retain protected gold indices and a live simulation context (rules, generation and elapsed time). Studio fresh-start exports may additionally carry validated per-tile working `values`; older files continue to use `v=k`.
 
 ### Playback and history compatibility
 
@@ -756,6 +772,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Resize, drawing, Undo/Redo and recipe replay | `tools/check-resize-undo.mjs` |
 | Cracks growth-area drafts, presets, material interaction, profiles and replay | `tools/check-cracks-area.mjs` |
 | Legacy independent-selection compatibility: old profile/settings migration, old/new recipes, settings, cycles and history | `tools/check-preset-rollback.mjs` |
+| Studio macro editing, fresh-start/end cuts, paused clock, original-file isolation and video handoff | `tools/check-macro-editor.mjs` |
 | Cracks paused/live button cycles, settings synchronization, history and recipe replay | `tools/check-cracks-cycle.mjs` |
 | DLA resizing, exhausted growth, Contours, Undo/Redo and logger replay | `tools/check-dla-history.mjs` |
 | Symmetry hold, mirrored controls, eight-way painting and recipe replay | `tools/check-symmetry-hold.mjs` |
