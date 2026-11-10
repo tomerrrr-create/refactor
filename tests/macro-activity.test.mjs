@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {MACRO_ACTIVITY_STORAGE_KEY,loadMacroActivity,saveMacroActivity,describeMacroActivity,macroGenerationTarget,macroActivityPlacement} from '../js/macro-activity.js';
+import {MACRO_ACTIVITY_STORAGE_KEY,loadMacroActivity,saveMacroActivity,describeMacroActivity,macroActivityPlacement} from '../js/macro-activity.js';
 
 test('display preference is opt-in, device-local and resilient to unavailable storage',()=>{
  const map=new Map(),storage={getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)};
@@ -17,16 +17,17 @@ test('activity descriptions cover simulation and artwork actions, while hiding b
  }
  for(const eventName of ['INIT_STATE','HISTORY_ACTION','HISTORY_SETTINGS','BRUSH_START','BRUSH_END','WIND_END'])assert.equal(describeMacroActivity({eventName,details:'{}'}),null);
  assert.equal(describeMacroActivity({eventName:'DRAW_STROKE',details:'[]'}).label,'macro_activity_draw');
- assert.equal(describeMacroActivity({eventName:'Nudge Mode Changed',details:'nudgeDarker'}).label,'help_nudge_backward');
- assert.equal(describeMacroActivity({eventName:'Game of Life Mode Changed',details:'{}'}).kind,'macro_activity_settings');
+ assert.equal(describeMacroActivity({eventName:'SEPARATOR_CHANGE',details:'0'}).label,'macro_activity_separators');
 });
-test('generation total is the next real stop in this run, never an unrelated later run',()=>{
- const stop={eventName:'PAUSE',isGenBased:true,targetGen:120};
- assert.equal(macroGenerationTarget([{eventName:'DRAW_STROKE'},stop],0,42),120);
- assert.equal(macroGenerationTarget([stop],0,121),null);
- assert.equal(macroGenerationTarget([{eventName:'PLAY'},stop],0,42),null);
- assert.equal(macroGenerationTarget([{...stop,isGenBased:false}],0,42),null);
- assert.equal(macroGenerationTarget([],0,42),null);
+test('Pause and every settings-only event stay out of the display without changing their commands',()=>{
+ const events=['PAUSE','SIMULATION_RULES','NUDGE_SPEED','EVOLUTION_TUNING','Nudge Mode Changed',
+  'Game of Life Mode Changed','Chi Flow Mode Changed','Gravitational Sort Mode','Brightness Evo Mode Changed',
+  'Islands Mode Changed','Magnet Mode Changed','Spiral Mode Changed','Erosion Mode Changed',
+  'DLA Mode Changed','Cymatics Mode Changed','Cracks Mode Changed'];
+ for(const eventName of events){
+  const action={eventName,details:'Armed: gameOfLife | Rules: {}',isGenBased:true,targetGen:42},before=structuredClone(action);
+  assert.equal(describeMacroActivity(action,'gameOfLife'),null,eventName);assert.deepEqual(action,before);
+ }
 });
 test('panel uses only free space left of the board and keeps its fullscreen gallery frame clear',()=>{
  const board={left:500,top:100,width:700,height:700},viewport={width:1700,height:1000},before=structuredClone(board);

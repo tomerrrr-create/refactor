@@ -700,7 +700,7 @@ Replay preserves operations, effective rules and generation targets. Determinism
 
 ### Desktop playback activity
 
-The technician menu has an opt-in **Macro activity · desktop** switch, off by default. It is a device-local display preference, outside profiles and recipes. During fullscreen macro playback on a desktop with a fine pointer, a read-only panel shows the current action and its existing control icon, plus up to three dimmed recent actions. Progressive stroke/Wind packets update their current entry rather than filling the history; bookkeeping events stay hidden. Discrete simulations show a live generation counter and the next recorded stop target when available in the same run. Time-based breathing does not invent a generation total.
+The technician menu has an opt-in **Macro activity · desktop** switch, off by default. It is a device-local display preference, outside profiles and recipes. During fullscreen macro playback on a desktop with a fine pointer, a read-only panel shows the current action and its existing control icon, plus up to three dimmed recent actions. Progressive stroke/Wind packets update their current entry rather than filling the history; bookkeeping, Pause and settings-change events stay hidden in both current and recent rows. Hidden events leave the last visible action in place and never consume a recent-history slot. Generation counters and totals are not displayed. These are presentation filters only: all recorded commands still execute and log normally.
 
 `js/macro-activity.js` observes executed commands and samples existing playback state at 10 Hz only while enabled on desktop. It never writes the logger, artwork, history, simulation clocks or recipe queue. The panel is fixed outside the app shell in free space to the **physical left** of the board, including Hebrew. It reserves clearance for the fullscreen gallery frame and hides on narrow/touch screens or when left space is insufficient. Toggling it never moves or resizes the board. Completion, Stop and file replacement clear the panel. Existing playback and file formats remain unchanged.
 
@@ -759,7 +759,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 
 | Area | Examples |
 | --- | --- |
-| Desktop fullscreen macro activity: opt-in, geometry, generation targets, mobile exclusion, Stop and replay equivalence | `tools/check-macro-activity.mjs` |
+| Desktop fullscreen macro activity: opt-in, geometry, action filtering, mobile exclusion, Stop and replay equivalence | `tools/check-macro-activity.mjs` |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
 | Creation/Evolution switch hidden during playback, stable layout, blocked gestures, pending transitions and macro completion | `tools/check-mode-switch-playback.mjs` |
 | Evolution map themes, resting/playback colors, reload and retired theme migration | `tools/check-simulation-themes.mjs` |

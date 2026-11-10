@@ -17,6 +17,7 @@ const recipe=`[00:00:00.000] INIT_STATE -> {"recipeVersion":2,"n":9,"pal":0,"sor
 [00:00:00.020] Sort by -> reversed
 [00:00:00.030] Invert Colors -> Sort: reversed
 [00:00:00.040] PLAY -> Armed: gameOfLife | Sort: reversed | Rules: {"survival":[2,3],"birth":[3]}
+[00:00:01.040] [GEN:60] Game of Life Mode Changed -> {"survival":[2,3],"birth":[3],"mode":"personal"}
 [00:00:06.040] [GEN:360] PAUSE -> ---
 [00:00:06.050] PLAY -> Armed: nudgeBrighter | Sort: reversed | Rules: {"nudgeTimingVersion":1,"intervalMs":0}
 [00:00:09.050] [GEN:180] PAUSE -> ---
@@ -45,13 +46,15 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
   const geometry=await page.locator('#board').boundingBox();
   const first=await panel.textContent();assert(first.length>10);assert.equal(await panel.locator('.macro-activity-recent li').count(),3);
   assert(await panel.locator('.macro-activity-current svg').count());
-  await page.waitForTimeout(200);assert.notEqual(await panel.textContent(),first,'generation count updates in place');
-  assert((await panel.textContent()).includes('360'),'known target displayed');
+  const generation=await page.evaluate(()=>activityTest.state().gen);
+  await page.waitForFunction(()=>activityTest.state().gen>=100);assert((await page.evaluate(()=>activityTest.state().gen))>generation,'the simulation continues advancing');
+  assert.equal(await panel.textContent(),first,'settings events and advancing generations do not replace or rewrite the display');
+  assert.equal(await panel.locator('.macro-activity-detail').count(),0,'no generation totals or settings captions in current or recent rows');
   const side=await panel.boundingBox();assert(side.x+side.width<=geometry.x-70,'panel clears the left gallery frame');assert(side.x>=0);
   await page.evaluate(()=>activityTest.tech());await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();await page.waitForTimeout(150);
   assert.equal(await panel.isVisible(),false);assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'off never resizes or moves board');
   if(config.lang==='en')await page.waitForFunction(()=>activityTest.state().simulation==='nudgeBrighter'&&activityTest.state().gen>=5);
-  await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en')assert((await panel.locator('.macro-activity-current').textContent()).includes('Nudge'),'enabling mid-play shows the latest action');assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
+  await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en'){assert((await panel.locator('.macro-activity-current').textContent()).includes('Nudge'),'enabling mid-play shows the latest action');assert(!/Pause|Settings changed|Generation/.test(await panel.textContent()),'Pause and settings are also excluded when rebuilding history');}assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
   await page.screenshot({path:path.join(artifacts,config.lang+'-fullscreen.png')});
   await page.setViewportSize({width:1024,height:1000});await page.waitForTimeout(150);assert.equal(await panel.isVisible(),false,'insufficient left space hides it');
   await page.setViewportSize({width:config.width,height:config.height});await panel.waitFor({state:'visible'});
