@@ -1,3 +1,4 @@
+import { createMacroActivity } from './macro-activity.js';
 import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour-action-settings.js';
 import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_FREQUENCIES,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
@@ -108,6 +109,7 @@ function applyNudgeTiming(rulesStr) {
     replayNudgeTiming = { nudgeTimingVersion: 1, intervalMs: timing.intervalMs };
 }
 // --- Macro Replay System Variables ---
+let macroActivity = null;
 let macroQueue = [];
 let currentGenerationCount = 0; // מונה דורות לסימולציה
 let isMacroLoaded = false;
@@ -4788,6 +4790,7 @@ function finishBrushReplay() {
 }
 
 function stopMacro() {
+    if (typeof macroActivity !== 'undefined') macroActivity?.stop();
     if (replayBrushBefore) {
         window.logArtEvent('BRUSH_END', '{"version":1}', true);
         finishBrushReplay();
@@ -4840,6 +4843,7 @@ function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
     
     isMacroPlaying = true;
+    if (typeof macroActivity !== 'undefined') macroActivity?.start();
     isSelectingMacroPalette = false; // איפוס בטיחות למקרה שהמודל נסגר ידנית
     
     // מפעיל את ה"ריצה" שמסתירה את הכפתור אבל משאירה את הרקע הכהה
@@ -5020,6 +5024,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
 function executeMacroAction(action) {
     validateIslandsMacroAction(action);
+    if (typeof macroActivity !== 'undefined') macroActivity?.record(action);
     //console.log("Macro Execution:", action.eventName, "->", action.details);
     isExecutingMacroCommand = true; // מדליקים דגל כדי לא להפעיל את ה-Kill Switch
     if (['WIND_WAVE', 'WIND_END'].includes(action.eventName)) {
@@ -5422,6 +5427,10 @@ else if (action.eventName === 'Invert Colors') {
         const splashScreen = document.getElementById('splashScreen'), splashText = document.getElementById('splashText');
         initializeLanguage();
         onLanguageChange(updateAllUIText);
+        macroActivity = createMacroActivity({ board: dom.board, getText, getLang: getCurrentLang,
+            readState: () => ({ loaded: isMacroLoaded, playing: isMacroPlaying, lifePlaying: isLifePlaying,
+                simulation: armedSimulation, generation: currentGenerationCount,
+                queue: macroQueue, index: currentMacroStep, fullscreen: isMacroFullscreen }) });
         onLanguageChange(updateNudgeButtonUI);
         onLanguageChange(updateContourButtonUI);
         updateNudgeButtonUI();
@@ -5526,6 +5535,8 @@ else if (action.eventName === 'Invert Colors') {
                 renderToScreen(null);
                 settingsProfiles?.scheduleCapture();
             },
+            getMacroActivity: () => macroActivity.enabled(),
+            setMacroActivity: value => macroActivity.setEnabled(value),
             getBrushMotionRecording: () => recordPausedBrushMotion,
             setBrushMotionRecording: value => {
                 finishBrushGesture();
