@@ -33,206 +33,138 @@ function describe(group){
 
 export async function mountEditor(panel,{file:initialFile=null}={}) {
  const $=id=>panel.querySelector('#'+id);
- panel.innerHTML=`
- <label class="file-title" for="editorFile">${text('Choose a macro to edit','בחר מקרו לעריכה')}</label>
- <input id="editorFile" class="file-input" type="file" accept=".txt,text/plain">
- <p id="editorFileName" class="muted"></p>
- <p class="editor-note">${text('Choose a start in the action list. To set the end, play the original, pause, then select “End here”. Your original file stays unchanged.','בחר התחלה ברשימת הפעולות. לסימון סיום, נגן את המקור, עצור ולחץ „סיים כאן”. הקובץ המקורי נשאר ללא שינוי.')}</p>
- <p id="editorStatus" class="muted" role="status" aria-live="polite"></p>
- <p id="editorError" role="alert"></p>
+ panel.innerHTML=`<label class="file-title" for="editorFile">${text('Choose a macro to edit','בחר מקרו לעריכה')}</label>
+ <input id="editorFile" class="file-input" type="file" accept=".txt,text/plain"><p id="editorFileName" class="muted"></p>
+ <p class="editor-note">${text('Play, pause, then choose your start and end. The original stays unchanged.','נגן, עצור ובחר התחלה וסיום. המקור נשאר ללא שינוי.')}</p>
+ <p id="editorStatus" class="muted" role="status" aria-live="polite"></p><p id="editorError" role="alert"></p>
  <canvas id="editorCanvas" width="520" height="520" aria-label="${text('Macro preview','תצוגת מקרו')}" hidden></canvas>
  <div class="editor-controls">
-  <button id="editorPlay" disabled>${text('Play original','ניגון המקור')}</button>
-  <button id="editorRestart" class="secondary" disabled>${text('Restart','מההתחלה')}</button>
-  <button id="editorEnd" class="secondary" disabled>${text('End here','סיים כאן')}</button>
+ <button id="editorPreviousRun" class="secondary" disabled>${text('Previous run start','לתחילת הריצה הקודמת')}</button>
+ <button id="editorPlay" disabled>${text('Play original','ניגון המקור')}</button>
+ <button id="editorNextRun" class="secondary" disabled>${text('Next run start','לתחילת הריצה הבאה')}</button>
  </div>
- <p id="editorSourceHint" class="editor-note" hidden></p>
  <p id="editorPosition" class="editor-position" dir="ltr"></p>
+ <div class="editor-controls"><button id="editorStart" class="secondary" disabled>${text('Start here','התחל מכאן')}</button><button id="editorEnd" class="secondary" disabled>${text('End here','סיים כאן')}</button></div>
+ <p id="editorPlayerHint" class="editor-note" role="status"></p>
  <div id="editorRange" class="editor-range" role="status"></div>
- <div id="editorPreparation" hidden>
-  <p id="editorPreparationText" role="status" aria-live="polite"></p>
-  <progress id="editorPreparationProgress" max="100" value="0" aria-label="${text('Preparing selected range','הכנת הטווח הנבחר')}"></progress>
-  <button id="editorCancel" type="button" class="secondary">${text('Cancel preparation','ביטול ההכנה')}</button>
- </div>
- <div class="editor-controls">
-  <button id="editorPreview" class="secondary" disabled>${text('Preview selection','תצוגה מקדימה')}</button>
-  <button id="editorSave" disabled>${text('Save new macro','שמירת מקרו חדש')}</button>
-  <button id="editorReset" class="secondary" disabled>${text('Clear marks','ניקוי סימונים')}</button>
- </div>
- <h2 style="font-size:15px;font-weight:400;color:var(--gold)">${text('Recorded actions','הפעולות שהוקלטו')}</h2>
- <p id="editorStartHint" class="editor-note"></p>
- <div class="editor-paging">
-  <button id="editorPrev" class="secondary" disabled>${text('Previous','הקודם')}</button>
-  <span id="editorPage" class="muted"></span>
-  <button id="editorNext" class="secondary" disabled>${text('Next','הבא')}</button>
- </div>
- <ol id="editorActions" class="editor-list"></ol>`;
+ <div id="editorPreparation" hidden><p id="editorPreparationText" role="status" aria-live="polite"></p>
+ <progress id="editorPreparationProgress" max="100" value="0" aria-label="${text('Preparing selected range','הכנת הטווח הנבחר')}"></progress>
+ <button id="editorCancel" type="button" class="secondary">${text('Cancel','ביטול')}</button></div>
+ <div class="editor-controls"><button id="editorPreview" class="secondary" disabled>${text('Preview selection','תצוגה מקדימה')}</button>
+ <button id="editorSave" disabled>${text('Save new macro','שמירת מקרו חדש')}</button><button id="editorReset" class="secondary" disabled>${text('Clear marks','ניקוי סימונים')}</button></div>
+ <details class="editor-action-details"><summary>${text('Recorded actions · optional details','הפעולות שהוקלטו · פרטים נוספים')}</summary>
+ <div class="editor-paging"><button id="editorPrev" class="secondary" disabled>${text('Previous','הקודם')}</button><span id="editorPage" class="muted"></span><button id="editorNext" class="secondary" disabled>${text('Next','הבא')}</button></div>
+ <ol id="editorActions" class="editor-list"></ol></details>`;
  let frame,engine,engineLoad,inFlight,raf,url;
- let source='',filename='macro.txt',actions=[],groups=[],safe=new Set(),page=0;
- let selectedStart=null,startCheckpoint=null,end=null;
- let startLabel=text('Original beginning','ההתחלה המקורית'),endLabel=text('Original end','הסוף המקורי');
+ let source='',filename='macro.txt',actions=[],groups=[],starts=[],page=0;
+ let start=null,end=null,startLabel=text('Original beginning','ההתחלה המקורית'),endLabel=text('Original end','הסוף המקורי');
  let busy=false,playing=false,mode='source',lastTime=0,version=0,job=0;
- const ctx=$('editorCanvas').getContext('2d',{alpha:false});
- const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
- const fail=error=>{$('editorError').textContent=error?.message??String(error);};
- const clearError=()=>{$('editorError').textContent='';};
- const current=()=>engine?.state();
+ const ctx=$('editorCanvas').getContext('2d',{alpha:false}),nextFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
+ const current=()=>engine?.state(),clearError=()=>{$('editorError').textContent='';},fail=e=>{$('editorError').textContent=e?.message==='UNSUPPORTED_PROTOTYPE_INIT'?text('This file was saved by an older editor experiment with extra state fields. Open the original app recording instead.','הקובץ נשמר בניסוי הקודם של העורך עם שדות מצב נוספים. טען במקומו את ההקלטה המקורית מהאפליקציה.'):e?.message??String(e);};
+ const cursor=s=>s?.boundary??s?.rejected?.index??s?.lastIndex??-1;
+ const nextRun=s=>starts.find(index=>index>cursor(s));
+ const previousRun=s=>[0,...starts].filter(index=>index<cursor(s)||(s?.boundary===null&&index===cursor(s))).at(-1);
  function update(){
-  const state=current(),ready=Boolean(source)&&!busy;
-  panel.dataset.editorPhase=busy?'preparing':!source?'empty':playing?'playing':state?.finished?'complete':'paused';
-  panel.dataset.editorMode=mode;
-  $('editorFile').disabled=busy;
-  $('editorPlay').disabled=!ready||(mode==='source'&&Boolean(state?.finished));
+  const s=current(),ready=Boolean(source)&&!busy&&!inFlight;
+  panel.dataset.editorPhase=busy?'preparing':!source?'empty':playing?'playing':s?.finished?'complete':'paused';panel.dataset.editorMode=mode;
+  $('editorFile').disabled=busy;$('editorPlay').disabled=!source||busy;
   $('editorPlay').textContent=playing?text('Pause','עצירה'):text('Play original','ניגון המקור');
-  $('editorSourceHint').hidden=mode!=='selection';$('editorSourceHint').textContent=text('You are viewing the selection. To change the end, select Play original.','מוצג הטווח שנבחר. לשינוי הסיום לחץ „ניגון המקור”.');
-  $('editorRestart').disabled=!ready;
-  $('editorEnd').disabled=!ready||playing||Boolean(inFlight)||mode!=='source'||(state?.lastIndex??-1)<0;
-  for(const id of ['editorPreview','editorSave'])$(id).disabled=!ready||playing||Boolean(inFlight);
-  $('editorReset').disabled=!ready||playing||Boolean(inFlight)||(selectedStart===null&&!end);
+  $('editorPreviousRun').disabled=!ready||playing||mode!=='source'||previousRun(s)===undefined;
+  $('editorNextRun').disabled=!ready||playing||mode!=='source'||nextRun(s)===undefined;
+  const direct=(s?.lastIndex??-1)<0||s?.boundary!==null&&s?.boundary!==undefined;
+  $('editorStart').textContent=direct?text('Start here','התחל מכאן'):text('Start at the next run','התחל מהריצה הבאה');
+  $('editorStart').disabled=!ready||playing||mode!=='source'||(!direct&&nextRun(s)===undefined);
+  $('editorEnd').textContent=s?.simulation==='breathe'?text('End after Breathe','סיים אחרי הנשימה'):text('End here','סיים כאן');
+  $('editorEnd').disabled=!ready||playing||mode!=='source'||(s?.lastIndex??-1)<0;
+  for(const id of ['editorPreview','editorSave'])$(id).disabled=!ready||playing;
+  $('editorReset').disabled=!ready||playing||(!start&&!end);
   $('editorRange').textContent=text('From ','מ־')+startLabel+text(' to ',' עד ')+endLabel;
-  $('editorPreparation').hidden=!busy||mode!=='preparing';
-  if(state){
-   $('editorPosition').textContent=(mode==='selection'?text('Selection · ','הטווח · '):text('Original · ','המקור · '))+stamp(state.delta);
-   for(const li of $('editorActions').children){
-    li.toggleAttribute('data-active',mode==='source'&&state.lastIndex>=Number(li.dataset.from)&&state.lastIndex<=Number(li.dataset.to));
-   }
-  }
-  for(const button of panel.querySelectorAll('[data-start]')){
-   const choice=button.dataset.start==='original'?null:Number(button.dataset.start);
-   button.disabled=busy||playing||Boolean(inFlight);
-   button.setAttribute('aria-pressed',String(choice===selectedStart));
-   button.closest('li').toggleAttribute('data-start-selected',choice===selectedStart);
+  $('editorPreparation').hidden=!busy;
+  $('editorPlayerHint').textContent=mode==='selection'?text('Viewing your selection. Play original to choose different boundaries.','מוצג הטווח שנבחר. נגן את המקור לשינוי גבולות החיתוך.'):
+   direct?text('You can mark the current point as the beginning.','אפשר לסמן את הנקודה הנוכחית כהתחלה.'):
+   nextRun(s)!==undefined?(s?.rejected?.reason==='working-values'?text('This point needs internal working values that the app logger does not store. Start at the next supported run, or keep the original beginning.','הנקודה הזאת דורשת נתונים פנימיים שהלוגר הקיים לא שומר. אפשר להתקדם להתחלה נתמכת הבאה, או להשאיר את ההתחלה המקורית.'):
+    text('Start at the next run advances automatically and marks its beginning. You do not need the action list.','„התחל מהריצה הבאה” מתקדם אוטומטית ומסמן את תחילתה. אין צורך לחפש ברשימת הפעולות.')):
+   text('No new run follows this point. Go to a previous run start, or keep the original beginning and shorten the end.','אין ריצה חדשה אחרי הנקודה הזאת. חזור לתחילת ריצה קודמת, או השאר את ההתחלה המקורית וקצר את הסיום.');
+  if(s){
+   $('editorPosition').textContent=(mode==='selection'?text('Selection · ','הטווח · '):text('Original · ','המקור · '))+stamp(s.delta)+(s.simulation?` · ${simulations[s.simulation]??s.simulation} · ${text('generation','דור')} ${s.generation}`:'');
+   for(const li of $('editorActions').children)li.toggleAttribute('data-active',mode==='source'&&s.lastIndex>=+li.dataset.from&&s.lastIndex<=+li.dataset.to);
   }
  }
- async function pause(){
-  playing=false;engine?.pause();cancelAnimationFrame(raf);update();
-  await inFlight?.catch(()=>{});
-  update();
- }
+ async function pause(){playing=false;engine?.pause();cancelAnimationFrame(raf);update();await inFlight?.catch(()=>{});update();}
  function draw(){const output=engine?.draw();if(output){ctx.drawImage(output,0,0,520,520);$('editorCanvas').hidden=false;}}
- function loadEngine(){
-  if(engine)return Promise.resolve();
-  if(!engineLoad)engineLoad=bootEngine().finally(()=>{engineLoad=null;});
-  return engineLoad;
- }
+ function loadEngine(){if(engine)return Promise.resolve();if(!engineLoad)engineLoad=bootEngine().finally(()=>{engineLoad=null;});return engineLoad;}
  async function bootEngine(){
-  $('editorStatus').textContent=text('Loading editor…','טוען את העורך…');
-  frame?.remove();frame=document.createElement('iframe');frame.title=text('Isolated macro editor engine','מנוע עריכת מקרו מבודד');
-  frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;
+  $('editorStatus').textContent=text('Loading editor…','טוען את העורך…');frame?.remove();frame=document.createElement('iframe');frame.title=text('Isolated macro editor engine','מנוע עריכת מקרו מבודד');frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;
   const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(Error(text('Could not load the editor.','טעינת העורך נכשלה.')));});
-  frame.src='engine/index.html?computed=1&editor=1';panel.append(frame);await ready;
-  const until=performance.now()+60000;
-  while(performance.now()<until){
-   const win=frame.contentWindow;if(win.macroVideoError)throw Error(win.macroVideoError);
-   if(win.macroVideoEngine?.ready&&win.macroEditorEngine){engine=win.macroEditorEngine;return;}
-   if(win.exportClock)await win.exportClock.tickAsync(100);
-   await new Promise(resolve=>setTimeout(resolve,20));
-  }
+  frame.src='engine/index.html?computed=1&editor=1';panel.append(frame);await ready;const until=performance.now()+60000;
+  while(performance.now()<until){const win=frame.contentWindow;if(win.macroVideoError)throw Error(win.macroVideoError);if(win.macroVideoEngine?.ready&&win.macroEditorEngine){engine=win.macroEditorEngine;return;}if(win.exportClock)await win.exportClock.tickAsync(100);await new Promise(r=>setTimeout(r,20));}
   throw Error(text('The editor did not load. Reload Studio.','העורך לא נטען. טען מחדש את הסטודיו.'));
  }
  function renderList(){
-  const list=$('editorActions');list.replaceChildren();
-  const pages=Math.max(1,Math.ceil(groups.length/100));page=Math.min(page,pages-1);
-  groups.slice(page*100,(page+1)*100).forEach((group,offset)=>{
-   const li=document.createElement('li');li.dataset.from=group.from;li.dataset.to=group.to;
-   const details=document.createElement('details'),summary=document.createElement('summary');
-   summary.textContent=`${page*100+offset+1}. ${label({...group.actions[0],eventName:group.eventName})}`;
-   const when=document.createElement('small');when.dir='ltr';when.textContent=stamp(group.actions[0].delta)+(group.actions[0].isGenBased?` · ${text('Generation','דור')} ${group.actions[0].targetGen}`:'');
-   details.append(summary,when);
-   details.addEventListener('toggle',()=>{if(details.open&&!details.querySelector('pre')){
-    const pre=document.createElement('pre');pre.textContent=describe(group);pre.dir=language==='he'?'rtl':'ltr';pre.style.direction=pre.dir;details.append(pre);
-   }});
-   li.append(details);
-   const original=group.eventName==='INIT_STATE';
-   if(original||safe.has(group.from)){
-    const button=document.createElement('button');button.type='button';button.dataset.start=original?'original':group.from;
-    button.textContent=original?text('Start at the beginning','מההתחלה המקורית'):text('Start here','התחל מכאן');
-    button.addEventListener('click',()=>{
-     const index=original?null:group.from;
-     if(index!==null&&end&&index>end.index){fail(text('This start is after the marked end. Clear the marks or choose an earlier start.','ההתחלה הזאת אחרי הסיום שסימנת. נקה סימונים או בחר התחלה מוקדמת יותר.'));return;}
-     selectedStart=index;startCheckpoint=null;startLabel=original?text('Original beginning','ההתחלה המקורית'):label(actions[index])+` (${page*100+offset+1})`;
-     clearError();$('editorStatus').textContent=text('Start selected. Preview or save whenever you are ready.','ההתחלה נבחרה. אפשר להציג תצוגה מקדימה או לשמור.');update();
-    });li.append(button);
-   }
-   list.append(li);
+  const list=$('editorActions');list.replaceChildren();const pages=Math.max(1,Math.ceil(groups.length/100));page=Math.min(page,pages-1);
+  groups.slice(page*100,(page+1)*100).forEach((g,offset)=>{
+   const li=document.createElement('li');li.dataset.from=g.from;li.dataset.to=g.to;const d=document.createElement('details'),summary=document.createElement('summary');summary.textContent=`${page*100+offset+1}. ${label({...g.actions[0],eventName:g.eventName})}`;
+   const when=document.createElement('small');when.dir='ltr';when.textContent=stamp(g.actions[0].delta);d.append(summary,when);
+   d.addEventListener('toggle',()=>{if(d.open&&!d.querySelector('pre')){const pre=document.createElement('pre');pre.textContent=describe(g);pre.dir=language==='he'?'rtl':'ltr';pre.style.direction=pre.dir;d.append(pre);}});li.append(d);list.append(li);
   });
   $('editorPage').textContent=`${page+1} / ${pages}`;$('editorPrev').disabled=page===0;$('editorNext').disabled=page===pages-1;update();
  }
  async function openFile(file){
-  if(!file)return;const request=++version;job++;busy=true;await pause();source='';selectedStart=startCheckpoint=end=null;mode='source';
-  startLabel=text('Original beginning','ההתחלה המקורית');endLabel=text('Original end','הסוף המקורי');clearError();update();
-  try{
-   if(file.size>32*1024*1024)throw Error(t('לגרסת הניסוי יש מגבלה של 32 מגה לקובץ מקרו.'));
-   const contents=await file.text();await loadEngine();if(request!==version)return;
-   actions=engine.load(contents);source=contents;filename=file.name;groups=actionGroups(actions);safe=new Set(freshStartIndices(actions));page=0;
-   $('editorFileName').textContent=filename;
-   $('editorStartHint').textContent=safe.size?text('“Start here” is available beside fresh simulation starts. Choose one now; Studio prepares the board automatically when you preview or save.','„התחל מכאן” מופיע ליד תחילת ריצות חדשות. אפשר לבחור מיד; הסטודיו יכין את הלוח אוטומטית בתצוגה מקדימה או בשמירה.'):text('This file has no fresh simulation start. You can keep its original beginning and shorten the end.','בקובץ הזה אין תחילת ריצת סימולציה חדשה. אפשר להשאיר את ההתחלה המקורית ולקצר את הסיום.');
-   $('editorStatus').textContent=text('Choose your start in the list below.','בחר התחלה ברשימה למטה.');renderList();draw();
-  }catch(error){if(request!==version)return;engine?.stop();actions=[];groups=[];$('editorActions').replaceChildren();fail(error);}
-  finally{if(request===version){busy=false;update();}}
+  if(!file)return;const request=++version;job++;busy=true;await pause();source='';start=end=null;mode='source';startLabel=text('Original beginning','ההתחלה המקורית');endLabel=text('Original end','הסוף המקורי');$('editorCanvas').hidden=true;$('editorFileName').textContent='';clearError();update();
+  try{if(file.size>32*1024*1024)throw Error(t('לגרסת הניסוי יש מגבלה של 32 מגה לקובץ מקרו.'));const contents=await file.text();await loadEngine();if(request!==version)return;
+   actions=engine.load(contents);source=contents;filename=file.name;groups=actionGroups(actions);starts=freshStartIndices(actions);page=0;$('editorFileName').textContent=filename;$('editorStatus').textContent=text('Play and pause to choose a range, or use the run navigation.','נגן ועצור לבחירת טווח, או עבור בין תחילות הריצות.');renderList();draw();
+  }catch(e){if(request!==version)return;engine?.stop();actions=[];groups=[];$('editorActions').replaceChildren();fail(e);}finally{if(request===version){busy=false;update();}}
  }
  async function tick(time){
-  if(!playing)return;
-  try{
-   inFlight=engine.advance(Math.min(32,lastTime?time-lastTime:16));await inFlight;inFlight=null;lastTime=time;draw();playing=engine.state().running;update();
-   if(playing)raf=requestAnimationFrame(tick);
-   else $('editorStatus').textContent=mode==='selection'?text('Selection preview complete. To change the end, select Play original.','תצוגת הטווח הסתיימה. לשינוי הסיום לחץ „ניגון המקור”.'):text('Playback stopped. You can mark “End here”.','הניגון נעצר. אפשר לסמן „סיים כאן”.');
-  }catch(error){inFlight=null;await pause();fail(error);}
+  if(!playing)return;try{inFlight=engine.advance(Math.min(32,lastTime?time-lastTime:16));await inFlight;inFlight=null;lastTime=time;draw();playing=engine.state().running;update();if(playing)raf=requestAnimationFrame(tick);else $('editorStatus').textContent=text('Playback stopped. Choose your start or end.','הניגון נעצר. בחר התחלה או סיום.');}catch(e){inFlight=null;await pause();fail(e);}
  }
  function beginPlayback(){engine.play();playing=true;lastTime=0;update();raf=requestAnimationFrame(tick);}
- async function prepareStart(token){
-  if(selectedStart===null||startCheckpoint)return;
-  mode='preparing';$('editorPreparationText').textContent=text('Preparing the selected start…','מכין את נקודת ההתחלה שנבחרה…');$('editorPreparationProgress').value=0;update();
-  engine.load(source);engine.hold(selectedStart);engine.play();
+ function markStart(point){
+  if(point&&end&&point.index>end.index)throw Error(text('Start is after the marked end. Clear marks or choose an earlier start.','ההתחלה אחרי הסיום שסומן. נקה סימונים או בחר התחלה מוקדמת יותר.'));
+  start=point;startLabel=point?label(actions[point.index])+` · ${stamp(actions[point.index].delta)}`:text('Original beginning','ההתחלה המקורית');
+  $('editorStatus').textContent=text('New beginning marked. Preview or save the range.','נקודת ההתחלה סומנה. אפשר להציג או לשמור את הטווח.');
+ }
+ async function travel(index,token,select){
+  mode='source';if(index===0){engine.load(source);draw();if(select)markStart(null);return;}
+  let s=engine.state();if(s.boundary===index){if(select)markStart(engine.startPoint());return;}
+  if(s.finished||index<=s.lastIndex||s.rejected?.index===index)engine.load(source);
+  let target=index;engine.hold(target);engine.play();
   while(token===job){
-   inFlight=engine.advance(32);await inFlight;inFlight=null;
-   if(token!==job)return;
-   const state=engine.state();draw();
-   $('editorPreparationProgress').value=Math.min(99,Math.max(0,(state.lastIndex+1)/Math.max(1,selectedStart)*100));
-   $('editorPreparationText').textContent=text('Preparing the selected start… ','מכין את נקודת ההתחלה שנבחרה… ')+stamp(state.delta);
-   if(state.boundary===selectedStart){startCheckpoint=engine.startPoint();$('editorPreparationProgress').value=100;mode='source';return;}
-   if(!state.running)throw Error(text('This recording cannot start at this point. Choose another start.','לא ניתן להתחיל בנקודה הזאת בהקלטה. בחר התחלה אחרת.'));
+   inFlight=engine.advance(32);await inFlight;inFlight=null;if(token!==job)return;s=engine.state();draw();
+   $('editorPreparationProgress').value=Math.min(99,Math.max(0,(s.lastIndex+1)/Math.max(1,target)*100));
+   $('editorPreparationText').textContent=text('Moving to run start… ','מתקדם לתחילת ריצה… ')+stamp(s.delta);
+   if(s.boundary===target){if(select)markStart(engine.startPoint());return;}
+   if(!s.running){
+    if(select&&s.rejected){const following=starts.find(i=>i>target);if(following!==undefined){target=following;engine.hold(target);engine.play();continue;}}
+    throw Error(s.rejected?.reason==='working-values'?text('This start needs internal data absent from the existing logger. Keep the original beginning or use a later supported run.','ההתחלה הזאת דורשת נתונים פנימיים שאינם בלוגר הקיים. השאר את ההתחלה המקורית או עבור לריצה נתמכת בהמשך.'):text('No supported run start remains. Go to a previous run start.','לא נותרה התחלת ריצה נתמכת. חזור לתחילת ריצה קודמת.'));
+   }
    await nextFrame();
   }
  }
- async function selectionFile(token){await prepareStart(token);if(token!==job)return null;return new File([exportRange(actions,{start:startCheckpoint,end})],filename.replace(/\.txt$/i,'')+'_edited.txt',{type:'text/plain'});}
- async function runJob(kind){
-  if(busy||playing||!source)return;const token=++job;busy=true;clearError();await pause();
-  try{
-   const file=await selectionFile(token);if(!file||token!==job)return;
-   if(kind==='preview'){
-    engine.load(await file.text());mode='selection';busy=false;beginPlayback();
-    $('editorStatus').textContent=text('Previewing the selected range. To change the end, play the original.','מציג את הטווח שנבחר. לשינוי הסיום, נגן את המקור.');
-   }else{
-    if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);const link=document.createElement('a');link.href=url;link.download=file.name;link.click();
-    $('editorStatus').textContent=text('New macro downloaded. Original unchanged.','המקרו החדש הורד. המקור לא השתנה.');
-   }
-  }catch(error){if(token===job)fail(error);}
-  finally{if(token===job){busy=false;if(mode==='preparing')mode='source';update();}}
+ async function background(action){
+  if(busy||playing||!source)return;const token=++job;busy=true;clearError();$('editorPreparationProgress').value=0;$('editorPreparationText').textContent=text('Preparing…','מכין…');await pause();
+  try{await action(token);}catch(e){if(token===job)fail(e);}finally{if(token===job){busy=false;update();}}
  }
+ async function cancel(){const token=++job;await pause();if(token!==job)return;engine.load(source);mode='source';busy=false;draw();$('editorStatus').textContent=text('Canceled. Your marks and original file are unchanged.','בוטל. הסימונים והקובץ המקורי נשארו ללא שינוי.');update();}
+ function file(){return new File([exportRange(actions,{start,end})],filename.replace(/\.txt$/i,'')+'_edited.txt',{type:'text/plain'});}
  $('editorFile').addEventListener('change',()=>openFile($('editorFile').files[0]));
- $('editorPlay').addEventListener('click',async()=>{
-  clearError();if(playing){await pause();return;}
-  if(mode!=='source'){engine.load(source);mode='source';draw();}
-  beginPlayback();
- });
- $('editorRestart').addEventListener('click',async()=>{busy=true;await pause();try{engine.load(source);mode='source';draw();clearError();$('editorStatus').textContent=text('Original restarted. Your marks are unchanged.','המקור חזר להתחלה. הסימונים נשמרו.');}catch(error){fail(error);}finally{busy=false;update();}});
+ $('editorPlay').addEventListener('click',async()=>{clearError();if(playing){await pause();return;}if(mode!=='source'||engine.state().finished){engine.load(source);mode='source';draw();}beginPlayback();});
+ $('editorPreviousRun').addEventListener('click',()=>background(token=>travel(previousRun(current()),token,false)));
+ $('editorNextRun').addEventListener('click',()=>background(token=>travel(nextRun(current()),token,false)));
+ $('editorStart').addEventListener('click',()=>{const s=current();if(s.lastIndex<0){markStart(null);update();}else if(s.boundary!==null){try{markStart(engine.startPoint());clearError();update();}catch(e){fail(e);}}else background(token=>travel(nextRun(s),token,true));});
+ function markEnd(){const point=engine.endPoint();if(start&&point.index<start.index)throw Error(text('End must follow the selected start.','הסיום צריך להיות אחרי ההתחלה שנבחרה.'));end=point;endLabel=text('marked end at ','הסיום שסומן ב־')+stamp(point.delta);update();}
  $('editorEnd').addEventListener('click',()=>{
-  try{const point=engine.endPoint();if(selectedStart!==null&&point.index<selectedStart)throw Error(text('The end must follow your selected start.','הסיום צריך להיות אחרי ההתחלה שבחרת.'));
-   end=point;endLabel=text('marked end at ','הסיום שסומן ב־')+stamp(point.delta);clearError();update();
-  }catch(error){fail(error);}
+  if(current().simulation==='breathe')background(async token=>{
+   const target=actions.findIndex((a,i)=>i>current().lastIndex&&a.eventName==='PAUSE');
+   if(target<0)throw Error(text('No Breathe stop is recorded. Keep the original end or return to a previous run.','לא הוקלטה עצירת נשימה. השאר את הסוף המקורי או חזור לריצה קודמת.'));
+   engine.holdEnd(target);engine.play();while(token===job){inFlight=engine.advance(32);await inFlight;inFlight=null;if(token!==job)return;draw();if(engine.state().endedAt===target){markEnd();return;}if(!engine.state().running)throw Error(text('The recording ended before the Breathe stop.','ההקלטה הסתיימה לפני עצירת הנשימה.'));await nextFrame();}
+  });else try{markEnd();clearError();}catch(e){fail(e);}
  });
- $('editorReset').addEventListener('click',()=>{selectedStart=startCheckpoint=end=null;startLabel=text('Original beginning','ההתחלה המקורית');endLabel=text('Original end','הסוף המקורי');clearError();update();});
- $('editorPreview').addEventListener('click',()=>runJob('preview'));
- $('editorSave').addEventListener('click',()=>runJob('save'));
- async function cancelPreparation(){
-  const token=++job;await pause();if(token!==job)return;
-  engine.load(source);mode='source';busy=false;draw();$('editorStatus').textContent=text('Preparation canceled. Your marks and original file are unchanged.','ההכנה בוטלה. הסימונים והקובץ המקורי נשארו ללא שינוי.');update();
- }
- $('editorCancel').addEventListener('click',cancelPreparation);
- $('editorPrev').addEventListener('click',()=>{page--;renderList();});$('editorNext').addEventListener('click',()=>{page++;renderList();});
- document.addEventListener('visibilitychange',()=>{if(document.hidden&&!busy)pause();});
- window.addEventListener('beforeunload',event=>{if(busy||playing){event.preventDefault();event.returnValue='';}if(url)URL.revokeObjectURL(url);});
+ $('editorPreview').addEventListener('click',()=>background(async token=>{const copy=file();engine.load(await copy.text());if(token!==job)return;mode='selection';busy=false;beginPlayback();}));
+ $('editorSave').addEventListener('click',()=>{try{const copy=file();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(copy);const link=document.createElement('a');link.href=url;link.download=copy.name;link.click();$('editorStatus').textContent=text('New macro downloaded. Original unchanged.','המקרו החדש הורד. המקור לא השתנה.');}catch(e){fail(e);}});
+ $('editorReset').addEventListener('click',()=>{start=end=null;startLabel=text('Original beginning','ההתחלה המקורית');endLabel=text('Original end','הסוף המקורי');clearError();update();});
+ $('editorCancel').addEventListener('click',cancel);$('editorPrev').addEventListener('click',()=>{page--;renderList();});$('editorNext').addEventListener('click',()=>{page++;renderList();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden&&!busy)pause();});window.addEventListener('beforeunload',event=>{if(busy||playing){event.preventDefault();event.returnValue='';}if(url)URL.revokeObjectURL(url);});
  if(initialFile)await openFile(initialFile);else{$('editorStatus').textContent=text('Choose a macro to begin.','בחר מקרו כדי להתחיל.');update();}
- return {pause:()=>busy&&mode==='preparing'?cancelPreparation():pause(),openFile};
+ return {pause:()=>busy?cancel():pause(),openFile};
 }

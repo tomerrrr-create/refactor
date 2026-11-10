@@ -56,12 +56,20 @@ export function actionGroups(actions) {
  });
  return groups;
 }
+export function assertPortableSource(actions) {
+ for(const action of actions){
+  if(action.eventName!=='INIT_STATE')continue;
+  const init=JSON.parse(action.details);
+  if(init.values!==undefined||init.freshStart!==undefined)throw Error('UNSUPPORTED_PROTOTYPE_INIT');
+ }
+}
 export function makeCheckpoint(state) {
+ if(state.tiles.some(tile=>!Number.isFinite(tile.k)||(tile.v??tile.k)!==tile.k))throw Error('UNSUPPORTED_WORKING_VALUES');
  const runs=[];let last,count=0;
  for(const tile of state.tiles){if(count&&tile.k!==last){runs.push(`${count}x${last}`);count=0;}last=tile.k;count++;}
  if(count)runs.push(`${count}x${last}`);
- return {recipeVersion:2,freshStart:true,n:state.n,pal:state.activePaletteIndex,sort:state.currentSortMethod,
-  sep:state.separatorPx,board:runs.join(','),values:state.tiles.map(t=>t.v),
+ return {recipeVersion:2,n:state.n,pal:state.activePaletteIndex,sort:state.currentSortMethod,
+  sep:state.separatorPx,board:runs.join(','),
   gold:state.tiles.flatMap((t,i)=>t.isGold?[i]:[])};
 }
 function line(action,delta) {
@@ -76,6 +84,10 @@ export function exportRange(actions,{start=null,end=null}={}) {
  const selected=actions.slice(first,last+1).map(a=>({...a,delta:Math.max(0,a.delta-base)}));
  if(start){
   selected.unshift({eventName:'HISTORY_SETTINGS',details:JSON.stringify(start.settings),delta:0,isGenBased:false});
+  // Existing app commands clear a previously armed engine without running or
+  // painting it. No new event, INIT field or app-parser behavior is required.
+  selected.unshift({eventName:'Nudge Mode Changed',details:'off',delta:0,isGenBased:false});
+  selected.unshift({eventName:'Nudge Mode Changed',details:'nudgeBrighter',delta:0,isGenBased:false});
   selected.unshift({eventName:'INIT_STATE',details:JSON.stringify(start.init),delta:0,isGenBased:false});
  } else {
   const init=selected.find(a=>a.eventName==='INIT_STATE');

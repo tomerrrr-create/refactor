@@ -82,6 +82,7 @@ test('deploy build includes a generated, isolated Studio while normal PWA exclud
  try {
   await buildVercel({branch:'work',outputDirectory:out});
   const app=await readFile(path.join(out,'js/app.js'),'utf8');
+  assert.equal(app,await readFile(new URL('../js/app.js',import.meta.url),'utf8'),'Studio build must not patch the ordinary app player/logger');
   const studio=await readFile(path.join(out,'studio/index.html'),'utf8');
   // Branding must load without the generated engine, including source hosting
   // beneath a GitHub Pages project path.

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
-import {freshStartIndices,actionGroups,makeCheckpoint,exportRange} from '../studio/macro-edit-model.js';
+import {freshStartIndices,actionGroups,makeCheckpoint,exportRange,assertPortableSource} from '../studio/macro-edit-model.js';
 import {prepareWindMacro} from '../js/wind-recording.js';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 const ctx=vm.createContext({prepareWindMacro});
@@ -13,7 +13,7 @@ const a=(eventName,details,delta=0,gen=null)=>({eventName,details:typeof details
 const begin=a('INIT_STATE',init);
 const play=sim=>a('PLAY',`Armed: ${sim} | Sort: luminance | Rules: {}`,100);
 const settings={n:3,activePaletteIndex:0,separatorPx:0,currentSortMethod:'luminance'};
-const checkpoint={index:2,init:{...init,board:'9x3',values:Array(9).fill(1),gold:[4]},settings};
+const checkpoint={index:2,init:{...init,board:'9x3',gold:[4]},settings};
 
 test('only genuinely fresh starts qualify; pause/play and single steps are not fresh',()=>{
  const actions=[begin,play('gameOfLife'),a('PAUSE','---',500,5),play('gameOfLife'),
@@ -32,13 +32,13 @@ test('one complete brush gesture is one readable row while all samples remain av
  const actions=[begin,a('BRUSH_START',{version:1}),a('DRAW_STROKE',[]),a('DRAW_STROKE',[]),a('BRUSH_END',{version:1}),play('gameOfLife')];
  const groups=actionGroups(actions);assert.equal(groups.length,3);assert.equal(groups[1].actions.length,4);assert.equal(groups[1].eventName,'DRAW_STROKE');assert.equal(groups[2].from,5);
 });
-test('checkpoint retains working values and gold; cropped export uses effective commands without mutating source',()=>{
- const state={...settings,tiles:Array.from({length:9},(_,i)=>({k:i<5?2:3,v:i/2,isGold:i===2}))};
- const snapshot=makeCheckpoint(state);assert.equal(snapshot.freshStart,true);assert.equal(snapshot.board,'5x2,4x3');assert.deepEqual(snapshot.gold,[2]);assert.deepEqual(snapshot.values,state.tiles.map(t=>t.v));
+test('portable checkpoint retains colors and gold using only existing recipe commands',()=>{
+ const state={...settings,tiles:Array.from({length:9},(_,i)=>({k:i<5?2:3,v:i<5?2:3,isGold:i===2}))};
+ const snapshot=makeCheckpoint(state);assert.equal('freshStart' in snapshot,false);assert.equal(snapshot.board,'5x2,4x3');assert.deepEqual(snapshot.gold,[2]);assert.equal('values' in snapshot,false);assert.throws(()=>makeCheckpoint({...state,tiles:[{k:2,v:2.3}]}),/UNSUPPORTED_WORKING_VALUES/);
  const actions=[begin,a('DRAW_STROKE',[{i:0,k:3}],50),play('gameOfLife'),a('PAUSE','---',900,8)];
  const original=JSON.stringify(actions),text=exportRange(actions,{start:checkpoint});
- const replay=parse(text);assert.deepEqual(replay.map(e=>e.eventName),['INIT_STATE','HISTORY_SETTINGS','PLAY','PAUSE']);
- assert.deepEqual(JSON.parse(replay[0].details).values,Array(9).fill(1));assert.equal(replay[2].delta,0);assert.equal(replay[3].targetGen,8);
+ const replay=parse(text);assert.deepEqual(replay.map(e=>e.eventName),['INIT_STATE','Nudge Mode Changed','Nudge Mode Changed','HISTORY_SETTINGS','PLAY','PAUSE']);
+ assert.equal('values' in JSON.parse(replay[0].details),false);assert.equal(replay[4].delta,0);assert.equal(replay[5].targetGen,8);
  assert.equal(JSON.stringify(actions),original);
 });
 test('end inside an open brush gesture closes it before terminating; generation target is retained',()=>{
@@ -56,14 +56,17 @@ test('flattened Undo/Redo never re-applies old history offsets on export',()=>{
  const actions=parse(raw),replay=parse(exportRange(actions));
  assert.deepEqual(replay.map(e=>[e.eventName,e.details,e.delta]),actions.map(e=>[e.eventName,e.details,e.delta]));
 });
-test('invalid ranges and invalid checkpoint values are rejected before replay',()=>{
+test('invalid ranges are rejected without requiring changes to the app parser',()=>{
  assert.throws(()=>exportRange([begin,play('gameOfLife')],{end:{index:-1}}));
  assert.throws(()=>exportRange([begin,play('gameOfLife')],{start:{...checkpoint,index:0}}),/fresh/);
- assert.throws(()=>parse(`[00:00:00.000] INIT_STATE -> ${JSON.stringify({...init,values:[1]})}`),/working values/);
- assert.throws(()=>parse(`[00:00:00.000] INIT_STATE -> ${JSON.stringify({...init,freshStart:'yes'})}`),/simulation reset/);
  assert.equal(parse(`[00:00:00.000] INIT_STATE -> ${JSON.stringify(init)}`).length,1);
 });
 test('normal app does not import editor code; Studio loads it only through the Edit Macro tab',()=>{
  assert.equal(source.includes('macro-edit-model'),false);assert.equal(source.includes('macro-editor-engine'),false);
  const exporter=readFileSync(new URL('../studio/exporter.js',import.meta.url),'utf8');assert.match(exporter,/if\(edit&&!macroEditor\).*import\('\.\/editor.js'\)/s);
+});
+
+test('prototype-only INIT fields are rejected by the editor before silently losing state',()=>{
+ assert.throws(()=>assertPortableSource([a('INIT_STATE',{...init,values:Array(9).fill(1)})]),/UNSUPPORTED_PROTOTYPE_INIT/);
+ assert.doesNotThrow(()=>assertPortableSource([begin]));
 });
