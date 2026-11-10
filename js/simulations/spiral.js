@@ -1,3 +1,4 @@
+import { runTurbine2Generation } from './spiral-turbine2.js';
 
 let cachedRadialOrder = null;
 let cachedRadialN = null;
@@ -119,6 +120,9 @@ let strength = 0.9; // עוצמת ברירת המחדל המקורית של הס
     }
 
     switch (method) {
+
+        case 'turbine2':
+            return runTurbine2Generation(n, nextBoardState);
 
         case 'black_hole':
             return runBlackHoleGeneration(n, nextBoardState);

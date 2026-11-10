@@ -476,11 +476,14 @@ Most modes calculate a target using angle and distance from the center, then swa
 | --- | --- | --- |
 | `b` | Pinwheel | Inward neighbor flow with a small angular offset; first button mode |
 | `left` | Turbine | Inward spinning flow with stronger angular variation; second button mode |
+| `turbine2` | Turbine 2 | Separate experimental smoother flow; settings only, beside the original Turbine |
 | `black_hole` | Circle | Inward swaps plus comb-sort passes over exact Euclidean radial order; third button mode |
 | `radial` | Diamond | Inward targeting without spin; modal only |
 | `down` | Hexagon | Inward targeting with its own spin parameters; modal only |
 | `a` | Experiment A | Cached radial order with fixed-stride bidirectional passes; modal only |
 | `vortex` | Vortex | Turbulent angular/radial targeting; modal only |
+
+Turbine 2 is implemented separately in `js/simulations/spiral-turbine2.js`; the original Turbine and the Pinwheel → Turbine → Circle button cycle are unchanged. It samples cardinal, diagonal and stay probabilities from the continuous target vector, compensating for diagonal step length. A fresh Fisher–Yates traversal and a moved-cell mask permit at most one swap per tile per generation. Angular/radial eddies are weaker and slower than the original Turbine. Swaps preserve all existing tile/color values and protect gold. Geometry and scratch buffers are cached only by size; there is no hidden convergence state tied to a board. The method ID round-trips through settings/profiles, artwork snapshots, Undo/Redo and recorded rules. Like the original Turbine, it uses `Math.random` and wall-clock phase; recipes preserve its operations/rules but do not promise pixel-identical stochastic playback.
 
 Circle caches geometry by board size and convergence progress by board reference. It preserves colors through swaps, can swap nonadjacent positions in its radial passes, and restarts convergence after edits or palette remapping. Its swaps include gold tiles. Experiment A's active branch is not the older commented-out time-budget implementation. Preserve these IDs when changing displayed names.
 
@@ -776,6 +779,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Game of Life genetics and dead color: independent drafts, narrow layouts, cycles, profiles, Undo/Redo and real logger-to-macro replay | `tools/check-gol-genetics.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Settings entry focus and keyboard navigation | `tools/check-settings-focus.mjs` |
+| Experimental Turbine 2: modal choice, original mode, artwork/settings/profiles, Undo/Redo and real macro playback | `tools/check-turbine2.mjs` (`TURBINE_LANG` filters languages) |
 | Toolbar layout | `tools/check-evolution-drawer.mjs` |
 | Dedicated Wind cycle, settings, removed color gesture, mouse/touch, history and recipe replay | `tools/check-wind-button.mjs` |
 | Wind-only disabled/dimmed brush and Symmetry controls, keyboard/hold/swipe blocking and restored choices | `tools/check-wind-disabled-controls.mjs` |

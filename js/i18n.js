@@ -297,6 +297,7 @@ export const translations = {
   spiral_radial: {"en": "Diamond", "he": "יהלום", "ru": "Ромб", "nl": "Diamant"},
   spiral_down: {"en": "Hexagon", "he": "משושה", "ru": "Шестиугольник", "nl": "Zeshoek"},
   spiral_left: {"en": "Turbine", "he": "טורבינה", "ru": "Турбина", "nl": "Turbine"},
+  spiral_turbine2: {en:"Turbine 2",he:"טורבינה 2",ru:"Турбина 2",nl:"Turbine 2"},
   help_how_it_works: {"en": "How it works", "he": "איך זה עובד?", "ru": "Как это работает", "nl": "Zo werkt het"},
   help_evolution_choose: {"en": "Choose an evolution.", "he": "בחרו אבולוציה.", "ru": "Выберите эволюцию.", "nl": "Kies een evolutie."},
   help_evolution_advance: {"en": "Single step advances one generation. Play runs generations continuously.", "he": "צעד קדימה מקדם דור אחד. Play מריץ דורות ברצף.", "ru": "Один шаг продвигает на поколение. Запуск запускает поколения непрерывно.", "nl": "Eén stap gaat één generatie vooruit. Afspelen laat generaties doorlopen."},

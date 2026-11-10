@@ -530,7 +530,7 @@ k: tileState.k,
         }));
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'radial', 'down'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'radial', 'down', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
@@ -3936,8 +3936,8 @@ function cycleBreatheEvoMode() {
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-black_hole', 'simulation-active');
-    dom.btnSpiral.title = spiralMode === 'black_hole'
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(spiralMode)
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${spiralMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);
@@ -5622,6 +5622,7 @@ syncGsModeFromModal: (direction) => {
             getContourRules: () => ({ ...contourActionRules }), setContourRules: (r) => { if(isMacroLoaded)return;contourActionRules=validateContourActionRules(r);persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture(); }, // <-- ADDED HERE
 
 spiralRules,
+getSpiralRules: () => spiralRules,
 syncSpiralModeFromModal: (method) => {
     if (armedSimulation !== 'spiral') {
         armSimulation('spiral');

@@ -40,7 +40,7 @@ try{
  // Every alternate root SVG must be the actual visible symbol, not the first SVG.
  const modes={erosion:{channels:'iconErosionChannels','channels-solid':'iconErosionSolid',legacy:'iconErosionLegacy'},
  gravitationalSort:{up:'iconGsUp',right:'iconGsRight',center_x:'iconGsCenterX'},
- spiral:{b:'iconSpiralB',vortex:'iconSpiralVortex',left:'iconSpiralLeft',a:'iconSpiralA',radial:'iconSpiralRadial',down:'iconSpiralDown',black_hole:'iconSpiralBlackHole'},
+ spiral:{b:'iconSpiralB',vortex:'iconSpiralVortex',left:'iconSpiralLeft',turbine2:'iconSpiralTurbine2',a:'iconSpiralA',radial:'iconSpiralRadial',down:'iconSpiralDown',black_hole:'iconSpiralBlackHole'},
  magnet:{magnet:'iconModeMagnet',cosmic_magnet:'iconModeCosmicMagnet',time_magnet:'iconModeTimeMagnet'},
  breathe:{solo:'iconBreatheSolo',group:'iconBreatheGroup','random-cell':'iconBreatheRandomCell','random-color':'iconBreatheRandomColor'}};
  for(const [sim,choices] of Object.entries(modes))for(const [value,id] of Object.entries(choices)){

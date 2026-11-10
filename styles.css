@@ -1333,6 +1333,8 @@ body {
 
 #btnSpiral.mode-left #iconSpiralLeft { display: block !important; }
 #btnSpiral.mode-left svg:not(#iconSpiralLeft) { display: none !important; }
+#btnSpiral.mode-turbine2 #iconSpiralTurbine2 { display:block !important; }
+#btnSpiral.mode-turbine2 svg:not(#iconSpiralTurbine2) { display:none !important; }
 
 #btnSpiral.mode-black_hole #iconSpiralBlackHole { display: block !important; }
 #btnSpiral.mode-black_hole svg:not(#iconSpiralBlackHole) { display: none !important; }
