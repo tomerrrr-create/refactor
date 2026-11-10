@@ -5,11 +5,12 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+const spiralSequence = JSON.parse(source.match(/const SPIRAL_MODE_SEQUENCE = (\[[^\]]+\])/)[1].replaceAll("'", '"'));
 const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
     { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x'], get: c => c.gsMode },
     { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: ['magnet', 'cosmic_magnet', 'time_magnet'], get: c => c.magnetMode },
-    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['b', 'left', 'black_hole'], get: c => c.spiralMode },
+    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['turbine2', 'b', 'left', 'black_hole'], get: c => c.spiralMode },
     { sim: 'brightnessEvo', fn: 'cycleBrightnessEvoMode', event: 'Brightness Evo Mode Changed', modes: ['brightness', 'contrast'], get: c => c.brightnessEvoMode },
     { sim: 'dla', fn: 'cycleDlaMode', event: 'DLA Mode Changed', modes: ['genetics', 'no-genetics'], get: c => c.dlaMode }
 ];
@@ -25,7 +26,7 @@ function harness() {
         brightnessEvoMode: 'off', dlaMode: 'off', gsMode: 'off', spiralMode: 'off', magnetMode: 'off',
         erosionRules: { mode: 'legacy', erosionStrength: .1 }, gravitationalSortRules: { direction: 'up' },
         spiralRules: { method: 'b' }, magnetRules: { method: 'cosmic_magnet' },
-        SPIRAL_MODE_SEQUENCE: ['off', 'b', 'left', 'black_hole'], boardState: board, dlaState,
+        SPIRAL_MODE_SEQUENCE: spiralSequence, boardState: board, dlaState,
         armCalls: 0, pauseCalls: 0 });
     c.restoreErosionRules = restoreErosionRules;
     c.getErosionRecordingRules = () => recordErosionRules(c.erosionRules, 64);
@@ -107,4 +108,23 @@ test('modes selected outside the button cycle enter its first active mode while 
     assert.equal(c.nextEvolutionMode('expand', ['off', 'magnet', 'cosmic_magnet', 'time_magnet']), 'magnet');
     c.isLifePlaying = false;
     assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x']), 'off');
+});
+
+test('Spiral cycling repairs stale mode/arming combinations without toggling off a selected simulation', () => {
+    const unarmed = harness();
+    unarmed.spiralMode = 'left';
+    unarmed.cycleSpiralMode();
+    assert.equal(unarmed.armedSimulation, 'spiral');
+    assert.equal(unarmed.spiralMode, 'turbine2');
+    assert.equal(unarmed.spiralRules.method, 'turbine2');
+    assert.equal(unarmed.armCalls, 1);
+
+    const selected = harness();
+    selected.armedSimulation = 'spiral';
+    selected.spiralMode = 'off';
+    selected.cycleSpiralMode();
+    assert.equal(selected.armedSimulation, 'spiral');
+    assert.equal(selected.spiralMode, 'turbine2');
+    assert.equal(selected.spiralRules.method, 'turbine2');
+    assert.equal(selected.armCalls, 0);
 });

@@ -1317,7 +1317,7 @@ body {
 
 /* --- Spiral Modes Button States --- */
 #btnSpiral:not([class*="mode-"]) svg { display: none !important; }
-#btnSpiral:not([class*="mode-"]) #iconSpiralB { display: block !important; }
+#btnSpiral:not([class*="mode-"]) #iconSpiralTurbine2 { display: block !important; }
 
 #btnSpiral.mode-b #iconSpiralB { display: block !important; }
 #btnSpiral.mode-b svg:not(#iconSpiralB) { display: none !important; }
@@ -1333,6 +1333,8 @@ body {
 
 #btnSpiral.mode-left #iconSpiralLeft { display: block !important; }
 #btnSpiral.mode-left svg:not(#iconSpiralLeft) { display: none !important; }
+#btnSpiral.mode-turbine2 #iconSpiralTurbine2 { display:block !important; }
+#btnSpiral.mode-turbine2 svg:not(#iconSpiralTurbine2) { display:none !important; }
 
 #btnSpiral.mode-black_hole #iconSpiralBlackHole { display: block !important; }
 #btnSpiral.mode-black_hole svg:not(#iconSpiralBlackHole) { display: none !important; }
@@ -2572,20 +2574,15 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .gol-dead-color[aria-checked="true"]::before { background: #141719; border-color: #d5aa48; box-shadow: 0 0 0 2px #d5aa48; }
 
 /* A read-only overlay in unused screen space; never participates in board layout. */
-.macro-activity { position:fixed; z-index:35; pointer-events:none; padding:14px 0;
+.macro-activity { position:fixed; z-index:35; pointer-events:none; padding:14px 0; height:72px; display:flex; align-items:center; box-sizing:border-box;
   color:#dedbd1; border-block:1px solid #d5aa4824; text-align:start; }
 .macro-activity[hidden] { display:none !important; }
-.macro-activity-heading { margin:0 0 17px; color:#8c8c87; font-size:10px; letter-spacing:.1em; }
-.macro-activity-row { display:flex; align-items:flex-start; gap:10px; min-width:0; }
+.macro-activity-row { display:flex; align-items:center; gap:10px; min-width:0; }
 .macro-activity-icon { flex:0 0 25px; color:#d5aa48; }
 .macro-activity-icon svg { width:24px; height:24px; }
 .macro-activity-title { margin:0; font-size:13px; line-height:1.45; overflow-wrap:anywhere; }
-.macro-activity-detail { margin:5px 0 0; font-size:11px; line-height:1.45; color:#93958f; font-variant-numeric:tabular-nums; }
-.macro-activity-recent { list-style:none; padding:0; margin:20px 0 0; display:grid; gap:14px; }
-.macro-activity-recent li { opacity:.45; }
-.macro-activity-recent li:nth-child(2) { opacity:.32; }
-.macro-activity-recent li:nth-child(3) { opacity:.22; }
-.macro-activity-recent .macro-activity-icon { color:#a5aba7; }
+.macro-activity-current { width:100%; height:42px; display:grid; align-items:center; }
+.macro-activity-current > .macro-activity-row { grid-area:1 / 1; }
 .macro-activity-option { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 @media (max-width:1023px), (hover:none), (pointer:coarse) { .macro-activity { display:none !important; } }
 

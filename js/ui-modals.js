@@ -188,7 +188,8 @@ function openSpiralSettingsModal() {
     
     // סימון הכפתור הנכון לפי מה ששמור בהגדרות
 
-const currentMethod = app.spiralRules ? app.spiralRules.method : 'magnet';    app.dom.spiralMethodButtons.forEach(btn => {
+const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'b';
+    app.dom.spiralMethodButtons.forEach(btn => {
 
 
         if (btn.dataset.method === currentMethod) {

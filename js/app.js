@@ -369,7 +369,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'black_hole'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'turbine2', 'b', 'left', 'black_hole'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -530,7 +530,7 @@ k: tileState.k,
         }));
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'radial', 'down'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'radial', 'down', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
@@ -988,8 +988,6 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
 dlaState = null; // איפוס לפרקטלים
         turingState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
-spiralMode = 'off';
-    updateSpiralButtonUI();
         startAnimationLoop();
 
       }
@@ -3936,8 +3934,8 @@ function cycleBreatheEvoMode() {
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-black_hole', 'simulation-active');
-    dom.btnSpiral.title = spiralMode === 'black_hole'
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(spiralMode)
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${spiralMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);
@@ -3952,7 +3950,7 @@ function updateSpiralButtonUI() {
 
 
 function cycleSpiralMode() {
-    const oldMode = spiralMode;
+    const oldMode = armedSimulation === 'spiral' ? spiralMode : 'off';
 const sequence = SPIRAL_MODE_SEQUENCE;
 
 
@@ -3962,7 +3960,8 @@ const sequence = SPIRAL_MODE_SEQUENCE;
 // const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
 
 
-    spiralMode = nextEvolutionMode(spiralMode, sequence);
+    const nextMode = nextEvolutionMode(oldMode, sequence);
+    spiralMode = nextMode;
 
     if (spiralMode !== 'off') {
         spiralRules.method = spiralMode;
@@ -3970,8 +3969,11 @@ const sequence = SPIRAL_MODE_SEQUENCE;
     
     window.logArtEvent('Spiral Mode Changed', spiralMode);
 
-    if (oldMode === 'off' && spiralMode !== 'off') {
+    if (spiralMode !== 'off' && armedSimulation !== 'spiral') {
         armSimulation('spiral');
+        // Arming retains the legacy default; the button applies its explicit choice.
+        spiralMode = nextMode;
+        spiralRules.method = nextMode;
     } else if (oldMode !== 'off' && spiralMode === 'off') {
         if (armedSimulation === 'spiral') {
             armSimulation(null);
@@ -5622,6 +5624,7 @@ syncGsModeFromModal: (direction) => {
             getContourRules: () => ({ ...contourActionRules }), setContourRules: (r) => { if(isMacroLoaded)return;contourActionRules=validateContourActionRules(r);persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture(); }, // <-- ADDED HERE
 
 spiralRules,
+getSpiralRules: () => spiralRules,
 syncSpiralModeFromModal: (method) => {
     if (armedSimulation !== 'spiral') {
         armSimulation('spiral');

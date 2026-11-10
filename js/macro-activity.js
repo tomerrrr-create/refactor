@@ -18,13 +18,6 @@ const simulations = {
     contour: ['help_contour', 'btnContour'], cymatics: ['help_cymatics', 'btnCymatics'],
     nudgeBrighter: ['help_nudge_forward', 'btnNudgeBrighter'], nudgeDarker: ['help_nudge_backward', 'btnNudgeBrighter']
 };
-const modeSimulations = {
-    'Game of Life Mode Changed': 'gameOfLife', 'Chi Flow Mode Changed': 'sandpile',
-    'Gravitational Sort Mode': 'gravitationalSort', 'Brightness Evo Mode Changed': 'brightnessEvo',
-    'Islands Mode Changed': 'islands', 'Magnet Mode Changed': 'magnet',
-    'Spiral Mode Changed': 'spiral', 'Erosion Mode Changed': 'erosion',
-    'DLA Mode Changed': 'dla', 'Cymatics Mode Changed': 'cymatics', 'Cracks Mode Changed': 'contour'
-};
 const actions = {
     DRAW_STROKE: ['macro_activity_draw', 'btnBrushMode'],
     WIND_WAVE: ['macro_activity_wind', 'btnWind'],
@@ -36,44 +29,110 @@ const actions = {
     GRID_RESIZE: ['macro_activity_resize', 'btnResizeUp'], SEPARATOR_CHANGE: ['macro_activity_separators', 'btnGap'],
     CONTOUR_APPLY: ['help_contour_action', 'btnContoursAction'],
     UNDO: ['macro_activity_undo', 'btnUndo'], REDO: ['macro_activity_redo', 'btnRedo'],
-    PAUSE: ['macro_activity_pause', 'btnPlayPauseLife'],
-    NUDGE: ['help_nudge', 'btnNudgeBrighter'],
-    NUDGE_SPEED: ['macro_activity_settings', 'btnNudgeBrighter']
+    NUDGE: ['help_nudge', 'btnNudgeBrighter']
 };
 export function describeMacroActivity(action, simulation) {
-    let kind;
-    if (['PLAY', 'STEP FORWARD', 'SIMULATION_RULES'].includes(action.eventName)) {
+    // Only describe visible creative actions. Pause and settings events still
+    // execute and log normally; they never replace a row in this presentation.
+    if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
         simulation = String(action.details ?? '').match(/Armed:\s*(\w+)/)?.[1] || simulation;
-        kind = action.eventName === 'STEP FORWARD' ? 'macro_activity_step'
-            : action.eventName === 'SIMULATION_RULES' ? 'macro_activity_settings' : null;
-    } else if (modeSimulations[action.eventName]) {
-        simulation = modeSimulations[action.eventName]; kind = 'macro_activity_settings';
-    } else if (action.eventName === 'Nudge Mode Changed') {
-        simulation = action.details === 'nudgeDarker' ? 'nudgeDarker' : 'nudgeBrighter'; kind = 'macro_activity_settings';
-    } else if (action.eventName === 'EVOLUTION_TUNING') {
-        try { simulation = JSON.parse(action.details).simulation; } catch { return null; }
-        kind = 'macro_activity_settings';
-    } else {
-        const definition = actions[action.eventName];
-        return definition ? { label: definition[0], icon: definition[1], key: action.eventName } : null;
+        const definition = simulations[simulation];
+        return definition ? { label: definition[0], icon: definition[1],
+            key: action.eventName + ':' + simulation } : null;
     }
-    const definition = simulations[simulation];
-    return definition ? { label: definition[0], icon: definition[1], kind, key: action.eventName + ':' + simulation } : null;
+    const definition = actions[action.eventName];
+    return definition ? { label: definition[0], icon: definition[1], key: action.eventName } : null;
 }
-export function macroGenerationTarget(queue, index, generation) {
-    for (let i = index; i < queue.length; i++) {
-        const action = queue[i];
-        if (['PLAY', 'INIT_STATE', 'ISLANDS_INIT'].includes(action.eventName)) return null;
-        if (action.eventName === 'PAUSE') return action.isGenBased && action.targetGen >= generation ? action.targetGen : null;
+// Recover the current visible action when the display is enabled mid-play.
+// Only already-executed commands are read; nothing is changed or replayed.
+export function latestMacroActivity(queue, index, simulation) {
+    for (let i = Math.min(index, queue.length - 1); i >= 0; i--) {
+        const item = describeMacroActivity(queue[i], simulation);
+        if (item) return item;
     }
     return null;
 }
 export function macroActivityPlacement(board, viewport, fullscreen = false) {
     const gap = fullscreen ? 74 : 28; // Leave the fullscreen gallery frame untouched.
-    const width = Math.min(224, board.left - gap - 16), height = 244;
+    const width = Math.min(224, board.left - gap - 16), height = 72;
     if (viewport.width < 1024 || width < 188 || viewport.height < height + 32 || board.width <= 0) return null;
     return { left: board.left - gap - width, top: Math.max(16, Math.min(viewport.height - height - 16,
         board.top + (board.height - height) / 2)), width };
+}
+
+// Freeze the visible control symbol so an outgoing row cannot change mid-fade.
+export function captureMacroActivityIcon(button) {
+    if (!button) return null;
+    const win = button.ownerDocument.defaultView;
+    // Fullscreen/drawers can hide the whole control via inherited visibility.
+    // Per-symbol display still identifies the selected variant while it is hidden.
+    const original = [...button.querySelectorAll('svg, .glyph, .glyph-dark')]
+        .find(node => win.getComputedStyle(node).display !== 'none');
+    if (!original) return null;
+    const clone = original.cloneNode(true), originals = [original, ...original.querySelectorAll('*')];
+    const copies = [clone, ...clone.querySelectorAll('*')];
+    const properties = ['fill', 'fill-opacity', 'stroke', 'stroke-width', 'stroke-opacity',
+        'stroke-linecap', 'stroke-linejoin', 'stroke-dasharray', 'stroke-dashoffset',
+        'opacity', 'transform', 'transform-origin', 'vector-effect', 'paint-order',
+        'fill-rule', 'clip-rule', 'stroke-miterlimit', 'stop-color', 'stop-opacity'];
+    for (let i = 0; i < copies.length; i++) {
+        const node = copies[i], style = win.getComputedStyle(originals[i]);
+        if (i && style.display === 'none') { node.remove(); continue; }
+        if (original instanceof win.SVGElement) {
+            node.removeAttribute('class');
+            for (const property of properties) node.style.setProperty(property, style.getPropertyValue(property));
+        }
+        node.style.display = i ? style.display : 'block';
+    }
+    clone.style.width = '24px'; clone.style.height = '24px';
+    return { node: clone, signature: clone.outerHTML, sourceId: original.id };
+}
+let activityIconId = 0;
+function installIcon(snapshot) {
+    const clone = snapshot.node.cloneNode(true), nodes = [clone, ...clone.querySelectorAll('*')], ids = new Map();
+    for (const node of nodes) if (node.id) {
+        const id = 'macro-activity-icon-' + (++activityIconId);
+        ids.set(node.id, id); node.id = id;
+    }
+    for (const node of nodes) for (const attribute of [...node.attributes]) {
+        let value = attribute.value;
+        for (const [before, after] of ids) {
+            value = value.replaceAll('#' + before + ')', '#' + after + ')')
+                .replaceAll('#' + before + '"', '#' + after + '"').replaceAll("#" + before + "'", "#" + after + "'");
+            if (value === '#' + before) value = '#' + after;
+        }
+        if (value !== attribute.value) node.setAttribute(attribute.name, value);
+    }
+    return clone;
+}
+
+// At most two overlapping rows. Rapid updates replace the incoming content,
+// without restarting the fade or queuing animations behind the actual playback.
+export function createMacroActivityFade(container) {
+    const win = container.ownerDocument.defaultView, reduced = win.matchMedia('(prefers-reduced-motion: reduce)');
+    let incoming = null, outgoing = null, enter = null, exit = null;
+    function settle() {
+        if (enter) { enter.onfinish = null; enter.cancel(); }
+        exit?.cancel(); enter = exit = null;
+        outgoing?.remove(); outgoing = null;
+        if (incoming) incoming.style.opacity = '1';
+    }
+    reduced.addEventListener('change', () => { if (reduced.matches) settle(); });
+    return {
+        show(row) {
+            if (!incoming || reduced.matches || !row.animate) {
+                settle(); incoming = row; container.replaceChildren(row); return;
+            }
+            if (enter) { incoming.replaceChildren(...row.childNodes); return; }
+            outgoing = incoming; outgoing.setAttribute('aria-hidden', 'true');
+            incoming = row; container.append(row);
+            const timing = {duration: 250, easing: 'ease-in-out', fill: 'forwards'};
+            exit = outgoing.animate([{opacity:1}, {opacity:0}], timing);
+            enter = incoming.animate([{opacity:0}, {opacity:1}], timing);
+            enter.onfinish = settle;
+        },
+        clear() { settle(); incoming = null; container.replaceChildren(); }
+    };
 }
 
 export function createMacroActivity({ board, getText, getLang, readState, document: doc = document }) {
@@ -81,40 +140,21 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     const panel = doc.createElement('aside');
     panel.id = 'macroActivity'; panel.className = 'macro-activity'; panel.hidden = true;
     panel.setAttribute('role', 'region');
-    const heading = doc.createElement('p'); heading.className = 'macro-activity-heading';
-    const current = doc.createElement('div'), recent = doc.createElement('ol');
-    current.className = 'macro-activity-current'; recent.className = 'macro-activity-recent';
-    panel.append(heading, current, recent); doc.body.append(panel);
-    let enabled = loadMacroActivity(), active = false, timer = null, entry = null, history = [], lastMarkup = '';
+    const current = doc.createElement('div'); current.className = 'macro-activity-current';
+    panel.append(current); doc.body.append(panel);
+    const fade = createMacroActivityFade(current);
+    let iconCacheKey = '', iconSnapshot = null;
+    let enabled = loadMacroActivity(), active = false, timer = null, entry = null, lastMarkup = '';
     const text = key => getText(key).split('\n')[0];
-    const progress = state => {
-        if (!state.lifePlaying || !state.simulation || state.simulation === 'breathe') return '';
-        const target = macroGenerationTarget(state.queue, state.index, state.generation);
-        return getText(target === null ? 'macro_activity_generation' : 'macro_activity_generations')
-            .replace('{n}', state.generation).replace('{total}', target);
-    };
-    function row(item, info = '') {
+    function row(item, snapshot) {
         const row = doc.createElement('div'); row.className = 'macro-activity-row';
         const icon = doc.createElement('span'); icon.className = 'macro-activity-icon'; icon.setAttribute('aria-hidden', 'true');
-        const original = doc.getElementById(item.icon)?.querySelector('svg, .glyph, .glyph-dark');
-        if (original) {
-            const svg = original.cloneNode(true);
-            const originals = [original, ...original.querySelectorAll('*')];
-            const copies = [svg, ...svg.querySelectorAll('*')];
-            for (let i = 0; i < copies.length; i++) {
-                const node = copies[i];
-                if (i && win.getComputedStyle(originals[i]).display === 'none') { node.remove(); continue; }
-                node.removeAttribute('id');
-                if (!node.matches('.glyph, .glyph-dark')) node.removeAttribute('class');
-                // Current control layout must not hide an informational icon.
-                node.style.removeProperty('display');
-            }
-            icon.append(svg);
+        if (snapshot) {
+            icon.dataset.sourceIcon = snapshot.sourceId;
+            icon.append(installIcon(snapshot));
         } else icon.textContent = doc.getElementById(item.icon)?.textContent.trim() || '◇';
         const body = doc.createElement('div'), title = doc.createElement('p');
         title.className = 'macro-activity-title'; title.textContent = text(item.label); body.append(title);
-        const detail = [item.kind ? text(item.kind) : '', info].filter(Boolean).join(' · ');
-        if (detail) { const p = doc.createElement('p'); p.className = 'macro-activity-detail'; p.textContent = detail; body.append(p); }
         row.append(icon, body); return row;
     }
     function render() {
@@ -122,17 +162,27 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         const place = enabled && active && desktop.matches && entry && state.loaded && state.fullscreen
             ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight}, state.fullscreen) : null;
         panel.hidden = !place;
-        if (!place) return;
+        if (!place) { fade.clear(); lastMarkup = ''; return; }
         Object.assign(panel.style, { left: place.left + 'px', top: place.top + 'px', width: place.width + 'px' });
         panel.dir = getLang() === 'he' ? 'rtl' : 'ltr';
-        const info = progress(state), signature = JSON.stringify([entry, history, info, getLang()]);
+        const displayEntry = entry.icon === 'btnNudgeBrighter' && ['nudgeBrighter', 'nudgeDarker'].includes(state.simulation)
+            ? { ...entry, label: simulations[state.simulation][0] } : entry;
+        const button = doc.getElementById(displayEntry.icon);
+        const cacheKey = (button?.outerHTML ?? '') + (button ? win.getComputedStyle(button).color : '') + doc.documentElement.dataset.simulationEffectiveTheme;
+        if (cacheKey !== iconCacheKey) {
+            iconCacheKey = cacheKey; iconSnapshot = captureMacroActivityIcon(button);
+        }
+        const signature = JSON.stringify([displayEntry, getLang(), iconSnapshot?.signature]);
         if (signature === lastMarkup) return;
-        lastMarkup = signature; heading.textContent = text('macro_activity_title');
-        panel.setAttribute('aria-label', heading.textContent);
-        current.replaceChildren(row(entry, info));
-        recent.replaceChildren(...history.map(item => { const li = doc.createElement('li'); li.append(row(item, item.progress)); return li; }));
+        lastMarkup = signature;
+        panel.setAttribute('aria-label', text('macro_activity_setting'));
+        fade.show(row(displayEntry, iconSnapshot));
     }
     function sync() {
+        if (enabled && active && desktop.matches) {
+            const state = readState();
+            entry = latestMacroActivity(state.queue, state.index - 1, state.simulation);
+        }
         if (timer !== null) win.clearInterval(timer);
         timer = enabled && active && desktop.matches ? win.setInterval(render, 100) : null;
         render();
@@ -142,25 +192,14 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         enabled: () => enabled,
         setEnabled(value) {
             enabled = Boolean(value); saveMacroActivity(enabled);
-            if (enabled && active) {
-                entry = null; history = [];
-                const state = readState();
-                for (let i = state.index - 1; i >= 0 && history.length < 3; i--) {
-                    const item = describeMacroActivity(state.queue[i], state.simulation);
-                    if (!item || item.key === (history.at(-1)?.key ?? entry?.key)) continue;
-                    if (!entry) entry = item; else history.push(item);
-                }
-            }
             sync();
         },
         start() { active = true; sync(); },
-        stop() { active = false; entry = null; history = []; lastMarkup = ''; sync(); },
+        stop() { active = false; entry = null; lastMarkup = ''; sync(); },
         record(action) {
-            if (!enabled || !active) return;
+            if (!enabled || !active || !desktop.matches) return;
             const next = describeMacroActivity(action, readState().simulation);
-            if (!next) return;
-            if (entry && !(entry.key === next.key && ['DRAW_STROKE', 'WIND_WAVE'].includes(action.eventName))) history = [{ ...entry, progress: progress(readState()) }, ...history].slice(0, 3);
-            entry = next; lastMarkup = '';
+            if (next) entry = next;
         }
     };
 }
