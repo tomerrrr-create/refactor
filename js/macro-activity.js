@@ -44,6 +44,38 @@ export function describeMacroActivity(action, simulation) {
     const definition = actions[action.eventName];
     return definition ? { label: definition[0], icon: definition[1], key: action.eventName } : null;
 }
+// Build a presentation index once per loaded queue, never change the commands.
+// Stroke/wave boundaries keep separate gestures distinct while collapsing samples.
+export function macroActivityTimeline(queue, simulation) {
+    const timeline = [];
+    let mergePackets = false;
+    for (let index = 0; index < queue.length; index++) {
+        const action = queue[index];
+        if (['BRUSH_START', 'BRUSH_END', 'BRUSH_CHECKPOINT', 'BRUSH_CONTINUE', 'HISTORY_ACTION', 'PAUSE', 'WIND_END'].includes(action.eventName)) mergePackets = false;
+        const item = describeMacroActivity(action, simulation);
+        if (!item) continue;
+        if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
+            const armed = String(action.details ?? '').match(/Armed:\s*(\w+)/)?.[1];
+            if (armed) simulation = armed;
+        }
+        const packet = ['DRAW_STROKE', 'WIND_WAVE'].includes(action.eventName);
+        if (!(packet && mergePackets && timeline.at(-1)?.item.key === item.key)) timeline.push({ index, item });
+        mergePackets = packet;
+    }
+    return timeline;
+}
+export function macroActivityWindow(timeline, index) {
+    let low = 0, high = timeline.length;
+    while (low < high) {
+        const middle = (low + high) >>> 1;
+        if (timeline[middle].index <= index) low = middle + 1;
+        else high = middle;
+    }
+    const cursor = low - 1;
+    return { previous: cursor > 0 ? timeline[cursor - 1].item : null,
+        current: timeline[cursor]?.item ?? null,
+        upcoming: timeline.slice(cursor + 1, cursor + 3).map(entry => entry.item) };
+}
 export function macroActivityPlacement(board, viewport, fullscreen = false) {
     const gap = fullscreen ? 74 : 28; // Leave the fullscreen gallery frame untouched.
     const width = Math.min(224, board.left - gap - 16), height = 244;
@@ -57,11 +89,12 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     const panel = doc.createElement('aside');
     panel.id = 'macroActivity'; panel.className = 'macro-activity'; panel.hidden = true;
     panel.setAttribute('role', 'region');
-    const heading = doc.createElement('p'); heading.className = 'macro-activity-heading';
-    const current = doc.createElement('div'), recent = doc.createElement('ol');
-    current.className = 'macro-activity-current'; recent.className = 'macro-activity-recent';
-    panel.append(heading, current, recent); doc.body.append(panel);
-    let enabled = loadMacroActivity(), active = false, timer = null, entry = null, history = [], lastMarkup = '';
+    const previous = doc.createElement('ol'), current = doc.createElement('div'), upcoming = doc.createElement('ol');
+    previous.className = 'macro-activity-previous'; current.className = 'macro-activity-current';
+    upcoming.className = 'macro-activity-upcoming';
+    panel.append(previous, current, upcoming); doc.body.append(panel);
+    let enabled = loadMacroActivity(), active = false, timer = null, lastMarkup = '';
+    let queue = null, timeline = [], observedIndex = -1;
     const text = key => getText(key).split('\n')[0];
     function row(item) {
         const row = doc.createElement('div'); row.className = 'macro-activity-row';
@@ -89,18 +122,26 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     }
     function render() {
         const state = readState();
-        const place = enabled && active && desktop.matches && entry && state.loaded && state.fullscreen
+        if (enabled && active && desktop.matches && queue !== state.queue) {
+            queue = state.queue;
+            timeline = macroActivityTimeline(queue, state.simulation);
+            observedIndex = -1;
+        }
+        const window = macroActivityWindow(timeline, Math.max(observedIndex, state.index - 1));
+        const place = enabled && active && desktop.matches && window.current && state.loaded && state.fullscreen
             ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight}, state.fullscreen) : null;
         panel.hidden = !place;
         if (!place) return;
         Object.assign(panel.style, { left: place.left + 'px', top: place.top + 'px', width: place.width + 'px' });
         panel.dir = getLang() === 'he' ? 'rtl' : 'ltr';
-        const signature = JSON.stringify([entry, history, getLang()]);
+        const signature = JSON.stringify([window, getLang()]);
         if (signature === lastMarkup) return;
-        lastMarkup = signature; heading.textContent = text('macro_activity_title');
-        panel.setAttribute('aria-label', heading.textContent);
-        current.replaceChildren(row(entry));
-        recent.replaceChildren(...history.map(item => { const li = doc.createElement('li'); li.append(row(item)); return li; }));
+        lastMarkup = signature;
+        panel.setAttribute('aria-label', text('macro_activity_setting'));
+        const listRow = item => { const li = doc.createElement('li'); li.append(row(item)); return li; };
+        previous.replaceChildren(...(window.previous ? [listRow(window.previous)] : []));
+        current.replaceChildren(row(window.current));
+        upcoming.replaceChildren(...window.upcoming.map(listRow));
     }
     function sync() {
         if (timer !== null) win.clearInterval(timer);
@@ -112,25 +153,13 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         enabled: () => enabled,
         setEnabled(value) {
             enabled = Boolean(value); saveMacroActivity(enabled);
-            if (enabled && active) {
-                entry = null; history = [];
-                const state = readState();
-                for (let i = state.index - 1; i >= 0 && history.length < 3; i--) {
-                    const item = describeMacroActivity(state.queue[i], state.simulation);
-                    if (!item || item.key === (history.at(-1)?.key ?? entry?.key)) continue;
-                    if (!entry) entry = item; else history.push(item);
-                }
-            }
             sync();
         },
         start() { active = true; sync(); },
-        stop() { active = false; entry = null; history = []; lastMarkup = ''; sync(); },
-        record(action) {
-            if (!enabled || !active) return;
-            const next = describeMacroActivity(action, readState().simulation);
-            if (!next) return;
-            if (entry && !(entry.key === next.key && ['DRAW_STROKE', 'WIND_WAVE'].includes(action.eventName))) history = [entry, ...history].slice(0, 3);
-            entry = next; lastMarkup = '';
+        stop() { active = false; queue = null; timeline = []; observedIndex = -1; lastMarkup = ''; sync(); },
+        record() {
+            if (!enabled || !active || !desktop.matches) return;
+            observedIndex = readState().index;
         }
     };
 }

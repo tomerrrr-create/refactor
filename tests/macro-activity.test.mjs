@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {MACRO_ACTIVITY_STORAGE_KEY,loadMacroActivity,saveMacroActivity,describeMacroActivity,macroActivityPlacement} from '../js/macro-activity.js';
+import {MACRO_ACTIVITY_STORAGE_KEY,loadMacroActivity,saveMacroActivity,describeMacroActivity,macroActivityPlacement,macroActivityTimeline,macroActivityWindow} from '../js/macro-activity.js';
 
 test('display preference is opt-in, device-local and resilient to unavailable storage',()=>{
  const map=new Map(),storage={getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)};
@@ -41,4 +41,27 @@ test('all declared labels and icons exist, and playback presentation has no logg
  for(const [,id] of source.matchAll(/'(btn\w+)'/g))assert(html.includes(`id="${id}"`),id);
  for(const [,key] of source.matchAll(/'((?:help|macro_activity)_\w+)'/g))assert(i18n.includes(key+':'),key);
  assert(!/logArtEvent|pushHistory|executeMacroAction\(/.test(source));
+});
+
+test('past/current/future window skips hidden actions and collapses packets without modifying the queue',()=>{
+ const event=(eventName,details='{}')=>Object.freeze({eventName,details});
+ const queue=Object.freeze([event('PLAY','Armed: cymatics | Rules: {}'),event('PAUSE'),event('EVOLUTION_TUNING'),
+  event('BRUSH_START'),...Array.from({length:1000},()=>event('DRAW_STROKE','[]')),event('BRUSH_END'),
+  event('SIMULATION_RULES'),event('PLAY','Armed: gameOfLife | Rules: {}'),event('PAUSE'),event('Invert Colors')]);
+ const before=JSON.stringify(queue),timeline=macroActivityTimeline(queue);
+ assert.deepEqual(timeline.map(x=>x.item.label),['help_cymatics','macro_activity_draw','help_gameOfLife','macro_activity_invert']);
+ let window=macroActivityWindow(timeline,0);assert.equal(window.previous,null);assert.equal(window.current.label,'help_cymatics');
+ assert.deepEqual(window.upcoming.map(x=>x.label),['macro_activity_draw','help_gameOfLife']);
+ window=macroActivityWindow(timeline,500);assert.equal(window.previous.label,'help_cymatics');assert.equal(window.current.label,'macro_activity_draw');
+ assert.deepEqual(window.upcoming.map(x=>x.label),['help_gameOfLife','macro_activity_invert']);
+ window=macroActivityWindow(timeline,queue.length-1);assert.equal(window.previous.label,'help_gameOfLife');assert.deepEqual(window.upcoming,[]);
+ assert.equal(macroActivityWindow(timeline,-1).current,null);assert.deepEqual(macroActivityWindow([],0),{previous:null,current:null,upcoming:[]});
+ assert.equal(JSON.stringify(queue),before);
+});
+test('adjacent separate strokes and wind batches remain separate preview actions',()=>{
+ const queue=['BRUSH_START','DRAW_STROKE','DRAW_STROKE','BRUSH_END','BRUSH_START','DRAW_STROKE','BRUSH_END',
+  'WIND_WAVE','WIND_WAVE','WIND_END','WIND_WAVE','WIND_END'].map(eventName=>({eventName,details:'{}'}));
+ assert.deepEqual(macroActivityTimeline(queue).map(x=>x.item.label),['macro_activity_draw','macro_activity_draw','macro_activity_wind','macro_activity_wind']);
+ const live=['BRUSH_CHECKPOINT','BRUSH_CONTINUE','DRAW_STROKE','DRAW_STROKE','BRUSH_CHECKPOINT','BRUSH_CONTINUE','DRAW_STROKE'].map(eventName=>({eventName,details:'{}'}));
+ assert.equal(macroActivityTimeline(live).length,2);
 });
