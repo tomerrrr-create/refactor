@@ -19,10 +19,13 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('dialog',async d=>{errors.push(d.message());await d.dismiss();});
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
  source=source.replace('      initializeApp();',`window.geneticsTest={
-  setup:()=>{stopMacro();pauseLife();resetArmedState();activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Mono');currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,'luminance'));n=9;initializeBoardAndCanvas(true);armSimulation('gameOfLife');delete gameOfLifeRules.genetics;setPersonalGameOfLifeRules({survival:[2,3],birth:[3]});boardState.forEach(t=>{t.k=t.v=0;t.isGold=false;});[2,8,11].forEach((k,i)=>boardState[39+i].k=boardState[39+i].v=k);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');dom.btnStepForward.classList.remove('control-hidden');history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();renderToScreen(null);},
+  setup:()=>{stopMacro();pauseLife();resetArmedState();activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Mono');currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,'luminance'));n=9;initializeBoardAndCanvas(true);armSimulation('gameOfLife');delete gameOfLifeRules.genetics;delete gameOfLifeRules.deadColor;setPersonalGameOfLifeRules({survival:[2,3],birth:[3]});boardState.forEach(t=>{t.k=t.v=0;t.isGold=false;});[2,8,11].forEach((k,i)=>boardState[39+i].k=boardState[39+i].v=k);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');dom.btnStepForward.classList.remove('control-hidden');history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();renderToScreen(null);},
   open:()=>modals.openGolSettingsModal(),tech:()=>modals.openTechnicianMenu(),reset:()=>settingsProfiles.resetToDefaults(),
   mode:()=>gameOfLifeRules.genetics||'rgb',snapshot:captureProfileSettings,
   state:()=>({mode:gameOfLifeRules.genetics||'rgb',playing:isLifePlaying,gen:currentGenerationCount,macro:isMacroPlaying,loaded:isMacroLoaded,tiles:boardState.map(t=>[t.k,t.v,t.isGold]),logs:[...artRecipeLog],rules:getGameOfLifeRecordingRules()}),
+  dead:()=>gameOfLifeRules.deadColor||'current',
+  anchorSetup:()=>{currentSortMethod='reversed';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,'reversed'));const last=palette().length-1;boardState.forEach(t=>{t.k=t.v=last;t.isGold=false;});[2,8,11].forEach((k,i)=>boardState[39+i].k=boardState[39+i].v=last-k);history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);},
+  validate:parseMacroText,
   record:()=>artRecipeLog.join(String.fromCharCode(10)),forcePaletteMode:()=>{gameOfLifeRules.genetics='palette-order';},
   mono:()=>C.PALETTES.findIndex(p=>p.originalName==='Mono')
  };initializeApp().then(()=>geneticsTest.ready=true);`);
@@ -39,11 +42,11 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  assert.equal(await dot.getAttribute('aria-checked'),'false');assert((await dot.getAttribute('aria-label')).length>0);
  const geometry=await page.locator('#golCycleToolbar').evaluate(t=>{
   const box=e=>{const r=e.getBoundingClientRect();return {left:r.left,right:r.right,center:r.left+r.width/2,y:r.top};};
-  const d=t.querySelector('#btnGolGenetics'),reset=t.querySelector('.cycle-reset-dot'),slots=[...t.querySelectorAll('.cycle-slot-button')].map(box),r=box(reset),p=box(d);
-  return {point:p,reset:r,slots,dot:getComputedStyle(d,'::before').width,resetDot:getComputedStyle(reset,'::before').width,overflow:t.scrollWidth>t.clientWidth};
+  const d=t.querySelector('#btnGolGenetics'),dead=t.querySelector('#btnGolDeadColor'),reset=t.querySelector('.cycle-reset-dot'),slots=[...t.querySelectorAll('.cycle-slot-button')].map(box),r=box(reset),p=box(d);
+  return {point:p,dead:box(dead),reset:r,slots,dot:getComputedStyle(d,'::before').width,resetDot:getComputedStyle(reset,'::before').width,overflow:t.scrollWidth>t.clientWidth};
  });
  assert.equal(geometry.slots.length,3);assert(!geometry.overflow);assert(geometry.point.right<geometry.slots[0].left);assert(geometry.reset.left>geometry.slots[2].right);
- assert(Math.abs((geometry.slots[0].center-geometry.point.center)-(geometry.reset.center-geometry.slots[2].center))<.2,'the two dots are symmetric');assert.equal(geometry.dot,'12px');assert.equal(geometry.resetDot,'6px');
+ assert(geometry.point.right<=geometry.dead.left&&geometry.dead.right<geometry.slots[0].left,'genetics and dead-color controls precede the three slots');assert.equal(geometry.dot,'12px');assert.equal(geometry.resetDot,'6px');
  const before=await state();await dot.click();assert.equal(await dot.getAttribute('aria-checked'),'true');assert.equal(await mode(),'rgb');assert.deepEqual(await state(),before,'draft toggle does not touch engine or logger');
  for(const slot of [1,2,0]){await page.locator('#golCycleToolbar [data-cycle-slot="'+slot+'"]').click();assert.equal(await dot.getAttribute('aria-checked'),'true');}
  await close();await open();assert.equal(await dot.getAttribute('aria-checked'),'false');
@@ -73,5 +76,36 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const pal=await page.evaluate(()=>geneticsTest.mono());
  const old=`[12:00:00.000] INIT_STATE -> {"recipeVersion":2,"n":3,"pal":${pal},"sort":"luminance","sep":0,"board":"1x2,1x8,1x11,6x0"}\n[12:00:00.010] PLAY -> Armed: gameOfLife | Sort: luminance | Rules: {"survival":[2,3],"birth":[3]}\n[12:00:00.020] [GEN:3] PAUSE -> ---`;
  await page.evaluate(()=>geneticsTest.forcePaletteMode());await load(old);assert.equal(await mode(),'rgb');assert.equal((await state()).gen,3);
+ // Dead color is an independent modal draft, shared across slots and both genetics modes.
+ await page.evaluate(()=>geneticsTest.setup());await page.evaluate(()=>geneticsTest.anchorSetup());
+ const dead=page.locator('#btnGolDeadColor'),deadMode=()=>page.evaluate(()=>geneticsTest.dead());
+ await open();assert.equal(await dead.getAttribute('aria-checked'),'false');
+ const untouched=await state();await dead.click();assert.equal(await dead.getAttribute('aria-checked'),'true');assert.deepEqual(await state(),untouched);assert.equal(await deadMode(),'current');
+ await close();await open();assert.equal(await dead.getAttribute('aria-checked'),'false');
+ await dead.focus();await page.keyboard.press('Space');await save();assert.equal(await deadMode(),'luminance');assert.equal(await mode(),'rgb');
+ await page.locator('#btnStepForward').click();const anchored=await state();
+ assert.equal(anchored.tiles[0][0],anchored.tiles[80][0],'empty corners stay at the reversed palette darkest color');assert(anchored.tiles[0][0]>0);
+ await page.locator('#btnUndo').click();assert.equal(await deadMode(),'luminance');await page.locator('#btnRedo').click();assert.deepEqual((await state()).tiles,anchored.tiles);
+ const anchoredLog=await page.evaluate(()=>geneticsTest.record());assert(anchoredLog.includes('"deadColor":"luminance"'));
+ await load(anchoredLog);assert.deepEqual((await state()).tiles,anchored.tiles,'new dead color replays exact artwork including Undo and Redo');
+ for(let i=0;i<4;i++){await page.locator('#btnGameOfLife').click();assert.equal(await deadMode(),'luminance');}
+ await open();await dot.click();await save();assert.equal(await mode(),'palette-order');assert.equal(await deadMode(),'luminance');
+ await open();await dead.click();await save();assert.equal(await deadMode(),'current');assert.equal(await mode(),'palette-order');
+ await open();await dead.click();await save();assert.equal(await deadMode(),'luminance');
+ await boot(true);assert.equal(await deadMode(),'current','dialog Save remains session-only');
+ await page.evaluate(()=>geneticsTest.setup());await open();await dead.click();await save();await page.evaluate(()=>geneticsTest.tech());
+ if(!(await page.locator('#profileActions').isVisible()))await page.locator('[data-profile-dot="0"]').click();await page.locator('#btnProfileSave').click();await boot(true);assert.equal(await deadMode(),'luminance','Save to profile retains dead anchor');
+ await open();await page.locator('#btnGolSettingsReset').click();assert.equal(await dead.getAttribute('aria-checked'),'false');assert.equal(await deadMode(),'luminance');await close();
+ await open();assert.equal(await dead.getAttribute('aria-checked'),'true');await page.locator('#btnGolSettingsReset').click();await save();assert.equal(await deadMode(),'current');
+ // New preference changes while running are generation stamped and replay through the existing loader.
+ await page.evaluate(()=>geneticsTest.setup());await page.evaluate(()=>geneticsTest.anchorSetup());await page.locator('#btnPlayPauseLife').click();await page.waitForFunction(()=>geneticsTest.state().gen>=2);await open();await dead.click();await save();assert((await state()).playing);
+ await page.locator('#btnCycleSort').click();await page.waitForTimeout(80);await open();await dot.click();await save();
+ await open();await dead.click();await save();await page.locator('#btnPlayPauseLife').click();
+ const deadFinal=await state(),deadRecording=await page.evaluate(()=>geneticsTest.record());
+ assert(deadFinal.logs.some(line=>/\[GEN:\d+\] Game of Life Mode Changed/.test(line)&&line.includes('"deadColor":"luminance"')));
+ await load(deadRecording);assert.deepEqual((await state()).tiles,deadFinal.tiles,'live changes in genetics, dead color and sorting replay exactly');
+ await open();await dead.click();await save();assert.equal(await deadMode(),'luminance');await load(old);assert.equal(await deadMode(),'current','old recipe clears viewer dead-color preference');
+ assert(await page.evaluate(text=>{try{geneticsTest.validate(text);return false;}catch(e){return /Invalid Game of Life dead color/.test(e.message);}},old.replace('"birth":[3]','"birth":[3],"deadColor":"invalid"')),'invalid recorded option rejected before playback');
+ await page.evaluate(()=>geneticsTest.reset());assert.equal(await deadMode(),'current');
  assert.deepEqual(errors,[]);results.push({...config,passed:true});console.log('PASS',JSON.stringify(config));await context.close();
 }await writeFile(path.join(artifacts,'results.json'),JSON.stringify(results,null,2));}finally{await browser.close();await new Promise(r=>server.close(r));}

@@ -117,7 +117,7 @@ The settings toolbar has three symbol buttons for the assigned cycle positions, 
 
 The low-level Chi Flow fallback Yours → Ripples → Nova is not the fresh profile-1 cycle. Save to profile to retain session rule/cycle edits on reopening; dialog Save applies the working choices.
 
-When Game of Life or Chi Flow is selected, swipe its button **right for the next preset** or **left for the previous preset**, wrapping at both ends. Physical directions stay the same in every language and in either simulation drawer. Swipes are inactive for unselected evolutions and during macro loading/playback. A completed swipe commits exactly the same three-slot snapshot as choosing that preset in settings and pressing Save: only the active shortcut changes, its zero/one/two-star position stays selected, the other shortcuts and Yours remain unchanged, and Game of Life retains its genetics setting. A brief nonblocking label shows the localized preset name without shading the board or controls. On desktop, the label stays centered above the button (clamped only at screen edges), independently of pointer position or name length. Its native tooltip is suppressed during feedback and until the pointer leaves, while its accessible label stays current. Touch feedback retains its existing positioning and behavior.
+When Game of Life or Chi Flow is selected, swipe its button **right for the next preset** or **left for the previous preset**, wrapping at both ends. Physical directions stay the same in every language and in either simulation drawer. Swipes are inactive for unselected evolutions and during macro loading/playback. A completed swipe commits exactly the same three-slot snapshot as choosing that preset in settings and pressing Save: only the active shortcut changes, its zero/one/two-star position stays selected, the other shortcuts and Yours remain unchanged, and Game of Life retains its shared genetics and dead-color settings. A brief nonblocking label shows the localized preset name without shading the board or controls. On desktop, the label stays centered above the button (clamped only at screen edges), independently of pointer position or name length. Its native tooltip is suppressed during feedback and until the pointer leaves, while its accessible label stays current. Touch feedback retains its existing positioning and behavior.
 
 Both the dialog and navigation read the preset buttons in DOM order, rather than constants insertion order. Game of Life begins Paint 4 → Paint 1 → Shuffle → Harmonic; Chi Flow begins Nova → Harmony → Topography → Fluent. Reordering those buttons changes navigation as well. A retained named source identifies the current preset even when a profile supplies a different Chi Reach; otherwise matching rule values identify it. Unmatched custom rules go to the first preset on a right swipe or the last on a left swipe. Choosing a Chi preset applies its entire rule set, including its own Magnetic Reach, exactly like the dialog.
 
@@ -191,7 +191,7 @@ Profile 1's Chi Flow slots are Harmony → Nova → Alexis, with each preset's o
 
 Only the active profile's dot opens its action panel, with four actions: **Save**, **Export settings TXT**, **Copy to another profile**, and **Load settings TXT**. Copy and Load request confirmation before replacing their target. Copy preserves the source and current selection. Invalid imports leave the profile unchanged. Profile Reset restores only the selected profile's application defaults and saved baseline; other profiles and the current drawing remain unchanged. Matching former defaults migrate once without replacing unrelated personal values.
 
-Simulation rules, rule cycles and personal/source identities, Nudge timing, evolution tuning, Game of Life genetics and brush shape survive reopening only after **Save to profile** or a confirmed import/copy. Other draft preferences, such as Startup and display settings, persist automatically. Per-map Resonance frequency/strength tables and toolbar layout are separate fields; `withSavedSessionPreferences` in `profile-state.js` defines exactly which fields revert to the saved baseline. Dialog Save applies a working preference; it is not the same as Save to profile.
+Simulation rules, rule cycles and personal/source identities, Nudge timing, evolution tuning, Game of Life genetics/dead color and brush shape survive reopening only after **Save to profile** or a confirmed import/copy. Other draft preferences, such as Startup and display settings, persist automatically. Per-map Resonance frequency/strength tables and toolbar layout are separate fields; `withSavedSessionPreferences` in `profile-state.js` defines exactly which fields revert to the saved baseline. Dialog Save applies a working preference; it is not the same as Save to profile.
 
 Profiles contain settings, not drawings. Switching/importing applies preferences and pauses a run without replacing board pixels. Actions are blocked while a macro is loaded or playing. Clearing browser site data removes profiles; a storage failure leaves in-session operation available and reports that persistence is unavailable.
 
@@ -364,7 +364,7 @@ Different modals use dialogs, visibility classes or inline display state. Follow
 | --- | --- |
 | Artwork / Undo stack | In memory; explicit PNG/JSON/recipe exports |
 | Profile saved baseline | `colorGridProfileDraftsV1`; explicit Save/import/copy |
-| Simulation rules/cycles/tuning, Nudge timing, genetics, brush shape | Working profile session; unsaved values revert on reopening |
+| Simulation rules/cycles/tuning, Nudge timing, genetics/dead color, brush shape | Working profile session; unsaved values revert on reopening |
 | Other profile draft preferences | Automatically persisted according to `profile-state.js` |
 | Opening profile | `colorGridStartupProfile`; independent of last-used profile |
 | Workspace settings export | `FYI_SETTINGS_V1`; persisted compatibility copy in `colorGridWorkspaceSettings` |
@@ -548,10 +548,10 @@ Spatially sorts current palette indices with direction-dependent comparisons. �
 
 An artistic adaptation of the classic cellular automaton. The default in profiles 1/2 is Paint 4, not Conway's standard survival `[2, 3]` / birth `[3]`: Paint 4 uses survival 0–8 and birth 4–8. Presets are centralized in `GAME_OF_LIFE_PRESETS`; profiles 1/2 start with Yours → Shuffle → Coral, while profile 3 starts with Paint 1 in the first slot.
 
-* **Live Cell Definition:** Instead of a binary state, a cell is considered "alive" if its color index is strictly greater than 0 (`notDarkest`). Gold tiles are strictly immune.
+* **Dead Color:** The second small switch beside Genetics selects **first in current sort** (default, unchanged index-zero behavior) or **darkest by Luminance**. The latter anchors the dead color to the first color in the palette's default dark-to-light Luminance order, independently of the active sort and genetics method. It resolves again when the palette changes; equal-luminance ties retain original palette order. All other colors count as alive; dying cells take the selected dead color. Gold tiles stay immune and do not count as live neighbors.
 * **List-Based Rules:** Supports complex rulesets by checking if the live neighbor count is `.includes()` in the survival/birth arrays (e.g., survival: `[2, 3]`, birth: `[3]`).
 * **Boundaries:** Game of Life checks neighbors within the board; it does not wrap edges like Chi Flow.
-* **Color Genetics:** RGB genetics (default) finds the closest palette color to the live parents' average RGB. Palette order genetics instead uses their rounded average current palette rank, kept above zero when possible. Genetics affects newborn colors, not survival/birth lists, and is shared across all three rule slots. Sorting therefore changes Palette order inheritance. Save to profile to retain a session genetics choice on reopening.
+* **Color Genetics:** RGB genetics (default) finds the closest palette color to the live parents' average RGB. Palette order genetics instead uses their rounded average current palette rank, avoiding the selected dead index when possible (above zero in the default mode). Genetics affects newborn colors, not survival/birth lists, and is shared across all three rule slots. Dead-color choice is shared separately across those slots. Sorting therefore changes Palette order inheritance. Both switches are dialog drafts until Save; Cancel discards edits, and Reset selects RGB/current-sort without applying until Save. Save to profile retains these session choices on reopening. Undo/Redo restores artwork without undoing preferences.
 
 ### 11. DLA (Diffusion-Limited Aggregation)
 
@@ -675,7 +675,7 @@ Live brush input emits `DRAW_STROKE` packets as pointer events paint, using the 
 
 Events carry timestamps, and generation-based actions include `[GEN:n]`. The logger records board strokes/diffs, palette and sorting changes, play, pause, single steps, live mode changes, Nudge timing and history metadata. Logging has some overhead and does not make the entire application allocation-free.
 
-`PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys.
+`PLAY` and `STEP FORWARD` include actual evolution rules. Game of Life and Chi Flow mode events also snapshot all three rule slots, the personal rules and source identities (`cycleSources`). The player injects the recorded values, so later edits to named presets do not silently change old journeys. Game of Life records optional `deadColor: "luminance"` in its rule snapshots for PLAY, STEP and mode changes, independently of optional genetics. Missing dead-color fields in old recipes always mean current-sort/index-zero, regardless of the viewer's preference. Default recordings keep their existing payload; unknown dead-color values are rejected before playback. Workspace settings use the optional `gameOfLifeDeadColor` field with the same legacy default.
 
 Save the journey through the save modal, using `exportArtRecipeLog()`. Current TXT filenames use `Intuition_Path_<palette>_<line-count>.txt`. Save/Play long presses no longer export or reset the logger. `resetArtRecipeLog()` requires confirmation and a successful backup share/download flow before clearing the log and capturing a new start; cancelling sharing preserves the old log. See [Save, load and help](#save-load-and-help). New `INIT_STATE` records can also retain protected gold indices and a live simulation context (rules, generation and elapsed time).
 
@@ -697,6 +697,12 @@ Macro playback must not persist recorded startup, cycle/Yours or Nudge choices i
 Replay preserves operations, effective rules and generation targets. Determinism is engine-specific: Islands, versioned Cracks and Resonance serialize their random/runtime cursor; DLA, stochastic Chi ignition, erosion, spatial random choices and random Breathe rhythms do not share a universal saved seed. Wind is not promised pixel-identical. A recipe is not an exact image backup.
 
 `DRAW_STROKE` can explicitly retain `isGold: true`; a missing gold flag means false for compatibility. Together with optional `INIT_STATE.gold`, this is richer than a color-index-only recording but is not a complete restoration of every historical tile field.
+
+### Desktop playback activity
+
+The technician menu has an opt-in **Macro activity · desktop** switch, off by default. It is a device-local display preference, outside profiles and recipes. During fullscreen macro playback on a desktop with a fine pointer, a read-only panel shows the current action and its existing control icon, plus up to three dimmed recent actions. Progressive stroke/Wind packets update their current entry rather than filling the history; bookkeeping events stay hidden. Discrete simulations show a live generation counter and the next recorded stop target when available in the same run. Time-based breathing does not invent a generation total.
+
+`js/macro-activity.js` observes executed commands and samples existing playback state at 10 Hz only while enabled on desktop. It never writes the logger, artwork, history, simulation clocks or recipe queue. The panel is fixed outside the app shell in free space to the **physical left** of the board, including Hebrew. It reserves clearance for the fullscreen gallery frame and hides on narrow/touch screens or when left space is insufficient. Toggling it never moves or resizes the board. Completion, Stop and file replacement clear the panel. Existing playback and file formats remain unchanged.
 
 ### Input and interruption
 
@@ -753,6 +759,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 
 | Area | Examples |
 | --- | --- |
+| Desktop fullscreen macro activity: opt-in, geometry, generation targets, mobile exclusion, Stop and replay equivalence | `tools/check-macro-activity.mjs` |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
 | Creation/Evolution switch hidden during playback, stable layout, blocked gestures, pending transitions and macro completion | `tools/check-mode-switch-playback.mjs` |
 | Evolution map themes, resting/playback colors, reload and retired theme migration | `tools/check-simulation-themes.mjs` |
@@ -765,7 +772,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
 | Palette controls and transitions | `tools/check-palette-cards.mjs`, `tools/check-palette-hold-colors.mjs`, `tools/check-color-page-swipe.mjs`, `tools/check-picker-dialog-transition.mjs` |
 | Game of Life / Chi preset swipes: modal-Save equivalence, all shortcut positions, live rules, profiles and replay | `tools/check-preset-swipes.mjs` (`PRESET_LANG` filters languages) |
-| Game of Life genetics | `tools/check-gol-genetics.mjs` |
+| Game of Life genetics and dead color: independent drafts, narrow layouts, cycles, profiles, Undo/Redo and real logger-to-macro replay | `tools/check-gol-genetics.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Settings entry focus and keyboard navigation | `tools/check-settings-focus.mjs` |
 | Toolbar layout | `tools/check-evolution-drawer.mjs` |

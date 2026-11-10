@@ -22,8 +22,11 @@ try{for(const viewport of [{width:1280,height:1000},{width:390,height:844}]){
   const stamp='00:00:'+String(Math.floor(delay/1000)).padStart(2,'0')+'.'+String(delay%1000).padStart(3,'0');
   const recipe='[00:00:00.000] INIT_STATE -> '+JSON.stringify({recipeVersion:2,n:9,pal:0,sort:'luminance',sep:0,board:'81x0'})+'\n['+stamp+'] Invert Colors -> Sort: luminance\n';
   await page.locator('#projectFileInput').setInputFiles({name:'overlay.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});
-  await page.waitForFunction(()=>overlayTest.state().loaded);await page.locator('#btnMacroPlay').click();
-  if(scenario!=='ordinary')await page.locator('#boardCanvas').click();
+  await page.waitForFunction(()=>overlayTest.state().loaded);
+  const boardBox=await page.locator('#boardCanvas').boundingBox();
+  await page.locator('#btnMacroPlay').click();
+  // Avoid locator stability waits outliving the 150 ms macro and painting after it ends.
+  if(scenario!=='ordinary')await page.mouse.click(boardBox.x+boardBox.width/2,boardBox.y+boardBox.height/2);
   if(scenario==='manual-stop'){
    await page.waitForFunction(()=>overlayTest.state().fullscreen&&overlayTest.state().animating);
    await page.evaluate(()=>overlayTest.stop());

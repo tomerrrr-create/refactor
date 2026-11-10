@@ -13,7 +13,7 @@ function harness({direction = 'nudgeBrighter', stored = null, blockedStorage = f
             setItem:(k,v)=>{if(blockedStorage) throw Error('blocked');storage.set(k,v);}},
         performance: {now:()=>now}, window: {logArtEvent:(...args)=>logs.push(args)},
         isLifePlaying:true, isMacroPlaying:false, replayWindBatch:null,currentGenerationCount:0,
-        armedSimulation:direction, n:2, boardState:[{k:2,v:2},{k:8,v:8,isGold:true}],
+        armedSimulation:direction, C:{PALETTES:[{originalColors:Array(97)}]}, activePaletteIndex:0, n:2, boardState:[{k:2,v:2},{k:8,v:8,isGold:true}],
         palette:()=>Array(97), norm:v=>(v+97)%97, startAnimationLoop:()=>{},
         gameOfLifeRules:{}, gravitationalSortRules:{}, erosionRules:{}, dlaState:null,
         dlaRules:{}, contourRules:{}, renderToScreen:()=>{}, requestAnimationFrame:()=>{},
