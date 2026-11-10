@@ -2575,14 +2575,12 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .macro-activity { position:fixed; z-index:35; pointer-events:none; padding:14px 0; height:72px; display:flex; align-items:center; box-sizing:border-box;
   color:#dedbd1; border-block:1px solid #d5aa4824; text-align:start; }
 .macro-activity[hidden] { display:none !important; }
-.macro-activity-row { display:flex; align-items:flex-start; gap:10px; min-width:0; }
+.macro-activity-row { display:flex; align-items:center; gap:10px; min-width:0; }
 .macro-activity-icon { flex:0 0 25px; color:#d5aa48; }
 .macro-activity-icon svg { width:24px; height:24px; }
 .macro-activity-title { margin:0; font-size:13px; line-height:1.45; overflow-wrap:anywhere; }
-.macro-activity-current { width:100%; }
-.macro-activity-row { animation:macro-activity-arrive .18s ease-out; }
-@keyframes macro-activity-arrive { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
-@media (prefers-reduced-motion:reduce) { .macro-activity-row { animation:none; } }
+.macro-activity-current { width:100%; height:42px; display:grid; align-items:center; }
+.macro-activity-current > .macro-activity-row { grid-area:1 / 1; }
 .macro-activity-option { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 @media (max-width:1023px), (hover:none), (pointer:coarse) { .macro-activity { display:none !important; } }
 

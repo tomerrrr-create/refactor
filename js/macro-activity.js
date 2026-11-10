@@ -60,6 +60,81 @@ export function macroActivityPlacement(board, viewport, fullscreen = false) {
         board.top + (board.height - height) / 2)), width };
 }
 
+// Freeze the visible control symbol so an outgoing row cannot change mid-fade.
+export function captureMacroActivityIcon(button) {
+    if (!button) return null;
+    const win = button.ownerDocument.defaultView;
+    // Fullscreen/drawers can hide the whole control via inherited visibility.
+    // Per-symbol display still identifies the selected variant while it is hidden.
+    const original = [...button.querySelectorAll('svg, .glyph, .glyph-dark')]
+        .find(node => win.getComputedStyle(node).display !== 'none');
+    if (!original) return null;
+    const clone = original.cloneNode(true), originals = [original, ...original.querySelectorAll('*')];
+    const copies = [clone, ...clone.querySelectorAll('*')];
+    const properties = ['fill', 'fill-opacity', 'stroke', 'stroke-width', 'stroke-opacity',
+        'stroke-linecap', 'stroke-linejoin', 'stroke-dasharray', 'stroke-dashoffset',
+        'opacity', 'transform', 'transform-origin', 'vector-effect', 'paint-order',
+        'fill-rule', 'clip-rule', 'stroke-miterlimit', 'stop-color', 'stop-opacity'];
+    for (let i = 0; i < copies.length; i++) {
+        const node = copies[i], style = win.getComputedStyle(originals[i]);
+        if (i && style.display === 'none') { node.remove(); continue; }
+        if (original instanceof win.SVGElement) {
+            node.removeAttribute('class');
+            for (const property of properties) node.style.setProperty(property, style.getPropertyValue(property));
+        }
+        node.style.display = i ? style.display : 'block';
+    }
+    clone.style.width = '24px'; clone.style.height = '24px';
+    return { node: clone, signature: clone.outerHTML, sourceId: original.id };
+}
+let activityIconId = 0;
+function installIcon(snapshot) {
+    const clone = snapshot.node.cloneNode(true), nodes = [clone, ...clone.querySelectorAll('*')], ids = new Map();
+    for (const node of nodes) if (node.id) {
+        const id = 'macro-activity-icon-' + (++activityIconId);
+        ids.set(node.id, id); node.id = id;
+    }
+    for (const node of nodes) for (const attribute of [...node.attributes]) {
+        let value = attribute.value;
+        for (const [before, after] of ids) {
+            value = value.replaceAll('#' + before + ')', '#' + after + ')')
+                .replaceAll('#' + before + '"', '#' + after + '"').replaceAll("#" + before + "'", "#" + after + "'");
+            if (value === '#' + before) value = '#' + after;
+        }
+        if (value !== attribute.value) node.setAttribute(attribute.name, value);
+    }
+    return clone;
+}
+
+// At most two overlapping rows. Rapid updates replace the incoming content,
+// without restarting the fade or queuing animations behind the actual playback.
+export function createMacroActivityFade(container) {
+    const win = container.ownerDocument.defaultView, reduced = win.matchMedia('(prefers-reduced-motion: reduce)');
+    let incoming = null, outgoing = null, enter = null, exit = null;
+    function settle() {
+        if (enter) { enter.onfinish = null; enter.cancel(); }
+        exit?.cancel(); enter = exit = null;
+        outgoing?.remove(); outgoing = null;
+        if (incoming) incoming.style.opacity = '1';
+    }
+    reduced.addEventListener('change', () => { if (reduced.matches) settle(); });
+    return {
+        show(row) {
+            if (!incoming || reduced.matches || !row.animate) {
+                settle(); incoming = row; container.replaceChildren(row); return;
+            }
+            if (enter) { incoming.replaceChildren(...row.childNodes); return; }
+            outgoing = incoming; outgoing.setAttribute('aria-hidden', 'true');
+            incoming = row; container.append(row);
+            const timing = {duration: 250, easing: 'ease-in-out', fill: 'forwards'};
+            exit = outgoing.animate([{opacity:1}, {opacity:0}], timing);
+            enter = incoming.animate([{opacity:0}, {opacity:1}], timing);
+            enter.onfinish = settle;
+        },
+        clear() { settle(); incoming = null; container.replaceChildren(); }
+    };
+}
+
 export function createMacroActivity({ board, getText, getLang, readState, document: doc = document }) {
     const win = doc.defaultView, desktop = win.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)');
     const panel = doc.createElement('aside');
@@ -67,25 +142,16 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     panel.setAttribute('role', 'region');
     const current = doc.createElement('div'); current.className = 'macro-activity-current';
     panel.append(current); doc.body.append(panel);
+    const fade = createMacroActivityFade(current);
+    let iconCacheKey = '', iconSnapshot = null;
     let enabled = loadMacroActivity(), active = false, timer = null, entry = null, lastMarkup = '';
     const text = key => getText(key).split('\n')[0];
-    function row(item) {
+    function row(item, snapshot) {
         const row = doc.createElement('div'); row.className = 'macro-activity-row';
         const icon = doc.createElement('span'); icon.className = 'macro-activity-icon'; icon.setAttribute('aria-hidden', 'true');
-        const original = doc.getElementById(item.icon)?.querySelector('svg, .glyph, .glyph-dark');
-        if (original) {
-            const svg = original.cloneNode(true);
-            const originals = [original, ...original.querySelectorAll('*')];
-            const copies = [svg, ...svg.querySelectorAll('*')];
-            for (let i = 0; i < copies.length; i++) {
-                const node = copies[i];
-                if (i && win.getComputedStyle(originals[i]).display === 'none') { node.remove(); continue; }
-                node.removeAttribute('id');
-                if (!node.matches('.glyph, .glyph-dark')) node.removeAttribute('class');
-                // Current control layout must not hide an informational icon.
-                node.style.removeProperty('display');
-            }
-            icon.append(svg);
+        if (snapshot) {
+            icon.dataset.sourceIcon = snapshot.sourceId;
+            icon.append(installIcon(snapshot));
         } else icon.textContent = doc.getElementById(item.icon)?.textContent.trim() || '◇';
         const body = doc.createElement('div'), title = doc.createElement('p');
         title.className = 'macro-activity-title'; title.textContent = text(item.label); body.append(title);
@@ -96,14 +162,21 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         const place = enabled && active && desktop.matches && entry && state.loaded && state.fullscreen
             ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight}, state.fullscreen) : null;
         panel.hidden = !place;
-        if (!place) return;
+        if (!place) { fade.clear(); lastMarkup = ''; return; }
         Object.assign(panel.style, { left: place.left + 'px', top: place.top + 'px', width: place.width + 'px' });
         panel.dir = getLang() === 'he' ? 'rtl' : 'ltr';
-        const signature = JSON.stringify([entry, getLang()]);
+        const displayEntry = entry.icon === 'btnNudgeBrighter' && ['nudgeBrighter', 'nudgeDarker'].includes(state.simulation)
+            ? { ...entry, label: simulations[state.simulation][0] } : entry;
+        const button = doc.getElementById(displayEntry.icon);
+        const cacheKey = (button?.outerHTML ?? '') + (button ? win.getComputedStyle(button).color : '') + doc.documentElement.dataset.simulationEffectiveTheme;
+        if (cacheKey !== iconCacheKey) {
+            iconCacheKey = cacheKey; iconSnapshot = captureMacroActivityIcon(button);
+        }
+        const signature = JSON.stringify([displayEntry, getLang(), iconSnapshot?.signature]);
         if (signature === lastMarkup) return;
         lastMarkup = signature;
         panel.setAttribute('aria-label', text('macro_activity_setting'));
-        current.replaceChildren(row(entry));
+        fade.show(row(displayEntry, iconSnapshot));
     }
     function sync() {
         if (enabled && active && desktop.matches) {

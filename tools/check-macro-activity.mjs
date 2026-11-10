@@ -53,7 +53,7 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
   assert.equal(await panel.locator('.macro-activity-previous, .macro-activity-upcoming, .macro-activity-heading').count(),0,'no history, preview or headings');
   assert.equal(await panel.locator('.macro-activity-title').textContent(),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
   assert(await panel.locator('.macro-activity-current svg').count());
-  if(config.lang==='he')assert.equal(await panel.locator('.macro-activity-current .macro-activity-row').evaluate(e=>getComputedStyle(e).animationName),'none','reduced motion disables row transitions');
+  if(config.lang==='he')assert.equal(await panel.locator('.macro-activity-current').evaluate(e=>e.getAnimations({subtree:true}).length),0,'reduced motion disables crossfades');
   const generation=await page.evaluate(()=>activityTest.state().gen);
   await page.waitForFunction(()=>activityTest.state().gen>=100);assert((await page.evaluate(()=>activityTest.state().gen))>generation,'the simulation continues advancing');
   assert.equal(await panel.textContent(),first,'settings events and advancing generations do not replace or rewrite the display');
