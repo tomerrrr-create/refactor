@@ -988,8 +988,6 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
 dlaState = null; // איפוס לפרקטלים
         turingState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
-spiralMode = 'off';
-    updateSpiralButtonUI();
         startAnimationLoop();
 
       }
@@ -3952,7 +3950,7 @@ function updateSpiralButtonUI() {
 
 
 function cycleSpiralMode() {
-    const oldMode = spiralMode;
+    const oldMode = armedSimulation === 'spiral' ? spiralMode : 'off';
 const sequence = SPIRAL_MODE_SEQUENCE;
 
 
@@ -3962,7 +3960,7 @@ const sequence = SPIRAL_MODE_SEQUENCE;
 // const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
 
 
-    const nextMode = nextEvolutionMode(spiralMode, sequence);
+    const nextMode = nextEvolutionMode(oldMode, sequence);
     spiralMode = nextMode;
 
     if (spiralMode !== 'off') {
@@ -3971,7 +3969,7 @@ const sequence = SPIRAL_MODE_SEQUENCE;
     
     window.logArtEvent('Spiral Mode Changed', spiralMode);
 
-    if (oldMode === 'off' && spiralMode !== 'off') {
+    if (spiralMode !== 'off' && armedSimulation !== 'spiral') {
         armSimulation('spiral');
         // Arming retains the legacy default; the button applies its explicit choice.
         spiralMode = nextMode;

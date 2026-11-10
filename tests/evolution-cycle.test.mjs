@@ -109,3 +109,22 @@ test('modes selected outside the button cycle enter its first active mode while 
     c.isLifePlaying = false;
     assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x']), 'off');
 });
+
+test('Spiral cycling repairs stale mode/arming combinations without toggling off a selected simulation', () => {
+    const unarmed = harness();
+    unarmed.spiralMode = 'left';
+    unarmed.cycleSpiralMode();
+    assert.equal(unarmed.armedSimulation, 'spiral');
+    assert.equal(unarmed.spiralMode, 'turbine2');
+    assert.equal(unarmed.spiralRules.method, 'turbine2');
+    assert.equal(unarmed.armCalls, 1);
+
+    const selected = harness();
+    selected.armedSimulation = 'spiral';
+    selected.spiralMode = 'off';
+    selected.cycleSpiralMode();
+    assert.equal(selected.armedSimulation, 'spiral');
+    assert.equal(selected.spiralMode, 'turbine2');
+    assert.equal(selected.spiralRules.method, 'turbine2');
+    assert.equal(selected.armCalls, 0);
+});

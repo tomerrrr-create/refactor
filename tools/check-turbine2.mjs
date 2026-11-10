@@ -9,9 +9,9 @@ const root=fileURLToPath(new URL('../dist/',import.meta.url)),artifacts='/tmp/tu
 let source=await readFile(path.join(root,'js/app.js'),'utf8');
 source=source.replace('      initializeApp();',`window.turbineTest={
  setup:()=>{stopMacro();pauseLife();resetArmedState();activePaletteIndex=0;currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,'luminance'));n=31;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*7+3)%paletteLen();t.isGold=i===0;});armSimulation('spiral');spiralMode='left';spiralRules.method='left';updateSpiralButtonUI();isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');dom.btnStepForward.classList.remove('control-hidden');history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();renderToScreen(null);},
- other:()=>armSimulation('gravitationalSort'),controls:()=>{armSimulation(null);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');},open:()=>modals.openSpiralSettingsModal(),tech:()=>modals.openTechnicianMenu(),pause:pauseLife,
+ dark:goDarkAction,other:()=>armSimulation('gravitationalSort'),controls:()=>{armSimulation(null);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');},open:()=>modals.openSpiralSettingsModal(),tech:()=>modals.openTechnicianMenu(),pause:pauseLife,
  project:getCurrentState,restore:state=>applyState(state),settings:()=>serializeWorkspaceSettings(getWorkspaceSettings()),
- state:()=>({method:spiralRules.method,mode:spiralMode,playing:isLifePlaying,loaded:isMacroLoaded,gen:currentGenerationCount,tiles:boardState.map(t=>[t.k,t.v,t.isGold]),logs:[...artRecipeLog]}),
+ state:()=>({armed:armedSimulation,method:spiralRules.method,mode:spiralMode,playing:isLifePlaying,loaded:isMacroLoaded,gen:currentGenerationCount,tiles:boardState.map(t=>[t.k,t.v,t.isGold]),logs:[...artRecipeLog]}),
  recipe:()=>artRecipeLog.join(String.fromCharCode(10))};initializeApp().then(()=>turbineTest.ready=true);`);
 for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
 const server=createServer(async(req,res)=>{try{const file=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');res.end(file==='js/app.js'?source:await readFile(path.join(root,file)));}catch{res.writeHead(404);res.end();}});
@@ -34,6 +34,21 @@ try{for(const config of [{width:1440,height:1000,lang:'en'},{width:390,height:84
  const choose=async method=>{await open();await page.locator('.spiral-method-btn[data-method="'+method+'"]').click();await save();};
  const replay=async text=>{await page.locator('#projectFileInput').setInputFiles({name:'turbine2.txt',mimeType:'text/plain',buffer:Buffer.from(text)});await page.waitForFunction(()=>turbineTest.state().loaded);await page.evaluate(()=>resetTurbineRandom());await page.locator('#btnMacroPlay').click();await page.waitForFunction(()=>!turbineTest.state().loaded,{timeout:20000});};
  await boot(false);await page.evaluate(()=>turbineTest.setup());
+ // Go Dark must preserve the selected Spiral mode and its actual arming state.
+ if(!(await page.locator('#btnSpiral').isVisible()))await page.locator('#btnEvolutionDrawerInternal').click();
+ for(const method of ['turbine2','b','left','black_hole']){
+  await choose(method);
+  await page.evaluate(()=>turbineTest.dark());await page.waitForTimeout(900);
+  const dark=await state();assert.equal(dark.armed,'spiral');assert.equal(dark.mode,method);
+  assert(await page.locator('#btnSpiral').evaluate(e=>e.classList.contains('simulation-active')));
+  assert(!(await page.locator('#btnPlayPauseLife').isDisabled()));
+  await page.locator('#btnSpiral').click();
+  const next=['turbine2','b','left','black_hole','off'][['turbine2','b','left','black_hole'].indexOf(method)+1];
+  assert.equal((await state()).mode,next);assert.equal((await state()).armed,next==='off'?null:'spiral');
+  assert.equal(await page.locator('#btnSpiral').evaluate(e=>e.classList.contains('simulation-active')),next!=='off');
+ }
+ console.log('PASS Go Dark preserves Spiral arming across all cycle modes',config.lang);
+ await page.evaluate(()=>turbineTest.setup());
  if(process.env.TURBINE_ICON_ONLY){
   const icons=()=>page.locator('#btnSpiral svg').evaluateAll(nodes=>nodes.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id));
   await page.evaluate(()=>turbineTest.controls());
