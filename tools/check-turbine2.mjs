@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../dist/',import.meta.url)),artifacts='/tmp/tu
 let source=await readFile(path.join(root,'js/app.js'),'utf8');
 source=source.replace('      initializeApp();',`window.turbineTest={
  setup:()=>{stopMacro();pauseLife();resetArmedState();activePaletteIndex=0;currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,'luminance'));n=31;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*7+3)%paletteLen();t.isGold=i===0;});armSimulation('spiral');spiralMode='left';spiralRules.method='left';updateSpiralButtonUI();isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');dom.btnStepForward.classList.remove('control-hidden');history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();renderToScreen(null);},
- controls:()=>{armSimulation(null);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');},open:()=>modals.openSpiralSettingsModal(),tech:()=>modals.openTechnicianMenu(),pause:pauseLife,
+ other:()=>armSimulation('gravitationalSort'),controls:()=>{armSimulation(null);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');},open:()=>modals.openSpiralSettingsModal(),tech:()=>modals.openTechnicianMenu(),pause:pauseLife,
  project:getCurrentState,restore:state=>applyState(state),settings:()=>serializeWorkspaceSettings(getWorkspaceSettings()),
  state:()=>({method:spiralRules.method,mode:spiralMode,playing:isLifePlaying,loaded:isMacroLoaded,gen:currentGenerationCount,tiles:boardState.map(t=>[t.k,t.v,t.isGold]),logs:[...artRecipeLog]}),
  recipe:()=>artRecipeLog.join(String.fromCharCode(10))};initializeApp().then(()=>turbineTest.ready=true);`);
@@ -33,7 +33,21 @@ try{for(const config of [{width:1440,height:1000,lang:'en'},{width:390,height:84
  const save=async()=>{await page.locator('#btnSpiralSettingsSave').click();await page.waitForTimeout(350);};
  const choose=async method=>{await open();await page.locator('.spiral-method-btn[data-method="'+method+'"]').click();await save();};
  const replay=async text=>{await page.locator('#projectFileInput').setInputFiles({name:'turbine2.txt',mimeType:'text/plain',buffer:Buffer.from(text)});await page.waitForFunction(()=>turbineTest.state().loaded);await page.evaluate(()=>resetTurbineRandom());await page.locator('#btnMacroPlay').click();await page.waitForFunction(()=>!turbineTest.state().loaded,{timeout:20000});};
- await boot(false);await page.evaluate(()=>turbineTest.setup());await open();
+ await boot(false);await page.evaluate(()=>turbineTest.setup());
+ if(process.env.TURBINE_ICON_ONLY){
+  const icons=()=>page.locator('#btnSpiral svg').evaluateAll(nodes=>nodes.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id));
+  await page.evaluate(()=>turbineTest.controls());
+  if(!(await page.locator('#btnSpiral').isVisible()))await page.locator('#btnEvolutionDrawerInternal').click();
+  assert.deepEqual(await icons(),['iconSpiralTurbine2'],'unselected control uses the first cycle icon');
+  for(const [mode,icon] of [['turbine2','iconSpiralTurbine2'],['b','iconSpiralB'],['left','iconSpiralLeft'],['black_hole','iconSpiralBlackHole'],['off','iconSpiralTurbine2']]){
+   await page.locator('#btnSpiral').click();assert.equal((await state()).mode,mode);assert.deepEqual(await icons(),[icon]);
+   assert.equal(await page.locator('#btnSpiral').evaluate(e=>e.classList.contains('simulation-active')),mode!=='off');
+  }
+  await page.locator('#btnSpiral').click();await page.locator('#btnSpiral').click();await page.locator('#btnSpiral').click();assert.deepEqual(await icons(),['iconSpiralLeft']);
+  await page.evaluate(()=>turbineTest.other());assert.equal((await state()).mode,'off');assert.deepEqual(await icons(),['iconSpiralTurbine2'],'switching to another evolution restores the default symbol');
+  assert.deepEqual(errors,[]);console.log('PASS inactive/active Spiral icons',JSON.stringify(config));await context.close();continue;
+ }
+ await open();
  const option=page.locator('.spiral-method-btn[data-method="turbine2"]');assert.equal(await option.count(),1);assert((await option.textContent()).includes('2'));
  await option.click();assert.equal((await state()).method,'left','selection stays a modal draft');await page.locator('#btnSpiralSettingsCancel').click();await page.waitForTimeout(350);assert.equal((await state()).method,'left');
  await choose('turbine2');assert.equal((await state()).mode,'turbine2');
