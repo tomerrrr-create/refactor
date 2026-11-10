@@ -1356,7 +1356,7 @@ dlaState.emptyIndices.push(index);
         let nextState;
         let didAdvance = true;
         switch(armedSimulation) {
-            case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration(context); boardState = nextState; break;
+            case 'gameOfLife': nextState = Simulations.runGameOfLifeGeneration({ ...context, originalPalette: C.PALETTES[activePaletteIndex].originalColors }); boardState = nextState; break;
 case 'brightnessEvo':
     if (brightnessEvoMode === 'contrast') {
         nextState = Simulations.runContrastGeneration(context);
@@ -1490,7 +1490,7 @@ break;
             
             switch(armedSimulation) {
                 case 'gameOfLife': 
-                    boardState = Simulations.runGameOfLifeGeneration(context); 
+                    boardState = Simulations.runGameOfLifeGeneration({ ...context, originalPalette: C.PALETTES[activePaletteIndex].originalColors });
                     break;
 case 'brightnessEvo': 
     if (brightnessEvoMode === 'contrast') {
@@ -1878,9 +1878,11 @@ if (!isTogglingOff && simulationName !== null) {
         }
         if (simulationName === 'gameOfLife') {
             const genetics = gameOfLifeRules.genetics;
+            const deadColor = gameOfLifeRules.deadColor;
             gameOfLifeMode = 'personal';
             gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
             if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+            if (deadColor === 'luminance') gameOfLifeRules.deadColor = deadColor;
         }
         if (simulationName === 'brightnessEvo') {
             brightnessEvoMode = 'brightness';
@@ -2145,6 +2147,7 @@ if (simulationName === 'magnet') {
             simulationPlaybackTheme: getSimulationPlaybackTheme(),
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
             ...(gameOfLifeRules.genetics === 'palette-order' ? { gameOfLifeGenetics: 'palette-order' } : {}),
+            ...(gameOfLifeRules.deadColor === 'luminance' ? { gameOfLifeDeadColor: 'luminance' } : {}),
             ...(JSON.stringify(evolutionTuning) === JSON.stringify(DEFAULT_EVOLUTION_TUNING) ? {} : { evolutionTuning: structuredClone(evolutionTuning) }),
             ...(separatorCycle.join() === DEFAULT_SEPARATOR_CYCLE.join() ? {} : { separatorCycle: [...separatorCycle] }),
             smoothing: { display: isSmoothRendering, export: dom.saveSmoothImage.checked,
@@ -2163,6 +2166,8 @@ if (simulationName === 'magnet') {
         evolutionDrawer?.applyLayout();
         if (settings.gameOfLifeGenetics === 'palette-order') gameOfLifeRules.genetics = 'palette-order';
         else delete gameOfLifeRules.genetics;
+        if (settings.gameOfLifeDeadColor === 'luminance') gameOfLifeRules.deadColor = 'luminance';
+        else delete gameOfLifeRules.deadColor;
         evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
         if (islandsSession) islandsSession.activity = evolutionTuning.islands.activity;
         if (settings.simulationTheme) applySimulationTheme(settings.simulationTheme);
@@ -2243,6 +2248,8 @@ if (simulationName === 'magnet') {
         // Set the shared mode before recording the imported cycle snapshot.
         if (settings.gameOfLifeGenetics === 'palette-order') gameOfLifeRules.genetics = 'palette-order';
         else delete gameOfLifeRules.genetics;
+        if (settings.gameOfLifeDeadColor === 'luminance') gameOfLifeRules.deadColor = 'luminance';
+        else delete gameOfLifeRules.deadColor;
         const sources = (slots, presets) => slots.map((rules, i) =>
             Object.entries(presets).find(([, preset]) => JSON.stringify(preset) === JSON.stringify(rules))?.[0] || 'custom-' + i);
         setGameOfLifeCycle(settings.cycles.gameOfLife, identity?.gameOfLife.index ?? ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode),
@@ -3344,7 +3351,8 @@ function cloneGameOfLifeRules(rules) {
 
 function getGameOfLifeRecordingRules() {
     return { ...cloneGameOfLifeRules(gameOfLifeRules),
-        ...(gameOfLifeRules.genetics === 'palette-order' ? { genetics: 'palette-order' } : {}), cycleMode: gameOfLifeMode,
+        ...(gameOfLifeRules.genetics === 'palette-order' ? { genetics: 'palette-order' } : {}),
+        ...(gameOfLifeRules.deadColor === 'luminance' ? { deadColor: 'luminance' } : {}), cycleMode: gameOfLifeMode,
         personalRules: cloneGameOfLifeRules(personalGameOfLifeRules), cycleSlots: gameOfLifeCycle.map(cloneGameOfLifeRules), cycleSources: [...gameOfLifeSources] };
 }
 
@@ -3372,12 +3380,14 @@ function setPersonalGameOfLifeRules(rules) {
 
 function setGameOfLifeCycle(slots, index, sources = gameOfLifeSources, yoursRules = personalGameOfLifeRules) {
     const genetics = gameOfLifeRules.genetics;
+    const deadColor = gameOfLifeRules.deadColor;
     gameOfLifeCycle = normalizeEvolutionCycle(slots, defaultGolCycle);
     gameOfLifeSources = normalizeCycleSources(sources, gameOfLifeCycle, C.GAME_OF_LIFE_PRESETS);
     personalGameOfLifeRules = cloneGameOfLifeRules(yoursRules);
     gameOfLifeMode = ['personal', 'shuffle', 'coral'][index];
     gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[index]);
     if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+    if (deadColor === 'luminance') gameOfLifeRules.deadColor = deadColor;
     persistEvolutionCycle('colorGridGolCycleMembership', gameOfLifeCycle);
     persistEvolutionCycle('colorGridGolCycleMembershipIdentity', { sources: gameOfLifeSources, yoursRules: personalGameOfLifeRules });
     updateGameOfLifeButtonUI();
@@ -3388,8 +3398,10 @@ function setGameOfLifeCycle(slots, index, sources = gameOfLifeSources, yoursRule
 
 function restoreGameOfLifeRules(snapshot) {
     gameOfLifeRules = cloneGameOfLifeRules(snapshot);
-    // Missing fields in old recipes always restore the original RGB genetics.
+    // Missing fields in old recipes restore RGB genetics and the first sorted color as dead.
     if (snapshot.genetics === 'palette-order') gameOfLifeRules.genetics = snapshot.genetics;
+    if (snapshot.deadColor !== undefined && !['current', 'luminance'].includes(snapshot.deadColor)) throw Error('Invalid Game of Life dead color');
+    if (snapshot.deadColor === 'luminance') gameOfLifeRules.deadColor = 'luminance';
     gameOfLifeMode = ['shuffle', 'coral'].includes(snapshot.cycleMode) ? snapshot.cycleMode : 'personal';
     // Older recordings have one personal snapshot and two fixed preset shortcuts.
     const legacySlots = [snapshot.personalRules || snapshot, ...defaultGolCycle.slice(1)];
@@ -3408,10 +3420,12 @@ function cycleGameOfLifeMode() {
         armSimulation(null);
     } else {
         const genetics = gameOfLifeRules.genetics;
+        const deadColor = gameOfLifeRules.deadColor;
         if (current === 'off') armSimulation('gameOfLife');
         gameOfLifeMode = next;
         gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[['personal', 'shuffle', 'coral'].indexOf(next)]);
         if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
+        if (deadColor === 'luminance') gameOfLifeRules.deadColor = deadColor;
     }
     updateGameOfLifeButtonUI();
     window.logArtEvent('Game of Life Mode Changed', JSON.stringify({ ...getGameOfLifeRecordingRules(), mode: next }));
@@ -4443,6 +4457,15 @@ function parseMacroText(text) {
         if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed'].includes(action.eventName)) simulationRunning = false;
         actions.push(action);
     }
+    for (const action of actions) {
+        let snapshot;
+        if (action.eventName === 'Game of Life Mode Changed') snapshot = JSON.parse(action.details);
+        if (['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName) && action.details.startsWith('Armed: gameOfLife |')) {
+            const rules = action.details.match(/\|\s+Rules:\s+(.*)$/)?.[1];
+            if (rules && rules !== 'No specific rules mapping') snapshot = JSON.parse(rules);
+        }
+        if (snapshot?.deadColor !== undefined && !['current', 'luminance'].includes(snapshot.deadColor)) throw Error('Invalid Game of Life dead color');
+    }
     actions.forEach(validateIslandsMacroAction);
     actions.forEach(validateCymaticsMacroAction);
     let brushOpen = false;
@@ -4928,7 +4951,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
         erosionRules = restoreErosionRules({});
         updateErosionButtonUI();
     }
-    if (sim === 'gameOfLife' && rulesStr === "No specific rules mapping") delete gameOfLifeRules.genetics;
+    if (sim === 'gameOfLife' && rulesStr === "No specific rules mapping") { delete gameOfLifeRules.genetics; delete gameOfLifeRules.deadColor; }
     if (rulesStr !== "No specific rules mapping") {
         try {
             if (sim === 'brightnessEvo') {
@@ -5543,10 +5566,13 @@ else if (action.eventName === 'Invert Colors') {
             switchToPalette: index => switchToPalette(index, { adapt: true }),
             getGameOfLifeRules: () => gameOfLifeRules, setGameOfLifeRules: setPersonalGameOfLifeRules,
             getGameOfLifeCycle: () => ({ slots: gameOfLifeCycle.map(cloneGameOfLifeRules), sources: [...gameOfLifeSources], yoursRules: cloneGameOfLifeRules(personalGameOfLifeRules), index: ['personal', 'shuffle', 'coral'].indexOf(gameOfLifeMode) }),
-            setGameOfLifeCycle: (slots, index, sources, yoursRules, genetics = gameOfLifeRules.genetics || 'rgb') => {
+            setGameOfLifeCycle: (slots, index, sources, yoursRules, genetics = gameOfLifeRules.genetics || 'rgb', deadColor = gameOfLifeRules.deadColor || 'current') => {
                 if (!['rgb', 'palette-order'].includes(genetics)) throw new Error('Invalid Game of Life genetics');
+                if (!['current', 'luminance'].includes(deadColor)) throw new Error('Invalid Game of Life dead color');
                 if (genetics === 'palette-order') gameOfLifeRules.genetics = genetics;
                 else delete gameOfLifeRules.genetics;
+                if (deadColor === 'luminance') gameOfLifeRules.deadColor = deadColor;
+                else delete gameOfLifeRules.deadColor;
                 setGameOfLifeCycle(slots, index, sources, yoursRules);
             },
             getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; recordLiveSimulationRules('gravitationalSort'); },

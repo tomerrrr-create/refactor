@@ -276,6 +276,7 @@ function closeContourSettingsModal() {
 let chiCycleMembership = null;
 let golCycleMembership = null;
 let golGeneticsDraft = 'rgb';
+let golDeadColorDraft = 'current';
 
 function refreshGolGeneticsButton() {
     const button = document.getElementById('btnGolGenetics');
@@ -283,6 +284,15 @@ function refreshGolGeneticsButton() {
     const ordered = golGeneticsDraft === 'palette-order';
     button.setAttribute('aria-checked', String(ordered));
     button.title = app.getText(ordered ? 'gol_genetics_order' : 'gol_genetics_rgb');
+    button.setAttribute('aria-label', button.title);
+}
+
+function refreshGolDeadColorButton() {
+    const button = document.getElementById('btnGolDeadColor');
+    if (!button) return;
+    const anchored = golDeadColorDraft === 'luminance';
+    button.setAttribute('aria-checked', String(anchored));
+    button.title = app.getText(anchored ? 'gol_dead_luminance' : 'gol_dead_current');
     button.setAttribute('aria-label', button.title);
 }
 
@@ -1130,6 +1140,7 @@ function openGolSettingsModal() {
     // במקום להגדיר טקסט, נפעיל את הפונקציה שמעדכנת את הכפתורים
     const rules = app.getGameOfLifeRules();
     golGeneticsDraft = rules.genetics === 'palette-order' ? 'palette-order' : 'rgb';
+    golDeadColorDraft = rules.deadColor === 'luminance' ? 'luminance' : 'current';
     applyGolPreset(rules.survival, rules.birth);
 updateActivePresetButton();
     // --- END: MODIFICATION ---
@@ -1140,7 +1151,7 @@ updateActivePresetButton();
         defaults: [app.C.defaultGameOfLifeRules, PRESET_RULES.btnGolPresetShuffle, PRESET_RULES.btnGolPresetCoral], defaultSources: ['btnGolPresetPaint', 'btnGolPresetShuffle', 'btnGolPresetCoral'],
         readRules: readGolCycleRules,
         writeRules: rules => applyGolPreset(rules.survival, rules.birth),
-        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots, index, sources, yoursRules, golGeneticsDraft),
+        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots, index, sources, yoursRules, golGeneticsDraft, golDeadColorDraft),
         saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
     const geneticsButton = document.createElement('button');
@@ -1153,7 +1164,16 @@ updateActivePresetButton();
         refreshGolGeneticsButton();
     });
     document.getElementById('golCycleToolbar').prepend(geneticsButton);
-    refreshGolGeneticsButton();
+    const deadColorButton = document.createElement('button');
+    deadColorButton.type = 'button';deadColorButton.id = 'btnGolDeadColor';
+    deadColorButton.className = 'gol-genetics-dot gol-dead-color';
+    deadColorButton.setAttribute('role','switch');
+    deadColorButton.addEventListener('click',()=>{
+        golDeadColorDraft = golDeadColorDraft === 'current' ? 'luminance' : 'current';
+        refreshGolDeadColorButton();
+    });
+    geneticsButton.after(deadColorButton);
+    refreshGolGeneticsButton();refreshGolDeadColorButton();
     app.dom.gameOfLifeSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gameOfLifeSettingsModal.classList.add('modal-visible'), 10);
 }
@@ -1175,8 +1195,8 @@ function saveGolSettings() {
 }
 
 function resetGolSettings() {
-    golGeneticsDraft = 'rgb';
-    refreshGolGeneticsButton();
+    golGeneticsDraft = 'rgb';golDeadColorDraft = 'current';
+    refreshGolGeneticsButton();refreshGolDeadColorButton();
     applyGolPreset(app.C.defaultGameOfLifeRules.survival, app.C.defaultGameOfLifeRules.birth);
     golCycleMembership?.manualChange();
 }

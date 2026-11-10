@@ -1,10 +1,21 @@
-import { getGeneticColor, findClosestColorIndex } from '../colors.js';
+import { getGeneticColor, findClosestColorIndex, getLuminance } from '../colors.js';
 
-export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, gameOfLifeRules }) {
+export function gameOfLifeDeadIndex(currentPalette, rules, originalPalette = currentPalette) {
+    if (rules.deadColor !== 'luminance' || !currentPalette.length) return 0;
+    const reference = originalPalette.length ? originalPalette : currentPalette;
+    let darkest = reference[0];
+    for (const color of reference) if (getLuminance(color) < getLuminance(darkest)) darkest = color;
+    const index = currentPalette.indexOf(darkest);
+    if (index >= 0) return index;
+    // Standalone callers may supply a palette without its original ordering.
+    return currentPalette.reduce((best, color, i) => getLuminance(color) < getLuminance(currentPalette[best]) ? i : best, 0);
+}
+
+export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, originalPalette = currentPalette, gameOfLifeRules }) {
     const paletteOrderGenetics = gameOfLifeRules.genetics === 'palette-order';
-    const darkestIndex = 0;
+    const darkestIndex = gameOfLifeDeadIndex(currentPalette, gameOfLifeRules, originalPalette);
+    const anchoredDead = gameOfLifeRules.deadColor === 'luminance';
     const lightestIndex = currentPalette.length - 1;
-    const halfIndex = Math.floor(lightestIndex / 2);
 
     // 1. Read the current state from the data array into a 2D grid for easier neighbor calculation
     let internalCurrentState = [];
@@ -14,11 +25,8 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
             const tileData = currentBoardState[i * n + j];
             const tileIndex = tileData.k;
 
-            // --- START: MODIFICATION 1 ---
-            // The 'liveCellDef' logic is now hard-coded to 'notDarkest' as requested.
-            // The old switch statement has been removed.
+            // The dead color is independent of the selected inheritance method.
             let isAlive = tileIndex !== darkestIndex;
-            // --- END: MODIFICATION 1 ---
 
             if (tileData.isGold) isAlive = false;
 
@@ -65,10 +73,13 @@ export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, 
                 // === END MODIFICATION ===
                 if (becomesAlive) {
                     if (paletteOrderGenetics) {
-                        // Index zero remains dead. Birth without parents (B0)
-                        // uses the first living color when one is available.
-                        newK = lightestIndex > 0 ? Math.max(1, Math.min(lightestIndex,
-                            Math.round(liveNeighbors ? neighborRanks / liveNeighbors : 1))) : 0;
+                        const firstLiving = darkestIndex === 0 && lightestIndex > 0 ? 1 : 0;
+                        const inherited = Math.round(liveNeighbors ? neighborRanks / liveNeighbors : firstLiving);
+                        // Keep the historical zero-dead calculation unchanged.
+                        newK = anchoredDead ? Math.max(0, Math.min(lightestIndex, inherited))
+                            : lightestIndex > 0 ? Math.max(1, Math.min(lightestIndex, inherited)) : 0;
+                        if (anchoredDead && newK === darkestIndex && lightestIndex > 0)
+                            newK = darkestIndex < lightestIndex ? darkestIndex + 1 : darkestIndex - 1;
                     } else {
                         const geneticColor = getGeneticColor(neighborColors, 'average');
                         newK = findClosestColorIndex(geneticColor, currentPalette);

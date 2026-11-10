@@ -75,6 +75,8 @@ export const translations = {
   brush_line: { en: 'Horizontal line', he: 'קו אופקי', ru: 'Горизонтальная линия', nl: 'Horizontale lijn' },
   gol_genetics_rgb: { en: 'Genetics: RGB', he: 'גנטיקה: RGB', ru: 'Генетика: RGB', nl: 'Genetica: RGB' },
   gol_genetics_order: { en: 'Genetics: palette order', he: 'גנטיקה: סדר הפלטה', ru: 'Генетика: порядок палитры', nl: 'Genetica: paletvolgorde' },
+  gol_dead_current: { en: 'Dead color: first in current sort', he: 'צבע מת: הראשון במיון הנוכחי', ru: 'Мёртвый цвет: первый в текущей сортировке', nl: 'Dode kleur: eerste in huidige sortering' },
+  gol_dead_luminance: { en: 'Dead color: darkest by Luminance', he: 'צבע מת: הכהה ביותר לפי Luminance', ru: 'Мёртвый цвет: самый тёмный по яркости', nl: 'Dode kleur: donkerste volgens luminantie' },
   brush_width: { en: '{n} cells wide', he: 'רוחב של {n} תאים', ru: 'Ширина: {n} клеток', nl: '{n} cellen breed' },
   brush_color_page: { en: 'Color page {n}', he: 'עמוד צבעים {n}', ru: 'Страница цветов {n}', nl: 'Kleurenpagina {n}' },
   studio_popup_blocked: { en: "Allow pop-ups for this site to open Video Studio.", he: "יש לאפשר חלונות קופצים לאתר כדי לפתוח את הסטודיו.", ru: "Разрешите всплывающие окна для открытия видеостудии.", nl: "Sta pop-ups toe om de videostudio te openen." },

@@ -48,7 +48,7 @@ function mergeKnown(defaults, overrides, path = '') {
                 ? (key === 'simulationTheme' ? 'blue' : 'gold') : clone(value);
             continue;
         }
-        if (path === '' && ['separatorCycle', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === '' && ['separatorCycle', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics', 'gameOfLifeDeadColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'rules.contour' && key === 'growth') { result[key] = validateCracksGrowth(value); continue; }
@@ -97,6 +97,7 @@ export function validateWorkspaceSettings(value) {
     const valid = equal(normalizeStartup(settings.startup), settings.startup) && validateSimInit(settings.simulationInit) &&
         equal(normalizeSortCycle(settings.sortCycle), settings.sortCycle) && integer(settings.nudgeIntervalMs, 0, 200) &&
         (!Object.hasOwn(settings, 'gameOfLifeGenetics') || ['rgb', 'palette-order'].includes(settings.gameOfLifeGenetics)) &&
+        (!Object.hasOwn(settings, 'gameOfLifeDeadColor') || ['current','luminance'].includes(settings.gameOfLifeDeadColor)) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&
         (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationTheme)) &&
         (!Object.hasOwn(settings, 'simulationPlaybackTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationPlaybackTheme)) &&

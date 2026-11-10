@@ -1637,7 +1637,7 @@ button, .ctrl {
 .cycle-slot-button[aria-pressed="true"] { color: var(--gold); opacity: 1; background: #d5aa4814; }
 .cycle-reset-dot { width: 32px; margin-inline-start: 4px; }
 .cycle-reset-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #d5aa48; box-shadow: 0 0 7px #d5aa4840; }
-#golCycleToolbar { direction: ltr; }
+#golCycleToolbar { direction: ltr; gap: 8px; }
 .gol-genetics-dot { display: inline-grid; place-items: center; flex-shrink: 0; width: 32px; height: 40px; margin-inline-end: 4px; padding: 0; border: 0; border-radius: 8px; background: transparent; cursor: pointer; }
 .gol-genetics-dot::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: conic-gradient(#ef5350 0deg 120deg, #66bb6a 120deg 240deg, #42a5f5 240deg 360deg); }
 .gol-genetics-dot[aria-checked="true"]::before { background: linear-gradient(135deg, #f1d886, #d5aa48); box-shadow: 0 0 7px #d5aa4840; }
@@ -2566,3 +2566,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog .drawer-appearance .technician-badge { display:none; }
 #evolutionDrawerDialog .drawer-appearance .simulation-theme-preview::before { inset:12px; }
 #evolutionDrawerDialog .drawer-appearance .simulation-theme-preview svg { width:16px; height:16px; }
+
+/* Independent dead-cell anchor, paired with the existing genetics dot. */
+.gol-dead-color::before { background: #252a2e; border: 1px solid #a5aba7; box-sizing: border-box; }
+.gol-dead-color[aria-checked="true"]::before { background: #141719; border-color: #d5aa48; box-shadow: 0 0 0 2px #d5aa48; }

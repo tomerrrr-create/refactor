@@ -166,6 +166,7 @@ function defaultComparable(value, factory) {
     if (settings.rules.contour.lineColor === 'darkest') settings.rules.contour.lineColor = 'brush';
     settings.evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
     settings.gameOfLifeGenetics ??= 'rgb';
+    settings.gameOfLifeDeadColor ??= 'current';
     settings.separatorCycle ??= [...DEFAULT_SEPARATOR_CYCLE];
     const bloom = resolveSavedBloom(settings.smoothing);
     Object.assign(settings.smoothing, { bloom: bloom.enabled, bloomIntensity: bloom.intensity });
@@ -180,7 +181,7 @@ function defaultComparable(value, factory) {
 // saved. Other preferences (Startup, display, brush size/mode, etc.) still autosave.
 function withSavedSessionPreferences(draft, saved) {
     const result = clone(draft);
-    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'gameOfLifeGenetics', 'contourAction']) {
+    for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'gameOfLifeGenetics', 'gameOfLifeDeadColor', 'contourAction']) {
         if (Object.hasOwn(saved.settings, key)) result.settings[key] = clone(saved.settings[key]);
         else delete result.settings[key];
     }
