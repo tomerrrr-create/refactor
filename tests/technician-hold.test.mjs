@@ -14,7 +14,7 @@ function harness(t, pointerType = 'touch') {
         setPointerCapture: id => captured.add(id), hasPointerCapture: id => captured.has(id), releasePointerCapture: id => captured.delete(id),
         addEventListener(type, fn) { handlers.set(type, fn); },
         classList: { add: c => classes.add(c), remove: c => classes.delete(c), toggle(c, on) { if(on) classes.add(c); else classes.delete(c); } } };
-    const context = vm.createContext({isBreathing: false, isSimModeActive: false, C: {LONG_PRESS_SHOW_MS: 600}, dom: {btnToggleSimMode: button},
+    const context = vm.createContext({isBreathing: false, isLifePlaying: false, isSimModeActive: false, C: {LONG_PRESS_SHOW_MS: 600}, dom: {btnToggleSimMode: button},
         bindPickerGestures, hideLongPressDisplay() {},
         toggleSimMode() { context.isSimModeActive = !context.isSimModeActive; actions.push('toggle'); },
         prepareBoardForSimMode() { actions.push('init'); },
@@ -71,6 +71,7 @@ test('cancelled Go Dark swipe and blocked breathing interaction do not change th
     h.context.isBreathing = true;
     h.down(); h.event('pointermove', 25, 60); h.event('pointerup', 25, 60); h.event('click');
     assert.deepEqual(h.actions, []);
+    h.context.isBreathing=false;h.context.isLifePlaying=true;h.down();h.advance(900);h.release();assert.deepEqual(h.actions, []);
 });
 
 test('simulation initialization preserves current symmetry by default and honors explicit settings', () => {

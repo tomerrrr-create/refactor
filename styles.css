@@ -865,6 +865,18 @@ body {
 }
 
 /* --- Simulation Mode Styles --- */
+#btnToggleSimMode {
+    transition: transform 0.4s ease-in-out, background-color 0.3s ease-in-out,
+        grid-area 0.5s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+:root[data-simulation-running] #btnToggleSimMode {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
+}
+
 .control-hidden {
     opacity: 0;
     transform: scale(0.5);
