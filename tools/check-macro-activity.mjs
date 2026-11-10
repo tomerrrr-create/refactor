@@ -48,22 +48,21 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
  if(config.desktop){
   await panel.waitFor({state:'visible'});
   const geometry=await page.locator('#board').boundingBox();
-  const first=await panel.textContent();assert(first.length>10);assert.equal(await panel.locator('.macro-activity-previous li').count(),1);
-  assert.equal(await panel.locator('.macro-activity-upcoming li').count(),2);
-  assert.equal(await panel.locator('.macro-activity-heading').count(),0,'no visible Now/Later headings');
-  const expected=await page.evaluate(()=>[activityTest.label('macro_activity_draw'),activityTest.label('help_nudge_forward')]);
-  assert.deepEqual(await panel.locator('.macro-activity-upcoming .macro-activity-title').allTextContents(),expected,'preview shows one drawing action for the whole next stroke, then Nudge');
+  const first=await panel.textContent();assert(first.length>0);
+  assert.equal(await panel.locator('.macro-activity-row').count(),1,'only the current action is rendered');
+  assert.equal(await panel.locator('.macro-activity-previous, .macro-activity-upcoming, .macro-activity-heading').count(),0,'no history, preview or headings');
+  assert.equal(await panel.locator('.macro-activity-title').textContent(),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
   assert(await panel.locator('.macro-activity-current svg').count());
   if(config.lang==='he')assert.equal(await panel.locator('.macro-activity-current .macro-activity-row').evaluate(e=>getComputedStyle(e).animationName),'none','reduced motion disables row transitions');
   const generation=await page.evaluate(()=>activityTest.state().gen);
   await page.waitForFunction(()=>activityTest.state().gen>=100);assert((await page.evaluate(()=>activityTest.state().gen))>generation,'the simulation continues advancing');
   assert.equal(await panel.textContent(),first,'settings events and advancing generations do not replace or rewrite the display');
-  assert.equal(await panel.locator('.macro-activity-detail').count(),0,'no generation totals or settings captions in past, current or upcoming rows');
+  assert.equal(await panel.locator('.macro-activity-detail').count(),0,'only action name and icon, without extra captions');
   const side=await panel.boundingBox();assert(side.x+side.width<=geometry.x-70,'panel clears the left gallery frame');assert(side.x>=0);
   await page.evaluate(()=>activityTest.tech());await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();await page.waitForTimeout(150);
   assert.equal(await panel.isVisible(),false);assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'off never resizes or moves board');
   if(config.lang==='en')await page.waitForFunction(()=>activityTest.state().simulation==='nudgeBrighter'&&activityTest.state().gen>=5);
-  await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en'){assert((await panel.locator('.macro-activity-current').textContent()).includes('Nudge'),'enabling mid-play shows the latest action');assert(!/Pause|Settings changed|Generation/.test(await panel.textContent()),'Pause and settings are also excluded when rebuilding history');}assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
+  await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en'){assert((await panel.locator('.macro-activity-current').textContent()).includes('Nudge'),'enabling mid-play shows the latest action');assert(!/Pause|Settings changed|Generation/.test(await panel.textContent()),'Pause and settings are excluded when recovering the current action');}assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
   await page.screenshot({path:path.join(artifacts,config.lang+'-fullscreen.png')});
   await page.setViewportSize({width:1024,height:1000});await page.waitForTimeout(150);assert.equal(await panel.isVisible(),false,'insufficient left space hides it');
   await page.setViewportSize({width:config.width,height:config.height});await panel.waitFor({state:'visible'});

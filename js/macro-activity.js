@@ -38,47 +38,23 @@ export function describeMacroActivity(action, simulation) {
         simulation = String(action.details ?? '').match(/Armed:\s*(\w+)/)?.[1] || simulation;
         const definition = simulations[simulation];
         return definition ? { label: definition[0], icon: definition[1],
-            kind: action.eventName === 'STEP FORWARD' ? 'macro_activity_step' : null,
             key: action.eventName + ':' + simulation } : null;
     }
     const definition = actions[action.eventName];
     return definition ? { label: definition[0], icon: definition[1], key: action.eventName } : null;
 }
-// Build a presentation index once per loaded queue, never change the commands.
-// Stroke/wave boundaries keep separate gestures distinct while collapsing samples.
-export function macroActivityTimeline(queue, simulation) {
-    const timeline = [];
-    let mergePackets = false;
-    for (let index = 0; index < queue.length; index++) {
-        const action = queue[index];
-        if (['BRUSH_START', 'BRUSH_END', 'BRUSH_CHECKPOINT', 'BRUSH_CONTINUE', 'HISTORY_ACTION', 'PAUSE', 'WIND_END'].includes(action.eventName)) mergePackets = false;
-        const item = describeMacroActivity(action, simulation);
-        if (!item) continue;
-        if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
-            const armed = String(action.details ?? '').match(/Armed:\s*(\w+)/)?.[1];
-            if (armed) simulation = armed;
-        }
-        const packet = ['DRAW_STROKE', 'WIND_WAVE'].includes(action.eventName);
-        if (!(packet && mergePackets && timeline.at(-1)?.item.key === item.key)) timeline.push({ index, item });
-        mergePackets = packet;
+// Recover the current visible action when the display is enabled mid-play.
+// Only already-executed commands are read; nothing is changed or replayed.
+export function latestMacroActivity(queue, index, simulation) {
+    for (let i = Math.min(index, queue.length - 1); i >= 0; i--) {
+        const item = describeMacroActivity(queue[i], simulation);
+        if (item) return item;
     }
-    return timeline;
-}
-export function macroActivityWindow(timeline, index) {
-    let low = 0, high = timeline.length;
-    while (low < high) {
-        const middle = (low + high) >>> 1;
-        if (timeline[middle].index <= index) low = middle + 1;
-        else high = middle;
-    }
-    const cursor = low - 1;
-    return { previous: cursor > 0 ? timeline[cursor - 1].item : null,
-        current: timeline[cursor]?.item ?? null,
-        upcoming: timeline.slice(cursor + 1, cursor + 3).map(entry => entry.item) };
+    return null;
 }
 export function macroActivityPlacement(board, viewport, fullscreen = false) {
     const gap = fullscreen ? 74 : 28; // Leave the fullscreen gallery frame untouched.
-    const width = Math.min(224, board.left - gap - 16), height = 244;
+    const width = Math.min(224, board.left - gap - 16), height = 72;
     if (viewport.width < 1024 || width < 188 || viewport.height < height + 32 || board.width <= 0) return null;
     return { left: board.left - gap - width, top: Math.max(16, Math.min(viewport.height - height - 16,
         board.top + (board.height - height) / 2)), width };
@@ -89,12 +65,9 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     const panel = doc.createElement('aside');
     panel.id = 'macroActivity'; panel.className = 'macro-activity'; panel.hidden = true;
     panel.setAttribute('role', 'region');
-    const previous = doc.createElement('ol'), current = doc.createElement('div'), upcoming = doc.createElement('ol');
-    previous.className = 'macro-activity-previous'; current.className = 'macro-activity-current';
-    upcoming.className = 'macro-activity-upcoming';
-    panel.append(previous, current, upcoming); doc.body.append(panel);
-    let enabled = loadMacroActivity(), active = false, timer = null, lastMarkup = '';
-    let queue = null, timeline = [], observedIndex = -1;
+    const current = doc.createElement('div'); current.className = 'macro-activity-current';
+    panel.append(current); doc.body.append(panel);
+    let enabled = loadMacroActivity(), active = false, timer = null, entry = null, lastMarkup = '';
     const text = key => getText(key).split('\n')[0];
     function row(item) {
         const row = doc.createElement('div'); row.className = 'macro-activity-row';
@@ -116,34 +89,27 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         } else icon.textContent = doc.getElementById(item.icon)?.textContent.trim() || '◇';
         const body = doc.createElement('div'), title = doc.createElement('p');
         title.className = 'macro-activity-title'; title.textContent = text(item.label); body.append(title);
-        const detail = item.kind ? text(item.kind) : '';
-        if (detail) { const p = doc.createElement('p'); p.className = 'macro-activity-detail'; p.textContent = detail; body.append(p); }
         row.append(icon, body); return row;
     }
     function render() {
         const state = readState();
-        if (enabled && active && desktop.matches && queue !== state.queue) {
-            queue = state.queue;
-            timeline = macroActivityTimeline(queue, state.simulation);
-            observedIndex = -1;
-        }
-        const window = macroActivityWindow(timeline, Math.max(observedIndex, state.index - 1));
-        const place = enabled && active && desktop.matches && window.current && state.loaded && state.fullscreen
+        const place = enabled && active && desktop.matches && entry && state.loaded && state.fullscreen
             ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight}, state.fullscreen) : null;
         panel.hidden = !place;
         if (!place) return;
         Object.assign(panel.style, { left: place.left + 'px', top: place.top + 'px', width: place.width + 'px' });
         panel.dir = getLang() === 'he' ? 'rtl' : 'ltr';
-        const signature = JSON.stringify([window, getLang()]);
+        const signature = JSON.stringify([entry, getLang()]);
         if (signature === lastMarkup) return;
         lastMarkup = signature;
         panel.setAttribute('aria-label', text('macro_activity_setting'));
-        const listRow = item => { const li = doc.createElement('li'); li.append(row(item)); return li; };
-        previous.replaceChildren(...(window.previous ? [listRow(window.previous)] : []));
-        current.replaceChildren(row(window.current));
-        upcoming.replaceChildren(...window.upcoming.map(listRow));
+        current.replaceChildren(row(entry));
     }
     function sync() {
+        if (enabled && active && desktop.matches) {
+            const state = readState();
+            entry = latestMacroActivity(state.queue, state.index - 1, state.simulation);
+        }
         if (timer !== null) win.clearInterval(timer);
         timer = enabled && active && desktop.matches ? win.setInterval(render, 100) : null;
         render();
@@ -156,10 +122,11 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
             sync();
         },
         start() { active = true; sync(); },
-        stop() { active = false; queue = null; timeline = []; observedIndex = -1; lastMarkup = ''; sync(); },
-        record() {
+        stop() { active = false; entry = null; lastMarkup = ''; sync(); },
+        record(action) {
             if (!enabled || !active || !desktop.matches) return;
-            observedIndex = readState().index;
+            const next = describeMacroActivity(action, readState().simulation);
+            if (next) entry = next;
         }
     };
 }

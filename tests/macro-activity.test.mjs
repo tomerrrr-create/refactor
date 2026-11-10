@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {MACRO_ACTIVITY_STORAGE_KEY,loadMacroActivity,saveMacroActivity,describeMacroActivity,macroActivityPlacement,macroActivityTimeline,macroActivityWindow} from '../js/macro-activity.js';
+import {MACRO_ACTIVITY_STORAGE_KEY,loadMacroActivity,saveMacroActivity,describeMacroActivity,macroActivityPlacement,latestMacroActivity} from '../js/macro-activity.js';
 
 test('display preference is opt-in, device-local and resilient to unavailable storage',()=>{
  const map=new Map(),storage={getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)};
@@ -13,7 +13,7 @@ test('activity descriptions cover simulation and artwork actions, while hiding b
  for(const sim of ['gameOfLife','sandpile','gravitationalSort','brightnessEvo','islands','magnet','spiral','erosion','dla','turing','breathe','contour','cymatics','nudgeBrighter','nudgeDarker']){
   const action={eventName:'PLAY',details:`Armed: ${sim} | Rules: {}`},before=structuredClone(action);
   const item=describeMacroActivity(action);assert(item.label&&item.icon,sim);assert.deepEqual(action,before);
-  assert.equal(describeMacroActivity({...action,eventName:'STEP FORWARD'}).kind,'macro_activity_step');
+  assert.equal(describeMacroActivity({...action,eventName:'STEP FORWARD'}).label,item.label);
  }
  for(const eventName of ['INIT_STATE','HISTORY_ACTION','HISTORY_SETTINGS','BRUSH_START','BRUSH_END','WIND_END'])assert.equal(describeMacroActivity({eventName,details:'{}'}),null);
  assert.equal(describeMacroActivity({eventName:'DRAW_STROKE',details:'[]'}).label,'macro_activity_draw');
@@ -34,7 +34,7 @@ test('panel uses only free space left of the board and keeps its fullscreen gall
  const place=macroActivityPlacement(board,viewport,true);assert(place);assert(place.left>=16);assert(place.left+place.width<=board.left-74);assert.equal(place.width,224);assert.deepEqual(board,before);
  assert.equal(macroActivityPlacement({...board,left:200},viewport,true),null);
  assert.equal(macroActivityPlacement(board,{width:900,height:1000}),null);
- assert.equal(macroActivityPlacement(board,{width:1700,height:240}),null);
+ assert.equal(macroActivityPlacement(board,{width:1700,height:90}),null);
 });
 test('all declared labels and icons exist, and playback presentation has no logger or history writer',()=>{
  const source=readFileSync(new URL('../js/macro-activity.js',import.meta.url),'utf8'),html=readFileSync(new URL('../index.html',import.meta.url),'utf8'),i18n=readFileSync(new URL('../js/i18n.js',import.meta.url),'utf8');
@@ -43,25 +43,17 @@ test('all declared labels and icons exist, and playback presentation has no logg
  assert(!/logArtEvent|pushHistory|executeMacroAction\(/.test(source));
 });
 
-test('past/current/future window skips hidden actions and collapses packets without modifying the queue',()=>{
+test('current action recovery reads only executed commands and skips hidden events',()=>{
  const event=(eventName,details='{}')=>Object.freeze({eventName,details});
  const queue=Object.freeze([event('PLAY','Armed: cymatics | Rules: {}'),event('PAUSE'),event('EVOLUTION_TUNING'),
   event('BRUSH_START'),...Array.from({length:1000},()=>event('DRAW_STROKE','[]')),event('BRUSH_END'),
   event('SIMULATION_RULES'),event('PLAY','Armed: gameOfLife | Rules: {}'),event('PAUSE'),event('Invert Colors')]);
- const before=JSON.stringify(queue),timeline=macroActivityTimeline(queue);
- assert.deepEqual(timeline.map(x=>x.item.label),['help_cymatics','macro_activity_draw','help_gameOfLife','macro_activity_invert']);
- let window=macroActivityWindow(timeline,0);assert.equal(window.previous,null);assert.equal(window.current.label,'help_cymatics');
- assert.deepEqual(window.upcoming.map(x=>x.label),['macro_activity_draw','help_gameOfLife']);
- window=macroActivityWindow(timeline,500);assert.equal(window.previous.label,'help_cymatics');assert.equal(window.current.label,'macro_activity_draw');
- assert.deepEqual(window.upcoming.map(x=>x.label),['help_gameOfLife','macro_activity_invert']);
- window=macroActivityWindow(timeline,queue.length-1);assert.equal(window.previous.label,'help_gameOfLife');assert.deepEqual(window.upcoming,[]);
- assert.equal(macroActivityWindow(timeline,-1).current,null);assert.deepEqual(macroActivityWindow([],0),{previous:null,current:null,upcoming:[]});
+ const before=JSON.stringify(queue);
+ assert.equal(latestMacroActivity(queue,0).label,'help_cymatics');
+ assert.equal(latestMacroActivity(queue,2).label,'help_cymatics','hidden actions do not replace the current one');
+ assert.equal(latestMacroActivity(queue,500).label,'macro_activity_draw');
+ assert.equal(latestMacroActivity(queue,queue.length-2).label,'help_gameOfLife');
+ assert.equal(latestMacroActivity(queue,queue.length-1).label,'macro_activity_invert');
+ assert.equal(latestMacroActivity(queue,-1),null);assert.equal(latestMacroActivity([],0),null);
  assert.equal(JSON.stringify(queue),before);
-});
-test('adjacent separate strokes and wind batches remain separate preview actions',()=>{
- const queue=['BRUSH_START','DRAW_STROKE','DRAW_STROKE','BRUSH_END','BRUSH_START','DRAW_STROKE','BRUSH_END',
-  'WIND_WAVE','WIND_WAVE','WIND_END','WIND_WAVE','WIND_END'].map(eventName=>({eventName,details:'{}'}));
- assert.deepEqual(macroActivityTimeline(queue).map(x=>x.item.label),['macro_activity_draw','macro_activity_draw','macro_activity_wind','macro_activity_wind']);
- const live=['BRUSH_CHECKPOINT','BRUSH_CONTINUE','DRAW_STROKE','DRAW_STROKE','BRUSH_CHECKPOINT','BRUSH_CONTINUE','DRAW_STROKE'].map(eventName=>({eventName,details:'{}'}));
- assert.equal(macroActivityTimeline(live).length,2);
 });
