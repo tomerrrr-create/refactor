@@ -80,7 +80,7 @@ Select an evolution, then use **Single step** for one generation or **Play/Pause
 
 Tapping a different ordinary evolution ends the old run and immediately starts the new one on the same board, with its own generation counter and history segment. Cycling the current evolution changes its active mode without restarting and skips Off during playback. When paused, Off remains part of the cycle and disarms it. Switching into or out of **Breathe** requires manual Pause; cycling Breathe itself pauses it. Breathe animates rendering rather than discrete generations, so Single step is unavailable.
 
-Button cycles intentionally expose a subset of the modes in settings. Magnet cycles Cosmic → Regular → Time, with Expand available in settings. Spiral cycles Pinwheel → Turbine → Circle, with other modes in settings. Details and compatibility rules are in [Evolution engines](#6-evolution-engines).
+Button cycles intentionally expose a subset of the modes in settings. Magnet cycles Cosmic → Regular → Time, with Expand available in settings. Spiral cycles Turbine 2 → Pinwheel → Turbine → Circle, with other modes in settings. Details and compatibility rules are in [Evolution engines](#6-evolution-engines).
 
 Resonance uses one fixed audio-waveform icon made of vertical amplitude strokes. A small badge at the physical upper-right identifies the selected map: a circle for Circular, crossed lines for Interference, and distinct diagonal, grid, cloud and center-dot circle marks for the four settings-only maps. The badge stays upper-right in RTL and is included in the drawer editor and hold explanation. The human toolbar shortcuts are **Circular → Interference → Off** while paused and **Circular ↔ Interference** while running. Activating a shortcut starts at Circular, using its remembered frequency/Strength; a saved settings-only map remains selectable/restorable, and the next cycle tap returns to Circular. Cosmological empathy remains available in settings, projects and recorded replay. No field calculation, map ID, legacy fallback or recording schema changes.
 
@@ -474,16 +474,16 @@ Most modes calculate a target using angle and distance from the center, then swa
 
 | Internal ID | English label | Behavior / exposure |
 | --- | --- | --- |
-| `b` | Pinwheel | Inward neighbor flow with a small angular offset; first button mode |
-| `left` | Turbine | Inward spinning flow with stronger angular variation; second button mode |
-| `turbine2` | Turbine 2 | Separate experimental smoother flow; settings only, beside the original Turbine |
-| `black_hole` | Circle | Inward swaps plus comb-sort passes over exact Euclidean radial order; third button mode |
+| `turbine2` | Turbine 2 | Smoother flow; first button mode and also available in settings |
+| `b` | Pinwheel | Inward neighbor flow with a small angular offset; second button mode |
+| `left` | Turbine | Inward spinning flow with stronger angular variation; third button mode |
+| `black_hole` | Circle | Inward swaps plus comb-sort passes over exact Euclidean radial order; fourth button mode |
 | `radial` | Diamond | Inward targeting without spin; modal only |
 | `down` | Hexagon | Inward targeting with its own spin parameters; modal only |
 | `a` | Experiment A | Cached radial order with fixed-stride bidirectional passes; modal only |
 | `vortex` | Vortex | Turbulent angular/radial targeting; modal only |
 
-Turbine 2 is implemented separately in `js/simulations/spiral-turbine2.js`; the original Turbine and the Pinwheel → Turbine → Circle button cycle are unchanged. It samples cardinal, diagonal and stay probabilities from the continuous target vector, compensating for diagonal step length. A fresh Fisher–Yates traversal and a moved-cell mask permit at most one swap per tile per generation. Angular/radial eddies are weaker and slower than the original Turbine. Swaps preserve all existing tile/color values and protect gold. Geometry and scratch buffers are cached only by size; there is no hidden convergence state tied to a board. The method ID round-trips through settings/profiles, artwork snapshots, Undo/Redo and recorded rules. Like the original Turbine, it uses `Math.random` and wall-clock phase; recipes preserve its operations/rules but do not promise pixel-identical stochastic playback.
+Turbine 2 is implemented separately in `js/simulations/spiral-turbine2.js`; the original Turbine engine is unchanged. The button enters Turbine 2 first, then cycles Pinwheel → original Turbine → Circle. Paused cycling includes Off; live cycling wraps to Turbine 2 without stopping or resetting generations. Historical recordings keep their explicit mode IDs and legacy arming defaults. It samples cardinal, diagonal and stay probabilities from the continuous target vector, compensating for diagonal step length. A fresh Fisher–Yates traversal and a moved-cell mask permit at most one swap per tile per generation. Angular/radial eddies are weaker and slower than the original Turbine. Swaps preserve all existing tile/color values and protect gold. Geometry and scratch buffers are cached only by size; there is no hidden convergence state tied to a board. The method ID round-trips through settings/profiles, artwork snapshots, Undo/Redo and recorded rules. Like the original Turbine, it uses `Math.random` and wall-clock phase; recipes preserve its operations/rules but do not promise pixel-identical stochastic playback.
 
 Circle caches geometry by board size and convergence progress by board reference. It preserves colors through swaps, can swap nonadjacent positions in its radial passes, and restarts convergence after edits or palette remapping. Its swaps include gold tiles. Experiment A's active branch is not the older commented-out time-budget implementation. Preserve these IDs when changing displayed names.
 

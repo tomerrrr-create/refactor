@@ -51,7 +51,23 @@ try{for(const config of [{width:1440,height:1000,lang:'en'},{width:390,height:84
  // Explicit profile Save is required for reopening, as with the original mode.
  await page.evaluate(()=>turbineTest.tech());if(!(await page.locator('#profileActions').isVisible()))await page.locator('[data-profile-dot="0"]').click();await page.locator('#btnProfileSave').click();await boot(true);assert.equal((await state()).method,'turbine2');
  await open();assert(await option.evaluate(e=>e.classList.contains('active')),'saved experiment is selected after reload');await page.locator('#btnSpiralSettingsCancel').click();await page.waitForTimeout(350);
- // The three standard main-button choices remain unchanged; the experiment is modal-only.
- await page.evaluate(()=>turbineTest.controls());if(!(await page.locator('#btnSpiral').isVisible()))await page.locator('#btnEvolutionDrawerInternal').click();await page.locator('#btnSpiral').click();assert.equal((await state()).method,'b');await page.locator('#btnSpiral').click();assert.equal((await state()).method,'left');await page.locator('#btnSpiral').click();assert.equal((await state()).method,'black_hole');
+ // Both initial entry and paused cycling follow the new requested order.
+ await page.evaluate(()=>turbineTest.controls());if(!(await page.locator('#btnSpiral').isVisible()))await page.locator('#btnEvolutionDrawerInternal').click();
+ for(const expected of ['turbine2','b','left','black_hole','off']){
+  await page.locator('#btnSpiral').click();assert.equal((await state()).mode,expected);
+  if(expected!=='off')assert.equal((await state()).method,expected);
+ }
+ // Live cycling wraps to Turbine 2, skips Off and retains the running generation clock.
+ await page.evaluate(()=>turbineTest.setup());await page.evaluate(()=>turbineTest.controls());
+ if(!(await page.locator('#btnSpiral').isVisible()))await page.locator('#btnEvolutionDrawerInternal').click();
+ await page.locator('#btnSpiral').click();assert.equal((await state()).method,'turbine2');
+ await page.locator('#btnPlayPauseLife').click();await page.waitForFunction(()=>turbineTest.state().gen>=2);
+ for(const expected of ['b','left','black_hole','turbine2']){
+  const generation=(await state()).gen;await page.locator('#btnSpiral').click();const live=await state();
+  assert.equal(live.mode,expected);assert.equal(live.method,expected);assert(live.playing);assert(live.gen>=generation);
+ }
+ await page.locator('#btnPlayPauseLife').click();const cycleRecipe=await page.evaluate(()=>turbineTest.recipe());
+ assert(cycleRecipe.split('\n').some(line=>/\[GEN:\d+\] Spiral Mode Changed -> turbine2/.test(line)));
+ await replay(cycleRecipe);assert.equal((await state()).mode,'turbine2');
  assert.deepEqual(errors,[]);console.log('PASS',JSON.stringify(config));await context.close();
 }}finally{await browser.close();await new Promise(r=>server.close(r));}

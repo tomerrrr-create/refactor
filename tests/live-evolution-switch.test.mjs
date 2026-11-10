@@ -6,6 +6,7 @@ import { createCracksState } from '../js/simulations/cracks.js';
 import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+const spiralSequence = JSON.parse(source.match(/const SPIRAL_MODE_SEQUENCE = (\[[^\]]+\])/)[1].replaceAll("'", '"'));
 const section = (from, to) => source.slice(source.indexOf(from), source.indexOf(to, source.indexOf(from)));
 const simulations = {
     spiral: 'btnSpiral', gravitationalSort: 'btnGravitationalSort', brightnessEvo: 'btnBrightnessEvo',
@@ -26,7 +27,7 @@ function harness() {
         turingState: null, spiralRules: {method: 'b'}, gravitationalSortRules: {direction: 'up'},
         magnetRules: {}, erosionRules: {mode: 'legacy'}, contourRules: {}, turingRules: {},
         evolutionTuning: {islands: {activity: .05}, brightnessEvo: {}, dla: {}}, dlaRules: {},
-        gameOfLifeRules: {}, gameOfLifeCycle: [{}, {}, {}], chiFlowCycle: [{}, {}, {}], SPIRAL_MODE_SEQUENCE: ['off','b','left','black_hole'],
+        gameOfLifeRules: {}, gameOfLifeCycle: [{}, {}, {}], chiFlowCycle: [{}, {}, {}], SPIRAL_MODE_SEQUENCE: spiralSequence,
         isMacroPlaying: false, lastNudgeTime: 0, performance: {now: () => 100},
         getCurrentState: () => ({board: c.boardState.map(t => ({...t}))}),
         areStatesEqual: (a,b) => JSON.stringify(a) === JSON.stringify(b),
@@ -159,4 +160,11 @@ test('Nudge arms and cycles without paint; live cycling keeps the same generatio
  }
  assert.equal(c.artRecipeLog.filter(line=>line.includes(' PAUSE ->')).length,0);
  assert.match(c.artRecipeLog.at(-1),/\[GEN:19\] Nudge Mode Changed -> nudgeDarker/);
+});
+
+test('Spiral button starts at Turbine 2, follows the requested order live, and preserves legacy arming',()=>{
+ const c=harness();select(c,'spiral');assert.equal(c.spiralMode,'turbine2');assert.equal(c.spiralRules.method,'turbine2');
+ c.togglePlayPauseLife();c.currentGenerationCount=23;
+ for(const mode of ['b','left','black_hole','turbine2']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
+ const legacy=harness();legacy.isExecutingMacroCommand=true;legacy.armSimulation('spiral');assert.equal(legacy.spiralMode,'b');assert.equal(legacy.spiralRules.method,'b');
 });

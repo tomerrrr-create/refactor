@@ -369,7 +369,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'black_hole'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'turbine2', 'b', 'left', 'black_hole'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -3962,7 +3962,8 @@ const sequence = SPIRAL_MODE_SEQUENCE;
 // const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
 
 
-    spiralMode = nextEvolutionMode(spiralMode, sequence);
+    const nextMode = nextEvolutionMode(spiralMode, sequence);
+    spiralMode = nextMode;
 
     if (spiralMode !== 'off') {
         spiralRules.method = spiralMode;
@@ -3972,6 +3973,9 @@ const sequence = SPIRAL_MODE_SEQUENCE;
 
     if (oldMode === 'off' && spiralMode !== 'off') {
         armSimulation('spiral');
+        // Arming retains the legacy default; the button applies its explicit choice.
+        spiralMode = nextMode;
+        spiralRules.method = nextMode;
     } else if (oldMode !== 'off' && spiralMode === 'off') {
         if (armedSimulation === 'spiral') {
             armSimulation(null);
