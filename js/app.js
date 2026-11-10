@@ -2621,9 +2621,12 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
       }
 
       function toggleSimMode() {
+        if (isLifePlaying) return;
         const duration = 500;
         dom.controlsContainer.style.opacity = '0';
         setTimeout(() => {
+            // Playback may start while the panel transition is pending.
+            if (isLifePlaying) { dom.controlsContainer.style.opacity = '1'; return; }
             isSimModeActive = !isSimModeActive;
             dom.controlsContainer.classList.toggle('sim-mode-active', isSimModeActive);
             if (isSimModeActive) {
@@ -5861,7 +5864,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 if (!isSimModeActive) toggleSimMode();
                 prepareBoardForSimMode();
             },
-            canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
+            canInteract: () => !isBreathing && !isLifePlaying, beforeStart: hideLongPressDisplay,
             holdMs: C.LONG_PRESS_SHOW_MS
         });
         // A swipe opens settings for the selected evolution, including during playback.
