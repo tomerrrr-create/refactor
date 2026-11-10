@@ -2477,7 +2477,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; text-align:start; }
 #cymaticsSettingsDialog .cymatics-phase input { order:1; width:18px; height:18px; margin:0; flex-shrink:0; accent-color:var(--gold); }
 
-/* One stable audio waveform; only the small upper-right map badge changes. */
+/* One stable tuning fork; only the small upper-right map badge changes. */
 #btnCymatics [data-cymatics-map-mark] { display:none; }
 #btnCymatics.cymatics-diagonal [data-cymatics-map-mark="diagonal"],
 #btnCymatics.cymatics-grid [data-cymatics-map-mark="grid"],
