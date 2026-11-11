@@ -52,7 +52,16 @@ export function latestMacroActivity(queue, index, simulation) {
     }
     return null;
 }
-export function macroActivityPlacement(board, viewport, fullscreen = false) {
+export function macroActivityPlacement(board, viewport, fullscreen = false, below = false) {
+    if (below) {
+        const width = Math.min(224, board.width, viewport.width - 32), height = 72;
+        const gap = viewport.width >= 768 ? 74 : 20;
+        const top = board.top + board.height + gap;
+        const left = board.left + (board.width - width) / 2;
+        if (!fullscreen || board.width <= 0 || width < 188 || left < 16 || left + width > viewport.width - 16 ||
+            top + height > viewport.height - Math.max(16, viewport.safeBottom || 0)) return null;
+        return {left, top, width};
+    }
     const gap = fullscreen ? 74 : 28; // Leave the fullscreen gallery frame untouched.
     const width = Math.min(224, board.left - gap - 16), height = 72;
     if (viewport.width < 1024 || width < 188 || viewport.height < height + 32 || board.width <= 0) return null;
@@ -159,8 +168,9 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     }
     function render() {
         const state = readState();
-        const place = enabled && active && desktop.matches && entry && state.loaded && state.fullscreen
-            ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight}, state.fullscreen) : null;
+        const place = enabled && active && entry && state.loaded && state.fullscreen
+            ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight, safeBottom: parseFloat(win.getComputedStyle(panel).getPropertyValue('--activity-safe-bottom')) || 0}, state.fullscreen, !desktop.matches) : null;
+        panel.dataset.placement = desktop.matches ? 'left' : 'below';
         panel.hidden = !place;
         if (!place) { fade.clear(); lastMarkup = ''; return; }
         Object.assign(panel.style, { left: place.left + 'px', top: place.top + 'px', width: place.width + 'px' });
@@ -179,12 +189,12 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         fade.show(row(displayEntry, iconSnapshot));
     }
     function sync() {
-        if (enabled && active && desktop.matches) {
+        if (enabled && active) {
             const state = readState();
             entry = latestMacroActivity(state.queue, state.index - 1, state.simulation);
         }
         if (timer !== null) win.clearInterval(timer);
-        timer = enabled && active && desktop.matches ? win.setInterval(render, 100) : null;
+        timer = enabled && active ? win.setInterval(render, 100) : null;
         render();
     }
     desktop.addEventListener('change', sync);
@@ -197,7 +207,7 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         start() { active = true; sync(); },
         stop() { active = false; entry = null; lastMarkup = ''; sync(); },
         record(action) {
-            if (!enabled || !active || !desktop.matches) return;
+            if (!enabled || !active) return;
             const next = describeMacroActivity(action, readState().simulation);
             if (next) entry = next;
         }

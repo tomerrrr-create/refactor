@@ -1,4 +1,4 @@
-// Real TXT playback: opt-in desktop fullscreen activity never changes board geometry or replay.
+// Real TXT playback: opt-in fullscreen activity never changes board geometry or replay.
 import {readFile,mkdir} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {fileURLToPath} from 'node:url';
@@ -26,8 +26,9 @@ const recipe=`[00:00:00.000] INIT_STATE -> {"recipeVersion":2,"n":9,"pal":0,"sor
 [00:00:06.050] PLAY -> Armed: nudgeBrighter | Sort: reversed | Rules: {"nudgeTimingVersion":1,"intervalMs":0}
 [00:00:09.050] [GEN:180] PAUSE -> ---
 [00:00:09.060] Invert Colors -> Sort: reversed`;
-try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:1440,height:900,lang:'he',desktop:true},{width:390,height:844,lang:'ru',desktop:false},{width:1180,height:820,lang:'nl',desktop:false,touch:true}]){
+try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:1440,height:900,lang:'he',desktop:true},{width:390,height:844,lang:'ru',desktop:false},{width:390,height:844,lang:'he',desktop:false},{width:1180,height:820,lang:'nl',desktop:false,touch:true}]){
  if(process.env.ACTIVITY_LANG&&config.lang!==process.env.ACTIVITY_LANG)continue;
+ if(process.env.ACTIVITY_MOBILE_ONLY&&config.desktop)continue;
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:!config.desktop,hasTouch:!config.desktop,reducedMotion:config.lang==='he'?'reduce':'no-preference',serviceWorkers:'block'});
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{errors.push(d.message());await d.dismiss();});
@@ -45,7 +46,7 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
  if(config.lang==='he')await page.evaluate(()=>activityTest.zoom(90));
  await start();assert.equal(await panel.isVisible(),false,'normal board mode stays uncluttered');
  await page.locator('#boardCanvas').click();await page.waitForFunction(()=>activityTest.state().fullscreen&&!activityTest.state().animating);
- if(config.desktop){
+ if(config.desktop||config.width<768){
   await panel.waitFor({state:'visible'});
   const geometry=await page.locator('#board').boundingBox();
   const first=await panel.textContent();assert(first.length>0);
@@ -58,15 +59,19 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
   await page.waitForFunction(()=>activityTest.state().gen>=100);assert((await page.evaluate(()=>activityTest.state().gen))>generation,'the simulation continues advancing');
   assert.equal(await panel.textContent(),first,'settings events and advancing generations do not replace or rewrite the display');
   assert.equal(await panel.locator('.macro-activity-detail').count(),0,'only action name and icon, without extra captions');
-  const side=await panel.boundingBox();assert(side.x+side.width<=geometry.x-70,'panel clears the left gallery frame');assert(side.x>=0);
+  const side=await panel.boundingBox();
+  if(config.desktop)assert(side.x+side.width<=geometry.x-70,'panel clears the left gallery frame');
+  else {assert(side.y>=geometry.y+geometry.height+20,'mobile panel is below the board');assert(Math.abs(side.x+side.width/2-geometry.x-geometry.width/2)<1,'mobile panel is centered');assert(side.y+side.height<=config.height-16,'panel clears the bottom edge');}
+  assert(side.x>=0);
   await page.evaluate(()=>activityTest.tech());await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();await page.waitForTimeout(150);
   assert.equal(await panel.isVisible(),false);assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'off never resizes or moves board');
   if(config.lang==='en')await page.waitForFunction(()=>activityTest.state().simulation==='nudgeBrighter'&&activityTest.state().gen>=5);
   await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en'){assert((await panel.locator('.macro-activity-current').textContent()).includes('Nudge'),'enabling mid-play shows the latest action');assert(!/Pause|Settings changed|Generation/.test(await panel.textContent()),'Pause and settings are excluded when recovering the current action');}assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
   await page.screenshot({path:path.join(artifacts,config.lang+'-fullscreen.png')});
-  await page.setViewportSize({width:1024,height:1000});await page.waitForTimeout(150);assert.equal(await panel.isVisible(),false,'insufficient left space hides it');
+  await page.setViewportSize(config.desktop?{width:1024,height:1000}:{width:844,height:390});await page.waitForTimeout(300);assert.equal(await panel.isVisible(),false,'insufficient free space hides it');
+  const cramped=await page.locator('#board').boundingBox();await page.evaluate(()=>activityTest.tech());await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();assert.deepEqual(await page.locator('#board').boundingBox(),cramped,'hidden activity never changes board geometry');await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();
   await page.setViewportSize({width:config.width,height:config.height});await panel.waitFor({state:'visible'});
- }else{await page.waitForTimeout(150);assert.equal(await panel.isVisible(),false,'mobile/coarse pointer never shows panel');}
+ }else{await page.waitForTimeout(150);assert.equal(await panel.isVisible(),false,'tablet without sufficient space below hides panel');}
  const replayed=await finish();assert.deepEqual(replayed,baseline,'display does not change replayed artwork');assert.deepEqual(await recipeLog(),baselineLog,'display does not change recorded playback commands');assert.equal(await panel.isVisible(),false,'completion cleans panel');
  // A stopped replacement file also clears presentation immediately.
  await start();await page.locator('#boardCanvas').click();await page.waitForFunction(()=>activityTest.state().fullscreen&&!activityTest.state().animating);

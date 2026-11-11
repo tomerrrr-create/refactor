@@ -2584,6 +2584,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .macro-activity-current { width:100%; height:42px; display:grid; align-items:center; }
 .macro-activity-current > .macro-activity-row { grid-area:1 / 1; }
 .macro-activity-option { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-@media (max-width:1023px), (hover:none), (pointer:coarse) { .macro-activity { display:none !important; } }
+.macro-activity { --activity-safe-bottom:env(safe-area-inset-bottom, 0px); }
+.macro-activity[data-placement="below"] .macro-activity-row { justify-content:center; }
 
 .macro-activity-icon .glyph { font-size:24px; }

@@ -9,7 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  macro_activity_setting: {"en": "Macro activity · desktop", "he": "פעולות מקרו · מחשב", "ru": "Действия макроса · компьютер", "nl": "Macroactiviteit · desktop"},
+  macro_activity_setting: {"en": "Macro activity", "he": "פעולות מקרו", "ru": "Действия макроса", "nl": "Macroactiviteit"},
   macro_activity_title: {"en": "MACRO · NOW", "he": "מקרו · עכשיו", "ru": "МАКРОС · СЕЙЧАС", "nl": "MACRO · NU"},
   macro_activity_generation: {"en": "Generation {n}", "he": "דור {n}", "ru": "Поколение {n}", "nl": "Generatie {n}"},
   macro_activity_generations: {"en": "Generation {n} of {total}", "he": "דור {n} מתוך {total}", "ru": "Поколение {n} из {total}", "nl": "Generatie {n} van {total}"},
