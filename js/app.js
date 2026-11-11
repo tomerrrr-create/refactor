@@ -370,7 +370,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'black_hole'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'black_hole'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -541,7 +541,7 @@ k: tileState.k,
         }
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'radial', 'down', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
@@ -3968,12 +3968,6 @@ function updateSpiralButtonUI() {
 function cycleSpiralMode() {
     const oldMode = armedSimulation === 'spiral' ? spiralMode : 'off';
 const sequence = SPIRAL_MODE_SEQUENCE;
-
-
-// original with all button
-//const sequence = ['off', 'b', 'vortex',  'left', 'a', 'radial', 'down', ];
-
-// const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
 
 
     const nextMode = nextEvolutionMode(oldMode, sequence);

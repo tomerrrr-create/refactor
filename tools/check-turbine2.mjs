@@ -36,7 +36,7 @@ try{for(const config of [{width:1440,height:1000,lang:'en'},{width:390,height:84
   await tap('#btnGravitationalSort');assert.equal((await state()).mode,mode);assert.deepEqual(await icon(),[id]);
  }
  await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
- for(const mode of ['b','left','black_hole','off']){await tap('#btnSpiral');assert.equal((await state()).spiral,mode);}
+ for(const mode of ['b','left','radial','down','black_hole','off']){await tap('#btnSpiral');assert.equal((await state()).spiral,mode);}
  await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
  await tap('#btnGravitationalSort');await choose('turbine2',27,false);assert.deepEqual((await state()).gravity,{direction:'up',strength:.6});
  await choose('turbine2',60);assert.equal((await state()).mode,'turbine2');assert.deepEqual(await icon(),['iconGsTurbine2']);

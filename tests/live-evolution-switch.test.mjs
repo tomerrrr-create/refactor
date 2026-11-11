@@ -165,6 +165,6 @@ test('Nudge arms and cycles without paint; live cycling keeps the same generatio
 test('Spiral button starts at Pinwheel, follows the requested order live, and preserves legacy arming',()=>{
  const c=harness();select(c,'spiral');assert.equal(c.spiralMode,'b');assert.equal(c.spiralRules.method,'b');
  c.togglePlayPauseLife();c.currentGenerationCount=23;
- for(const mode of ['left','black_hole','b']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
+ for(const mode of ['left','radial','down','black_hole','b']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
  const legacy=harness();legacy.isExecutingMacroCommand=true;legacy.armSimulation('spiral');assert.equal(legacy.spiralMode,'b');assert.equal(legacy.spiralRules.method,'b');
 });
