@@ -9,6 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  remember_evolution_modes: {en:"Remember simulation modes",he:"זכור מצב סימולציה אחרון",ru:"Запоминать режимы симуляций",nl:"Simulatiemodi onthouden"},
   macro_activity_setting: {"en": "Macro activity", "he": "פעולות מקרו", "ru": "Действия макроса", "nl": "Macroactiviteit"},
   macro_activity_title: {"en": "MACRO · NOW", "he": "מקרו · עכשיו", "ru": "МАКРОС · СЕЙЧАС", "nl": "MACRO · NU"},
   macro_activity_generation: {"en": "Generation {n}", "he": "דור {n}", "ru": "Поколение {n}", "nl": "Generatie {n}"},
