@@ -1,4 +1,4 @@
-import {createEvolutionModeMemory} from './evolution-mode-memory.js';
+import {createEvolutionModeMemory,defaultEvolutionCycleMode} from './evolution-mode-memory.js';
 import { createMacroActivity } from './macro-activity.js';
 import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour-action-settings.js';
 import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_FREQUENCIES,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
@@ -1854,6 +1854,35 @@ function restoreCycleMode(simulation, mode) {
         case 'nudgeBrighter':case 'nudgeDarker':armedSimulation=mode;break;
     }
 }
+function resetEvolutionCycle(simulation) {
+    if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
+    const mode=defaultEvolutionCycleMode(simulation);
+    if(mode===undefined)return false;
+    const selected=armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation());
+    cycleMemory.remember(simulation,mode);
+    if(!selected){
+        // Clouds is settings-only and normally survives re-entry. An explicit
+        // reset must also replace that inactive preference with Circular.
+        if(simulation==='cymatics'){
+            const selectedMap=selectCymaticsMap(getCymaticsRules(),mode,cymaticsFrequencies,cymaticsStrengths);
+            cymaticsRules=selectedMap.rules;cymaticsFrequencies=selectedMap.frequencies;cymaticsStrengths=selectedMap.strengths;
+            persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();
+        }
+        refreshCycleIcons();return true;
+    }
+    cycleMemoryAfterReplay=false;
+    if(currentCycleMode(armedSimulation)!==mode){
+        // Breathe's existing mode changes require Pause. Other active engines
+        // keep their current generation clock, just like normal live cycling.
+        if(simulation==='breathe'&&isLifePlaying)pauseLife();
+        const live=isLifePlaying;
+        restoreCycleMode(simulation,mode);
+        if(isNudgeSimulation(simulation))window.logArtEvent('Nudge Mode Changed',mode);
+        else if(!live||!['cymatics','contour'].includes(simulation))window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+    }
+    rememberCurrentCycle();refreshCycleIcons();return true;
+}
+
 function cycleMemoryTap(simulation, onTap) {
     rememberCurrentCycle();
     const remembered=cycleMemory.recall(simulation);
@@ -6070,7 +6099,7 @@ dom.btnWind.addEventListener('keydown', event => {
         bindPickerGestures(dom.btnContoursAction, {
             onTap: () => applyContoursOnce(), onOpen: modals.openContourSettingsModal,
             onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
-            onHold: () => evolutionExplanation.show(dom.btnContoursAction, 'contourAction'),
+            onExtendedHold: () => evolutionExplanation.show(dom.btnContoursAction, 'contourAction'),
             canInteract: () => !isBreathing && !isMacroLoaded,
             beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
         });
@@ -6083,7 +6112,8 @@ dom.btnWind.addEventListener('keydown', event => {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
                 onSwipeSide: ['gameOfLife','sandpile'].includes(simulation) ? direction => modals.browseEvolutionPreset(simulation,direction) : undefined,
                 canSwipeSide: () => contextForModals.canBrowseEvolutionPreset(simulation) && !evolutionExplanation.isOpen(),
-                onHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
+                onHold: () => resetEvolutionCycle(simulation),
+                onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
