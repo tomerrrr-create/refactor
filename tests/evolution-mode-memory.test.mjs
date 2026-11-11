@@ -31,7 +31,7 @@ test('explicit Off restarts the cycle while leaving for another simulation recal
  const memory=createEvolutionModeMemory({storage:storage()});memory.setEnabled(true);
  memory.remember('gravitationalSort','right');assert.equal(memory.entry('gravitationalSort'),'right','handoff recalls last mode');
  memory.remember('gravitationalSort','black_hole');memory.finishCycle('gravitationalSort');
- assert.equal(memory.recall('gravitationalSort'),'black_hole','inactive icon retains last mode');
+ assert.equal(memory.recall('gravitationalSort'),'black_hole','stored history remains available separately from the entry preview');
  assert.equal(memory.entry('gravitationalSort'),'up','Off queues the first mode');
  assert.equal(memory.entry('gravitationalSort'),'up','reading the entry does not consume it');
  memory.enterCycle('gravitationalSort');memory.remember('gravitationalSort','right');assert.equal(memory.entry('gravitationalSort'),'right');

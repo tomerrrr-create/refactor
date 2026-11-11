@@ -1102,7 +1102,7 @@ function applyNudgeLogic(direction) {
 
       function updateNudgeButtonUI() {
           const active = isNudgeSimulation();
-          const darker = armedSimulation === 'nudgeDarker'||(!active&&typeof cycleMemory!=='undefined'&&cycleMemory.recall('nudgeBrighter')==='nudgeDarker');
+          const darker = armedSimulation === 'nudgeDarker'||(!active&&typeof cycleMemory!=='undefined'&&cycleMemory.entry('nudgeBrighter')==='nudgeDarker');
           const button = dom.btnNudgeBrighter;
           button.classList.toggle('simulation-active', active);
           button.setAttribute('aria-pressed', String(active));
@@ -3008,6 +3008,7 @@ function cycleWindEffect() {
     if (nextWindEffect(windSettings.mode) === 'ripple') {
         setWindMode(false);
         if(typeof cycleMemory!=='undefined')cycleMemory.finishCycle('wind');
+        updateWindButtonUI();
         return;
     }
     windPainter?.stop();
@@ -3369,7 +3370,7 @@ function updateWindButtonUI() {
         dom.btnWind.classList.toggle('wind-active', windMode);
         dom.btnWind.setAttribute('aria-pressed', String(windMode));
         dom.btnWind.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp');
-        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : (typeof cycleMemory!=='undefined'?cycleMemory.recall('wind'):undefined)??'ripple'));
+        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : (typeof cycleMemory!=='undefined'?cycleMemory.entry('wind'):undefined)??'ripple'));
         dom.btnWind.dataset.windMode = windMode ? windSettings.mode : 'off';
         dom.btnWind.title = `${getText(windMode ? 'wind_mode_' + windSettings.mode : 'erosion_off')} — ${getText('tooltip_wind_cycle')}`;
         dom.btnWind.setAttribute('aria-label', dom.btnWind.title);
@@ -3476,7 +3477,7 @@ function getTilesInRadius(centerIndex, size) {
       function updateSymmetryUI() { updateSymmetryButtonUI(); }
       
 function updateBrightnessEvoButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='brightnessEvo'?cycleMemory.recall('brightnessEvo'):undefined)??brightnessEvoMode;
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='brightnessEvo'?cycleMemory.entry('brightnessEvo'):undefined)??brightnessEvoMode;
     dom.btnBrightnessEvo.classList.remove('mode-brightness', 'mode-contrast', 'simulation-active');
 
     if (displayMode === 'brightness') {
@@ -3508,7 +3509,7 @@ function getGameOfLifeRecordingRules() {
 
 function updateGameOfLifeButtonUI() {
     const active = armedSimulation === 'gameOfLife';
-    const remembered=typeof cycleMemory!=='undefined'?cycleMemory.recall('gameOfLife'):undefined;
+    const remembered=typeof cycleMemory!=='undefined'?cycleMemory.entry('gameOfLife'):undefined;
     const displayMode=active?gameOfLifeMode:remembered??gameOfLifeMode;
     dom.btnGameOfLife.classList.toggle('simulation-active', active);
     const stars = (active||remembered!==undefined) && displayMode !== 'personal' ? (displayMode === 'shuffle' ? 1 : 2) : 0;
@@ -3600,7 +3601,7 @@ function getChiFlowRecordingRules() {
 
 function updateChiFlowButtonUI() {
     const active = armedSimulation === 'sandpile';
-    const remembered=typeof cycleMemory!=='undefined'?cycleMemory.recall('sandpile'):undefined;
+    const remembered=typeof cycleMemory!=='undefined'?cycleMemory.entry('sandpile'):undefined;
     const displayMode=active?chiFlowMode:remembered??chiFlowMode;
     dom.btnSandpile.classList.toggle('simulation-active', active);
     const stars = (active||remembered!==undefined) && displayMode !== 'personal' ? (displayMode === 'ripples' ? 1 : 2) : 0;
@@ -3670,7 +3671,7 @@ function cycleChiFlowMode() {
 function updateCymaticsButtonUI(){
     if(typeof dom==='undefined'||!dom.btnCymatics)return;
     const button=dom.btnCymatics,rules=getCymaticsRules();
-    const map=Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===((typeof cycleMemory!=='undefined'&&armedSimulation!=='cymatics'?cycleMemory.recall('cymatics'):undefined)??rules.resonanceVersion??1));
+    const map=Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===((typeof cycleMemory!=='undefined'&&armedSimulation!=='cymatics'?cycleMemory.entry('cymatics'):undefined)??rules.resonanceVersion??1));
     for(const name of Object.keys(CYMATICS_RESONANCE_MAPS))button.classList.toggle('cymatics-'+name,name===map);
     button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',armedSimulation==='cymatics');
     const title=getText('tooltip_cymatics')+' — '+getText('cymatics_map_'+map);
@@ -3822,7 +3823,7 @@ function updateContourButtonUI() {
     const active = armedSimulation === 'contour' && contourMode === 'cracks';
     dom.btnContour.classList.toggle('simulation-active', active);
     dom.btnContour.classList.toggle('cracks-active', true);
-    const area = active ? (getCracksGrowth().area ?? 'all') : (typeof cycleMemory!=='undefined'?cycleMemory.recall('contour'):undefined)??'all';
+    const area = active ? (getCracksGrowth().area ?? 'all') : (typeof cycleMemory!=='undefined'?cycleMemory.entry('contour'):undefined)??'all';
     dom.btnContour.dataset.cracksArea = area;
     dom.btnContour.querySelector('.cracks-area-mark')?.setAttribute('opacity', area==='dead' ? '1' : '0');
     const title = getText('tooltip_cracks') + (active ? ' · ' + getText('cracks_area_' + area) : '');
@@ -3921,7 +3922,7 @@ function cycleBrightnessEvoMode() {
 function updateErosionButtonUI() {
     dom.btnErosion.classList.toggle('simulation-active', armedSimulation === 'erosion');
     dom.btnErosion.setAttribute('aria-pressed', String(armedSimulation === 'erosion'));
-    const displayMode=armedSimulation==='erosion'?erosionRules.mode:typeof cycleMemory!=='undefined'?cycleMemory.recall('erosion'):undefined;
+    const displayMode=armedSimulation==='erosion'?erosionRules.mode:typeof cycleMemory!=='undefined'?cycleMemory.entry('erosion'):undefined;
     const channels = !displayMode || displayMode === 'channels';
     const solid = displayMode === 'channels-solid';
     document.getElementById('iconErosionLegacy').style.display = channels || solid ? 'none' : 'block';
@@ -3949,7 +3950,7 @@ function cycleErosionMode() {
 }
 
 function updateDlaButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='dla'?cycleMemory.recall('dla'):undefined)??dlaMode;
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='dla'?cycleMemory.entry('dla'):undefined)??dlaMode;
     dom.btnDla.classList.remove('mode-genetics', 'mode-no-genetics');
     if (displayMode === 'genetics') {
         dom.btnDla.classList.add('mode-genetics');
@@ -3989,7 +3990,7 @@ function logIslandsSessionStart() {
 
 // --- NEW: Gravitational Sort UI and Cycling ---
 function updateGravitationalSortButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='gravitationalSort'?cycleMemory.recall('gravitationalSort'):undefined)??gsMode;
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='gravitationalSort'?cycleMemory.entry('gravitationalSort'):undefined)??gsMode;
     dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
 
     if (displayMode !== 'off') {
@@ -4031,7 +4032,7 @@ function cycleGravitationalSortMode() {
 function updateIslandsButtonUI() {
     const active = armedSimulation === 'islands';
     dom.btnIslands.classList.toggle('simulation-active', active);
-    const proximity = (active?islandsSession?.mode:typeof cycleMemory!=='undefined'?cycleMemory.recall('islands'):undefined)==='proximity';
+    const proximity = (active?islandsSession?.mode:typeof cycleMemory!=='undefined'?cycleMemory.entry('islands'):undefined)==='proximity';
     dom.btnIslands.classList.toggle('mode-proximity', proximity);
     dom.btnIslands.title = getText(proximity ? 'tooltip_islands_proximity' : 'tooltip_islands');
     dom.btnIslands.setAttribute('aria-label', dom.btnIslands.title);
@@ -4061,7 +4062,7 @@ function updateBreatheEvoButtonUI() {
     updateIslandsButtonUI();
     const modes = ['solo', 'group', 'random-cell', 'random-color'];
     const icons = ['iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
-    const selectedMode = armedSimulation === 'breathe' ? breatheEvoMode : (typeof cycleMemory!=='undefined'?cycleMemory.recall('breathe'):undefined)??'off';
+    const selectedMode = armedSimulation === 'breathe' ? breatheEvoMode : (typeof cycleMemory!=='undefined'?cycleMemory.entry('breathe'):undefined)??'off';
     dom.btnShowBreatheMenu.classList.remove(...modes.map(mode => 'mode-' + mode), 'simulation-active');
     modes.forEach((mode, index) => {
         document.getElementById(icons[index]).style.display = mode === selectedMode || (selectedMode === 'off' && index === 0) ? 'block' : 'none';
@@ -4090,7 +4091,7 @@ function cycleBreatheEvoMode() {
 
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='spiral'?cycleMemory.recall('spiral'):undefined)??spiralMode;
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='spiral'?cycleMemory.entry('spiral'):undefined)??spiralMode;
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
     dom.btnSpiral.classList.remove('mode-tornado', 'mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
     dom.btnSpiral.title = ['black_hole', 'turbine2', 'tornado'].includes(displayMode)
@@ -4140,7 +4141,7 @@ const sequence = SPIRAL_MODE_SEQUENCE;
 // --- NEW: Magnet Button Functions ---
 
 function updateMagnetButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='magnet'?cycleMemory.recall('magnet'):undefined)??magnetMode;
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='magnet'?cycleMemory.entry('magnet'):undefined)??magnetMode;
     if (!dom.btnMagnetModes) return;
     // הוספנו לניקוי את time_magnet ואת expand!
     dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-expand', 'simulation-active');

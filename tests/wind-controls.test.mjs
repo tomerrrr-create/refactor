@@ -74,14 +74,14 @@ test('Wind cycles through three effects then Off, retaining preferences and conc
  settings.modes.paint.colorSpan=2.5;settings.modes.displace.strength=2;
  const c=vm.createContext({windMode:true,windSettings:settings,symmetryMode:'horizontal',isLifePlaying:true,
  windPainter:{stop:()=>events.push('commit')},selectWindMode,nextWindEffect,
- setWindMode(value){c.windMode=value;events.push(value);},saveWindSettings:()=>events.push('save'),updateColorPickerButtonUI:()=>events.push('ui'),pauseLife(){throw Error('must keep playing');}});
+ setWindMode(value){c.windMode=value;events.push(value);},saveWindSettings:()=>events.push('save'),updateColorPickerButtonUI:()=>events.push('ui'),updateWindButtonUI:()=>events.push('wind-ui'),pauseLife(){throw Error('must keep playing');}});
  vm.runInContext(source.slice(source.indexOf('function cycleWindEffect('),source.indexOf('let windPointerId =')),c);
  c.cycleWindEffect();assert.equal(c.windSettings.mode,'paint');assert.equal(c.windSettings.colorSpan,2.5);
  c.cycleWindEffect();assert.equal(c.windSettings.mode,'displace');assert.equal(c.windSettings.strength,2);
  c.cycleWindEffect();assert.equal(c.windMode,false);assert.equal(c.windSettings.modes.ripple.strength,5);
  c.cycleWindEffect();assert.equal(c.windMode,true);
  assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);assert.equal(c.symmetryMode,'horizontal');
- assert.deepEqual(events,['commit','save','ui','commit','save','ui',false,true]);
+ assert.deepEqual(events,['commit','save','ui','commit','save','ui',false,'wind-ui',true]);
 });
 test('down swipe uses the existing empty-brush reset, preserving size, symmetry, board and running simulation',()=>{
  let gestures,flashes=0;

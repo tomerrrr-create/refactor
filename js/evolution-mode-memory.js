@@ -25,8 +25,8 @@ export function createEvolutionModeMemory({storage, blocked = () => false} = {})
             if (active() && simulation && mode !== 'off' && (typeof mode === 'string' || Number.isInteger(mode))) modes.set(evolutionModeKey(simulation),mode);
         },
         recall: simulation => active() ? modes.get(evolutionModeKey(simulation)) : undefined,
-        // Explicit Off ends this cycle. Keep the inactive symbol, but begin
-        // at the first mode next time; ordinary handoffs still recall modes.
+        // Explicit Off ends this cycle. Both the inactive symbol and next tap
+        // use the first mode; ordinary handoffs still recall the last selection.
         entry(simulation) {
             if(!active())return undefined;
             return completedCycles.has(evolutionModeKey(simulation)) ? defaultEvolutionCycleMode(simulation) : modes.get(evolutionModeKey(simulation));
