@@ -57,3 +57,16 @@ test('current action recovery reads only executed commands and skips hidden even
  assert.equal(latestMacroActivity(queue,-1),null);assert.equal(latestMacroActivity([],0),null);
  assert.equal(JSON.stringify(queue),before);
 });
+
+
+test('mobile activity stays below the unchanged board, clears safe areas and hides without room',()=>{
+ const board={left:10,top:230,width:370,height:370},viewport={width:390,height:844},before=structuredClone(board);
+ const place=macroActivityPlacement(board,viewport,true,true);
+ assert(place);assert.equal(place.left+place.width/2,board.left+board.width/2);
+ assert(place.top>=board.top+board.height+20);assert(place.top+72<=viewport.height-16);
+ assert.deepEqual(board,before);
+ assert.equal(macroActivityPlacement(board,viewport,false,true),null);
+ assert.equal(macroActivityPlacement(board,{...viewport,height:680},true,true),null);
+ assert.equal(macroActivityPlacement(board,{...viewport,height:700,safeBottom:40},true,true),null);
+ assert.equal(macroActivityPlacement({left:295,top:68,width:254,height:254},{width:844,height:390},true,true),null);
+});

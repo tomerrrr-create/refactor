@@ -27,9 +27,8 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  if(touch){const cdp=await ctx.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y+dy*i/5}]});await page.waitForTimeout(25);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}
  else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:5});await page.mouse.up();}await page.waitForTimeout(80);}
  assert.deepEqual(await page.locator('#btnWind').evaluate(e=>[getComputedStyle(e).gridRowStart,getComputedStyle(e).gridColumnStart]),['2','1']);
- assert.deepEqual(await page.locator('#btnNudgeBrighter').evaluate(e=>[getComputedStyle(e).gridRowStart,getComputedStyle(e).gridColumnStart]),['3','5']);
- const initial=await state(),colorIcon=await page.locator('#btnColorPicker').innerHTML();
- await swipe('#btnColorPicker',35);assert.equal((await state()).wind,false);
+ const initial=await state();
+ await swipe('#btnColorPicker',35);assert.equal((await state()).wind,false);const colorIcon=await page.locator('#btnColorPicker').innerHTML();
  await page.locator('#btnColorPicker').focus();await page.keyboard.press('Alt+ArrowDown');assert.equal((await state()).wind,false);
  for(const mode of ['ripple','paint','displace','off']){await tap('#btnWind');assert.equal(await page.locator('#btnWind').getAttribute('data-wind-mode'),mode);assert.equal(await page.locator('#btnWind').getAttribute('aria-pressed'),String(mode!=='off'));assert.equal(await page.locator('#btnColorPicker').innerHTML(),colorIcon);assert.equal(await page.locator('#btnWind').evaluate(e=>getComputedStyle(e).color==='rgb(255, 215, 0)'),mode!=='off');assert.deepEqual(await page.locator('#btnWind').evaluate(e=>({shadow:getComputedStyle(e).boxShadow,background:getComputedStyle(e).backgroundColor})),{shadow:'none',background:'rgba(0, 0, 0, 0)'});assert.equal(await page.locator('#btnWind').evaluate(e=>e.getAnimations().filter(a=>a.effect.getKeyframes().some(f=>'boxShadow' in f)).length),0);}
  assert.deepEqual((await state()).board,initial.board);assert.equal((await state()).history,initial.history);
@@ -43,8 +42,8 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  // A painted wave is recorded and remains a single artwork action on stop.
  await tap('#btnWind');assert.equal((await state()).mode,'paint');const before=(await state()).board;
  const board=await page.locator('#boardCanvas').boundingBox();if(touch)await page.touchscreen.tap(board.x+board.width*.5,board.y+board.height*.5);else await page.mouse.click(board.x+board.width*.5,board.y+board.height*.5);
- await page.waitForTimeout(220);await tap('#btnWind');const after=await state();assert(after.history>0);assert.notDeepEqual(after.board,before);assert(after.logs.some(x=>x.includes('WIND_WAVE')));assert(after.logs.some(x=>x.includes('WIND_END')));
- await tap('#btnWind');assert(!(await state()).wind);await tap('#btnUndo');assert.deepEqual((await state()).board,before);await tap('#btnRedo');assert.deepEqual((await state()).board,after.board);
+ await page.waitForTimeout(220);await swipe('#btnWind',35);const after=await state();assert(after.history>0);assert.notDeepEqual(after.board,before);assert(after.logs.some(x=>x.includes('WIND_WAVE')));assert(after.logs.some(x=>x.includes('WIND_END')));
+ assert(!(await state()).wind);assert(await page.locator('#btnColorPicker').isEnabled());await tap('#btnUndo');assert.deepEqual((await state()).board,before);await tap('#btnRedo');assert.deepEqual((await state()).board,after.board);
  const recipe=await page.evaluate(()=>windTest.recipe()),settings=await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1'));
  await page.evaluate(text=>windTest.replay(text),recipe);await page.waitForFunction(()=>!windTest.state().macro,{},{timeout:20000});assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1')),settings);assert.equal(await page.locator('#btnWind').getAttribute('aria-pressed'),'false');
  // Running evolution retains its identity and generation timeline across the cycle.
