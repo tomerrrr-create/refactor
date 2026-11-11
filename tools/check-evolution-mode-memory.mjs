@@ -33,12 +33,19 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const state=()=>page.evaluate(()=>memoryTest.state()),setup=()=>page.evaluate(()=>memoryTest.setup());
  // Hidden-page controls use their real click handlers; the map's current page is not altered.
  const tap=id=>page.locator('#'+id).evaluate(e=>e.click());
+ const iconState=id=>page.locator('#'+id).evaluate(e=>({
+  modes:[...e.classList].filter(c=>c.startsWith('mode-')).sort(),
+  badges:['nudgeMode','cymaticsMap','cracksArea'].map(k=>e.dataset[k]??null),
+  stars:[...e.querySelectorAll('[data-gol-star],[data-chi-star]')].map(el=>getComputedStyle(el).display!=='none'),
+  erosion:[...e.querySelectorAll('svg[id^="iconErosion"]')].map(el=>[el.id,getComputedStyle(el).display]),
+  wind:e.querySelector('[data-wind-mode]')?.getAttribute('data-wind-mode')??null
+ }));
  async function toggle(enabled){await page.evaluate(()=>memoryTest.tech());await page.locator('#rememberEvolutionModesToggle').setChecked(enabled);await page.locator('#btnTechnicianCloseTop').click();}
  assert.equal(await page.locator('#rememberEvolutionModesToggle').isChecked(),false);
  for(const [sim,id,first] of cases){await setup();await tap(id);await tap(id);await tap('btnTuring');await tap(id);const result=await state();assert.equal(result.mode??(sim==='contour'?'all':sim==='islands'?'classic':undefined),first,'off retains default for '+sim);}
  await toggle(true);
  for(const [sim,id,first,second,selector] of cases){
-  await setup();await tap(id);await tap(id);assert.equal((await state()).mode,second,sim+' second mode');
+  await setup();await tap(id);const firstIcon=await iconState(id);await tap(id);assert.equal((await state()).mode,second,sim+' second mode');
   await tap('btnTuring');assert.equal((await state()).armed,'turing');assert(!(await page.locator('#'+id).evaluate(e=>e.classList.contains('simulation-active'))),sim+' is not armed');
   if(selector==='stars')assert.equal(await page.locator('#'+id+' [data-'+(sim==='gameOfLife'?'gol':'chi')+'-star]').evaluateAll(es=>es.filter(e=>getComputedStyle(e).display!=='none').length),1);
   else if(selector.startsWith('svg'))assert.equal(await page.locator('#'+id+' '+selector).evaluate(e=>getComputedStyle(e).display),'block');
@@ -47,10 +54,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await tap(id);assert.notEqual((await state()).mode,second,'next click advances '+sim);
   let count=0;while((await state()).armed&&count++<12)await tap(id);
   assert.equal((await state()).armed,null,'Off exists '+sim);
+  assert.deepEqual(await iconState(id),firstIcon,'inactive icon previews first mode after Off '+sim);
   const remembered=await page.evaluate(sim=>memoryTest.remembered(sim),sim);assert.notEqual(remembered,undefined);
-  await tap(id);assert.equal((await state()).mode,first,'Off restarts at the first mode '+sim);assert(!(await state()).playing);await tap(id);assert.equal((await state()).mode,second,'cycle continues after restarting '+sim);
+  await tap(id);assert.equal((await state()).mode,first,'Off restarts at the first mode '+sim);assert.deepEqual(await iconState(id),firstIcon,'selected icon matches inactive preview '+sim);assert(!(await state()).playing);await tap(id);assert.equal((await state()).mode,second,'cycle continues after restarting '+sim);
  }
- if(process.env.MEMORY_CYCLE_ONLY){await setup();for(let i=0;i<4;i++)await tap('btnWind');assert(!(await page.evaluate(()=>memoryTest.wind())).active);await tap('btnWind');assert.equal((await page.evaluate(()=>memoryTest.wind())).mode,'ripple');await tap('btnWind');assert.equal((await page.evaluate(()=>memoryTest.wind())).mode,'paint');assert.deepEqual(errors,[]);console.log(JSON.stringify({config,cycles:13,handoffRecall:true,offRestartsFirst:true,continuesAfterRestart:true}));await context.close();continue;}
+ if(process.env.MEMORY_CYCLE_ONLY){await setup();await tap('btnWind');const firstWind=await page.locator('#btnWind svg').evaluate(e=>e.outerHTML);for(let i=0;i<3;i++)await tap('btnWind');assert.equal(await page.locator('#btnWind svg').evaluate(e=>e.outerHTML),firstWind,'inactive Wind previews the next ripple');assert(!(await page.evaluate(()=>memoryTest.wind())).active);await tap('btnWind');assert.equal((await page.evaluate(()=>memoryTest.wind())).mode,'ripple');await tap('btnWind');assert.equal((await page.evaluate(()=>memoryTest.wind())).mode,'paint');assert.deepEqual(errors,[]);console.log(JSON.stringify({config,cycles:13,handoffRecall:true,offRestartsFirst:true,continuesAfterRestart:true}));await context.close();continue;}
  // The user's Gravity example through actual desktop clicks and touch taps.
  const nativeTap=id=>config.width<600?page.locator('#'+id).tap():page.locator('#'+id).click();
  await setup();await nativeTap('btnGravitationalSort');await nativeTap('btnGravitationalSort');await nativeTap('btnMagnetModes');assert.equal((await state()).armed,'magnet');assert(await page.locator('#btnGravitationalSort').evaluate(e=>e.classList.contains('mode-right')&&!e.classList.contains('simulation-active')));await page.screenshot({path:'/tmp/evolution-mode-memory/'+config.lang+'-inactive-gravity.png'});await nativeTap('btnGravitationalSort');assert.equal((await state()).mode,'right');await nativeTap('btnGravitationalSort');assert.equal((await state()).mode,'center_x');
