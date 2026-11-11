@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runSpiralGeneration } from '../js/simulations/spiral.js';
+import { runGravitationalSortGeneration } from '../js/simulations/gravitational_sort.js';
+import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
 
 function boardFor(n, colors = 23) {
     let seed = 12345;
@@ -71,4 +73,25 @@ test('restarts after in-place edits and after changing grid size', () => {
     settle(other, 16);
     for (const tile of board) tile.k = 22 - tile.k;
     settle(board, 31);
+});
+
+for (const n of [1, 2, 17, 64]) test(`Gravity Circle matches legacy Spiral generation by generation, independent of Strength: ${n}`, () => {
+    const original = boardFor(n), legacy = structuredClone(original);
+    const copies = [0, .01, .6, 1].map(strength => ({strength, board:structuredClone(original)}));
+    for (let generation = 0; generation < 25; generation++) {
+        step(legacy, n);
+        for (const copy of copies) {
+            const result = runGravitationalSortGeneration({ n, currentBoardState:copy.board,
+                gravitationalSortRules:{direction:'black_hole', strength:copy.strength} });
+            assert.equal(result, copy.board);
+            assert.deepEqual(result, legacy);
+        }
+    }
+    assert.deepEqual([...legacy].sort((a,b)=>a.id-b.id), original);
+});
+test('Circle settings round-trip in Gravity and remain readable in legacy Spiral settings', () => {
+    const settings = defaultWorkspaceSettings();
+    settings.rules.gravity = {direction:'black_hole', strength:.27};
+    settings.rules.spiral.method = 'black_hole';
+    assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
 });

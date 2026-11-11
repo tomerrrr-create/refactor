@@ -1,3 +1,4 @@
+import { runBlackHoleGeneration } from './circle.js';
 import { runTurbine2Generation } from './spiral-turbine2.js';
 
 let cachedRadialOrder = null;
@@ -13,6 +14,7 @@ export function runGravitationalSortGeneration({ n, currentBoardState, gravitati
     const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
     const strength = gravitationalSortRules.strength;
 
+    if (gravitationalSortRules.direction === 'black_hole') return runBlackHoleGeneration(n, nextBoardState);
     if (gravitationalSortRules.direction === 'turbine2') return runTurbine2Generation(n, nextBoardState, strength);
 
     switch (gravitationalSortRules.direction) {

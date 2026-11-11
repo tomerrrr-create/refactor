@@ -7,8 +7,8 @@ const ids=slots=>slots.filter(id=>id!==null).sort();
 const complete=slots=>{assert.deepEqual(ids(slots),EVOLUTION_CATALOG.map(e=>e.id).sort());assert(INTERNAL_NAV_SLOTS.every(i=>slots[i]===null));};
 test('permanent drawers reserve bottom center and retain the approved default order',()=>{
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,20);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['dla','contour','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort',null,'sandpile','erosion']);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),['spiral','breathe','turing','cymatics',null,null,null,null,'nudgeBrighter',null]);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['cymatics','sandpile','gameOfLife','brightnessEvo','islands','nudgeBrighter','magnet',null,'gravitationalSort','erosion']);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),['turing','spiral','breathe','dla','contour',null,null,null,null,null]);
  complete(DEFAULT_EVOLUTION_LAYOUT);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
  for(const lang of ['en','he','ru','nl'])assert(translations.drawer_navigation_slot[lang]);
@@ -21,11 +21,11 @@ test('legacy ten-place layouts migrate without losing controls or mutating the i
 });
 test('arranging occupied and empty places preserves every simulation and protects navigation',()=>{
  const original=[...DEFAULT_EVOLUTION_LAYOUT],swap=moveEvolutionSlot(original,0,13);
- assert.equal(swap[0],'cymatics');assert.equal(swap[13],'dla');
- const moved=moveEvolutionSlot(swap,13,19);assert.equal(moved[13],null);assert.equal(moved[19],'dla');complete(moved);
+ assert.equal(swap[0],'dla');assert.equal(swap[13],'cymatics');
+ const moved=moveEvolutionSlot(swap,13,19);assert.equal(moved[13],null);assert.equal(moved[19],'cymatics');complete(moved);
  assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,19,19),moved);
- assert.deepEqual(assignEvolutionSlot(original,19,'dla'),moveEvolutionSlot(original,0,19));
- for(const [from,to] of [[-1,0],[0,20],[.5,0],[14,0],[0,7],[0,17],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
+ assert.deepEqual(assignEvolutionSlot(original,19,'cymatics'),moveEvolutionSlot(original,0,19));
+ for(const [from,to] of [[-1,0],[0,20],[.5,0],[15,0],[0,7],[0,17],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
  for(const reserved of INTERNAL_NAV_SLOTS)assert.throws(()=>assignEvolutionSlot(original,reserved,'dla'));
 });
 test('new arrangements round-trip exactly through settings; legacy rules stay unchanged',()=>{
@@ -42,7 +42,7 @@ test('historical Nudge directions normalize once and keep the first unified assi
  const old=[...DEFAULT_EVOLUTION_SLOTS];old[3]='nudgeDarker';old[5]='nudgeBrighter';
  const migrated=validateEvolutionSlots(old);assert.equal(migrated[3],'nudgeBrighter');assert.equal(migrated[14],'brightnessEvo');complete(migrated);
  assert.deepEqual(validateEvolutionSlots(migrated),migrated);assert.equal(old[3],'nudgeDarker');
- const moved=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,18,4);
+ const moved=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,5,4);
  assert.deepEqual(validateEvolutionSlots(moved.map(id=>id==='nudgeBrighter'?'nudgeDarker':id)),moved);
 });
 test('previous twenty-place layouts free navigation places without dropping their occupants',()=>{

@@ -1202,6 +1202,12 @@ function resetGolSettings() {
     golCycleMembership?.manualChange();
 }
 
+function refreshGravitationalStrength(direction) {
+    const circle = direction === 'black_hole';
+    app.dom.gsStrengthSlider.disabled = circle;
+    app.dom.gravitationalSortSettingsModal.querySelector('[data-gravity-strength]').classList.toggle('gravity-strength-inactive', circle);
+}
+
 function openGravitationalSortSettingsModal() {
     if (app.isBreathing()) return;
     const rules = app.getGravitationalSortRules();
@@ -1210,6 +1216,7 @@ function openGravitationalSortSettingsModal() {
     });
     app.dom.gsStrengthSlider.value = rules.strength * 100;
     app.dom.gsStrengthValue.textContent = `${Math.round(rules.strength * 100)}%`;
+    refreshGravitationalStrength(rules.direction);
     app.dom.gravitationalSortSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gravitationalSortSettingsModal.classList.add('modal-visible'), 10);
 }
@@ -1220,7 +1227,7 @@ function saveGravitationalSortSettings() {
     if (activeBtn) {
         newRules.direction = activeBtn.dataset.direction;
     }
-    newRules.strength = parseInt(app.dom.gsStrengthSlider.value, 10) / 100;
+    if (!app.dom.gsStrengthSlider.disabled) newRules.strength = parseInt(app.dom.gsStrengthSlider.value, 10) / 100;
     app.setGravitationalSortRules(newRules);
     
     // עדכון: סנכרון האייקון בלוח הבקרה למצב החדש שנבחר
@@ -1929,6 +1936,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
         btn.addEventListener('click', () => {
             app.dom.gsDirectionButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            if (btn.dataset.direction) refreshGravitationalStrength(btn.dataset.direction);
         });
     });
     app.dom.gsStrengthSlider.addEventListener('input', () => {

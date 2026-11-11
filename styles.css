@@ -1130,6 +1130,12 @@ body {
 
 #btnGravitationalSort.mode-turbine2 #iconGsTurbine2 { display: block !important; }
 #btnGravitationalSort.mode-turbine2 svg:not(#iconGsTurbine2) { display: none !important; }
+#btnGravitationalSort.mode-black_hole #iconGsCircle { display: block !important; }
+#btnGravitationalSort.mode-black_hole svg:not(#iconGsCircle) { display: none !important; }
+#gravitationalSortSettingsModal .gravity-directions { gap:12px; flex-wrap:wrap; }
+#gravitationalSortSettingsModal .gravity-directions .gs-direction-btn { flex-shrink:0; }
+[data-gravity-strength].gravity-strength-inactive { opacity:.35; }
+#gsStrength:disabled { cursor:not-allowed; }
 
 /* --- Breathe Button States --- */
 #btnShowBreatheMenu #iconBreatheSolo {

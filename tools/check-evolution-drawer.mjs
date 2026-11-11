@@ -19,7 +19,12 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  theme:applySimulationTheme,open:()=>evolutionDrawer.open(),arm:armSimulation,play:togglePlayPauseLife,pause:pauseLife,tech:()=>modals.openTechnicianMenu(),loadSettings:importWorkspaceSettings,recipe:async()=>await createArtRecipeFile().text(),macro:playMacro
  };initializeApp().then(()=>drawerTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
- await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>drawerTest.setup());
+ await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));await page.goto(base);await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
+ assert.deepEqual((await page.evaluate(()=>drawerTest.state())).slots,DEFAULT_EVOLUTION_LAYOUT,'first launch uses the requested layout before any test setup');
+ if(config.width<600)await page.locator('#btnToggleSimMode').tap();else await page.locator('#btnToggleSimMode').click();
+ await page.waitForFunction(()=>document.getElementById('controlsContainer').classList.contains('sim-mode-active'));await page.waitForTimeout(600);
+ assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top||a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId)),['cymatics','sandpile','gameOfLife','brightnessEvo','islands','nudgeBrighter','magnet','gravitationalSort','erosion'],'fresh entry uses physical left-to-right order');
+ await page.evaluate(()=>drawerTest.setup());
 
  const state=()=>page.evaluate(()=>drawerTest.state()),tap=target=>config.width<600?target.tap():target.click();
  const trigger=page.locator('#btnEvolutionDrawerInternal'),dialog=page.locator('#evolutionDrawerDialog'),container=page.locator('#controlsContainer');
@@ -36,6 +41,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  async function save(){await tap(dialog.locator('[type=submit]'));}
  async function reload(){await page.waitForTimeout(300);await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});}
  const initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
+ const physicalRows=()=>page.locator('#controlsContainer [data-evolution-slot],#btnEvolutionDrawerInternal').evaluateAll(es=>[2,3].map(row=>es.filter(e=>e.getBoundingClientRect().width&&getComputedStyle(e).gridRowStart===String(row)).sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId||'navigation')));
+ assert.deepEqual(await physicalRows(),[['cymatics','sandpile','gameOfLife','brightnessEvo','islands'],['nudgeBrighter','magnet','navigation','gravitationalSort','erosion']],'physical left-to-right order on the first drawer');
  assert.equal(await page.locator('.drawer-view-option,[data-drawer-view],.evolution-drawer-trigger,#btnEvolutionDrawerRight,.drawer-recess').count(),0,'removed presentations leave no controls or technician choice');
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(0,10).filter(Boolean));
  const layout=await container.evaluate(e=>({rows:getComputedStyle(e).gridTemplateRows.split(' ').length,bottom:['btnSave','btnInvert','btnToggleSimMode','btnRandom','btnCycleSort','btnUndo','btnRedo'].map(id=>getComputedStyle(document.getElementById(id)).gridRowStart)}));
@@ -57,7 +64,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const position=await trigger.boundingBox(),frame=await page.locator('#simModeBackground').boundingBox();
  await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(8, 10, 9)','rgb(255, 215, 0)']);
  assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),['rgb(255, 215, 0)','rgb(8, 10, 9)']);
- assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(Boolean));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['turing','spiral','breathe','dla','contour'],['navigation']],'second drawer has five simulations on top and only navigation below');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(Boolean));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
  await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled').count(),2);
  assert.equal(await dialog.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
@@ -67,7 +74,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual((await state()).slots,custom);unchanged(initial,await state());
  await reload();assert.deepEqual((await state()).slots,custom,'arrangement survives reopening');assert.equal(await container.getAttribute('data-evolution-page'),'0');
  await page.evaluate(()=>drawerTest.tech());assert.equal(await page.locator('[data-drawer-view]').count(),0);
- await tap(page.locator('[data-profile-choice="1"]'));assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT);
+ for(const index of [1,2]){await tap(page.locator('[data-profile-choice="'+index+'"]'));assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT,'every untouched factory profile starts with the new layout');}
  await tap(page.locator('[data-profile-choice="0"]'));assert.deepEqual((await state()).slots,custom,'each profile retains its own arrangement');
  await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  await open();await tap(dialog.locator('[data-reset]'));await page.keyboard.press('Escape');assert.deepEqual((await state()).slots,custom);
@@ -78,7 +85,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await page.emulateMedia({reducedMotion:'reduce'});await tap(trigger);assert.equal(await trigger.locator('path').evaluateAll(es=>es.flatMap(e=>e.getAnimations()).length),0);await tap(trigger);await page.emulateMedia({reducedMotion:'no-preference'});
  }
  // Genuine old settings files migrate once; every simulation remains represented.
- for(const legacy of [['cymatics',...DEFAULT_EVOLUTION_SLOTS.slice(1)],[...DEFAULT_EVOLUTION_SLOTS,'breathe','turing','cymatics',...Array(7).fill(null)]]){
+ for(const legacy of [['cymatics',...DEFAULT_EVOLUTION_SLOTS.slice(1)],[...DEFAULT_EVOLUTION_SLOTS,'breathe','turing','cymatics',...Array(7).fill(null)],['dla','contour','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort',null,'sandpile','erosion','spiral','breathe','turing','cymatics',null,null,null,null,'nudgeBrighter',null]]){
   const expected=validateEvolutionSlots(legacy);
   await page.locator('#projectFileInput').setInputFiles({name:'legacy-drawers.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{evolutionSlots:legacy}}))});
   await page.waitForFunction(slots=>JSON.stringify(drawerTest.state().slots)===JSON.stringify(slots),expected);
@@ -98,9 +105,9 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.locator('#projectFileInput').setInputFiles({name:'permanent-drawer-journey.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});
  await page.waitForFunction(()=>drawerTest.state().loaded);assert(await trigger.isDisabled());await page.evaluate(()=>drawerTest.macro());await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});
  assert.deepEqual((await state()).board,result.board,'macro uses engine rules, independent of layout');assert.deepEqual((await state()).slots,custom);
- await page.evaluate(()=>drawerTest.arm('nudgeDarker'));if(await container.getAttribute('data-evolution-page')!=='1')await tap(trigger);
- const nudge=page.locator('#btnNudgeBrighter');assert(await nudge.isVisible());assert.equal(await nudge.getAttribute('data-evolution-slot'),'18');assert.equal(await nudge.getAttribute('data-nudge-mode'),'darker');
- const nudgeBefore=await state();await open();await move(18,0);await save();custom=moveEvolutionSlot(custom,18,0);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
+ await page.evaluate(()=>drawerTest.arm('nudgeDarker'));if(await container.getAttribute('data-evolution-page')!==String(Math.floor(custom.indexOf('nudgeBrighter')/10)))await tap(trigger);
+ const nudge=page.locator('#btnNudgeBrighter');assert(await nudge.isVisible());assert.equal(await nudge.getAttribute('data-evolution-slot'),String(custom.indexOf('nudgeBrighter')));assert.equal(await nudge.getAttribute('data-nudge-mode'),'darker');
+ const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter');await open();await move(nudgeFrom,15);await save();custom=moveEvolutionSlot(custom,nudgeFrom,15);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
  await reload();assert.deepEqual((await state()).slots,custom,'moving Nudge persists alongside all other controls');
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());await tap(trigger);assert((await state()).playing);await page.evaluate(()=>drawerTest.pause());
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
