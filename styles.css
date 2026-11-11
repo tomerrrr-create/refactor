@@ -2591,3 +2591,15 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .macro-activity[data-placement="below"] .macro-activity-row { justify-content:center; }
 
 .macro-activity-icon .glyph { font-size:24px; }
+
+/* Reserve a compact group beside the name; signals never displace the running engine. */
+.macro-activity { flex-direction:row; align-items:center; gap:8px; padding:6px 0; }
+.macro-activity-current { flex:1; min-width:0; width:auto; height:60px; }
+.macro-activity-row > div { min-width:0; }
+.macro-activity-title { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; }
+.macro-activity-signals { height:18px; flex:0 0 62px; display:flex; align-items:center; justify-content:flex-end; gap:7px; }
+.macro-activity-signal { pointer-events:auto; display:inline-flex; width:16px; height:16px; color:#bca776; opacity:.7; animation:macro-activity-pulse 1400ms ease-in-out both; }
+.macro-activity-signal svg,.macro-activity-signal .glyph { width:16px !important; height:16px !important; }
+.macro-activity[data-placement="below"] .macro-activity-signals { justify-content:flex-end; }
+@keyframes macro-activity-pulse { 0% { opacity:0; transform:scale(.85); } 20% { opacity:.9; transform:scale(1.12); } 45% { opacity:.5; transform:scale(1); } 65% { opacity:.8; } 100% { opacity:0; transform:scale(1); } }
+@media(prefers-reduced-motion:reduce) { .macro-activity-signal { animation:none; } }

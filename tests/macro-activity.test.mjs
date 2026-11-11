@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {MACRO_ACTIVITY_STORAGE_KEY,loadMacroActivity,saveMacroActivity,describeMacroActivity,macroActivityPlacement,latestMacroActivity} from '../js/macro-activity.js';
+import {MACRO_ACTIVITY_STORAGE_KEY,loadMacroActivity,saveMacroActivity,describeMacroActivity,macroActivityPlacement,latestMacroActivity,primaryMacroActivity,createMacroActivitySignals,describeMacroSignal} from '../js/macro-activity.js';
 
 test('display preference is opt-in, device-local and resilient to unavailable storage',()=>{
  const map=new Map(),storage={getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)};
@@ -69,4 +69,37 @@ test('mobile activity stays below the unchanged board, clears safe areas and hid
  assert.equal(macroActivityPlacement(board,{...viewport,height:680},true,true),null);
  assert.equal(macroActivityPlacement(board,{...viewport,height:700,safeBottom:40},true,true),null);
  assert.equal(macroActivityPlacement({left:295,top:68,width:254,height:254},{width:844,height:390},true,true),null);
+});
+
+test('running engine remains primary during drawing/sorting and current engine changes replace it',()=>{
+ const draw=describeMacroActivity({eventName:'DRAW_STROKE'});
+ for(const simulation of ['gravitationalSort','cymatics','breathe','nudgeDarker']){
+  const state=Object.freeze({lifePlaying:true,simulation});
+  assert.equal(primaryMacroActivity(state,draw).label,describeMacroActivity({eventName:'PLAY'},simulation).label);
+ }
+ assert.equal(primaryMacroActivity({lifePlaying:false,simulation:'cymatics'},draw),draw);
+ assert.equal(primaryMacroActivity({lifePlaying:true,simulation:'unknown'},draw),draw);
+});
+test('signals coalesce repeated actions, retain latest state and evict older kinds at three',()=>{
+ let time=0;const signals=createMacroActivitySignals(()=>time);
+ for(let i=0;i<1000;i++)signals.add({key:'DRAW_STROKE',label:'draw'});
+ assert.equal(signals.current().length,1);
+ signals.add({key:'Sort by',detail:'luminance'});signals.add({key:'Sort by',detail:'reversed'});
+ assert.equal(signals.current().length,2);assert.equal(signals.current()[1].detail,'reversed');
+ signals.add({key:'GRID_RESIZE',growing:true});signals.add({key:'Invert Colors'});
+ assert.deepEqual(signals.current().map(x=>x.key),['Sort by','GRID_RESIZE','Invert Colors']);
+ time=1400;assert.deepEqual(signals.current(),[]);
+ signals.add({key:'DRAW_STROKE'});signals.clear();assert.deepEqual(signals.current(),[]);
+});
+
+test('resize signals use recorded sizes for plus/minus independently of the manual resize button',()=>{
+ const state=Object.freeze({boardSize:21,simulation:'cymatics'});
+ for(const [size,growing] of [[35,true],[9,false]]){
+  const action=Object.freeze({eventName:'GRID_RESIZE',details:String(size)});
+  const signal=describeMacroSignal(action,state);
+  assert.equal(signal.growing,growing);assert.equal(signal.detail,`21×21 → ${size}×${size}`);
+ }
+ assert.equal(describeMacroSignal({eventName:'GRID_RESIZE',details:'bad'},state),null);
+ assert.equal(describeMacroSignal({eventName:'PAUSE'},state),null);
+ assert.equal(describeMacroSignal({eventName:'PLAY'},state),null);
 });
