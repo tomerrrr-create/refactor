@@ -12,9 +12,12 @@ export const EVOLUTION_CATALOG = Object.freeze([
 export const DEFAULT_EVOLUTION_SLOTS = Object.freeze(EVOLUTION_CATALOG.slice(0,10).map(e=>e.id));
 export const EVOLUTION_PAGE_SIZE = 10;
 export const INTERNAL_NAV_SLOTS = Object.freeze([7,17]);
+// Physical left-to-right order, shared by first launch, factory profiles and Reset.
 export const DEFAULT_EVOLUTION_LAYOUT = Object.freeze([
-    ...DEFAULT_EVOLUTION_SLOTS.slice(0,5), 'magnet', 'gravitationalSort', null, 'sandpile', 'erosion',
-    'spiral', 'breathe', 'turing', 'cymatics', null, null, null, null, 'nudgeBrighter', null
+    'cymatics', 'sandpile', 'gameOfLife', 'brightnessEvo', 'islands',
+    'nudgeBrighter', 'magnet', null, 'gravitationalSort', 'erosion',
+    'turing', 'spiral', 'breathe', 'dla', 'contour',
+    null, null, null, null, null
 ]);
 // Older ten/twenty-place preferences remain readable. Upgrade once: layouts
 // already reserving the two navigation places keep their exact assignments.
