@@ -715,7 +715,7 @@ Save the journey through the save modal, using `exportArtRecipeLog()`. Current T
 - `scheduleNextMacroStep` schedules time-based events; `gameLoop` consumes generation-based events when their target generation is reached.
 - `applyMacroRules` restores rules before execution. `executeMacroAction` restores live mode transitions and logs replayed events without duplicating the underlying callback logs.
 
-Version-2 history playback removes undone actions and their elapsed time. `HISTORY_SETTINGS` checkpoints are instantaneous. Redo relocates original commands while preserving internal brush, Wind and simulation timing; time spent deciding before Undo/Redo is omitted. Normal idle caps, generation targets and legacy non-history parsing remain intact. The original logger text is not rewritten by this timeline resolution.
+Version-2 history playback removes undone actions and their elapsed time. `HISTORY_SETTINGS` checkpoints are instantaneous. Redo relocates original commands while preserving internal brush, Wind and simulation timing; time spent deciding before Undo/Redo is omitted. Normal idle caps, generation targets and legacy non-history parsing remain intact. The original logger text is not rewritten by this timeline resolution. With a viewer-selected opening palette, playback tracks the recorded palette independently of the active one. A HISTORY_SETTINGS checkpoint that repeats the previous recorded palette keeps the current effective palette; a genuinely different recorded checkpoint still restores that palette. Every explicit Palette Change executes even when it names the original opening palette. INIT_STATE and legacy full-board ISLANDS_INIT anchor recorded provenance; session-only Islands records do not. Context resets on file replacement, Stop/completion and a new playback, but not on pause/resume. Without an opening override, or without a known recorded anchor, restoration retains its original behavior. This is a playback-only interpretation: no logger payload, queue action or file format is rewritten.
 
 Game of Life and Chi Flow begin their macro-driven loop on an animation frame so the queue advances beyond PLAY before generation one. This preserves mode events recorded at that first generation. Ordinary manual Play remains immediate.
 
@@ -786,6 +786,8 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 
 | Area | Examples |
 | --- | --- |
+| Opening-palette history policy: raw/resolved Undo/Redo, legacy checkpoints, real palette switches and playback lifecycle | `tools/check-macro-palette-context.mjs` (optional `PALETTE_RECIPE` runs the reported full-file regression) |
+| Real file import, opening-palette catalogue, drawing Undo, explicit changes and file replacement on desktop/English and touch/Hebrew | `tools/check-macro-palette-ui.mjs` |
 | Fullscreen macro activity: opt-in, desktop/mobile geometry, action filtering, space limits, Stop and replay equivalence | `tools/check-macro-activity.mjs` |
 | Macro activity mode icons, frozen outgoing snapshots, gradients, crossfade opacity, rapid bursts and reduced motion | `tools/check-macro-activity-icons.mjs` |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |

@@ -1,3 +1,4 @@
+import { createMacroPaletteContext } from '../js/macro-palette-context.js';
 import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -76,7 +77,7 @@ test('new seed-only recipe imports without board data and rejects unknown record
 
 test('new replay keeps existing board while old replay still restores its snapshot',()=>{
     const original=[{k:7,v:7,isGold:false}], logs=[];
-    const c=vm.createContext({ evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning, updateIslandsButtonUI(){},restoreIslandsSession,restoreIslandsBoard,armedSimulation:'islands',isLifePlaying:false,
+    const c=vm.createContext({macroPaletteContext:createMacroPaletteContext(), evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning, updateIslandsButtonUI(){},restoreIslandsSession,restoreIslandsBoard,armedSimulation:'islands',isLifePlaying:false,
         boardState:original,islandsSession:null,isExecutingMacroCommand:false,pendingMacroPalette:null,
         C:{PALETTES:[{}]},window:{logArtEvent:(...args)=>logs.push(args)},renderToScreen(){},
         applyState(state){c.boardState=state.tiles;},console});

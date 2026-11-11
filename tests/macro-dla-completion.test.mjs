@@ -1,3 +1,4 @@
+import { createMacroPaletteContext } from '../js/macro-palette-context.js';
 import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -23,7 +24,7 @@ test('DLA recorded mode stays separate from persisted boolean rules',()=>{
 
 for(const fullscreen of [false,true])for(const busy of [false,true])test(`macro cleanup releases overlay despite profile capture failure (fullscreen=${fullscreen}, animation=${busy})`,()=>{
  const errors=[],removed=[];let full=fullscreen;
- const c=vm.createContext({ replayBrightnessPreferences:{rules:{smoothing:.75,contrast:.6},mode:'contrast'},updateBrightnessEvoButtonUI(){}, evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning,clearTimeout(){},isLifePlaying:false,windReplay:null,finishWindReplay(){},replayWindClocks:new Map(),replayBrushBefore:null,macroTimerId:1,macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
+ const c=vm.createContext({macroPaletteContext:createMacroPaletteContext(), replayBrightnessPreferences:{rules:{smoothing:.75,contrast:.6},mode:'contrast'},updateBrightnessEvoButtonUI(){}, evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning,clearTimeout(){},isLifePlaying:false,windReplay:null,finishWindReplay(){},replayWindClocks:new Map(),replayBrushBefore:null,macroTimerId:1,macroQueue:[{}],isMacroLoaded:true,isMacroPlaying:true,
   settingsProfiles:{endReplay(){throw Error('profile capture failed');}},
   replayNudgeTiming:{},currentMacroStep:12,pendingMacroPalette:3,isSelectingMacroPalette:true,isMacroFullscreen:fullscreen,
   animateBoardTransition:fn=>{assert.deepEqual(removed,['active','running'],'controls are released before scheduling animation');if(!busy)fn();},toggleMacroFullScreen(){full=false;},console:{error:(...args)=>errors.push(args)},
