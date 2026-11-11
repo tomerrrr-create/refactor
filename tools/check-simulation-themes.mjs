@@ -23,6 +23,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const state=()=>page.evaluate(()=>themeTest.state()),tap=selector=>config.width<600?page.locator(selector).tap():page.locator(selector).click();
  const tech=async()=>{await page.evaluate(()=>themeTest.tech());await page.locator('#technicianDialog').waitFor({state:'visible'});};
  const map=async()=>{await page.evaluate(()=>themeTest.map());await page.locator('#evolutionDrawerDialog').waitFor({state:'visible'});};
+ const backdrop=page.locator('#simModeBackground');
+ const opacity=()=>backdrop.evaluate(e=>getComputedStyle(e).opacity);
  const ink=()=>page.locator('#btnGravitationalSort svg').first().evaluate(e=>getComputedStyle(e).stroke);
  await boot(false);await page.evaluate(()=>themeTest.setup());await tech();
  assert.equal(await page.locator('#technicianDialog #simulationThemeSettings,#technicianDialog #simulationPlaybackThemeSettings').count(),0);
@@ -44,10 +46,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  for(const [rest,playback]of [['blue','gold'],['gold','teal'],['teal','blue']]){
   const before=await state();await tap('#simulationThemeSettings [data-theme='+rest+']');await tap('#simulationPlaybackThemeSettings [data-theme='+playback+']');
   const selected=await state();assert.deepEqual(selected.board,before.board);assert.equal(selected.history,before.history);assert.equal(selected.settings.simulationTheme,rest);assert.equal(selected.settings.simulationPlaybackTheme,playback);
-  await tap('#evolutionDrawerDialog [data-close]');await tap('#btnPlayPauseLife');assert((await state()).playing);assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),playback);await page.waitForTimeout(450);
-  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(118, 103, 65)',teal:'rgb(104, 189, 181)'})[playback]);
+  await tap('#evolutionDrawerDialog [data-close]');const frame=await backdrop.boundingBox(),buttonBounds=await page.locator('#btnNudgeBrighter').boundingBox();assert.equal(await opacity(),'1');await tap('#btnPlayPauseLife');assert((await state()).playing);assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),playback);await page.waitForTimeout(450);
+  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(118, 103, 65)',teal:'rgb(104, 189, 181)'})[playback]);assert.equal(await opacity(),'0');assert.deepEqual(await backdrop.boundingBox(),frame);assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);await page.screenshot({path:artifacts+'/'+config.lang+'-'+playback+'-running.png'});
   await tap('#btnPlayPauseLife');assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);await page.waitForTimeout(450);
-  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(165, 139, 84)',teal:'rgb(104, 189, 181)'})[rest]);await map();
+  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(165, 139, 84)',teal:'rgb(104, 189, 181)'})[rest]);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);await map();
  }
  await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,'teal');assert.equal(current.settings.simulationPlaybackTheme,'blue');
  // Saved legacy profiles normalize only the retired appearance fields.
