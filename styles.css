@@ -1906,13 +1906,13 @@ button, .ctrl {
 .guide-ripple-tile canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 @media (max-height:650px) { .guide-welcome h2 { margin:12px auto 20px; } .guide-ripple-tile { height:clamp(160px,32dvh,220px); } }
 
-/* Crossfade fixed gradient layers; works without animated custom properties. */
+/* Keep the decorative backdrop invisible while retaining its grid footprint. */
 .sim-mode-active #simModeBackground {
   position: relative;
   isolation: isolate;
   border-color: #334155;
-  opacity: 1;
-  transition: opacity 400ms ease-in-out, border-color 400ms ease-in-out, box-shadow 400ms ease-in-out;
+  opacity: 0;
+  transition: border-color 400ms ease-in-out, box-shadow 400ms ease-in-out;
 }
 .sim-mode-active #simModeBackground::before,
 .sim-mode-active #simModeBackground::after {
@@ -1933,8 +1933,6 @@ button, .ctrl {
 :root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
 :root[data-simulation-effective-theme="gold"] #simModeBackground::before,
 :root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
-/* Fade only the decorative frame; simulation controls remain independent. */
-:root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
   :root,
   .sim-mode-active #simModeBackground,
