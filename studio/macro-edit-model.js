@@ -128,17 +128,21 @@ export function exportRange(actions,{start=null}={}) {
   if(!randomStartIndices(actions).includes(first))throw Error('Choose an independent Random point.');
   const init={...start.init,board:`${start.init.n*start.init.n}x0`,gold:[]};
   selected[0].isGenBased=false;
-  selected.unshift({eventName:'HISTORY_SETTINGS',details:JSON.stringify(start.settings),delta:0,isGenBased:false});
   selected.unshift({eventName:'Islands Mode Changed',details:'{"mode":"off"}',delta:0,isGenBased:false});
   selected.unshift({eventName:'ISLANDS_INIT',details:JSON.stringify({...start.boardCheckpoint,board:[[init.n*init.n,0,0,0]]}),delta:0,isGenBased:false});
+  // Restore preferences before the full-board checkpoint: that existing
+  // command honors the player's selected opening-palette override.
+  selected.unshift({eventName:'HISTORY_SETTINGS',details:JSON.stringify(start.settings),delta:0,isGenBased:false});
   selected.unshift({eventName:'PAUSE',details:'---',delta:0,isGenBased:false});
   selected.unshift({eventName:'INIT_STATE',details:JSON.stringify(init),delta:0,isGenBased:false});
  } else if(start){
-  selected.unshift({eventName:'HISTORY_SETTINGS',details:JSON.stringify(start.settings),delta:0,isGenBased:false});
   // The existing legacy Islands checkpoint is the player's supported full
   // tile codec (k, working v, protected flags). No new app command/field is used.
   selected.unshift({eventName:'Islands Mode Changed',details:'{"mode":"off"}',delta:0,isGenBased:false});
   selected.unshift({eventName:'ISLANDS_INIT',details:JSON.stringify(start.boardCheckpoint),delta:0,isGenBased:false});
+  // Restore preferences before the full-board checkpoint: that existing
+  // command honors the player's selected opening-palette override.
+  selected.unshift({eventName:'HISTORY_SETTINGS',details:JSON.stringify(start.settings),delta:0,isGenBased:false});
   selected.unshift({eventName:'PAUSE',details:'---',delta:0,isGenBased:false});
   selected.unshift({eventName:'INIT_STATE',details:JSON.stringify(start.init),delta:0,isGenBased:false});
  } else {
@@ -149,4 +153,22 @@ export function exportRange(actions,{start=null}={}) {
  // A live INIT_STATE expands to its own synthetic PLAY on import. Avoid
  // duplicating it, and keep all other already-resolved effective commands.
  return selected.filter(a=>!a.resume).map(a=>line(a,a.delta)).join('\n')+'\n';
+}
+
+// Repair only the exact old Studio opening template, preserving every command,
+// timestamp, line ending and all later intentional palette/history changes.
+export function repairOpeningPalette(text) {
+ const chunks=text.match(/[^\r\n]*(?:\r\n|\n|$)/g)??[];
+ const records=chunks.flatMap((raw,index)=>{const m=raw.trim().match(/^\[00:00:00\.000\] ([^\n]+?) -> (.*)$/);return m?[{index,event:m[1],details:m[2]}]:[];});
+ if(records.length<5)return {changed:false,text};
+ const [init,pause,board,off,settings]=records;
+ if(init.event!=='INIT_STATE'||pause.event!=='PAUSE'||board.event!=='ISLANDS_INIT'||off.event!=='Islands Mode Changed'||settings.event!=='HISTORY_SETTINGS')return {changed:false,text};
+ try{
+  const a=JSON.parse(init.details),b=JSON.parse(board.details),c=JSON.parse(settings.details),d=JSON.parse(off.details);
+  if(b.recordingVersion!==undefined||b.islandsVersion!==1||b.seed!==1||b.state!==1||b.steps!==0||d.mode!=='off'||
+   !Array.isArray(b.board)||a.n!==b.n||a.n!==c.n||a.pal!==b.activePaletteIndex||a.pal!==c.activePaletteIndex||a.sort!==b.currentSortMethod||a.sort!==c.currentSortMethod)return {changed:false,text};
+ }catch{return {changed:false,text};}
+ const legacy=[chunks[board.index],chunks[off.index],chunks[settings.index]];
+ [chunks[board.index],chunks[off.index],chunks[settings.index]]=[legacy[2],legacy[0],legacy[1]];
+ return {changed:true,text:chunks.join('')};
 }

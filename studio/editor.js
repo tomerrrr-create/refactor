@@ -1,5 +1,5 @@
 import {t,language} from './i18n.js';
-import {actionGroups,freshStartIndices,randomStartIndices,simulationOf,exportRange} from './macro-edit-model.js';
+import {actionGroups,freshStartIndices,randomStartIndices,repairOpeningPalette,simulationOf,exportRange} from './macro-edit-model.js';
 const text=(en,he)=>language==='he'?he:en;
 const names={INIT_STATE:['Starting board','לוח התחלתי'],DRAW_STROKE:['Brush stroke','ציור במברשת'],PLAY:['Start simulation','הפעלת סימולציה'],
  PAUSE:['Pause simulation','עצירת סימולציה'],'STEP FORWARD':['One simulation step','צעד סימולציה אחד'],HISTORY_SETTINGS:['Restore settings','שחזור הגדרות'],
@@ -35,7 +35,7 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  const $=id=>panel.querySelector('#'+id);
  panel.innerHTML=`<label class="file-title" for="editorFile">${text('Choose a macro to edit','בחר מאקרו לעריכה')}</label><input id="editorFile" class="file-input" type="file" accept=".txt,text/plain">
  <p class="editor-note">${text('1. Load a macro → 2. Reach a safe start → 3. Preview and save a new copy. The original stays unchanged.','1. טען מאקרו ← 2. בחר נקודת התחלה בטוחה ← 3. בדוק ושמור עותק חדש. המקור נשאר ללא שינוי.')}</p>
- <p id="editorFileName" class="muted"></p><p id="editorStatus" class="muted" role="status" aria-live="polite"></p><p id="editorError" role="alert"></p>
+ <p id="editorFileName" class="muted"></p><p id="editorRepairNote" class="editor-note" hidden>${text('This older edited file may override your chosen starting palette. Save a repaired copy without cutting it again.','הקובץ הערוך הזה עלול לדרוס את פלטת הפתיחה שתבחר. אפשר לשמור עותק מתוקן בלי לחתוך אותו שוב.')}</p><button id="editorRepairPalette" class="secondary" type="button" hidden>${text('Save copy with starting palette fix','שמור עותק עם תיקון פלטת פתיחה')}</button><p id="editorStatus" class="muted" role="status" aria-live="polite"></p><p id="editorError" role="alert"></p>
  <canvas id="editorCanvas" width="520" height="520" aria-label="${text('Macro preview','תצוגת מאקרו')}" hidden></canvas>
  <div class="editor-controls"><button id="editorPlay" disabled>${text('Play','ניגון')}</button><button id="editorRestart" class="secondary" disabled>${text('Restart','מההתחלה')}</button>
  <button id="editorNextSafe" class="secondary" disabled>${text('Play to next safe start','נגן עד לנקודת חיתוך בטוחה')}</button><button id="editorStart" disabled>${text('Choose as new beginning','בחר כהתחלה חדשה')}</button></div>
@@ -53,7 +53,7 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  <div class="editor-paging"><button id="editorPrev" class="secondary" disabled>${text('Previous','הקודם')}</button><span id="editorPage" class="muted"></span><button id="editorNext" class="secondary" disabled>${text('Next','הבא')}</button></div>
  <ol id="editorActions" class="editor-list"></ol><p id="editorActionsEmpty" class="editor-note" role="status" hidden>${text('No safe starting points in this macro.','אין במאקרו הזה נקודות התחלה בטוחות.')}</p>`;
  let frame=null,engine=null,source='',filename='macro.txt',actions=[],groups=[],safe=new Set(),random=new Set(),page=0,filter='all',start=null,
-  previewing=false,previewTotal=0,busy=false,playing=false,raf=null,lastTime=0,version=0,url=null,inFlight=null,engineLoad=null;
+  previewing=false,previewTotal=0,busy=false,playing=false,raf=null,lastTime=0,version=0,url=null,inFlight=null,engineLoad=null,openingRepair=null;
  const ctx=$('editorCanvas').getContext('2d',{alpha:false});
  function fail(error){$('editorError').textContent=error?.message??String(error);}
  function clearError(){$('editorError').textContent='';}
@@ -80,6 +80,8 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  function current(){return engine?.state();}
  function update(){
   const state=current();const ready=Boolean(source)&&!busy;panel.dataset.editorPhase=busy?'loading':!source?'empty':playing?'playing':state?.finished?'complete':'paused';
+  $('editorRepairPalette').hidden=$('editorRepairNote').hidden=!openingRepair;
+  $('editorRepairPalette').disabled=!ready||playing||Boolean(inFlight)||!openingRepair;
   $('editorPlay').disabled=!ready||Boolean(state?.finished);$('editorPlay').textContent=playing?text('Pause','עצירה'):text('Play','ניגון');
   for(const id of ['editorAllFilter','editorSafeFilter','editorRandomFilter','editorReplayFilter'])$(id).disabled=!ready;
   $('editorRestart').disabled=!ready;$('editorStart').disabled=!ready||playing||Boolean(inFlight)||previewing||state?.boundary===null||state?.boundary===undefined;
@@ -133,11 +135,11 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
   $('editorPage').textContent=`${page+1} / ${pages}`;$('editorPrev').disabled=page===0;$('editorNext').disabled=page===pages-1;update();
  }
  async function openFile(file){
-  if(!file)return;const request=++version;busy=true;await pause();source='';start=null;previewing=false;clearError();update();
+  if(!file)return;const request=++version;busy=true;await pause();source='';openingRepair=null;start=null;previewing=false;clearError();update();
   try{
    if(file.size>32*1024*1024)throw Error(t('לגרסת הניסוי יש מגבלה של 32 מגה לקובץ מקרו.'));
    const contents=await file.text();await loadEngine();if(request!==version)return;
-   actions=engine.load(contents);source=contents;filename=file.name;groups=actionGroups(actions);safe=new Set(freshStartIndices(actions));random=new Set(randomStartIndices(actions));page=0;
+   actions=engine.load(contents);source=contents;const repair=repairOpeningPalette(contents);openingRepair=repair.changed?repair.text:null;filename=file.name;groups=actionGroups(actions);safe=new Set(freshStartIndices(actions));random=new Set(randomStartIndices(actions));page=0;
    $('editorFileName').textContent=filename;$('editorStatus').textContent=safe.size===0?text('This macro has no safe new starting points. The source stays unchanged.','לא נמצאו במאקרו נקודות התחלה עצמאיות. המקור נשאר ללא שינוי.'):text('Ready. Play the macro or choose a fresh start in the list.','מוכן. נגן את המאקרו או בחר נקודת התחלה חדשה ברשימה.');renderList();draw();
   }catch(error){if(request!==version)return;engine?.stop();actions=[];groups=[];$('editorActions').replaceChildren();fail(error);}
   finally{if(request===version){busy=false;update();}}
@@ -166,6 +168,7 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  $('editorStart').addEventListener('click',()=>{try{const point=engine.startPoint();start=point;draw();$('editorStartCanvas').getContext('2d').drawImage($('editorCanvas'),0,0);clearError();update();}catch(error){fail(error);}});
  $('editorReset').addEventListener('click',async()=>{busy=true;await pause();try{start=null;previewing=false;engine.load(source);clearError();draw();}catch(error){fail(error);}finally{busy=false;update();}});
  $('editorPreview').addEventListener('click',async()=>{busy=true;try{const file=editedFile();await pause();previewTotal=engine.load(await file.text()).length;previewing=true;engine.play();playing=true;lastTime=0;raf=requestAnimationFrame(tick);}catch(error){fail(error);}finally{busy=false;update();}});
+ $('editorRepairPalette').addEventListener('click',()=>{if(!openingRepair)return;if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(new Blob([openingRepair],{type:'text/plain'}));const link=document.createElement('a');link.href=url;link.download=filename.replace(/\.txt$/i,'')+'_palette-fixed.txt';link.click();$('editorStatus').textContent=text('Repaired copy downloaded. Load it in the app and choose your starting palette. Original unchanged.','העותק המתוקן הורד. טען אותו באפליקציה ובחר פלטת פתיחה. המקור נשאר ללא שינוי.');});
  $('editorSave').addEventListener('click',()=>{try{const file=editedFile();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);const link=document.createElement('a');link.href=url;link.download=file.name;link.click();$('editorStatus').textContent=text('New macro downloaded. Original unchanged.','המאקרו החדש הורד. המקור לא השתנה.');}catch(error){fail(error);}});
  for(const [id,value]of [['editorAllFilter','all'],['editorSafeFilter','safe'],['editorRandomFilter','random'],['editorReplayFilter','replay']])$(id).addEventListener('click',()=>{filter=filter===value?'all':value;page=0;renderList();});
  $('editorPrev').addEventListener('click',()=>{page--;renderList();});$('editorNext').addEventListener('click',()=>{page++;renderList();});

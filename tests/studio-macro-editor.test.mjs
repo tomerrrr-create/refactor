@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {restoreIslandsBoard} from '../js/simulations/islands.js';
-import {freshStartIndices,randomStartIndices,randomSetupActions,makeCheckpoint,makeBoardCheckpoint,exportRange,actionGroups} from '../studio/macro-edit-model.js';
+import {freshStartIndices,repairOpeningPalette,randomStartIndices,randomSetupActions,makeCheckpoint,makeBoardCheckpoint,exportRange,actionGroups} from '../studio/macro-edit-model.js';
 const a=(eventName,details='',delta=0)=>({eventName,details,delta,isGenBased:false});
 const play=sim=>a('PLAY',`Armed: ${sim} | Sort: luminance | Rules: {}`);
 const init=a('INIT_STATE',JSON.stringify({n:5,pal:0,sort:'luminance',sep:0,board:'25x1'}));
@@ -55,4 +55,22 @@ test('a paused Random can restart board-only Gravity without retaining its previ
 test('Random bootstrap starts at INIT_STATE even with earlier startup setting records',()=>{
  const source=[a('Sort by','reversed'),init,a('--','Palette Randomized'),play('gravitationalSort'),a('PAUSE')];
  const setup=randomSetupActions(source,2);assert.equal(setup[0].eventName,'INIT_STATE');assert.equal(JSON.parse(setup[0].details).sort,'luminance');
+});
+
+test('both export prefixes restore settings before the palette-override-aware board checkpoint',()=>{
+ const source=[init,a('--','Palette Randomized'),play('gravitationalSort'),a('PAUSE')];
+ const state={n:2,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,tiles:Array.from({length:4},()=>({k:1,v:1,isGold:false}))};
+ for(const random of [false,true]){
+  const point={index:random?1:2,random,init:makeCheckpoint(state),boardCheckpoint:makeBoardCheckpoint(state),settings:{n:2,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0}};
+  const output=exportRange(source,{start:point});assert(output.indexOf('HISTORY_SETTINGS ->')<output.indexOf('ISLANDS_INIT ->'));
+ }
+});
+
+test('old Studio opening palette repair keeps later palette changes and is idempotent',()=>{
+ const source=[init,a('--','Palette Randomized'),play('gravitationalSort'),a('Palette Change','Later palette | Sort: luminance',1000),a('PAUSE','---',1100)];
+ const state={n:2,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,tiles:Array.from({length:4},()=>({k:1,v:1}))};
+ const point={index:1,random:true,init:makeCheckpoint(state),boardCheckpoint:makeBoardCheckpoint(state),settings:{n:2,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0}};
+ const fixed=exportRange(source,{start:point});const lines=fixed.split('\n');const legacy=[lines[0],lines[1],lines[3],lines[4],lines[2],...lines.slice(5)].join('\n');
+ const repaired=repairOpeningPalette(legacy);assert(repaired.changed);assert.equal(repaired.text,fixed);assert.equal(repairOpeningPalette(repaired.text).changed,false);assert.equal(repairOpeningPalette(legacy.replaceAll('\n','\r\n')).text,fixed.replaceAll('\n','\r\n'));
+ assert.deepEqual(repairOpeningPalette('ordinary macro text'),{changed:false,text:'ordinary macro text'});
 });
