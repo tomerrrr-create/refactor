@@ -4,7 +4,7 @@ import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour
 import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_FREQUENCIES,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
-import {DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,validateEvolutionSlots} from './evolution-drawer-settings.js';
+import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,validateEvolutionSlots} from './evolution-drawer-settings.js';
 import {createEvolutionDrawer} from './evolution-drawer.js';
 import { CONTOUR_LINE_COLORS, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, createCracksSession, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
@@ -1854,7 +1854,7 @@ function restoreCycleMode(simulation, mode) {
         case 'nudgeBrighter':case 'nudgeDarker':armedSimulation=mode;break;
     }
 }
-function resetEvolutionCycle(simulation) {
+function resetEvolutionCycle(simulation, {refresh=true} = {}) {
     if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
     const mode=defaultEvolutionCycleMode(simulation);
     if(mode===undefined)return false;
@@ -1868,7 +1868,7 @@ function resetEvolutionCycle(simulation) {
             cymaticsRules=selectedMap.rules;cymaticsFrequencies=selectedMap.frequencies;cymaticsStrengths=selectedMap.strengths;
             persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();
         }
-        refreshCycleIcons();return true;
+        if(refresh)refreshCycleIcons();return true;
     }
     cycleMemoryAfterReplay=false;
     if(currentCycleMode(armedSimulation)!==mode){
@@ -1880,7 +1880,12 @@ function resetEvolutionCycle(simulation) {
         if(isNudgeSimulation(simulation))window.logArtEvent('Nudge Mode Changed',mode);
         else if(!live||!['cymatics','contour'].includes(simulation))window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
     }
-    rememberCurrentCycle();refreshCycleIcons();return true;
+    rememberCurrentCycle();if(refresh)refreshCycleIcons();return true;
+}
+function resetAllEvolutionCycles() {
+    if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
+    for(const {id} of EVOLUTION_CATALOG)resetEvolutionCycle(id,{refresh:false});
+    refreshCycleIcons();return true;
 }
 
 function cycleMemoryTap(simulation, onTap) {
@@ -5887,7 +5892,7 @@ updateBrightnessEvoButtonUI();
             canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying,
             getText,getLang:getCurrentLang,onLanguageChange});
         evolutionDrawer = createEvolutionDrawer({
-            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,
+            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
             canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             getText,getLang:getCurrentLang,onLanguageChange,

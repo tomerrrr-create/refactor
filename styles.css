@@ -2606,3 +2606,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 .technician-display-settings .remember-modes-option { display:flex; flex-direction:row; justify-content:space-between; text-align:start; }
 .technician-display-settings .remember-modes-option span { min-width:0; }
+
+#evolutionDrawerDialog .drawer-cycle-actions { margin-top:14px; padding-top:14px; border-top:1px solid #b28b362c; }
+#evolutionDrawerDialog [data-reset-cycles] { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:44px; padding:8px 12px; border:1px solid #b28b3659; border-radius:8px; background:#b28b3612; color:#e3c677; font:inherit; font-size:12px; cursor:pointer; }
+#evolutionDrawerDialog [data-reset-cycles] svg { flex:0 0 18px; width:18px; height:18px; }
+#evolutionDrawerDialog [data-reset-cycles]:focus-visible { outline:2px solid #ffe7a0; outline-offset:3px; }
+#evolutionDrawerDialog [data-reset-cycles-status] { min-height:16px; margin:6px 0 0; color:#b7b4a8; font-size:12px; text-align:center; }
