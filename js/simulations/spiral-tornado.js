@@ -1,58 +1,63 @@
-// A flowing vortex, not a sort into a pre-painted cone. Geometry only is cached;
-// every generation is a pure function of the tiles and size (no hidden clock).
+// Cylindrical particle coordinates become a ground-level perspective view.
+// Each particle has a height, radius and angular position around a vertical axis.
+// The frame is explicit in rules/checkpoints; no wall clock or session state.
 let geometry;
-function tornadoGeometry(n) {
-    const count = n * n, center = (n - 1) / 2;
-    const height = Math.max(1, (n - 1) * .72), eye = (n - 1) * .72;
-    const width = row => Math.max(1, (n - 1) * (.09 + .46 * (1 - Math.max(0, Math.min(1, row / Math.max(1, n - 1)))) ** 1.4));
-    const targets = new Int32Array(count * 2).fill(-1);
-    const order = Array.from({length: count}, (_, i) => i);
-    for (let i = 0; i < count; i++) {
-        const row = Math.floor(i / n), col = i % n;
-        const x = (col - center) / width(row), y = (row - eye) / height;
-        const radius = Math.hypot(x, y);
-        if (!radius) continue;
-        // Clockwise circulation dominates inward draw. The smooth coordinate
-        // warp makes the crown broad and the lower turns compact, with no mask.
-        const angle = .12 / Math.max(.6, radius);
-        const inward = Math.max(0, 1 - .025 / Math.max(.5, radius));
-        const ty = (x * Math.sin(angle) + y * Math.cos(angle)) * inward;
-        const tx = (x * Math.cos(angle) - y * Math.sin(angle)) * inward;
-        const targetR = eye + ty * height + .22 * (1 - row / Math.max(1, n - 1));
-        const targetC = center + tx * width(targetR);
-        const dx = targetC - col, dy = targetR - row, scale = Math.hypot(dx, dy);
-        if (!scale) continue;
-        let first = -Infinity, second = -Infinity;
-        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-            if (!dr && !dc) continue;
-            const r = row + dr, c = col + dc;
-            if (r < 0 || r >= n || c < 0 || c >= n) continue;
-            const score = (dx * dc + dy * dr) / (scale * Math.hypot(dr, dc));
-            if (score <= .25) continue;
-            if (score > first) {
-                targets[i * 2 + 1] = targets[i * 2]; second = first;
-                targets[i * 2] = r * n + c; first = score;
-            } else if (score > second) { targets[i * 2 + 1] = r * n + c; second = score; }
-        }
+const tau = Math.PI * 2;
+const noise = i => ((Math.imul(i ^ (i >>> 16), 0x45d9f3b) >>> 0) % 65536) / 65536;
+function particlesFor(n) {
+    const levels = Math.max(16, Math.ceil(n * 1.1));
+    const around = Math.max(24, n * 2);
+    const particles = [];
+    for (let row = 0; row < levels; row++) for (let col = 0; col < around; col++) {
+        const id = row * around + col, h = (row + noise(id + 17)) / levels;
+        const angle = tau * (col + noise(id + 91) * .8) / around;
+        // Five loose helical strands; gaps allow the far side to show through.
+        const strand = Math.cos(angle * 5 + h * tau * 3);
+        const core = strand < -.65 + noise(id + 53) * .45;
+        if (core && noise(id + 239) > .3) continue;
+        particles.push({h, angle, core, layer: core ? .35 + .4 * noise(id + 173) : .8 + .2 * noise(id + 173), jitter: noise(id + 719)});
     }
-    // Distribute work spatially rather than dragging a horizontal scan line.
-    const hash = i => Math.imul(i ^ (i >>> 16), 0x45d9f3b) >>> 0;
-    order.sort((a, b) => hash(a) - hash(b));
-    return {n, targets, order, moved: new Uint8Array(count)};
+    return {n, particles, depth: new Float64Array(n * n), ranks: new Int32Array(n * n)};
 }
-export function runTornadoGeneration(n, board) {
-    if (!geometry || geometry.n !== n) geometry = tornadoGeometry(n);
-    const {targets, order, moved} = geometry;
-    moved.fill(0);
-    for (const i of order) {
-        if (moved[i] || board[i].isGold) continue;
-        for (let choice = 0; choice < 2; choice++) {
-            const j = targets[i * 2 + choice];
-            if (j < 0 || moved[j] || board[j].isGold || board[i].k <= board[j].k) continue;
-            const tile = board[i]; board[i] = board[j]; board[j] = tile;
-            moved[i] = moved[j] = 1;
-            break;
-        }
+export function projectTornadoParticle(n, h, angle, layer = 1, phase = 0, out = {}) {
+    const span = Math.max(1, n - 1);
+    const radius = span * (.035 + .32 * (1 - h) ** 1.7) * layer;
+    const x = radius * Math.cos(angle);
+    const z = radius * Math.sin(angle);
+    const y = span * (.14 + .79 * h);
+    const eye = span * .88, distance = span * 3;
+    const perspective = distance / (distance - z);
+    const lean = span * .018 * Math.sin(h * 5 + phase * .12) * Math.sin(Math.PI * h);
+    out.x = span * .5 + (x + lean) * perspective;
+    out.y = eye + (y - eye) * perspective;
+    out.z = z; out.radius = radius;
+    return out;
+}
+export function runTornadoGeneration(n, board, {paletteLength = 23, frame = 0} = {}) {
+    if (!geometry || geometry.n !== n) geometry = particlesFor(n);
+    const {particles, depth, ranks} = geometry;
+    depth.fill(-Infinity); ranks.fill(0);
+    const phase = frame * .045, projected = {};
+    for (const p of particles) {
+        // Faster narrow lower turns, bounded so the foot remains readable.
+        const speed = .7 + 1.0 * p.h;
+        const angle = p.angle + phase * speed;
+        const h = Math.max(0, Math.min(1, p.h + .007 * Math.sin(phase * .3 + p.angle)));
+        projectTornadoParticle(n, h, angle, p.layer, phase, projected);
+        const col = Math.round(projected.x), row = Math.round(projected.y);
+        if (col < 0 || row < 0 || col >= n || row >= n) continue;
+        const i = row * n + col;
+        if (projected.z <= depth[i]) continue;
+        depth[i] = projected.z;
+        // Pigment follows the particle around the axis. Front particles are
+        // stronger; back particles recede, always within the current palette.
+        const pigment = .28 + .54 * p.h + .16 * Math.sin(p.angle + p.h * tau * 2) + .035 * p.jitter;
+        const lighting = .42 + .58 * (Math.sin(angle) + 1) / 2;
+        ranks[i] = Math.max(0, Math.min(paletteLength - 1, Math.round(pigment * lighting * (p.core ? .75 : 1) * (paletteLength - 1))));
+    }
+    for (let i = 0; i < board.length; i++) {
+        if (board[i].isGold) continue;
+        board[i].k = board[i].v = ranks[i];
     }
     return board;
 }
