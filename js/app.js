@@ -1159,6 +1159,10 @@ function applyNudgeLogic(direction) {
         setBrushMode(true);
       }
 
+      function visitSomewhereAction() {
+        return animateBoardTransition(() => performAction(specialReset));
+      }
+
       function specialReset() {
         activePaletteIndex = Math.floor(Math.random() * C.PALETTES.length);
         separatorPx = C.SEPARATORS[Math.floor(Math.random() * C.SEPARATORS.length)];
@@ -5799,7 +5803,7 @@ bindPickerGestures(dom.btnPalette, {
             onBlocked: () => alert(getText('studio_popup_blocked')),
             onError: () => alert(getText('studio_transfer_failed'))
         })));
-        dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
+        dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, visitSomewhereAction));
         bindPickerGestures(dom.btnResizeUp, {
             onTap: () => resizeGrid(resizeIncreasing), onOpen: modals.openResizeModal,
             onSwipeDown: toggleResizeDirection,
@@ -5920,13 +5924,13 @@ dom.btnWind.addEventListener('keydown', event => {
     }
 });
         bindPickerGestures(dom.btnDark, {
-            onTap: goDarkAction,
+            onTap: goDarkAction, onOpen: visitSomewhereAction,
             onHold: () => {
                 if (isLifePlaying) return;
                 if (!isSimModeActive) toggleSimMode();
                 prepareBoardForSimMode();
             },
-            canInteract: () => !isBreathing, canOpen: () => false,
+            canInteract: () => !isBreathing,
             beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
         });
         bindPickerGestures(dom.btnToggleSimMode, {

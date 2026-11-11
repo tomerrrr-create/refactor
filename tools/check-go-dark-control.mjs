@@ -6,9 +6,9 @@ import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
 let app=await readFile(root+'js/app.js','utf8');
-app=app.replace('      initializeApp();',`window.darkTest={
- setup(sim){pauseLife();setWindMode(false);resetArmedState();activePaletteIndex=0;updatePaletteHeader();n=9;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i%Math.min(10,paletteLen()));t.isGold=i===40;});simulationInitSettings={boardSize:15,brushSize:3,brushColor:'first',symmetry:'horizontal'};isSimModeActive=sim;dom.controlsContainer.classList.toggle('sim-mode-active',sim);dom.btnPlayPauseLife.classList.toggle('control-hidden',!sim);updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);updateLayout();},
- state:()=>({board:boardState.map(t=>[t.k,t.v,t.isGold]),n,sep:separatorPx,brush:brushSize,color:selectedColorIndex,symmetry:symmetryMode,sim:isSimModeActive,playing:isLifePlaying,gen:currentGenerationCount,animating:isAnimating,loaded:isMacroLoaded,logs:[...artRecipeLog]}),recipe:async()=>await createArtRecipeFile().text(),start(){armSimulation('nudgeBrighter');togglePlayPauseLife();},pause:pauseLife
+app=app.replace('      initializeApp();',`const darkOriginalRandom=Math.random;window.darkTest={fixedRandom:value=>{Math.random=value?()=>.2:darkOriginalRandom;},
+ setup(sim){pauseLife();setWindMode(false);resetArmedState();activePaletteIndex=0;updatePaletteHeader();n=9;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i%Math.min(10,paletteLen()));t.isGold=i===40;});simulationInitSettings={boardSize:15,brushSize:3,brushColor:'first',symmetry:'horizontal'};isSimModeActive=sim;dom.controlsContainer.classList.toggle('sim-mode-active',sim);dom.btnSpecialReset.classList.toggle('control-hidden',sim);dom.btnPlayPauseLife.classList.toggle('control-hidden',!sim);updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);updateLayout();},
+ state:()=>({board:boardState.map(t=>[t.k,t.v,t.isGold]),n,palette:activePaletteIndex,sep:separatorPx,brush:brushSize,color:selectedColorIndex,symmetry:symmetryMode,sim:isSimModeActive,playing:isLifePlaying,gen:currentGenerationCount,animating:isAnimating,loaded:isMacroLoaded,logs:[...artRecipeLog]}),recipe:async()=>await createArtRecipeFile().text(),start(){armSimulation('nudgeBrighter');togglePlayPauseLife();},pause:pauseLife
  };initializeApp().then(()=>darkTest.ready=true);`);
 for(const ms of [5000,1500,2000])app=app.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
 const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':'text/html');res.end(f==='js/app.js'?app:await readFile(root+f));}catch{res.writeHead(404);res.end();}});
@@ -42,6 +42,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   for(const key of ['board','n','sep','brush','color','symmetry','sim'])assert.deepEqual(actual[key],baseline[key],key);
   assert.equal(actual.n,15);assert.equal(actual.brush,3);assert(actual.board.every(t=>t[0]===0&&!t[2]));assert.equal(actual.logs.filter(l=>l.includes('INIT_STATE ->')).length,1);assert.equal(actual.logs.filter(l=>l.includes('GO_DARK ->')).length,0,'hold release must not add a tap');
  }
+ await page.evaluate(()=>{darkTest.setup(false);darkTest.fixedRandom(true);});await tap('#btnSpecialReset');await page.waitForFunction(()=>!darkTest.state().animating);const visit=await state();
+ for(const sim of [false,true]){
+  await page.evaluate(sim=>darkTest.setup(sim),sim);
+  const r=await dark.boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
+  if(touch){const cdp=await ctx.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-i*8}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}
+  else {await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y-40,{steps:5});await page.mouse.up();}
+  await page.waitForFunction(()=>!darkTest.state().animating);const actual=await state();
+  for(const key of ['board','n','palette','sep','color'])assert.deepEqual(actual[key],visit[key],'swipe matches Visit somewhere: '+key);
+  assert.equal(actual.sim,sim);assert.equal(actual.logs.filter(l=>l.includes('INIT_STATE ->')).length,2);assert.equal(actual.logs.filter(l=>l.includes('GO_DARK ->')).length,0);
+ }
+ await page.evaluate(()=>darkTest.fixedRandom(false));
  await page.evaluate(()=>{darkTest.setup(true);darkTest.start();});await page.waitForFunction(()=>darkTest.state().gen>=3);await hold('#btnDark');assert((await state()).playing);assert.equal((await state()).n,9);await tap('#btnDark');await page.waitForFunction(()=>!darkTest.state().animating);assert((await state()).playing);assert.equal((await state()).n,9);assert((await state()).logs.some(l=>l.includes('GO_DARK ->')));await page.evaluate(()=>darkTest.pause());
- await page.screenshot({path:'/tmp/go-dark-control/'+config.lang+'.png'});assert.deepEqual(errors,[]);console.log(JSON.stringify({config,position:true,tap:true,holdMatchesEntry:true,history:true,exportedReplay:true,playbackGuard:true}));await ctx.close();
+ await page.screenshot({path:'/tmp/go-dark-control/'+config.lang+'.png'});assert.deepEqual(errors,[]);console.log(JSON.stringify({config,position:true,tap:true,holdMatchesEntry:true,history:true,exportedReplay:true,visitSwipeMatches:true,playbackGuard:true}));await ctx.close();
 }}finally{await browser.close();server.close();}

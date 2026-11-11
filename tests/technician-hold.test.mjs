@@ -19,6 +19,7 @@ function harness(t, pointerType = 'touch', buttonId = 'btnToggleSimMode') {
         toggleSimMode() { context.isSimModeActive = !context.isSimModeActive; actions.push('toggle'); },
         prepareBoardForSimMode() { actions.push('init'); },
         goDarkAction() { actions.push('dark'); },
+        visitSomewhereAction() { actions.push('visit'); },
         modals: { openTechnicianMenu(trigger) { assert.equal(trigger, button); actions.push('technicians'); } } });
     Object.assign(globalThis, {document: {addEventListener() {}, elementFromPoint: (x,y) => x >= 0 && x <= 50 && y >= 0 && y <= 50 ? button : null}, window: {addEventListener() {}},
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, {fn, at: now + ms}); return id; }, clearTimeout: id => timers.delete(id)});
@@ -120,4 +121,12 @@ test('Go Dark hold preserves the simulation panel and is blocked while playing; 
  h.down();h.advance(600);h.release();assert.deepEqual(h.actions,['init']);
  h.context.isLifePlaying=true;h.down();h.advance(2000);h.release();assert.deepEqual(h.actions,['init']);
  h.down();h.advance(2100);h.release();assert.deepEqual(h.actions,['init','dark']);
+});
+
+for(const pointerType of ['mouse','touch'])test(`${pointerType} Go Dark swipe up visits once without tap, initialization or panel switch`,t=>{
+ const h=harness(t,pointerType,'btnDark');h.down();h.advance(150);h.event('pointermove',25,-10);h.event('pointerup',25,-10);h.event('click');h.advance(3000);assert.deepEqual(h.actions,['visit']);
+});
+test('cancelled Go Dark swipe and breathing cannot visit or initialize',t=>{
+ const h=harness(t,'touch','btnDark');h.down();h.event('pointermove',25,-10);h.event('pointercancel');h.event('click');assert.deepEqual(h.actions,[]);
+ h.context.isBreathing=true;h.down();h.event('pointermove',25,-10);h.event('pointerup',25,-10);h.event('click');assert.deepEqual(h.actions,[]);
 });
