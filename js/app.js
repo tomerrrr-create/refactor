@@ -361,6 +361,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let simulationInitSettings = loadSimInit();
       let brushSize = 1;
       let paletteBrushFeedbackTimer = null;
+      let colorBrushFeedbackTimer = null;
       let brushShape = 'circle';
       let isLifePlaying = false;
       let animationFrameId = null;
@@ -825,16 +826,18 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         dom.btnPalette.setAttribute('aria-label', label);
       }
 
-      function cyclePaletteBrushSize(direction) {
+      function cyclePaletteBrushSize(direction, button = dom.btnPalette) {
         const index = BRUSH_SIZES.indexOf(brushSize);
         brushSize = BRUSH_SIZES[(Math.max(0, index) + direction + BRUSH_SIZES.length) % BRUSH_SIZES.length];
         settingsProfiles?.scheduleCapture();
-        updatePaletteHeader();
-        dom.btnPalette.textContent = brushSizeLabel(brushSize);
-        dom.btnPalette.title = `${getText('init_brush_size')}: ${brushSize}`;
-        dom.btnPalette.setAttribute('aria-label', dom.btnPalette.title);
-        dom.btnPalette.classList.add('palette-brush-size-feedback');
-        paletteBrushFeedbackTimer = setTimeout(updatePaletteHeader, 900);
+        const restore = button === dom.btnPalette ? updatePaletteHeader : updateColorPickerButtonUI;
+        restore();
+        button.textContent = brushSizeLabel(brushSize);
+        button.title = `${getText('init_brush_size')}: ${brushSize}`;
+        button.setAttribute('aria-label', button.title);
+        button.classList.add('palette-brush-size-feedback');
+        if (button === dom.btnPalette) paletteBrushFeedbackTimer = setTimeout(restore, 900);
+        else colorBrushFeedbackTimer = setTimeout(restore, 900);
       }
       
       function updateSeparatorButtonUI() {
@@ -3224,6 +3227,9 @@ function updateLayout() {
     }
 
     function updateColorPickerButtonUI() {
+        clearTimeout(colorBrushFeedbackTimer);
+        colorBrushFeedbackTimer = null;
+        dom.btnColorPicker.classList.remove('palette-brush-size-feedback');
         const brushKey=JSON.stringify(getCracksBrush());
         if(!isMacroPlaying&&!isExecutingMacroCommand&&brushKey!==lastCracksBrushKey&&armedSimulation==='contour'&&contourMode==='cracks'){
             cracksState=prepareCracksResume({n,currentBoardState:boardState,currentPalette:palette(),contourRules:{...contourRules,lineColor:'brush',material:getCracksMaterial(),growth:getCracksGrowth()},cracksBrush:getCracksBrush()},cracksState);
@@ -5859,7 +5865,8 @@ bindPickerGestures(dom.btnColorPicker, {
     },
     onOpen: () => modals.openColorPickerModal(),
     canSwipeSide: () => !windMode,
-    onSwipeSide: () => {
+    onSwipeSide: direction => cyclePaletteBrushSize(direction, dom.btnColorPicker),
+    onSwipeDown: () => {
         if (windMode || (!selectedColor && !isRainbowModeActive)) return;
         resetSelectedColor();
         dom.btnColorPicker.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 250 });
@@ -5884,6 +5891,8 @@ bindPickerGestures(dom.btnColorPicker, {
 });
 bindPickerGestures(dom.btnWind, {
     onTap: cycleWindEffect,
+    onSwipeDown: () => setWindMode(false),
+    canSwipeDown: () => windMode,
     onOpen: () => windSettingsUI.open(),
     canOpen: () => windMode,
     canInteract: () => isSimModeActive && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,

@@ -32,7 +32,7 @@ test('color control retains brush actions and has no Wind toggle gesture',()=>{
  updateGlowEffect(){},updateColorPickerButtonUI(){},bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('bindPickerGestures(dom.btnColorPicker,');
  vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnWind,',start)),c);
- assert.equal(gestures.onSwipeDown,undefined);gestures.onTap();gestures.onOpen();
+ assert.equal(typeof gestures.onSwipeDown,'function');gestures.onTap();gestures.onOpen();
  gestures.onHold();assert.equal(c.selectedColorIndex,0);gestures.onExtendedHold();assert(c.isRainbowModeActive);
  c.windMode=true;assert(!gestures.canInteract());assert(!gestures.canOpen());c.windMode=false;assert(gestures.canInteract());
  assert.deepEqual(events,['color','color-settings']);
@@ -40,11 +40,11 @@ test('color control retains brush actions and has no Wind toggle gesture',()=>{
 });
 test('dedicated Wind gestures use settings only while active and block macro interaction',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnWind:{addEventListener(){}}},windMode:false,isSimModeActive:true,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
- cycleWindEffect:()=>events.push('cycle'),windSettingsUI:{open:()=>events.push('settings')},hideLongPressDisplay(){},bindPickerGestures:(button,options)=>{gestures=options;}});
+ setWindMode:enabled=>{c.windMode=enabled;events.push('off');},cycleWindEffect:()=>events.push('cycle'),windSettingsUI:{open:()=>events.push('settings')},hideLongPressDisplay(){},bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('bindPickerGestures(dom.btnWind,');
  vm.runInContext(source.slice(start,source.indexOf("        dom.btnDark.addEventListener",start)),c);
  assert(gestures.canInteract());assert(!gestures.canOpen());gestures.onTap();c.windMode=true;assert(gestures.canOpen());gestures.onOpen();
- assert.deepEqual(events,['cycle','settings']);for(const flag of ['isMacroLoaded','isMacroPlaying','isExecutingMacroCommand']){c[flag]=true;assert(!gestures.canInteract());c[flag]=false;}
+ assert(gestures.canSwipeDown());gestures.onSwipeDown();assert(!c.windMode);assert(!gestures.canSwipeDown());assert.deepEqual(events,['cycle','settings','off']);for(const flag of ['isMacroLoaded','isMacroPlaying','isExecutingMacroCommand']){c[flag]=true;assert(!gestures.canInteract());c[flag]=false;}
  c.isSimModeActive=false;assert(!gestures.canInteract());
 });
 test('ordinary panel events commit pending ripples without consuming or blocking the event',()=>{
@@ -83,7 +83,7 @@ test('Wind cycles through three effects then Off, retaining preferences and conc
  assert.equal(c.windMode,true);assert.equal(c.isLifePlaying,true);assert.equal(c.symmetryMode,'horizontal');
  assert.deepEqual(events,['commit','save','ui','commit','save','ui',false,true]);
 });
-test('side swipe uses the existing empty-brush reset, preserving size, symmetry, board and running simulation',()=>{
+test('down swipe uses the existing empty-brush reset, preserving size, symmetry, board and running simulation',()=>{
  let gestures,flashes=0;
  const c=vm.createContext({dom:{btnColorPicker:{addEventListener(){},animate(){flashes++;}}},windMode:false,isBreathing:false,isLifePlaying:true,armedSimulation:'islands',
  selectedColorIndex:3,selectedColor:'color3',isRainbowModeActive:false,brushSize:7,symmetryMode:'vertical',boardState:[{k:3}],
@@ -92,9 +92,9 @@ test('side swipe uses the existing empty-brush reset, preserving size, symmetry,
  const start=source.indexOf('bindPickerGestures(dom.btnColorPicker,');
  vm.runInContext(source.slice(source.indexOf('      function resetSelectedColor()'),source.indexOf('      function resetToGoldAndDefaultPalette()'))+
  source.slice(start,source.indexOf('bindPickerGestures(dom.btnWind,',start)),c);
- assert(gestures.canSwipeSide());gestures.onSwipeSide();assert.equal(c.selectedColor,null);assert.equal(c.selectedColorIndex,-1);assert(!c.isRainbowModeActive);assert.equal(flashes,1);
- gestures.onSwipeSide();assert.equal(flashes,1);
- c.isRainbowModeActive=true;gestures.onSwipeSide();assert(!c.isRainbowModeActive);assert.equal(flashes,2);
- c.windMode=true;c.selectedColor='color3';c.selectedColorIndex=3;assert(!gestures.canSwipeSide());gestures.onSwipeSide();assert.equal(c.selectedColor,'color3');assert.equal(flashes,2);
+ assert(gestures.canSwipeSide());gestures.onSwipeDown();assert.equal(c.selectedColor,null);assert.equal(c.selectedColorIndex,-1);assert(!c.isRainbowModeActive);assert.equal(flashes,1);
+ gestures.onSwipeDown();assert.equal(flashes,1);
+ c.isRainbowModeActive=true;gestures.onSwipeDown();assert(!c.isRainbowModeActive);assert.equal(flashes,2);
+ c.windMode=true;c.selectedColor='color3';c.selectedColorIndex=3;assert(!gestures.canSwipeSide());gestures.onSwipeDown();assert.equal(c.selectedColor,'color3');assert.equal(flashes,2);
  assert.equal(c.brushSize,7);assert.equal(c.symmetryMode,'vertical');assert(c.isLifePlaying);assert.equal(c.boardState[0].k,3);
 });
