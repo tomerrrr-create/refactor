@@ -49,7 +49,7 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
  if(config.desktop||config.width<768){
   await panel.waitFor({state:'visible'});
   const geometry=await page.locator('#board').boundingBox();
-  const first=await panel.textContent();assert(first.length>0);
+  const first=await panel.locator('.macro-activity-row:not([aria-hidden]) .macro-activity-title').textContent();assert(first.length>0);
   assert.equal(await panel.locator('.macro-activity-row').count(),1,'only the current action is rendered');
   assert.equal(await panel.locator('.macro-activity-previous, .macro-activity-upcoming, .macro-activity-heading').count(),0,'no history, preview or headings');
   assert.equal(await panel.locator('.macro-activity-title').textContent(),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
@@ -57,7 +57,7 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
   if(config.lang==='he')assert.equal(await panel.locator('.macro-activity-current').evaluate(e=>e.getAnimations({subtree:true}).length),0,'reduced motion disables crossfades');
   const generation=await page.evaluate(()=>activityTest.state().gen);
   await page.waitForFunction(()=>activityTest.state().gen>=100);assert((await page.evaluate(()=>activityTest.state().gen))>generation,'the simulation continues advancing');
-  assert.equal(await panel.textContent(),first,'settings events and advancing generations do not replace or rewrite the display');
+  assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden]) .macro-activity-title').textContent(),first,'settings events and advancing generations do not replace or rewrite the display');
   assert.equal(await panel.locator('.macro-activity-detail').count(),0,'only action name and icon, without extra captions');
   const side=await panel.boundingBox();
   if(config.desktop)assert(side.x+side.width<=geometry.x-70,'panel clears the left gallery frame');

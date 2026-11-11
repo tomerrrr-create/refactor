@@ -43,6 +43,39 @@ export function describeMacroActivity(action, simulation) {
     const definition = actions[action.eventName];
     return definition ? { label: definition[0], icon: definition[1], key: action.eventName } : null;
 }
+export function describeMacroSignal(action, state) {
+    const item=describeMacroActivity(action,state.simulation);
+    if(!item||['PLAY','STEP FORWARD'].includes(action.eventName))return null;
+    if(action.eventName==='Sort by')return {...item,detail:String(action.details)};
+    if(action.eventName==='GRID_RESIZE'){
+        const size=Number.parseInt(action.details,10),before=state.boardSize;
+        if(!Number.isInteger(before)||!Number.isInteger(size))return null;
+        return {...item,detail:before+'×'+before+' → '+size+'×'+size,growing:size>before};
+    }
+    return item;
+}
+// A running engine takes precedence over incidental artwork commands.
+export function primaryMacroActivity(state, fallback) {
+    const definition = state.lifePlaying && simulations[state.simulation];
+    return definition ? {label:definition[0],icon:definition[1],key:'PLAY:'+state.simulation} : fallback;
+}
+// Bounded, transient presentation state; repeated actions share one place.
+export function createMacroActivitySignals(now = () => Date.now()) {
+    const items = new Map();
+    function current() {
+        for (const [key,item] of items) if (item.expires <= now()) items.delete(key);
+        return [...items.values()];
+    }
+    return {
+        add(item) {
+            current();items.delete(item.key);
+            items.set(item.key,{...item,expires:now()+1400});
+            while(items.size>3)items.delete(items.keys().next().value);
+        },
+        current,
+        clear() {items.clear();}
+    };
+}
 // Recover the current visible action when the display is enabled mid-play.
 // Only already-executed commands are read; nothing is changed or replayed.
 export function latestMacroActivity(queue, index, simulation) {
@@ -150,8 +183,10 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     panel.id = 'macroActivity'; panel.className = 'macro-activity'; panel.hidden = true;
     panel.setAttribute('role', 'region');
     const current = doc.createElement('div'); current.className = 'macro-activity-current';
-    panel.append(current); doc.body.append(panel);
-    const fade = createMacroActivityFade(current);
+    const signals = doc.createElement('div'); signals.className = 'macro-activity-signals';
+    panel.append(current, signals); doc.body.append(panel);
+    const fade = createMacroActivityFade(current), effects = createMacroActivitySignals();
+    const signalNodes = new Map();
     let iconCacheKey = '', iconSnapshot = null;
     let enabled = loadMacroActivity(), active = false, timer = null, entry = null, lastMarkup = '';
     const text = key => getText(key).split('\n')[0];
@@ -168,19 +203,56 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     }
     function render() {
         const state = readState();
-        const place = enabled && active && entry && state.loaded && state.fullscreen
+        const primary = primaryMacroActivity(state, entry);
+        const place = enabled && active && primary && state.loaded && state.fullscreen
             ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight, safeBottom: parseFloat(win.getComputedStyle(panel).getPropertyValue('--activity-safe-bottom')) || 0}, state.fullscreen, !desktop.matches) : null;
         panel.dataset.placement = desktop.matches ? 'left' : 'below';
         panel.hidden = !place;
-        if (!place) { fade.clear(); lastMarkup = ''; return; }
+        if (!place) { fade.clear(); signals.replaceChildren(); signalNodes.clear(); lastMarkup = ''; return; }
         Object.assign(panel.style, { left: place.left + 'px', top: place.top + 'px', width: place.width + 'px' });
         panel.dir = getLang() === 'he' ? 'rtl' : 'ltr';
-        const displayEntry = entry.icon === 'btnNudgeBrighter' && ['nudgeBrighter', 'nudgeDarker'].includes(state.simulation)
-            ? { ...entry, label: simulations[state.simulation][0] } : entry;
+        const displayEntry = primary.icon === 'btnNudgeBrighter' && ['nudgeBrighter', 'nudgeDarker'].includes(state.simulation)
+            ? { ...primary, label: simulations[state.simulation][0] } : primary;
         const button = doc.getElementById(displayEntry.icon);
         const cacheKey = (button?.outerHTML ?? '') + (button ? win.getComputedStyle(button).color : '') + doc.documentElement.dataset.simulationEffectiveTheme;
         if (cacheKey !== iconCacheKey) {
             iconCacheKey = cacheKey; iconSnapshot = captureMacroActivityIcon(button);
+        }
+        const activeSignals = state.lifePlaying ? effects.current() : [];
+        const keys = new Set(activeSignals.map(item=>item.key));
+        for(const [key,node] of signalNodes)if(!keys.has(key)){node.remove();signalNodes.delete(key);}
+        for(const item of activeSignals){
+            let node=signalNodes.get(item.key);
+            if(!node){
+                node=doc.createElement('span');node.className='macro-activity-signal';node.dataset.action=item.key;
+                node.setAttribute('role','img');
+                if(item.key==='DRAW_STROKE')node.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 22 21H2Z"/></svg>';
+                else if(item.key==='GRID_RESIZE')node.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14'+(item.growing?'M12 5v14':'')+'"/></svg>';
+                else if(item.key==='ADAPT_COLORS')node.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><rect x="8" y="8" width="8" height="8"/></svg>';
+                else {const control=doc.getElementById(item.icon),snapshot=captureMacroActivityIcon(control);if(snapshot)node.append(installIcon(snapshot));else node.textContent=control?.textContent.trim()||'◇';}
+                signalNodes.set(item.key,node);signals.append(node);
+            }
+            // A new sort/resize may use the same slot but a different symbol.
+            if(node.dataset.expires!==String(item.expires)){
+                const animation=node.getAnimations()[0];
+                if(animation&&animation.currentTime>=1000)animation.currentTime=0;
+                node.dataset.expires=String(item.expires);
+                if(!['DRAW_STROKE','GRID_RESIZE','ADAPT_COLORS'].includes(item.key)){
+                    const snapshot=captureMacroActivityIcon(doc.getElementById(item.icon));
+                    if(snapshot&&node.dataset.icon!==snapshot.signature){node.replaceChildren(installIcon(snapshot));node.dataset.icon=snapshot.signature;}
+                }
+            }
+            if(node.dataset.detail!==String(item.detail??'')){
+                node.dataset.detail=String(item.detail??'');
+                if(item.key==='Sort by'){const snapshot=captureMacroActivityIcon(doc.getElementById(item.icon));if(snapshot)node.replaceChildren(installIcon(snapshot));}
+                if(item.key==='GRID_RESIZE')node.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14'+(item.growing?'M12 5v14':'')+'"/></svg>';
+
+            }
+            const translationKey='startup_sort_'+item.detail;
+            const translated=item.key==='Sort by'?getText(translationKey):item.detail;
+            const detail=translated===translationKey?item.detail:translated;
+            const label=text(item.label)+(detail?' · '+detail:'');
+            if(node.title!==label){node.title=label;node.setAttribute('aria-label',label);}
         }
         const signature = JSON.stringify([displayEntry, getLang(), iconSnapshot?.signature]);
         if (signature === lastMarkup) return;
@@ -201,15 +273,19 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     return {
         enabled: () => enabled,
         setEnabled(value) {
-            enabled = Boolean(value); saveMacroActivity(enabled);
+            enabled = Boolean(value); if(!enabled)effects.clear(); saveMacroActivity(enabled);
             sync();
         },
         start() { active = true; sync(); },
-        stop() { active = false; entry = null; lastMarkup = ''; sync(); },
+        stop() { active = false; entry = null; effects.clear(); lastMarkup = ''; sync(); },
         record(action) {
             if (!enabled || !active) return;
             const next = describeMacroActivity(action, readState().simulation);
-            if (next) entry = next;
+            if (next) {
+                entry = next;
+                const signal=describeMacroSignal(action,readState());
+                if(signal)effects.add(signal);
+            }
         }
     };
 }

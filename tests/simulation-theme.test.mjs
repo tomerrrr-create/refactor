@@ -39,10 +39,10 @@ test('all resting/playback color pairs restore the resting selection and never p
         assert.equal(reload.root.dataset.simulationEffectiveTheme, rest);
     }
 });
-test('legacy/default/blocked storage stays blue at rest and gold while running; independent controls work', () => {
+test('fresh/blocked storage defaults to gold at rest and while running; independent controls work', () => {
     for (const blocked of [false, true]) {
         const h = harness({}, blocked); h.run('initializeSimulationTheme()');
-        assert.equal(h.root.dataset.simulationTheme, 'blue');
+        assert.equal(h.root.dataset.simulationTheme, 'gold');
         assert.equal(h.root.dataset.simulationPlaybackTheme, 'gold');
         h.run('setSimulationRunning(true)');
         assert.equal(h.root.dataset.simulationEffectiveTheme, 'gold');
@@ -69,9 +69,9 @@ test('retired device choices fall back independently and replace only appearance
     for (const removed of ['silver', 'ice', 'pink']) {
         const h = harness({ colorGridSimulationTheme: removed, colorGridSimulationPlaybackTheme: removed, untouched: 'keep' });
         h.run('initializeSimulationTheme()');
-        assert.equal(h.root.dataset.simulationTheme, 'blue');
+        assert.equal(h.root.dataset.simulationTheme, 'gold');
         assert.equal(h.root.dataset.simulationPlaybackTheme, 'gold');
-        assert.equal(h.storage.get('colorGridSimulationTheme'), 'blue');
+        assert.equal(h.storage.get('colorGridSimulationTheme'), 'gold');
         assert.equal(h.storage.get('colorGridSimulationPlaybackTheme'), 'gold');
         assert.equal(h.storage.get('untouched'), 'keep');
     }

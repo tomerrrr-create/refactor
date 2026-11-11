@@ -35,7 +35,7 @@ try{
  page.on('pageerror',e=>errors.push(e.message));await page.goto(base);await page.waitForFunction(()=>window.iconTest?.ready);
  await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());iconTest.setup();});
  const panel=page.locator('#macroActivity'),current=panel.locator('.macro-activity-row:not([aria-hidden])');
- const settled=async()=>{await panel.waitFor({state:'visible'});await page.waitForTimeout(400);assert.equal(await panel.locator('.macro-activity-row').count(),1);};
+ const settled=async()=>{await panel.waitFor({state:'visible'});await page.waitForTimeout(400);await page.waitForFunction(()=>document.querySelectorAll('#macroActivity .macro-activity-row').length===1);assert.equal(await panel.locator('.macro-activity-row').count(),1);};
  const mode=async(sim,value,record=true)=>page.evaluate(([s,m,r])=>iconTest.mode(s,m,r),[sim,value,record]);
  // Every alternate root SVG must be the actual visible symbol, not the first SVG.
  const modes={erosion:{channels:'iconErosionChannels','channels-solid':'iconErosionSolid',legacy:'iconErosionLegacy'},

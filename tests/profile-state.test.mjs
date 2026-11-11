@@ -127,6 +127,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     const snapshots = defaultProfileSnapshots(initial());
     const [one, two, three] = snapshots.map(snapshot => snapshot.settings);
     const expected = initial().settings;
+    expected.simulationTheme = 'gold';
     expected.simulationPlaybackTheme = 'gold';
     expected.rules.erosion.erosionStages.channels = 4;
     Object.assign(expected.startup, { paletteName: '@random', fill: 'random', brushColor: 'none', separatorPx: 2, boardSize: 21, symmetry: 'off' });
@@ -140,7 +141,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     assert.equal(three.startup.separatorPx, 0);
     assert.equal(three.startup.brushSize, 1);
     assert.equal(three.brush.size, 1);
-    assert.deepEqual(snapshots.map(s => s.settings.simulationTheme), ['blue', 'gold', 'teal']);
+    assert.deepEqual(snapshots.map(s => s.settings.simulationTheme), ['gold', 'gold', 'teal']);
     for (const settings of [two, three]) {
         assert.equal(settings.startup.interfaceMode, 'simulation');
         assert.deepEqual(settings.cycles.chiFlow.map(r => r.flow), [[1], [3, 5, 7], [4, 5, 6, 7, 8]]);
@@ -206,7 +207,7 @@ test('factory reset restores the selected profile independently of personal save
         for (const other of [0, 1, 2].filter(i => i !== index)) assert.deepEqual(state.draft(other), otherProfiles[other]);
         assert.deepEqual(createProfileState(initial(), disk).draft(), factoryProfileSnapshot(index));
     }
-    assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.simulationTheme), ['blue', 'gold', 'teal']);
+    assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.simulationTheme), ['gold', 'gold', 'teal']);
     assert.equal(factoryProfileSnapshot(1).settings.startup.paletteName, 'Golden Midnight Extended');
     assert.equal(factoryProfileSnapshot(2).settings.startup.paletteName, 'Ancient 264');
     assert.throws(() => factoryProfileSnapshot(3));

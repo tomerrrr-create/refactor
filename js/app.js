@@ -5453,7 +5453,7 @@ else if (action.eventName === 'Invert Colors') {
         onLanguageChange(updateAllUIText);
         macroActivity = createMacroActivity({ board: dom.board, getText, getLang: getCurrentLang,
             readState: () => ({ loaded: isMacroLoaded, playing: isMacroPlaying, lifePlaying: isLifePlaying,
-                simulation: armedSimulation, generation: currentGenerationCount,
+                simulation: armedSimulation, generation: currentGenerationCount, boardSize:n,
                 queue: macroQueue, index: currentMacroStep, fullscreen: isMacroFullscreen }) });
         onLanguageChange(updateNudgeButtonUI);
         onLanguageChange(updateContourButtonUI);

@@ -74,7 +74,7 @@ function applyProfileOneDefaults(snapshot) {
 // Profile 1 supplies every unspecified setting; named rules remain snapshots.
 export function defaultProfileSnapshots(initial) {
     const first = validateProfileSnapshot(initial);
-    first.settings.simulationTheme = 'blue';
+    first.settings.simulationTheme = 'gold';
     const profiles = [first, clone(first), clone(first)];
     for (const [index, paletteName, fill, theme] of [
         [1, 'Golden Midnight Extended', 'random', 'gold'],
