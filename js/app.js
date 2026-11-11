@@ -1159,6 +1159,10 @@ function applyNudgeLogic(direction) {
         setBrushMode(true);
       }
 
+      function visitSomewhereAction() {
+        return animateBoardTransition(() => performAction(specialReset));
+      }
+
       function specialReset() {
         activePaletteIndex = Math.floor(Math.random() * C.PALETTES.length);
         separatorPx = C.SEPARATORS[Math.floor(Math.random() * C.SEPARATORS.length)];
@@ -5799,7 +5803,7 @@ bindPickerGestures(dom.btnPalette, {
             onBlocked: () => alert(getText('studio_popup_blocked')),
             onError: () => alert(getText('studio_transfer_failed'))
         })));
-        dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, () => animateBoardTransition(() => performAction(specialReset))));
+        dom.btnSpecialReset.addEventListener('click', (e) => handleCtrlClick(e, visitSomewhereAction));
         bindPickerGestures(dom.btnResizeUp, {
             onTap: () => resizeGrid(resizeIncreasing), onOpen: modals.openResizeModal,
             onSwipeDown: toggleResizeDirection,
@@ -5919,7 +5923,16 @@ dom.btnWind.addEventListener('keydown', event => {
         event.preventDefault(); windSettingsUI.open();
     }
 });
-        dom.btnDark.addEventListener('click', (e) => handleCtrlClick(e, goDarkAction));
+        bindPickerGestures(dom.btnDark, {
+            onTap: goDarkAction, onOpen: visitSomewhereAction,
+            onHold: () => {
+                if (isLifePlaying) return;
+                if (!isSimModeActive) toggleSimMode();
+                prepareBoardForSimMode();
+            },
+            canInteract: () => !isBreathing,
+            beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
+        });
         bindPickerGestures(dom.btnToggleSimMode, {
             onTap: toggleSimMode,
             onSwipeSide: goDarkAction,
@@ -5982,7 +5995,7 @@ dom.btnWind.addEventListener('keydown', event => {
         // dom.btnExitBreathe.addEventListener('click', stopBreatheAnimation); // Removed
         
         document.querySelectorAll('.ctrl').forEach(btn => { 
-            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnWind || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
+            if (btn === dom.btnResizeUp || btn === dom.btnResizeDown || btn === dom.btnPalette || btn === dom.btnColorPicker || btn === dom.btnWind || btn === dom.btnCycleSort || btn === dom.btnToggleSimMode || btn === dom.btnDark || btn === dom.btnSymmetry || evolutionPickerButtons.has(btn)) return;
             btn.addEventListener('pointerdown', handlePointerDownCtrl); 
             btn.addEventListener('pointerup', hideLongPressDisplay); 
             btn.addEventListener('pointerleave', hideLongPressDisplay); 

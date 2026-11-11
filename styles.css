@@ -288,8 +288,7 @@ body {
 .sim-mode-active #btnGap,
 .sim-mode-active #btnResetBoard,
 .sim-mode-active #btnTutorial,
-.sim-mode-active #btnSpecialReset,
-.sim-mode-active #btnDark {
+.sim-mode-active #btnSpecialReset {
   display: none;
 }
 
@@ -350,6 +349,7 @@ body {
 
 /* שורה 3 - (משמאל לימין) */
 .sim-mode-active #btnResizeDown        { grid-area: 3 / 1; }
+.sim-mode-active #btnDark              { display: inline-flex; grid-area: 3 / 1; }
 .sim-mode-active #btnSpiral            { grid-area: 3 / 3; }
 .sim-mode-active #btnMagnetModes       { grid-area: 3 / 4; }
 .sim-mode-active #btnGravitationalSort { grid-area: 3 / 5; }
