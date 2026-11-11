@@ -3547,8 +3547,8 @@ function cycleCymaticsMode(){
     if(activating)armSimulation('cymatics');
     const rules=getCymaticsRules(),current=rules.resonanceVersion??1;
     const first=CYMATICS_RESONANCE_MAPS.circular;
-    const cycle=['off',first,CYMATICS_RESONANCE_MAPS.interference];
-    // Settings-only maps remain selectable/restorable; the toolbar shortcuts start with Circular.
+    const cycle=['off',first,CYMATICS_RESONANCE_MAPS.interference,CYMATICS_RESONANCE_MAPS.diagonal,CYMATICS_RESONANCE_MAPS.grid,CYMATICS_RESONANCE_MAPS.cosmic];
+    // Clouds stays settings-only; entering the toolbar cycle starts with Circular.
     const next=activating?(cycle.includes(current)?first:current):(cycle.includes(current)?nextEvolutionMode(current,cycle):first);
     const selected=selectCymaticsMap(rules,next==='off'?first:next,cymaticsFrequencies,cymaticsStrengths);
     const running=isLifePlaying;
