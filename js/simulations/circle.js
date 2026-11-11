@@ -101,4 +101,3 @@ export function runBlackHoleGeneration(n, board) {
     }
     return board;
 }
-
