@@ -1,11 +1,11 @@
 import {t,language} from './i18n.js';
-import {actionGroups,freshStartIndices,simulationOf,exportRange} from './macro-edit-model.js';
+import {actionGroups,freshStartIndices,randomStartIndices,simulationOf,exportRange} from './macro-edit-model.js';
 const text=(en,he)=>language==='he'?he:en;
 const names={INIT_STATE:['Starting board','לוח התחלתי'],DRAW_STROKE:['Brush stroke','ציור במברשת'],PLAY:['Start simulation','הפעלת סימולציה'],
  PAUSE:['Pause simulation','עצירת סימולציה'],'STEP FORWARD':['One simulation step','צעד סימולציה אחד'],HISTORY_SETTINGS:['Restore settings','שחזור הגדרות'],
  WIND_WAVE:['Paint with Wind','ציור ברוח'],WIND_END:['Stop Wind','סיום רוח'],GO_DARK:['Darken board','הכהיית הלוח'],
  'Palette Change':['Change palette','החלפת פלטה'],'Sort by':['Change color order','שינוי סדר הצבעים'],GRID_RESIZE:['Resize board','שינוי גודל הלוח'],
- SEPARATOR_CHANGE:['Change separators','שינוי מפרידים'],SHUFFLE_COLORS:['Shuffle colors','ערבוב צבעים'],'Invert Colors':['Invert colors','היפוך צבעים'],
+ SEPARATOR_CHANGE:['Change separators','שינוי מפרידים'],SHUFFLE_COLORS:['Shuffle existing colors','ערבוב צבעים קיימים'],'Invert Colors':['Invert colors','היפוך צבעים'],
  CONTOUR_APPLY:['Draw contours','יצירת קווי מתאר'],ADAPT_COLORS:['Adapt colors','התאמת צבעים'],NUDGE:['Shift colors','הזזת צבעים'],
  BRUSH_CHECKPOINT:['Finish live brush stroke','סיום משיכת מברשת בזמן ניגון'],BRUSH_CONTINUE:['Continue simulation','המשך סימולציה'],
  SIMULATION_RULES:['Change simulation settings','שינוי הגדרות סימולציה'],EVOLUTION_TUNING:['Change evolution settings','שינוי הגדרות אבולוציה'],
@@ -13,7 +13,7 @@ const names={INIT_STATE:['Starting board','לוח התחלתי'],DRAW_STROKE:['B
 const simulations={gameOfLife:'Game of Life',sandpile:'Chi Flow',contour:'Cracks',cymatics:'Resonance',brightnessEvo:'Brightness Evolution',
  islands:'Islands',breathe:'Breathe',dla:'DLA',turing:'Turing',magnet:'Magnet',gravitationalSort:'Gravity',spiral:'Spiral',erosion:'Erosion',nudgeBrighter:'Nudge +',nudgeDarker:'Nudge −'};
 const stamp=ms=>`${Math.floor(ms/60000)}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}.${String(Math.floor(ms)%1000).padStart(3,'0')}`;
-const label=a=>{const pair=names[a.eventName];const name=pair?pair[language==='he'?1:0]:a.eventName.endsWith('Mode Changed')?text('Select simulation mode','בחירת מצב סימולציה'):a.eventName==='--'?text('Shuffle colors','ערבוב צבעים'):text('Change settings','שינוי הגדרות');const sim=simulationOf(a);return name+(sim?` · ${simulations[sim]??sim}`:'');};
+const label=a=>{const pair=names[a.eventName];const name=pair?pair[language==='he'?1:0]:a.eventName.endsWith('Mode Changed')?text('Select simulation mode','בחירת מצב סימולציה'):a.eventName==='--'?text('Random fill','מילוי אקראי'):text('Change settings','שינוי הגדרות');const sim=simulationOf(a);return name+(sim?` · ${simulations[sim]??sim}`:'');};
 
 function describe(group){
  const a=group.actions[0];let value;try{value=JSON.parse(a.details);}catch{}
@@ -39,15 +39,20 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  <canvas id="editorCanvas" width="520" height="520" aria-label="${text('Macro preview','תצוגת מאקרו')}" hidden></canvas>
  <div class="editor-controls"><button id="editorPlay" disabled>${text('Play','ניגון')}</button><button id="editorRestart" class="secondary" disabled>${text('Restart','מההתחלה')}</button>
  <button id="editorNextSafe" class="secondary" disabled>${text('Play to next safe start','נגן עד לנקודת חיתוך בטוחה')}</button><button id="editorStart" disabled>${text('Choose as new beginning','בחר כהתחלה חדשה')}</button></div>
- <section id="editorSelection" hidden><h2 class="editor-heading">${text('The new macro will start from this board','המאקרו החדש יתחיל מהלוח הזה')}</h2><canvas id="editorStartCanvas" width="520" height="520" aria-label="${text('Chosen starting board','לוח ההתחלה שנבחר')}"></canvas></section><p id="editorPosition" class="editor-position" dir="ltr"></p><div id="editorRange" class="editor-range" role="status"></div>
+ <section id="editorSelection" hidden><h2 id="editorSelectionTitle" class="editor-heading">${text('The new macro will start from this board','המאקרו החדש יתחיל מהלוח הזה')}</h2><canvas id="editorStartCanvas" width="520" height="520" aria-label="${text('Chosen starting board','לוח ההתחלה שנבחר')}"></canvas><p id="editorSelectionNote" class="editor-note" hidden></p></section><p id="editorPosition" class="editor-position" dir="ltr"></p><div id="editorRange" class="editor-range" role="status"></div>
  <div class="editor-controls"><button id="editorReset" class="secondary" disabled>${text('Change starting point','שנה נקודת התחלה')}</button><button id="editorPreview" class="secondary" disabled>${text('Play from new beginning','נגן מההתחלה החדשה')}</button>
  <button id="editorSave" disabled>${text('Save as new macro','שמור כמאקרו חדש')}</button></div>
  <h2 style="font-size:15px;font-weight:400;color:var(--gold)">${text('Recorded actions','הפעולות שהוקלטו')}</h2>
  <p class="editor-note">${text('Choose a gold start marker, or play to the next safe point. Playback stops before that action; the point is checked again on arrival. Simulations with randomness may vary between playbacks.','בחר סימון התחלה זהוב, או נגן עד לנקודה הבטוחה הבאה. הניגון ייעצר לפני הפעולה והנקודה תיבדק שוב בהגעה. סימולציות אקראיות עשויות להשתנות בין ניגונים.')}</p>
- <div class="editor-controls"><button id="editorSafeFilter" class="secondary" type="button" aria-pressed="false" aria-controls="editorActions" disabled>${text('Safe starts only','נקודות התחלה בטוחות בלבד')}</button><span id="editorActionCount" class="muted" role="status"></span></div>
+ <div class="editor-controls" role="group" aria-label="${text('Filter actions','סינון פעולות')}">
+ <button id="editorAllFilter" class="secondary" type="button" aria-pressed="true" aria-controls="editorActions" disabled>${text('All actions','כל הפעולות')}</button>
+ <button id="editorSafeFilter" class="secondary" type="button" aria-pressed="false" aria-controls="editorActions" disabled>${text('All starting points','כל נקודות ההתחלה')}</button>
+ <button id="editorRandomFilter" class="secondary" type="button" aria-pressed="false" aria-controls="editorActions" disabled>${text('Random · instant jump','Random · קפיצה מיידית')}</button>
+ <button id="editorReplayFilter" class="secondary" type="button" aria-pressed="false" aria-controls="editorActions" disabled>${text('Requires playback','נקודות הדורשות ניגון')}</button>
+ <span id="editorActionCount" class="muted" role="status" dir="ltr"></span></div>
  <div class="editor-paging"><button id="editorPrev" class="secondary" disabled>${text('Previous','הקודם')}</button><span id="editorPage" class="muted"></span><button id="editorNext" class="secondary" disabled>${text('Next','הבא')}</button></div>
  <ol id="editorActions" class="editor-list"></ol><p id="editorActionsEmpty" class="editor-note" role="status" hidden>${text('No safe starting points in this macro.','אין במאקרו הזה נקודות התחלה בטוחות.')}</p>`;
- let frame=null,engine=null,source='',filename='macro.txt',actions=[],groups=[],safe=new Set(),page=0,safeOnly=false,start=null,
+ let frame=null,engine=null,source='',filename='macro.txt',actions=[],groups=[],safe=new Set(),random=new Set(),page=0,filter='all',start=null,
   previewing=false,previewTotal=0,busy=false,playing=false,raf=null,lastTime=0,version=0,url=null,inFlight=null,engineLoad=null;
  const ctx=$('editorCanvas').getContext('2d',{alpha:false});
  function fail(error){$('editorError').textContent=error?.message??String(error);}
@@ -76,12 +81,15 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  function update(){
   const state=current();const ready=Boolean(source)&&!busy;panel.dataset.editorPhase=busy?'loading':!source?'empty':playing?'playing':state?.finished?'complete':'paused';
   $('editorPlay').disabled=!ready||Boolean(state?.finished);$('editorPlay').textContent=playing?text('Pause','עצירה'):text('Play','ניגון');
-  $('editorSafeFilter').disabled=!ready;
+  for(const id of ['editorAllFilter','editorSafeFilter','editorRandomFilter','editorReplayFilter'])$(id).disabled=!ready;
   $('editorRestart').disabled=!ready;$('editorStart').disabled=!ready||playing||Boolean(inFlight)||previewing||state?.boundary===null||state?.boundary===undefined;
   $('editorNextSafe').disabled=!ready||previewing||!actions.some((_,i)=>safe.has(i)&&i>Math.max(state?.lastIndex??-1,state?.boundary??-1));
   for(const id of ['editorReset','editorPreview','editorSave'])$(id).disabled=!ready||playing||Boolean(inFlight);
   $('editorReset').disabled=busy||playing||Boolean(inFlight)||!start;
   $('editorSelection').hidden=!start;
+  $('editorSelectionTitle').textContent=start?.random?text('Start with a new Random board','התחלה מהגרלה חדשה'):text('The new macro will start from this board','המאקרו החדש יתחיל מהלוח הזה');
+  $('editorSelectionNote').hidden=!start?.random;
+  $('editorSelectionNote').textContent=text('This is an example. Each playback generates a new board using these palette, order and size settings.','זהו לוח לדוגמה. כל ניגון יגריל לוח חדש לפי הפלטה, המיון והגודל שבנקודה הזו.');
   $('editorSave').disabled=$('editorPreview').disabled=!ready||playing||Boolean(inFlight)||!start;
   $('editorRange').textContent=start?text('New beginning: ','התחלה חדשה: ')+stamp(actions[start.index].delta)+' · '+label(actions[start.index]):text('No starting point chosen. Pause at a marked safe point or play to the next one.','טרם נבחרה התחלה. עצור בנקודה מסומנת או נגן עד לנקודה הבטוחה הבאה.');
   if(state){$('editorPosition').textContent=`${stamp(state.delta)} · ${Math.max(0,state.lastIndex+1)} / ${previewing?previewTotal:actions.length} · ${simulations[state.simulation]??text('Paused','בהשהיה')}`;
@@ -98,10 +106,11 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  }
  function renderList(){
   const list=$('editorActions');list.replaceChildren();
-  const visible=groups.map((group,index)=>({group,index})).filter(({group})=>!safeOnly||safe.has(group.from));
+  const visible=groups.map((group,index)=>({group,index})).filter(({group})=>filter==='all'||filter==='safe'&&safe.has(group.from)||filter==='random'&&random.has(group.from)||filter==='replay'&&safe.has(group.from)&&!random.has(group.from));
   const pages=Math.max(1,Math.ceil(visible.length/100));page=Math.min(page,pages-1);
-  $('editorSafeFilter').setAttribute('aria-pressed',String(safeOnly));
-  $('editorActionsEmpty').hidden=!safeOnly||!source||visible.length>0;
+  for(const [id,value]of [['editorAllFilter','all'],['editorSafeFilter','safe'],['editorRandomFilter','random'],['editorReplayFilter','replay']])$(id).setAttribute('aria-pressed',String(filter===value));
+  $('editorActionsEmpty').hidden=!source||visible.length>0;
+  $('editorActionsEmpty').textContent=filter==='random'?text('No independent Random starts in this macro.','אין במאקרו נקודות Random עצמאיות.'):filter==='replay'?text('No starting points requiring playback.','אין נקודות התחלה הדורשות ניגון.'):text('No matching starting points.','אין נקודות התחלה התואמות לסינון.');
   $('editorActionCount').textContent=source?`${visible.length} / ${groups.length}`:'';
   visible.slice(page*100,(page+1)*100).forEach(({group,index})=>{
    const li=document.createElement('li');li.dataset.from=group.from;li.dataset.to=group.to;
@@ -116,7 +125,7 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
    }});
    li.append(details);
    if(safe.has(group.from)){
-    const hold=document.createElement('button');hold.type='button';hold.dataset.hold=group.from;hold.textContent='◆ '+text('Safe start · go here','התחלה בטוחה · נגן עד לכאן');li.dataset.safe='true';
+    const hold=document.createElement('button');hold.type='button';hold.dataset.hold=group.from;hold.textContent=random.has(group.from)?'⚡ '+text('New Random start · jump now','התחלה חדשה מ־Random · קפיצה מיידית'):'◆ '+text('Safe start · play to here','התחלה בטוחה · נגן עד לכאן');li.dataset.safe='true';li.dataset.startKind=random.has(group.from)?'random':'replay';
     hold.addEventListener('click',()=>goToSafe(group.from));li.append(hold);
    }
    list.append(li);
@@ -128,7 +137,7 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
   try{
    if(file.size>32*1024*1024)throw Error(t('לגרסת הניסוי יש מגבלה של 32 מגה לקובץ מקרו.'));
    const contents=await file.text();await loadEngine();if(request!==version)return;
-   actions=engine.load(contents);source=contents;filename=file.name;groups=actionGroups(actions);safe=new Set(freshStartIndices(actions));page=0;
+   actions=engine.load(contents);source=contents;filename=file.name;groups=actionGroups(actions);safe=new Set(freshStartIndices(actions));random=new Set(randomStartIndices(actions));page=0;
    $('editorFileName').textContent=filename;$('editorStatus').textContent=safe.size===0?text('This macro has no safe new starting points. The source stays unchanged.','לא נמצאו במאקרו נקודות התחלה עצמאיות. המקור נשאר ללא שינוי.'):text('Ready. Play the macro or choose a fresh start in the list.','מוכן. נגן את המאקרו או בחר נקודת התחלה חדשה ברשימה.');renderList();draw();
   }catch(error){if(request!==version)return;engine?.stop();actions=[];groups=[];$('editorActions').replaceChildren();fail(error);}
   finally{if(request===version){busy=false;update();}}
@@ -137,6 +146,14 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  async function goToSafe(index='next'){
   if(busy||previewing)return;busy=true;await pause();clearError();
   try{
+   const at=engine.state();const target=index==='next'?[...safe].find(i=>i>Math.max(at.lastIndex,at.boundary??-1)):index;
+   if(target===undefined){$('editorStatus').textContent=text('No safe starting points remain.','אין נקודות התחלה בטוחות נוספות.');return;}
+   if(random.has(target)){
+    $('editorStatus').textContent=text('Preparing a new Random board…','מכין לוח Random חדש…');
+    await engine.jumpRandom(target);draw();playing=false;
+    $('editorStatus').textContent=text('New Random start ready. No earlier simulation was played.','התחלה חדשה מ־Random מוכנה. הסימולציות שקדמו לנקודה לא נוגנו.');return;
+   }
+   index=target;
    if(index!=='next'&&index<=engine.state().lastIndex){engine.load(source);draw();}
    engine.hold(index);engine.play();playing=true;lastTime=0;
    $('editorStatus').textContent=text('Playing to a safe starting point…','מנגן עד לנקודת התחלה בטוחה…');raf=requestAnimationFrame(tick);
@@ -150,7 +167,7 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  $('editorReset').addEventListener('click',async()=>{busy=true;await pause();try{start=null;previewing=false;engine.load(source);clearError();draw();}catch(error){fail(error);}finally{busy=false;update();}});
  $('editorPreview').addEventListener('click',async()=>{busy=true;try{const file=editedFile();await pause();previewTotal=engine.load(await file.text()).length;previewing=true;engine.play();playing=true;lastTime=0;raf=requestAnimationFrame(tick);}catch(error){fail(error);}finally{busy=false;update();}});
  $('editorSave').addEventListener('click',()=>{try{const file=editedFile();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);const link=document.createElement('a');link.href=url;link.download=file.name;link.click();$('editorStatus').textContent=text('New macro downloaded. Original unchanged.','המאקרו החדש הורד. המקור לא השתנה.');}catch(error){fail(error);}});
- $('editorSafeFilter').addEventListener('click',()=>{safeOnly=!safeOnly;page=0;renderList();});
+ for(const [id,value]of [['editorAllFilter','all'],['editorSafeFilter','safe'],['editorRandomFilter','random'],['editorReplayFilter','replay']])$(id).addEventListener('click',()=>{filter=filter===value?'all':value;page=0;renderList();});
  $('editorPrev').addEventListener('click',()=>{page--;renderList();});$('editorNext').addEventListener('click',()=>{page++;renderList();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
  window.addEventListener('beforeunload',()=>{if(url)URL.revokeObjectURL(url);});

@@ -41,6 +41,7 @@ initializeApp().then(async () => {
      ...(typeof effects.glow==='boolean'?{bloom:effects.glow}:{}),...(Number.isFinite(effects.intensity)?{bloomIntensity:effects.intensity}:{})};
     if(Object.keys(smoothing).length){init.smoothing=smoothing;settings.smoothing=smoothing;}
     return {init,settings,boardCheckpoint:makeBoardCheckpoint(state),compatible:true};},
+   settlePreview(){boardState.forEach(tile=>{tile.prevK=null;tile.animStart=0;});},
    error:()=>window.macroVideoError,now:()=>performance.now(),tick:ms=>window.exportClock.tickAsync(ms),pause:pauseMacro,play:playMacro,
    draw:()=>window.macroVideoEngine.draw(),output:()=>window.macroVideoEngine.output,stop:stopMacro
   });

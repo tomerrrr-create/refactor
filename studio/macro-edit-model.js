@@ -1,5 +1,8 @@
 // Pure editing model. Inputs are the app's resolved replay queue, never raw
 // history line offsets. Source files and actions are never mutated.
+// Random resets every tile's k/v/gold. These engines need no retained
+// particle/chemical/session buffers; recorded PLAY rules suffice after a fill.
+const boardOnlyEngines=new Set(['gravitationalSort','spiral','magnet','gameOfLife','sandpile','brightnessEvo','erosion','nudgeBrighter','nudgeDarker','breathe']);
 const modeEvents = {
  'Game of Life Mode Changed':'gameOfLife','Chi Flow Mode Changed':'sandpile',
  'Brightness Evo Mode Changed':'brightnessEvo','Islands Mode Changed':'islands',
@@ -21,6 +24,7 @@ export function freshStartIndices(actions) {
    let live=null;try{live=JSON.parse(a.details).liveSimulation;}catch{}
    if(index===0){armed=live?.simulation??null;used=Boolean(live);running=Boolean(live);}else if(live){armed=live.simulation;used=true;running=true;}
   }
+  if(a.eventName==='--'&&a.details==='Palette Randomized'&&idle[index]&&boardOnlyEngines.has(armed))used=false;
   if(a.eventName==='BRUSH_START'||a.eventName==='BRUSH_CONTINUE')brush=true;
   if(a.eventName==='BRUSH_END')brush=false;
   if(a.eventName==='WIND_WAVE')wind=true;
@@ -52,6 +56,34 @@ export function freshStartIndices(actions) {
  }
  return [...safe].filter(i=>i>0&&i<actions.length-1).sort((a,b)=>a-b);
 }
+// Only the full-fill Random command is independent of previous pixels.
+// Shuffle-existing-colors intentionally does not qualify.
+export function randomStartIndices(actions) {
+ const safe=new Set(freshStartIndices(actions));let initial=false;
+ return actions.flatMap((a,i)=>{if(a.eventName==='INIT_STATE')initial=true;return initial&&safe.has(i)&&a.eventName==='--'&&a.details==='Palette Randomized'?[i]:[];});
+}
+export function randomSetupActions(actions,index) {
+ if(!randomStartIndices(actions).includes(index))throw Error('This Random point depends on an earlier session.');
+ const result=[];
+ const push=(eventName,details)=>result.push({eventName,details,delta:0,isGenBased:false});
+ const init=value=>{
+  const n=value.n,pal=value.pal??value.activePaletteIndex,sort=value.sort??value.currentSortMethod,sep=value.sep??value.separatorPx??0;
+  if(!Number.isInteger(n)||n<1||n>327||!Number.isInteger(pal)||typeof sort!=='string')throw Error('Random start has no complete board settings.');
+  push('INIT_STATE',JSON.stringify({recipeVersion:2,n,pal,sort,sep,board:`${n*n}x0`,...(value.smoothing?{smoothing:value.smoothing}:{})}));
+ };
+ const firstInit=actions.findIndex(a=>a.eventName==='INIT_STATE');
+ for(const a of actions.slice(firstInit,index)){
+  if(a.eventName==='INIT_STATE'||a.eventName==='HISTORY_SETTINGS')init(JSON.parse(a.details));
+  else if(a.eventName==='ISLANDS_INIT'){const v=JSON.parse(a.details);if(v.recordingVersion===undefined)init(v);}
+  else if(['Palette Change','Sort by','GRID_RESIZE','SEPARATOR_CHANGE'].includes(a.eventName))push(a.eventName,a.details);
+  else if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(a.eventName)){
+   const sort=a.details.match(/\|\s*Sort:\s*([\w-]+)\s*\|/)?.[1];if(sort)push('Sort by',sort);
+  }
+ }
+ if(result[0]?.eventName!=='INIT_STATE')throw Error('No initial board settings before Random.');
+ push('--','Palette Randomized');return result;
+}
+export function serializeActions(actions){return actions.map(a=>line(a,a.delta)).join('\n')+'\n';}
 export function actionGroups(actions) {
  const groups=[];let stroke=null,wind=null;
  actions.forEach((a,i)=>{
@@ -92,7 +124,16 @@ export function exportRange(actions,{start=null}={}) {
  if(start&&!freshStartIndices(actions).includes(first))throw Error('Choose a marked safe start.');
  const base=start?actions[first].delta:0;
  const selected=actions.slice(first,last+1).map(a=>({...a,delta:Math.max(0,a.delta-base)}));
- if(start){
+ if(start?.random){
+  if(!randomStartIndices(actions).includes(first))throw Error('Choose an independent Random point.');
+  const init={...start.init,board:`${start.init.n*start.init.n}x0`,gold:[]};
+  selected[0].isGenBased=false;
+  selected.unshift({eventName:'HISTORY_SETTINGS',details:JSON.stringify(start.settings),delta:0,isGenBased:false});
+  selected.unshift({eventName:'Islands Mode Changed',details:'{"mode":"off"}',delta:0,isGenBased:false});
+  selected.unshift({eventName:'ISLANDS_INIT',details:JSON.stringify({...start.boardCheckpoint,board:[[init.n*init.n,0,0,0]]}),delta:0,isGenBased:false});
+  selected.unshift({eventName:'PAUSE',details:'---',delta:0,isGenBased:false});
+  selected.unshift({eventName:'INIT_STATE',details:JSON.stringify(init),delta:0,isGenBased:false});
+ } else if(start){
   selected.unshift({eventName:'HISTORY_SETTINGS',details:JSON.stringify(start.settings),delta:0,isGenBased:false});
   // The existing legacy Islands checkpoint is the player's supported full
   // tile codec (k, working v, protected flags). No new app command/field is used.

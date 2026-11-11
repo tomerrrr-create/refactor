@@ -1,7 +1,8 @@
 import {readFile,mkdir} from 'node:fs/promises';import {createServer} from 'node:http';import path from 'node:path';import {fileURLToPath} from 'node:url';import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');const root=fileURLToPath(new URL('../dist/',import.meta.url));
-const app=await readFile(root+'studio/engine/js/app.js','utf8');const instrumented=app.replace('window.macroVideoEngine = {','window.studioEditTest={state:()=>getCurrentState()};window.macroVideoEngine = {');
-const server=createServer(async(req,res)=>{try{let f=new URL(req.url,'http://local').pathname.slice(1);if(!f||f.endsWith('/'))f+='index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.png')?'image/png':'text/html');res.end(f==='studio/engine/js/app.js'?instrumented:await readFile(path.join(root,f)));}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
+const app=await readFile(root+'studio/engine/js/app.js','utf8');const instrumented=app.replace('window.macroVideoEngine = {','window.studioEditTest={state:()=>getCurrentState(),events:[]};window.macroVideoEngine = {');
+const tracked=instrumented.replace('function executeMacroAction(action) {','function executeMacroAction(action) { window.studioEditTest.events.push(action.eventName);');
+const server=createServer(async(req,res)=>{try{let f=new URL(req.url,'http://local').pathname.slice(1);if(!f||f.endsWith('/'))f+='index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.png')?'image/png':'text/html');res.end(f==='studio/engine/js/app.js'?tracked:await readFile(path.join(root,f)));}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']});await mkdir('/tmp/studio-editor',{recursive:true});
 const fixture=[
  '[00:00:00.000] INIT_STATE -> '+JSON.stringify({recipeVersion:2,n:9,pal:0,sort:'luminance',sep:0,board:'81x5',gold:[0]}),
@@ -49,5 +50,33 @@ try{for(const cfg of [{lang:'en',width:1280,height:1000},{lang:'he',width:390,he
   await page.locator('[name="size"][value="540"]').check();await page.locator('[name="fps"][value="15"]').check();
   await page.waitForFunction(()=>!document.querySelector('#start').disabled);await page.locator('#start').click();await page.locator('#download').waitFor({state:'visible',timeout:60000});assert((await page.evaluate(()=>lastExportReport.bytes))>0,'video export still works');
  }
+
+ // Random restarts reconstruct only metadata, skipping even a huge earlier run.
+ const randomFixture=[fixture.split('\n')[0],
+ '[00:00:00.100] PLAY -> Armed: turing | Sort: luminance | Rules: {}',
+ '[00:59:59.000] [GEN:999999] PAUSE -> ---',
+ '[01:00:00.000] GRID_RESIZE -> 7',
+ '[01:00:00.050] Sort by -> reversed',
+ '[01:00:00.100] SEPARATOR_CHANGE -> 0',
+ '[01:00:00.200] -- -> Palette Randomized',
+ '[01:00:00.300] Gravitational Sort Mode -> up',
+ '[01:00:00.400] PLAY -> Armed: gravitationalSort | Sort: reversed | Rules: {"direction":"up","strength":1}',
+ '[01:00:00.800] [GEN:5] PAUSE -> ---',
+ '[01:00:01.000] PLAY -> Armed: gravitationalSort | Sort: reversed | Rules: {"direction":"up","strength":1}',
+ '[01:00:01.500] [GEN:5] PAUSE -> ---',
+ '[01:00:01.600] SHUFFLE_COLORS -> []',
+ '[01:00:01.700] DRAW_STROKE -> [{"i":40,"k":8,"isGold":false}]'].join('\n');
+ await page.locator('#editorTab').click();await page.locator('#editorFile').setInputFiles({name:'random-restart.txt',mimeType:'text/plain',buffer:Buffer.from(randomFixture)});await page.waitForFunction(()=>!document.querySelector('#editorPlay').disabled);
+ await page.locator('#editorRandomFilter').click();assert.equal(await page.locator('#editorActions > li').count(),1);assert.equal(await page.locator('#editorActions > li').getAttribute('data-start-kind'),'random');assert.equal(await page.locator('#editorActions [data-hold]').getAttribute('data-hold'),'6');
+ await ef().evaluate(()=>{studioEditTest.events=[];});
+ await page.locator('[data-hold="6"]').click();await page.waitForFunction(()=>!document.querySelector('#editorStart').disabled);
+ const jumped=await ef().evaluate(()=>({state:macroEditorEngine.state(),board:studioEditTest.state(),events:studioEditTest.events}));
+ assert.equal(jumped.state.boundary,6);assert.equal(jumped.board.n,7);assert.equal(jumped.board.currentSortMethod,'reversed');assert.equal(jumped.board.separatorPx,0);assert(!jumped.events.includes('PLAY'),'no earlier simulation executed');assert(!jumped.board.tiles.some(t=>t.isGold));
+ await page.locator('#editorStart').click();assert(await page.locator('#editorSelectionNote').isVisible());
+ const randomDownloadEvent=page.waitForEvent('download');await page.locator('#editorSave').click();const randomDownload=await randomDownloadEvent;const randomText=await readFile(await randomDownload.path(),'utf8');assert(randomText.includes('-- -> Palette Randomized'));assert(randomText.includes('"board":"49x0"'));assert(!randomText.includes('Armed: turing'));
+ const replayedRandom=await run(randomText);assert.equal(replayedRandom.n,7);assert.equal(replayedRandom.currentSortMethod,'reversed');assert(replayedRandom.tiles.every(t=>Number.isInteger(t.k)&&t.k>=0));
+ await page.locator('#editorReplayFilter').click();assert.equal(await page.locator('#editorActions [data-start-kind="random"]').count(),0);assert((await page.locator('#editorActions > li').count())>0);
+ await page.locator('#editorSafeFilter').click();assert.equal(await page.locator('#editorActions [data-start-kind="random"]').count(),1);
+ await page.screenshot({path:'/tmp/studio-editor/'+cfg.lang+'-random.png',fullPage:true});
  assert.deepEqual(errors,[]);console.log('PASS',JSON.stringify(cfg),'lazy loading, safe handoff, resume exclusion, checkpoint preview, TXT download and unchanged-player replay');await context.close();
 }}finally{await browser.close();server.close();}

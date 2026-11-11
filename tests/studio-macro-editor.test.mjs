@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {restoreIslandsBoard} from '../js/simulations/islands.js';
-import {freshStartIndices,makeCheckpoint,makeBoardCheckpoint,exportRange,actionGroups} from '../studio/macro-edit-model.js';
+import {freshStartIndices,randomStartIndices,randomSetupActions,makeCheckpoint,makeBoardCheckpoint,exportRange,actionGroups} from '../studio/macro-edit-model.js';
 const a=(eventName,details='',delta=0)=>({eventName,details,delta,isGenBased:false});
 const play=sim=>a('PLAY',`Armed: ${sim} | Sort: luminance | Rules: {}`);
 const init=a('INIT_STATE',JSON.stringify({n:5,pal:0,sort:'luminance',sep:0,board:'25x1'}));
@@ -26,4 +26,33 @@ test('stroke actions form one timeline group',()=>{assert.equal(actionGroups([a(
 test('the existing checkpoint codec retains exact working values and gold without player changes',()=>{
  const state={n:2,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,tiles:[{k:2,v:.125,isGold:true},{k:3,v:7.25,isGold:false},{k:0,v:-1,isGold:false},{k:1,v:0,isGold:false}]};
  const checkpoint=makeBoardCheckpoint(state);assert.deepEqual(restoreIslandsBoard(2,checkpoint.board),state.tiles);
+});
+
+test('only independent full-fill Random commands qualify for immediate starts',()=>{
+ const source=[init,play('turing'),a('PAUSE'),a('--','Palette Randomized'),a('Gravitational Sort Mode','up'),play('gravitationalSort'),a('PAUSE')];
+ assert.deepEqual(randomStartIndices(source),[3]);
+ assert.deepEqual(randomStartIndices([init,play('turing'),a('--','Palette Randomized'),a('PAUSE')]),[]);
+ assert.deepEqual(randomStartIndices([init,play('turing'),a('PAUSE'),a('--','Palette Randomized'),play('turing'),a('PAUSE')]),[]);
+ assert.deepEqual(randomStartIndices([init,a('SHUFFLE_COLORS','[]'),play('gravitationalSort'),a('PAUSE')]),[]);
+});
+test('Random setup reconstructs metadata without replaying simulations, drawing or old random fills',()=>{
+ const source=[init,play('turing'),a('PAUSE'),a('GRID_RESIZE','7'),a('Sort by','reversed'),a('SEPARATOR_CHANGE','0'),a('DRAW_STROKE','[]'),a('--','Palette Randomized'),play('gravitationalSort'),a('PAUSE')];
+ const before=structuredClone(source),setup=randomSetupActions(source,7);
+ assert(!setup.some(x=>['PLAY','STEP FORWARD','DRAW_STROKE'].includes(x.eventName)));assert(setup.every(x=>x.delta===0&&!x.isGenBased));assert.equal(setup.filter(x=>x.eventName==='--').length,1);assert(setup.some(x=>x.eventName==='Sort by'&&x.details==='reversed'));assert.deepEqual(source,before);
+});
+test('Random exports retain re-randomization and contain only a blank starting board',()=>{
+ const source=[init,a('--','Palette Randomized'),play('gravitationalSort'),a('PAUSE')];
+ const state={n:2,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,tiles:[{k:9,v:9},{k:7,v:7},{k:5,v:5},{k:3,v:3}]};
+ const point={index:1,random:true,init:makeCheckpoint(state),boardCheckpoint:makeBoardCheckpoint(state),settings:{n:2,activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0}};
+ const output=exportRange(source,{start:point});assert(output.includes('"board":"4x0"'));assert(output.includes('"board":[[4,0,0,0]]'));assert(output.includes('-- -> Palette Randomized'));assert(!output.includes('"board":"1x9'));assert(!output.includes('STUDIO_'));
+});
+
+test('a paused Random can restart board-only Gravity without retaining its previous run',()=>{
+ const source=[init,play('gravitationalSort'),a('PAUSE'),a('--','Palette Randomized'),play('gravitationalSort'),a('PAUSE')];
+ assert.deepEqual(randomStartIndices(source),[3]);
+});
+
+test('Random bootstrap starts at INIT_STATE even with earlier startup setting records',()=>{
+ const source=[a('Sort by','reversed'),init,a('--','Palette Randomized'),play('gravitationalSort'),a('PAUSE')];
+ const setup=randomSetupActions(source,2);assert.equal(setup[0].eventName,'INIT_STATE');assert.equal(JSON.parse(setup[0].details).sort,'luminance');
 });
