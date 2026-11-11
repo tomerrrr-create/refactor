@@ -1,4 +1,4 @@
-// Experimental Turbine 2. Existing Spiral methods keep their original behavior.
+// Shared Turbine 2 engine. Legacy Spiral recordings retain the fixed .6 default.
 // These nine shared offsets avoid allocating a direction object for every cell.
 const steps = Object.freeze(Array.from({length:9},(_,i)=>Object.freeze({dr:Math.floor(i/3)-1,dc:i%3-1})));
 export function turbine2Direction(dx,dy,choice) {
@@ -12,7 +12,7 @@ export function turbine2Direction(dx,dy,choice) {
     return steps[(dr+1)*3+dc+1];
 }
 let geometry;
-export function runTurbine2Generation(n,board) {
+export function runTurbine2Generation(n,board,strength = .6) {
     if(!geometry||geometry.n!==n){
         const center=(n-1)/2,radius=new Float64Array(n*n),angle=new Float64Array(n*n);
         for(let i=0;i<n*n;i++){
@@ -40,7 +40,7 @@ export function runTurbine2Generation(n,board) {
         const {dr,dc}=turbine2Direction(targetC-col,targetR-row,Math.random());
         if(!dr&&!dc)continue;
         const j=(row+dr)*n+col+dc;
-        if(moved[j]||board[j].isGold||board[i].k>=board[j].k||Math.random()>=.6)continue;
+        if(moved[j]||board[j].isGold||board[i].k>=board[j].k||Math.random()>=strength)continue;
         const saved=board[i];board[i]=board[j];board[j]=saved;
         moved[i]=moved[j]=1;
     }

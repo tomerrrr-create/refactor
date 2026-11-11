@@ -370,7 +370,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'turbine2', 'b', 'left', 'black_hole'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'black_hole'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -424,6 +424,7 @@ currentSortMethod,
             brightnessEvoMode, breatheEvoMode, dlaMode,
             ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
+            ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...gravitationalSortRules } } : {}),
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
             ...(armedSimulation === 'cymatics' ? {cymaticsState:getCymaticsSnapshot()} : {}),
@@ -457,6 +458,7 @@ currentSortMethod,
 
       function areStatesEqual(stateA, stateB) {
         if (!stateA || !stateB) return false;
+        if (JSON.stringify(stateA.gravityRules) !== JSON.stringify(stateB.gravityRules)) return false;
         if(JSON.stringify(stateA.cymaticsState)!==JSON.stringify(stateB.cymaticsState))return false;
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
         if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
@@ -472,6 +474,7 @@ currentSortMethod,
 
       function applyState(state, { preserveCracksPreferences = false, preserveBrightnessPreferences = false, preserveCymaticsPreferences = false } = {}) {
         const brightnessPreferences = preserveBrightnessPreferences ? { rules:{...evolutionTuning.brightnessEvo}, mode:brightnessEvoMode } : null;
+        if (state.gravityRules) validateGravitySnapshot(state.gravityRules);
         if (state.contourState) {
             validateContourSnapshot(state.contourState);
             if (state.contourState.cracksState && state.contourState.cracksState.n !== state.n) throw new Error('Cracks board size mismatch');
@@ -530,8 +533,15 @@ k: tileState.k,
             startDelay: 0
         }));
 
+        if (state.gravityRules) {
+            if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
+            gravitationalSortRules = { ...state.gravityRules };
+            gsMode = gravitationalSortRules.direction;
+            updateGravitationalSortButtonUI();
+        }
+
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'radial', 'down', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
@@ -3839,7 +3849,7 @@ function logIslandsSessionStart() {
 
 // --- NEW: Gravitational Sort UI and Cycling ---
 function updateGravitationalSortButtonUI() {
-    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'simulation-active');
+    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'mode-turbine2', 'simulation-active');
 
     if (gsMode !== 'off') {
         dom.btnGravitationalSort.classList.add('mode-' + gsMode);
@@ -3851,7 +3861,7 @@ function updateGravitationalSortButtonUI() {
 
 function cycleGravitationalSortMode() {
     const oldMode = gsMode;
-    const sequence = ['off', 'up', 'right', 'center_x'];
+    const sequence = ['off', 'up', 'right', 'center_x', 'turbine2'];
 
     gsMode = nextEvolutionMode(gsMode, sequence);
 
@@ -3958,12 +3968,6 @@ function updateSpiralButtonUI() {
 function cycleSpiralMode() {
     const oldMode = armedSimulation === 'spiral' ? spiralMode : 'off';
 const sequence = SPIRAL_MODE_SEQUENCE;
-
-
-// original with all button
-//const sequence = ['off', 'b', 'vortex',  'left', 'a', 'radial', 'down', ];
-
-// const sequence = ['off', 'b', 'vortex', 'classic', 'expand', 'a', 'time_magnet', 'magnet', 'cosmic_magnet'];
 
 
     const nextMode = nextEvolutionMode(oldMode, sequence);
@@ -4197,10 +4201,17 @@ function getHistorySettings(state) {
             ...(state.tuningSimulation ? { tuningSimulation: state.tuningSimulation } : {}) } : {}),
         ...(state.islandsState ? { islandsState: state.islandsState } : {}),
         ...(state.cymaticsState ? {cymaticsState:state.cymaticsState} : {}),
+        ...(state.gravityRules ? { gravityRules: { ...state.gravityRules } } : {}),
         ...(state.contourState ? { contourState: state.contourState } : {}) };
 }
 
+function validateGravitySnapshot(rules) {
+    if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2'].includes(rules.direction) ||
+        !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1) throw new Error('Invalid gravity rules');
+}
+
 function validateHistorySettings(settings) {
+    if (settings?.gravityRules) validateGravitySnapshot(settings.gravityRules);
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);
     if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
     if(settings?.cymaticsState){const c=validateCymaticsSnapshot(settings.cymaticsState);if(c.state.n!==settings.n)throw new Error('Cymatics board size mismatch');}
@@ -4215,6 +4226,12 @@ function validateHistorySettings(settings) {
 
 function applyHistorySettings(settings) {
     validateHistorySettings(settings);
+    if (settings.gravityRules) {
+        if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
+        gravitationalSortRules = { ...settings.gravityRules };
+        gsMode = gravitationalSortRules.direction;
+        updateGravitationalSortButtonUI();
+    }
     if (settings.evolutionTuning) {
         if (['brightnessEvo', 'breathe', 'islands', 'dla'].includes(settings.tuningSimulation) && armedSimulation !== settings.tuningSimulation) {
             armSimulation(settings.tuningSimulation, { recordIslandsStart: false });

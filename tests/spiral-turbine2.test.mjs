@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {turbine2Direction} from '../js/simulations/spiral-turbine2.js';
 import {runSpiralGeneration} from '../js/simulations/spiral.js';
+import {runGravitationalSortGeneration} from '../js/simulations/gravitational_sort.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 const step=(board,n)=>runSpiralGeneration({n,currentBoardState:board,currentPalette:[],spiralRules:{method:'turbine2'}});
 const boardFor=n=>Array.from({length:n*n},(_,id)=>({id,k:(id*157+31)%264,v:(id*157+31)%264,isGold:id%37===0,prevK:null}));
@@ -52,3 +53,25 @@ test('a pigment participates in at most one actual swap per generation',()=>seed
  }});
  step(board,n);assert(writes.size>0);assert([...writes.values()].every(count=>count===1));
 }));
+
+const gravityStep=(board,n,strength)=>runGravitationalSortGeneration({n,currentBoardState:board,gravitationalSortRules:{direction:'turbine2',strength}});
+test('Gravity at 60% reproduces legacy Spiral Turbine 2 exactly, including tile metadata',()=>{
+ const original=boardFor(31);original.forEach((t,i)=>{t.v=i/3;t.prevK=i%17;});
+ const legacy=seeded(()=>{const b=structuredClone(original);for(let i=0;i<12;i++)step(b,31);return b;});
+ const gravity=seeded(()=>{const b=structuredClone(original);for(let i=0;i<12;i++)gravityStep(b,31,.6);return b;});
+ assert.deepEqual(gravity,legacy);assert.notDeepEqual(gravity,original);
+});
+test('Gravity strength gates actual swaps and preserves colors, gold and one-cell movement',()=>{
+ const original=boardFor(31);
+ assert.deepEqual(seeded(()=>gravityStep(structuredClone(original),31,0)),original);
+ const full=seeded(()=>gravityStep(structuredClone(original),31,1));assert.notDeepEqual(full,original);
+ assert.deepEqual([...full].sort((a,b)=>a.id-b.id),original);
+ full.forEach((tile,i)=>{if(original[i].isGold)assert.deepEqual(tile,original[i]);assert(Math.abs(i%31-tile.id%31)<=1);assert(Math.abs(Math.floor(i/31)-Math.floor(tile.id/31))<=1);});
+ assert.notDeepEqual(seeded(()=>gravityStep(structuredClone(original),31,.01)),full);
+});
+test('new Gravity settings and both retired modes retain distinct rules through export/import',()=>{
+ for(const [kind,value] of [['gravity','turbine2'],['gravity','vortex'],['spiral','turbine2']]){
+  const settings=defaultWorkspaceSettings();settings.rules[kind][kind==='gravity'?'direction':'method']=value;settings.rules.gravity.strength=.27;
+  const restored=deserializeWorkspaceSettings(serializeWorkspaceSettings(settings));assert.deepEqual(restored.rules[kind],settings.rules[kind]);assert.equal(restored.rules.gravity.strength,.27);
+ }
+});

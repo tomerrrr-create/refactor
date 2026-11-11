@@ -22,6 +22,8 @@ Tap a cycling evolution to change its mode. Paused cycles include Off; running c
 
 Game of Life and Chi Flow each have three configurable cycle positions, shown with zero, one or two stars. In their settings, select a position, then choose a preset or edit its rules. **Save** commits the draft; **Cancel** discards it. Ordinary taps cycle the assigned positions. When its evolution is selected, swipe right/left to commit the next/previous preset to the active cycle position, exactly like selecting it in settings and saving. The number of stars stays unchanged, and other positions retain their presets. The order follows the preset buttons in settings, wraps at either end and stays physically right/left in every language. Chi Flow loads the selected preset’s full Magnetic Reach. Paused swipes do not paint; running swipes retain playback and the generation counter. Swipes are blocked during macro loading/playback.
 
+Gravity cycles Up → Right → Center-X → Turbine 2, with Off while paused. Turbine 2 replaces the circular option in Gravity settings and uses its Strength slider; 60% retains its original behavior. Spiral cycles Pinwheel → Turbine → Diamond → Hexagon → Circle, keeping Pinwheel as its initial button mode. Experiment A remains in settings only; Vortex is removed from the selectable options. Existing profile defaults and legacy recipe playback are preserved. Older Spiral Turbine 2 files and recipes remain readable.
+
 Brightness smoothing starts at 10%. Cracks defaults to whole-board growth; its button cycles between whole-board and dead-cell growth, with Off available while paused. Cracks always uses the selected brush color and starts with Fibonacci Bloom growth defaults. Its settings use manual controls followed by colored preset tiles.
 
 Resonance starts in the second drawer. Its toolbar cycle is Circular → Interference, with Off while paused; all six maps, including Cosmological empathy, remain available in settings. A fixed audio-waveform icon has a small upper-right badge for the selected map. Each map remembers its own Frequency and Strength, while Phase motion is shared. Cosmological empathy uses a circular gradient across the board; older recordings retain their recorded map behavior.
@@ -32,7 +34,7 @@ Wind has a dedicated button in the simulation panel above Nudge. Tap to cycle Lo
 
 The simulation overlay has **two drawers**, each with ten fixed places in two rows of five. All fourteen evolutions appear exactly once across them. Empty places are invisible on the control panel, and the frame keeps the same size.
 
-- Tap the **two small gray dots** above the overlay to switch drawers. The current drawer has a filled dot; the other has an outlined dot.
+- Tap the **filled gold-and-dark yin–yang button** in the bottom center of the simulation overlay to switch drawers. Each half has a dot in the opposite color; their colors swap to indicate the current drawer. A gentle gold glow keeps the symbol visible.
 - Switching changes visibility only. It does not select, pause, restart or step an evolution, change its cycle mode, or reset its generation counter.
 - Global Play/Pause and Single step still control the selected evolution when its button is in the other drawer. A small gold marker and tooltip identify that situation.
 - Navigation works during playback, including Breathe. The current drawer is retained during the session; a new app load starts at drawer one.

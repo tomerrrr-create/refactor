@@ -8,7 +8,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
     trigger.setAttribute('aria-keyshortcuts','Alt+ArrowUp');
-    trigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path class="drawer-yin-half" data-yin-half="0" d="M15.35 27.98A12 12 0 0 1 15.35 4.02C23.5 4.02 23.5 12.2 17.1 15.3"/><path class="drawer-yin-half" data-yin-half="1" transform="rotate(180 16 16)" d="M15.35 27.98A12 12 0 0 1 15.35 4.02C23.5 4.02 23.5 12.2 17.1 15.3"/></svg><span class="drawer-active-mark"></span></span>';
+    trigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><svg class="drawer-yin-icon" viewBox="0 0 32 32" stroke-width=".65" stroke-linejoin="round"><path class="drawer-yin-half" data-yin-half="0" d="M16 4A12 12 0 0 0 16 28A6 6 0 0 0 16 16A6 6 0 0 1 16 4Z"/><path class="drawer-yin-half" data-yin-half="1" transform="rotate(180 16 16)" d="M16 4A12 12 0 0 0 16 28A6 6 0 0 0 16 16A6 6 0 0 1 16 4Z"/><circle class="drawer-yin-dot" data-yin-dot="0" cx="16" cy="22" r="2"/><circle class="drawer-yin-dot" data-yin-dot="1" cx="16" cy="10" r="2"/></svg><span class="drawer-active-mark"></span></span>';
     controls.append(trigger);
     const dialog=document.createElement('dialog');
     dialog.id='evolutionDrawerDialog';

@@ -39,7 +39,7 @@ try{
  const mode=async(sim,value,record=true)=>page.evaluate(([s,m,r])=>iconTest.mode(s,m,r),[sim,value,record]);
  // Every alternate root SVG must be the actual visible symbol, not the first SVG.
  const modes={erosion:{channels:'iconErosionChannels','channels-solid':'iconErosionSolid',legacy:'iconErosionLegacy'},
- gravitationalSort:{up:'iconGsUp',right:'iconGsRight',center_x:'iconGsCenterX'},
+ gravitationalSort:{up:'iconGsUp',right:'iconGsRight',center_x:'iconGsCenterX',turbine2:'iconGsTurbine2'},
  spiral:{b:'iconSpiralB',vortex:'iconSpiralVortex',left:'iconSpiralLeft',turbine2:'iconSpiralTurbine2',a:'iconSpiralA',radial:'iconSpiralRadial',down:'iconSpiralDown',black_hole:'iconSpiralBlackHole'},
  magnet:{magnet:'iconModeMagnet',cosmic_magnet:'iconModeCosmicMagnet',time_magnet:'iconModeTimeMagnet'},
  breathe:{solo:'iconBreatheSolo',group:'iconBreatheGroup','random-cell':'iconBreatheRandomCell','random-color':'iconBreatheRandomColor'}};
