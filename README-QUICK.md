@@ -34,7 +34,7 @@ Wind has a dedicated button in the simulation panel above Nudge. Tap to cycle Lo
 
 The simulation overlay has **two drawers**, each with ten fixed places in two rows of five. All fourteen evolutions appear exactly once across them. Empty places are invisible on the control panel, and the frame keeps the same size.
 
-- Tap the **two small gray dots** above the overlay to switch drawers. The current drawer has a filled dot; the other has an outlined dot.
+- Tap the **filled gold-and-dark yin–yang button** in the bottom center of the simulation overlay to switch drawers. Each half has a dot in the opposite color; their colors swap to indicate the current drawer. A gentle gold glow keeps the symbol visible.
 - Switching changes visibility only. It does not select, pause, restart or step an evolution, change its cycle mode, or reset its generation counter.
 - Global Play/Pause and Single step still control the selected evolution when its button is in the other drawer. A small gold marker and tooltip identify that situation.
 - Navigation works during playback, including Breathe. The current drawer is retained during the session; a new app load starts at drawer one.

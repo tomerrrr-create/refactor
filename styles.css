@@ -2548,12 +2548,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #controlsContainer.sim-mode-active .evolution-drawer-internal { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; grid-area:3 / 5; width:50px; max-width:100%; height:50px; padding:0; border:0; background:transparent; color:#c5cbc5; cursor:pointer; touch-action:none; }
 .drawer-internal-symbol { position:relative; display:grid; place-items:center; box-sizing:border-box; width:34px; height:34px; border:1px solid #89908b50; border-radius:50%; background-color:#141719; background-image:linear-gradient(180deg,#ffffff08,transparent 55%,#00000018); box-shadow:inset 0 1px 0 #e1e7e914,0 2px 4px #0006; transition:border-color 150ms ease; pointer-events:none; }
 .drawer-internal-symbol svg { width:30px; height:30px; }
-.drawer-yin-half { fill:none; transition:stroke 260ms ease-in-out; }
-[data-yin-half="0"] { stroke:#c6ad74; }
-[data-yin-half="1"] { stroke:#555d63; }
-.evolution-drawer-internal[data-page="1"] [data-yin-half="0"] { stroke:#555d63; }
-.evolution-drawer-internal[data-page="1"] [data-yin-half="1"] { stroke:#c6ad74; }
-@media(prefers-reduced-motion:reduce) { .drawer-yin-half, .drawer-internal-symbol { transition:none; } }
+.drawer-yin-icon { --yin-first:var(--gold); --yin-second:#080a09; }
+.drawer-internal-symbol .drawer-yin-icon { filter:drop-shadow(0 0 3px #ffd70045); }
+.drawer-yin-half { stroke:#ffd70070; transition:fill 260ms ease-in-out; }
+.drawer-yin-dot { stroke:none; transition:fill 260ms ease-in-out; }
+.drawer-yin-icon [data-yin-half="0"], .drawer-yin-icon [data-yin-dot="1"] { fill:var(--yin-first); }
+.drawer-yin-icon [data-yin-half="1"], .drawer-yin-icon [data-yin-dot="0"] { fill:var(--yin-second); }
+.evolution-drawer-internal[data-page="1"] .drawer-yin-icon { --yin-first:#080a09; --yin-second:var(--gold); }
+@media(prefers-reduced-motion:reduce) { .drawer-yin-half, .drawer-yin-dot, .drawer-internal-symbol { transition:none; } }
 .evolution-drawer-internal .drawer-active-mark { display:none; position:absolute; bottom:2px; width:2px; height:2px; border-radius:50%; background:var(--gold); }
 .evolution-drawer-internal[data-parked-active="true"] .drawer-active-mark { display:block; }
 .evolution-drawer-internal:disabled { opacity:.3; cursor:default; }

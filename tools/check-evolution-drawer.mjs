@@ -11,7 +11,7 @@ const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://l
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
 try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:375,height:667},{lang:'nl',width:1024,height:768}].filter(c=>!process.env.DRAWER_LANG||c.lang===process.env.DRAWER_LANG)){
- const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block',reducedMotion:config.lang==='he'?'reduce':'no-preference'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.drawerTest={
  setup:()=>{pauseLife();resetArmedState();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=5+i%12;t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();},
@@ -48,12 +48,15 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
  const island=await trigger.locator('.drawer-internal-symbol').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),b=e.parentElement.getBoundingClientRect();return {w:s.width,h:s.height,radius:s.borderRadius,background:s.backgroundColor,image:s.backgroundImage,shadow:s.boxShadow,fits:r.left>=b.left&&r.right<=b.right&&r.top>=b.top&&r.bottom<=b.bottom};});
  assert(Math.abs(parseFloat(island.w)-34)<.1&&Math.abs(parseFloat(island.h)-34)<.1);assert.equal(island.radius,'50%');assert.equal(island.background,'rgb(20, 23, 25)');assert(island.image.includes('gradient')&&island.shadow!=='none'&&island.fits,'neutral island stays inside the original tap target');
- const yinColors=()=>trigger.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).stroke));
- assert.deepEqual(await yinColors(),['rgb(198, 173, 116)','rgb(85, 93, 99)']);
- assert.deepEqual(await trigger.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),['none','none']);
- assert.equal(await trigger.locator('circle').count(),0);
+ const yinColors=()=>trigger.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill));
+ assert.deepEqual(await yinColors(),['rgb(255, 215, 0)','rgb(8, 10, 9)']);
+ assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),['rgb(8, 10, 9)','rgb(255, 215, 0)']);
+ assert.equal(await trigger.locator('circle').count(),2);
+ assert.notEqual(await trigger.locator('svg').evaluate(e=>getComputedStyle(e).filter),'none');
+ if(config.lang==='he')assert.equal(await trigger.locator('[data-yin-half]').first().evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
  const position=await trigger.boundingBox(),frame=await page.locator('#simModeBackground').boundingBox();
- await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(85, 93, 99)','rgb(198, 173, 116)']);
+ await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(8, 10, 9)','rgb(255, 215, 0)']);
+ assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),['rgb(255, 215, 0)','rgb(8, 10, 9)']);
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(Boolean));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
  await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled').count(),2);
