@@ -5,16 +5,16 @@ import { readFileSync } from 'node:fs';
 import { bindPickerGestures } from '../js/picker-gestures.js';
 
 const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
-function harness(t, pointerType = 'touch') {
+function harness(t, pointerType = 'touch', buttonId = 'btnToggleSimMode') {
     const original = { document: globalThis.document, window: globalThis.window, setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
     t.after(() => Object.assign(globalThis, original));
     let now = 0, nextId = 0;
     const timers = new Map(), classes = new Set(), actions = [], handlers = new Map(), captured = new Set();
-    const button = { id: 'btnToggleSimMode', contains: node => node === button, getBoundingClientRect: () => ({left: 0, top: 0, right: 50, bottom: 50}),
+    const button = { id: buttonId, contains: node => node === button, getBoundingClientRect: () => ({left: 0, top: 0, right: 50, bottom: 50}),
         setPointerCapture: id => captured.add(id), hasPointerCapture: id => captured.has(id), releasePointerCapture: id => captured.delete(id),
         addEventListener(type, fn) { handlers.set(type, fn); },
         classList: { add: c => classes.add(c), remove: c => classes.delete(c), toggle(c, on) { if(on) classes.add(c); else classes.delete(c); } } };
-    const context = vm.createContext({isBreathing: false, isLifePlaying: false, isSimModeActive: false, C: {LONG_PRESS_SHOW_MS: 600}, dom: {btnToggleSimMode: button},
+    const context = vm.createContext({isBreathing: false, isLifePlaying: false, isSimModeActive: false, C: {LONG_PRESS_SHOW_MS: 600}, dom: {[buttonId]: button},
         bindPickerGestures, hideLongPressDisplay() {},
         toggleSimMode() { context.isSimModeActive = !context.isSimModeActive; actions.push('toggle'); },
         prepareBoardForSimMode() { actions.push('init'); },
@@ -22,8 +22,8 @@ function harness(t, pointerType = 'touch') {
         modals: { openTechnicianMenu(trigger) { assert.equal(trigger, button); actions.push('technicians'); } } });
     Object.assign(globalThis, {document: {addEventListener() {}, elementFromPoint: (x,y) => x >= 0 && x <= 50 && y >= 0 && y <= 50 ? button : null}, window: {addEventListener() {}},
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, {fn, at: now + ms}); return id; }, clearTimeout: id => timers.delete(id)});
-    const start = app.indexOf('bindPickerGestures(dom.btnToggleSimMode,');
-    vm.runInContext(app.slice(start, app.indexOf('// A swipe opens settings', start)), context);
+    const start = app.indexOf('bindPickerGestures(dom.'+buttonId+',');
+    vm.runInContext(app.slice(start, buttonId==='btnDark'?app.indexOf('bindPickerGestures(dom.btnToggleSimMode,',start):app.indexOf('// A swipe opens settings', start)), context);
     const event = (type, x = 25, y = 25) => handlers.get(type)?.({pointerId: 1, pointerType, isPrimary: true, button: 0, clientX: x, clientY: y, detail: 1});
     return {actions, classes, context, event, down: () => event('pointerdown'),
         release() {event('pointerup'); event('click');},
@@ -107,4 +107,17 @@ test('simulation initialization preserves current symmetry by default and honors
             assert.equal(context.separatorPx, 0);
         }
     }
+});
+
+for(const pointerType of ['mouse','touch'])test(`${pointerType} Go Dark tap darkens and hold initializes once without a release tap`,t=>{
+ const h=harness(t,pointerType,'btnDark');
+ h.down();h.advance(100);h.release();assert.deepEqual(h.actions,['dark']);
+ h.down();h.advance(700);assert.deepEqual(h.actions,['dark','toggle','init']);
+ h.advance(3000);h.release();assert.deepEqual(h.actions,['dark','toggle','init']);
+});
+test('Go Dark hold preserves the simulation panel and is blocked while playing; tap remains available',t=>{
+ const h=harness(t,'touch','btnDark');h.context.isSimModeActive=true;
+ h.down();h.advance(600);h.release();assert.deepEqual(h.actions,['init']);
+ h.context.isLifePlaying=true;h.down();h.advance(2000);h.release();assert.deepEqual(h.actions,['init']);
+ h.down();h.advance(2100);h.release();assert.deepEqual(h.actions,['init','dark']);
 });

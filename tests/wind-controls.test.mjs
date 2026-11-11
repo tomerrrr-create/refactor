@@ -42,7 +42,7 @@ test('dedicated Wind gestures use settings only while active and block macro int
  let gestures;const events=[],c=vm.createContext({dom:{btnWind:{addEventListener(){}}},windMode:false,isSimModeActive:true,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
  setWindMode:enabled=>{c.windMode=enabled;events.push('off');},cycleWindEffect:()=>events.push('cycle'),windSettingsUI:{open:()=>events.push('settings')},hideLongPressDisplay(){},bindPickerGestures:(button,options)=>{gestures=options;}});
  const start=source.indexOf('bindPickerGestures(dom.btnWind,');
- vm.runInContext(source.slice(start,source.indexOf("        dom.btnDark.addEventListener",start)),c);
+ vm.runInContext(source.slice(start,source.indexOf('bindPickerGestures(dom.btnDark,',start)),c);
  assert(gestures.canInteract());assert(!gestures.canOpen());gestures.onTap();c.windMode=true;assert(gestures.canOpen());gestures.onOpen();
  assert(gestures.canSwipeDown());gestures.onSwipeDown();assert(!c.windMode);assert(!gestures.canSwipeDown());assert.deepEqual(events,['cycle','settings','off']);for(const flag of ['isMacroLoaded','isMacroPlaying','isExecutingMacroCommand']){c[flag]=true;assert(!gestures.canInteract());c[flag]=false;}
  c.isSimModeActive=false;assert(!gestures.canInteract());
