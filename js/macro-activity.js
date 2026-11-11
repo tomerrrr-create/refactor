@@ -85,21 +85,15 @@ export function latestMacroActivity(queue, index, simulation) {
     }
     return null;
 }
-export function macroActivityPlacement(board, viewport, fullscreen = false, below = false) {
-    if (below) {
-        const width = Math.min(224, board.width, viewport.width - 32), height = 72;
-        const gap = viewport.width >= 768 ? 74 : 20;
-        const top = board.top + board.height + gap;
-        const left = board.left + (board.width - width) / 2;
-        if (!fullscreen || board.width <= 0 || width < 188 || left < 16 || left + width > viewport.width - 16 ||
-            top + height > viewport.height - Math.max(16, viewport.safeBottom || 0)) return null;
-        return {left, top, width};
-    }
-    const gap = fullscreen ? 74 : 28; // Leave the fullscreen gallery frame untouched.
-    const width = Math.min(224, board.left - gap - 16), height = 72;
-    if (viewport.width < 1024 || width < 188 || viewport.height < height + 32 || board.width <= 0) return null;
-    return { left: board.left - gap - width, top: Math.max(16, Math.min(viewport.height - height - 16,
-        board.top + (board.height - height) / 2)), width };
+export function macroActivityPlacement(board, viewport, fullscreen = false) {
+    const width = Math.min(184, viewport.width - 32), height = 32;
+    // Desktop/tablet fullscreen has a 50px gallery frame; stay below it.
+    const gap = viewport.width >= 768 ? 58 : 12;
+    const top = board.top + board.height + gap;
+    const left = board.left + (board.width - width) / 2;
+    if (!fullscreen || board.width <= 0 || width < 24 || left < 16 || left + width > viewport.width - 16 ||
+        top + height > viewport.height - Math.max(12, (viewport.safeBottom || 0) + 8)) return null;
+    return {left, top, width};
 }
 
 // Freeze the visible control symbol so an outgoing row cannot change mid-fade.
@@ -165,7 +159,7 @@ export function createMacroActivityFade(container) {
             if (!incoming || reduced.matches || !row.animate) {
                 settle(); incoming = row; container.replaceChildren(row); return;
             }
-            if (enter) { incoming.replaceChildren(...row.childNodes); return; }
+            if (enter) { incoming.replaceChildren(...row.childNodes); incoming.setAttribute('aria-label',row.getAttribute('aria-label')); return; }
             outgoing = incoming; outgoing.setAttribute('aria-hidden', 'true');
             incoming = row; container.append(row);
             const timing = {duration: 250, easing: 'ease-in-out', fill: 'forwards'};
@@ -178,7 +172,7 @@ export function createMacroActivityFade(container) {
 }
 
 export function createMacroActivity({ board, getText, getLang, readState, document: doc = document }) {
-    const win = doc.defaultView, desktop = win.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)');
+    const win = doc.defaultView;
     const panel = doc.createElement('aside');
     panel.id = 'macroActivity'; panel.className = 'macro-activity'; panel.hidden = true;
     panel.setAttribute('role', 'region');
@@ -197,16 +191,15 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
             icon.dataset.sourceIcon = snapshot.sourceId;
             icon.append(installIcon(snapshot));
         } else icon.textContent = doc.getElementById(item.icon)?.textContent.trim() || '◇';
-        const body = doc.createElement('div'), title = doc.createElement('p');
-        title.className = 'macro-activity-title'; title.textContent = text(item.label); body.append(title);
-        row.append(icon, body); return row;
+        row.setAttribute('role','img');row.setAttribute('aria-label',text(item.label));
+        row.append(icon); return row;
     }
     function render() {
         const state = readState();
         const primary = primaryMacroActivity(state, entry);
         const place = enabled && active && primary && state.loaded && state.fullscreen
-            ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight, safeBottom: parseFloat(win.getComputedStyle(panel).getPropertyValue('--activity-safe-bottom')) || 0}, state.fullscreen, !desktop.matches) : null;
-        panel.dataset.placement = desktop.matches ? 'left' : 'below';
+            ? macroActivityPlacement(board.getBoundingClientRect(), {width: win.innerWidth, height: win.innerHeight, safeBottom: parseFloat(win.getComputedStyle(panel).getPropertyValue('--activity-safe-bottom')) || 0}, state.fullscreen) : null;
+        panel.dataset.placement = 'below';
         panel.hidden = !place;
         if (!place) { fade.clear(); signals.replaceChildren(); signalNodes.clear(); lastMarkup = ''; return; }
         Object.assign(panel.style, { left: place.left + 'px', top: place.top + 'px', width: place.width + 'px' });
@@ -269,7 +262,6 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         timer = enabled && active ? win.setInterval(render, 100) : null;
         render();
     }
-    desktop.addEventListener('change', sync);
     return {
         enabled: () => enabled,
         setEnabled(value) {

@@ -49,29 +49,32 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
  if(config.lang==='he')await page.evaluate(()=>activityTest.zoom(90));
  await start();assert.equal(await panel.isVisible(),false,'normal board mode stays uncluttered');
  await page.locator('#boardCanvas').click();await page.waitForFunction(()=>activityTest.state().fullscreen&&!activityTest.state().animating);
- if(config.desktop||config.width<768){
+ {
   await panel.waitFor({state:'visible'});
   const geometry=await page.locator('#board').boundingBox();
-  const first=await panel.locator('.macro-activity-row:not([aria-hidden]) .macro-activity-title').textContent();assert(first.length>0);
+  const first=await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label');assert(first.length>0);
   assert.equal(await panel.locator('.macro-activity-row').count(),1,'only the current action is rendered');
   assert.equal(await panel.locator('.macro-activity-previous, .macro-activity-upcoming, .macro-activity-heading').count(),0,'no history, preview or headings');
-  assert.equal(await panel.locator('.macro-activity-title').textContent(),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
+  assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label'),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
   assert(await panel.locator('.macro-activity-current svg').count());
   if(config.lang==='he')assert.equal(await panel.locator('.macro-activity-current').evaluate(e=>e.getAnimations({subtree:true}).length),0,'reduced motion disables crossfades');
   const generation=await page.evaluate(()=>activityTest.state().gen);
   await page.waitForFunction(()=>activityTest.state().gen>=100);assert((await page.evaluate(()=>activityTest.state().gen))>generation,'the simulation continues advancing');
-  assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden]) .macro-activity-title').textContent(),first,'settings events and advancing generations do not replace or rewrite the display');
+  assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label'),first,'settings events and advancing generations do not replace or rewrite the display');
   assert.equal(await panel.locator('.macro-activity-detail').count(),0,'only action name and icon, without extra captions');
   const side=await panel.boundingBox();
-  if(config.desktop)assert(side.x+side.width<=geometry.x-70,'panel clears the left gallery frame');
-  else {assert(side.y>=geometry.y+geometry.height+20,'mobile panel is below the board');assert(Math.abs(side.x+side.width/2-geometry.x-geometry.width/2)<1,'mobile panel is centered');assert(side.y+side.height<=config.height-16,'panel clears the bottom edge');}
+  assert(side.y>=geometry.y+geometry.height+(config.width>=768?58:12),'activity is below the board/frame');
+  assert(Math.abs(side.x+side.width/2-geometry.x-geometry.width/2)<1,'activity is centered');
+  const primary=await panel.locator('.macro-activity-current').boundingBox();assert(Math.abs(primary.x+primary.width/2-geometry.x-geometry.width/2)<1,'primary icon itself is centered');
+  assert.equal(await panel.locator('.macro-activity-title').count(),0,'no visible word labels');
+  assert.deepEqual(await panel.evaluate(e=>[getComputedStyle(e).borderTopWidth,getComputedStyle(e).borderBottomWidth]),['0px','0px']);
   assert(side.x>=0);
   await page.waitForFunction(()=>activityTest.state().gen>=180);
   await panel.locator('.macro-activity-signal[data-action="DRAW_STROKE"]').waitFor({state:'visible'});
-  assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden]) .macro-activity-title').textContent(),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
+  assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label'),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
   await page.waitForFunction(()=>activityTest.state().gen>=240);
   await panel.locator('.macro-activity-signal[data-action="Sort by"]').waitFor({state:'visible'});
-  assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden]) .macro-activity-title').textContent(),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
+  assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label'),await page.evaluate(()=>activityTest.label('help_gameOfLife')));
   assert((await panel.locator('.macro-activity-signal[data-action="Sort by"]').getAttribute('aria-label')).includes(await page.evaluate(()=>activityTest.label('startup_sort_luminance'))));
   assert(await panel.locator('.macro-activity-signal').count()<=3);
   await page.screenshot({path:path.join(artifacts,config.lang+'-concurrent.png')});
@@ -80,12 +83,12 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
   await page.evaluate(()=>activityTest.tech());await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();await page.waitForTimeout(150);
   assert.equal(await panel.isVisible(),false);assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'off never resizes or moves board');
   if(config.lang==='en')await page.waitForFunction(()=>activityTest.state().simulation==='nudgeBrighter'&&activityTest.state().gen>=5);
-  await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en'){assert((await panel.locator('.macro-activity-current').textContent()).includes('Nudge'),'enabling mid-play shows the latest action');assert(!/Pause|Settings changed|Generation/.test(await panel.textContent()),'Pause and settings are excluded when recovering the current action');}assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
+  await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en'){assert((await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label')).includes('Nudge'),'enabling mid-play shows the latest action');assert(!/Pause|Settings changed|Generation/.test(await panel.textContent()),'Pause and settings are excluded when recovering the current action');}assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
   await page.screenshot({path:path.join(artifacts,config.lang+'-fullscreen.png')});
-  await page.setViewportSize(config.desktop?{width:1024,height:1000}:{width:844,height:390});await page.waitForTimeout(300);assert.equal(await panel.isVisible(),false,'insufficient free space hides it');
+  await page.setViewportSize({width:844,height:390});await page.waitForTimeout(300);assert.equal(await panel.isVisible(),false,'insufficient free space hides it');
   const cramped=await page.locator('#board').boundingBox();await page.evaluate(()=>activityTest.tech());await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();assert.deepEqual(await page.locator('#board').boundingBox(),cramped,'hidden activity never changes board geometry');await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();
   await page.setViewportSize({width:config.width,height:config.height});await panel.waitFor({state:'visible'});
- }else{await page.waitForTimeout(150);assert.equal(await panel.isVisible(),false,'tablet without sufficient space below hides panel');}
+ }
  const replayed=await finish();assert.deepEqual(replayed,baseline,'display does not change replayed artwork');assert.deepEqual(await recipeLog(),baselineLog,'display does not change recorded playback commands');assert.equal(await panel.isVisible(),false,'completion cleans panel');
  // A stopped replacement file also clears presentation immediately.
  await start();await page.locator('#boardCanvas').click();await page.waitForFunction(()=>activityTest.state().fullscreen&&!activityTest.state().animating);

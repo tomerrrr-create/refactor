@@ -47,7 +47,7 @@ try{
   await mode(sim,value);await settled();assert.equal(await current.locator('.macro-activity-icon').getAttribute('data-source-icon'),id,sim+' '+value);
  }
  // Mode changes hidden from the activity text still update its symbol.
- await mode('erosion','channels');await settled();const label=await current.locator('.macro-activity-title').textContent(),geometry=await current.boundingBox();
+ await mode('erosion','channels');await settled();const label=await current.getAttribute('aria-label'),geometry=await current.boundingBox();
  await mode('erosion','channels-solid',false);await page.waitForFunction(()=>document.querySelectorAll('#macroActivity .macro-activity-row').length===2);
  await panel.locator('.macro-activity-row').evaluateAll(rows=>rows.forEach(row=>row.getAnimations().forEach(animation=>{animation.pause();animation.currentTime=80;})));
  const transition=await panel.locator('.macro-activity-row').evaluateAll(rows=>rows.map(row=>({opacity:Number(getComputedStyle(row).opacity),transform:getComputedStyle(row).transform,x:row.getBoundingClientRect().x,y:row.getBoundingClientRect().y,icon:row.querySelector('.macro-activity-icon').dataset.sourceIcon,html:row.outerHTML})));
@@ -57,7 +57,7 @@ try{
  const frozen=transition[0].html;await mode('erosion','legacy',false);await page.waitForTimeout(105);
  assert.equal(await panel.locator('.macro-activity-row[aria-hidden]').evaluate(e=>e.outerHTML),frozen,'outgoing icon is frozen while control changes again');
  await panel.locator('.macro-activity-row').evaluateAll(rows=>rows.forEach(row=>row.getAnimations().forEach(animation=>animation.play())));
- await settled();assert.equal(await current.locator('.macro-activity-icon').getAttribute('data-source-icon'),'iconErosionLegacy');assert.equal(await current.locator('.macro-activity-title').textContent(),label);assert.deepEqual(await current.boundingBox(),geometry);
+ await settled();assert.equal(await current.locator('.macro-activity-icon').getAttribute('data-source-icon'),'iconErosionLegacy');assert.equal(await current.getAttribute('aria-label'),label);assert.deepEqual(await current.boundingBox(),geometry);
  // Shared SVGs retain only the selected map mark and all original per-mode paints.
  for(const map of ['diagonal','grid','circular','interference','clouds','cosmic']){
   await mode('cymatics',map);await settled();assert.deepEqual(await current.locator('[data-cymatics-map-mark]').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMapMark)),[map]);
@@ -79,8 +79,11 @@ try{
  for(const value of ['classic','proximity']){await mode('islands',value);await settled();assert.equal(await current.locator('.islands-proximity-mark').count(),0); // CSS classes are frozen away.
   assert.equal(await current.locator('circle').count(),value==='proximity'?1:0);}
  for(const value of ['all','dead']){await mode('contour',value);await settled();const opacity=await current.locator('svg [opacity]').evaluateAll(nodes=>nodes.map(n=>getComputedStyle(n).opacity));assert(opacity.includes(value==='dead'?'1':'0'));}
- await mode('nudgeBrighter');await settled();await mode('nudgeDarker',null,false);await settled();assert((await current.locator('.macro-activity-title').textContent()).includes('backward'));
+ await mode('nudgeBrighter');await settled();await mode('nudgeDarker',null,false);await settled();assert((await current.getAttribute('aria-label')).includes('backward'));
  assert.equal(await current.locator('path').getAttribute('d'),'M9 4 V 20 C 20 20, 20 4, 9 4 Z');
+ for(const viewport of [{width:1700,height:1000},{width:1440,height:900},{width:390,height:844},{width:1180,height:820}]){
+  await page.setViewportSize(viewport);await page.waitForTimeout(200);await panel.waitFor({state:'visible'});const board=await page.locator('#board').boundingBox(),symbol=await current.boundingBox();assert(Math.abs(symbol.x+symbol.width/2-board.x-board.width/2)<1);assert(symbol.y>board.y+board.height);assert.equal(await panel.locator('.macro-activity-title').count(),0);
+ }
  await page.evaluate(()=>iconTest.stop());assert.equal(await panel.isVisible(),false);await page.waitForTimeout(300);assert.equal(await panel.locator('.macro-activity-row').count(),0);
  // Exercise rapid bursts deterministically against the same production fade controller.
  await page.evaluate(async()=>{
