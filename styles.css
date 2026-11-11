@@ -1317,6 +1317,8 @@ body {
 #btnSpiral:not([class*="mode-"]) svg { display: none !important; }
 #btnSpiral:not([class*="mode-"]) #iconSpiralB { display: block !important; }
 
+#btnSpiral.mode-tornado #iconSpiralTornado { display: block !important; }
+#btnSpiral.mode-tornado svg:not(#iconSpiralTornado) { display: none !important; }
 #btnSpiral.mode-b #iconSpiralB { display: block !important; }
 #btnSpiral.mode-b svg:not(#iconSpiralB) { display: none !important; }
 

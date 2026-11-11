@@ -371,7 +371,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a', 'tornado'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -428,6 +428,7 @@ currentSortMethod,
             brightnessEvoMode, breatheEvoMode, dlaMode,
             ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
+            ...(spiralMode === 'tornado' ? {tornadoVersion: spiralRules.tornadoVersion ?? 3, tornadoFrame: spiralRules.tornadoFrame ?? 0} : {}),
             ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...gravitationalSortRules } } : {}),
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
@@ -462,6 +463,7 @@ currentSortMethod,
 
       function areStatesEqual(stateA, stateB) {
         if (!stateA || !stateB) return false;
+        if (stateA.tornadoVersion !== stateB.tornadoVersion || stateA.tornadoFrame !== stateB.tornadoFrame) return false;
         if (JSON.stringify(stateA.gravityRules) !== JSON.stringify(stateB.gravityRules)) return false;
         if(JSON.stringify(stateA.cymaticsState)!==JSON.stringify(stateB.cymaticsState))return false;
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
@@ -549,6 +551,8 @@ k: tileState.k,
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
+            spiralRules.tornadoVersion = [2, 3].includes(state.tornadoVersion) ? state.tornadoVersion : 1;
+            spiralRules.tornadoFrame = Number.isSafeInteger(state.tornadoFrame) && state.tornadoFrame >= 0 ? state.tornadoFrame : 0;
             updateSpiralButtonUI();
         }
         
@@ -1834,7 +1838,7 @@ function refreshCycleIcons() {
 function restoreCycleMode(simulation, mode) {
     switch(simulation){
         case 'gravitationalSort':gsMode=mode;gravitationalSortRules.direction=mode;break;
-        case 'spiral':spiralMode=mode;spiralRules.method=mode;break;
+        case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;break;
         case 'magnet':magnetMode=mode;magnetRules.method=mode;break;
         case 'brightnessEvo':brightnessEvoMode=mode;break;
         case 'dla':dlaMode=mode;break;
@@ -4085,8 +4089,8 @@ function cycleBreatheEvoMode() {
 function updateSpiralButtonUI() {
     const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='spiral'?cycleMemory.recall('spiral'):undefined)??spiralMode;
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
-    dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(displayMode)
+    dom.btnSpiral.classList.remove('mode-tornado', 'mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = ['black_hole', 'turbine2', 'tornado'].includes(displayMode)
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${displayMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);
@@ -4109,6 +4113,7 @@ const sequence = SPIRAL_MODE_SEQUENCE;
     spiralMode = nextMode;
 
     if (spiralMode !== 'off') {
+        spiralRules.tornadoVersion = 3; spiralRules.tornadoFrame = 0;
         spiralRules.method = spiralMode;
     }
     
@@ -4335,6 +4340,7 @@ function getHistorySettings(state) {
         ...(state.evolutionTuning ? { evolutionTuning: state.evolutionTuning, brightnessEvoMode: state.brightnessEvoMode,
             breatheEvoMode: state.breatheEvoMode, dlaMode: state.dlaMode,
             ...(state.tuningSimulation ? { tuningSimulation: state.tuningSimulation } : {}) } : {}),
+        ...(state.spiralMethod === 'tornado' ? {tornadoState:{version:state.tornadoVersion ?? 1,frame:state.tornadoFrame ?? 0}} : {}),
         ...(state.islandsState ? { islandsState: state.islandsState } : {}),
         ...(state.cymaticsState ? {cymaticsState:state.cymaticsState} : {}),
         ...(state.gravityRules ? { gravityRules: { ...state.gravityRules } } : {}),
@@ -4347,6 +4353,7 @@ function validateGravitySnapshot(rules) {
 }
 
 function validateHistorySettings(settings) {
+    if (settings?.tornadoState && (![1,2,3].includes(settings.tornadoState.version) || !Number.isSafeInteger(settings.tornadoState.frame) || settings.tornadoState.frame < 0)) throw new Error('Invalid Tornado checkpoint');
     if (settings?.gravityRules) validateGravitySnapshot(settings.gravityRules);
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);
     if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
@@ -4362,6 +4369,13 @@ function validateHistorySettings(settings) {
 
 function applyHistorySettings(settings) {
     validateHistorySettings(settings);
+    if (settings.tornadoState) {
+        if (armedSimulation !== 'spiral') armSimulation('spiral');
+        spiralMode = spiralRules.method = 'tornado';
+        spiralRules.tornadoVersion = settings.tornadoState.version;
+        spiralRules.tornadoFrame = settings.tornadoState.frame;
+        updateSpiralButtonUI();
+    }
     if (settings.gravityRules) {
         if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
         gravitationalSortRules = { ...settings.gravityRules };
@@ -5167,7 +5181,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     updateContourButtonUI();
                 }
                 else if (sim === 'spiral') {
-                    Object.assign(spiralRules, parsedRules);
+                    Object.assign(spiralRules, parsedRules, {tornadoVersion: [2, 3].includes(parsedRules.tornadoVersion) ? parsedRules.tornadoVersion : 1, tornadoFrame: Number.isSafeInteger(parsedRules.tornadoFrame) && parsedRules.tornadoFrame >= 0 ? parsedRules.tornadoFrame : 0});
                     spiralMode = parsedRules.method || spiralMode;
                     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
                 }
@@ -5434,6 +5448,7 @@ function executeMacroAction(action) {
                 } else {
                     if (armedSimulation !== 'spiral') armSimulation('spiral');
                     spiralRules.method = action.details;
+                    if (spiralRules.tornadoVersion === 3) spiralRules.tornadoFrame = 0;
                 }
                 spiralMode = action.details;
                 if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -5800,6 +5815,7 @@ syncSpiralModeFromModal: (method) => {
         armSimulation('spiral');
     }
     spiralMode = method;
+    spiralRules.tornadoVersion = 3; spiralRules.tornadoFrame = 0;
     spiralRules.method = method;
     updateSpiralButtonUI();
     recordLiveSimulationRules('spiral');

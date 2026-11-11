@@ -79,7 +79,7 @@ export const defaultGravitationalSortRules = {
 };
 
 export const defaultSpiralRules = {
-    method: 'b'
+    method: 'b', tornadoVersion: 3, tornadoFrame: 0
 };
 
 export const defaultMagnetRules = {

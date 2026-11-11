@@ -111,7 +111,8 @@ export function validateWorkspaceSettings(value) {
             Object.entries(settings.evolutionSelections).every(([name, rules]) => ['gameOfLife','chiFlow'].includes(name) && validCycle([rules,rules,rules],name==='chiFlow'))) &&
         validCycle(settings.cycles.gameOfLife, false) && validCycle(settings.cycles.chiFlow, true) &&
         ['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'black_hole'].includes(r.gravity.direction) && number(r.gravity.strength, 0, 1) &&
-        ['b', 'a', 'vortex', 'radial', 'down', 'left', 'black_hole', 'turbine2'].includes(r.spiral.method) &&
+        ['b', 'a', 'vortex', 'radial', 'down', 'left', 'black_hole', 'turbine2', 'tornado'].includes(r.spiral.method) &&
+        [1, 2, 3].includes(r.spiral.tornadoVersion) && integer(r.spiral.tornadoFrame, 0, Number.MAX_SAFE_INTEGER) &&
         ['magnet', 'cosmic_magnet', 'time_magnet', 'expand'].includes(r.magnet.method) &&
         integer(r.magnet.anchorColorIndex, -1, Math.max(...C.PALETTES.map(p => p.colors.length)) - 1) &&
         EROSION_MODES.includes(r.erosion.mode) && number(r.erosion.erosionStrength, 0, 1) &&

@@ -11,7 +11,7 @@ export async function buildStudio({ outputDirectory = path.join(root, 'studio') 
     const hook = await readFile(new URL('./studio-engine-hook.js',import.meta.url),'utf8');
     await mkdir(outputDirectory, { recursive:true });
     if (path.resolve(outputDirectory) !== sourceDirectory) {
-        for (const name of ['index.html','exporter.js','i18n.js','handoff.js','video-effects.js','engine-boot.js','vendor']) {
+        for (const name of ['index.html','exporter.js','i18n.js','handoff.js','video-effects.js','engine-boot.js','editor.js','macro-edit-model.js','macro-editor-engine.js','vendor']) {
             await cp(path.join(sourceDirectory,name),path.join(outputDirectory,name),{recursive:true});
         }
     }
@@ -31,7 +31,7 @@ export async function buildStudio({ outputDirectory = path.join(root, 'studio') 
     let source = await readFile(path.join(engine,'js/app.js'),'utf8');
     if(source.split(marker).length !== 2) throw Error('Review Studio adapter: app bootstrap changed');
     source = "import { DEFAULT_VIDEO_EFFECTS, recordedEffects, inspectEffects, compositeGlow } from '../../video-effects.js';\n" + source;
-    source = source.replace('function executeMacroAction(action) {','function executeMacroAction(action) {\n    window.macroVideoEngine?.applyRecordedEffects(action);');
+    source = source.replace('function executeMacroAction(action) {','function executeMacroAction(action) {\n    if(window.macroEditorEngine?.handleAction(action))return;\n    window.macroVideoEngine?.applyRecordedEffects(action);');
     source = source.replace('function renderToScreen(timestamp) {','function renderToScreen(timestamp) { return; // Studio renders only its output canvas\n').replace(marker,hook);
     for (const delay of [5000,1500,2000]) source = source.replace(`await new Promise(r => setTimeout(r, ${delay}));`,'/* No splash delay in Studio engine. */');
     await writeFile(path.join(engine,'js/app.js'),source);
