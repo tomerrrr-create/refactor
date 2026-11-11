@@ -371,7 +371,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a', 'tornado'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -4085,8 +4085,8 @@ function cycleBreatheEvoMode() {
 function updateSpiralButtonUI() {
     const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='spiral'?cycleMemory.recall('spiral'):undefined)??spiralMode;
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
-    dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(displayMode)
+    dom.btnSpiral.classList.remove('mode-tornado', 'mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = ['black_hole', 'turbine2', 'tornado'].includes(displayMode)
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${displayMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);
