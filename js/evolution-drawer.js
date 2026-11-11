@@ -3,7 +3,7 @@ import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
 import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId } from './evolution-drawer-settings.js';
 
-export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,onSave,getText,getLang,onLanguageChange}) {
+export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
@@ -15,7 +15,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     dialog.className='erosion-settings-dialog evolution-drawer-dialog';
     dialog.setAttribute('aria-labelledby','evolutionDrawerTitle');
     dialog.setAttribute('aria-describedby','drawerInstructions');
-    dialog.innerHTML=`<form><header class="drawer-header"><div class="drawer-title"><span class="drawer-mark" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h20M4 14h20M4 20h20"/><circle cx="9" cy="8" r="2" fill="currentColor"/><circle cx="19" cy="14" r="2" fill="currentColor"/><circle cx="12" cy="20" r="2" fill="currentColor"/></svg></span><h2 id="evolutionDrawerTitle"></h2></div><button type="button" data-close>×</button></header><p id="drawerInstructions"></p><div class="drawer-pages"></div><p class="drawer-selection" role="status" aria-live="polite"></p><div data-drawer-appearance></div><footer class="drawer-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></footer></form>`;
+    dialog.innerHTML=`<form><header class="drawer-header"><div class="drawer-title"><span class="drawer-mark" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h20M4 14h20M4 20h20"/><circle cx="9" cy="8" r="2" fill="currentColor"/><circle cx="19" cy="14" r="2" fill="currentColor"/><circle cx="12" cy="20" r="2" fill="currentColor"/></svg></span><h2 id="evolutionDrawerTitle"></h2></div><button type="button" data-close>×</button></header><p id="drawerInstructions"></p><div class="drawer-pages"></div><p class="drawer-selection" role="status" aria-live="polite"></p><div data-drawer-appearance></div><section class="drawer-cycle-actions"><button type="button" data-reset-cycles><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M20 7V3h-4M20 3a9 9 0 1 0 1 10"/></svg><span data-reset-cycles-label></span></button><p data-reset-cycles-status role="status" aria-live="polite"></p></section><footer class="drawer-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></footer></form>`;
     const appearance=document.getElementById('evolutionAppearanceControls');
     appearance.hidden=false;
     dialog.querySelector('[data-drawer-appearance]').replaceWith(appearance);
@@ -65,7 +65,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const text=getText('drawer_navigation').replace('{n}',page+1);
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);trigger.dataset.page=String(page);
-        trigger.title=[text,activeText,getText('drawer_open_hint')].filter(Boolean).join(' — ');
+        trigger.title=[text,activeText,getText('drawer_open_hint'),getText('drawer_reset_modes_hold')].filter(Boolean).join(' — ');
         trigger.setAttribute('aria-label',trigger.title);
         if(dialog.open&&!canEdit())dialog.close();
     }
@@ -86,6 +86,9 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         dialog.querySelector('#drawerInstructions').textContent=getText('drawer_instructions');
         dialog.querySelector('[data-close]').setAttribute('aria-label',getText('saveModal_close'));
         dialog.querySelector('[data-reset]').textContent=getText('evolution_reset_default');
+        dialog.querySelector('[data-reset-cycles-label]').textContent=getText('drawer_reset_modes');
+        dialog.querySelector('[data-reset-cycles]').title=getText('drawer_reset_modes_hint');
+        dialog.querySelector('[data-reset-cycles]').disabled=!navigateAllowed()||typeof onResetCycles!=='function';
         dialog.querySelector('[data-cancel]').textContent=getText('gs_modal_cancel');
         dialog.querySelector('[type=submit]').textContent=getText('gs_modal_save_close');
         const pages=dialog.querySelector('.drawer-pages');pages.replaceChildren();
@@ -125,9 +128,19 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     }
     function open(){
         if(dialog.open||!canEdit())return;
-        draft=slotsNow();selected=null;render();dialog.showModal();focusSettingsHeading(dialog);
+        draft=slotsNow();selected=null;dialog.querySelector('[data-reset-cycles-status]').textContent='';render();dialog.showModal();focusSettingsHeading(dialog);
     }
-    bindPickerGestures(trigger,{onTap:nextPage,onOpen:open,canInteract:navigateAllowed,canOpen:canEdit});
+    function resetCycles(){
+        if(!navigateAllowed()||typeof onResetCycles!=='function'||onResetCycles()===false)return;
+        refresh();
+        if(dialog.open){render();dialog.querySelector('[data-reset-cycles-status]').textContent=getText('drawer_modes_reset_done');}
+        const symbol=trigger.querySelector('.drawer-internal-symbol');
+        if(symbol&&!matchMedia('(prefers-reduced-motion: reduce)').matches)symbol.animate([
+            {boxShadow:'0 0 10px #ffd70088'}, {boxShadow:getComputedStyle(symbol).boxShadow}
+        ],{duration:400,easing:'ease-out'});
+    }
+    bindPickerGestures(trigger,{onTap:nextPage,onOpen:open,onHold:resetCycles,canInteract:navigateAllowed,canOpen:canEdit});
+    dialog.querySelector('[data-reset-cycles]').addEventListener('click',resetCycles);
     trigger.addEventListener('keydown',event=>{
         if(event.altKey&&event.key==='ArrowUp'&&canEdit()){event.preventDefault();open();}
     });

@@ -1626,6 +1626,9 @@ export function initializeModals(appContext) {
         app.previewSoftBloomIntensity(Number(bloomIntensity.value));
     });
     bloomIntensity.addEventListener('change', () => app.setSoftBloomIntensity(Number(bloomIntensity.value)));
+    const rememberModesToggle = document.getElementById('rememberEvolutionModesToggle');
+    rememberModesToggle.checked = app.getRememberEvolutionModes();
+    rememberModesToggle.addEventListener('change', () => app.setRememberEvolutionModes(rememberModesToggle.checked));
     const macroActivityToggle = document.getElementById('macroActivityToggle');
     macroActivityToggle.checked = app.getMacroActivity();
     macroActivityToggle.addEventListener('change', () => app.setMacroActivity(macroActivityToggle.checked));
@@ -1666,6 +1669,7 @@ export function initializeModals(appContext) {
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
+        rememberModesToggle.checked = app.getRememberEvolutionModes();
         macroActivityToggle.checked = app.getMacroActivity();
         brushMotionToggle.checked = app.getBrushMotionRecording();
         refreshSmoothControl();

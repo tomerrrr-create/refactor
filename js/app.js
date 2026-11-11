@@ -1,9 +1,10 @@
+import {createEvolutionModeMemory,defaultEvolutionCycleMode} from './evolution-mode-memory.js';
 import { createMacroActivity } from './macro-activity.js';
 import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour-action-settings.js';
 import {CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_FREQUENCIES,INITIAL_CYMATICS_RULES,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
 import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from './simulations/cymatics.js';
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
-import {DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,validateEvolutionSlots} from './evolution-drawer-settings.js';
+import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,validateEvolutionSlots} from './evolution-drawer-settings.js';
 import {createEvolutionDrawer} from './evolution-drawer.js';
 import { CONTOUR_LINE_COLORS, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, createCracksSession, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
@@ -373,6 +374,9 @@ let spiralMode = 'off';
 const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
+
+      const cycleMemory = createEvolutionModeMemory({blocked:()=>isMacroLoaded||isMacroPlaying||isExecutingMacroCommand});
+      let selectingCycleMode = false, cycleMemoryAfterReplay = false;
 
       // breatheEvoMode is defined at the top
       
@@ -1092,7 +1096,7 @@ function applyNudgeLogic(direction) {
 
       function updateNudgeButtonUI() {
           const active = isNudgeSimulation();
-          const darker = armedSimulation === 'nudgeDarker';
+          const darker = armedSimulation === 'nudgeDarker'||(!active&&typeof cycleMemory!=='undefined'&&cycleMemory.recall('nudgeBrighter')==='nudgeDarker');
           const button = dom.btnNudgeBrighter;
           button.classList.toggle('simulation-active', active);
           button.setAttribute('aria-pressed', String(active));
@@ -1802,9 +1806,113 @@ function initializeDla() {
 
 
 
+// Remember a selection, never an engine's running cursor or artwork.
+function currentCycleMode(simulation) {
+    return ({gameOfLife:gameOfLifeMode,sandpile:chiFlowMode,gravitationalSort:gsMode,
+        spiral:spiralMode,magnet:magnetMode,brightnessEvo:brightnessEvoMode,dla:dlaMode,
+        breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
+        contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
+        nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
+}
+function rememberCurrentCycle() {
+    if(selectingCycleMode||!cycleMemory.active())return;
+    if(cycleMemoryAfterReplay){
+        // A subsequent manual settings edit is a new choice; an untouched
+        // playback result must never replace the user's remembered mode.
+        if(cycleMemoryAfterReplay.simulation!==armedSimulation||cycleMemoryAfterReplay.mode===currentCycleMode(armedSimulation))return;
+        cycleMemoryAfterReplay=false;
+    }
+    if(armedSimulation)cycleMemory.remember(armedSimulation,currentCycleMode(armedSimulation));
+    if(windMode)cycleMemory.remember('wind',windSettings.mode);
+}
+function refreshCycleIcons() {
+    updateBrightnessEvoButtonUI();updateDlaButtonUI();updateErosionButtonUI();
+    updateGravitationalSortButtonUI();updateSpiralButtonUI();updateMagnetButtonUI();
+    updateGameOfLifeButtonUI();updateChiFlowButtonUI();updateCymaticsButtonUI();
+    updateContourButtonUI();updateBreatheEvoButtonUI();updateNudgeButtonUI();updateWindButtonUI();
+}
+function restoreCycleMode(simulation, mode) {
+    switch(simulation){
+        case 'gravitationalSort':gsMode=mode;gravitationalSortRules.direction=mode;break;
+        case 'spiral':spiralMode=mode;spiralRules.method=mode;break;
+        case 'magnet':magnetMode=mode;magnetRules.method=mode;break;
+        case 'brightnessEvo':brightnessEvoMode=mode;break;
+        case 'dla':dlaMode=mode;break;
+        case 'breathe':breatheEvoMode=mode;break;
+        case 'erosion':erosionRules.mode=mode;break;
+        case 'gameOfLife':{
+            const shared=Object.fromEntries(['genetics','deadColor'].filter(key=>Object.hasOwn(gameOfLifeRules,key)).map(key=>[key,gameOfLifeRules[key]]));
+            gameOfLifeMode=mode;gameOfLifeRules={...cloneGameOfLifeRules(gameOfLifeCycle[['personal','shuffle','coral'].indexOf(mode)]),...shared};break;
+        }
+        case 'sandpile':chiFlowMode=mode;chiFlowRules=cloneChiFlowRules(chiFlowCycle[['personal','ripples','nova'].indexOf(mode)]);break;
+        case 'islands':islandsSession=restoreIslandsSession({...islandsSession,islandsVersion:mode==='proximity'?2:1,mode});break;
+        case 'contour':saveCracksSettings(getCracksMaterial(),{...getCracksGrowth(),area:mode});break;
+        case 'cymatics':{
+            const selected=selectCymaticsMap(getCymaticsRules(),mode,cymaticsFrequencies,cymaticsStrengths);
+            saveCymaticsSettings(selected.rules,selected.frequencies,selected.strengths);break;
+        }
+        case 'nudgeBrighter':case 'nudgeDarker':armedSimulation=mode;break;
+    }
+}
+function resetEvolutionCycle(simulation, {refresh=true} = {}) {
+    if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
+    const mode=defaultEvolutionCycleMode(simulation);
+    if(mode===undefined)return false;
+    const selected=armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation());
+    cycleMemory.remember(simulation,mode);
+    if(!selected){
+        // Clouds is settings-only and normally survives re-entry. An explicit
+        // reset must also replace that inactive preference with Circular.
+        if(simulation==='cymatics'){
+            const selectedMap=selectCymaticsMap(getCymaticsRules(),mode,cymaticsFrequencies,cymaticsStrengths);
+            cymaticsRules=selectedMap.rules;cymaticsFrequencies=selectedMap.frequencies;cymaticsStrengths=selectedMap.strengths;
+            persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();
+        }
+        if(refresh)refreshCycleIcons();return true;
+    }
+    cycleMemoryAfterReplay=false;
+    if(currentCycleMode(armedSimulation)!==mode){
+        // Breathe's existing mode changes require Pause. Other active engines
+        // keep their current generation clock, just like normal live cycling.
+        if(simulation==='breathe'&&isLifePlaying)pauseLife();
+        const live=isLifePlaying;
+        restoreCycleMode(simulation,mode);
+        if(isNudgeSimulation(simulation))window.logArtEvent('Nudge Mode Changed',mode);
+        else if(!live||!['cymatics','contour'].includes(simulation))window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+    }
+    rememberCurrentCycle();if(refresh)refreshCycleIcons();return true;
+}
+function resetAllEvolutionCycles() {
+    if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
+    for(const {id} of EVOLUTION_CATALOG)resetEvolutionCycle(id,{refresh:false});
+    refreshCycleIcons();return true;
+}
+
+function cycleMemoryTap(simulation, onTap) {
+    rememberCurrentCycle();
+    const remembered=cycleMemory.entry(simulation);
+    return ()=>{
+        selectingCycleMode=true;
+        try {
+            const selected=armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation());
+            if(!selected&&remembered!==undefined){
+                armSimulation(simulation);restoreCycleMode(simulation,remembered);
+                // Existing context commands keep recipes independent of this preference.
+                window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+            }else onTap();
+            if(selected&&armedSimulation===null)cycleMemory.finishCycle(simulation);
+            else if(armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation()))cycleMemory.enterCycle(simulation);
+        }finally{
+            selectingCycleMode=false;cycleMemoryAfterReplay=false;
+            rememberCurrentCycle();refreshCycleIcons();
+        }
+    };
+}
+
 // Live handoff reuses PAUSE/selection/PLAY so each run keeps its own
 // generations, rules and Undo boundary. Only breathing retains manual Pause.
 function handleEvolutionTap(simulation, onTap) {
+    if(typeof cycleMemory!=='undefined'&&cycleMemory.active())onTap=cycleMemoryTap(simulation,onTap);
     if (!isLifePlaying || armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())) {
         onTap();
         return;
@@ -1812,7 +1920,7 @@ function handleEvolutionTap(simulation, onTap) {
     if (armedSimulation === 'breathe' || simulation === 'breathe') return;
     pauseLife();
     onTap();
-    if (armedSimulation === simulation && !isLifePlaying) togglePlayPauseLife();
+    if ((armedSimulation === simulation || (isNudgeSimulation(simulation)&&isNudgeSimulation())) && !isLifePlaying) togglePlayPauseLife();
 }
 
 function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
@@ -1826,6 +1934,7 @@ function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     }
     // -------------------------
 
+    if(typeof cycleMemory!=='undefined'&&cycleMemory.active())rememberCurrentCycle();
     const currentlyArmed = armedSimulation;
     const isTogglingOff = currentlyArmed === simulationName;
 
@@ -1953,6 +2062,7 @@ if (simulationName === 'magnet') {
 
     
     }
+    if(typeof cycleMemory!=='undefined'&&cycleMemory.active())refreshCycleIcons();
     updateNudgeButtonUI();
     updateGameOfLifeButtonUI();
     updateChiFlowButtonUI();
@@ -2252,6 +2362,7 @@ if (simulationName === 'magnet') {
       function importWorkspaceSettings(settings, identity = null, options = {}) {
         // The file has been fully validated before any state or preferences change.
         if (isMacroPlaying) throw new Error('Cannot import settings during macro playback');
+        if(typeof cycleMemory!=='undefined'){cycleMemory.clear();cycleMemoryAfterReplay=false;}
         settings = migrateEvolutionSelections(settings, {
             gameOfLife: identity?.gameOfLife.index ?? ['personal','shuffle','coral'].indexOf(gameOfLifeMode),
             chiFlow: identity?.chiFlow.index ?? ['personal','ripples','nova'].indexOf(chiFlowMode)
@@ -2673,6 +2784,7 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
       }
       
       function resetArmedState() {
+        if(typeof cycleMemory!=='undefined'&&cycleMemory.active())rememberCurrentCycle();
         armedSimulation = null;
         updateNudgeButtonUI();
         dlaState = null;
@@ -2701,6 +2813,7 @@ gsMode = 'off';
     updateGravitationalSortButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
+    if(typeof cycleMemory!=='undefined'&&cycleMemory.active())refreshCycleIcons();
 
       }
 
@@ -2867,7 +2980,8 @@ function commitWindPainting(reason = 'complete') {
 function setWindMode(enabled) {
     if (enabled === windMode || (enabled && (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
     if (enabled) {
-        windSettings = selectWindMode(windSettings, 'ripple');
+        windSettings = selectWindMode(windSettings, (typeof cycleMemory!=='undefined'?cycleMemory.entry('wind'):undefined)??'ripple');
+        if(typeof cycleMemory!=='undefined')cycleMemory.enterCycle('wind');
         saveWindSettings(windSettings);
     } else {
         if (windSettingsUI?.dialog.open) windSettingsUI.dialog.close();
@@ -2875,6 +2989,7 @@ function setWindMode(enabled) {
         if (windPointerId !== null && canvas.hasPointerCapture(windPointerId)) canvas.releasePointerCapture(windPointerId);
         windPointerId = null;
     }
+    if(!enabled&&windMode&&typeof cycleMemory!=='undefined')cycleMemory.remember('wind',windSettings.mode);
     windMode = enabled;
     dom.btnColorPicker.disabled = enabled;
     dom.btnSymmetry.disabled = enabled;
@@ -2883,7 +2998,11 @@ function setWindMode(enabled) {
 }
 function cycleWindEffect() {
     if (!windMode) { setWindMode(true); return; }
-    if (nextWindEffect(windSettings.mode) === 'ripple') { setWindMode(false); return; }
+    if (nextWindEffect(windSettings.mode) === 'ripple') {
+        setWindMode(false);
+        if(typeof cycleMemory!=='undefined')cycleMemory.finishCycle('wind');
+        return;
+    }
     windPainter?.stop();
     windSettings = selectWindMode(windSettings, nextWindEffect(windSettings.mode));
     saveWindSettings(windSettings);
@@ -3239,6 +3358,16 @@ function updateLayout() {
         else { dom.board.classList.remove('glowing-border', 'glowing-border-rainbow'); }
     }
 
+function updateWindButtonUI() {
+        dom.btnWind.classList.toggle('wind-active', windMode);
+        dom.btnWind.setAttribute('aria-pressed', String(windMode));
+        dom.btnWind.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp');
+        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : (typeof cycleMemory!=='undefined'?cycleMemory.recall('wind'):undefined)??'ripple'));
+        dom.btnWind.dataset.windMode = windMode ? windSettings.mode : 'off';
+        dom.btnWind.title = `${getText(windMode ? 'wind_mode_' + windSettings.mode : 'erosion_off')} — ${getText('tooltip_wind_cycle')}`;
+        dom.btnWind.setAttribute('aria-label', dom.btnWind.title);
+}
+
     function updateColorPickerButtonUI() {
         clearTimeout(colorBrushFeedbackTimer);
         colorBrushFeedbackTimer = null;
@@ -3249,13 +3378,7 @@ function updateLayout() {
             recordLiveSimulationRules('contour');
         }
         lastCracksBrushKey=brushKey;
-        dom.btnWind.classList.toggle('wind-active', windMode);
-        dom.btnWind.setAttribute('aria-pressed', String(windMode));
-        dom.btnWind.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp');
-        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : 'ripple'));
-        dom.btnWind.dataset.windMode = windMode ? windSettings.mode : 'off';
-        dom.btnWind.title = `${getText(windMode ? 'wind_mode_' + windSettings.mode : 'erosion_off')} — ${getText('tooltip_wind_cycle')}`;
-        dom.btnWind.setAttribute('aria-label', dom.btnWind.title);
+        updateWindButtonUI();
         dom.btnColorPicker.title = getText('tooltip_colorPicker');
         dom.btnColorPicker.setAttribute('aria-label', dom.btnColorPicker.title);
         // 1. האם אנחנו במצב קשת?
@@ -3346,15 +3469,16 @@ function getTilesInRadius(centerIndex, size) {
       function updateSymmetryUI() { updateSymmetryButtonUI(); }
       
 function updateBrightnessEvoButtonUI() {
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='brightnessEvo'?cycleMemory.recall('brightnessEvo'):undefined)??brightnessEvoMode;
     dom.btnBrightnessEvo.classList.remove('mode-brightness', 'mode-contrast', 'simulation-active');
 
-    if (brightnessEvoMode === 'brightness') {
+    if (displayMode === 'brightness') {
         dom.btnBrightnessEvo.classList.add('mode-brightness');
         // נוסיף גם את הקלאס שמדגיש שהסימולציה "חמושה"
         if (armedSimulation === 'brightnessEvo') {
              dom.btnBrightnessEvo.classList.add('simulation-active');
         }
-    } else if (brightnessEvoMode === 'contrast') {
+    } else if (displayMode === 'contrast') {
         dom.btnBrightnessEvo.classList.add('mode-contrast');
         if (armedSimulation === 'brightnessEvo') {
              dom.btnBrightnessEvo.classList.add('simulation-active');
@@ -3377,8 +3501,10 @@ function getGameOfLifeRecordingRules() {
 
 function updateGameOfLifeButtonUI() {
     const active = armedSimulation === 'gameOfLife';
+    const remembered=typeof cycleMemory!=='undefined'?cycleMemory.recall('gameOfLife'):undefined;
+    const displayMode=active?gameOfLifeMode:remembered??gameOfLifeMode;
     dom.btnGameOfLife.classList.toggle('simulation-active', active);
-    const stars = active && gameOfLifeMode !== 'personal' ? (gameOfLifeMode === 'shuffle' ? 1 : 2) : 0;
+    const stars = (active||remembered!==undefined) && displayMode !== 'personal' ? (displayMode === 'shuffle' ? 1 : 2) : 0;
     dom.btnGameOfLife.querySelectorAll('[data-gol-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
@@ -3467,8 +3593,10 @@ function getChiFlowRecordingRules() {
 
 function updateChiFlowButtonUI() {
     const active = armedSimulation === 'sandpile';
+    const remembered=typeof cycleMemory!=='undefined'?cycleMemory.recall('sandpile'):undefined;
+    const displayMode=active?chiFlowMode:remembered??chiFlowMode;
     dom.btnSandpile.classList.toggle('simulation-active', active);
-    const stars = active && chiFlowMode !== 'personal' ? (chiFlowMode === 'ripples' ? 1 : 2) : 0;
+    const stars = (active||remembered!==undefined) && displayMode !== 'personal' ? (displayMode === 'ripples' ? 1 : 2) : 0;
     dom.btnSandpile.querySelectorAll('[data-chi-star]').forEach((star, index) => {
         star.style.display = index < stars ? '' : 'none';
     });
@@ -3535,7 +3663,7 @@ function cycleChiFlowMode() {
 function updateCymaticsButtonUI(){
     if(typeof dom==='undefined'||!dom.btnCymatics)return;
     const button=dom.btnCymatics,rules=getCymaticsRules();
-    const map=Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===(rules.resonanceVersion??1));
+    const map=Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===((typeof cycleMemory!=='undefined'&&armedSimulation!=='cymatics'?cycleMemory.recall('cymatics'):undefined)??rules.resonanceVersion??1));
     for(const name of Object.keys(CYMATICS_RESONANCE_MAPS))button.classList.toggle('cymatics-'+name,name===map);
     button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',armedSimulation==='cymatics');
     const title=getText('tooltip_cymatics')+' — '+getText('cymatics_map_'+map);
@@ -3687,7 +3815,7 @@ function updateContourButtonUI() {
     const active = armedSimulation === 'contour' && contourMode === 'cracks';
     dom.btnContour.classList.toggle('simulation-active', active);
     dom.btnContour.classList.toggle('cracks-active', true);
-    const area = active ? (getCracksGrowth().area ?? 'all') : 'all';
+    const area = active ? (getCracksGrowth().area ?? 'all') : (typeof cycleMemory!=='undefined'?cycleMemory.recall('contour'):undefined)??'all';
     dom.btnContour.dataset.cracksArea = area;
     dom.btnContour.querySelector('.cracks-area-mark')?.setAttribute('opacity', area==='dead' ? '1' : '0');
     const title = getText('tooltip_cracks') + (active ? ' · ' + getText('cracks_area_' + area) : '');
@@ -3786,8 +3914,9 @@ function cycleBrightnessEvoMode() {
 function updateErosionButtonUI() {
     dom.btnErosion.classList.toggle('simulation-active', armedSimulation === 'erosion');
     dom.btnErosion.setAttribute('aria-pressed', String(armedSimulation === 'erosion'));
-    const channels = armedSimulation !== 'erosion' || erosionRules.mode === 'channels';
-    const solid = armedSimulation === 'erosion' && erosionRules.mode === 'channels-solid';
+    const displayMode=armedSimulation==='erosion'?erosionRules.mode:typeof cycleMemory!=='undefined'?cycleMemory.recall('erosion'):undefined;
+    const channels = !displayMode || displayMode === 'channels';
+    const solid = displayMode === 'channels-solid';
     document.getElementById('iconErosionLegacy').style.display = channels || solid ? 'none' : 'block';
     document.getElementById('iconErosionChannels').style.display = channels ? 'block' : 'none';
     document.getElementById('iconErosionSolid').style.display = solid ? 'block' : 'none';
@@ -3813,10 +3942,11 @@ function cycleErosionMode() {
 }
 
 function updateDlaButtonUI() {
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='dla'?cycleMemory.recall('dla'):undefined)??dlaMode;
     dom.btnDla.classList.remove('mode-genetics', 'mode-no-genetics');
-    if (dlaMode === 'genetics') {
+    if (displayMode === 'genetics') {
         dom.btnDla.classList.add('mode-genetics');
-    } else if (dlaMode === 'no-genetics') {
+    } else if (displayMode === 'no-genetics') {
         dom.btnDla.classList.add('mode-no-genetics');
     }
 }
@@ -3852,10 +3982,11 @@ function logIslandsSessionStart() {
 
 // --- NEW: Gravitational Sort UI and Cycling ---
 function updateGravitationalSortButtonUI() {
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='gravitationalSort'?cycleMemory.recall('gravitationalSort'):undefined)??gsMode;
     dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
 
-    if (gsMode !== 'off') {
-        dom.btnGravitationalSort.classList.add('mode-' + gsMode);
+    if (displayMode !== 'off') {
+        dom.btnGravitationalSort.classList.add('mode-' + displayMode);
         if (armedSimulation === 'gravitationalSort') {
              dom.btnGravitationalSort.classList.add('simulation-active');
         }
@@ -3893,7 +4024,7 @@ function cycleGravitationalSortMode() {
 function updateIslandsButtonUI() {
     const active = armedSimulation === 'islands';
     dom.btnIslands.classList.toggle('simulation-active', active);
-    const proximity = active && islandsSession?.mode === 'proximity';
+    const proximity = (active?islandsSession?.mode:typeof cycleMemory!=='undefined'?cycleMemory.recall('islands'):undefined)==='proximity';
     dom.btnIslands.classList.toggle('mode-proximity', proximity);
     dom.btnIslands.title = getText(proximity ? 'tooltip_islands_proximity' : 'tooltip_islands');
     dom.btnIslands.setAttribute('aria-label', dom.btnIslands.title);
@@ -3923,7 +4054,7 @@ function updateBreatheEvoButtonUI() {
     updateIslandsButtonUI();
     const modes = ['solo', 'group', 'random-cell', 'random-color'];
     const icons = ['iconBreatheSolo', 'iconBreatheGroup', 'iconBreatheRandomCell', 'iconBreatheRandomColor'];
-    const selectedMode = armedSimulation === 'breathe' ? breatheEvoMode : 'off';
+    const selectedMode = armedSimulation === 'breathe' ? breatheEvoMode : (typeof cycleMemory!=='undefined'?cycleMemory.recall('breathe'):undefined)??'off';
     dom.btnShowBreatheMenu.classList.remove(...modes.map(mode => 'mode-' + mode), 'simulation-active');
     modes.forEach((mode, index) => {
         document.getElementById(icons[index]).style.display = mode === selectedMode || (selectedMode === 'off' && index === 0) ? 'block' : 'none';
@@ -3952,15 +4083,16 @@ function cycleBreatheEvoMode() {
 
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='spiral'?cycleMemory.recall('spiral'):undefined)??spiralMode;
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
     dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
-    dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(spiralMode)
-        ? `${getText('tooltip_spiral')}: ${getText(`spiral_${spiralMode}`)}`
+    dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(displayMode)
+        ? `${getText('tooltip_spiral')}: ${getText(`spiral_${displayMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);
 
-    if (spiralMode !== 'off') {
-        dom.btnSpiral.classList.add('mode-' + spiralMode);
+    if (displayMode !== 'off') {
+        dom.btnSpiral.classList.add('mode-' + displayMode);
         if (armedSimulation === 'spiral') {
              dom.btnSpiral.classList.add('simulation-active');
         }
@@ -4000,12 +4132,13 @@ const sequence = SPIRAL_MODE_SEQUENCE;
 // --- NEW: Magnet Button Functions ---
 
 function updateMagnetButtonUI() {
+    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='magnet'?cycleMemory.recall('magnet'):undefined)??magnetMode;
     if (!dom.btnMagnetModes) return;
     // הוספנו לניקוי את time_magnet ואת expand!
     dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-expand', 'simulation-active');
     
-    if (magnetMode !== 'off') {
-        dom.btnMagnetModes.classList.add('mode-' + magnetMode);
+    if (displayMode !== 'off') {
+        dom.btnMagnetModes.classList.add('mode-' + displayMode);
         if (armedSimulation === 'magnet') {
              dom.btnMagnetModes.classList.add('simulation-active');
         }
@@ -4847,6 +4980,10 @@ function stopMacro() {
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     if(typeof updateContourButtonUI==='function')updateContourButtonUI();
+    if(typeof cycleMemory!=='undefined'&&cycleMemory.enabled()){
+        if(cycleMemoryAfterReplay)cycleMemoryAfterReplay={simulation:armedSimulation,mode:currentCycleMode(armedSimulation)};
+        refreshCycleIcons();
+    }
     currentMacroStep = 0;
     pendingMacroPalette = null; 
     isSelectingMacroPalette = false; 
@@ -4870,6 +5007,7 @@ function stopMacro() {
 function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
     
+    if(typeof cycleMemory!=='undefined')cycleMemoryAfterReplay=true;
     isMacroPlaying = true;
     if (typeof macroActivity !== 'undefined') macroActivity?.start();
     isSelectingMacroPalette = false; // איפוס בטיחות למקרה שהמודל נסגר ידנית
@@ -5563,6 +5701,12 @@ else if (action.eventName === 'Invert Colors') {
                 renderToScreen(null);
                 settingsProfiles?.scheduleCapture();
             },
+            getRememberEvolutionModes: () => cycleMemory.enabled(),
+            setRememberEvolutionModes: value => {
+                cycleMemory.setEnabled(value);
+                if(!isMacroLoaded&&!isMacroPlaying)cycleMemoryAfterReplay=false;
+                rememberCurrentCycle();refreshCycleIcons();
+            },
             getMacroActivity: () => macroActivity.enabled(),
             setMacroActivity: value => macroActivity.setEnabled(value),
             getBrushMotionRecording: () => recordPausedBrushMotion,
@@ -5748,7 +5892,7 @@ updateBrightnessEvoButtonUI();
             canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying,
             getText,getLang:getCurrentLang,onLanguageChange});
         evolutionDrawer = createEvolutionDrawer({
-            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,
+            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
             canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             getText,getLang:getCurrentLang,onLanguageChange,
@@ -5967,7 +6111,7 @@ dom.btnWind.addEventListener('keydown', event => {
         bindPickerGestures(dom.btnContoursAction, {
             onTap: () => applyContoursOnce(), onOpen: modals.openContourSettingsModal,
             onSwipeDown: swapSimulationUtilityControl, canSwipeDown: () => isSimModeActive,
-            onHold: () => evolutionExplanation.show(dom.btnContoursAction, 'contourAction'),
+            onExtendedHold: () => evolutionExplanation.show(dom.btnContoursAction, 'contourAction'),
             canInteract: () => !isBreathing && !isMacroLoaded,
             beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
         });
@@ -5980,7 +6124,8 @@ dom.btnWind.addEventListener('keydown', event => {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
                 onSwipeSide: ['gameOfLife','sandpile'].includes(simulation) ? direction => modals.browseEvolutionPreset(simulation,direction) : undefined,
                 canSwipeSide: () => contextForModals.canBrowseEvolutionPreset(simulation) && !evolutionExplanation.isOpen(),
-                onHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
+                onHold: () => resetEvolutionCycle(simulation),
+                onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
                 canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
