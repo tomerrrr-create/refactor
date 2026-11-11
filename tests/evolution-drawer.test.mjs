@@ -8,7 +8,7 @@ const complete=slots=>{assert.deepEqual(ids(slots),EVOLUTION_CATALOG.map(e=>e.id
 test('permanent drawers reserve bottom center and retain the approved default order',()=>{
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,20);
  assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['cymatics','sandpile','gameOfLife','brightnessEvo','islands','nudgeBrighter','magnet',null,'gravitationalSort','erosion']);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),['turing','spiral','breathe','dla','contour',null,null,null,null,null]);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),[null,'spiral','breathe','dla',null,null,'turing',null,'contour',null]);
  complete(DEFAULT_EVOLUTION_LAYOUT);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
  for(const lang of ['en','he','ru','nl'])assert(translations.drawer_navigation_slot[lang]);

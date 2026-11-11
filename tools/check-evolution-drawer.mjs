@@ -64,7 +64,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const position=await trigger.boundingBox(),frame=await page.locator('#simModeBackground').boundingBox();
  await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(8, 10, 9)','rgb(255, 215, 0)']);
  assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),['rgb(255, 215, 0)','rgb(8, 10, 9)']);
- assert.deepEqual(await physicalRows(),[['turing','spiral','breathe','dla','contour'],['navigation']],'second drawer has five simulations on top and only navigation below');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(Boolean));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['spiral','breathe','dla'],['turing','navigation','contour']],'second drawer centers three controls in each row, with empty outer columns');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(Boolean));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
  await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled').count(),2);
  assert.equal(await dialog.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
