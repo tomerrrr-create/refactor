@@ -370,7 +370,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'black_hole'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -541,7 +541,7 @@ k: tileState.k,
         }
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'a', 'vortex', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'black_hole', 'vortex', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
@@ -2588,7 +2588,6 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
             if (btn.title) btn.setAttribute('aria-label', btn.title);
         });
 
-        document.querySelector('[data-method="black_hole"] span').textContent = getText('spiral_black_hole');
         updateSpiralButtonUI();
       }
 
@@ -3849,7 +3848,7 @@ function logIslandsSessionStart() {
 
 // --- NEW: Gravitational Sort UI and Cycling ---
 function updateGravitationalSortButtonUI() {
-    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'mode-turbine2', 'simulation-active');
+    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
 
     if (gsMode !== 'off') {
         dom.btnGravitationalSort.classList.add('mode-' + gsMode);
@@ -3861,7 +3860,7 @@ function updateGravitationalSortButtonUI() {
 
 function cycleGravitationalSortMode() {
     const oldMode = gsMode;
-    const sequence = ['off', 'up', 'right', 'center_x', 'turbine2'];
+    const sequence = ['off', 'up', 'right', 'center_x', 'turbine2', 'black_hole'];
 
     gsMode = nextEvolutionMode(gsMode, sequence);
 
@@ -4206,7 +4205,7 @@ function getHistorySettings(state) {
 }
 
 function validateGravitySnapshot(rules) {
-    if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2'].includes(rules.direction) ||
+    if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'black_hole'].includes(rules.direction) ||
         !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1) throw new Error('Invalid gravity rules');
 }
 
