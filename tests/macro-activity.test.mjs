@@ -29,12 +29,12 @@ test('Pause and every settings-only event stay out of the display without changi
   assert.equal(describeMacroActivity(action,'gameOfLife'),null,eventName);assert.deepEqual(action,before);
  }
 });
-test('panel uses only free space left of the board and keeps its fullscreen gallery frame clear',()=>{
+test('desktop panel is centered below the fullscreen gallery frame',()=>{
  const board={left:500,top:100,width:700,height:700},viewport={width:1700,height:1000},before=structuredClone(board);
- const place=macroActivityPlacement(board,viewport,true);assert(place);assert(place.left>=16);assert(place.left+place.width<=board.left-74);assert.equal(place.width,224);assert.deepEqual(board,before);
- assert.equal(macroActivityPlacement({...board,left:200},viewport,true),null);
- assert.equal(macroActivityPlacement(board,{width:900,height:1000}),null);
- assert.equal(macroActivityPlacement(board,{width:1700,height:90}),null);
+ const place=macroActivityPlacement(board,viewport,true);assert(place);assert.equal(place.left+place.width/2,board.left+board.width/2);assert.equal(place.top,858);assert.equal(place.width,184);assert.deepEqual(board,before);
+ assert(macroActivityPlacement({...board,left:200},{width:1100,height:1000},true));
+ assert.equal(macroActivityPlacement(board,viewport,false),null);
+ assert.equal(macroActivityPlacement(board,{width:1700,height:880},true),null);
 });
 test('all declared labels and icons exist, and playback presentation has no logger or history writer',()=>{
  const source=readFileSync(new URL('../js/macro-activity.js',import.meta.url),'utf8'),html=readFileSync(new URL('../index.html',import.meta.url),'utf8'),i18n=readFileSync(new URL('../js/i18n.js',import.meta.url),'utf8');
@@ -63,11 +63,11 @@ test('mobile activity stays below the unchanged board, clears safe areas and hid
  const board={left:10,top:230,width:370,height:370},viewport={width:390,height:844},before=structuredClone(board);
  const place=macroActivityPlacement(board,viewport,true,true);
  assert(place);assert.equal(place.left+place.width/2,board.left+board.width/2);
- assert(place.top>=board.top+board.height+20);assert(place.top+72<=viewport.height-16);
+ assert(place.top>=board.top+board.height+12);assert(place.top+32<=viewport.height-16);
  assert.deepEqual(board,before);
  assert.equal(macroActivityPlacement(board,viewport,false,true),null);
- assert.equal(macroActivityPlacement(board,{...viewport,height:680},true,true),null);
- assert.equal(macroActivityPlacement(board,{...viewport,height:700,safeBottom:40},true,true),null);
+ assert.equal(macroActivityPlacement(board,{...viewport,height:650},true,true),null);
+ assert.equal(macroActivityPlacement(board,{...viewport,height:680,safeBottom:40},true,true),null);
  assert.equal(macroActivityPlacement({left:295,top:68,width:254,height:254},{width:844,height:390},true,true),null);
 });
 

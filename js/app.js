@@ -1,3 +1,4 @@
+import { createMacroPaletteContext } from './macro-palette-context.js';
 import {createEvolutionModeMemory,defaultEvolutionCycleMode} from './evolution-mode-memory.js';
 import { createMacroActivity } from './macro-activity.js';
 import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour-action-settings.js';
@@ -112,6 +113,7 @@ function applyNudgeTiming(rulesStr) {
 // --- Macro Replay System Variables ---
 let macroActivity = null;
 let macroQueue = [];
+const macroPaletteContext = createMacroPaletteContext();
 let currentGenerationCount = 0; // מונה דורות לסימולציה
 let isMacroLoaded = false;
 let isMacroPlaying = false;
@@ -2498,6 +2500,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 // its wave fronts must never paint on the replacement board.
                 if (isMacroLoaded || isMacroPlaying) stopMacro();
                 macroQueue = parsedQueue;
+                macroPaletteContext.reset();
                 if (typeof windMode !== 'undefined' && windMode) setWindMode(false);
                 settingsProfiles?.beginReplay();
                 replayBrightnessPreferences={rules:{...evolutionTuning.brightnessEvo},mode:brightnessEvoMode};
@@ -4972,6 +4975,7 @@ function stopMacro() {
     }
     clearTimeout(macroTimerId);
     macroQueue = [];
+    macroPaletteContext.reset();
     isMacroLoaded = false;
     isMacroPlaying = false;
     windReplay?.stop();
@@ -5020,6 +5024,7 @@ function stopMacro() {
 
 function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
+    if (currentMacroStep === 0) macroPaletteContext.reset();
     
     if(typeof cycleMemory!=='undefined')cycleMemoryAfterReplay=true;
     isMacroPlaying = true;
@@ -5223,6 +5228,7 @@ function executeMacroAction(action) {
     if (action.eventName === 'INIT_STATE') {
         try {
             const initState = JSON.parse(action.details);
+            macroPaletteContext.record(C.PALETTES[initState.pal] ? initState.pal : null);
             
 
             // 1. הגדרת משתני הסביבה ההתחלתיים
@@ -5284,6 +5290,7 @@ function executeMacroAction(action) {
             const tiles = restoreIslandsBoard(snapshot.n, snapshot.board);
             if (!C.PALETTES[snapshot.activePaletteIndex]) throw new Error('Invalid Islands palette');
             applyState({ ...snapshot, activePaletteIndex: pendingMacroPalette ?? snapshot.activePaletteIndex, tiles, islandsState: session });
+            macroPaletteContext.record(snapshot.activePaletteIndex);
             renderToScreen(null);
         }
         islandsSession = session;
@@ -5312,7 +5319,11 @@ function executeMacroAction(action) {
     }
     else if (action.eventName === 'HISTORY_SETTINGS') {
         if (isLifePlaying) pauseLife();
-        applyHistorySettings(JSON.parse(action.details));
+        const settings = JSON.parse(action.details);
+        const paletteIndex = macroPaletteContext.historyPalette(settings.activePaletteIndex,
+            { selected: pendingMacroPalette, current: activePaletteIndex });
+        applyHistorySettings(paletteIndex === settings.activePaletteIndex ? settings : { ...settings, activePaletteIndex: paletteIndex });
+        macroPaletteContext.record(C.PALETTES[settings.activePaletteIndex] ? settings.activePaletteIndex : null);
         historyRecipeCursor = artRecipeLog.length;
     }
     else if (action.eventName === 'Palette Change') {
@@ -5328,7 +5339,10 @@ function executeMacroAction(action) {
         }
 
         const pIndex = C.PALETTES.findIndex(p => p.name === paletteName || p.originalName === paletteName);
-        if(pIndex !== -1) switchToPalette(pIndex);
+        if(pIndex !== -1) {
+            switchToPalette(pIndex);
+            macroPaletteContext.record(pIndex);
+        }
     }
 
 
