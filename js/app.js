@@ -428,6 +428,7 @@ currentSortMethod,
             brightnessEvoMode, breatheEvoMode, dlaMode,
             ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
             spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
+            ...(spiralMode === 'tornado' ? {tornadoVersion: spiralRules.tornadoVersion ?? 2} : {}),
             ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...gravitationalSortRules } } : {}),
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
@@ -549,6 +550,7 @@ k: tileState.k,
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
+            spiralRules.tornadoVersion = state.tornadoVersion === 2 ? 2 : 1;
             updateSpiralButtonUI();
         }
         
@@ -1834,7 +1836,7 @@ function refreshCycleIcons() {
 function restoreCycleMode(simulation, mode) {
     switch(simulation){
         case 'gravitationalSort':gsMode=mode;gravitationalSortRules.direction=mode;break;
-        case 'spiral':spiralMode=mode;spiralRules.method=mode;break;
+        case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=2;break;
         case 'magnet':magnetMode=mode;magnetRules.method=mode;break;
         case 'brightnessEvo':brightnessEvoMode=mode;break;
         case 'dla':dlaMode=mode;break;
@@ -4109,6 +4111,7 @@ const sequence = SPIRAL_MODE_SEQUENCE;
     spiralMode = nextMode;
 
     if (spiralMode !== 'off') {
+        spiralRules.tornadoVersion = 2;
         spiralRules.method = spiralMode;
     }
     
@@ -5167,7 +5170,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     updateContourButtonUI();
                 }
                 else if (sim === 'spiral') {
-                    Object.assign(spiralRules, parsedRules);
+                    Object.assign(spiralRules, parsedRules, {tornadoVersion: parsedRules.tornadoVersion === 2 ? 2 : 1});
                     spiralMode = parsedRules.method || spiralMode;
                     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
                 }
@@ -5800,6 +5803,7 @@ syncSpiralModeFromModal: (method) => {
         armSimulation('spiral');
     }
     spiralMode = method;
+    spiralRules.tornadoVersion = 2;
     spiralRules.method = method;
     updateSpiralButtonUI();
     recordLiveSimulationRules('spiral');

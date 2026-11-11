@@ -1,6 +1,7 @@
 import { runBlackHoleGeneration } from './circle.js';
 import { runTurbine2Generation } from './spiral-turbine2.js';
 import { runTornadoGeneration } from './spiral-tornado.js';
+import { runLegacyTornadoGeneration } from './spiral-tornado-legacy.js';
 
 let cachedRadialOrder = null;
 let cachedRadialN = null;
@@ -20,7 +21,9 @@ let strength = 0.9; // עוצמת ברירת המחדל המקורית של הס
 
     switch (method) {
         case 'tornado':
-            return runTornadoGeneration(n, nextBoardState);
+            return spiralRules.tornadoVersion === 1
+                ? runLegacyTornadoGeneration(n, nextBoardState)
+                : runTornadoGeneration(n, nextBoardState);
 
         case 'turbine2':
             return runTurbine2Generation(n, nextBoardState);
