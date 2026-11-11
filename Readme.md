@@ -80,7 +80,7 @@ Select an evolution, then use **Single step** for one generation or **Play/Pause
 
 Tapping a different ordinary evolution ends the old run and immediately starts the new one on the same board, with its own generation counter and history segment. Cycling the current evolution changes its active mode without restarting and skips Off during playback. When paused, Off remains part of the cycle and disarms it. Switching into or out of **Breathe** requires manual Pause; cycling Breathe itself pauses it. Breathe animates rendering rather than discrete generations, so Single step is unavailable.
 
-Button cycles intentionally expose a subset of the modes in settings. Magnet cycles Cosmic → Regular → Time, with Expand available in settings. Spiral cycles Turbine 2 → Pinwheel → Turbine → Circle, with other modes in settings. Details and compatibility rules are in [Evolution engines](#6-evolution-engines).
+Button cycles intentionally expose a subset of the modes in settings. Magnet cycles Cosmic → Regular → Time, with Expand available in settings. Gravity cycles Up → Right → Center-X → Turbine 2. Spiral cycles Pinwheel → Turbine → Circle, with other modes in settings. Details and compatibility rules are in [Evolution engines](#6-evolution-engines).
 
 Resonance uses one fixed audio-waveform icon made of vertical amplitude strokes. A small badge at the physical upper-right identifies the selected map: a circle for Circular, crossed lines for Interference, and distinct diagonal, grid, cloud and center-dot circle marks for the four settings-only maps. The badge stays upper-right in RTL and is included in the drawer editor and hold explanation. The human toolbar shortcuts are **Circular → Interference → Off** while paused and **Circular ↔ Interference** while running. Activating a shortcut starts at Circular, using its remembered frequency/Strength; a saved settings-only map remains selectable/restorable, and the next cycle tap returns to Circular. Cosmological empathy remains available in settings, projects and recorded replay. No field calculation, map ID, legacy fallback or recording schema changes.
 
@@ -474,16 +474,16 @@ Most modes calculate a target using angle and distance from the center, then swa
 
 | Internal ID | English label | Behavior / exposure |
 | --- | --- | --- |
-| `turbine2` | Turbine 2 | Smoother flow; first button mode and also available in settings |
-| `b` | Pinwheel | Inward neighbor flow with a small angular offset; second button mode |
-| `left` | Turbine | Inward spinning flow with stronger angular variation; third button mode |
-| `black_hole` | Circle | Inward swaps plus comb-sort passes over exact Euclidean radial order; fourth button mode |
+| `turbine2` | Turbine 2 | Legacy files/replay only; new selection belongs to Gravity |
+| `b` | Pinwheel | Inward neighbor flow with a small angular offset; first button mode |
+| `left` | Turbine | Inward spinning flow with stronger angular variation; second button mode |
+| `black_hole` | Circle | Inward swaps plus comb-sort passes over exact Euclidean radial order; third button mode |
 | `radial` | Diamond | Inward targeting without spin; modal only |
 | `down` | Hexagon | Inward targeting with its own spin parameters; modal only |
 | `a` | Experiment A | Cached radial order with fixed-stride bidirectional passes; modal only |
 | `vortex` | Vortex | Turbulent angular/radial targeting; modal only |
 
-Turbine 2 is implemented separately in `js/simulations/spiral-turbine2.js`; the original Turbine engine is unchanged. Its line icon is a single thin open spiral with one and a half smooth turns, shared by the toolbar and settings card. The button shows the Turbine 2 icon while off/unselected, including after selecting another evolution; while selected it shows the actual active mode icon. It enters Turbine 2 first, then cycles Pinwheel → original Turbine → Circle. Go Dark preserves the selected Spiral mode and arming, like the other evolution controls; cycling uses the actual armed simulation to determine whether to select Spiral. Paused cycling includes Off; live cycling wraps to Turbine 2 without stopping or resetting generations. Historical recordings keep their explicit mode IDs and legacy arming defaults. It samples cardinal, diagonal and stay probabilities from the continuous target vector, compensating for diagonal step length. A fresh Fisher–Yates traversal and a moved-cell mask permit at most one swap per tile per generation. Angular/radial eddies are weaker and slower than the original Turbine. Swaps preserve all existing tile/color values and protect gold. Geometry and scratch buffers are cached only by size; there is no hidden convergence state tied to a board. The method ID round-trips through settings/profiles, artwork snapshots, Undo/Redo and recorded rules. Like the original Turbine, it uses `Math.random` and wall-clock phase; recipes preserve its operations/rules but do not promise pixel-identical stochastic playback.
+Spiral now enters Pinwheel, then cycles original Turbine → Circle. Paused cycling includes Off; live cycling wraps to Pinwheel without resetting generations. Go Dark preserves its mode and arming. Turbine 2 is no longer offered in Spiral settings or its button cycle. Existing Spiral `turbine2` projects, profiles/settings and recipes remain readable and retain their original fixed 60% behavior through the shared engine in `js/simulations/spiral-turbine2.js`; the old icon remains available for these restored states. Their next cycle tap follows the normal cycle rules for settings-only modes.
 
 Circle caches geometry by board size and convergence progress by board reference. It preserves colors through swaps, can swap nonadjacent positions in its radial passes, and restarts convergence after edits or palette remapping. Its swaps include gold tiles. Experiment A's active branch is not the older commented-out time-budget implementation. Preserve these IDs when changing displayed names.
 
@@ -543,7 +543,10 @@ Spatially sorts current palette indices with direction-dependent comparisons. �
 * **Directional Vectors:**
     * `up` / `right`: Linear sorts using optimized, direction-specific `for` loops.
     * `center_x`: Pulls lower indices toward the center using four-neighbor distance checks.
-    * `vortex`: Uses cached radial order and bidirectional fixed-stride sorting; available through settings, outside the three-mode button cycle.
+    * `turbine2`: Smoother inward spinning flow; replaces the circular `vortex` choice in settings and is the fourth button mode. It uses the existing thin open-spiral icon. Sorting Strength controls its swap probability; 60% is identical to the former Spiral implementation. Cardinal/diagonal/stay sampling, time-based eddies, gold protection and at most one swap per tile per generation are retained. Colors and tile values are preserved. Geometry/scratch buffers depend only on size; replay is stochastic, as before.
+    * `vortex`: Legacy cached radial sorting remains readable in saved settings/projects and recipes, but is no longer offered in settings.
+
+The Gravity button cycles Up → Right → Center-X → Turbine 2 → Off while paused, and wraps from Turbine 2 to Up while running. Settings Save and the button keep the selected direction/icon in sync, including during playback. New artwork/history snapshots carry optional `gravityRules` (direction and strength), while older snapshots without that field keep their prior behavior. Profiles/settings and new recorded Gravity rules retain `turbine2` and Strength.
 
 ### 10. Game of Life
 
@@ -779,7 +782,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Game of Life genetics and dead color: independent drafts, narrow layouts, cycles, profiles, Undo/Redo and real logger-to-macro replay | `tools/check-gol-genetics.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Settings entry focus and keyboard navigation | `tools/check-settings-focus.mjs` |
-| Experimental Turbine 2: modal choice, original mode, artwork/settings/profiles, Undo/Redo and real macro playback | `tools/check-turbine2.mjs` (`TURBINE_LANG` filters languages) |
+| Gravity Turbine 2: Strength, cycles, artwork/settings/profiles, Undo/Redo and legacy Spiral replay | `tools/check-turbine2.mjs` (`TURBINE_LANG` filters languages) |
 | Toolbar layout | `tools/check-evolution-drawer.mjs` |
 | Dedicated Wind cycle, direct swipe-off, settings, mouse/touch, history and recipe replay | `tools/check-wind-button.mjs` |
 | Brush toolbar size swipes/feedback, downward clearing and Wind exit across mouse/touch and languages | `tools/check-brush-toolbar-gestures.mjs` |

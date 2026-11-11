@@ -1128,6 +1128,9 @@ body {
 
 
 
+#btnGravitationalSort.mode-turbine2 #iconGsTurbine2 { display: block !important; }
+#btnGravitationalSort.mode-turbine2 svg:not(#iconGsTurbine2) { display: none !important; }
+
 /* --- Breathe Button States --- */
 #btnShowBreatheMenu #iconBreatheSolo {
     display: block;
@@ -1317,7 +1320,7 @@ body {
 
 /* --- Spiral Modes Button States --- */
 #btnSpiral:not([class*="mode-"]) svg { display: none !important; }
-#btnSpiral:not([class*="mode-"]) #iconSpiralTurbine2 { display: block !important; }
+#btnSpiral:not([class*="mode-"]) #iconSpiralB { display: block !important; }
 
 #btnSpiral.mode-b #iconSpiralB { display: block !important; }
 #btnSpiral.mode-b svg:not(#iconSpiralB) { display: none !important; }

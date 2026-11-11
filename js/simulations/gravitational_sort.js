@@ -1,3 +1,5 @@
+import { runTurbine2Generation } from './spiral-turbine2.js';
+
 let cachedRadialOrder = null;
 let cachedRadialN = null;
 
@@ -10,6 +12,8 @@ const gsNeighborsCoords = [
 export function runGravitationalSortGeneration({ n, currentBoardState, gravitationalSortRules }) {
     const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
     const strength = gravitationalSortRules.strength;
+
+    if (gravitationalSortRules.direction === 'turbine2') return runTurbine2Generation(n, nextBoardState, strength);
 
     switch (gravitationalSortRules.direction) {
 
