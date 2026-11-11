@@ -129,13 +129,13 @@ const initial=await state();assert.equal(await button.getAttribute('aria-pressed
  if(process.env.CYMATICS_CYCLE_ONLY){
   const order=[[4,true],[3,false],[3,true]],initialBoard=(await state()).board;
   async function checkIcon(){
-   assert.equal(await button.locator('svg:visible').count(),1);assert.equal(await button.locator('[data-cymatics-tuning-fork]').count(),1);
+   assert.equal(await button.locator('svg:visible').count(),1);assert.equal(await button.locator('[data-cymatics-waveform]').count(),1);
    const mark=button.locator('[data-cymatics-map-mark]:visible');assert.equal(await mark.count(),1);assert.equal(await mark.getAttribute('data-cymatics-map-mark'),await button.getAttribute('data-cymatics-map'));
-   const geometry=await mark.evaluate(e=>{const r=e.getBoundingClientRect(),wave=e.closest('svg').querySelector('[data-cymatics-tuning-fork]').getBoundingClientRect();return{right:r.x>wave.x+wave.width/2,above:r.y+r.height/2<wave.y+wave.height/2};});assert(geometry.right&&geometry.above);
+   const geometry=await mark.evaluate(e=>{const r=e.getBoundingClientRect(),wave=e.closest('svg').querySelector('[data-cymatics-waveform]').getBoundingClientRect();return{right:r.x>wave.x+wave.width/2,above:r.y+r.height/2<wave.y};});assert(geometry.right&&geometry.above);
   }
   await checkIcon();
-  const waveform=await button.locator('[data-cymatics-tuning-fork]').getAttribute('d');
-  for(const name of ['diagonal','grid','clouds','cosmic','circular','interference']){await saveMap(name);await checkIcon();assert.equal(await button.locator('[data-cymatics-tuning-fork]').getAttribute('d'),waveform);await page.screenshot({path:path.join(artifacts,config.lang+'-audio-'+name+'.png'),animations:'disabled'});}
+  const waveform=await button.locator('[data-cymatics-waveform]').getAttribute('d');
+  for(const name of ['diagonal','grid','clouds','cosmic','circular','interference']){await saveMap(name);await checkIcon();assert.equal(await button.locator('[data-cymatics-waveform]').getAttribute('d'),waveform);await page.screenshot({path:path.join(artifacts,config.lang+'-audio-'+name+'.png'),animations:'disabled'});}
   await saveMap('circular');
   for(const [index,[map,active]] of order.entries()){if(config.lang==='en'&&index<2){await button.focus();await page.keyboard.press(index===0?'Enter':'Space');}else await tap(button);const current=await state();assert.equal(current.rules.resonanceVersion,map);assert.equal(current.armed==='cymatics',active);assert.equal(current.rules.frequency,({1:11831,2:11831,3:20000,4:800,5:800,6:800})[map]);assert.equal(current.rules.phaseMotion,true);assert.deepEqual(current.board,initialBoard);assert.equal(current.history,initial.history);assert.equal(await page.locator('#btnPlayPauseLife').isDisabled(),!active);await checkIcon();}
   await saveMap('grid');assert.equal(await button.getAttribute('data-cymatics-map'),'grid');await tap(button);assert.equal((await state()).rules.resonanceVersion,3);await saveMap('circular');assert.deepEqual((await state()).board,initialBoard);const beforeRun=await state();await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>cymaticsTest.state().gen>=8);
