@@ -1885,7 +1885,7 @@ function resetEvolutionCycle(simulation) {
 
 function cycleMemoryTap(simulation, onTap) {
     rememberCurrentCycle();
-    const remembered=cycleMemory.recall(simulation);
+    const remembered=cycleMemory.entry(simulation);
     return ()=>{
         selectingCycleMode=true;
         try {
@@ -1895,6 +1895,8 @@ function cycleMemoryTap(simulation, onTap) {
                 // Existing context commands keep recipes independent of this preference.
                 window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
             }else onTap();
+            if(selected&&armedSimulation===null)cycleMemory.finishCycle(simulation);
+            else if(armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation()))cycleMemory.enterCycle(simulation);
         }finally{
             selectingCycleMode=false;cycleMemoryAfterReplay=false;
             rememberCurrentCycle();refreshCycleIcons();
@@ -2973,7 +2975,8 @@ function commitWindPainting(reason = 'complete') {
 function setWindMode(enabled) {
     if (enabled === windMode || (enabled && (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
     if (enabled) {
-        windSettings = selectWindMode(windSettings, (typeof cycleMemory!=='undefined'?cycleMemory.recall('wind'):undefined)??'ripple');
+        windSettings = selectWindMode(windSettings, (typeof cycleMemory!=='undefined'?cycleMemory.entry('wind'):undefined)??'ripple');
+        if(typeof cycleMemory!=='undefined')cycleMemory.enterCycle('wind');
         saveWindSettings(windSettings);
     } else {
         if (windSettingsUI?.dialog.open) windSettingsUI.dialog.close();
@@ -2990,7 +2993,11 @@ function setWindMode(enabled) {
 }
 function cycleWindEffect() {
     if (!windMode) { setWindMode(true); return; }
-    if (nextWindEffect(windSettings.mode) === 'ripple') { setWindMode(false); return; }
+    if (nextWindEffect(windSettings.mode) === 'ripple') {
+        setWindMode(false);
+        if(typeof cycleMemory!=='undefined')cycleMemory.finishCycle('wind');
+        return;
+    }
     windPainter?.stop();
     windSettings = selectWindMode(windSettings, nextWindEffect(windSettings.mode));
     saveWindSettings(windSettings);

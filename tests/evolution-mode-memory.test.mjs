@@ -26,3 +26,16 @@ test('Nudge directions share a place and unavailable storage retains session fun
  assert.doesNotThrow(()=>memory.setEnabled(true));memory.remember('nudgeDarker','nudgeDarker');assert.equal(memory.recall('nudgeBrighter'),'nudgeDarker');
  memory.remember('wind','paint');assert.equal(memory.recall('wind'),'paint');
 });
+
+test('explicit Off restarts the cycle while leaving for another simulation recalls the last mode',()=>{
+ const memory=createEvolutionModeMemory({storage:storage()});memory.setEnabled(true);
+ memory.remember('gravitationalSort','right');assert.equal(memory.entry('gravitationalSort'),'right','handoff recalls last mode');
+ memory.remember('gravitationalSort','black_hole');memory.finishCycle('gravitationalSort');
+ assert.equal(memory.recall('gravitationalSort'),'black_hole','inactive icon retains last mode');
+ assert.equal(memory.entry('gravitationalSort'),'up','Off queues the first mode');
+ assert.equal(memory.entry('gravitationalSort'),'up','reading the entry does not consume it');
+ memory.enterCycle('gravitationalSort');memory.remember('gravitationalSort','right');assert.equal(memory.entry('gravitationalSort'),'right');
+ memory.remember('nudgeDarker','nudgeDarker');memory.finishCycle('nudgeDarker');assert.equal(memory.entry('nudgeBrighter'),'nudgeBrighter');
+ memory.remember('wind','displace');memory.finishCycle('wind');assert.equal(memory.entry('wind'),'ripple');
+ memory.clear();assert.equal(memory.entry('gravitationalSort'),undefined);
+});

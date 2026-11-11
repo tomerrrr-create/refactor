@@ -48,13 +48,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   let count=0;while((await state()).armed&&count++<12)await tap(id);
   assert.equal((await state()).armed,null,'Off exists '+sim);
   const remembered=await page.evaluate(sim=>memoryTest.remembered(sim),sim);assert.notEqual(remembered,undefined);
-  await tap(id);assert.equal((await state()).mode,remembered,'Off retains last non-Off '+sim);assert(!(await state()).playing);
+  await tap(id);assert.equal((await state()).mode,first,'Off restarts at the first mode '+sim);assert(!(await state()).playing);await tap(id);assert.equal((await state()).mode,second,'cycle continues after restarting '+sim);
  }
+ if(process.env.MEMORY_CYCLE_ONLY){await setup();for(let i=0;i<4;i++)await tap('btnWind');assert(!(await page.evaluate(()=>memoryTest.wind())).active);await tap('btnWind');assert.equal((await page.evaluate(()=>memoryTest.wind())).mode,'ripple');await tap('btnWind');assert.equal((await page.evaluate(()=>memoryTest.wind())).mode,'paint');assert.deepEqual(errors,[]);console.log(JSON.stringify({config,cycles:13,handoffRecall:true,offRestartsFirst:true,continuesAfterRestart:true}));await context.close();continue;}
  // The user's Gravity example through actual desktop clicks and touch taps.
  const nativeTap=id=>config.width<600?page.locator('#'+id).tap():page.locator('#'+id).click();
  await setup();await nativeTap('btnGravitationalSort');await nativeTap('btnGravitationalSort');await nativeTap('btnMagnetModes');assert.equal((await state()).armed,'magnet');assert(await page.locator('#btnGravitationalSort').evaluate(e=>e.classList.contains('mode-right')&&!e.classList.contains('simulation-active')));await page.screenshot({path:'/tmp/evolution-mode-memory/'+config.lang+'-inactive-gravity.png'});await nativeTap('btnGravitationalSort');assert.equal((await state()).mode,'right');await nativeTap('btnGravitationalSort');assert.equal((await state()).mode,'center_x');
  // Independent Wind remembers its chosen tool, without arming an engine.
- await setup();await tap('btnWind');await tap('btnWind');const wind=await page.evaluate(()=>memoryTest.wind());assert.equal(wind.mode,'paint');await tap('btnWind');await tap('btnWind');assert(!(await page.evaluate(()=>memoryTest.wind())).active);await tap('btnWind');assert.equal((await page.evaluate(()=>memoryTest.wind())).mode,'displace');await tap('btnWind');
+ await setup();await tap('btnWind');await tap('btnWind');const wind=await page.evaluate(()=>memoryTest.wind());assert.equal(wind.mode,'paint');await tap('btnWind');await tap('btnWind');assert(!(await page.evaluate(()=>memoryTest.wind())).active);await tap('btnWind');assert.equal((await page.evaluate(()=>memoryTest.wind())).mode,'ripple');await tap('btnWind');
  // A live handoff keeps the established Play behavior, including Nudge's shared button.
  await setup();await tap('btnNudgeBrighter');await tap('btnNudgeBrighter');await tap('btnGravitationalSort');await tap('btnGravitationalSort');await tap('btnPlayPauseLife');await page.waitForFunction(()=>memoryTest.state().generation>=3);await tap('btnNudgeBrighter');assert.equal((await state()).armed,'nudgeDarker');assert((await state()).playing);await page.evaluate(()=>memoryTest.pause());
  // A newly recorded recall uses existing context commands, and replays independently of the toggle.
