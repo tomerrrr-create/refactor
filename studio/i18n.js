@@ -18,7 +18,7 @@ const english = {
  'חסכונית':'Economical', 'גבוהה':'High', 'מרבית':'Maximum', 'אפקטים':'Effects',
  'הגדרות שמופיעות בקובץ מיושמות אוטומטית. כשאין הגדרה, הבחירה שלך קובעת.':'Recorded preferences are applied automatically. Otherwise, your choices apply.',
  'בודק תמיכה בייצוא…':'Checking export support…',
- 'יצירת וידאו':'Create video', 'ביטול':'Cancel', 'שמירת הסרטון':'Save video',
+ 'עריכת מאקרו':'Edit macro', 'יצירת וידאו':'Create video', 'ביטול':'Cancel', 'שמירת הסרטון':'Save video',
  'התקדמות ההמרה':'Export progress', 'טוען את מנוע הניגון…':'Loading the playback engine…',
  'תצוגת הסרטון':'Video preview', 'הכול במחשב שלך · ללא קול':'On your device · no audio',
  'השאר את הכלי פתוח ואת המחשב ער.':'Keep Studio open and your device awake.',

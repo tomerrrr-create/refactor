@@ -176,6 +176,16 @@ Export uses native file sharing when supported, with download behavior depending
 
 WTF/help groups guidance into Creation, Evolution and Tools. English is the primary interface language; Hebrew, Russian and Dutch are also supported. A separate interactive quick-start guide is available, and holding an evolution shows its explanation.
 
+## Studio macro editing (MVP)
+
+Studio has **Create video** and **Edit macro** tabs. The editor UI/model are imported only when Edit macro opens; its separate controlled-clock engine iframe is created only after choosing a file. No editor modules enter the application's imports or offline cache. Switching to video or hiding the page freezes the editing clock, including active simulations, brushes and Wind.
+
+Load a journey TXT, play/pause, or use **Play to next safe start**. Gold timeline markers navigate automatically, restarting the source first when selecting an earlier point. The list groups brush/Wind gestures and renders 100 rows per page. Starts are before verified fresh simulation runs or idle creative actions whose next engine use is independent. A Pause followed by resuming the same session, active brush/Wind crossings, live-init resumptions and nonzero session cursors are excluded. Arrival performs a runtime check before enabling **Choose as new beginning**. No safe point means an explicit message, without enabling an arbitrary cut.
+
+Choosing a start retains a small board preview and its original time. **Play from new beginning** previews the retained suffix; **Save as new macro** downloads an `_edited.txt` copy. **Change starting point** returns to the source. There is no end trim, action reordering or parameter editing. The original file is never modified. Random engines retain their existing nondeterminism limits; a new replay need not reproduce every stochastic pixel from a previous viewing.
+
+Exports use only existing player commands: INIT_STATE for initial colors/palette/order, the already-supported legacy ISLANDS_INIT full-tile codec to retain working `v` and gold flags, Islands Off to clear its temporary checkpoint session, and HISTORY_SETTINGS plus the retained resolved commands. This checkpoint transport does not add an Islands animation. No application logger, player or recipe grammar changes are required. Undo/Redo are resolved by the existing parser before timeline grouping and cutting. Source actions are copied and timestamps rebased; the Studio-only boundary sentinel never appears in an exported file. Validate with `node --test tests/studio-macro-editor.test.mjs tests/studio-link.test.mjs` and, after a shared build, `tools/check-studio-macro-editor.mjs` (Playwright/Chromium environment variables are supported).
+
 ## Three settings profiles
 
 Technicians offers three fixed settings profiles, each with an explicitly saved baseline and an in-session working draft. Switching profiles restores the current session draft. The **star means “different from this profile's factory defaults”**, not “unsaved”: saving a customized profile does not remove its star. Resetting or manually returning to equivalent defaults does. Stars on other profiles remain visible.
