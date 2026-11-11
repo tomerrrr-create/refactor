@@ -44,9 +44,10 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  <button id="editorSave" disabled>${text('Save as new macro','שמור כמאקרו חדש')}</button></div>
  <h2 style="font-size:15px;font-weight:400;color:var(--gold)">${text('Recorded actions','הפעולות שהוקלטו')}</h2>
  <p class="editor-note">${text('Choose a gold start marker, or play to the next safe point. Playback stops before that action; the point is checked again on arrival. Simulations with randomness may vary between playbacks.','בחר סימון התחלה זהוב, או נגן עד לנקודה הבטוחה הבאה. הניגון ייעצר לפני הפעולה והנקודה תיבדק שוב בהגעה. סימולציות אקראיות עשויות להשתנות בין ניגונים.')}</p>
+ <div class="editor-controls"><button id="editorSafeFilter" class="secondary" type="button" aria-pressed="false" aria-controls="editorActions" disabled>${text('Safe starts only','נקודות התחלה בטוחות בלבד')}</button><span id="editorActionCount" class="muted" role="status"></span></div>
  <div class="editor-paging"><button id="editorPrev" class="secondary" disabled>${text('Previous','הקודם')}</button><span id="editorPage" class="muted"></span><button id="editorNext" class="secondary" disabled>${text('Next','הבא')}</button></div>
- <ol id="editorActions" class="editor-list"></ol>`;
- let frame=null,engine=null,source='',filename='macro.txt',actions=[],groups=[],safe=new Set(),page=0,start=null,
+ <ol id="editorActions" class="editor-list"></ol><p id="editorActionsEmpty" class="editor-note" role="status" hidden>${text('No safe starting points in this macro.','אין במאקרו הזה נקודות התחלה בטוחות.')}</p>`;
+ let frame=null,engine=null,source='',filename='macro.txt',actions=[],groups=[],safe=new Set(),page=0,safeOnly=false,start=null,
   previewing=false,previewTotal=0,busy=false,playing=false,raf=null,lastTime=0,version=0,url=null,inFlight=null,engineLoad=null;
  const ctx=$('editorCanvas').getContext('2d',{alpha:false});
  function fail(error){$('editorError').textContent=error?.message??String(error);}
@@ -75,6 +76,7 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  function update(){
   const state=current();const ready=Boolean(source)&&!busy;panel.dataset.editorPhase=busy?'loading':!source?'empty':playing?'playing':state?.finished?'complete':'paused';
   $('editorPlay').disabled=!ready||Boolean(state?.finished);$('editorPlay').textContent=playing?text('Pause','עצירה'):text('Play','ניגון');
+  $('editorSafeFilter').disabled=!ready;
   $('editorRestart').disabled=!ready;$('editorStart').disabled=!ready||playing||Boolean(inFlight)||previewing||state?.boundary===null||state?.boundary===undefined;
   $('editorNextSafe').disabled=!ready||previewing||!actions.some((_,i)=>safe.has(i)&&i>Math.max(state?.lastIndex??-1,state?.boundary??-1));
   for(const id of ['editorReset','editorPreview','editorSave'])$(id).disabled=!ready||playing||Boolean(inFlight);
@@ -96,11 +98,15 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  }
  function renderList(){
   const list=$('editorActions');list.replaceChildren();
-  const pages=Math.max(1,Math.ceil(groups.length/100));page=Math.min(page,pages-1);
-  groups.slice(page*100,(page+1)*100).forEach((group,offset)=>{
+  const visible=groups.map((group,index)=>({group,index})).filter(({group})=>!safeOnly||safe.has(group.from));
+  const pages=Math.max(1,Math.ceil(visible.length/100));page=Math.min(page,pages-1);
+  $('editorSafeFilter').setAttribute('aria-pressed',String(safeOnly));
+  $('editorActionsEmpty').hidden=!safeOnly||!source||visible.length>0;
+  $('editorActionCount').textContent=source?`${visible.length} / ${groups.length}`:'';
+  visible.slice(page*100,(page+1)*100).forEach(({group,index})=>{
    const li=document.createElement('li');li.dataset.from=group.from;li.dataset.to=group.to;
    const details=document.createElement('details'),summary=document.createElement('summary');
-   summary.textContent=`${page*100+offset+1}. ${label({...group.actions[0],eventName:group.eventName})}`;
+   summary.textContent=`${index+1}. ${label({...group.actions[0],eventName:group.eventName})}`;
    const when=document.createElement('small');when.dir='ltr';when.textContent=stamp(group.actions[0].delta)+(group.actions[0].isGenBased?` · ${text('Generation','דור')} ${group.actions[0].targetGen}`:'');
    summary.append(when);details.append(summary);
    details.addEventListener('toggle',()=>{if(details.open&&!details.querySelector('pre')){
@@ -144,6 +150,7 @@ export async function mountEditor(panel,{file:initialFile=null,onVideo}={}) {
  $('editorReset').addEventListener('click',async()=>{busy=true;await pause();try{start=null;previewing=false;engine.load(source);clearError();draw();}catch(error){fail(error);}finally{busy=false;update();}});
  $('editorPreview').addEventListener('click',async()=>{busy=true;try{const file=editedFile();await pause();previewTotal=engine.load(await file.text()).length;previewing=true;engine.play();playing=true;lastTime=0;raf=requestAnimationFrame(tick);}catch(error){fail(error);}finally{busy=false;update();}});
  $('editorSave').addEventListener('click',()=>{try{const file=editedFile();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);const link=document.createElement('a');link.href=url;link.download=file.name;link.click();$('editorStatus').textContent=text('New macro downloaded. Original unchanged.','המאקרו החדש הורד. המקור לא השתנה.');}catch(error){fail(error);}});
+ $('editorSafeFilter').addEventListener('click',()=>{safeOnly=!safeOnly;page=0;renderList();});
  $('editorPrev').addEventListener('click',()=>{page--;renderList();});$('editorNext').addEventListener('click',()=>{page++;renderList();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
  window.addEventListener('beforeunload',()=>{if(url)URL.revokeObjectURL(url);});

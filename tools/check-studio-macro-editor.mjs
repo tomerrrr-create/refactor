@@ -22,6 +22,16 @@ try{for(const cfg of [{lang:'en',width:1280,height:1000},{lang:'he',width:390,he
  await page.locator('#editorFile').setInputFiles({name:'journey.txt',mimeType:'text/plain',buffer:Buffer.from(fixture)});await page.waitForFunction(()=>!document.querySelector('#editorPlay').disabled);
  const ef=()=>page.frames().find(f=>f.url().includes('editor=1'));
  assert.equal(await page.locator('[data-hold="6"]').count(),0,'resume is not marked safe');
+ const allRows=await page.locator('#editorActions > li').evaluateAll(rows=>rows.map(r=>r.dataset.from));
+ const safeRows=await page.locator('#editorActions > li[data-safe]').evaluateAll(rows=>rows.map(r=>({from:r.dataset.from,title:r.querySelector('summary').textContent})));
+ const beforeFilter=await ef().evaluate(()=>macroEditorEngine.state());
+ const toggleFilter=()=>cfg.width<600?page.locator('#editorSafeFilter').tap():page.locator('#editorSafeFilter').click();
+ await toggleFilter();assert.equal(await page.locator('#editorSafeFilter').getAttribute('aria-pressed'),'true');
+ assert.deepEqual(await page.locator('#editorActions > li').evaluateAll(rows=>rows.map(r=>({from:r.dataset.from,title:r.querySelector('summary').textContent}))),safeRows,'filter preserves original numbers and safe targets');
+ assert.deepEqual(await ef().evaluate(()=>macroEditorEngine.state()),beforeFilter,'filter does not touch playback');
+ await toggleFilter();assert.deepEqual(await page.locator('#editorActions > li').evaluateAll(rows=>rows.map(r=>r.dataset.from)),allRows);
+ await toggleFilter();
+
  await page.locator('[data-hold="4"]').click();await page.waitForFunction(()=>!document.querySelector('#editorStart').disabled);
  await page.waitForTimeout(150);const boundary=await ef().evaluate(()=>macroEditorEngine.state());assert.equal(boundary.boundary,4);assert(!boundary.running);const board=await ef().evaluate(()=>studioEditTest.state());assert(board.tiles[0].isGold);
  const frozen=await ef().evaluate(()=>studioEditTest.state());await page.waitForTimeout(200);assert.deepEqual(await ef().evaluate(()=>studioEditTest.state()),frozen,'paused engine clock freezes all simulation state');await page.locator('#editorStart').click();assert(await page.locator('#editorSelection').isVisible());assert(!(await page.locator('#editorSave').isDisabled()));
