@@ -3,7 +3,7 @@
 @property --sim-color {
   syntax: '<color>';
   inherits: true;
-  initial-value: #3F51B5;
+  initial-value: #a58b54;
 }
 
 /* Custom properties for dynamic styling controlled by JS */
@@ -18,7 +18,7 @@
   --stroke: 3px;
   --gold: #FFD700;
   --glow-color: var(--gold);
-  --sim-color: #3F51B5;
+  --sim-color: #a58b54;
   transition: --sim-color 400ms ease-in-out;
 
 }
@@ -1926,6 +1926,7 @@ button, .ctrl {
 }
 .sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
 .sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
+:root[data-simulation-effective-theme="blue"] { --sim-color: #3F51B5; }
 :root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: #766741; }
 :root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }

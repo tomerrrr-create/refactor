@@ -26,7 +26,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const backdrop=page.locator('#simModeBackground');
  const opacity=()=>backdrop.evaluate(e=>getComputedStyle(e).opacity);
  const ink=()=>page.locator('#btnGravitationalSort svg').first().evaluate(e=>getComputedStyle(e).stroke);
- await boot(false);await page.evaluate(()=>themeTest.setup());await tech();
+ await boot(false);const fresh=await state();assert.equal(fresh.settings.simulationTheme,'gold');assert.equal(fresh.settings.simulationPlaybackTheme,'gold');await page.evaluate(()=>themeTest.setup());await tech();
  assert.equal(await page.locator('#technicianDialog #simulationThemeSettings,#technicianDialog #simulationPlaybackThemeSettings').count(),0);
  await tap('#btnTechnicianCloseTop');await map();
  assert.equal(await page.locator('#evolutionDrawerDialog .drawer-appearance #simulationThemeSettings').count(),1);

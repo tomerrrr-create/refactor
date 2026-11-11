@@ -10,7 +10,7 @@ const LABELS = {
   nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois'}
 };
 export function getSimulationTheme() {
-  return document.documentElement.dataset.simulationTheme || 'blue';
+  return document.documentElement.dataset.simulationTheme || 'gold';
 }
 
 export function getSimulationPlaybackTheme() {
@@ -30,7 +30,7 @@ export function setSimulationRunning(running) {
 }
 
 export function applySimulationTheme(value) {
-  const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'blue';
+  const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'gold';
   document.documentElement.dataset.simulationTheme = theme;
   for (const preview of document.querySelectorAll('#simulationThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
@@ -57,7 +57,7 @@ export function initializeSimulationTheme() {
   const previews = section.querySelectorAll('[data-theme]');
   const playbackPreviews = playbackSection.querySelectorAll('[data-theme]');
   let saved;
-  try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* Use the existing blue appearance. */ }
+  try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* Use the default gold appearance. */ }
   applySimulationTheme(saved);
   let savedPlayback;
   try { savedPlayback = localStorage.getItem(PLAYBACK_STORAGE_KEY); } catch {}
