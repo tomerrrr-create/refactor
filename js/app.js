@@ -895,17 +895,13 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
       async function animateBoardTransition(actionFn) {
         if (isAnimating) return;
         isAnimating = true;
-        try {
-            dom.boardOverlay.style.opacity = '1';
-            await new Promise(resolve => setTimeout(resolve, 350));
-            actionFn();
-            await new Promise(resolve => setTimeout(resolve, 50));
-            dom.boardOverlay.style.opacity = '0';
-            await new Promise(resolve => setTimeout(resolve, 350));
-        } finally {
-            dom.boardOverlay.style.opacity = '0';
-            isAnimating = false;
-        }
+        dom.boardOverlay.style.opacity = '1';
+        await new Promise(resolve => setTimeout(resolve, 350));
+        actionFn();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        dom.boardOverlay.style.opacity = '0';
+        await new Promise(resolve => setTimeout(resolve, 350));
+        isAnimating = false;
       }
       
       function applyInitialPattern() {
@@ -2639,29 +2635,27 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         const duration = 500;
         dom.controlsContainer.style.opacity = '0';
         setTimeout(() => {
-            try {
-                // Playback may start while the panel transition is pending.
-                if (isLifePlaying) return;
-                isSimModeActive = !isSimModeActive;
-                dom.controlsContainer.classList.toggle('sim-mode-active', isSimModeActive);
-                if (isSimModeActive) {
-                    pauseLife();
-                    resetArmedState();
-                } else {
-                    if (windMode) setWindMode(false);
-                    pauseLife();
-                    resetArmedState();
-                }
-
-                const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, dom.btnSpecialReset ];
-                controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
-                updateSimulationUtilityControl();
-
-                dom.btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
-                dom.btnToggleSimMode.classList.toggle('active', isSimModeActive);
-            } finally {
-                dom.controlsContainer.style.opacity = '1';
+            // Playback may start while the panel transition is pending.
+            if (isLifePlaying) { dom.controlsContainer.style.opacity = '1'; return; }
+            isSimModeActive = !isSimModeActive;
+            dom.controlsContainer.classList.toggle('sim-mode-active', isSimModeActive);
+            if (isSimModeActive) {
+                pauseLife();
+                resetArmedState();
+            } else {
+                if (windMode) setWindMode(false);
+                pauseLife();
+                resetArmedState();
             }
+            
+
+const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, dom.btnSpecialReset ];
+            controlsToHide.forEach(btn => btn.classList.toggle('control-hidden', isSimModeActive));
+            updateSimulationUtilityControl();
+
+            dom.btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
+            dom.btnToggleSimMode.classList.toggle('active', isSimModeActive);
+            dom.controlsContainer.style.opacity = '1';
         }, duration);
       }
       
