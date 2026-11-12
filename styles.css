@@ -1083,10 +1083,10 @@ body {
 }
 
 /* --- Brightness Evolution Button States --- */
-#btnBrightnessEvo.mode-brightness svg {
+#btnBrightnessEvo.mode-brightness.simulation-active svg {
     stroke: var(--gold);
 }
-#btnBrightnessEvo.mode-contrast svg {
+#btnBrightnessEvo.mode-contrast.simulation-active svg {
     stroke: url(#contrastGradient);
 }
 
