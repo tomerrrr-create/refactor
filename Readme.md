@@ -430,6 +430,8 @@ The button cycles Solo → Group → Random cell → Random color → Off. Chang
 
 ### 2. Brightness Evolution & Contrast
 
+The inactive toolbar icon uses the selected simulation theme color for both modes. Gold (Brightness) and the split gradient (Contrast) indicate a selected simulation only; remembering or previewing a mode does not highlight the button.
+
 **File:** `js/simulations/brightness.js`
 
 These models simulate cellular smoothing and contrasting by treating the color index (`v`) as a continuous float representing "brightness".
