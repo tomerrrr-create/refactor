@@ -14,7 +14,7 @@ const browser=await chromium.launch({headless:true,executablePath:process.env.CH
 const results=[];
 try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844,lang:'he'},{width:320,height:568,lang:'ru'},{width:844,height:390,lang:'nl'}]){
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},serviceWorkers:'block',isMobile:config.width<600,hasTouch:config.width<600});
- await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridCompactColorPicker','false');},config.lang);
  const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
  source=source.replace('modals = initializeModals(contextForModals);','window.brushContext=contextForModals;modals = initializeModals(contextForModals);');

@@ -14,6 +14,7 @@ const browser=await chromium.launch({headless:true,executablePath:process.env.CH
 const results=[];
 try{for(const width of [390,320]){
  const context=await browser.newContext({viewport:{width,height:width===390?844:568},isMobile:true,hasTouch:true,serviceWorkers:'block'});
+ await context.addInitScript(()=>localStorage.setItem('colorGridCompactColorPicker','false'));
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
  source=source.replace('      initializeApp();',`window.swipeTest={open:()=>{activePaletteIndex=C.PALETTES.findIndex(p=>p.colors.length===264);selectedColorIndex=-1;selectedColor=null;modals.openColorPickerModal();},page:()=>colorPickerPage,state:()=>({color:selectedColorIndex,brush:brushSize,shape:brushShape})};initializeApp().then(()=>swipeTest.ready=true);`);

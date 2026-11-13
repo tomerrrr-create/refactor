@@ -18,7 +18,7 @@ try {
  for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844,lang:'he'},{width:320,height:568,lang:'ru'},{width:844,height:390,lang:'nl'}]){
  const mobile=config.width<600;
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:mobile,hasTouch:mobile,serviceWorkers:'block'});
- await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridCompactColorPicker','false');},config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
  source=source.replace('      initializeApp();',`window.pickerNavTest={
