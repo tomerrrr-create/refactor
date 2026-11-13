@@ -1,3 +1,4 @@
+import { magnetAnchorIndex } from './magnet-anchor.js';
 import { initializeMacroOverlaySettings } from './macro-overlay-settings.js';
 import { createCompactColorPicker } from './compact-color-picker.js';
 import { focusSettingsHeading } from './dialog-focus.js';
@@ -2170,7 +2171,29 @@ function renderMagnetMethodButtons() {
 function renderMagnetAnchorSwatches() {
     const container = app.dom.magnetAnchorSwatches;
     container.innerHTML = '';
-    const currentPalette = app.C.PALETTES[app.getActivePaletteIndex()].colors;
+    const activePalette = app.C.PALETTES[app.getActivePaletteIndex()];
+    const currentPalette = activePalette.colors;
+    const anchored = tempMagnetRules.anchorColor === 'luminance';
+    const selectedAnchor = magnetAnchorIndex(currentPalette, tempMagnetRules, activePalette.originalColors);
+    let toggle = document.getElementById('btnMagnetAnchorColor');
+    if (!toggle) {
+        toggle = document.createElement('button');
+        toggle.type = 'button'; toggle.id = 'btnMagnetAnchorColor';
+        toggle.className = 'gol-genetics-dot gol-dead-color';
+        toggle.setAttribute('role', 'switch');
+        const heading = document.createElement('div');
+        heading.className = 'flex items-center justify-center gap-2';
+        app.dom.magnetAnchorLabel.before(heading);
+        heading.append(app.dom.magnetAnchorLabel, toggle);
+        toggle.addEventListener('click', () => {
+            if (tempMagnetRules.anchorColor === 'luminance') delete tempMagnetRules.anchorColor;
+            else tempMagnetRules.anchorColor = 'luminance';
+            renderMagnetAnchorSwatches();
+        });
+    }
+    toggle.setAttribute('aria-checked', String(anchored));
+    toggle.title = app.getText(anchored ? 'magnet_anchor_luminance' : 'magnet_anchor_current');
+    toggle.setAttribute('aria-label', toggle.title);
 
     // 1. יצירת עטיפה (Wrapper) לכפתור ה-ROOT ולאינדיקטור הצבע
     let rootWrapper = document.getElementById('magnetRootWrapper');
@@ -2201,9 +2224,9 @@ function renderMagnetAnchorSwatches() {
     let displayColor = '';
     let displayContent = '';
     
-    if (tempMagnetRules.anchorColorIndex === -1) {
+    if (anchored || tempMagnetRules.anchorColorIndex === -1) {
         // מצב Root: מציגים את הצבע הכהה (אינדקס 0) ואת אייקון ליקוי החמה המרוכז
-        displayColor = currentPalette[0];
+        displayColor = currentPalette[anchored ? selectedAnchor : 0];
         displayContent = indicatorEclipseIcon; 
     } else {
         // נבחר עוגן: מציגים את הצבע והאינדקס שלו
@@ -2214,11 +2237,13 @@ function renderMagnetAnchorSwatches() {
     // יצירת כפתור ה-Root 
     const rootBtn = document.createElement('button');
     rootBtn.className = `flex-1 flex items-center justify-center p-3 rounded-2xl border-2 transition-all font-bold text-lg tracking-widest ${
-        tempMagnetRules.anchorColorIndex === -1 
+        !anchored && tempMagnetRules.anchorColorIndex === -1
         ? 'border-gold-400 text-gold-400 bg-gray-900 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]' 
         : 'border-gray-600 hover:border-gray-400 text-gray-400'
     }`;
     rootBtn.innerHTML = `${eclipseIcon} <span data-debug-text="magnet_root">${app.getText('magnet_root')}</span>`;
+    rootBtn.disabled = anchored;
+    rootBtn.style.opacity = anchored ? '0.45' : '1';
     rootBtn.onclick = () => {
         tempMagnetRules.anchorColorIndex = -1;
         renderMagnetAnchorSwatches();
@@ -2252,9 +2277,13 @@ indicator.className = `w-14 h-14 flex-shrink-0 rounded-2xl border-2 flex items-c
     // 2. רינדור שאר הצבעים בתוך הקונטיינר הנגלל
 currentPalette.forEach((color, index) => {
 
-        const swatch = document.createElement('div');
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.disabled = anchored;
+        swatch.setAttribute('aria-label', String(index));
+        swatch.style.opacity = anchored ? '0.45' : '1';
         swatch.className = `w-9 h-9 rounded-2xl cursor-pointer border-2 transition-all flex-shrink-0 ${
-            tempMagnetRules.anchorColorIndex === index 
+            selectedAnchor === index
             ? 'border-gold-400 scale-110 shadow-[0_0_0_3px_rgba(255,215,0,0.3)]' 
             : 'border-transparent hover:border-gray-400'
         }`;
