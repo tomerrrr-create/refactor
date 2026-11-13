@@ -555,6 +555,7 @@ A spatial attraction engine using anchors around the selected palette entry. `an
     * Reuses a flat `Uint8Array` to track moved pixels instead of using `Set()`.
     * Uses classic variables for swapping (`temp = a; a = b; b = temp`) instead of array destructuring `[a,b] = [b,a]`.
     * Uses multiplication for squared distances in hot loops. Anchor coordinate objects can still be allocated; do not describe the whole engine as zero allocation.
+* **Nearest-anchor search:** Above eight sampled perimeter anchors, all four modes build an exact squared-Euclidean nearest-anchor map once per generation (`js/simulations/magnet-nearest-map.js`). At eight or fewer they retain direct scanning. The map keeps the same sampled anchors and original-order distance ties; movement order, neighbor ranking, protected cells and random calls remain unchanged. Reusable typed buffers use approximately eight bytes per board cell plus row scratch space, and are released with Magnet caches. The map is rebuilt every generation, so live painting, anchor changes and sorting use the current board. No macro format or simulation-version change is involved.
 * **Execution Modes:**
     * `magnet`: Organic attraction with alternative neighbor candidates.
     * `cosmic_magnet`: Strict/geometric attraction toward the best candidate neighbor.
@@ -814,6 +815,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
 | Palette controls and transitions | `tools/check-palette-cards.mjs`, `tools/check-palette-hold-colors.mjs`, `tools/check-color-page-swipe.mjs`, `tools/check-picker-dialog-transition.mjs` |
 | Game of Life / Chi preset swipes: modal-Save equivalence, all shortcut positions, live rules, profiles and replay | `tools/check-preset-swipes.mjs` (`PRESET_LANG` filters languages) |
+| Magnet exact spatial lookup: live mouse/touch drawing, sorting, Undo/Redo, and cross-engine replay (optional `MAGNET_BASELINE_FILE` points to an older engine) | `tools/check-magnet-spatial.mjs` |
 | Magnet darkest-by-Luminance anchor: drafts, disabled manual controls, sorting, profiles, Undo/Redo and new/legacy/live macro replay | `tools/check-magnet-anchor.mjs` |
 | Game of Life genetics and dead color: independent drafts, narrow layouts, cycles, profiles, Undo/Redo and real logger-to-macro replay | `tools/check-gol-genetics.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
