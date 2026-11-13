@@ -29,6 +29,8 @@ The brush picker offers **Circle, Square, Diamond, Ring and a horizontal Line**,
 
 Brushes also work while a simulation runs: taps and drags change the current board, and the simulation continues from those edits. Wind and brushes are mutually exclusive board tools; switch Wind off to return to the brush. Loaded macros block manual painting.
 
+Technicians includes **All palette colors · session experiment**, off by default and never stored in profiles, settings exports or browser storage. Enabled, the brush/color picker shows the complete palette plus Rainbow in a compact grid instead of 24-color pages. Its density adapts to viewport height; the brush tools may still scroll on short screens. Mouse hover or pointer contact shows an enlarged color preview; dragging adjusts the candidate and releasing inside a swatch commits through the existing selection path. Releasing outside or cancelling makes no selection. Keyboard activation remains available. Turning the switch off restores paging; reload resets the experiment. The experiment lives in `js/compact-color-picker.js` with a small rendering branch in `ui-modals.js`.
+
 ### Controls and gestures
 
 | Control | Tap/click | Swipe/drag up | Swipe/drag down | Hold or horizontal swipe |
@@ -788,6 +790,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 
 | Area | Examples |
 | --- | --- |
+| Session-only compact color-picker experiment: full palettes, pointer preview/drag/cancel, keyboard, Rainbow, paging restoration and reload | `tools/check-compact-color-picker.mjs` |
 | Opening-palette history policy: raw/resolved Undo/Redo, legacy checkpoints, real palette switches and playback lifecycle | `tools/check-macro-palette-context.mjs` (optional `PALETTE_RECIPE` runs the reported full-file regression) |
 | Real file import, opening-palette catalogue, drawing Undo, explicit changes and file replacement on desktop/English and touch/Hebrew | `tools/check-macro-palette-ui.mjs` |
 | Fullscreen macro activity: opt-in, desktop/mobile geometry, action filtering, space limits, Stop and replay equivalence | `tools/check-macro-activity.mjs` |

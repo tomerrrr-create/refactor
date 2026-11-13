@@ -2604,3 +2604,27 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog [data-reset-cycles] svg { flex:0 0 18px; width:18px; height:18px; }
 #evolutionDrawerDialog [data-reset-cycles]:focus-visible { outline:2px solid #ffe7a0; outline-offset:3px; }
 #evolutionDrawerDialog [data-reset-cycles-status] { min-height:16px; margin:6px 0 0; color:#b7b4a8; font-size:12px; text-align:center; }
+
+/* Session-only compact color-picker experiment. */
+#colorPickerModal.compact-colors #colorPickerSwatches {
+    grid-template-columns:repeat(var(--compact-columns,17),minmax(0,1fr));
+    gap:2px; touch-action:none;
+}
+#colorPickerModal.compact-colors .color-swatch {
+    border:0; border-radius:2px; box-shadow:none;
+}
+#colorPickerModal.compact-colors .color-swatch.is-selected,
+#colorPickerModal.compact-colors .compact-color-candidate {
+    outline:2px solid white; outline-offset:-2px; z-index:1;
+}
+#colorPickerModal.compact-colors .color-swatch.is-selected::after {display:none;}
+#colorPickerModal.compact-colors .rainbow-palette-count {display:none;}
+#colorPickerModal.compact-colors .color-swatch:focus-visible {outline-offset:-2px;}
+.compact-color-preview {
+    position:fixed; width:64px; height:64px; z-index:20000; pointer-events:none;
+    border:2px solid white; border-radius:8px; background:#151715;
+    box-shadow:0 5px 20px #000a;
+}
+.compact-color-preview[hidden] {display:none;}
+.compact-color-preview .color-swatch-inner {position:absolute;inset:0;border-radius:6px;}
+.compact-color-preview svg {width:100%;height:100%;}
