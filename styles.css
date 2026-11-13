@@ -2047,7 +2047,8 @@ body.wind-mode :is(#btnColorPicker, #btnSymmetry, #btnColorPickerSymmetry):disab
 .interface-zoom-option > label { color: #e3c677; margin-bottom: 10px; }
 .technician-display-settings .interface-zoom-option { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #b28b3630; }
 /* One compact row per display preference; controls keep their touch height. */
-.technician-display-settings { padding: 6px 12px; margin-inline: -10px; border:1px solid #b28b3638; border-radius:14px; background:linear-gradient(145deg,#1c1a1280,#0d0e0c80); }
+.technician-display-settings { padding:6px 18px; margin-inline:0; border:1px solid #b28b3645; border-radius:12px; background:linear-gradient(135deg,#1c1a12,#0d0e0c); }
+.technician-display-settings + .technician-display-settings { margin-block-start:18px; }
 .technician-display-settings .technician-option { min-height: 56px; margin: 0; padding: 10px 0; gap: 10px; justify-content: center; border:0; border-bottom: 1px solid #b28b3630; border-radius:0; background:transparent; }
 .technician-display-settings .technician-option:last-child { border-bottom: 0; }
 .technician-display-settings .technician-option-heading { width: 100%; min-width: 0; gap: 8px; }
