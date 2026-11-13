@@ -9,7 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  compact_colors_experiment: {en:"All palette colors · session experiment",he:"כל צבעי הפלטה · ניסוי לפתיחה הנוכחית",ru:"Все цвета палитры · эксперимент на сеанс",nl:"Alle paletkleuren · sessie-experiment"},
+  compact_colors_experiment: {en:"All palette colors · experiment",he:"כל צבעי הפלטה · ניסוי",ru:"Все цвета палитры · эксперимент",nl:"Alle paletkleuren · experiment"},
   remember_evolution_modes: {en:"Remember simulation modes",he:"זכור מצב סימולציה אחרון",ru:"Запоминать режимы симуляций",nl:"Simulatiemodi onthouden"},
   macro_activity_setting: {"en": "Macro activity", "he": "פעולות מקרו", "ru": "Действия макроса", "nl": "Macroactiviteit"},
   macro_activity_title: {"en": "MACRO · NOW", "he": "מקרו · עכשיו", "ru": "МАКРОС · СЕЙЧАС", "nl": "MACRO · NU"},

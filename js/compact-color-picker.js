@@ -1,7 +1,9 @@
-// Disposable, session-only UI experiment. Selection still uses the existing
-// swatch click handlers, so artwork/history and profile formats stay untouched.
+// Removable UI experiment with a browser-local preference, outside profiles.
+// Selection uses the existing swatch handlers; artwork/history formats stay untouched.
 export function createCompactColorPicker({modal, grid, toggle, onChange}) {
     let enabled = false, pointer = null, candidate = null, frame = null, pending = null;
+    const storageKey='colorGridCompactColorPicker';
+    try { enabled=localStorage.getItem(storageKey)==='true'; } catch { /* Keep the default when storage is unavailable. */ }
     const preview = document.createElement('div');
     preview.className = 'compact-color-preview';
     preview.hidden = true;
@@ -65,8 +67,12 @@ export function createCompactColorPicker({modal, grid, toggle, onChange}) {
         grid.style.setProperty('--compact-columns',columns);
         grid.toggleAttribute('data-large-swatches',columns<=8);
     }
-    toggle.checked=false;
-    toggle.addEventListener('change',()=>{cancel();enabled=toggle.checked;onChange();});
+    toggle.checked=enabled;
+    toggle.addEventListener('change',()=>{
+        cancel();enabled=toggle.checked;
+        try { localStorage.setItem(storageKey,String(enabled)); } catch { /* The current choice still works for this session. */ }
+        onChange();
+    });
     grid.addEventListener('pointerdown',event=>{
         if(!enabled||event.button!==0)return;
         if(pointer!==null){cancel();return;}
