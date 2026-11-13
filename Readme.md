@@ -549,7 +549,7 @@ Turing initializes chemical buffers from nonzero, non-gold board cells; if none 
 
 **File:** `js/simulations/magnet.js`
 
-A spatial attraction engine using anchors around the selected palette entry. `anchorColorIndex = -1` resolves to index zero in the current ordering. The main cycle is Cosmic → Regular → Time; Expand remains selectable through settings.
+A spatial attraction engine using anchors around the selected palette entry. `anchorColorIndex = -1` resolves to index zero in the current ordering. The main cycle is Cosmic → Regular → Time; Expand remains selectable through settings. A small switch beside Anchor optionally locks the anchor to the darkest color in default Luminance order, independently of the current sort, in every Magnet mode. Off is the legacy default (Root follows current index zero, or a manually selected color). While On, manual anchor controls are disabled without discarding their selection; Off restores that selection. Palette changes resolve the darkest color again, with original-order ties. Dialog Save applies the draft; Save to profile persists it. The optional `anchorColor: "luminance"` rule travels with existing settings/artwork/history and macro rules; older recordings without it retain current-sort behavior.
 
 * **Buffer reuse and in-place updates:** This file deliberately trades modern syntactic sugar for raw speed:
     * Reuses a flat `Uint8Array` to track moved pixels instead of using `Set()`.
@@ -814,6 +814,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Brush geometry/navigation and live Undo | `tools/check-brush-picker.mjs`, `tools/check-brush-picker-navigation.mjs`, `tools/check-live-brush-undo.mjs` |
 | Palette controls and transitions | `tools/check-palette-cards.mjs`, `tools/check-palette-hold-colors.mjs`, `tools/check-color-page-swipe.mjs`, `tools/check-picker-dialog-transition.mjs` |
 | Game of Life / Chi preset swipes: modal-Save equivalence, all shortcut positions, live rules, profiles and replay | `tools/check-preset-swipes.mjs` (`PRESET_LANG` filters languages) |
+| Magnet darkest-by-Luminance anchor: drafts, disabled manual controls, sorting, profiles, Undo/Redo and new/legacy/live macro replay | `tools/check-magnet-anchor.mjs` |
 | Game of Life genetics and dead color: independent drafts, narrow layouts, cycles, profiles, Undo/Redo and real logger-to-macro replay | `tools/check-gol-genetics.mjs` |
 | Cracks growth, brush, reset and session seed | `tools/check-cracks.mjs`, `tools/check-cracks-brush.mjs`, `tools/check-cracks-reset.mjs`, `tools/check-cracks-session-seed.mjs` |
 | Settings entry focus and keyboard navigation | `tools/check-settings-focus.mjs` |

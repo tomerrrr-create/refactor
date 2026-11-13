@@ -51,6 +51,7 @@ function mergeKnown(defaults, overrides, path = '') {
         if (path === '' && ['separatorCycle', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics', 'gameOfLifeDeadColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === 'rules.magnet' && key === 'anchorColor') { result[key] = clone(value); continue; }
         if (path === 'rules.contour' && key === 'growth') { result[key] = validateCracksGrowth(value); continue; }
         if (path === 'rules.contour' && key === 'material') { result[key] = validateCracksMaterial(value); continue; }
         if (path === 'rules.erosion' && ['erosionEvents', 'erosionPace', 'erosionStages'].includes(key)) { result[key] = clone(value); continue; }
@@ -114,6 +115,7 @@ export function validateWorkspaceSettings(value) {
         ['b', 'a', 'vortex', 'radial', 'down', 'left', 'black_hole', 'turbine2', 'tornado'].includes(r.spiral.method) &&
         [1, 2, 3].includes(r.spiral.tornadoVersion) && integer(r.spiral.tornadoFrame, 0, Number.MAX_SAFE_INTEGER) &&
         ['magnet', 'cosmic_magnet', 'time_magnet', 'expand'].includes(r.magnet.method) &&
+        (!Object.hasOwn(r.magnet, 'anchorColor') || r.magnet.anchorColor === 'luminance') &&
         integer(r.magnet.anchorColorIndex, -1, Math.max(...C.PALETTES.map(p => p.colors.length)) - 1) &&
         EROSION_MODES.includes(r.erosion.mode) && number(r.erosion.erosionStrength, 0, 1) &&
         (!Object.hasOwn(r.erosion, 'erosionEvents') || integer(r.erosion.erosionEvents, 1,

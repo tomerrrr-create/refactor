@@ -1407,7 +1407,7 @@ case 'spiral':
                 boardState = nextState; 
                 break;
 case 'magnet': 
-    nextState = Simulations.runMagnetGeneration({ ...context, magnetRules }); 
+    nextState = Simulations.runMagnetGeneration({ ...context, magnetRules, originalPalette: C.PALETTES[activePaletteIndex].originalColors });
     boardState = nextState; 
     break;
 
@@ -1548,7 +1548,7 @@ case 'spiral':
 
 
 case 'magnet': 
-    boardState = Simulations.runMagnetGeneration({ n, currentBoardState: boardState, currentPalette: palette(), magnetRules }); 
+    boardState = Simulations.runMagnetGeneration({ n, currentBoardState: boardState, currentPalette: palette(), magnetRules, originalPalette: C.PALETTES[activePaletteIndex].originalColors });
     break;
 
 
@@ -5141,6 +5141,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
         erosionRules = restoreErosionRules({});
         updateErosionButtonUI();
     }
+    if (sim === 'magnet') delete magnetRules.anchorColor; // Old recordings never inherit the viewer's anchor preference.
     if (sim === 'gameOfLife' && rulesStr === "No specific rules mapping") { delete gameOfLifeRules.genetics; delete gameOfLifeRules.deadColor; }
     if (rulesStr !== "No specific rules mapping") {
         try {

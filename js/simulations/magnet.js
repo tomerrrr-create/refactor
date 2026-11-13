@@ -1,3 +1,4 @@
+import { magnetAnchorIndex } from '../magnet-anchor.js';
 
 // --- START: Magnet Simulation (Independent Domain) ---
 
@@ -47,7 +48,7 @@ const cachedAnchors = [];
 let cachedMovedThisFrame = new Uint8Array(0);
 let cachedAnchorFallback = null;
 
-export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette }) {
+export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette }) {
 
     const nextBoardState = currentBoardState; // Zero Allocation!
     const method = magnetRules.method || 'magnet';
@@ -56,7 +57,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
     // === תוספת שלנו: שליפת משתני הפלטה והעוגן להתחלה ===
     const pLen = currentPalette ? currentPalette.length : 256;
 // אם המשתמש בחר ב-DARKEST (-1) או שעדיין לא נבחר כלום, נתייחס לזה כאינדקס 0
-const anchorIndex = (magnetRules.anchorColorIndex === undefined || magnetRules.anchorColorIndex === -1) ? 0 : magnetRules.anchorColorIndex;
+const selectedAnchor = magnetAnchorIndex(currentPalette, magnetRules, originalPalette);
+const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
 
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const anchorLimit = magnetRules.anchorLimit || (isMobile ? 300 : 300);
