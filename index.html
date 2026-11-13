@@ -734,6 +734,11 @@
         <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 1 7M3 4v6h6M12 7v5l3 2"/></svg></span><span data-debug-text="remember_evolution_modes">Remember simulation modes</span></span>
         <input id="rememberEvolutionModesToggle" class="technician-switch" type="checkbox" role="switch">
       </label>
+      <div class="technician-option magnet-anchor-limit-option">
+        <label for="magnetAnchorLimit" class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h5v8a2 2 0 0 0 4 0V4h5v8a7 7 0 0 1-14 0Z"/><path d="M5 8h5M14 8h5"/></svg></span><span data-debug-text="magnet_anchor_limit">Magnet anchor points · experiment</span></label>
+        <select id="magnetAnchorLimit" aria-describedby="magnetAnchorLimitNote"></select>
+        <span id="magnetAnchorLimitNote" class="sr-only" data-debug-text="magnet_anchor_limit_note"></span>
+      </div>
       <label class="technician-option technician-switch-option macro-activity-option">
         <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m7 4 13 8-13 8Z"/><path d="M3 8v8"/></svg></span><span data-debug-text="macro_activity_setting">Macro activity</span></span>
         <input id="macroActivityToggle" class="technician-switch" type="checkbox" role="switch">

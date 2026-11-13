@@ -105,6 +105,8 @@ export const translations = {
   gol_genetics_rgb: { en: 'Genetics: RGB', he: 'גנטיקה: RGB', ru: 'Генетика: RGB', nl: 'Genetica: RGB' },
   gol_genetics_order: { en: 'Genetics: palette order', he: 'גנטיקה: סדר הפלטה', ru: 'Генетика: порядок палитры', nl: 'Genetica: paletvolgorde' },
   gol_dead_current: { en: 'Dead color: first in current sort', he: 'צבע מת: הראשון במיון הנוכחי', ru: 'Мёртвый цвет: первый в текущей сортировке', nl: 'Dode kleur: eerste in huidige sortering' },
+  magnet_anchor_limit: { en: 'Magnet anchor points · experiment', he: 'נקודות עוגן במגנט · ניסוי', ru: 'Точки якоря магнита · эксперимент', nl: 'Magneetankerpunten · experiment' },
+  magnet_anchor_limit_note: { en: 'For this session only. Macros use their recorded limit; older macros use 300.', he: 'לפתיחה הנוכחית בלבד. מאקרו משתמש במגבלה שהוקלטה; מאקרו ישן משתמש ב־300.', ru: 'Только для текущего сеанса. Макросы используют записанный лимит; старые — 300.', nl: 'Alleen voor deze sessie. Macro’s gebruiken hun opgenomen limiet; oudere macro’s gebruiken 300.' },
   magnet_anchor_luminance: { en: 'Anchor: darkest by Luminance', he: 'עוגן: הכהה ביותר לפי Luminance', ru: 'Якорь: самый тёмный по яркости', nl: 'Anker: donkerste volgens luminantie' },
   magnet_anchor_current: { en: 'Anchor: Root or selected color', he: 'עוגן: Root או צבע נבחר', ru: 'Якорь: Root или выбранный цвет', nl: 'Anker: Root of gekozen kleur' },
   gol_dead_luminance: { en: 'Dead color: darkest by Luminance', he: 'צבע מת: הכהה ביותר לפי Luminance', ru: 'Мёртвый цвет: самый тёмный по яркости', nl: 'Dode kleur: donkerste volgens luminantie' },

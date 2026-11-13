@@ -1,3 +1,4 @@
+import {magnetRecordingRules, recordedMagnetAnchorLimit} from '../js/magnet-anchor-limit.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -25,7 +26,7 @@ function harness() {
         Simulations: {resetMagnetCaches() {}, resetGravitationalSortCaches() {}},
         brightnessEvoMode: 'off', dlaMode: 'off', breatheEvoMode: 'off', gsMode: 'off', spiralMode: 'off', magnetMode: 'off',
         turingState: null, spiralRules: {method: 'b'}, gravitationalSortRules: {direction: 'up'},
-        magnetRules: {}, erosionRules: {mode: 'legacy'}, contourRules: {}, turingRules: {},
+        magnetAnchorLimit:300,replayMagnetAnchorLimit:null,magnetRecordingRules,recordedMagnetAnchorLimit,magnetRules: {}, erosionRules: {mode: 'legacy'}, contourRules: {}, turingRules: {},
         evolutionTuning: {islands: {activity: .05}, brightnessEvo: {}, dla: {}}, dlaRules: {},
         gameOfLifeRules: {}, gameOfLifeCycle: [{}, {}, {}], chiFlowCycle: [{}, {}, {}], SPIRAL_MODE_SEQUENCE: spiralSequence,
         isMacroPlaying: false, lastNudgeTime: 0, performance: {now: () => 100},
@@ -44,6 +45,7 @@ function harness() {
         'updateBreatheEvoButtonUI','updateGravitationalSortButtonUI','updateSpiralButtonUI','updateMagnetButtonUI',
         'updateGameOfLifeButtonUI','updateChiFlowButtonUI','updateIslandsButtonUI','updateNudgeButtonUI']) c[name] = () => {};
     c.gameLoop = () => { c.currentGenerationCount++; c.animationFrameId = c.requestAnimationFrame(c.gameLoop); };
+    vm.runInContext(section('function effectiveMagnetAnchorLimit()', 'let chiFlowRules ='), c);
     vm.runInContext(section('window.logArtEvent = function', '// ------------------------------------------'), c);
     vm.runInContext(section('function pauseLife()', 'function getRandomGridPosition('), c);
     vm.runInContext(section('function handleEvolutionTap(', 'function setBrushMode('), c);

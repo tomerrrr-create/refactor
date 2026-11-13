@@ -2647,3 +2647,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 #technicianSettingsScroll .profile-controls > .technician-group-title {text-align:center;}
 #technicianSettingsScroll .technician-start-settings > .technician-group-title {margin-top:0;}
+
+.technician-display-settings .magnet-anchor-limit-option { display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: space-between; }
+.magnet-anchor-limit-option select { width: 88px; min-height: 44px; flex-shrink: 0; padding: 6px 8px; border: 1px solid #596264; border-radius: 8px; background: #111; color: #eee; direction: ltr; }
+.magnet-anchor-limit-option .technician-effect-heading { min-width: 0; }
+#technicianSettingsScroll .magnet-anchor-limit-option .technician-effect-heading { white-space: normal; }
+.magnet-anchor-limit-option .technician-effect-heading > span:last-child { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 360px) {
+    .technician-display-settings .magnet-anchor-limit-option { flex-wrap: wrap; }
+    .magnet-anchor-limit-option .technician-effect-heading { flex-basis: 100%; }
+    .magnet-anchor-limit-option select { margin-inline-start: auto; }
+}

@@ -53,7 +53,7 @@ let cachedMovedThisFrame = new Uint8Array(0);
 let cachedAnchorFallback = null;
 const nearestAnchorMap = createMagnetNearestMap();
 
-export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette }) {
+export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette, anchorLimit: limitOverride }) {
 
     const nextBoardState = currentBoardState; // Preserve in-place swap order.
     const method = magnetRules.method || 'magnet';
@@ -65,12 +65,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 const selectedAnchor = magnetAnchorIndex(currentPalette, magnetRules, originalPalette);
 const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
 
-    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const anchorLimit = magnetRules.anchorLimit || (isMobile ? 300 : 300);
-        // הגדרת מגבלה: 100 למובייל, 300 למחשב
-
-    //const anchorLimit = magnetRules.anchorLimit || (isMobile ? 150 : 300);
-
+    // The app passes a session/replay override without adding it to profile rules.
+    const anchorLimit = limitOverride ?? (magnetRules.anchorLimit || 300);
 
     if (cachedMovedThisFrame.length !== n * n) {
         cachedMovedThisFrame = new Uint8Array(n * n);

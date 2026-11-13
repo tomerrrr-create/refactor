@@ -1640,6 +1640,14 @@ export function initializeModals(appContext) {
     rememberModesToggle.checked = app.getRememberEvolutionModes();
     rememberModesToggle.addEventListener('change', () => app.setRememberEvolutionModes(rememberModesToggle.checked));
     initializeMacroOverlaySettings({input:document.getElementById('macroControlDimming'),output:document.getElementById('macroControlDimmingValue')});
+    const magnetAnchorLimitSelect = document.getElementById('magnetAnchorLimit');
+    for (const limit of app.magnetAnchorLimits) {
+        const option = document.createElement('option');
+        option.value = String(limit); option.textContent = limit.toLocaleString('en-US');
+        magnetAnchorLimitSelect.appendChild(option);
+    }
+    magnetAnchorLimitSelect.value = String(app.getMagnetAnchorLimit());
+    magnetAnchorLimitSelect.addEventListener('change', () => app.setMagnetAnchorLimit(Number(magnetAnchorLimitSelect.value)));
     const macroActivityToggle = document.getElementById('macroActivityToggle');
     macroActivityToggle.checked = app.getMacroActivity();
     macroActivityToggle.addEventListener('change', () => app.setMacroActivity(macroActivityToggle.checked));
@@ -1680,6 +1688,7 @@ export function initializeModals(appContext) {
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
+        magnetAnchorLimitSelect.value = String(app.getMagnetAnchorLimit());
         rememberModesToggle.checked = app.getRememberEvolutionModes();
         macroActivityToggle.checked = app.getMacroActivity();
         brushMotionToggle.checked = app.getBrushMotionRecording();

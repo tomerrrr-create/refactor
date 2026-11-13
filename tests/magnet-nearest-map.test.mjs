@@ -12,7 +12,7 @@ test('exact map preserves original-order ties, sparse columns, duplicates, resiz
  const map=createMagnetNearestMap();
  for(const n of [7,31,101]){
   const rand=random(11);
-  const sets=[[],[{r:0,c:0}],[{r:n-1,c:n-1},{r:0,c:0},{r:0,c:n-1},{r:n-1,c:0}],Array.from({length:n},(_,i)=>({r:n/2|0,c:n-i-1})),Array.from({length:Math.min(n*n,300)},()=>({r:rand()*n|0,c:rand()*n|0}))];
+  const sets=[[],[{r:0,c:0}],[{r:n-1,c:n-1},{r:0,c:0},{r:0,c:n-1},{r:n-1,c:0}],Array.from({length:n},(_,i)=>({r:n/2|0,c:n-i-1})),Array.from({length:Math.min(n*n,2000)},()=>({r:rand()*n|0,c:rand()*n|0}))];
   for(const anchors of sets)assert.deepEqual([...map.build(n,anchors)],brute(n,anchors));
  }
  map.clear();assert.deepEqual([...map.build(3,[{r:1,c:1}])],Array(9).fill(0));
