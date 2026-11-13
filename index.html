@@ -717,6 +717,10 @@
       <label class="technician-option technician-switch-option smooth-rendering-option">
         <span class="technician-option-heading"><span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3 7C7 3 17 11 21 7M3 12C7 8 17 16 21 12M3 17C7 13 17 21 21 17"/></svg></span><bdi>smooth /</bdi></span><input id="smoothRenderingToggle" class="technician-switch" type="checkbox" role="switch" checked></span>
       </label>
+      <div class="technician-option macro-dimming-option">
+        <label for="macroControlDimming" class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M12 4a8 8 0 0 1 0 16" fill="currentColor"/></svg></span><span data-debug-text="macro_control_dimming">Macro control dimming</span></label>
+        <div class="bloom-intensity-row"><input id="macroControlDimming" type="range" min="0" max="100" step="1" value="80"><output id="macroControlDimmingValue" for="macroControlDimming">80%</output></div>
+      </div>
       </section>
       <section class="technician-display-settings technician-feature-settings">
       <label class="technician-option technician-switch-option">

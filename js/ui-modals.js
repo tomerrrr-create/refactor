@@ -1,3 +1,4 @@
+import { initializeMacroOverlaySettings } from './macro-overlay-settings.js';
 import { createCompactColorPicker } from './compact-color-picker.js';
 import { focusSettingsHeading } from './dialog-focus.js';
 import { createCracksSettingsDialog } from './cracks-settings-dialog.js';
@@ -1637,6 +1638,7 @@ export function initializeModals(appContext) {
     const rememberModesToggle = document.getElementById('rememberEvolutionModesToggle');
     rememberModesToggle.checked = app.getRememberEvolutionModes();
     rememberModesToggle.addEventListener('change', () => app.setRememberEvolutionModes(rememberModesToggle.checked));
+    initializeMacroOverlaySettings({input:document.getElementById('macroControlDimming'),output:document.getElementById('macroControlDimmingValue')});
     const macroActivityToggle = document.getElementById('macroActivityToggle');
     macroActivityToggle.checked = app.getMacroActivity();
     macroActivityToggle.addEventListener('change', () => app.setMacroActivity(macroActivityToggle.checked));
