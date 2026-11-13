@@ -53,6 +53,16 @@ let cachedMovedThisFrame = new Uint8Array(0);
 let cachedAnchorFallback = null;
 const nearestAnchorMap = createMagnetNearestMap();
 
+// Match the renderer's wrapped palette indices without rewriting stored artwork.
+function visibleColorIndex(k, length) {
+    return k >= 0 && k < length ? k : ((k % length) + length) % length;
+}
+
+function anchorOffset(k, anchor, length) {
+    const offset = (k - anchor + length) % length;
+    return offset < 0 ? offset + length : offset;
+}
+
 export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette, anchorLimit: limitOverride }) {
 
     const nextBoardState = currentBoardState; // Preserve in-place swap order.
@@ -77,7 +87,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
   // === 1. בדיקה חכמה: האם היעד חסר, או שהופיע יעד טוב יותר? ===
   let shouldRecalculate = false;
 
-  if (!cachedAnchorFallback || cachedAnchorFallback.originalAnchorIndex !== anchorIndex) {
+  if (!cachedAnchorFallback || cachedAnchorFallback.originalAnchorIndex !== anchorIndex || cachedAnchorFallback.paletteLength !== pLen) {
       shouldRecalculate = true; // אין מטמון או שהמשתמש שינה בחירה בממשק
   } else {
       let targetFound = false;
@@ -85,7 +95,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
       for (let i = 0; i < n * n; i++) {
           if (nextBoardState[i].isGold) continue;
           
-          const currentK = nextBoardState[i].k;
+          const currentK = visibleColorIndex(nextBoardState[i].k, pLen);
           
           // בדיקה א': האם היעד הנוכחי שלנו עדיין קיים?
           if (currentK === cachedAnchorFallback.targetColorIndex) {
@@ -94,7 +104,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
           
           // בדיקה ב': אם אנחנו כרגע מתפשרים על יעד, האם פתאום הופיע צבע קרוב יותר לאידיאל?
           if (cachedAnchorFallback.targetShiftedK > 0) {
-              const shiftedK = (currentK - anchorIndex + pLen) % pLen;
+              const shiftedK = anchorOffset(currentK, anchorIndex, pLen);
               if (shiftedK < cachedAnchorFallback.targetShiftedK) {
                   shouldRecalculate = true; // הופיע צבע עדיף! חייבים לחשב מחדש
                   break; 
@@ -115,9 +125,9 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
 
       for (let i = 0; i < n * n; i++) {
           if (nextBoardState[i].isGold) continue;
-          const currentK = nextBoardState[i].k;
+          const currentK = visibleColorIndex(nextBoardState[i].k, pLen);
           
-          const shiftedK = (currentK - anchorIndex + pLen) % pLen;
+          const shiftedK = anchorOffset(currentK, anchorIndex, pLen);
           
           if (shiftedK < darkestPresentShifted) {
               darkestPresentShifted = shiftedK;
@@ -131,7 +141,8 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
       cachedAnchorFallback = {
           targetColorIndex: targetRealK,
           targetShiftedK: darkestPresentShifted,
-          originalAnchorIndex: anchorIndex
+          originalAnchorIndex: anchorIndex,
+          paletteLength: pLen
       };
   }
 
@@ -145,7 +156,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
             cachedAnchors.length = 0; 
 
             for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+                if (visibleColorIndex(nextBoardState[i].k, pLen) === targetColorIndex && !nextBoardState[i].isGold) {
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
@@ -158,7 +169,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
                                 // המרת השכן לערך הווירטואלי שלו לפני השוואה
-                                if (((nextBoardState[nr * n + nc].k - anchorIndex + pLen) % pLen) > targetShiftedK) {                                    
+                                if ((anchorOffset(nextBoardState[nr * n + nc].k, anchorIndex, pLen)) > targetShiftedK) {
                                     isEdge = true;
                                     break;
                                 }
@@ -193,7 +204,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                     
                     if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    if (nextBoardState[i].k === targetColorIndex) continue;
+                    if (visibleColorIndex(nextBoardState[i].k, pLen) === targetColorIndex) continue;
 
                     let minDist = Infinity;
                     let targetR = row;
@@ -267,7 +278,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                                 
                                 // ממירים גם פה לערכים הווירטואליים לפני שמבצעים את תנאי ההחלפה
                                 if (!nextBoardState[target_i].isGold &&
-                                    ((nextBoardState[i].k - anchorIndex + pLen) % pLen) < ((nextBoardState[target_i].k - anchorIndex + pLen) % pLen) && 
+                                    (anchorOffset(nextBoardState[i].k, anchorIndex, pLen)) < (anchorOffset(nextBoardState[target_i].k, anchorIndex, pLen)) &&
                                     cachedMovedThisFrame[target_i] === 0) {
                                     
                                     const tempTile = nextBoardState[i];
@@ -291,7 +302,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
             cachedAnchors.length = 0; 
 
             for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+                if (visibleColorIndex(nextBoardState[i].k, pLen) === targetColorIndex && !nextBoardState[i].isGold) {
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
@@ -303,7 +314,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (((nextBoardState[nr * n + nc].k - anchorIndex + pLen) % pLen) > targetShiftedK) {
+                                if ((anchorOffset(nextBoardState[nr * n + nc].k, anchorIndex, pLen)) > targetShiftedK) {
                                     isEdge = true;
                                     break;
                                 }
@@ -338,7 +349,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                     
                     if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    if (nextBoardState[i].k === targetColorIndex) continue;
+                    if (visibleColorIndex(nextBoardState[i].k, pLen) === targetColorIndex) continue;
 
                     let minDist = Infinity;
                     let targetR = row;
@@ -394,7 +405,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                             const target_i = bestNr * n + bestNc;
                             
                             if (!nextBoardState[target_i].isGold &&
-                                ((nextBoardState[i].k - anchorIndex + pLen) % pLen) < ((nextBoardState[target_i].k - anchorIndex + pLen) % pLen) && 
+                                (anchorOffset(nextBoardState[i].k, anchorIndex, pLen)) < (anchorOffset(nextBoardState[target_i].k, anchorIndex, pLen)) &&
                                 cachedMovedThisFrame[target_i] === 0) {
                                 
                                 const tempTile = nextBoardState[i];
@@ -420,7 +431,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
             cachedAnchors.length = 0; 
 
             for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+                if (visibleColorIndex(nextBoardState[i].k, pLen) === targetColorIndex && !nextBoardState[i].isGold) {
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
@@ -432,7 +443,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (((nextBoardState[nr * n + nc].k - anchorIndex + pLen) % pLen) > targetShiftedK) {
+                                if ((anchorOffset(nextBoardState[nr * n + nc].k, anchorIndex, pLen)) > targetShiftedK) {
                                     isEdge = true;
                                     break;
                                 }
@@ -467,10 +478,10 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                     
                     if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    if (nextBoardState[i].k === targetColorIndex) continue;
+                    if (visibleColorIndex(nextBoardState[i].k, pLen) === targetColorIndex) continue;
 
                     // חישוב המשקל לפי הערך הווירטואלי החדש!
-                    const colorWeight = ((nextBoardState[i].k - anchorIndex + pLen) % pLen) / pLen; 
+                    const colorWeight = (anchorOffset(nextBoardState[i].k, anchorIndex, pLen)) / pLen;
                     const moveProbability = 0.15 + (colorWeight * 0.80);
                     
                     if (Math.random() >= moveProbability) continue;
@@ -546,7 +557,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                             const target_i = optNr * n + optNc;
                             
                             if (!nextBoardState[target_i].isGold &&
-                                ((nextBoardState[i].k - anchorIndex + pLen) % pLen) < ((nextBoardState[target_i].k - anchorIndex + pLen) % pLen) && 
+                                (anchorOffset(nextBoardState[i].k, anchorIndex, pLen)) < (anchorOffset(nextBoardState[target_i].k, anchorIndex, pLen)) &&
                                 cachedMovedThisFrame[target_i] === 0) {
                                 
                                 const tempTile = nextBoardState[i];
@@ -574,7 +585,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
             cachedAnchors.length = 0; 
             
             for (let i = 0; i < n * n; i++) {
-                if (nextBoardState[i].k === targetColorIndex && !nextBoardState[i].isGold) {
+                if (visibleColorIndex(nextBoardState[i].k, pLen) === targetColorIndex && !nextBoardState[i].isGold) {
                     const r = Math.floor(i / n);
                     const c = i % n;
                     let isEdge = false;
@@ -586,7 +597,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                             const nc = c + dc;
                             
                             if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                                if (((nextBoardState[nr * n + nc].k - anchorIndex + pLen) % pLen) > targetShiftedK) {                                    
+                                if ((anchorOffset(nextBoardState[nr * n + nc].k, anchorIndex, pLen)) > targetShiftedK) {
                                     isEdge = true;
                                     break;
                                 }
@@ -621,10 +632,10 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                     
                     if (cachedMovedThisFrame[i] === 1) continue;
                     if (nextBoardState[i].isGold) continue;
-                    if (nextBoardState[i].k === targetColorIndex) continue;
+                    if (visibleColorIndex(nextBoardState[i].k, pLen) === targetColorIndex) continue;
 
                     // חישוב המשקל ההפוך (expand) לפי הערך הווירטואלי החדש
-                    const colorWeight = 1.0 - (((nextBoardState[i].k - anchorIndex + pLen) % pLen) / pLen); 
+                    const colorWeight = 1.0 - ((anchorOffset(nextBoardState[i].k, anchorIndex, pLen)) / pLen);
                     const moveProbability = 0.15 + (colorWeight * 0.80);
                     
                     if (Math.random() >= moveProbability) continue;
@@ -700,7 +711,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                             const target_i = optNr * n + optNc;
                             
                             if (!nextBoardState[target_i].isGold &&
-                                ((nextBoardState[i].k - anchorIndex + pLen) % pLen) < ((nextBoardState[target_i].k - anchorIndex + pLen) % pLen) && 
+                                (anchorOffset(nextBoardState[i].k, anchorIndex, pLen)) < (anchorOffset(nextBoardState[target_i].k, anchorIndex, pLen)) &&
                                 cachedMovedThisFrame[target_i] === 0) {
                                 
                                 const tempTile = nextBoardState[i];

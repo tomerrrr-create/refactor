@@ -3148,13 +3148,10 @@ function onPointerDown(e) {
         changes: new Map(), liveRecording: isLifePlaying || recordPausedBrushMotion,
         pausedMotion: !isLifePlaying && recordPausedBrushMotion, motionStarted: false, liveCheckpoint: false });
     pointerState.longPressTimer = isLifePlaying ? null : setTimeout(() => {
-        if (pointerState.isDragging) return;
+        // Holding selected ink must not cancel a slow drawing gesture.
+        if (pointerState.isDragging || selectedColor || isRainbowModeActive) return;
         pointerState.suppressClick = true;
-        if (selectedColor || isRainbowModeActive) {
-            performAction(resetSelectedColor);
-        } else {
-            modals.openColorPickerModal(index);
-        }
+        modals.openColorPickerModal(index);
     }, C.LONG_PRESS_SHOW_MS);
     if (!isBrushModeOn) { pointerState.dragSourceIndex = index; }
 }

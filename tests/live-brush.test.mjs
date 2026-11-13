@@ -237,3 +237,34 @@ test('each live stroke creates its own boundary, but cancelled untouched input c
  assert.equal(h.snapshots,2);assert.equal(h.checkpoints.length,4);
  h.c.undo();assert.deepEqual(h.c.boardState,second);h.c.undo();assert.deepEqual(h.c.boardState,first);
 });
+
+
+for (const rainbow of [false, true]) {
+ for (const gesture of ['release', 'drag', 'slow', 'cancel']) test(`paused ${rainbow ? 'rainbow' : 'color'} survives a board hold followed by ${gesture}`, () => {
+  const h=harness({live:false,continuous:true});
+  if(rainbow){h.c.selectedColor=null;h.c.selectedColorIndex=-1;h.c.isRainbowModeActive=true;}
+  h.down(15,15);
+  if(gesture==='slow')h.move(19,15); // Below the 8px drag threshold.
+  for(const fn of h.timers.values())fn(); // Existing 600ms hold timeout.
+  assert.equal(h.c.pointer.suppressClick,false,'holding ink must not consume a paint release');
+  assert.equal(h.c.selectedColorIndex,rainbow?-1:0);
+  assert.equal(h.c.isRainbowModeActive,rainbow);
+  if(gesture==='drag')h.move(55,15);
+  h.up(gesture==='drag'?55:19,15,1,gesture==='cancel'?'pointercancel':'pointerup');
+  assert.equal(h.c.pointer.id,null);assert.equal(h.captures.size,0);
+  if(gesture==='cancel'){assert.equal(h.logs.length,0);assert.equal(h.history.length,0);}
+  else {
+   assert.equal(h.logs.length,1);assert.equal(h.history.length,1);
+   assert(h.logs[0].data.length>=(gesture==='drag'?5:1));
+   assert(h.logs[0].data.every(tile=>tile.k===(rainbow?12:0)));
+  }
+ });
+}
+
+test('paused board hold without ink still opens the picker and suppresses a release tap', () => {
+ const h=harness({live:false});h.c.selectedColor=null;h.c.selectedColorIndex=-1;
+ const opened=[];h.c.modals.openColorPickerModal=index=>opened.push(index);
+ h.down(15,15);for(const fn of h.timers.values())fn();h.up(15,15);
+ assert.deepEqual(opened,[10]);assert.equal(h.logs.length,0);assert.equal(h.history.length,0);
+ assert.equal(h.c.pointer.id,null);assert.equal(h.captures.size,0);
+});
