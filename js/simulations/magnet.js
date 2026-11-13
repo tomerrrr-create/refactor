@@ -1,3 +1,4 @@
+import { createMagnetNearestMap } from './magnet-nearest-map.js';
 import { magnetAnchorIndex } from '../magnet-anchor.js';
 
 // --- START: Magnet Simulation (Independent Domain) ---
@@ -25,6 +26,9 @@ import { magnetAnchorIndex } from '../magnet-anchor.js';
  * * 4. CLASSIC SWAPPING (No Destructuring):
  * Using `[a, b] = [b, a]` creates temporary arrays in memory that trigger the GC. 
  * We use a classic `temp` variable to swap pixels safely.
+ * * NEAREST ANCHORS: A reusable exact distance map replaces per-cell scans
+ * when there are more than eight sampled anchors. Rebuilt every generation;
+ * neighbor ranking, swaps and RNG calls retain their original order.
  * * Logic Modes:
  * - 'magnet': Fluid/organic. Finds the top 3 optimal neighbors and allows 
  * path-bending/traffic-bypass.
@@ -47,10 +51,11 @@ const magnetNeighborsCoords = [
 const cachedAnchors = [];
 let cachedMovedThisFrame = new Uint8Array(0);
 let cachedAnchorFallback = null;
+const nearestAnchorMap = createMagnetNearestMap();
 
-export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette }) {
+export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette, anchorLimit: limitOverride }) {
 
-    const nextBoardState = currentBoardState; // Zero Allocation!
+    const nextBoardState = currentBoardState; // Preserve in-place swap order.
     const method = magnetRules.method || 'magnet';
     const strength = 0.9; 
 
@@ -60,12 +65,8 @@ export function runMagnetGeneration({ n, currentBoardState, magnetRules, current
 const selectedAnchor = magnetAnchorIndex(currentPalette, magnetRules, originalPalette);
 const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
 
-    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const anchorLimit = magnetRules.anchorLimit || (isMobile ? 300 : 300);
-        // הגדרת מגבלה: 100 למובייל, 300 למחשב
-
-    //const anchorLimit = magnetRules.anchorLimit || (isMobile ? 150 : 300);
-
+    // The app passes a session/replay override without adding it to profile rules.
+    const anchorLimit = limitOverride ?? (magnetRules.anchorLimit || 300);
 
     if (cachedMovedThisFrame.length !== n * n) {
         cachedMovedThisFrame = new Uint8Array(n * n);
@@ -183,6 +184,9 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                 cachedAnchors.length = writeIndex;
             }
 
+            // Rebuild from this generation's sampled anchors, including live drawing.
+            // Direct search avoids map overhead when there are very few anchors.
+            const nearestIds = cachedAnchors.length > 8 ? nearestAnchorMap.build(n, cachedAnchors) : null;
             for (let row = 0; row < n; row++) {
                 for (let col = 0; col < n; col++) {
                     const i = row * n + col;
@@ -195,15 +199,23 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                     let targetR = row;
                     let targetC = col;
 
-                    for (let a = 0; a < cachedAnchors.length; a++) {
-                        const dr = cachedAnchors[a].r - row;
-                        const dc = cachedAnchors[a].c - col;
-                        const distSq = (dr * dr) + (dc * dc); 
-                        
-                        if (distSq < minDist) {
-                            minDist = distSq;
-                            targetR = cachedAnchors[a].r;
-                            targetC = cachedAnchors[a].c;
+                    if (nearestIds) {
+                        const point = cachedAnchors[nearestIds[i]];
+                        targetR = point.r;
+                        targetC = point.c;
+                        const dr = targetR - row, dc = targetC - col;
+                        minDist = dr * dr + dc * dc;
+                    } else {
+                        for (let a = 0; a < cachedAnchors.length; a++) {
+                            const dr = cachedAnchors[a].r - row;
+                            const dc = cachedAnchors[a].c - col;
+                            const distSq = (dr * dr) + (dc * dc);
+
+                            if (distSq < minDist) {
+                                minDist = distSq;
+                                targetR = cachedAnchors[a].r;
+                                targetC = cachedAnchors[a].c;
+                            }
                         }
                     }
 
@@ -317,6 +329,9 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                 cachedAnchors.length = writeIndex;
             }
 
+            // Rebuild from this generation's sampled anchors, including live drawing.
+            // Direct search avoids map overhead when there are very few anchors.
+            const nearestIds = cachedAnchors.length > 8 ? nearestAnchorMap.build(n, cachedAnchors) : null;
             for (let row = 0; row < n; row++) {
                 for (let col = 0; col < n; col++) {
                     const i = row * n + col;
@@ -329,15 +344,23 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                     let targetR = row;
                     let targetC = col;
 
-                    for (let a = 0; a < cachedAnchors.length; a++) {
-                        const dr = cachedAnchors[a].r - row;
-                        const dc = cachedAnchors[a].c - col;
-                        const distSq = (dr * dr) + (dc * dc); 
-                        
-                        if (distSq < minDist) {
-                            minDist = distSq;
-                            targetR = cachedAnchors[a].r;
-                            targetC = cachedAnchors[a].c;
+                    if (nearestIds) {
+                        const point = cachedAnchors[nearestIds[i]];
+                        targetR = point.r;
+                        targetC = point.c;
+                        const dr = targetR - row, dc = targetC - col;
+                        minDist = dr * dr + dc * dc;
+                    } else {
+                        for (let a = 0; a < cachedAnchors.length; a++) {
+                            const dr = cachedAnchors[a].r - row;
+                            const dc = cachedAnchors[a].c - col;
+                            const distSq = (dr * dr) + (dc * dc);
+
+                            if (distSq < minDist) {
+                                minDist = distSq;
+                                targetR = cachedAnchors[a].r;
+                                targetC = cachedAnchors[a].c;
+                            }
                         }
                     }
 
@@ -435,6 +458,9 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                 cachedAnchors.length = writeIndex;
             }
 
+            // Rebuild from this generation's sampled anchors, including live drawing.
+            // Direct search avoids map overhead when there are very few anchors.
+            const nearestIds = cachedAnchors.length > 8 ? nearestAnchorMap.build(n, cachedAnchors) : null;
             for (let row = 0; row < n; row++) {
                 for (let col = 0; col < n; col++) {
                     const i = row * n + col;
@@ -453,16 +479,24 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                     let targetR = row;
                     let targetC = col;
 
-                    for (let a = 0; a < cachedAnchors.length; a++) {
-                        const dr = cachedAnchors[a].r - row;
-                        const dc = cachedAnchors[a].c - col;
-                        
-                        const distSq = (dr * dr) + (dc * dc); 
-                        
-                        if (distSq < minDistSq) {
-                            minDistSq = distSq;
-                            targetR = cachedAnchors[a].r;
-                            targetC = cachedAnchors[a].c;
+                    if (nearestIds) {
+                        const point = cachedAnchors[nearestIds[i]];
+                        targetR = point.r;
+                        targetC = point.c;
+                        const dr = targetR - row, dc = targetC - col;
+                        minDistSq = dr * dr + dc * dc;
+                    } else {
+                        for (let a = 0; a < cachedAnchors.length; a++) {
+                            const dr = cachedAnchors[a].r - row;
+                            const dc = cachedAnchors[a].c - col;
+
+                            const distSq = (dr * dr) + (dc * dc);
+
+                            if (distSq < minDistSq) {
+                                minDistSq = distSq;
+                                targetR = cachedAnchors[a].r;
+                                targetC = cachedAnchors[a].c;
+                            }
                         }
                     }
 
@@ -578,6 +612,9 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                 cachedAnchors.length = writeIndex;
             }
 
+            // Rebuild from this generation's sampled anchors, including live drawing.
+            // Direct search avoids map overhead when there are very few anchors.
+            const nearestIds = cachedAnchors.length > 8 ? nearestAnchorMap.build(n, cachedAnchors) : null;
             for (let row = 0; row < n; row++) {
                 for (let col = 0; col < n; col++) {
                     const i = row * n + col;
@@ -596,16 +633,24 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
                     let targetR = row;
                     let targetC = col;
 
-                    for (let a = 0; a < cachedAnchors.length; a++) {
-                        const dr = cachedAnchors[a].r - row;
-                        const dc = cachedAnchors[a].c - col;
-                        
-                        const distSq = (dr * dr) + (dc * dc); 
-                        
-                        if (distSq < minDistSq) {
-                            minDistSq = distSq;
-                            targetR = cachedAnchors[a].r;
-                            targetC = cachedAnchors[a].c;
+                    if (nearestIds) {
+                        const point = cachedAnchors[nearestIds[i]];
+                        targetR = point.r;
+                        targetC = point.c;
+                        const dr = targetR - row, dc = targetC - col;
+                        minDistSq = dr * dr + dc * dc;
+                    } else {
+                        for (let a = 0; a < cachedAnchors.length; a++) {
+                            const dr = cachedAnchors[a].r - row;
+                            const dc = cachedAnchors[a].c - col;
+
+                            const distSq = (dr * dr) + (dc * dc);
+
+                            if (distSq < minDistSq) {
+                                minDistSq = distSq;
+                                targetR = cachedAnchors[a].r;
+                                targetC = cachedAnchors[a].c;
+                            }
                         }
                     }
 
@@ -688,5 +733,6 @@ export function resetMagnetCaches() {
     if (typeof cachedAnchors !== 'undefined') {
         cachedAnchors.length = 0;
     }
+    nearestAnchorMap.clear();
     cachedAnchorFallback = null; // מנקה את הזיכרון כשהמגנט עוצר או משנה מצב
 }

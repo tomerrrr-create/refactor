@@ -1,3 +1,4 @@
+import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, magnetRecordingRules } from './magnet-anchor-limit.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
 import {createEvolutionModeMemory,defaultEvolutionCycleMode} from './evolution-mode-memory.js';
 import { createMacroActivity } from './macro-activity.js';
@@ -314,6 +315,10 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let contourRules = { ...C.defaultContourRules, lineColor:'brush', growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
+let magnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT;
+let replayMagnetAnchorLimit = null;
+function effectiveMagnetAnchorLimit() { return replayMagnetAnchorLimit ?? magnetAnchorLimit; }
+function getMagnetRecordingRules() { return magnetRecordingRules(magnetRules, effectiveMagnetAnchorLimit()); }
 let chiFlowRules = cloneChiFlowRules(C.defaultChiFlowRules);
 let personalChiFlowRules = cloneChiFlowRules(chiFlowRules);
 let chiFlowMode = 'personal';
@@ -1407,7 +1412,7 @@ case 'spiral':
                 boardState = nextState; 
                 break;
 case 'magnet': 
-    nextState = Simulations.runMagnetGeneration({ ...context, magnetRules, originalPalette: C.PALETTES[activePaletteIndex].originalColors });
+    nextState = Simulations.runMagnetGeneration({ ...context, magnetRules, anchorLimit: effectiveMagnetAnchorLimit(), originalPalette: C.PALETTES[activePaletteIndex].originalColors });
     boardState = nextState; 
     break;
 
@@ -1498,7 +1503,7 @@ break;
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(getContourRecordingRules());
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
-        else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
+        else if (armedSimulation === 'magnet') simDetails = JSON.stringify(getMagnetRecordingRules());
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
@@ -1548,7 +1553,7 @@ case 'spiral':
 
 
 case 'magnet': 
-    boardState = Simulations.runMagnetGeneration({ n, currentBoardState: boardState, currentPalette: palette(), magnetRules, originalPalette: C.PALETTES[activePaletteIndex].originalColors });
+    boardState = Simulations.runMagnetGeneration({ n, currentBoardState: boardState, currentPalette: palette(), magnetRules, anchorLimit: effectiveMagnetAnchorLimit(), originalPalette: C.PALETTES[activePaletteIndex].originalColors });
     break;
 
 
@@ -1728,7 +1733,7 @@ function getSimulationRecordingDetails() {
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(getContourRecordingRules());
         else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
-        else if (armedSimulation === 'magnet') simDetails = JSON.stringify(magnetRules);
+        else if (armedSimulation === 'magnet') simDetails = JSON.stringify(getMagnetRecordingRules());
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
         else if (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') simDetails = JSON.stringify(getNudgeTiming());
@@ -4647,6 +4652,12 @@ function parseMacroText(text) {
         }
         if (snapshot?.deadColor !== undefined && !['current', 'luminance'].includes(snapshot.deadColor)) throw Error('Invalid Game of Life dead color');
     }
+    for (const action of actions) {
+        if (['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName) && action.details.startsWith('Armed: magnet |')) {
+            const rules = action.details.match(/\|\s+Rules:\s+(.*)$/)?.[1];
+            if (rules && rules !== 'No specific rules mapping') recordedMagnetAnchorLimit(JSON.parse(rules));
+        }
+    }
     actions.forEach(validateIslandsMacroAction);
     actions.forEach(validateCymaticsMacroAction);
     let brushOpen = false;
@@ -4995,6 +5006,7 @@ function stopMacro() {
         console.error('Failed to finish macro profile capture:', error);
     }
     replayNudgeTiming = null;
+    replayMagnetAnchorLimit = null;
     replayCymaticsRules=null;
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
@@ -5025,7 +5037,10 @@ function stopMacro() {
 
 function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
-    if (currentMacroStep === 0) macroPaletteContext.reset();
+    if (currentMacroStep === 0) {
+        macroPaletteContext.reset();
+        replayMagnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT;
+    }
     
     if(typeof cycleMemory!=='undefined')cycleMemoryAfterReplay=true;
     isMacroPlaying = true;
@@ -5141,6 +5156,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
         erosionRules = restoreErosionRules({});
         updateErosionButtonUI();
     }
+    if (sim === 'magnet') { replayMagnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT; delete magnetRules.anchorLimit; }
     if (sim === 'magnet') delete magnetRules.anchorColor; // Old recordings never inherit the viewer's anchor preference.
     if (sim === 'gameOfLife' && rulesStr === "No specific rules mapping") { delete gameOfLifeRules.genetics; delete gameOfLifeRules.deadColor; }
     if (rulesStr !== "No specific rules mapping") {
@@ -5193,7 +5209,9 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
                 }
                 else if (sim === 'magnet') {
-                    Object.assign(magnetRules, parsedRules);
+                    const { anchorLimit, ...preferences } = parsedRules;
+                    replayMagnetAnchorLimit = recordedMagnetAnchorLimit(parsedRules);
+                    Object.assign(magnetRules, preferences);
                     magnetMode = parsedRules.method || magnetMode;
                     if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
                 }
@@ -5737,6 +5755,14 @@ else if (action.eventName === 'Invert Colors') {
                 cycleMemory.setEnabled(value);
                 if(!isMacroLoaded&&!isMacroPlaying)cycleMemoryAfterReplay=false;
                 rememberCurrentCycle();refreshCycleIcons();
+            },
+            getMagnetAnchorLimit: () => magnetAnchorLimit,
+            magnetAnchorLimits: MAGNET_ANCHOR_LIMITS,
+            setMagnetAnchorLimit: (value, { record = true } = {}) => {
+                const next = validateMagnetAnchorLimit(value);
+                if (next === magnetAnchorLimit) return;
+                magnetAnchorLimit = next;
+                if (record && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand) recordLiveSimulationRules('magnet');
             },
             getMacroActivity: () => macroActivity.enabled(),
             setMacroActivity: value => macroActivity.setEnabled(value),

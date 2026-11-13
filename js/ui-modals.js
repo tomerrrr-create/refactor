@@ -2118,6 +2118,8 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
 
 // ====================== MAGNET SETTINGS MODAL ======================
 let tempMagnetRules = { method: 'magnet', anchorColorIndex: -1 };
+let tempMagnetAnchorLimit = 300;
+const magnetAutumnAccents = ['#CD853F', '#607D8B', '#C2A14A', '#FF7F50'];
 
 function closeMagnetSettingsModal() {
     app.dom.magnetSettingsModal.style.display = 'none';
@@ -2135,23 +2137,23 @@ function renderMagnetMethodButtons() {
         { method: 'expand',        iconId: 'iconModeExpand' }
     ];
 
-    modes.forEach(m => {
+    modes.forEach((m, index) => {
         const btn = document.createElement('button');
-        btn.className = `gs-direction-btn flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
-            tempMagnetRules.method === m.method 
-            ? 'active border-gold-400 bg-gray-900 scale-105' 
-            : 'border-gray-600 hover:border-gray-400'
-        }`;
+        btn.type = 'button';
+        btn.className = 'magnet-method-button';
+        btn.style.setProperty('--magnet-accent', magnetAutumnAccents[index]);
+        btn.setAttribute('aria-pressed', String(tempMagnetRules.method === m.method));
+        btn.title = app.getText('magnet_method_' + m.method);
+        btn.setAttribute('aria-label', btn.title);
         btn.dataset.method = m.method;
-        btn.style.minWidth = '76px';
-        btn.style.minHeight = '76px';
 
         const originalIcon = document.getElementById(m.iconId);
         if (originalIcon) {
             const iconClone = originalIcon.cloneNode(true);
             iconClone.style.display = 'block';
-            iconClone.style.width = '42px';
-            iconClone.style.height = '42px';
+            iconClone.removeAttribute('id');
+            iconClone.style.width = '28px';
+            iconClone.style.height = '28px';
             btn.appendChild(iconClone);
         } else {
             btn.innerHTML = `<span class="text-4xl">⬡</span>`;
@@ -2160,6 +2162,7 @@ function renderMagnetMethodButtons() {
         btn.addEventListener('click', () => {
             tempMagnetRules.method = m.method;
             renderMagnetMethodButtons();
+            container.querySelector(`[data-method="${m.method}"]`).focus({ preventScroll: true });
         });
 
         container.appendChild(btn);
@@ -2167,6 +2170,25 @@ function renderMagnetMethodButtons() {
 }
 
 
+
+function renderMagnetLimitButtons() {
+    const container = document.getElementById('magnetAnchorLimit');
+    container.replaceChildren();
+    const accents = ['#607D8B', '#6B8E23', '#CD853F', '#FF7F50', '#C2A14A'];
+    for (const [index, limit] of app.magnetAnchorLimits.entries()) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'magnet-limit-button';
+        button.dataset.limit = String(limit);
+        button.textContent = limit.toLocaleString('en-US');
+        button.style.setProperty('--magnet-accent', accents[index]);
+        button.setAttribute('aria-pressed', String(tempMagnetAnchorLimit === limit));
+        button.addEventListener('click', () => {
+            tempMagnetAnchorLimit = limit;
+            for (const sibling of container.children) sibling.setAttribute('aria-pressed', String(sibling === button));
+        });
+        container.appendChild(button);
+    }
+}
 
 function renderMagnetAnchorSwatches() {
     const container = app.dom.magnetAnchorSwatches;
@@ -2242,6 +2264,7 @@ function renderMagnetAnchorSwatches() {
         : 'border-gray-600 hover:border-gray-400 text-gray-400'
     }`;
     rootBtn.innerHTML = `${eclipseIcon} <span data-debug-text="magnet_root">${app.getText('magnet_root')}</span>`;
+    rootBtn.setAttribute('aria-pressed', String(!anchored && tempMagnetRules.anchorColorIndex === -1));
     rootBtn.disabled = anchored;
     rootBtn.style.opacity = anchored ? '0.45' : '1';
     rootBtn.onclick = () => {
@@ -2261,7 +2284,7 @@ indicator.className = `w-14 h-14 flex-shrink-0 rounded-2xl border-2 flex items-c
     indicator.style.textShadow = '0px 1px 3px rgba(0,0,0,0.8)';
     
     if (tempMagnetRules.anchorColorIndex === -1) {
-        indicator.style.borderColor = 'var(--gold, #FFD700)';
+        indicator.style.borderColor = '#C2A14A';
     }
     
 
@@ -2302,12 +2325,15 @@ function openMagnetSettingsModal() {
     // התיקון שלנו: שימוש ב"טלפון" כדי למשוך את הנתונים העדכניים והאמיתיים מהמוח 
     const currentRules = app.getMagnetRules();
     tempMagnetRules = { ...currentRules };
+    tempMagnetAnchorLimit = app.getMagnetAnchorLimit();
 
+    app.dom.btnMagnetModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
     app.dom.magnetSettingsTitle.textContent = app.getText('magnet_modal_title');
     app.dom.magnetModeLabel.textContent = app.getText('magnet_mode_label');
     app.dom.magnetAnchorLabel.textContent = app.getText('magnet_anchor_label');
 
     renderMagnetMethodButtons();
+    renderMagnetLimitButtons();
     renderMagnetAnchorSwatches();
 
     app.dom.magnetSettingsModal.style.display = 'flex';
@@ -2317,6 +2343,7 @@ function openMagnetSettingsModal() {
 function saveMagnetSettings() {
     // התיקון שלנו: שימוש ב"טלפון" כדי לשמור את הנתונים חזרה בצורה מסודרת
     app.setMagnetRules({ ...tempMagnetRules });
+    app.setMagnetAnchorLimit(tempMagnetAnchorLimit, { record: false });
 
     if (typeof app.syncMagnetFromModal === 'function') {
         app.syncMagnetFromModal(tempMagnetRules.method, tempMagnetRules.anchorColorIndex);

@@ -2647,3 +2647,32 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 #technicianSettingsScroll .profile-controls > .technician-group-title {text-align:center;}
 #technicianSettingsScroll .technician-start-settings > .technician-group-title {margin-top:0;}
+
+/* Magnet settings: compact autumn-tinted methods and anchor-point choices. */
+#magnetSettingsModal { padding: 16px; }
+.magnet-settings-panel { position: relative; display: flex; flex-direction: column; gap: 20px; width: min(100%, 400px); max-height: calc(100dvh - 32px); padding: 24px 20px 20px; border: 1px solid #c2a14a30; border-radius: 20px; background: #1b1c1b; box-shadow: 0 20px 70px #0009; }
+.magnet-settings-panel h2 { margin: 0; font-size: 18px; }
+.magnet-settings-body { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding: 3px 3px 6px; scrollbar-width: thin; }
+.magnet-settings-body h3 { margin: 0; text-align: center; color: #b9bbb5; font-size: 12px; font-weight: 500; }
+#magnetMethodContainer { display: flex; justify-content: center; gap: 14px; direction: ltr; }
+.magnet-method-button, .magnet-limit-button { position: relative; display: inline-flex; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, var(--magnet-accent) 38%, transparent); background: color-mix(in srgb, var(--magnet-accent) 9%, #171a19); color: var(--magnet-accent); transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease; cursor: pointer; }
+.magnet-method-button { flex: 0 0 54px; height: 54px; padding: 0; border-radius: 15px; }
+.magnet-method-button[aria-pressed="true"], .magnet-limit-button[aria-pressed="true"] { border-color: var(--magnet-accent); background: color-mix(in srgb, var(--magnet-accent) 23%, #171a19); box-shadow: 0 0 0 2px color-mix(in srgb, var(--magnet-accent) 14%, transparent); }
+.magnet-method-button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: 4px; width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
+.magnet-limit-section { display: flex; flex-direction: column; gap: 10px; }
+#magnetAnchorLimit { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; direction: ltr; padding: 2px; }
+.magnet-limit-button { min-height: 44px; min-width: 0; padding: 6px 2px; border-radius: 10px; font-size: 12px; font-variant-numeric: tabular-nums; color: #aaa99f; }
+.magnet-limit-button[aria-pressed="true"] { color: #f3e8cf; font-weight: 600; }
+.magnet-limit-button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: 5px; width: 12px; height: 2px; border-radius: 2px; background: var(--magnet-accent); }
+.magnet-method-button:focus-visible, .magnet-limit-button:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
+@media (hover: hover) { .magnet-method-button:hover, .magnet-limit-button:hover { border-color: var(--magnet-accent); background: color-mix(in srgb, var(--magnet-accent) 18%, #171a19); } }
+.magnet-settings-footer { flex: 0 0 auto; display: flex; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #c2a14a26; }
+.magnet-settings-footer > div { gap: 10px; }
+#magnetRootWrapper { margin-bottom: 6px; }
+#magnetRootWrapper > button { min-height: 48px; padding: 8px; border: 1px solid #525a53; border-radius: 12px; background: #191c1b; box-shadow: none; font-size: 15px; font-weight: 500; }
+#magnetRootWrapper > button[aria-pressed="true"] { border-color: #c2a14a; color: #e3ce9a; }
+#magnetRootWrapper > div { width: 48px; height: 48px; border-width: 1px; border-radius: 12px; box-shadow: none; transform: none; }
+#btnMagnetSettingsSave, #btnMagnetSettingsCancel { min-height: 44px; border-radius: 10px; font-size: 14px; }
+#btnMagnetSettingsSave { background: #e3c677; color: #211b0e; }
+#btnMagnetSettingsCancel { border: 1px solid #454b44; background: #292e2b; color: #ddd; }
+@media (prefers-reduced-motion: reduce) { .magnet-method-button, .magnet-limit-button { transition: none; } }
