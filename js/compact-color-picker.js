@@ -1,27 +1,51 @@
 // Disposable, session-only UI experiment. Selection still uses the existing
 // swatch click handlers, so artwork/history and profile formats stay untouched.
 export function createCompactColorPicker({modal, grid, toggle, onChange}) {
-    let enabled = false, pointer = null, candidate = null;
+    let enabled = false, pointer = null, candidate = null, frame = null, pending = null;
     const preview = document.createElement('div');
     preview.className = 'compact-color-preview';
     preview.hidden = true;
     preview.setAttribute('aria-hidden', 'true');
     document.body.append(preview);
     const buttonAt = (x,y) => {
-        const button = document.elementFromPoint(x,y)?.closest('button.color-swatch');
-        return button && grid.contains(button) ? button : null;
+        const rect=grid.getBoundingClientRect();
+        if(x<rect.left||x>=rect.right||y<rect.top||y>=rect.bottom)return null;
+        const buttons=grid.querySelectorAll('button.color-swatch');
+        const columns=Number(grid.style.getPropertyValue('--compact-columns'));
+        const pitch=(rect.width+2)/columns;
+        const relativeX=getComputedStyle(grid).direction==='rtl'?rect.right-x:x-rect.left;
+        // Assign each internal gap to its nearest tile, retaining a continuous
+        // preview. Empty trailing cells and points outside the grid still cancel.
+        const column=Math.min(columns-1,Math.floor((relativeX+1)/pitch));
+        const row=Math.floor((y-rect.top+1)/pitch);
+        return buttons[row*columns+column]??null;
     };
     function show(button,x,y) {
-        candidate?.classList.remove('compact-color-candidate');
-        candidate = button;
-        preview.hidden = !button;
-        if (!button) return;
-        button.classList.add('compact-color-candidate');
-        preview.replaceChildren(button.querySelector('.color-swatch-inner').cloneNode(true));
-        preview.style.left = Math.max(8,Math.min(innerWidth-72,x-32))+'px';
-        preview.style.top = (y>=84 ? y-80 : Math.min(innerHeight-72,y+24))+'px';
+        if(button!==candidate){
+            candidate?.classList.remove('compact-color-candidate');
+            candidate=button;
+            if(button){
+                button.classList.add('compact-color-candidate');
+                preview.replaceChildren(button.querySelector('.color-swatch-inner').cloneNode(true));
+            }
+        }
+        preview.hidden=!button;
+        if(!button)return;
+        const left=Math.max(8,Math.min(innerWidth-72,x-32));
+        const top=y>=84?y-80:Math.min(innerHeight-72,y+24);
+        preview.style.transform=`translate3d(${left}px,${top}px,0)`;
+    }
+    function schedule(x,y) {
+        pending={x,y};
+        if(frame!==null)return;
+        frame=requestAnimationFrame(()=>{
+            frame=null;const point=pending;pending=null;
+            show(buttonAt(point.x,point.y),point.x,point.y);
+        });
     }
     function cancel() {
+        if(frame!==null)cancelAnimationFrame(frame);
+        frame=null;pending=null;
         const id=pointer;pointer=null;
         if(id!==null&&grid.hasPointerCapture(id))grid.releasePointerCapture(id);
         show(null);
@@ -39,6 +63,7 @@ export function createCompactColorPicker({modal, grid, toggle, onChange}) {
         let columns=Math.min(count,Math.max(5,Math.ceil(Math.sqrt(count*width/budget))));
         while(columns<count&&Math.ceil(count/columns)*((width-2*(columns-1))/columns+2)>budget)columns++;
         grid.style.setProperty('--compact-columns',columns);
+        grid.toggleAttribute('data-large-swatches',columns<=8);
     }
     toggle.checked=false;
     toggle.addEventListener('change',()=>{cancel();enabled=toggle.checked;onChange();});
@@ -51,7 +76,7 @@ export function createCompactColorPicker({modal, grid, toggle, onChange}) {
     });
     grid.addEventListener('pointermove',event=>{
         if(!enabled||(pointer!==null&&pointer!==event.pointerId))return;
-        if(pointer!==null||event.pointerType==='mouse')show(buttonAt(event.clientX,event.clientY),event.clientX,event.clientY);
+        if(pointer!==null||event.pointerType==='mouse')schedule(event.clientX,event.clientY);
     });
     grid.addEventListener('pointerup',event=>{
         if(!enabled||pointer!==event.pointerId)return;
@@ -60,7 +85,7 @@ export function createCompactColorPicker({modal, grid, toggle, onChange}) {
     });
     grid.addEventListener('pointercancel',cancel);
     grid.addEventListener('lostpointercapture',cancel);
-    grid.addEventListener('pointerleave',()=>{if(pointer===null)show(null);});
+    grid.addEventListener('pointerleave',()=>{if(pointer===null)cancel();});
     grid.addEventListener('click',event=>{
         if(enabled&&(event.detail>0||event.pointerType)){
             event.preventDefault();event.stopImmediatePropagation();
