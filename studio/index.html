@@ -3,6 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>
+// Directory routes may lose their trailing slash on static hosts. Keep every
+// Studio asset/iframe relative to its directory, including nested/local installs.
+{
+  const page = new URL(location.href);
+  if (!/\/$|\/[^/]+\.html$/i.test(page.pathname)) page.pathname += '/';
+  const base = document.createElement('base');
+  base.href = new URL('.', page).href;
+  document.head.appendChild(base);
+}
+</script>
 <title>Follow Your Intuition · Video Studio</title>
 <link rel="icon" href="../icons/fyi-eclipse-192.png">
 <style>
