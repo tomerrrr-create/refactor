@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '3c14931541a7583df7ab';
+const VERSION = '884d1ec4a55586578258';
 const ASSETS = [
     "./",
     "./index.html",
@@ -13,6 +13,7 @@ const ASSETS = [
     "./js/chi-reach.js",
     "./js/color-page-swipe.js",
     "./js/colors.js",
+    "./js/compact-color-picker.js",
     "./js/constants.js",
     "./js/contour-action-settings.js",
     "./js/cracks-settings-dialog.js",

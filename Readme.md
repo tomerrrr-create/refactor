@@ -29,6 +29,10 @@ The brush picker offers **Circle, Square, Diamond, Ring and a horizontal Line**,
 
 Brushes also work while a simulation runs: taps and drags change the current board, and the simulation continues from those edits. Wind and brushes are mutually exclusive board tools; switch Wind off to return to the brush. Loaded macros block manual painting.
 
+The technician display controls are ordered Zoom, Bloom, Smooth, All palette colors, Remember simulation modes, Macro activity, and Draw. All six on/off controls use the same switch appearance and keyboard behavior; Zoom retains its range slider, and Bloom retains its intensity slider. This ordering does not change which preferences persist.
+
+Technicians includes **All palette colors · experiment**, off by default. Its on/off choice is stored only in browser-local storage (`colorGridCompactColorPicker`), survives reload/reopening, and stays independent of profile switching, profile Reset, and settings import/export. Unavailable browser storage leaves the current session usable. Enabled, the brush/color picker shows the complete palette plus Rainbow in a compact grid instead of 24-color pages. Its density adapts to viewport height; the brush tools may still scroll on short screens. Selected colors and Rainbow retain a black/white frame painted above their color fill in both picker views; larger tiles also show a check badge. The temporary hover/drag candidate has a separate thin gold frame. Mouse hover or pointer contact shows an enlarged color preview; movement is coalesced to animation frames and reuses the preview content while staying on the same tile. Internal tile gaps belong to the nearest tile, avoiding preview flicker. Dragging adjusts the candidate and releasing inside the occupied grid commits through the existing selection path. Releasing outside or cancelling makes no selection. Keyboard activation remains available. Turning the switch off restores paging and remembers that choice for subsequent visits. The experiment lives in `js/compact-color-picker.js` with a small rendering branch in `ui-modals.js`.
+
 ### Controls and gestures
 
 | Control | Tap/click | Swipe/drag up | Swipe/drag down | Hold or horizontal swipe |
@@ -788,6 +792,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 
 | Area | Examples |
 | --- | --- |
+| Browser-local compact color-picker experiment: full palettes, pointer preview/drag/cancel, keyboard, Rainbow, paging restoration, reload and profile independence | `tools/check-compact-color-picker.mjs` |
 | Opening-palette history policy: raw/resolved Undo/Redo, legacy checkpoints, real palette switches and playback lifecycle | `tools/check-macro-palette-context.mjs` (optional `PALETTE_RECIPE` runs the reported full-file regression) |
 | Real file import, opening-palette catalogue, drawing Undo, explicit changes and file replacement on desktop/English and touch/Hebrew | `tools/check-macro-palette-ui.mjs` |
 | Fullscreen macro activity: opt-in, desktop/mobile geometry, action filtering, space limits, Stop and replay equivalence | `tools/check-macro-activity.mjs` |

@@ -1,3 +1,4 @@
+import { createCompactColorPicker } from './compact-color-picker.js';
 import { focusSettingsHeading } from './dialog-focus.js';
 import { createCracksSettingsDialog } from './cracks-settings-dialog.js';
 import { initializeBrushPicker } from './brush-picker.js';
@@ -20,6 +21,7 @@ import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
 
 let lastWheelTime = 0;
 function handlePaletteWheel(e) {
+    if(compactColorPicker?.enabled())return;
     const colors = app.C.PALETTES[app.getActivePaletteIndex()].colors;
     if (e.ctrlKey || colors.length <= app.C.COLORS_PER_PAGE) return;
     const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
@@ -36,6 +38,7 @@ function handlePaletteWheel(e) {
 let app;
 let contourOpenTimer = null, contourCloseTimer = null;
 let brushPicker;
+let compactColorPicker;
 let colorPickerReturnFocus;
 let colorPickerHoldOpeningClick = false;
 let presetFeedback, presetFeedbackTimer;
@@ -204,6 +207,7 @@ const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'b'
 
 
 function closeColorPickerModal() {
+    compactColorPicker?.cancel();
     finishPickerDialogTransition();
     colorPickerHoldOpeningClick = false;
     app.dom.colorPickerModal.classList.remove('modal-visible');
@@ -676,7 +680,8 @@ function selectRainbow() {
 function renderColorPickerContent() {
     const currentPalette = app.C.PALETTES[app.getActivePaletteIndex()];
     const colors = currentPalette.colors;
-    const totalPages = Math.ceil(colors.length / app.C.COLORS_PER_PAGE);
+    const compact=compactColorPicker?.enabled();
+    const totalPages = compact ? 1 : Math.ceil(colors.length / app.C.COLORS_PER_PAGE);
     const selectedColorIndex = app.getSelectedColorIndex();
     const rainbowSelected = app.isRainbowModeActive();
 
@@ -720,8 +725,8 @@ function renderColorPickerContent() {
     rainbowSwatch.addEventListener('click', () => selectRainbow());
     frag.appendChild(rainbowSwatch);
 
-    const startIndex = currentPage * app.C.COLORS_PER_PAGE;
-    const endIndex = startIndex + app.C.COLORS_PER_PAGE;
+    const startIndex = compact ? 0 : currentPage * app.C.COLORS_PER_PAGE;
+    const endIndex = compact ? colors.length : startIndex + app.C.COLORS_PER_PAGE;
     const pageColors = colors.slice(startIndex, endIndex);
 
     pageColors.forEach((color, index) => {
@@ -760,7 +765,7 @@ function renderColorPickerContent() {
         frag.appendChild(swatch);
     });
 
-    const placeholdersNeeded = (app.C.COLORS_PER_PAGE + 1) - (pageColors.length + 1);
+    const placeholdersNeeded = compact ? 0 : app.C.COLORS_PER_PAGE - pageColors.length;
     for (let i = 0; i < placeholdersNeeded; i++) {
         const placeholder = document.createElement('div');
         placeholder.className = 'color-swatch';
@@ -777,6 +782,7 @@ function renderColorPickerContent() {
         button.title = app.getText(key);
         button.setAttribute('aria-label', app.getText(key));
     }
+    compactColorPicker?.refresh();
     brushPicker?.refresh();
 }
 
@@ -1532,16 +1538,18 @@ export function initializeModals(appContext) {
     });
     app.dom.colorPickerModal.addEventListener('click', (e) => { if (e.target === app.dom.colorPickerModal) { closeColorPickerModal(); } });
     
+    compactColorPicker = createCompactColorPicker({modal:app.dom.colorPickerModal,grid:app.dom.colorPickerSwatches,
+        toggle:document.getElementById('compactColorsToggle'),onChange:renderColorPickerContent});
     app.dom.colorPickerSwatches.addEventListener('wheel', handlePaletteWheel, { passive: false });
     for (const [id, forward] of [['btnColorPagePrevious', false], ['btnColorPageNext', true]]) {
         document.getElementById(id).addEventListener('click', () => {
-            if (app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
+            if (compactColorPicker?.enabled() || app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
             app.navigateColorPages(forward);
             renderColorPickerContent();
         });
     }
     bindColorPageSwipe(app.dom.colorPickerSwatches, { onPage: forward => {
-        if (app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
+        if (compactColorPicker?.enabled() || app.C.PALETTES[app.getActivePaletteIndex()].colors.length <= app.C.COLORS_PER_PAGE) return;
         app.navigateColorPages(forward);
         renderColorPickerContent();
     } });
