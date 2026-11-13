@@ -9,6 +9,9 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},
+  technician_group_features: {en:"Features",he:"אפשרויות הפעלה",ru:"Возможности",nl:"Functies"},
+  technician_group_startup: {en:"Initialization & startup",he:"אתחול ופתיחה",ru:"Инициализация и запуск",nl:"Initialisatie en opstarten"},
   macro_control_dimming: {en:"Macro control dimming",he:"הכהיית לוח הבקרה במאקרו",ru:"Затемнение панели при макросе",nl:"Bediening dimmen tijdens macro"},
   compact_colors_experiment: {en:"All palette colors · experiment",he:"כל צבעי הפלטה · ניסוי",ru:"Все цвета палитры · эксперимент",nl:"Alle paletkleuren · experiment"},
   remember_evolution_modes: {en:"Remember simulation modes",he:"זכור מצב סימולציה אחרון",ru:"Запоминать режимы симуляций",nl:"Simulatiemodi onthouden"},

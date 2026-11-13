@@ -1,9 +1,9 @@
 // Removable UI experiment with a browser-local preference, outside profiles.
 // Selection uses the existing swatch handlers; artwork/history formats stay untouched.
 export function createCompactColorPicker({modal, grid, toggle, onChange}) {
-    let enabled = false, pointer = null, candidate = null, frame = null, pending = null;
+    let enabled = true, pointer = null, candidate = null, frame = null, pending = null;
     const storageKey='colorGridCompactColorPicker';
-    try { enabled=localStorage.getItem(storageKey)==='true'; } catch { /* Keep the default when storage is unavailable. */ }
+    try { enabled=localStorage.getItem(storageKey)!=='false'; } catch { /* Keep the default when storage is unavailable. */ }
     const preview = document.createElement('div');
     preview.className = 'compact-color-preview';
     preview.hidden = true;
