@@ -1,4 +1,4 @@
-// Session-only technician preference; it is never part of profile settings.
+// Session-only Magnet setting; it is never part of profile settings.
 export const DEFAULT_MAGNET_ANCHOR_LIMIT = 300;
 export const MAGNET_ANCHOR_LIMITS = Object.freeze([300, 600, 1000, 1500, 2000]);
 

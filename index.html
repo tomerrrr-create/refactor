@@ -734,11 +734,6 @@
         <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 1 7M3 4v6h6M12 7v5l3 2"/></svg></span><span data-debug-text="remember_evolution_modes">Remember simulation modes</span></span>
         <input id="rememberEvolutionModesToggle" class="technician-switch" type="checkbox" role="switch">
       </label>
-      <div class="technician-option magnet-anchor-limit-option">
-        <label for="magnetAnchorLimit" class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h5v8a2 2 0 0 0 4 0V4h5v8a7 7 0 0 1-14 0Z"/><path d="M5 8h5M14 8h5"/></svg></span><span data-debug-text="magnet_anchor_limit">Magnet anchor points · experiment</span></label>
-        <select id="magnetAnchorLimit" aria-describedby="magnetAnchorLimitNote"></select>
-        <span id="magnetAnchorLimitNote" class="sr-only" data-debug-text="magnet_anchor_limit_note"></span>
-      </div>
       <label class="technician-option technician-switch-option macro-activity-option">
         <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m7 4 13 8-13 8Z"/><path d="M3 8v8"/></svg></span><span data-debug-text="macro_activity_setting">Macro activity</span></span>
         <input id="macroActivityToggle" class="technician-switch" type="checkbox" role="switch">
@@ -1372,28 +1367,36 @@
 
 
 <!-- === MAGNET SETTINGS MODAL === -->
-<div id="magnetSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;">
-  <div class="relative bg-[#1c1c1c] rounded-lg p-6 w-full max-w-md flex flex-col gap-6">
+<div id="magnetSettingsModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="magnetSettingsTitle">
+  <div class="magnet-settings-panel">
     <button id="btnMagnetModalClose" class="absolute top-3 right-3 text-gray-400 hover:text-white">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
     
     <h2 id="magnetSettingsTitle" class="text-xl font-bold text-center text-gray-200" data-debug-text="magnet_modal_title">הגדרות מגנט</h2>
 
+    <div class="magnet-settings-body">
     <div class="flex flex-col gap-2">
       <h3 id="magnetModeLabel" class="font-semibold text-gray-300 text-center" data-debug-text="magnet_mode_label">סוג המגנט</h3>
-      <div class="grid grid-cols-4 gap-2" id="magnetMethodContainer"></div>
+      <div id="magnetMethodContainer" role="group" aria-labelledby="magnetModeLabel"></div>
     </div>
+
+    <section class="magnet-limit-section" aria-labelledby="magnetAnchorLimitLabel">
+      <h3 id="magnetAnchorLimitLabel" data-debug-text="magnet_anchor_limit">Anchor points</h3>
+      <div id="magnetAnchorLimit" role="group" aria-labelledby="magnetAnchorLimitLabel" aria-describedby="magnetAnchorLimitNote"></div>
+      <span id="magnetAnchorLimitNote" class="sr-only" data-debug-text="magnet_anchor_limit_note"></span>
+    </section>
 
     <div class="flex flex-col gap-2">
       <h3 id="magnetAnchorLabel" class="font-semibold text-gray-300 text-center" data-debug-text="magnet_anchor_label">צבע Anchor</h3>
       <div id="magnetAnchorSwatches" class="flex flex-wrap gap-2 justify-center max-h-64 overflow-auto p-2 border border-gray-700 rounded-xl"></div>
     </div>
 
-    <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
+    </div>
+    <div class="magnet-settings-footer">
       <div class="flex gap-4">
         <button id="btnMagnetSettingsCancel" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_cancel">ביטול</button>
-        <button id="btnMagnetSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" style="background-color: var(--gold);" data-debug-text="evolution_save_close">שמור וסגור</button>
+        <button id="btnMagnetSettingsSave" class="bg-gold-500 hover:bg-gold-400 text-black font-bold py-2 px-4 rounded-lg" data-debug-text="evolution_save_close">שמור וסגור</button>
       </div>
     </div>
   </div>

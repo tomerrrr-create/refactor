@@ -1,4 +1,4 @@
-// Session-only selector, new/legacy macro limits, live drawing, history and profile isolation.
+// Session-only modal buttons, new/legacy macro limits, live drawing, history and profile isolation.
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import path from 'node:path';
@@ -16,7 +16,7 @@ try{for(const touch of [false,true]){
  let source=await readFile(root+'/dist/js/app.js','utf8');
  source=source.replace('      initializeApp();',`window.capTest={
  setup:(limit,method)=>{stopMacro();pauseLife();resetArmedState();activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Mono');currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,currentSortMethod));n=101;initializeBoardAndCanvas(true);armSimulation('magnet');magnetRules={method,anchorColorIndex:-1};magnetMode=method;boardState.forEach((t,i)=>{t.k=t.v=i%5===0?0:(i*7)%paletteLen();t.isGold=i%173===0;});brushSize=3;brushShape='diamond';symmetryMode='off';selectedColorIndex=paletteLen()-1;selectedColor=palette().at(-1);setBrushMode(true,true);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');dom.btnStepForward.classList.remove('control-hidden');history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();renderToScreen(null);window.capsUsed=[];togglePlayPauseLife();},
- stop:()=>stopMacro(),tech:()=>modals.openTechnicianMenu(),
+ stop:()=>stopMacro(),open:()=>modals.openMagnetSettingsModal(),
  queueFirst:()=>macroQueue.find(a=>a.eventName==='PLAY')?.details,selected:()=>magnetAnchorLimit,effective:()=>effectiveMagnetAnchorLimit(),validate:parseMacroText,
  anchorBrush:()=>{selectedColorIndex=0;selectedColor=palette()[0];},
  state:()=>({loaded:isMacroLoaded,macro:isMacroPlaying,tiles:boardState.map(t=>({k:t.k,v:t.v,isGold:!!t.isGold})),playing:isLifePlaying,gen:currentGenerationCount,rules:{...magnetRules},observed:[...new Set(window.capsUsed||[])]}),
@@ -33,9 +33,12 @@ try{for(const touch of [false,true]){
   if(cdp){await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[a]});for(let i=1;i<=4;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:a.x+(b.x-a.x)*i/4,y:a.y+(b.y-a.y)*i/4}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
   else{await page.mouse.move(a.x,a.y);await page.mouse.down();await page.mouse.move(b.x,b.y,{steps:4});await page.mouse.up();}
  };
- const choose=async limit=>{await page.evaluate(()=>capTest.tech());await page.locator('#magnetAnchorLimit').selectOption(String(limit));await page.evaluate(()=>document.getElementById('technicianDialog').close());assert.equal(await page.evaluate(()=>capTest.selected()),limit);};
+ const open=async()=>{await page.evaluate(()=>capTest.open());await page.waitForFunction(()=>document.getElementById('magnetSettingsModal').style.display==='flex');};
+ const choose=async limit=>{await open();await page.locator('#magnetAnchorLimit [data-limit="'+limit+'"]').click();await page.locator('#btnMagnetSettingsSave').click();assert.equal(await page.evaluate(()=>capTest.selected()),limit);};
  assert.equal(await page.evaluate(()=>capTest.selected()),300);
- const choices=await page.locator('#magnetAnchorLimit option').evaluateAll(options=>options.map(o=>Number(o.value)));assert.deepEqual(choices,[300,600,1000,1500,2000]);
+ await open();const choices=await page.locator('#magnetAnchorLimit button').evaluateAll(options=>options.map(o=>Number(o.dataset.limit)));assert.deepEqual(choices,[300,600,1000,1500,2000]);
+ const initialMethod=(await page.evaluate(()=>capTest.state())).rules.method;await page.locator('#magnetMethodContainer [data-method="expand"]').click();assert.equal((await page.evaluate(()=>capTest.state())).rules.method,initialMethod,'method stays a draft');
+ await page.locator('#magnetAnchorLimit [data-limit="2000"]').click();assert.equal(await page.evaluate(()=>capTest.selected()),300,'modal selection is a draft');await page.locator('#btnMagnetSettingsCancel').click();await open();assert.equal(await page.locator('#magnetMethodContainer [aria-pressed="true"]').getAttribute('data-method'),initialMethod,'Cancel discards method draft');assert.equal(await page.locator('#magnetAnchorLimit [aria-pressed="true"]').getAttribute('data-limit'),'300');await page.locator('#btnMagnetSettingsCancel').click();
  for(const method of touch||process.env.MAGNET_LIMIT_FOCUS?['magnet']:['magnet','cosmic_magnet','time_magnet','expand'])for(const limit of process.env.MAGNET_LIMIT_FOCUS?[300,600]:[300,600,1000,1500,2000]){
   const errorStart=errors.length;await choose(limit);await page.evaluate(({limit,method})=>capTest.setup(limit,method),{limit,method});await page.waitForFunction(()=>capTest.state().gen>=2);await stroke(false);await page.evaluate(()=>capTest.anchorBrush());await stroke(true);await page.waitForTimeout(40);const live=(await page.evaluate(()=>capTest.state())).playing;
   await page.locator('#btnUndo').click();const undo=(await page.evaluate(()=>capTest.state())).tiles;await page.locator('#btnRedo').click();const expected=(await page.evaluate(()=>capTest.state())).tiles;
@@ -68,11 +71,11 @@ try{for(const touch of [false,true]){
  const liveExpected=(await page.evaluate(()=>capTest.state())).tiles,liveRecipe=await page.evaluate(()=>capTest.record());assert(liveRecipe.includes('SIMULATION_RULES')&&liveRecipe.includes('"anchorLimit":1500'));
  await choose(2000);await page.evaluate(text=>capTest.replay(text),liveRecipe);await page.waitForFunction(()=>capTest.done(),null,{timeout:15000});assert.deepEqual((await page.evaluate(()=>capTest.state())).tiles,liveExpected,'live cap changes reproduce the grid');
  const liveObserved=(await page.evaluate(()=>capTest.state())).observed;assert(liveObserved.includes(600)&&liveObserved.includes(1500));
- await page.evaluate(()=>capTest.tech());await page.locator('#magnetAnchorLimit').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(artifacts,touch?'touch.png':'desktop.png')});await page.evaluate(()=>document.getElementById('technicianDialog').close());
+ await open();await page.locator('#magnetAnchorLimit').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(artifacts,touch?'touch.png':'desktop.png')});await page.locator('#btnMagnetSettingsCancel').click();
  const before=await page.evaluate(()=>JSON.stringify(capTest.settings()));await choose(1000);assert.equal(await page.evaluate(()=>JSON.stringify(capTest.settings())),before,'choosing a cap does not touch profile settings');
  await page.reload();await page.waitForFunction(()=>window.capTest?.ready);assert.equal(await page.evaluate(()=>capTest.selected()),300,'reload resets the session experiment');
- await page.setViewportSize({width:320,height:568});await page.evaluate(()=>capTest.tech());await page.locator('#magnetAnchorLimit').scrollIntoViewIfNeeded();
- const narrow=await page.locator('.magnet-anchor-limit-option').evaluate(el=>{const label=el.querySelector('label').getBoundingClientRect(),select=el.querySelector('select').getBoundingClientRect();return {overflow:el.scrollWidth>el.clientWidth+1,overlap:Math.min(label.right,select.right)>Math.max(label.left,select.left)&&Math.min(label.bottom,select.bottom)>Math.max(label.top,select.top)};});assert(!narrow.overflow&&!narrow.overlap,'selector fits the narrow menu');
+ await page.setViewportSize({width:320,height:568});await open();await page.locator('#magnetAnchorLimit').scrollIntoViewIfNeeded();
+ const narrow=await page.locator('.magnet-settings-panel').evaluate(el=>{const r=el.getBoundingClientRect(),save=document.getElementById('btnMagnetSettingsSave').getBoundingClientRect(),counts=[...document.querySelectorAll('#magnetAnchorLimit button')].map(e=>e.getBoundingClientRect()),modes=[...document.querySelectorAll('#magnetMethodContainer button')].map(e=>e.getBoundingClientRect());return {overflow:el.scrollWidth>el.clientWidth+1,panelFits:r.top>=0&&r.bottom<=innerHeight,saveVisible:save.top>=0&&save.bottom<=innerHeight,countFits:counts.every(b=>b.left>=r.left&&b.right<=r.right&&b.width>=40&&b.height>=44),compactModes:modes.length===4&&modes.every(b=>b.width<76&&b.height<76)};});assert(!narrow.overflow&&narrow.panelFits&&narrow.saveVisible&&narrow.countFits&&narrow.compactModes,'compact modal fits the narrow screen');
  assert.deepEqual(pageErrors,[]);assert.deepEqual(errors,[]);
  console.log('PASS',touch?'touch/Hebrew':'desktop/English','live changes, legacy 300, profile isolation, session reset');
  results.push({touch,pageErrors});if(cdp)await cdp.detach();await context.close();

@@ -5758,11 +5758,11 @@ else if (action.eventName === 'Invert Colors') {
             },
             getMagnetAnchorLimit: () => magnetAnchorLimit,
             magnetAnchorLimits: MAGNET_ANCHOR_LIMITS,
-            setMagnetAnchorLimit: value => {
+            setMagnetAnchorLimit: (value, { record = true } = {}) => {
                 const next = validateMagnetAnchorLimit(value);
                 if (next === magnetAnchorLimit) return;
                 magnetAnchorLimit = next;
-                if (!isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand) recordLiveSimulationRules('magnet');
+                if (record && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand) recordLiveSimulationRules('magnet');
             },
             getMacroActivity: () => macroActivity.enabled(),
             setMacroActivity: value => macroActivity.setEnabled(value),
