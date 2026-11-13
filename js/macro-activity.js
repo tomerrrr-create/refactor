@@ -88,7 +88,7 @@ export function latestMacroActivity(queue, index, simulation) {
 export function macroActivityPlacement(board, viewport, fullscreen = false) {
     const width = Math.min(184, viewport.width - 32), height = 32;
     // Desktop/tablet fullscreen has a 50px gallery frame; stay below it.
-    const gap = viewport.width >= 768 ? 58 : 12;
+    const gap = viewport.width >= 768 ? 58 : 20;
     const top = board.top + board.height + gap;
     const left = board.left + (board.width - width) / 2;
     if (!fullscreen || board.width <= 0 || width < 24 || left < 16 || left + width > viewport.width - 16 ||

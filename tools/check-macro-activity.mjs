@@ -60,7 +60,7 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
   assert.equal(await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label'),first,'settings events and advancing generations do not replace or rewrite the display');
   assert.equal(await panel.locator('.macro-activity-detail').count(),0,'only action name and icon, without extra captions');
   const side=await panel.boundingBox();
-  assert(side.y>=geometry.y+geometry.height+(config.width>=768?58:12),'activity is below the board/frame');
+  assert(side.y>=geometry.y+geometry.height+(config.width>=768?58:20),'activity is below the board/frame');
   assert(Math.abs(side.x+side.width/2-geometry.x-geometry.width/2)<1,'activity is centered');
   const primary=await panel.locator('.macro-activity-current').boundingBox();assert(Math.abs(primary.x+primary.width/2-geometry.x-geometry.width/2)<1,'primary icon itself is centered');
   assert.equal(await panel.locator('.macro-activity-title').count(),0,'no visible word labels');
