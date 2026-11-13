@@ -9,6 +9,7 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  macro_control_dimming: {en:"Macro control dimming",he:"הכהיית לוח הבקרה במאקרו",ru:"Затемнение панели при макросе",nl:"Bediening dimmen tijdens macro"},
   compact_colors_experiment: {en:"All palette colors · experiment",he:"כל צבעי הפלטה · ניסוי",ru:"Все цвета палитры · эксперимент",nl:"Alle paletkleuren · experiment"},
   remember_evolution_modes: {en:"Remember simulation modes",he:"זכור מצב סימולציה אחרון",ru:"Запоминать режимы симуляций",nl:"Simulatiemodi onthouden"},
   macro_activity_setting: {"en": "Macro activity", "he": "פעולות מקרו", "ru": "Действия макроса", "nl": "Macroactiviteit"},

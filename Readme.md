@@ -714,7 +714,7 @@ Save the journey through the save modal, using `exportArtRecipeLog()`. Current T
 
 ### Playback and history compatibility
 
-`onProjectFileSelected` recognizes settings TXT by its `FYI_SETTINGS_V1` header, routes other TXT to `parseMacroText`, and JSON to artwork restoration. Loading a macro exposes a play overlay and optional initial-palette override.
+`onProjectFileSelected` recognizes settings TXT by its `FYI_SETTINGS_V1` header, routes other TXT to `parseMacroText`, and JSON to artwork restoration. Loading a macro exposes a play overlay and optional initial-palette override. Technicians’ **Macro control dimming** slider controls the black overlay over the toolbar after playback begins: 0–100%, default 80%. It updates on input and saves the committed choice in browser-local storage (`colorGridMacroControlDimming`), independently of profiles and recipes. Freshly loaded macros still use the existing 95% waiting overlay. At zero dimming the overlay retains its existing input interception; changing appearance does not enable the covered controls. Invalid or unavailable storage uses 80%.
 
 - `parseHistoryMacro` handles `recipeVersion: 2`, using history action IDs/ranges to resolve Undo/Redo and restore the relevant settings.
 - `parseLegacyMacroText` retains support for older recipes, including their UI-event folding and history behavior.
