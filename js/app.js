@@ -378,7 +378,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a', 'tornado'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -554,7 +554,7 @@ k: tileState.k,
         }
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'black_hole', 'vortex', 'turbine2'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'black_hole', 'vortex', 'turbine2', 'tornado'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral');
             spiralMode = state.spiralMethod;
             spiralRules.method = state.spiralMethod;
@@ -3689,8 +3689,8 @@ function cycleCymaticsMode(){
     if(activating)armSimulation('cymatics');
     const rules=getCymaticsRules(),current=rules.resonanceVersion??1;
     const first=CYMATICS_RESONANCE_MAPS.circular;
-    const cycle=['off',first,CYMATICS_RESONANCE_MAPS.interference,CYMATICS_RESONANCE_MAPS.diagonal,CYMATICS_RESONANCE_MAPS.grid,CYMATICS_RESONANCE_MAPS.cosmic];
-    // Clouds stays settings-only; entering the toolbar cycle starts with Circular.
+    const cycle=['off',first,CYMATICS_RESONANCE_MAPS.interference,CYMATICS_RESONANCE_MAPS.diagonal,CYMATICS_RESONANCE_MAPS.grid];
+    // Clouds and Cosmological empathy stay settings-only; the cycle starts with Circular.
     const next=activating?(cycle.includes(current)?first:current):(cycle.includes(current)?nextEvolutionMode(current,cycle):first);
     const selected=selectCymaticsMap(rules,next==='off'?first:next,cymaticsFrequencies,cymaticsStrengths);
     const running=isLifePlaying;
