@@ -2,6 +2,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
+    network: [
+        ['Living network','Colored tips grow from your drawing, branch and seek other patches. Busy threads thicken; weak threads recede. Sorting guides growth.'],
+        ['רשת חיה','חוטים בצבע המקור צומחים מהציור, מסתעפים ומתחברים. נתיבים פעילים מתעבים וחלשים נסוגים. המיון מכוון את הצמיחה.'],
+        ['Живая сеть','Цветные нити растут из рисунка и ветвятся. Активные связи утолщаются, слабые исчезают. Сортировка направляет рост.'],
+        ['Levend netwerk','Gekleurde draden groeien en vertakken vanuit je tekening. Actieve paden worden dikker, zwakke verdwijnen. Sortering stuurt de groei.']
+    ],
     oil: [
         ['Oil on water','Related pigments gather into droplets. Surface tension rounds their edges; sorting changes the groups and upward drift.'],
         ['שמן במים','גוונים קרובים מתכנסים לטיפות. מתח פנים מעגל את השוליים; המיון משנה את קבוצות הצבע ואת הציפה.'],

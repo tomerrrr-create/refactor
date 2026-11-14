@@ -2732,3 +2732,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .ink-settings-dialog .fluid-preset-card[aria-pressed="true"] strong { color:#f2d581; }
 
 .ink-settings-dialog .fluid-preset-card:last-child { grid-column:1 / -1; }
+
+#btnNetwork { display:none; touch-action:none !important; }
+#btnNetwork svg { stroke:var(--sim-color); }
+#btnNetwork.simulation-active svg { stroke:var(--gold); stroke-width:2; }
