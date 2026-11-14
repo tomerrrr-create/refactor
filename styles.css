@@ -2698,3 +2698,20 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     .macro-activity { transition: none; }
     #appContainer.macro-returning #controlsContainer { animation: none; }
 }
+
+.ink-settings-dialog { width: min(400px, calc(100vw - 32px)); }
+.ink-settings-dialog header { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.ink-settings-dialog h2 { margin:0; color:#e3c677; font-size:18px; }
+.ink-settings-dialog p { color:#b3b8af; line-height:1.6; font-size:13px; }
+.ink-settings-dialog .ink-setting-row { display:grid; text-align:start; grid-template-columns:1fr auto; gap:12px; margin:20px 0; color:#dcded7; }
+.ink-setting-row output { color:#d5aa48; font-variant-numeric:tabular-nums; }
+.ink-setting-row input { grid-column:1 / -1; width:100%; accent-color:#c2a14a; }
+.ink-settings-dialog button { min-height:40px; padding:8px 12px; border:1px solid #ffffff20; border-radius:9px; background:#282925; color:#deded5; font:inherit; font-size:13px; cursor:pointer; }
+.ink-settings-dialog button:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.ink-settings-dialog button[type=submit] { background:#d5b45d; color:#17160f; border-color:#d5b45d; font-weight:600; }
+.ink-settings-dialog button[data-reset] { margin-inline-end:auto; border-color:transparent; background:transparent; color:#b5b5aa; }
+.ink-settings-dialog footer { display:flex; justify-content:flex-end; gap:10px; margin-top:24px; }
+
+#btnInk { display:none; touch-action:none !important; }
+#btnInk svg { stroke:var(--sim-color); }
+#btnInk.simulation-active svg { stroke:var(--gold); stroke-width:2.5; }

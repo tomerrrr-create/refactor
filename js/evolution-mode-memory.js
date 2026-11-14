@@ -5,7 +5,7 @@ export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].in
 export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
     gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:'b',
     magnet:'magnet',brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
-    erosion:'channels',islands:'classic',contour:'all',cymatics:3,nudge:'nudgeBrighter',wind:'ripple'
+    ink:'flow',erosion:'channels',islands:'classic',contour:'all',cymatics:3,nudge:'nudgeBrighter',wind:'ripple'
 });
 export const defaultEvolutionCycleMode = simulation => DEFAULT_EVOLUTION_CYCLE_MODES[evolutionModeKey(simulation)];
 export function createEvolutionModeMemory({storage, blocked = () => false} = {}) {

@@ -2,6 +2,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
+    ink: [
+        ['Ink in fluid','Colors stretch and curl in a fluid flow. New drawing feeds the motion; sorting changes buoyancy and transport.'],
+        ['דיו בנוזל','הצבעים שבציור נמתחים ומסתחררים בזרימה. ציור חדש מניע את הנוזל; המיון משנה את הסחיפה והציפה.'],
+        ['Чернила в жидкости','Цвета рисунка растягиваются и закручиваются. Рисование питает течение; сортировка меняет движение.'],
+        ['Inkt in vloeistof','De kleuren rekken en wervelen. Tekenen voedt de stroming; sortering verandert het transport.']
+    ],
     islands: [
         ['Islands', 'Pixels copy a random neighbor’s color, gradually forming islands of color.'],
         ['איים', 'פיקסלים מעתיקים צבע משכן אקראי ויוצרים בהדרגה איים של צבע.'],

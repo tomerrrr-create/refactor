@@ -1,3 +1,4 @@
+import {INITIAL_INK_RULES,validateInkRules} from './simulations/ink.js';
 import {INITIAL_CYMATICS_RULES,migrateCymaticsPreferences,validateCymaticsFrequencies,validateCymaticsStrengths} from './cymatics-settings.js';
 import {validateEvolutionSlots} from './evolution-drawer-settings.js';
 import {validateContourActionRules} from './contour-action-settings.js';
@@ -39,6 +40,7 @@ function mergeKnown(defaults, overrides, path = '') {
         if (path === '' && key === 'cymaticsStrengths') { result[key]=validateCymaticsStrengths(value); continue; }
         if (path === '' && key === 'cymaticsFrequencies') { result[key]=validateCymaticsFrequencies(value); continue; }
         if (path === '' && key === 'evolutionSlots') { result[key] = validateEvolutionSlots(value); continue; }
+        if (path === 'rules' && key === 'ink') { result[key]=validateInkRules(value); continue; }
         if (path === 'rules' && key === 'cymatics') { result[key] = migrateCymaticsPreferences(value); continue; }
         if (path === 'brush' && key === 'shape') { result[key] = clone(value); continue; }
         // Optional extension; V1’s original baseline stays unchanged.
@@ -130,6 +132,7 @@ export function validateWorkspaceSettings(value) {
     if (r.contour.material && r.contour.material.enabled === DEFAULT_CRACKS_MATERIAL.enabled && r.contour.material.strength === DEFAULT_CRACKS_MATERIAL.strength) delete r.contour.material;
     if (r.contour.growth && equal(r.contour.growth, DEFAULT_CRACKS_GROWTH)) delete r.contour.growth;
     if(r.cymatics && equal(r.cymatics,INITIAL_CYMATICS_RULES))delete r.cymatics;
+    if(r.ink && equal(r.ink,INITIAL_INK_RULES))delete r.ink;
     return settings;
 }
 

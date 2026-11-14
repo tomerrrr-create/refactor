@@ -15,6 +15,7 @@ const simulations = {
     magnet: ['help_magnet', 'btnMagnetModes'], spiral: ['help_spiral', 'btnSpiral'],
     erosion: ['help_erosion', 'btnErosion'], dla: ['help_dla', 'btnDla'],
     turing: ['help_turing', 'btnTuring'], breathe: ['help_breathe', 'btnShowBreatheMenu'],
+    ink: ['help_ink','btnInk'],
     contour: ['help_contour', 'btnContour'], cymatics: ['help_cymatics', 'btnCymatics'],
     nudgeBrighter: ['help_nudge_forward', 'btnNudgeBrighter'], nudgeDarker: ['help_nudge_backward', 'btnNudgeBrighter']
 };

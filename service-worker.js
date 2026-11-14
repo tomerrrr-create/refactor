@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = 'f0a55c087ee08a4c0ec3';
+const VERSION = '4b056ca069e1404f080b';
 const ASSETS = [
     "./",
     "./index.html",
@@ -35,6 +35,7 @@ const ASSETS = [
     "./js/evolution-tuning.js",
     "./js/guide-ripples.js",
     "./js/i18n.js",
+    "./js/ink-settings-dialog.js",
     "./js/interface-zoom.js",
     "./js/macro-activity.js",
     "./js/macro-ending.js",
@@ -81,6 +82,7 @@ const ASSETS = [
     "./js/simulations/erosion.js",
     "./js/simulations/game_of_life.js",
     "./js/simulations/gravitational_sort.js",
+    "./js/simulations/ink.js",
     "./js/simulations/islands.js",
     "./js/simulations/magnet-combined-field.js",
     "./js/simulations/magnet-nearest-map.js",

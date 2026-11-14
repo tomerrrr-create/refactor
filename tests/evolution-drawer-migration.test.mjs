@@ -12,7 +12,7 @@ test('canonical customized layouts keep their exact positions across repeated lo
 test('legacy migrations remain complete and idempotent across arbitrary saved arrangements',()=>{
  let seed=17;
  for(let trial=0;trial<150;trial++){
-  const raw=[...Array(6).fill(null),...EVOLUTION_CATALOG.map(e=>e.id)];
+  const raw=[...Array(20-EVOLUTION_CATALOG.length).fill(null),...EVOLUTION_CATALOG.map(e=>e.id)];
   for(let i=19;i>0;i--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const j=seed%(i+1);[raw[i],raw[j]]=[raw[j],raw[i]];}
   const before=[...raw],result=validateEvolutionSlots(raw);
   assert.deepEqual(result.filter(Boolean).sort(),catalogue);assert(INTERNAL_NAV_SLOTS.every(i=>result[i]===null));
