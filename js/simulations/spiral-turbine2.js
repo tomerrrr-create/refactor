@@ -17,9 +17,11 @@ export function runTurbine2Generation(n,board,strength = .6) {
         const center=(n-1)/2,radius=new Float64Array(n*n),angle=new Float64Array(n*n);
         for(let i=0;i<n*n;i++){
             const y=Math.floor(i/n)-center,x=i%n-center;
-            radius[i]=Math.hypot(x,y);angle[i]=Math.atan2(y,x);
+            radius[i]=Math.hypot(x,y);
+            // Preserve the original left-to-right Float64 arithmetic.
+            angle[i]=(Math.atan2(y,x)+.10)+2/Math.max(radius[i],1);
         }
-        geometry={n,center,radius,angle,order:new Int32Array(n*n),moved:new Uint8Array(n*n)};
+        geometry={n,center,radius,angle,order:new Int32Array(n*n),moved:new Uint8Array(n*n),rowSines:new Float64Array(n),columnCosines:new Float64Array(n)};
     }
     const {center,radius,angle,order,moved}=geometry;
     moved.fill(0);
@@ -30,11 +32,16 @@ export function runTurbine2Generation(n,board,strength = .6) {
         const j=Math.floor(Math.random()*(i+1)),saved=order[i];order[i]=order[j];order[j]=saved;
     }
     const phase=Date.now()*.00015;
+    // Time still advances once per generation, after the unchanged shuffle.
+    // Each wave depends on one coordinate, so compute it once per row/column.
+    const {rowSines,columnCosines}=geometry;
+    for(let row=0;row<n;row++)rowSines[row]=Math.sin(row*.03+phase);
+    for(let col=0;col<n;col++)columnCosines[col]=Math.cos(col*.03-phase);
     for(const i of order){
         if(moved[i]||board[i].isGold||radius[i]===0)continue;
         const row=Math.floor(i/n),col=i%n,r=radius[i];
-        const eddy=Math.sin(row*.03+phase)*Math.cos(col*.03-phase);
-        const targetRadius=Math.max(0,r-.8+eddy*.25),targetAngle=angle[i]+.10+2/Math.max(r,1)+eddy*.06;
+        const eddy=rowSines[row]*columnCosines[col];
+        const targetRadius=Math.max(0,r-.8+eddy*.25),targetAngle=angle[i]+eddy*.06;
         const targetR=Math.max(0,Math.min(n-1,center+targetRadius*Math.sin(targetAngle)));
         const targetC=Math.max(0,Math.min(n-1,center+targetRadius*Math.cos(targetAngle)));
         const {dr,dc}=turbine2Direction(targetC-col,targetR-row,Math.random());
