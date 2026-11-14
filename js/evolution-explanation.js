@@ -2,6 +2,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
+    droplets: [
+        ['Oil droplets','Flow carries cohesive drops; surface tension rounds them and joins touching drops. Drawing feeds oil; sorting changes drift.'],
+        ['טיפות שמן','הזרימה מסיעה טיפות שלמות; מתח הפנים מעגל וממזג אותן במגע. ציור מוסיף שמן והמיון משפיע על הסחיפה.'],
+        ['Масляные капли','Поток переносит капли, натяжение округляет и соединяет их. Рисование добавляет масло, сортировка меняет дрейф.'],
+        ['Oliedruppels','Stroming vervoert druppels; oppervlaktespanning rondt ze af en voegt ze samen. Tekenen voegt olie toe; sortering stuurt drift.']
+    ],
     network: [
         ['Living network','Colored tips grow from your drawing, branch and seek other patches. Busy threads thicken; weak threads recede. Sorting guides growth.'],
         ['רשת חיה','חוטים בצבע המקור צומחים מהציור, מסתעפים ומתחברים. נתיבים פעילים מתעבים וחלשים נסוגים. המיון מכוון את הצמיחה.'],

@@ -1,3 +1,4 @@
+import {validateDropletsRules} from '../js/simulations/droplets.js';
 import {validateNetworkRules} from '../js/simulations/network.js';
 import {validateOilRules} from '../js/simulations/oil.js';
 import {validateInkRules} from '../js/simulations/ink.js';
@@ -15,7 +16,7 @@ const source = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const apply = source.slice(source.indexOf('function applyWorkspacePreferences('), source.indexOf('function captureProfileSettings('));
 function harness() {
     const noop = () => {};
-    const context = vm.createContext({validateNetworkRules,validateOilRules,validateInkRules,
+    const context = vm.createContext({validateDropletsRules,validateNetworkRules,validateOilRules,validateInkRules,
         validateContourActionRules, INITIAL_CYMATICS_RULES, validateCymaticsRules, createCymaticsFrequencies, rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength, INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],
