@@ -30,25 +30,25 @@ try{
   await page.goto(base);await page.waitForFunction(()=>window.spiralTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   await page.evaluate(()=>spiralTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
-  const modes=['b','left','radial','down','a','tornado'],icons=['iconSpiralB','iconSpiralLeft','iconSpiralRadial','iconSpiralDown','iconSpiralA','iconSpiralTornado'];
+  const modes=['b','left','radial','down','a'],icons=['iconSpiralB','iconSpiralLeft','iconSpiralRadial','iconSpiralDown','iconSpiralA'];
   const before=(await state()).tiles;
   for(const [i,mode] of [...modes,'off'].entries()){await tap('#btnSpiral');assert.equal((await state()).mode,mode);assert.deepEqual((await state()).tiles,before);assert.deepEqual(await page.locator('#btnSpiral svg').evaluateAll(ns=>ns.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id)),[icons[i]||'iconSpiralB']);}
   const open=async()=>{await page.evaluate(()=>spiralTest.open());await page.waitForTimeout(350);};
   const choose=async(method,save=true)=>{await open();await tap('.spiral-method-btn[data-method="'+method+'"]');await tap(save?'#btnSpiralSettingsSave':'#btnSpiralSettingsCancel');await page.waitForTimeout(350);};
-  await tap('#btnSpiral');await open();assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),modes);assert.equal(await page.locator('.spiral-method-btn[data-method="vortex"]').count(),0);await page.screenshot({path:path.join(artifacts,config.lang+'-settings.png')});await tap('#btnSpiralSettingsCancel');await page.waitForTimeout(350);
-  await choose('a',false);assert.equal((await state()).mode,'b');await choose('a');assert.equal((await state()).mode,'a');await tap('#btnSpiral');assert.equal((await state()).mode,'tornado');await tap('#btnSpiral');assert.equal((await state()).mode,'off');
+  await tap('#btnSpiral');await open();assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),[...modes,'tornado']);assert.equal(await page.locator('.spiral-method-btn[data-method="vortex"]').count(),0);await page.screenshot({path:path.join(artifacts,config.lang+'-settings.png')});await tap('#btnSpiralSettingsCancel');await page.waitForTimeout(350);
+  await choose('a',false);assert.equal((await state()).mode,'b');await choose('a');assert.equal((await state()).mode,'a');await tap('#btnSpiral');assert.equal((await state()).mode,'off');
   await page.evaluate(()=>spiralTest.setup());
   for(const method of modes){await tap('#btnSpiral');assert.equal((await state()).mode,method);await tap('#btnStepForward');}
   const after=(await state()).tiles,recipe=(await state()).logs.join('\n');assert.notDeepEqual(after,before);
   for(const method of modes){assert(recipe.includes('Spiral Mode Changed -> '+method));assert(recipe.includes('"method":"'+method+'"'));}
-  assert.deepEqual(await replay(page,recipe),after,'new logger-to-player steps retain the six modes');
-  const project=await page.evaluate(()=>spiralTest.project());assert.equal(project.spiralMethod,'tornado');await choose('radial');await page.evaluate(p=>spiralTest.restore(p),project);assert.equal((await state()).mode,'tornado');
+  assert.deepEqual(await replay(page,recipe),after,'new logger-to-player steps retain the five cycle modes');
+  await choose('tornado');const project=await page.evaluate(()=>spiralTest.project());assert.equal(project.spiralMethod,'tornado');await choose('radial');await page.evaluate(p=>spiralTest.restore(p),project);assert.equal((await state()).mode,'tornado');
   await choose('tornado');const undoBefore=(await state()).tiles;await tap('#btnStepForward');const undoAfter=(await state()).tiles;await tap('#btnUndo');assert.deepEqual((await state()).tiles,undoBefore);await tap('#btnRedo');assert.deepEqual((await state()).tiles,undoAfter);assert.deepEqual(await replay(page,(await state()).logs.join('\n')),undoAfter,'Tornado Undo/Redo checkpoints replay exactly');
   if(baseline)for(const method of Object.keys(oldBoards))assert.deepEqual(await replay(page,recipeFor(method)),oldBoards[method],'pre-change recipe still plays '+method);
   await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await tap('#btnPlayPauseLife');await page.waitForFunction(()=>spiralTest.state().gen>=2);
-  for(const mode of ['left','radial','down','a','tornado','b']){const gen=(await state()).gen;await tap('#btnSpiral');const s=await state();assert.equal(s.mode,mode);assert(s.playing);assert(s.gen>=gen);}
+  for(const mode of ['left','radial','down','a','b']){const gen=(await state()).gen;await tap('#btnSpiral');const s=await state();assert.equal(s.mode,mode);assert(s.playing);assert(s.gen>=gen);}
   await choose('tornado');assert((await state()).playing);await tap('#btnSpiral');assert.equal((await state()).mode,'b');await tap('#btnPlayPauseLife');
-  const live=(await state()).logs.join('\n');for(const mode of ['left','radial','down','a','tornado','b'])assert(live.split('\n').some(l=>/\[GEN:\d+\]/.test(l)&&l.endsWith('Spiral Mode Changed -> '+mode)));const liveFinal=(await state()).tiles;assert.deepEqual(await replay(page,live),liveFinal,'live cycle log replays under controlled random/time');
+  const live=(await state()).logs.join('\n');for(const mode of ['left','radial','down','a','b'])assert(live.split('\n').some(l=>/\[GEN:\d+\]/.test(l)&&l.endsWith('Spiral Mode Changed -> '+mode)));const liveFinal=(await state()).tiles;assert.deepEqual(await replay(page,live),liveFinal,'live cycle log replays under controlled random/time');
   // Current sort remaps remain recordable and replayable in Tornado.
   await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await choose('tornado');await tap('#btnStepForward');await tap('#btnCycleSort');await tap('#btnStepForward');
   const sorted=(await state()).tiles;assert.deepEqual(await replay(page,(await state()).logs.join('\n')),sorted,'Tornado follows recorded sorting changes');
