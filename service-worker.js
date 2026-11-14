@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '4b056ca069e1404f080b';
+const VERSION = '13371c6ed57d7645cb97';
 const ASSETS = [
     "./",
     "./index.html",
@@ -43,6 +43,7 @@ const ASSETS = [
     "./js/macro-palette-context.js",
     "./js/magnet-anchor-limit.js",
     "./js/magnet-anchor.js",
+    "./js/oil-settings-dialog.js",
     "./js/palette-color-transition.js",
     "./js/palette-display-names.js",
     "./js/palette-group-transition.js",
@@ -87,6 +88,7 @@ const ASSETS = [
     "./js/simulations/magnet-combined-field.js",
     "./js/simulations/magnet-nearest-map.js",
     "./js/simulations/magnet.js",
+    "./js/simulations/oil.js",
     "./js/simulations/spiral-tornado-flow.js",
     "./js/simulations/spiral-tornado-legacy.js",
     "./js/simulations/spiral-tornado.js",

@@ -934,7 +934,7 @@ function populateHelpModal() {
         order: { tab: 'creation', titleKey: 'help_category_order', buttons: ['btnCycleSort', 'btnResizeUp', 'btnGap', 'btnDark'] },
         touch: { tab: 'creation', titleKey: 'help_category_touch', buttons: ['btnBrushMode', 'btnSymmetry', 'btnColorPicker'] },
         controls: { tab: 'evolution', titleKey: 'help_category_controls', buttons: ['btnToggleSimMode', 'btnPlayPauseLife', 'btnStepForward', 'btnWind'] },
-        evolution: { tab: 'evolution', titleKey: 'help_category_evolution_modes', buttons: ['btnInk','btnCymatics', 'btnIslands', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter'] },
+        evolution: { tab: 'evolution', titleKey: 'help_category_evolution_modes', buttons: ['btnOil','btnInk','btnCymatics', 'btnIslands', 'btnShowBreatheMenu', 'btnGameOfLife', 'btnBrightnessEvo', 'btnGravitationalSort', 'btnSpiral', 'btnMagnetModes', 'btnContour', 'btnSandpile', 'btnTuring', 'btnErosion', 'btnDla', 'btnNudgeBrighter'] },
         advanced: { tab: 'tools', titleKey: 'help_category_advanced', buttons: ['btnOpenDebug'] },
         tools: { tab: 'tools', titleKey: 'help_category_tools', buttons: ['btnContoursAction', 'btnUndo', 'btnRedo', 'btnSave', 'btnMacroPlay', 'btnResetBoard'] }
     };
@@ -944,7 +944,7 @@ function populateHelpModal() {
         btnCycleSort: app.getText('help_sort'), btnSpiral: app.getText('help_spiral'), btnMagnetModes: app.getText('help_magnet'),
         btnContour: app.getText('help_contour'), btnContoursAction: app.getText('help_contour_action'), btnSandpile: app.getText('help_sandpile'), btnTuring: app.getText('help_turing'),
         btnNudgeBrighter: app.getText('help_nudge'), btnNudgeDarker: app.getText('help_nudge_backward'),
-        btnInk:app.getText('help_ink'), btnCymatics:app.getText('help_cymatics'), btnStepForward: app.getText('help_step'), btnIslands: app.getText('help_islands'),
+        btnOil:app.getText('help_oil'), btnInk:app.getText('help_ink'), btnCymatics:app.getText('help_cymatics'), btnStepForward: app.getText('help_step'), btnIslands: app.getText('help_islands'),
         btnMacroPlay: app.getText('help_macro'), btnOpenDebug: app.getText('help_technicians'),
         'btnPalette': app.getText('help_palette'), 'btnRandom': app.getText('help_random'), 'btnInvert': app.getText('help_invert'),
         'btnSpecialReset': app.getText('help_specialReset'), 'btnResizeUp': app.getText('help_resizeUp'), 'btnResizeDown': app.getText('help_resizeDown'),

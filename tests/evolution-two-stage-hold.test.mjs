@@ -30,7 +30,7 @@ for(const type of ['mouse','touch']){
  });
 }
 test('defaults describe first cycle choices, with Nudge directions sharing one default',()=>{
- assert.equal(Object.keys(DEFAULT_EVOLUTION_CYCLE_MODES).length,15);
+ assert.equal(Object.keys(DEFAULT_EVOLUTION_CYCLE_MODES).length,16);
  assert.equal(defaultEvolutionCycleMode('gravitationalSort'),'up');assert.equal(defaultEvolutionCycleMode('cymatics'),3);
  assert.equal(defaultEvolutionCycleMode('nudgeDarker'),'nudgeBrighter');assert.equal(defaultEvolutionCycleMode('turing'),undefined);
 });

@@ -1,3 +1,4 @@
+import {validateOilRules} from '../js/simulations/oil.js';
 import {validateInkRules} from '../js/simulations/ink.js';
 import {validateContourActionRules} from '../js/contour-action-settings.js';
 import {INITIAL_CYMATICS_RULES,validateCymaticsRules,validateCymaticsFrequencies,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,validateCymaticsStrengths,selectCymaticsMap} from '../js/cymatics-settings.js';
@@ -13,7 +14,7 @@ const source = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const apply = source.slice(source.indexOf('function applyWorkspacePreferences('), source.indexOf('function captureProfileSettings('));
 function harness() {
     const noop = () => {};
-    const context = vm.createContext({validateInkRules,
+    const context = vm.createContext({validateOilRules,validateInkRules,
         validateContourActionRules, INITIAL_CYMATICS_RULES, validateCymaticsRules, createCymaticsFrequencies, rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength, INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],

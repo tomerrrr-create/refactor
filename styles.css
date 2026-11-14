@@ -2715,3 +2715,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnInk { display:none; touch-action:none !important; }
 #btnInk svg { stroke:var(--sim-color); }
 #btnInk.simulation-active svg { stroke:var(--gold); stroke-width:2.5; }
+
+#btnOil { display:none; touch-action:none !important; }
+#btnOil svg { stroke:var(--sim-color); }
+#btnOil.simulation-active svg { stroke:var(--gold); stroke-width:2.2; }

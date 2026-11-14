@@ -8,7 +8,7 @@ const complete=slots=>{assert.deepEqual(ids(slots),EVOLUTION_CATALOG.map(e=>e.id
 test('permanent drawers reserve bottom center and retain the approved default order',()=>{
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,20);
  assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['cymatics','sandpile','gameOfLife','brightnessEvo','islands','nudgeBrighter','magnet',null,'gravitationalSort','erosion']);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),[null,'spiral','breathe','dla',null,'ink','turing',null,'contour',null]);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),[null,'spiral','breathe','dla',null,'ink','turing',null,'contour','oil']);
  complete(DEFAULT_EVOLUTION_LAYOUT);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
  for(const lang of ['en','he','ru','nl'])assert(translations.drawer_navigation_slot[lang]);
@@ -22,8 +22,8 @@ test('legacy ten-place layouts migrate without losing controls or mutating the i
 test('arranging occupied and empty places preserves every simulation and protects navigation',()=>{
  const original=[...DEFAULT_EVOLUTION_LAYOUT],swap=moveEvolutionSlot(original,0,13);
  assert.equal(swap[0],'dla');assert.equal(swap[13],'cymatics');
- const moved=moveEvolutionSlot(swap,13,19);assert.equal(moved[13],null);assert.equal(moved[19],'cymatics');complete(moved);
- assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,19,19),moved);
+ const moved=moveEvolutionSlot(swap,13,14);assert.equal(moved[13],null);assert.equal(moved[14],'cymatics');complete(moved);
+ assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,14,14),moved);
  assert.deepEqual(assignEvolutionSlot(original,19,'cymatics'),moveEvolutionSlot(original,0,19));
  for(const [from,to] of [[-1,0],[0,20],[.5,0],[14,0],[0,7],[0,17],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
  for(const reserved of INTERNAL_NAV_SLOTS)assert.throws(()=>assignEvolutionSlot(original,reserved,'dla'));

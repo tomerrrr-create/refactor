@@ -2,6 +2,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
+    oil: [
+        ['Oil on water','Related pigments gather into droplets. Surface tension rounds their edges; sorting changes the groups and upward drift.'],
+        ['שמן במים','גוונים קרובים מתכנסים לטיפות. מתח פנים מעגל את השוליים; המיון משנה את קבוצות הצבע ואת הציפה.'],
+        ['Масло в воде','Близкие цвета собираются в капли. Натяжение округляет края; сортировка меняет группы и плавучесть.'],
+        ['Olie op water','Verwante kleuren vormen druppels. Oppervlaktespanning rondt de randen af; sortering verandert de groepen en opwaartse drift.']
+    ],
     ink: [
         ['Ink in fluid','Colors stretch and curl in a fluid flow. New drawing feeds the motion; sorting changes buoyancy and transport.'],
         ['דיו בנוזל','הצבעים שבציור נמתחים ומסתחררים בזרימה. ציור חדש מניע את הנוזל; המיון משנה את הסחיפה והציפה.'],
