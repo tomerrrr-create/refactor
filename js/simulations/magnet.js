@@ -1,3 +1,5 @@
+import { runCombinedMagnetGeneration, resetCombinedMagnetField } from './magnet-combined-field.js';
+import { recordedMagnetCombinedField } from '../magnet-anchor-limit.js';
 import { createMagnetNearestMap } from './magnet-nearest-map.js';
 import { magnetAnchorIndex } from '../magnet-anchor.js';
 
@@ -63,7 +65,7 @@ function anchorOffset(k, anchor, length) {
     return offset < 0 ? offset + length : offset;
 }
 
-export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette, anchorLimit: limitOverride }) {
+export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette, anchorLimit: limitOverride, combinedField: fieldOverride }) {
 
     const nextBoardState = currentBoardState; // Preserve in-place swap order.
     const method = magnetRules.method || 'magnet';
@@ -150,6 +152,11 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
   const targetColorIndex = cachedAnchorFallback.targetColorIndex; 
   const targetShiftedK = cachedAnchorFallback.targetShiftedK; 
   // ==============================================================
+
+    if (fieldOverride ?? recordedMagnetCombinedField(magnetRules)) {
+        return runCombinedMagnetGeneration({n, board:nextBoardState, method, target:targetColorIndex,
+            anchor:anchorIndex, paletteLength:pLen, moved:cachedMovedThisFrame});
+    }
 
     switch (method) {
         case 'magnet': {
@@ -745,5 +752,6 @@ export function resetMagnetCaches() {
         cachedAnchors.length = 0;
     }
     nearestAnchorMap.clear();
+    resetCombinedMagnetField();
     cachedAnchorFallback = null; // מנקה את הזיכרון כשהמגנט עוצר או משנה מצב
 }

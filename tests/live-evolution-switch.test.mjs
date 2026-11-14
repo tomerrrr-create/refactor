@@ -45,7 +45,7 @@ function harness() {
         'updateBreatheEvoButtonUI','updateGravitationalSortButtonUI','updateSpiralButtonUI','updateMagnetButtonUI',
         'updateGameOfLifeButtonUI','updateChiFlowButtonUI','updateIslandsButtonUI','updateNudgeButtonUI']) c[name] = () => {};
     c.gameLoop = () => { c.currentGenerationCount++; c.animationFrameId = c.requestAnimationFrame(c.gameLoop); };
-    vm.runInContext(section('function effectiveMagnetAnchorLimit()', 'let chiFlowRules ='), c);
+    vm.runInContext(section('let magnetCombinedField =', 'let chiFlowRules ='), c);
     vm.runInContext(section('window.logArtEvent = function', '// ------------------------------------------'), c);
     vm.runInContext(section('function pauseLife()', 'function getRandomGridPosition('), c);
     vm.runInContext(section('function handleEvolutionTap(', 'function setBrushMode('), c);

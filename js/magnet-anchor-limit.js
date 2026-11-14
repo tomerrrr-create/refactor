@@ -11,10 +11,18 @@ export function recordedMagnetAnchorLimit(rules) {
     return rules?.anchorLimit === undefined ? DEFAULT_MAGNET_ANCHOR_LIMIT : validateMagnetAnchorLimit(rules.anchorLimit);
 }
 
-export function magnetRecordingRules(rules, limit) {
+export const COMBINED_MAGNET_FIELD = 'combined-v1';
+export function recordedMagnetCombinedField(rules) {
+    if (rules?.fieldModel === undefined) return false;
+    if (rules.fieldModel !== COMBINED_MAGNET_FIELD) throw new Error('Invalid Magnet field model');
+    return true;
+}
+
+export function magnetRecordingRules(rules, limit, combinedField = false) {
     validateMagnetAnchorLimit(limit);
     // An older injected rule must not leak into profile preferences or override
     // the session/replay selection. Legacy 300 recordings keep their payload.
-    const { anchorLimit, ...recorded } = rules;
+    const { anchorLimit, fieldModel, ...recorded } = rules;
+    if (combinedField) recorded.fieldModel = COMBINED_MAGNET_FIELD;
     return limit === DEFAULT_MAGNET_ANCHOR_LIMIT ? recorded : { ...recorded, anchorLimit: limit };
 }

@@ -109,6 +109,8 @@ export const translations = {
   magnet_method_cosmic_magnet: {en:'Cosmic',he:'קוסמי',ru:'Космический',nl:'Kosmisch'},
   magnet_method_time_magnet: {en:'Time',he:'זמן',ru:'Временной',nl:'Tijd'},
   magnet_method_expand: {en:'Expand',he:'התרחבות',ru:'Расширение',nl:'Uitbreiden'},
+  magnet_combined_field: { en: 'Combined field · experiment', he: 'שדה משולב · ניסוי', ru: 'Общее поле · эксперимент', nl: 'Gecombineerd veld · experiment' },
+  magnet_combined_field_note: { en: 'All anchors contribute. Session only; sample limit applies when off.', he: 'כל העוגנים משפיעים יחד. לפתיחה הנוכחית בלבד; מגבלת הדגימה חלה כשהניסוי כבוי.', ru: 'Все якоря влияют вместе. Только этот сеанс; лимит выборки действует при выключении.', nl: 'Alle ankers werken samen. Alleen deze sessie; de steekproeflimiet geldt als dit uit staat.' },
   magnet_anchor_limit: { en: 'Anchor points', he: 'נקודות עוגן', ru: 'Точки якоря', nl: 'Ankerpunten' },
   magnet_anchor_limit_note: { en: 'For this session only. Macros use their recorded limit; older macros use 300.', he: 'לפתיחה הנוכחית בלבד. מאקרו משתמש במגבלה שהוקלטה; מאקרו ישן משתמש ב־300.', ru: 'Только для текущего сеанса. Макросы используют записанный лимит; старые — 300.', nl: 'Alleen voor deze sessie. Macro’s gebruiken hun opgenomen limiet; oudere macro’s gebruiken 300.' },
   magnet_anchor_luminance: { en: 'Anchor: darkest by Luminance', he: 'עוגן: הכהה ביותר לפי Luminance', ru: 'Якорь: самый тёмный по яркости', nl: 'Anker: donkerste volgens luminantie' },
