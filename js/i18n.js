@@ -109,6 +109,8 @@ export const translations = {
   magnet_method_cosmic_magnet: {en:'Cosmic',he:'קוסמי',ru:'Космический',nl:'Kosmisch'},
   magnet_method_time_magnet: {en:'Time',he:'זמן',ru:'Временной',nl:'Tijd'},
   magnet_method_expand: {en:'Expand',he:'התרחבות',ru:'Расширение',nl:'Uitbreiden'},
+  fluid_presets: {en:'Presets',he:'פריסטים',ru:'Предустановки',nl:'Voorinstellingen'},
+  fluid_preset_custom: {en:'Custom',he:'מותאם אישית',ru:'Свои настройки',nl:'Aangepast'},
   help_oil: {en:'Oil on water',he:'שמן במים',ru:'Масло в воде',nl:'Olie op water'},
   oil_description: {en:'Paint droplets into the board. Related palette ranks gather; sorting changes their groups and drift.',he:'צייר כתמים על הלוח. גוונים קרובים במיון מתכנסים; שינוי המיון משנה את הקבוצות והציפה.',ru:'Рисуйте капли. Близкие цвета собираются; сортировка меняет группы и плавучесть.',nl:'Teken druppels. Nabije kleuren verzamelen; sortering verandert de groepen en drift.'},
   oil_tension: {en:'Surface tension',he:'מתח פנים',ru:'Поверхностное натяжение',nl:'Oppervlaktespanning'},
