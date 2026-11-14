@@ -1,4 +1,4 @@
-import {INITIAL_NETWORK_RULES,validateNetworkRules} from './simulations/network.js';
+import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules} from './simulations/network.js';
 import {INITIAL_OIL_RULES,validateOilRules} from './simulations/oil.js';
 import {INITIAL_INK_RULES,validateInkRules} from './simulations/ink.js';
 import {INITIAL_CYMATICS_RULES,migrateCymaticsPreferences,validateCymaticsFrequencies,validateCymaticsStrengths} from './cymatics-settings.js';
@@ -138,7 +138,7 @@ export function validateWorkspaceSettings(value) {
     if(r.cymatics && equal(r.cymatics,INITIAL_CYMATICS_RULES))delete r.cymatics;
     if(r.ink && equal(r.ink,INITIAL_INK_RULES))delete r.ink;
     if(r.oil && equal(r.oil,INITIAL_OIL_RULES))delete r.oil;
-    if(r.network && equal(r.network,INITIAL_NETWORK_RULES))delete r.network;
+    if(r.network && equal(r.network,DEFAULT_NETWORK_PREFERENCES))delete r.network;
     return settings;
 }
 

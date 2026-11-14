@@ -1,4 +1,4 @@
-import {INITIAL_NETWORK_RULES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
+import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
 import {createOilSettingsDialog} from './oil-settings-dialog.js';
@@ -73,7 +73,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let islandsSession = null;
       let inkState=null,inkRules={...INITIAL_INK_RULES},replayInkRules=null,inkSettingsUI=null;
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null,oilSettingsUI=null;
-      let networkState=null,networkRules={...INITIAL_NETWORK_RULES},replayNetworkRules=null,networkSettingsUI=null;
+      let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
       let evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
       
@@ -2350,7 +2350,7 @@ if (simulationName === 'magnet') {
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules, lineColor:'brush' }, turing: { ...turingRules },
                 ...(JSON.stringify(inkRules)===JSON.stringify(INITIAL_INK_RULES)?{}:{ink:{...inkRules}}),
                 ...(JSON.stringify(oilRules)===JSON.stringify(INITIAL_OIL_RULES)?{}:{oil:{...oilRules}}),
-                ...(JSON.stringify(networkRules)===JSON.stringify(INITIAL_NETWORK_RULES)?{}:{network:{...networkRules}}),
+                ...(JSON.stringify(networkRules)===JSON.stringify(DEFAULT_NETWORK_PREFERENCES)?{}:{network:{...networkRules}}),
                 ...(JSON.stringify(cymaticsRules)===JSON.stringify(INITIAL_CYMATICS_RULES)?{}:{cymatics:{...cymaticsRules}}) }
         };
       }
@@ -2380,7 +2380,7 @@ if (simulationName === 'magnet') {
         turingRules = { ...settings.rules.turing };
         inkRules=validateInkRules(settings.rules.ink);
         oilRules=validateOilRules(settings.rules.oil);
-        networkRules=validateNetworkRules(settings.rules.network);
+        networkRules=validateNetworkRules(settings.rules.network??DEFAULT_NETWORK_PREFERENCES);
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
         if(settings.rules.cymatics===undefined){
             cymaticsFrequencies=createCymaticsFrequencies(undefined,settings.cymaticsFrequencies);

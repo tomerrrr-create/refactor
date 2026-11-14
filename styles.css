@@ -2746,3 +2746,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .network-settings-dialog .network-background-options button[aria-pressed="true"] { border-color:#d5b45d; background:#39331f; }
 .network-background-options button[aria-pressed="true"] strong { color:#f1d582; }
 .network-background-options button[aria-pressed="true"]::after { background:#d5b45d; border-color:#d5b45d; box-shadow:inset 0 0 0 3px #39331f; }
+
+#btnInk svg, #btnOil svg { color:var(--sim-color); }
+#btnInk.simulation-active svg, #btnOil.simulation-active svg { color:var(--gold); }
+.ink-settings-dialog h2:has(.fluid-original-symbol) { display:flex; align-items:center; gap:9px; }
+.fluid-original-symbol { display:inline-flex; flex:none; color:#e3c677; }
+.fluid-original-symbol svg { width:24px; height:24px; }

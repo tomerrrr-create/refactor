@@ -1,3 +1,4 @@
+import {setFluidExperimentTitle} from './fluid-experiment-icons.js';
 import {createFluidPresetPicker} from './fluid-presets.js';
 import {INITIAL_INK_RULES,validateInkRules} from './simulations/ink.js';
 export function createInkSettingsDialog({getRules,saveRules,getText,getLang,onLanguageChange}){
@@ -12,7 +13,7 @@ export function createInkSettingsDialog({getRules,saveRules,getText,getLang,onLa
  }});
  dialog.querySelector('[data-ink-controls]').before(presets.element);
  function render(){
-  dialog.dir=getLang()==='he'?'rtl':'ltr';dialog.querySelector('h2').textContent=getText('help_ink');dialog.querySelector('[data-description]').textContent=getText('ink_description');dialog.querySelector('[data-close]').setAttribute('aria-label',getText('saveModal_close'));
+  dialog.dir=getLang()==='he'?'rtl':'ltr';setFluidExperimentTitle(dialog.querySelector('h2'),'ink',getText('help_ink'));dialog.querySelector('[data-description]').textContent=getText('ink_description');dialog.querySelector('[data-close]').setAttribute('aria-label',getText('saveModal_close'));
   dialog.querySelector('[data-reset]').textContent=getText('evolution_reset_default');dialog.querySelector('[data-cancel]').textContent=getText('gs_modal_cancel');dialog.querySelector('[type=submit]').textContent=getText('gs_modal_save_close');
   presets.render();
   const controls=dialog.querySelector('[data-ink-controls]');controls.replaceChildren();

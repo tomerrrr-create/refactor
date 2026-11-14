@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {INITIAL_NETWORK_RULES,validateNetworkRules,createNetworkState,restoreNetworkState,runNetworkGeneration} from '../js/simulations/network.js';
+import {DEFAULT_NETWORK_PREFERENCES,INITIAL_NETWORK_RULES,validateNetworkRules,createNetworkState,restoreNetworkState,runNetworkGeneration} from '../js/simulations/network.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 const palette=['#ffffff','#000000','#777777','#ff9933'];
 const make=()=>Array.from({length:81},(_,i)=>({k:i<6?i%2:2,v:i<6?i%2:2,isGold:false}));
@@ -18,7 +18,7 @@ test('calculated background stays fixed until reselected, then recomputes',()=>{
 });
 test('background rules preserve legacy defaults and profile/snapshot validation',()=>{
  assert.deepEqual(validateNetworkRules({backgroundMode:'auto'}),INITIAL_NETWORK_RULES);
- for(const mode of ['first','luminance']){const settings=defaultWorkspaceSettings();settings.rules.network={...INITIAL_NETWORK_RULES,backgroundMode:mode};assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.network.backgroundMode,mode);}
+ for(const mode of ['first','luminance']){const settings=defaultWorkspaceSettings();settings.rules.network={...INITIAL_NETWORK_RULES,backgroundMode:mode};assert.equal((deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.network??DEFAULT_NETWORK_PREFERENCES).backgroundMode,mode);}
  for(const bad of ['darkest',null,3]){assert.throws(()=>validateNetworkRules({backgroundMode:bad}));assert.throws(()=>restoreNetworkState({...createNetworkState(9),backgroundMode:bad}));}
 });
 test('forced background checkpoints continue exactly through painting and sorting',()=>{
@@ -27,4 +27,10 @@ test('forced background checkpoints continue exactly through painting and sortin
   const advance=(board,state)=>{let pal=palette;for(let f=0;f<30;f++){if(f===4)board[40].k=board[40].v=3;if(f===10){pal=[...palette].reverse();board.forEach(t=>t.k=t.v=pal.indexOf(palette[t.k]));}step(board,state,mode,pal,65);}return {board,state};};
   assert.deepEqual(advance(board,state),advance(saved.board,restoreNetworkState(saved.state)));
  }
+});
+
+test('new Network UI defaults use first, while legacy and explicit calculated rules remain calculated',()=>{
+ assert.equal(DEFAULT_NETWORK_PREFERENCES.backgroundMode,'first');assert.deepEqual(validateNetworkRules(INITIAL_NETWORK_RULES),INITIAL_NETWORK_RULES);
+ const settings=defaultWorkspaceSettings();settings.rules.network={...INITIAL_NETWORK_RULES};const imported=deserializeWorkspaceSettings(serializeWorkspaceSettings(settings));assert.deepEqual(imported.rules.network,INITIAL_NETWORK_RULES);
+ assert(!Object.hasOwn(defaultWorkspaceSettings().rules,'network'),'V1 factory baseline is unchanged');
 });
