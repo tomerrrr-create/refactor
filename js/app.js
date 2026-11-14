@@ -1,4 +1,4 @@
-import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, magnetRecordingRules } from './magnet-anchor-limit.js';
+import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
 import {createEvolutionModeMemory,defaultEvolutionCycleMode} from './evolution-mode-memory.js';
 import { createMacroActivity } from './macro-activity.js';
@@ -317,8 +317,11 @@ let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
 let magnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT;
 let replayMagnetAnchorLimit = null;
+let magnetCombinedField = false;
+let replayMagnetCombinedField = null;
+function effectiveMagnetCombinedField() { return replayMagnetCombinedField ?? magnetCombinedField; }
 function effectiveMagnetAnchorLimit() { return replayMagnetAnchorLimit ?? magnetAnchorLimit; }
-function getMagnetRecordingRules() { return magnetRecordingRules(magnetRules, effectiveMagnetAnchorLimit()); }
+function getMagnetRecordingRules() { return magnetRecordingRules(magnetRules, effectiveMagnetAnchorLimit(), effectiveMagnetCombinedField()); }
 let chiFlowRules = cloneChiFlowRules(C.defaultChiFlowRules);
 let personalChiFlowRules = cloneChiFlowRules(chiFlowRules);
 let chiFlowMode = 'personal';
@@ -1412,7 +1415,7 @@ case 'spiral':
                 boardState = nextState; 
                 break;
 case 'magnet': 
-    nextState = Simulations.runMagnetGeneration({ ...context, magnetRules, anchorLimit: effectiveMagnetAnchorLimit(), originalPalette: C.PALETTES[activePaletteIndex].originalColors });
+    nextState = Simulations.runMagnetGeneration({ ...context, magnetRules, anchorLimit: effectiveMagnetAnchorLimit(), combinedField: effectiveMagnetCombinedField(), originalPalette: C.PALETTES[activePaletteIndex].originalColors });
     boardState = nextState; 
     break;
 
@@ -1553,7 +1556,7 @@ case 'spiral':
 
 
 case 'magnet': 
-    boardState = Simulations.runMagnetGeneration({ n, currentBoardState: boardState, currentPalette: palette(), magnetRules, anchorLimit: effectiveMagnetAnchorLimit(), originalPalette: C.PALETTES[activePaletteIndex].originalColors });
+    boardState = Simulations.runMagnetGeneration({ n, currentBoardState: boardState, currentPalette: palette(), magnetRules, anchorLimit: effectiveMagnetAnchorLimit(), combinedField: effectiveMagnetCombinedField(), originalPalette: C.PALETTES[activePaletteIndex].originalColors });
     break;
 
 
@@ -4652,7 +4655,7 @@ function parseMacroText(text) {
     for (const action of actions) {
         if (['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName) && action.details.startsWith('Armed: magnet |')) {
             const rules = action.details.match(/\|\s+Rules:\s+(.*)$/)?.[1];
-            if (rules && rules !== 'No specific rules mapping') recordedMagnetAnchorLimit(JSON.parse(rules));
+            if (rules && rules !== 'No specific rules mapping') { const parsed = JSON.parse(rules); recordedMagnetAnchorLimit(parsed); recordedMagnetCombinedField(parsed); }
         }
     }
     actions.forEach(validateIslandsMacroAction);
@@ -5004,6 +5007,7 @@ function stopMacro() {
     }
     replayNudgeTiming = null;
     replayMagnetAnchorLimit = null;
+    replayMagnetCombinedField = null;
     replayCymaticsRules=null;
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
@@ -5037,6 +5041,7 @@ function playMacro() {
     if (currentMacroStep === 0) {
         macroPaletteContext.reset();
         replayMagnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT;
+        replayMagnetCombinedField = false;
     }
     
     if(typeof cycleMemory!=='undefined')cycleMemoryAfterReplay=true;
@@ -5153,7 +5158,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
         erosionRules = restoreErosionRules({});
         updateErosionButtonUI();
     }
-    if (sim === 'magnet') { replayMagnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT; delete magnetRules.anchorLimit; }
+    if (sim === 'magnet') { replayMagnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT; replayMagnetCombinedField = false; delete magnetRules.anchorLimit; delete magnetRules.fieldModel; }
     if (sim === 'magnet') delete magnetRules.anchorColor; // Old recordings never inherit the viewer's anchor preference.
     if (sim === 'gameOfLife' && rulesStr === "No specific rules mapping") { delete gameOfLifeRules.genetics; delete gameOfLifeRules.deadColor; }
     if (rulesStr !== "No specific rules mapping") {
@@ -5206,8 +5211,9 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
                 }
                 else if (sim === 'magnet') {
-                    const { anchorLimit, ...preferences } = parsedRules;
+                    const { anchorLimit, fieldModel, ...preferences } = parsedRules;
                     replayMagnetAnchorLimit = recordedMagnetAnchorLimit(parsedRules);
+                    replayMagnetCombinedField = recordedMagnetCombinedField(parsedRules);
                     Object.assign(magnetRules, preferences);
                     magnetMode = parsedRules.method || magnetMode;
                     if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
@@ -5752,6 +5758,13 @@ else if (action.eventName === 'Invert Colors') {
                 cycleMemory.setEnabled(value);
                 if(!isMacroLoaded&&!isMacroPlaying)cycleMemoryAfterReplay=false;
                 rememberCurrentCycle();refreshCycleIcons();
+            },
+            getMagnetCombinedField: () => magnetCombinedField,
+            setMagnetCombinedField: (value, { record = true } = {}) => {
+                const next = Boolean(value);
+                if (next === magnetCombinedField) return;
+                magnetCombinedField = next;
+                if (record && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand) recordLiveSimulationRules('magnet');
             },
             getMagnetAnchorLimit: () => magnetAnchorLimit,
             magnetAnchorLimits: MAGNET_ANCHOR_LIMITS,
