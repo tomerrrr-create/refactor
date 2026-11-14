@@ -1,15 +1,19 @@
+import {magnetAnchorIndex} from '../magnet-anchor.js';
 // A bounded, deterministic branching network growing from the live artwork.
 // Trails retain underlying colors and yield ownership to brush overwrites.
 export const INITIAL_NETWORK_RULES=Object.freeze({growth:65,branching:40,persistence:75});
+export const NETWORK_BACKGROUND_MODES=Object.freeze(['auto','first','luminance']);
 const MAX_AGENTS=128,MAX_SOURCES=96,MAX_TRAILS=12000;
 const norm=(k,p)=>((k%p)+p)%p;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
 function random(id,frame,salt=0){let h=(Math.imul(id+1,0x85ebca6b)^Math.imul(frame+1,0x9e3779b1)^salt)>>>0;h=Math.imul(h^(h>>>16),0x7feb352d);h=Math.imul(h^(h>>>15),0x846ca68b);return ((h^(h>>>16))>>>0)/4294967296;}
 export function validateNetworkRules(value=INITIAL_NETWORK_RULES){
-    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!Object.hasOwn(INITIAL_NETWORK_RULES,k)))throw Error('Invalid Network rules');
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>k!=='backgroundMode'&&!Object.hasOwn(INITIAL_NETWORK_RULES,k)))throw Error('Invalid Network rules');
     const rules={...INITIAL_NETWORK_RULES,...value};
-    if(Object.values(rules).some(v=>!Number.isInteger(v)||v<0||v>100))throw Error('Invalid Network rules');
+    if(Object.keys(INITIAL_NETWORK_RULES).some(k=>!Number.isInteger(rules[k])||rules[k]<0||rules[k]>100)||
+        (rules.backgroundMode!==undefined&&!NETWORK_BACKGROUND_MODES.includes(rules.backgroundMode)))throw Error('Invalid Network rules');
+    if(rules.backgroundMode==='auto')delete rules.backgroundMode;
     return rules;
 }
 export function createNetworkState(n){
@@ -20,6 +24,7 @@ export function restoreNetworkState(value){
     if(!value||value.networkVersion!==1||!Number.isSafeInteger(value.frame)||value.frame<0||!Number.isSafeInteger(value.nextId)||value.nextId<0)throw Error('Invalid Network state');
     const state=createNetworkState(value.n),n=state.n;
     if(!Array.isArray(value.palette)||value.palette.length>4096||value.palette.some(c=>typeof c!=='string'||!/^#[\da-f]{3,8}$/i.test(c)))throw Error('Invalid Network palette');
+    if(value.backgroundMode!==undefined&&!NETWORK_BACKGROUND_MODES.includes(value.backgroundMode))throw Error('Invalid Network background mode');
     const p=Math.max(1,value.palette.length),integer=(v,max)=>Number.isInteger(v)&&v>=0&&v<max;
     const point=v=>Number.isFinite(v)&&v>=0&&v<=n-1;
     if(!integer(value.background,p)||!Array.isArray(value.sources)||value.sources.length>MAX_SOURCES||!Array.isArray(value.agents)||value.agents.length>MAX_AGENTS||!Array.isArray(value.trails)||value.trails.length>Math.min(MAX_TRAILS,n*n))throw Error('Invalid Network bounds');
@@ -37,7 +42,7 @@ export function restoreNetworkState(value){
         if(!agent||!integer(agent.id,value.nextId)||agentIds.has(agent.id)||!point(agent.x)||!point(agent.y)||!Number.isFinite(agent.angle)||Math.abs(agent.angle)>Math.PI+1e-6||!integer(agent.k,p)||!integer(agent.age,901)||!integer(agent.origin,Math.min(n,17)**2)||!Number.isInteger(agent.target)||agent.target< -1||agent.target>=Math.min(n,17)**2)throw Error('Invalid Network tip');
         agentIds.add(agent.id);
     }
-    return {...state,frame:value.frame,nextId:value.nextId,palette:[...value.palette],background:value.background,sources:value.sources.map(v=>[...v]),trails:value.trails.map(v=>[...v]),agents:value.agents.map(v=>({...v}))};
+    return {...state,...(value.backgroundMode&&value.backgroundMode!=='auto'?{backgroundMode:value.backgroundMode}:{}),frame:value.frame,nextId:value.nextId,palette:[...value.palette],background:value.background,sources:value.sources.map(v=>[...v]),trails:value.trails.map(v=>[...v]),agents:value.agents.map(v=>({...v}))};
 }
 export function validateNetworkSnapshot(value){
     if(!value||value.networkVersion!==1)throw Error('Invalid Network snapshot');
@@ -105,12 +110,21 @@ function addAgent(state,source,angle,p,target=-1){
     if(target===-1)agent.target=chooseTarget(agent,state.sources,p);
     state.agents.push(agent);
 }
-export function runNetworkGeneration({n,currentBoardState:board,currentPalette,networkRules=INITIAL_NETWORK_RULES},state){
+export function runNetworkGeneration({n,currentBoardState:board,currentPalette,originalPalette=currentPalette,networkRules=INITIAL_NETWORK_RULES},state){
     if(!state||state.n!==n)state=createNetworkState(n);
     const p=Math.max(1,currentPalette.length),rules=networkRules;
     if(!scratch||scratch.n!==n)scratch={n,marks:new Map(),labels:new Int32Array(n*n),queue:new Int32Array(n*n)};
     const marks=scratch.marks;marks.clear();
+    const previousBackgroundMode=state.backgroundMode??'auto';
     remapPalette(state,currentPalette,board);
+    const mode=rules.backgroundMode??'auto';
+    if(mode==='first')state.background=0;
+    else if(mode==='luminance')state.background=Math.max(0,magnetAnchorIndex(currentPalette,{anchorColor:'luminance'},originalPalette));
+    else if(previousBackgroundMode!=='auto'){
+        const counts=new Uint32Array(p);for(const tile of board)if(!tile.isGold)counts[norm(tile.k,p)]++;
+        state.background=0;for(let k=1;k<p;k++)if(counts[k]>counts[state.background])state.background=k;
+    }
+    if(mode==='auto')delete state.backgroundMode;else state.backgroundMode=mode;
     const decay=1+Math.floor((100-rules.persistence)/30);
     if(rules.growth===0){state.frame++;return {nextBoardState:board,nextNetworkState:state};}
     for(const trail of state.trails){

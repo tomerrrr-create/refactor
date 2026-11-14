@@ -3750,7 +3750,7 @@ function restoreNetworkSnapshot(value,{preservePreferences=false}={}){
     else {replayNetworkRules=null;if(!preservePreferences)networkRules=snapshot.rules;}
     updateNetworkButtonUI();
 }
-function runNetworkEvolution(context){const result=runNetworkGeneration({...context,networkRules:getNetworkRules()},networkState);networkState=result.nextNetworkState;return result.nextBoardState;}
+function runNetworkEvolution(context){const result=runNetworkGeneration({...context,originalPalette:C.PALETTES[activePaletteIndex].originalColors,networkRules:getNetworkRules()},networkState);networkState=result.nextNetworkState;return result.nextBoardState;}
 function updateNetworkButtonUI(){
     if(!dom.btnNetwork)return;
     dom.btnNetwork.classList.toggle('simulation-active',armedSimulation==='network');
