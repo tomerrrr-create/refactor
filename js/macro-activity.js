@@ -182,7 +182,7 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     const fade = createMacroActivityFade(current), effects = createMacroActivitySignals();
     const signalNodes = new Map();
     let iconCacheKey = '', iconSnapshot = null;
-    let enabled = loadMacroActivity(), active = false, timer = null, entry = null, lastMarkup = '';
+    let enabled = loadMacroActivity(), active = false, finishing = false, timer = null, entry = null, lastMarkup = '';
     const text = key => getText(key).split('\n')[0];
     function row(item, snapshot) {
         const row = doc.createElement('div'); row.className = 'macro-activity-row';
@@ -195,6 +195,7 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
         row.append(icon); return row;
     }
     function render() {
+        if (finishing) return; // Retain the last icon while its container fades.
         const state = readState();
         const primary = primaryMacroActivity(state, entry);
         const place = enabled && active && primary && state.loaded && state.fullscreen
@@ -265,11 +266,23 @@ export function createMacroActivity({ board, getText, getLang, readState, docume
     return {
         enabled: () => enabled,
         setEnabled(value) {
-            enabled = Boolean(value); if(!enabled)effects.clear(); saveMacroActivity(enabled);
+            enabled = Boolean(value);
+            if(!enabled){finishing=false;panel.classList.remove('macro-activity-ending');effects.clear();} saveMacroActivity(enabled);
             sync();
         },
-        start() { active = true; sync(); },
-        stop() { active = false; entry = null; effects.clear(); lastMarkup = ''; sync(); },
+        start() { finishing = false; panel.classList.remove('macro-activity-ending'); active = true; sync(); },
+        finish() {
+            if (enabled && active) {
+                const state = readState();
+                entry = latestMacroActivity(state.queue, state.index - 1, state.simulation);
+                render();
+            }
+            finishing = true; active = false; effects.clear();
+            if (timer !== null) win.clearInterval(timer);
+            timer = null;
+            panel.classList.add('macro-activity-ending');
+        },
+        stop() { finishing = false; panel.classList.remove('macro-activity-ending'); active = false; entry = null; effects.clear(); lastMarkup = ''; sync(); },
         record(action) {
             if (!enabled || !active) return;
             const next = describeMacroActivity(action, readState().simulation);

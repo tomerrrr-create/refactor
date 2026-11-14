@@ -1,3 +1,4 @@
+import { createMacroEnding } from './macro-ending.js';
 import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
 import {createEvolutionModeMemory,defaultEvolutionCycleMode} from './evolution-mode-memory.js';
@@ -124,6 +125,7 @@ let macroStartTime = 0;
 let isExecutingMacroCommand = false; // דגל שמונע מה-Kill Switch להרוג את עצמו
 let pendingMacroPalette = null; // שומר את הפלטה הזמנית למאקרו
 let isSelectingMacroPalette = false; // דגל האם אנחנו בוחרים כעת פלטה למאקרו
+let macroEnding = null;
 let isMacroFullscreen = false; // דגל למצב מסך מלא של המאקרו
 
 
@@ -597,6 +599,7 @@ k: tileState.k,
       }
 
       function performAction(actionFn) {
+        if (typeof macroEnding !== 'undefined' && macroEnding?.active()) stopMacro();
         const beforeState = getCurrentState();
         actionFn();
         const afterState = getCurrentState();
@@ -2471,6 +2474,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
 
       function onProjectFileSelected(event) {
         const file = event.target.files[0]; if (!file) return;
+        if (typeof macroEnding !== 'undefined' && macroEnding?.active()) stopMacro();
 
 
         // -- ניתוב חכם: טיפול בקבצי מאקרו (.txt) --
@@ -3125,6 +3129,7 @@ function finishBrushGesture() {
 }
 
 function onPointerDown(e) {
+    if (typeof macroEnding !== 'undefined' && macroEnding?.active()) { stopMacro(); return; }
     clearPaletteColorTransition(dom.board);
     if (windMode) {
         if (e.button !== 0 || e.isPrimary === false) return;
@@ -4901,7 +4906,7 @@ function toggleMacroFullScreen() {
         
         // יציאה ממסך מלא של הדפדפן
         if (document.fullscreenElement) {
-            document.exitFullscreen();
+            document.exitFullscreen().catch(err => console.log("Fullscreen exit blocked", err));
         }
     }
     updateLayout(); // קורא למנוע למתוח את הקנבס
@@ -4910,6 +4915,7 @@ function toggleMacroFullScreen() {
 // מאזין ליציאה ממסך מלא (למשל לחיצה על Esc) כדי להחזיר את לוח הבקרה למקום
 document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement && isMacroFullscreen) {
+        macroEnding?.cancel();
         isMacroFullscreen = false;
         dom.appContainer.classList.remove('macro-fullscreen');
         updateLayout();
@@ -4964,12 +4970,36 @@ function executeWindMacro(action) {
     }
 }
 
+function getMacroEnding() {
+    if (!macroEnding) {
+        const clearPresentation = () => {
+            macroActivity?.stop();
+            dom.appContainer.classList.remove('macro-returning');
+        };
+        macroEnding = createMacroEnding({
+            onExit: () => {
+                if (!isMacroFullscreen) return;
+                dom.appContainer.classList.add('macro-returning');
+                toggleMacroFullScreen();
+            },
+            onFinish: clearPresentation,
+            onCancel: clearPresentation
+        });
+    }
+    return macroEnding;
+}
+
 function finishMacroPlayback() {
     // A file without a final END still lets its last wave settle naturally.
     if (windReplay?.activeWaves) return;
+    if (typeof macroEnding !== 'undefined' && macroEnding?.active()) return;
     finishWindReplay();
-    stopMacro();
+    const presentFinalFrame = typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen;
+    if (presentFinalFrame) macroActivity?.finish();
+    // Cleanup/pause immediately; only the fullscreen presentation is delayed.
+    stopMacro({ preserveFullscreen: presentFinalFrame, preserveActivity: presentFinalFrame });
     if (isLifePlaying) pauseLife();
+    if (presentFinalFrame) getMacroEnding().start();
 }
 
 function finishBrushReplay() {
@@ -4979,8 +5009,10 @@ function finishBrushReplay() {
     pushHistory({ before, after: getCurrentState() });
 }
 
-function stopMacro() {
-    if (typeof macroActivity !== 'undefined') macroActivity?.stop();
+function stopMacro({ preserveFullscreen = false, preserveActivity = false } = {}) {
+    const wasEnding = typeof macroEnding !== 'undefined' && macroEnding?.active();
+    if (typeof macroEnding !== 'undefined') macroEnding?.cancel();
+    if (!preserveActivity && typeof macroActivity !== 'undefined') macroActivity?.stop();
     if (replayBrushBefore) {
         window.logArtEvent('BRUSH_END', '{"version":1}', true);
         finishBrushReplay();
@@ -5022,8 +5054,9 @@ function stopMacro() {
     
     // Releasing controls must never depend on an animation accepting its callback.
     dom.macroOverlay.classList.remove('active', 'running');
+    if (preserveFullscreen) { dom.boardOverlay.style.opacity = '0'; return; }
     if (typeof isMacroFullscreen !== 'undefined' && isMacroFullscreen) {
-        if (isAnimating) {
+        if (isAnimating || wasEnding) {
             toggleMacroFullScreen();
         } else {
             animateBoardTransition(() => {
@@ -5038,6 +5071,7 @@ function stopMacro() {
 
 function playMacro() {
     if (!isMacroLoaded || currentMacroStep >= macroQueue.length) return;
+    if (typeof macroEnding !== 'undefined') macroEnding?.cancel();
     if (currentMacroStep === 0) {
         macroPaletteContext.reset();
         replayMagnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT;

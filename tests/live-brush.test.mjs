@@ -173,7 +173,7 @@ test('macro groups paused motion into one undo action, independently of the reco
  const h=harness({live:false});h.c.renderToScreen=()=>{};
  const start=source.indexOf("        else if (action.eventName === 'BRUSH_START'");
  const end=source.indexOf('        isExecutingMacroCommand = false;',start);
- vm.runInContext(source.slice(source.indexOf('function finishBrushReplay()'),source.indexOf('function stopMacro()'))+'function replay(action){'+source.slice(start,end).replace('else if','if')+'}',h.c);
+ vm.runInContext(source.slice(source.indexOf('function finishBrushReplay()'),source.indexOf('function stopMacro('))+'function replay(action){'+source.slice(start,end).replace('else if','if')+'}',h.c);
  h.c.replay({eventName:'BRUSH_START',details:'{"version":1}'});
  for(const i of [0,1,2])h.c.replay({eventName:'DRAW_STROKE',details:JSON.stringify([{i,k:0}])});
  assert.equal(h.history.length,0);h.c.replay({eventName:'BRUSH_END',details:'{"version":1}'});
