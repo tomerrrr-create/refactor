@@ -2736,7 +2736,3 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnNetwork { display:none; touch-action:none !important; }
 #btnNetwork svg { stroke:var(--sim-color); }
 #btnNetwork.simulation-active svg { stroke:var(--gold); stroke-width:2; }
-
-#btnDroplets { display:none; touch-action:none !important; }
-#btnDroplets svg { stroke:var(--sim-color); }
-#btnDroplets.simulation-active svg { stroke:var(--gold); stroke-width:2.2; }

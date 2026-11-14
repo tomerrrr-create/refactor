@@ -15,7 +15,6 @@ const simulations = {
     magnet: ['help_magnet', 'btnMagnetModes'], spiral: ['help_spiral', 'btnSpiral'],
     erosion: ['help_erosion', 'btnErosion'], dla: ['help_dla', 'btnDla'],
     turing: ['help_turing', 'btnTuring'], breathe: ['help_breathe', 'btnShowBreatheMenu'],
-    droplets: ['help_droplets','btnDroplets'],
     network: ['help_network','btnNetwork'],
     oil: ['help_oil','btnOil'],
     ink: ['help_ink','btnInk'],
