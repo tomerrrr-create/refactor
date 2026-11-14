@@ -729,6 +729,8 @@ Save the journey through the save modal, using `exportArtRecipeLog()`. Current T
 
 `onProjectFileSelected` recognizes settings TXT by its `FYI_SETTINGS_V1` header, routes other TXT to `parseMacroText`, and JSON to artwork restoration. Loading a macro exposes a play overlay and optional initial-palette override. Technicians’ **Macro control dimming** slider controls the black overlay over the toolbar after playback begins: 0–100%, default 80%. It updates on input and saves the committed choice in browser-local storage (`colorGridMacroControlDimming`), independently of profiles and recipes. Freshly loaded macros still use the existing 95% waiting overlay. At zero dimming the overlay retains its existing input interception; changing appearance does not enable the covered controls. Invalid or unavailable storage uses 80%.
 
+Natural completion in macro fullscreen pauses and cleans up playback immediately, while retaining the final artwork fullscreen for **1,500 ms**. The activity indicator fades over 400 ms, followed by a 400 ms controls-return fade; the artwork is never covered by the black transition overlay for this natural ending. This presentation-only tail is cancellable and does not add recipe/logger events or simulation generations. Manual Stop, a board tap, artwork action, new file/playback or a native fullscreen exit cancels pending work so it cannot exit a later playback. Reduced motion skips fades while retaining the final-frame hold. Completion outside fullscreen keeps its immediate behavior. Wind fronts still settle before completion, as before. The browser controls its own native fullscreen transition.
+
 - `parseHistoryMacro` handles `recipeVersion: 2`, using history action IDs/ranges to resolve Undo/Redo and restore the relevant settings.
 - `parseLegacyMacroText` retains support for older recipes, including their UI-event folding and history behavior.
 - `scheduleNextMacroStep` schedules time-based events; `gameLoop` consumes generation-based events when their target generation is reached.
@@ -808,6 +810,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Browser-local compact color-picker experiment: full palettes, pointer preview/drag/cancel, keyboard, Rainbow, paging restoration, reload and profile independence | `tools/check-compact-color-picker.mjs` |
 | Opening-palette history policy: raw/resolved Undo/Redo, legacy checkpoints, real palette switches and playback lifecycle | `tools/check-macro-palette-context.mjs` (optional `PALETTE_RECIPE` runs the reported full-file regression) |
 | Real file import, opening-palette catalogue, drawing Undo, explicit changes and file replacement on desktop/English and touch/Hebrew | `tools/check-macro-palette-ui.mjs` |
+| Natural fullscreen ending: frozen final frame, hold/fade timing, no-black artwork, reduced motion, native/CSS fullscreen, Stop/Escape and replacement playback cancellation | `tools/check-macro-ending.mjs` |
 | Fullscreen macro activity: opt-in, desktop/mobile geometry, action filtering, space limits, Stop and replay equivalence | `tools/check-macro-activity.mjs` |
 | Macro activity mode icons, frozen outgoing snapshots, gradients, crossfade opacity, rapid bursts and reduced motion | `tools/check-macro-activity-icons.mjs` |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |

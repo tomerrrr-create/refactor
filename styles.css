@@ -2688,3 +2688,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #magnetCombinedFieldNote { font-size: .75rem; line-height: 1.5; color: #a8aa9f; margin-top: 8px; }
 .magnet-limit-button:disabled { opacity: .35; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .magnet-field-toggle, .magnet-field-toggle::after { transition: none; } }
+
+/* A natural macro ending holds the artwork; only its activity and controls fade. */
+.macro-activity { transition: opacity 400ms ease-in-out; }
+.macro-activity.macro-activity-ending { opacity: 0; }
+#appContainer.macro-returning #controlsContainer { animation: macro-controls-return 400ms ease-out both; }
+@keyframes macro-controls-return { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+    .macro-activity { transition: none; }
+    #appContainer.macro-returning #controlsContainer { animation: none; }
+}
