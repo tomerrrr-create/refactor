@@ -25,7 +25,7 @@ function disconnected(board){
 }
 test('fast growth paints a connected path instead of skipping cells',()=>{
  for(const legacy of [true,false]){
-  const board=scene(),state=createNetworkState(n);if(legacy)delete state.growthVersion;
+  const board=scene(),state=createNetworkState(n);if(legacy){delete state.growthVersion;delete state.transitionVersion;}
   for(let f=0;f<4;f++)step(board,state);
   if(legacy)assert(disconnected(board)>0,'original scenario reproduces a floating pixel');
   else assert.equal(disconnected(board),0);
@@ -37,7 +37,7 @@ test('replacing a patch within the same bucket retires old tips and launches new
  for(const legacy of [true,false]){
   const board=Array.from({length:n*n},()=>({k:0,v:0}));
   for(const[x,y,k]of [[30,35,60],[110,110,46]])board[y*n+x]={k,v:k};
-  const state=createNetworkState(n);if(legacy)delete state.growthVersion;
+  const state=createNetworkState(n);if(legacy){delete state.growthVersion;delete state.transitionVersion;}
   for(let f=0;f<12;f++)step(board,state,{...rules,growth:65,branching:0});
   const source=state.sources.find(s=>s[1]===30),oldIds=new Set(state.agents.filter(a=>a.origin===source[0]).map(a=>a.id));
   assert(oldIds.size>0);board[35*n+30]={k:0,v:0};board[35*n+34]={k:60,v:60};
@@ -59,7 +59,7 @@ test('moving a representative within the same surviving patch retains its tips',
 });
 test('both growth versions cold-resume exactly and reject unknown versions',()=>{
  for(const legacy of [true,false]){
-  const board=scene(),state=createNetworkState(n);if(legacy)delete state.growthVersion;
+  const board=scene(),state=createNetworkState(n);if(legacy){delete state.growthVersion;delete state.transitionVersion;}
   for(let f=0;f<8;f++)step(board,state);
   const saved=JSON.parse(JSON.stringify({board,state}));
   for(let f=0;f<15;f++)step(board,state);
@@ -71,7 +71,7 @@ test('both growth versions cold-resume exactly and reject unknown versions',()=>
 });
 // Captured from the unmodified work engine at ada8f65.
 test('historical growth retains its recorded pixel and runtime sequence',()=>{
- const board=scene(),state=createNetworkState(n);delete state.growthVersion;
+ const board=scene(),state=createNetworkState(n);delete state.growthVersion;delete state.transitionVersion;
  for(let f=0;f<30;f++)step(board,state);
  const hash=createHash('sha256').update(JSON.stringify({board,state})).digest('hex');
  assert.equal(hash,'f1c365337e7a13bc06974fa3b010d76774535464c80d869829260a37ddb8e777');

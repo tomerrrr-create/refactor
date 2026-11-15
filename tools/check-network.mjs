@@ -13,7 +13,20 @@ try{for(const touch of [false,true]){
  visual:()=>{networkTest.setup(149);boardState.forEach((t,i)=>{const x=i%n/n,y=Math.floor(i/n)/n;let k=0;for(const[a,b,rank]of [[.18,.22,.9],[.76,.25,.7],[.27,.73,.55],[.8,.78,.85],[.51,.48,.95]])if((x-a)**2+(y-b)**2<.0008)k=Math.floor(paletteLen()*rank);t.k=t.v=k;});renderToScreen(null);},open:()=>networkSettingsUI.open(),tech:()=>modals.openTechnicianMenu(),project:getCurrentState,restore:applyState,sort:applySortMethod,resize:resizeBoard,
  state:()=>({palette:[...palette()],darkest:sortColorsArray(C.PALETTES[activePaletteIndex].originalColors,'luminance')[0],armed:armedSimulation,rules:{...getNetworkRules()},personal:{...networkRules},runtime:networkState?restoreNetworkState(networkState):null,playing:isLifePlaying,loaded:isMacroLoaded,gen:currentGenerationCount,tiles:boardState.map(t=>({k:t.k,v:t.v,isGold:!!t.isGold})),logs:[...artRecipeLog],settings:getWorkspaceSettings()}),
  replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},done:()=>!isMacroPlaying&&!isLifePlaying&&!isMacroLoaded,
- stepMany:count=>{for(let i=0;i<count;i++){boardState=runNetworkEvolution({n,currentBoardState:boardState,currentPalette:palette()});}renderToScreen(null);}
+ transitionAudit:()=>{
+   networkTest.setup(149);networkRules=validateNetworkRules({...DEFAULT_NETWORK_PREFERENCES,branching:0});armSimulation('network');
+   boardState.forEach((t,i)=>{t.k=t.v=(i*13+Math.floor(i/n)*7)%paletteLen();t.isGold=i===0;});
+   networkTest.stepMany(180);let modes=[];isLifePlaying=true;
+   for(let i=0;i<40;i++){
+    cycleNetworkMode();const frame=networkState.frame,before=networkState.nextId,generation=currentGenerationCount;
+    networkTest.stepMany(1);const created=networkState.nextId-before;
+    if(created>(frame%10===0?1:0))throw Error('Mode change launched '+created+' tips');
+    networkTest.stepMany(1);if(networkState.nextId-before>(frame%10===0||(frame+1)%10===0?1:0))throw Error('Delayed mode-change burst');
+    if(currentGenerationCount!==generation)throw Error('Manual audit changed generation clock');
+    modes.push(getNetworkRules().mode??'palette');
+   }isLifePlaying=false;return {modes,frame:networkState.frame};
+  },
+  stepMany:count=>{for(let i=0;i<count;i++){boardState=runNetworkEvolution({n,currentBoardState:boardState,currentPalette:palette()});}renderToScreen(null);}
  };initializeApp().then(()=>networkTest.ready=true);`);for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  const boot=async reload=>{await(reload?page.reload():page.goto(base));await page.waitForFunction(()=>window.networkTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));};
@@ -35,6 +48,8 @@ try{for(const touch of [false,true]){
   await tap('#btnNetwork');assert.equal((await state()).rules.mode,'spatial');assert((await state()).playing);
   await tap('#btnPlayPauseLife');const live=await state();await tap('#btnUndo');await tap('#btnRedo');assert.deepEqual((await state()).tiles,live.tiles);
   const played=await replay(live.logs.join('\n'));assert.deepEqual(played.tiles,live.tiles);assert.deepEqual(played.runtime,live.runtime);
+  const audit=await page.evaluate(()=>networkTest.transitionAudit());assert.equal(audit.modes.length,40);assert(audit.modes.includes('spatial'));assert(audit.modes.includes('palette'));
+  await page.evaluate(()=>networkTest.setup());await tap('#btnNetwork');await tap('#btnNetwork');
   await tap('#btnNetwork');assert.equal((await state()).armed,null);await tap('#btnNetwork');assert.equal((await state()).rules.mode,undefined);
   await tap('#btnNetwork');await page.evaluate(()=>networkTest.tech());if(!(await page.locator('#profileActions').isVisible()))await tap('[data-profile-dot="0"]');await tap('#btnProfileSave');await boot(true);assert.equal((await state()).personal.mode,'spatial');
   assert.deepEqual(errors,[]);console.log('PASS spatial cycle',JSON.stringify({touch,icons:true,live:true,replay:true,profile:true}));await context.close();continue;

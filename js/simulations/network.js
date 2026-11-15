@@ -22,13 +22,17 @@ export function validateNetworkRules(value=INITIAL_NETWORK_RULES){
 }
 export function createNetworkState(n){
     if(!Number.isInteger(n)||n<1||n>327)throw Error('Invalid Network size');
-    return {networkVersion:1,growthVersion:2,n,frame:0,nextId:0,palette:[],background:0,sources:[],agents:[],trails:[]};
+    return {networkVersion:1,growthVersion:2,transitionVersion:1,n,frame:0,nextId:0,palette:[],background:0,sources:[],agents:[],trails:[]};
 }
 export function restoreNetworkState(value){
     if(!value||value.networkVersion!==1||!Number.isSafeInteger(value.frame)||value.frame<0||!Number.isSafeInteger(value.nextId)||value.nextId<0)throw Error('Invalid Network state');
     const state=createNetworkState(value.n),n=state.n;
     if(value.mode!==undefined&&value.mode!=='spatial')throw Error('Invalid Network mode');
     if(value.mode==='spatial')state.mode='spatial';
+    if(value.transitionVersion===undefined)delete state.transitionVersion;
+    else if(value.transitionVersion!==1)throw Error('Invalid Network transition version');
+    if(value.sourceMode!==undefined){if(!['palette','spatial'].includes(value.sourceMode)||value.transitionVersion!==1)throw Error('Invalid Network source mode');state.sourceMode=value.sourceMode;}
+    if(value.stableSources!==undefined){if(value.stableSources!==true||value.transitionVersion!==1)throw Error('Invalid Network source identity');state.stableSources=true;}
     // Missing growthVersion is the original engine, retained for recorded journeys.
     if(value.growthVersion===undefined)delete state.growthVersion;
     else if(value.growthVersion!==2)throw Error('Invalid Network growth version');
@@ -77,7 +81,7 @@ function remapPalette(state,palette,board){
 }
 // One representative per spatial bucket, chosen from original source edges.
 // Generated trails are excluded, so they cannot turn into self-replicating seeds.
-function readSources(board,n,p,background,marks,scratch,spatial=false,colors=null){
+function readSources(board,n,p,background,marks,scratch,spatial=false,colors=null,preferred=[]){
     const g=Math.min(n,17),buckets=new Map(),{labels,queue}=scratch;labels.fill(0);let externalCount=0;const sizes=new Map(),contacts=new Map();
     const external=i=>!board[i].isGold&&!marks.has(i)&&(spatial?colors[norm(board[i].k,p)]!==colors[background]:norm(board[i].k,p)!==background);
     // Connected painted patches are distinct nutrient sources. Tips target
@@ -102,7 +106,16 @@ function readSources(board,n,p,background,marks,scratch,spatial=false,colors=nul
         const score=spatial?random(i,0):Math.abs(k-background)+random(i,0)*.01,previous=buckets.get(id);
         if(!previous||score>previous.score)buckets.set(id,{source:[id,c,r,k,labels[i]-1],score});
     }
-    return {sources:[...buckets.values()].sort((a,b)=>random(a.source[0],0)-random(b.source[0],0)).slice(0,MAX_SOURCES).map(v=>v.source).sort((a,b)=>a[0]-b[0]),dense:externalCount>n*n*.7,sizes,contacts};
+    // Once modes have been exchanged, a valid representative remains the same
+    // source. Different scoring must not turn another point of its patch into a birth.
+    const pinned=new Set();
+    for(const source of preferred){
+        const index=Math.round(source[2])*n+Math.round(source[1]);
+        if(!labels[index]||colors[norm(board[index].k,p)]!==colors[source[3]])continue;
+        const k=norm(board[index].k,p);pinned.add(source[0]);
+        buckets.set(source[0],{source:[source[0],source[1],source[2],k,labels[index]-1],score:Infinity});
+    }
+    return {sources:[...buckets.values()].sort((a,b)=>Number(pinned.has(b.source[0]))-Number(pinned.has(a.source[0]))||random(a.source[0],0)-random(b.source[0],0)).slice(0,MAX_SOURCES).map(v=>v.source).sort((a,b)=>a[0]-b[0]),dense:externalCount>n*n*.7,sizes,contacts};
 }
 function chooseTarget(agent,sources,p,avoid=-1,spatial=null){
     let best=-1,score=Infinity;const origin=sources.find(s=>s[0]===agent.origin);
@@ -153,8 +166,13 @@ export function runNetworkGeneration({n,currentBoardState:board,currentPalette,o
         trail[1]=norm(tile.k,p);trail[3]-=decay;
         if(trail[3]<=0)paint(tile,trail[2]);else marks.set(trail[0],trail);
     }
+    const sourceMode=spatialMode?'spatial':'palette';
+    const modeTransition=state.transitionVersion===1&&state.sourceMode!==undefined&&state.sourceMode!==sourceMode;
+    if(modeTransition)state.stableSources=true;
+    const preferred=state.stableSources?state.sources:[];
+    if(state.transitionVersion===1)state.sourceMode=sourceMode;
     const previous=new Map(state.sources.map(s=>[s[0],s]));
-    const observed=readSources(board,n,p,state.background,marks,scratch,spatialMode,currentPalette);state.sources=observed.sources;
+    const observed=readSources(board,n,p,state.background,marks,scratch,spatialMode,currentPalette,preferred);state.sources=observed.sources;
     const spatial=spatialMode?{sizes:observed.sizes,traffic:new Map([...observed.contacts].map(([id,count])=>[id,Math.min(32,count)/4]))}:null;
     if(spatial){
         const byId=new Map(state.sources.map(source=>[source[0],source[4]]));
@@ -171,7 +189,7 @@ export function runNetworkGeneration({n,currentBoardState:board,currentPalette,o
         if(scratch.labels[index]===source[4]+1&&(spatialMode?currentPalette[norm(board[index].k,p)]===currentPalette[old[3]]:norm(board[index].k,p)===old[3]))retainedOrigins.add(source[0]);
     }
     // New brush islands are immediate new buds. Later launches reinforce links.
-    for(const source of state.sources)if(!previous.has(source[0])||(spatialMode?currentPalette[previous.get(source[0])[3]]!==currentPalette[source[3]]:previous.get(source[0])[3]!==source[3])||(continuous&&!retainedOrigins.has(source[0]))){
+    if(!modeTransition)for(const source of state.sources)if(!previous.has(source[0])||(spatialMode?currentPalette[previous.get(source[0])[3]]!==currentPalette[source[3]]:previous.get(source[0])[3]!==source[3])||(continuous&&!retainedOrigins.has(source[0]))){
         addAgent(state,source,random(source[0],state.frame)*Math.PI*2-Math.PI,p,-1,spatial);
         if(state.agents.length<32)addAgent(state,source,random(source[0],state.frame,12345)*Math.PI*2-Math.PI,p,-1,spatial);
     }
