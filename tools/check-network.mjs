@@ -21,6 +21,24 @@ try{for(const touch of [false,true]){
  const open=async()=>{await page.evaluate(()=>networkTest.open());await page.locator('#networkSettingsDialog').waitFor({state:'visible'});await page.waitForTimeout(240);};
  const replay=async text=>{await page.evaluate(text=>networkTest.replay(text),text);await page.waitForFunction(()=>networkTest.done(),null,{timeout:20000});return state();};
  await boot(false);
+ if(process.env.NETWORK_SPATIAL_ONLY){
+  await page.evaluate(()=>networkTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(350);await tap('#btnNetwork');
+  const before=await state();assert.equal(before.rules.mode,undefined);await tap('#btnNetwork');
+  assert.equal((await state()).rules.mode,'spatial');assert.deepEqual((await state()).tiles,before.tiles);
+  assert(await page.locator('#btnNetwork .network-spatial-icon').isVisible());
+  await tap('#btnStepForward');assert.equal((await state()).runtime.frame,1);assert.equal((await state()).runtime.mode,'spatial');
+  await open();assert.equal(await page.locator('[data-network-background="first"]').isDisabled(),true);
+  await page.locator('[data-network-mode="palette"]').click();await page.locator('#networkSettingsDialog [data-cancel]').click();assert.equal((await state()).rules.mode,'spatial');
+  await open();await page.locator('#networkSettingsDialog [data-reset]').click();assert.equal(await page.locator('[data-network-mode="spatial"]').getAttribute('aria-pressed'),'true');await page.locator('#networkSettingsDialog [data-cancel]').click();
+  await tap('#btnPlayPauseLife');await page.waitForFunction(()=>networkTest.state().gen>=8);
+  const gen=(await state()).gen;await tap('#btnNetwork');assert.equal((await state()).rules.mode,undefined);assert((await state()).playing);assert((await state()).gen>=gen);
+  await tap('#btnNetwork');assert.equal((await state()).rules.mode,'spatial');assert((await state()).playing);
+  await tap('#btnPlayPauseLife');const live=await state();await tap('#btnUndo');await tap('#btnRedo');assert.deepEqual((await state()).tiles,live.tiles);
+  const played=await replay(live.logs.join('\n'));assert.deepEqual(played.tiles,live.tiles);assert.deepEqual(played.runtime,live.runtime);
+  await tap('#btnNetwork');assert.equal((await state()).armed,null);await tap('#btnNetwork');assert.equal((await state()).rules.mode,undefined);
+  await tap('#btnNetwork');await page.evaluate(()=>networkTest.tech());if(!(await page.locator('#profileActions').isVisible()))await tap('[data-profile-dot="0"]');await tap('#btnProfileSave');await boot(true);assert.equal((await state()).personal.mode,'spatial');
+  assert.deepEqual(errors,[]);console.log('PASS spatial cycle',JSON.stringify({touch,icons:true,live:true,replay:true,profile:true}));await context.close();continue;
+ }
  if(process.env.NETWORK_BACKGROUND_ONLY){
   await page.evaluate(()=>networkTest.backgroundScene());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(350);await tap('#btnNetwork');
   const dialog=page.locator('#networkSettingsDialog'),choice=mode=>dialog.locator('[data-network-background="'+mode+'"]');
@@ -57,7 +75,7 @@ try{for(const touch of [false,true]){
  const liveRecipe=live.logs.join('\n');await tap('#btnUndo');await tap('#btnRedo');assert.deepEqual((await state()).tiles,live.tiles);assert.deepEqual((await state()).runtime,live.runtime);const recipe=(await state()).logs.join('\n');const played=await replay(recipe);assert.deepEqual(played.tiles,live.tiles);assert.deepEqual(played.runtime,live.runtime);
  assert.deepEqual((await replay(liveRecipe)).tiles,live.tiles,'unresolved live replay is exact too');
  const project=await page.evaluate(()=>networkTest.project());await tap('#btnStepForward');await page.evaluate(p=>networkTest.restore(p),JSON.parse(JSON.stringify(project)));assert.deepEqual((await state()).runtime,project.networkState.state);assert.deepEqual((await state()).tiles,live.tiles);
- await page.evaluate(()=>networkTest.setup());await tap('#btnNetwork');await tap('#btnStepForward');await tap('#btnTuring');assert.equal((await state()).armed,'turing');await tap('#btnNetwork');assert.equal((await state()).armed,'network');await tap('#btnNetwork');assert.equal((await state()).armed,null);assert.equal(await page.locator('#btnNetwork').getAttribute('aria-pressed'),'false');await tap('#btnNetwork');assert.equal((await state()).runtime.frame,0);
+ await page.evaluate(()=>networkTest.setup());await tap('#btnNetwork');await tap('#btnStepForward');await tap('#btnTuring');assert.equal((await state()).armed,'turing');await tap('#btnNetwork');assert.equal((await state()).armed,'network');await tap('#btnNetwork');assert.equal((await state()).rules.mode,'spatial');await tap('#btnNetwork');assert.equal((await state()).armed,null);assert.equal(await page.locator('#btnNetwork').getAttribute('aria-pressed'),'false');await tap('#btnNetwork');assert.equal((await state()).runtime.frame,0);
  const mixed=await state();const mixedPlayed=await replay(mixed.logs.join('\n'));assert.deepEqual(mixedPlayed.tiles,mixed.tiles);assert.deepEqual(mixedPlayed.runtime,mixed.runtime);
  await open();await page.screenshot({path:path.join(artifacts,touch?'touch-settings.png':'desktop-settings.png')});await page.locator('#networkSettingsDialog [data-cancel]').click();
  // Visual sample begins with the user's existing pigments, rather than a generated object.

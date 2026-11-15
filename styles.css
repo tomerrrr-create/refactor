@@ -2755,3 +2755,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnMagnetModes.mode-field_cosmic_magnet #iconModeFieldCosmicMagnet { display:block !important; }
 #btnMagnetModes.mode-field_magnet svg:not(#iconModeFieldMagnet),
 #btnMagnetModes.mode-field_cosmic_magnet svg:not(#iconModeFieldCosmicMagnet) { display:none !important; }
+
+#btnNetwork:not(.network-spatial) .network-spatial-icon { display:none !important; }
+#btnNetwork.network-spatial > svg:not(.network-spatial-icon) { display:none !important; }
+#btnNetwork.network-spatial .network-spatial-icon { display:block !important; }
