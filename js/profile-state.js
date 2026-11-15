@@ -129,6 +129,7 @@ export function defaultProfileSnapshots(initial) {
 export function factoryProfileSnapshot(index) {
     if (!Number.isInteger(index) || index < 0 || index > 2) throw Error('Invalid profile');
     const settings = defaultWorkspaceSettings();
+    settings.nudgeIntervalMs = 35;
     settings.evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
     settings.rules.contour.growth = clone(INITIAL_CRACKS_GROWTH);
     Object.assign(settings.smoothing, { display: DEFAULT_SMOOTH_RENDERING,

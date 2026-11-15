@@ -66,9 +66,10 @@ test('preferences survive reload; malformed or blocked storage uses defaults',()
     const h=harness();h.context.setNudgeInterval(123);
     const loaded=harness({stored:h.storage.get('colorGridNudge')});
     assert.equal(loaded.timing().intervalMs,123);
+    assert.equal(harness({stored:'{"intervalMs":100}'}).timing().intervalMs,100);
     loaded.context.applyNudgeTiming('No specific rules mapping');assert.equal(loaded.timing().legacyFrames,true);
     for(const stored of ['{broken', 'null', '{"intervalMs":201,"unmarkedMode":"fast"}']){
-        assert.equal(harness({stored}).timing().intervalMs,100);
+        assert.equal(harness({stored}).timing().intervalMs,35);
     }
     const blocked=harness({blockedStorage:true});blocked.context.setNudgeInterval(200);
     assert.equal(blocked.timing().intervalMs,200);
@@ -80,7 +81,7 @@ test('versioned PLAY overrides local speed without changing stored preferences',
     assert.equal(h.context.currentGenerationCount,1);
     assert.equal(h.storage.get('colorGridNudge'),null);
     vm.runInContext('replayNudgeTiming = null',h.context);
-    assert.equal(h.timing().intervalMs,100);
+    assert.equal(h.timing().intervalMs,35);
 });
 test('unmarked recordings always use original slow frame counting',()=>{
     const old=harness();old.context.applyNudgeTiming('No specific rules mapping');
@@ -129,13 +130,13 @@ test('slider updates apply and log immediately but persist only when requested',
 });
 
 
-test('default is 100ms with immediate first shift and exact interval boundary',()=>{
+test('default is 35ms with immediate first shift and exact interval boundary',()=>{
     for(const [direction,expected] of [['nudgeBrighter',4],['nudgeDarker',0]]){
         const h=harness({direction});
-        assert.equal(h.timing().intervalMs,100);
-        h.frame(0);h.frame(16);h.frame(99);
+        assert.equal(h.timing().intervalMs,35);
+        h.frame(0);h.frame(16);h.frame(34);
         assert.equal(h.context.currentGenerationCount,1);
-        h.frame(100);h.frame(101);h.frame(199);
+        h.frame(35);h.frame(36);h.frame(69);
         assert.equal(h.context.currentGenerationCount,2);
         assert.equal(h.context.boardState[0].k,expected);
         assert.equal(h.context.boardState[1].k,8);
