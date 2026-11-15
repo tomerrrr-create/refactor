@@ -4,10 +4,10 @@ import {DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorL
 import {runMagnetGeneration,resetMagnetCaches} from '../js/simulations/magnet.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings} from '../js/workspace-settings.js';
 
-test('five supported limits, legacy 300 and explicit validation',()=>{
- assert.equal(DEFAULT_MAGNET_ANCHOR_LIMIT,300);assert.deepEqual(MAGNET_ANCHOR_LIMITS,[300,600,1000,1500,2000]);
+test('three visible limits, retired recording limits and explicit validation',()=>{
+ assert.equal(DEFAULT_MAGNET_ANCHOR_LIMIT,300);assert.deepEqual(MAGNET_ANCHOR_LIMITS,[300,600,1000]);
  assert.equal(recordedMagnetAnchorLimit({}),300);
- for(const limit of MAGNET_ANCHOR_LIMITS){assert.equal(validateMagnetAnchorLimit(limit),limit);assert.equal(recordedMagnetAnchorLimit({anchorLimit:limit}),limit);}
+ for(const limit of [...MAGNET_ANCHOR_LIMITS,1500,2000]){assert.equal(validateMagnetAnchorLimit(limit),limit);assert.equal(recordedMagnetAnchorLimit({anchorLimit:limit}),limit);}
  for(const value of [null,0,-300,301,Infinity,NaN,'600',[],{},999999])assert.throws(()=>recordedMagnetAnchorLimit({anchorLimit:value}));
 });
 test('recorded limit is independent of profile preferences; default rules stay unchanged',()=>{

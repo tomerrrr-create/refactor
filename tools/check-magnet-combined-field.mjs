@@ -29,12 +29,12 @@ try{for(const touch of [false,true]){
   const visible=await page.locator('#btnMagnetModes > svg').evaluateAll(list=>list.filter(e=>getComputedStyle(e).display!=='none').map(e=>e.id));assert.equal(visible.length,1);
   assert.equal(visible[0].includes('Field'),method.startsWith('field_'));
  }
- await tap('#btnMagnetModes');await open();assert.equal(await page.locator('#magnetCombinedField').count(),0);
+ await tap('#btnMagnetModes');await open();assert.equal(await page.locator('#magnetCombinedField').count(),0);assert.deepEqual(await page.locator('#magnetAnchorLimit button').evaluateAll(buttons=>buttons.map(b=>Number(b.dataset.limit))),[300,600,1000]);
  assert.equal(await page.locator('#magnetMethodContainer button').count(),6);
- assert.equal(await page.locator('#magnetAnchorLimit button:disabled').count(),5);
+ assert.equal(await page.locator('#magnetAnchorLimit button:disabled').count(),3);
  const unchanged=(await state()).tiles;await choose('magnet');assert.equal(await page.locator('#magnetAnchorLimit [aria-pressed="true"]').getAttribute('data-limit'),'600');await cancel();assert.equal((await state()).mode,'field_magnet');assert.deepEqual((await state()).tiles,unchanged);
  for(const method of [...cycle,'time_magnet','expand']){
-  await open();await choose(method);assert.equal(await page.locator('#magnetAnchorLimit button:disabled').count(),method.startsWith('field_')?5:0);await save();assert.equal((await state()).mode,method);
+  await open();await choose(method);assert.equal(await page.locator('#magnetAnchorLimit button:disabled').count(),method.startsWith('field_')?3:0);await save();assert.equal((await state()).mode,method);
  }
  // Settings-only Time wraps to the first shortcut.
  await open();await choose('time_magnet');await save();await tap('#btnMagnetModes');assert.equal((await state()).mode,'field_magnet');

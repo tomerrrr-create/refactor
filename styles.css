@@ -2660,7 +2660,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .magnet-method-button[aria-pressed="true"], .magnet-limit-button[aria-pressed="true"] { border-color: var(--magnet-accent); background: color-mix(in srgb, var(--magnet-accent) 23%, #171a19); box-shadow: 0 0 0 2px color-mix(in srgb, var(--magnet-accent) 14%, transparent); }
 .magnet-method-button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: 4px; width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
 .magnet-limit-section { display: flex; flex-direction: column; gap: 10px; }
-#magnetAnchorLimit { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; direction: ltr; padding: 2px; }
+#magnetAnchorLimit { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; direction: ltr; padding: 2px; }
 .magnet-limit-button { min-height: 44px; min-width: 0; padding: 6px 2px; border-radius: 10px; font-size: 12px; font-variant-numeric: tabular-nums; color: #aaa99f; }
 .magnet-limit-button[aria-pressed="true"] { color: #f3e8cf; font-weight: 600; }
 .magnet-limit-button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: 5px; width: 12px; height: 2px; border-radius: 2px; background: var(--magnet-accent); }
