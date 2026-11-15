@@ -366,6 +366,8 @@ English, Hebrew, Russian and Dutch have localized labels, with RTL handling in r
 
 Interface size is a device-local **70–120%** preference, default **84%**, outside profiles/history/recipes. `updateLayout` adapts to viewport dimensions and control height; fullscreen macro presentation uses its own sizing. Supported transitions and Wind honor reduced motion. The current viewport and input handlers suppress browser pinch/double-tap zoom; interface sizing is a separate control, not evidence of unrestricted browser zoom support.
 
+Breathe's Solo/Group strokes and DLA's Genetics/No genetics node fills use bright gold only while their button is selected (`simulation-active`). An inactive remembered mode keeps its symbol and follows the effective resting/playback theme, including after a completed cycle or handoff to another evolution. `tools/check-drawer-button-colors.mjs` verifies both controls with mode memory on/off, all three themes, desktop and touch.
+
 ### Preferences and modal drafts
 
 Preferences use `localStorage`, with validation and defaults when stored data is invalid or unavailable. They are independent from explicit JSON/TXT creation exports.
