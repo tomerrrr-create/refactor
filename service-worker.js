@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '2ada739dd092f1d3a11a';
+const VERSION = '47aee43ca71130bdf62c';
 const ASSETS = [
     "./",
     "./index.html",
@@ -46,6 +46,7 @@ const ASSETS = [
     "./js/macro-palette-context.js",
     "./js/magnet-anchor-limit.js",
     "./js/magnet-anchor.js",
+    "./js/magnet-modes.js",
     "./js/network-settings-dialog.js",
     "./js/oil-settings-dialog.js",
     "./js/palette-color-transition.js",

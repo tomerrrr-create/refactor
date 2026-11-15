@@ -120,7 +120,7 @@ export function validateWorkspaceSettings(value) {
         ['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'black_hole'].includes(r.gravity.direction) && number(r.gravity.strength, 0, 1) &&
         ['b', 'a', 'vortex', 'radial', 'down', 'left', 'black_hole', 'turbine2', 'tornado'].includes(r.spiral.method) &&
         [1, 2, 3].includes(r.spiral.tornadoVersion) && integer(r.spiral.tornadoFrame, 0, Number.MAX_SAFE_INTEGER) &&
-        ['magnet', 'cosmic_magnet', 'time_magnet', 'expand'].includes(r.magnet.method) &&
+        ['field_magnet','field_cosmic_magnet','magnet', 'cosmic_magnet', 'time_magnet', 'expand'].includes(r.magnet.method) &&
         (!Object.hasOwn(r.magnet, 'anchorColor') || r.magnet.anchorColor === 'luminance') &&
         integer(r.magnet.anchorColorIndex, -1, Math.max(...C.PALETTES.map(p => p.colors.length)) - 1) &&
         EROSION_MODES.includes(r.erosion.mode) && number(r.erosion.erosionStrength, 0, 1) &&

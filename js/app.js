@@ -1,3 +1,4 @@
+import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
@@ -327,11 +328,10 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let contourRules = { ...C.defaultContourRules, lineColor:'brush', growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
 let magnetRules = { ...C.defaultMagnetRules };
-let magnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT;
+let magnetAnchorLimit = 600;
 let replayMagnetAnchorLimit = null;
-let magnetCombinedField = false;
 let replayMagnetCombinedField = null;
-function effectiveMagnetCombinedField() { return replayMagnetCombinedField ?? magnetCombinedField; }
+function effectiveMagnetCombinedField() { return replayMagnetCombinedField ?? isCombinedMagnetMode(magnetRules.method); }
 function effectiveMagnetAnchorLimit() { return replayMagnetAnchorLimit ?? magnetAnchorLimit; }
 function getMagnetRecordingRules() { return magnetRecordingRules(magnetRules, effectiveMagnetAnchorLimit(), effectiveMagnetCombinedField()); }
 let chiFlowRules = cloneChiFlowRules(C.defaultChiFlowRules);
@@ -1893,7 +1893,7 @@ function restoreCycleMode(simulation, mode) {
     switch(simulation){
         case 'gravitationalSort':gsMode=mode;gravitationalSortRules.direction=mode;break;
         case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;break;
-        case 'magnet':magnetMode=mode;magnetRules.method=mode;break;
+        case 'magnet':selectMagnetMode(mode);break;
         case 'brightnessEvo':brightnessEvoMode=mode;break;
         case 'dla':dlaMode=mode;break;
         case 'breathe':breatheEvoMode=mode;break;
@@ -2096,8 +2096,7 @@ if (simulationName === 'spiral') {
 
 
 if (simulationName === 'magnet') {
-    magnetMode = 'magnet';
-    if (typeof magnetRules !== 'undefined') magnetRules.method = 'magnet';
+    selectMagnetMode('field_magnet');
 }
 
 
@@ -4306,11 +4305,15 @@ const sequence = SPIRAL_MODE_SEQUENCE;
 // --- NEW: Magnet Button Functions ---
 
 function updateMagnetButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='magnet'?cycleMemory.entry('magnet'):undefined)??magnetMode;
+    const selectedMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='magnet'?cycleMemory.entry('magnet'):undefined)??magnetMode;
+    const displayMode=selectedMode==='off'?'field_magnet':selectedMode;
     if (!dom.btnMagnetModes) return;
     // הוספנו לניקוי את time_magnet ואת expand!
-    dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-expand', 'simulation-active');
+    dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-expand', 'mode-field_magnet', 'mode-field_cosmic_magnet', 'simulation-active');
     
+    const modeLabel=magnetEngineMethod(displayMode==='off'?'field_magnet':displayMode);
+    dom.btnMagnetModes.title=getText('magnet_method_'+(isCombinedMagnetMode(displayMode)?displayMode:modeLabel));
+    dom.btnMagnetModes.setAttribute('aria-label',dom.btnMagnetModes.title);
     if (displayMode !== 'off') {
         dom.btnMagnetModes.classList.add('mode-' + displayMode);
         if (armedSimulation === 'magnet') {
@@ -4320,13 +4323,18 @@ function updateMagnetButtonUI() {
 }
 
 
+function selectMagnetMode(method) {
+    magnetMode=method;magnetRules.method=method;
+    if(method==='magnet'||method==='cosmic_magnet')magnetAnchorLimit=600;
+}
+
 function cycleMagnetMode() {
     const oldMode = magnetMode;
-    const sequence = ['off', 'magnet', 'cosmic_magnet', 'time_magnet'];
-    magnetMode = nextEvolutionMode(magnetMode, sequence);
+    const sequence = MAGNET_CYCLE;
+    magnetMode = sequence.includes(magnetMode)?nextEvolutionMode(magnetMode, sequence):'field_magnet';
 
     if (magnetMode !== 'off') {
-        magnetRules.method = magnetMode;
+        selectMagnetMode(magnetMode);
     }
     
     window.logArtEvent('Magnet Mode Changed', magnetMode);
@@ -4342,6 +4350,7 @@ function cycleMagnetMode() {
     }
     
     updateMagnetButtonUI();
+    if(magnetMode!=='off')recordLiveSimulationRules('magnet');
 }
 // --- END: Magnet Button Functions ---
 
@@ -5374,6 +5383,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
         updateErosionButtonUI();
     }
     if (sim === 'magnet') { replayMagnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_LIMIT; replayMagnetCombinedField = false; delete magnetRules.anchorLimit; delete magnetRules.fieldModel; }
+    if (sim === 'magnet' && rulesStr === 'No specific rules mapping') {magnetRules.method='magnet';magnetMode='magnet';}
     if (sim === 'magnet') delete magnetRules.anchorColor; // Old recordings never inherit the viewer's anchor preference.
     if (sim === 'gameOfLife' && rulesStr === "No specific rules mapping") { delete gameOfLifeRules.genetics; delete gameOfLifeRules.deadColor; }
     if (rulesStr !== "No specific rules mapping") {
@@ -5726,6 +5736,7 @@ function executeMacroAction(action) {
                 } else {
                     if (armedSimulation !== 'magnet') armSimulation('magnet');
                     magnetRules.method = action.details;
+                    if(isCombinedMagnetMode(action.details))replayMagnetCombinedField=true;
                 }
                 magnetMode = action.details;
                 if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
@@ -5988,13 +5999,6 @@ else if (action.eventName === 'Invert Colors') {
                 cycleMemory.setEnabled(value);
                 if(!isMacroLoaded&&!isMacroPlaying)cycleMemoryAfterReplay=false;
                 rememberCurrentCycle();refreshCycleIcons();
-            },
-            getMagnetCombinedField: () => magnetCombinedField,
-            setMagnetCombinedField: (value, { record = true } = {}) => {
-                const next = Boolean(value);
-                if (next === magnetCombinedField) return;
-                magnetCombinedField = next;
-                if (record && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand) recordLiveSimulationRules('magnet');
             },
             getMagnetAnchorLimit: () => magnetAnchorLimit,
             magnetAnchorLimits: MAGNET_ANCHOR_LIMITS,

@@ -1,3 +1,4 @@
+import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import { recordErosionRules, restoreErosionRules } from '../js/erosion-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +10,7 @@ const spiralSequence = JSON.parse(source.match(/const SPIRAL_MODE_SEQUENCE = (\[
 const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
     { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x', 'turbine2', 'black_hole'], get: c => c.gsMode },
-    { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: ['magnet', 'cosmic_magnet', 'time_magnet'], get: c => c.magnetMode },
+    { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: MAGNET_CYCLE.slice(1), get: c => c.magnetMode },
     { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['b', 'left', 'radial', 'down', 'a'], get: c => c.spiralMode },
     { sim: 'brightnessEvo', fn: 'cycleBrightnessEvoMode', event: 'Brightness Evo Mode Changed', modes: ['brightness', 'contrast'], get: c => c.brightnessEvoMode },
     { sim: 'dla', fn: 'cycleDlaMode', event: 'DLA Mode Changed', modes: ['genetics', 'no-genetics'], get: c => c.dlaMode }
@@ -21,7 +22,7 @@ function functionSource(name) {
 }
 function harness() {
     const board = [{ k: 0 }, { k: 1 }], dlaState = { crystal: new Set([0]) };
-    const c = vm.createContext({ window: {}, artRecipeLog: [], currentGenerationCount: 0,
+    const c = vm.createContext({MAGNET_CYCLE,isCombinedMagnetMode, window: {}, artRecipeLog: [], currentGenerationCount: 0,
         isExecutingMacroCommand: false, isLifePlaying: false, armedSimulation: null,
         brightnessEvoMode: 'off', dlaMode: 'off', gsMode: 'off', spiralMode: 'off', magnetMode: 'off',
         erosionRules: { mode: 'legacy', erosionStrength: .1 }, gravitationalSortRules: { direction: 'up' },
@@ -35,6 +36,8 @@ function harness() {
     for (const name of ['updateErosionButtonUI', 'updateGravitationalSortButtonUI', 'updateSpiralButtonUI', 'updateMagnetButtonUI', 'updateBrightnessEvoButtonUI', 'updateDlaButtonUI']) c[name] = () => {};
     const loggerStart = source.indexOf('window.logArtEvent = function');
     vm.runInContext(source.slice(loggerStart, source.indexOf('// ------------------------------------------', loggerStart)), c);
+    c.recordLiveSimulationRules=()=>{};
+    vm.runInContext(functionSource('selectMagnetMode'),c);
     vm.runInContext(functionSource('nextEvolutionMode') + cases.map(item => functionSource(item.fn)).join('\n'), c);
     vm.runInContext(source.slice(source.indexOf('function getHistorySettings('), source.indexOf('function toggleMacroFullScreen(')), c);
     vm.runInContext(source.slice(source.indexOf('function executeMacroAction('), source.indexOf('        async function initializeApp(')), c);

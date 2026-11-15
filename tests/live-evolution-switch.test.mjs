@@ -1,3 +1,4 @@
+import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import {magnetRecordingRules, recordedMagnetAnchorLimit} from '../js/magnet-anchor-limit.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,7 +19,7 @@ const simulations = {
 function harness() {
     const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
-    const c = vm.createContext({ n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
+    const c = vm.createContext({MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
         C:{PALETTES:[{originalColors:[]}]}, activePaletteIndex:0, palette:()=>[], getCracksBrush:()=>({color:null,rainbow:false}), getCracksGrowth:()=>({branchChance:65,branchInterval:11,curvature:100}), getCracksMaterial:()=>({enabled:false,strength:40}), dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
         setSimulationRunning(value) { c.runningAppearance = value; }, isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
         boardState: [{k: 1}, {k: 2}], simulationStartState: null, simulationHasBrushInput: false,
@@ -45,12 +46,12 @@ function harness() {
         'updateBreatheEvoButtonUI','updateGravitationalSortButtonUI','updateSpiralButtonUI','updateMagnetButtonUI',
         'updateGameOfLifeButtonUI','updateChiFlowButtonUI','updateIslandsButtonUI','updateNudgeButtonUI']) c[name] = () => {};
     c.gameLoop = () => { c.currentGenerationCount++; c.animationFrameId = c.requestAnimationFrame(c.gameLoop); };
-    vm.runInContext(section('let magnetCombinedField =', 'let chiFlowRules ='), c);
+    vm.runInContext(section('let replayMagnetCombinedField =', 'let chiFlowRules ='), c);
     vm.runInContext(section('window.logArtEvent = function', '// ------------------------------------------'), c);
     vm.runInContext(section('function pauseLife()', 'function getRandomGridPosition('), c);
     vm.runInContext(section('function handleEvolutionTap(', 'function setBrushMode('), c);
     vm.runInContext(section('function nextEvolutionMode(', 'function updateErosionButtonUI('), c);
-    for (const name of ['cycleSpiralMode','cycleGravitationalSortMode','cycleMagnetMode','cycleErosionMode','cycleGameOfLifeMode','cycleChiFlowMode','cycleIslandsMode','cycleDlaMode']) {
+    for (const name of ['selectMagnetMode','cycleSpiralMode','cycleGravitationalSortMode','cycleMagnetMode','cycleErosionMode','cycleGameOfLifeMode','cycleChiFlowMode','cycleIslandsMode','cycleDlaMode']) {
         const fn=source.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?^\\}`, 'm'));
         vm.runInContext(fn[0], c);
     }
