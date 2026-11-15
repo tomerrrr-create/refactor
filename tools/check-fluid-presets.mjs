@@ -12,7 +12,7 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`htt
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
 try{for(const [lang,touch] of [['en',false],['he',true],['ru',false],['nl',true]]){
  const context=await browser.newContext({viewport:touch?{width:390,height:844}:{width:1280,height:900},hasTouch:touch,isMobile:touch,serviceWorkers:'block'});
- await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),lang);
+ await context.addInitScript(()=>{if(!localStorage.getItem('colorGridExperimentalSimulationsV1'))localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({ink:true,oil:true,network:true}));});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.fluidTest={
  setup:kind=>{stopMacro();pauseLife();resetArmedState();n=61;restoreSeparatorWidth(0);initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*17)%paletteLen();t.isGold=i===0;});inkRules={...INITIAL_INK_RULES};oilRules={...INITIAL_OIL_RULES};history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();kind==='ink'?cycleInkMode():cycleOilMode();renderToScreen(null);},

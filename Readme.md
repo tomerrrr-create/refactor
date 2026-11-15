@@ -416,6 +416,12 @@ Execution is controlled by the `armedSimulation` variable. When active, `toggleP
 
 ## 6. Evolution engines
 
+### Experimental simulation visibility
+
+Technicians has independent Ink, Oil and Living network switches. All three default off. Enabling a switch reveals that simulation in its assigned toolbar place and Evolution map; disabling it hides both, preserving all saved assignments. Hidden places in the map cannot receive another simulation. Turning off the selected experiment pauses and deselects it without changing the artwork. The switches are unavailable while a recipe is loaded or playing; existing projects, history and recipes retain their engine support regardless of visibility.
+
+Choices persist in device-local `colorGridExperimentalSimulationsV1`, independently of profiles, profile Reset and settings imports/exports. Storage failures retain session choices. `js/experimental-simulations.js` owns the three-entry exposure registry, default-off flags and technician controls; the drawer consumes one visibility predicate. Removing an exposure entry/control is centralized here; removing an engine still requires its explicit app and compatibility integration to be considered.
+
 ### Living network
 
 Living network (`network`, `btnNetwork`) grows new source-colored threads from the current artwork, rather than sorting or conserving the input pigments. For a clear starting point, draw several separated colored patches on a mostly uniform board, select Network at the top-left of drawer two, then Play. Swipe up opens three **Background color** choices plus **Growth speed**, **Branching** and **Thread persistence** (65%, 40%, 75%). The shared tap/off, mode-reset/help holds, profile drafts and Save/Cancel/Reset behaviors apply. Growth 0 freezes growth and trail aging.
@@ -844,6 +850,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Natural fullscreen ending: frozen final frame, hold/fade timing, no-black artwork, reduced motion, native/CSS fullscreen, Stop/Escape and replacement playback cancellation | `tools/check-macro-ending.mjs` |
 | Fullscreen macro activity: opt-in, desktop/mobile geometry, action filtering, space limits, Stop and replay equivalence | `tools/check-macro-activity.mjs` |
 | Macro activity mode icons, frozen outgoing snapshots, gradients, crossfade opacity, rapid bursts and reduced motion | `tools/check-macro-activity-icons.mjs` |
+| Experimental Ink/Oil/Network switches: default-off, independent persistence, profiles, map visibility and hidden-engine recipe replay | `tools/check-experimental-simulations.mjs` |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
 | Creation/Evolution switch visible and white during playback, stable layout, blocked gestures, pending transitions and macro completion | `tools/check-mode-switch-playback.mjs` |
 | Two-stage simulation hold: 600ms reset, 1200ms help, inactive/active choices, preserved controls, release suppression and recorded replay | `tools/check-evolution-hold-reset.mjs` |

@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '74c521a9a991adf28577';
+const VERSION = 'a0007585fc8719d12a8a';
 const ASSETS = [
     "./",
     "./index.html",
@@ -33,6 +33,7 @@ const ASSETS = [
     "./js/evolution-mode-memory.js",
     "./js/evolution-tuning-modals.js",
     "./js/evolution-tuning.js",
+    "./js/experimental-simulations.js",
     "./js/fluid-experiment-icons.js",
     "./js/fluid-presets.js",
     "./js/guide-ripples.js",

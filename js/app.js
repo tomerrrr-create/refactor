@@ -1,3 +1,4 @@
+import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
@@ -411,6 +412,7 @@ let magnetMode = 'off';
       const originalColorPickerIconHTML = dom.btnColorPicker.innerHTML;
       
       let evolutionDrawer;
+      const experimentalSimulations=createExperimentalSimulationFlags();
       let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
       let modals;
       let settingsProfiles;
@@ -6190,7 +6192,15 @@ updateBrightnessEvoButtonUI();
         cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,getFrequencies:()=>cymaticsFrequencies,getStrengths:()=>cymaticsStrengths,saveRules:saveCymaticsSettings,
             canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying,
             getText,getLang:getCurrentLang,onLanguageChange});
+        initializeExperimentalSimulationControls({flags:experimentalSimulations,getText,onLanguageChange,
+            canChange:()=>!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
+            onChange:(id,enabled)=>{
+                if(!enabled&&armedSimulation===id){if(isLifePlaying)pauseLife();armSimulation(null);}
+                evolutionDrawer?.applyLayout();
+            }
+        });
         evolutionDrawer = createEvolutionDrawer({
+            isVisible:experimentalSimulations.visible,
             controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
             canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,

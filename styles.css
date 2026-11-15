@@ -2752,3 +2752,8 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .ink-settings-dialog h2:has(.fluid-original-symbol) { display:flex; align-items:center; gap:9px; }
 .fluid-original-symbol { display:inline-flex; flex:none; color:#e3c677; }
 .fluid-original-symbol svg { width:24px; height:24px; }
+
+/* Feature exposure does not change saved drawer assignments. */
+#controlsContainer [data-evolution-feature-hidden],
+#controlsContainer.sim-mode-active [data-evolution-feature-hidden] { display:none !important; }
+#evolutionDrawerDialog .drawer-feature-hidden { visibility:hidden; }
