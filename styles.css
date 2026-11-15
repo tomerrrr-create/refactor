@@ -2660,7 +2660,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .magnet-method-button[aria-pressed="true"], .magnet-limit-button[aria-pressed="true"] { border-color: var(--magnet-accent); background: color-mix(in srgb, var(--magnet-accent) 23%, #171a19); box-shadow: 0 0 0 2px color-mix(in srgb, var(--magnet-accent) 14%, transparent); }
 .magnet-method-button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: 4px; width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
 .magnet-limit-section { display: flex; flex-direction: column; gap: 10px; }
-#magnetAnchorLimit { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; direction: ltr; padding: 2px; }
+#magnetAnchorLimit { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; direction: ltr; padding: 2px; }
 .magnet-limit-button { min-height: 44px; min-width: 0; padding: 6px 2px; border-radius: 10px; font-size: 12px; font-variant-numeric: tabular-nums; color: #aaa99f; }
 .magnet-limit-button[aria-pressed="true"] { color: #f3e8cf; font-weight: 600; }
 .magnet-limit-button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: 5px; width: 12px; height: 2px; border-radius: 2px; background: var(--magnet-accent); }
@@ -2678,16 +2678,8 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 @media (prefers-reduced-motion: reduce) { .magnet-method-button, .magnet-limit-button { transition: none; } }
 
 /* Session-only combined Magnet field experiment. */
-.magnet-field-section { border: 1px solid #494332; border-radius: 12px; padding: 12px; background: #1c1d19; }
-.magnet-field-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #e1d4ad; font-size: .9rem; cursor: pointer; }
-.magnet-field-toggle { appearance: none; flex: 0 0 40px; width: 40px; height: 24px; border-radius: 20px; border: 1px solid #69695f; background: #42463f; position: relative; cursor: pointer; transition: background .15s; }
-.magnet-field-toggle::after { content: ''; position: absolute; width: 16px; height: 16px; top: 3px; left: 3px; background: #e8e8df; border-radius: 50%; transition: transform .15s; }
-.magnet-field-toggle:checked { background: #99732d; border-color: #c2a14a; }
-.magnet-field-toggle:checked::after { transform: translateX(16px); }
-.magnet-field-toggle:focus-visible { outline: 2px solid #e3c677; outline-offset: 3px; }
 #magnetCombinedFieldNote { font-size: .75rem; line-height: 1.5; color: #a8aa9f; margin-top: 8px; }
 .magnet-limit-button:disabled { opacity: .35; cursor: default; }
-@media (prefers-reduced-motion: reduce) { .magnet-field-toggle, .magnet-field-toggle::after { transition: none; } }
 
 /* A natural macro ending holds the artwork; only its activity and controls fade. */
 .macro-activity { transition: opacity 400ms ease-in-out; }
@@ -2757,3 +2749,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #controlsContainer [data-evolution-feature-hidden],
 #controlsContainer.sim-mode-active [data-evolution-feature-hidden] { display:none !important; }
 #evolutionDrawerDialog .drawer-feature-hidden { visibility:hidden; }
+
+#magnetMethodContainer { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+#btnMagnetModes.mode-field_magnet #iconModeFieldMagnet,
+#btnMagnetModes.mode-field_cosmic_magnet #iconModeFieldCosmicMagnet { display:block !important; }
+#btnMagnetModes.mode-field_magnet svg:not(#iconModeFieldMagnet),
+#btnMagnetModes.mode-field_cosmic_magnet svg:not(#iconModeFieldCosmicMagnet) { display:none !important; }

@@ -1,3 +1,4 @@
+import {isCombinedMagnetMode,magnetEngineMethod} from '../magnet-modes.js';
 import { runCombinedMagnetGeneration, resetCombinedMagnetField } from './magnet-combined-field.js';
 import { recordedMagnetCombinedField } from '../magnet-anchor-limit.js';
 import { createMagnetNearestMap } from './magnet-nearest-map.js';
@@ -68,7 +69,7 @@ function anchorOffset(k, anchor, length) {
 export function runMagnetGeneration({ n, currentBoardState, magnetRules, currentPalette, originalPalette, anchorLimit: limitOverride, combinedField: fieldOverride }) {
 
     const nextBoardState = currentBoardState; // Preserve in-place swap order.
-    const method = magnetRules.method || 'magnet';
+    const method = magnetEngineMethod(magnetRules.method || 'magnet');
     const strength = 0.9; 
 
     // === תוספת שלנו: שליפת משתני הפלטה והעוגן להתחלה ===
@@ -153,7 +154,7 @@ const anchorIndex = selectedAnchor === -1 ? 0 : selectedAnchor;
   const targetShiftedK = cachedAnchorFallback.targetShiftedK; 
   // ==============================================================
 
-    if (fieldOverride ?? recordedMagnetCombinedField(magnetRules)) {
+    if (isCombinedMagnetMode(magnetRules.method) || (fieldOverride ?? recordedMagnetCombinedField(magnetRules))) {
         return runCombinedMagnetGeneration({n, board:nextBoardState, method, target:targetColorIndex,
             anchor:anchorIndex, paletteLength:pLen, moved:cachedMovedThisFrame});
     }

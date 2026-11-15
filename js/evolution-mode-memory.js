@@ -4,7 +4,7 @@ export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].in
 // First human-cycle choices. Turing and one-shot utilities have no cycle.
 export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
     gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:'b',
-    magnet:'magnet',brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
+    magnet:'field_magnet',brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
     ink:'flow',oil:'droplets',network:'growth',erosion:'channels',islands:'classic',contour:'all',cymatics:3,nudge:'nudgeBrighter',wind:'ripple'
 });
 export const defaultEvolutionCycleMode = simulation => DEFAULT_EVOLUTION_CYCLE_MODES[evolutionModeKey(simulation)];

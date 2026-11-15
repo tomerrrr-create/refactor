@@ -9,6 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  magnet_method_field_magnet:{en:'Magnet · combined field',he:'מגנט · שדה משולב',ru:'Магнит · общее поле',nl:'Magneet · gecombineerd veld'},
+  magnet_method_field_cosmic_magnet:{en:'Cosmic magnet · combined field',he:'מגנט זוויתי · שדה משולב',ru:'Космический магнит · общее поле',nl:'Kosmische magneet · gecombineerd veld'},
   technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},
   technician_group_features: {en:"Features",he:"אפשרויות הפעלה",ru:"Возможности",nl:"Functies"},
   technician_group_startup: {en:"Initialization & startup",he:"אתחול ופתיחה",ru:"Инициализация и запуск",nl:"Initialisatie en opstarten"},
@@ -133,8 +135,6 @@ export const translations = {
   ink_flow: {en:'Flow',he:'זרימה',ru:'Течение',nl:'Stroming'},
   ink_swirl: {en:'Swirl',he:'סחרור',ru:'Вихри',nl:'Werveling'},
   ink_viscosity: {en:'Viscosity',he:'סמיכות',ru:'Вязкость',nl:'Viscositeit'},
-  magnet_combined_field: { en: 'Combined field · experiment', he: 'שדה משולב · ניסוי', ru: 'Общее поле · эксперимент', nl: 'Gecombineerd veld · experiment' },
-  magnet_combined_field_note: { en: 'All anchors contribute. Session only; sample limit applies when off.', he: 'כל העוגנים משפיעים יחד. לפתיחה הנוכחית בלבד; מגבלת הדגימה חלה כשהניסוי כבוי.', ru: 'Все якоря влияют вместе. Только этот сеанс; лимит выборки действует при выключении.', nl: 'Alle ankers werken samen. Alleen deze sessie; de steekproeflimiet geldt als dit uit staat.' },
   magnet_anchor_limit: { en: 'Anchor points', he: 'נקודות עוגן', ru: 'Точки якоря', nl: 'Ankerpunten' },
   magnet_anchor_limit_note: { en: 'For this session only. Macros use their recorded limit; older macros use 300.', he: 'לפתיחה הנוכחית בלבד. מאקרו משתמש במגבלה שהוקלטה; מאקרו ישן משתמש ב־300.', ru: 'Только для текущего сеанса. Макросы используют записанный лимит; старые — 300.', nl: 'Alleen voor deze sessie. Macro’s gebruiken hun opgenomen limiet; oudere macro’s gebruiken 300.' },
   magnet_anchor_luminance: { en: 'Anchor: darkest by Luminance', he: 'עוגן: הכהה ביותר לפי Luminance', ru: 'Якорь: самый тёмный по яркости', nl: 'Anker: donkerste volgens luminantie' },
@@ -366,7 +366,7 @@ export const translations = {
   help_sandpile: {"en": "Chi Flow\nAwakening and color flow based on neighbors.", "he": "זרימת צ׳י\nהתעוררות וזרימת צבע לפי השכנים.", "ru": "Поток Ци\nПробуждение и поток цвета по соседям.", "nl": "Chi Flow\nOntwaken en kleurstroming op basis van buren."},
   help_contour_action: {"en": "Contours\nTap to apply contour lines once. Swipe up for settings; swipe down for Separators. A running simulation pauses first.", "he": "קווי מתאר\nהקישו להוספת קווי מתאר פעם אחת. החליקו למעלה להגדרות ולמטה למפרידים. סימולציה רצה נעצרת תחילה.", "ru": "Контуры\nНажмите для однократного применения. Вверх — настройки, вниз — разделители. Работающая симуляция сначала приостанавливается.", "nl": "Contouren\nTik om eenmaal contourlijnen toe te passen. Veeg omhoog voor instellingen; omlaag voor scheidingen. Een actieve simulatie pauzeert eerst."},
   help_contour: {"en": "Cracks\nSelect, then use Single step or Play. Swipe up for growth settings.", "he": "סדקים\nבחרו ואז הפעילו צעד בודד או ניגון. החליקו למעלה להגדרות הצמיחה.", "ru": "Трещины\nВыберите, затем нажмите «Шаг» или «Воспроизведение». Смахните вверх для настроек роста.", "nl": "Scheuren\nSelecteer en gebruik één stap of afspelen. Veeg omhoog voor groei-instellingen."},
-  help_magnet: {"en": "Magnet\nTap to cycle: Cosmic, regular or time.", "he": "מגנט\nלחיצה למעבר בין Cosmic, רגיל וזמן.", "ru": "Магнит\nНажатие переключает Cosmic, обычный и временной магнит.", "nl": "Magneet\nTik om te wisselen: Cosmic, gewoon of tijd."},
+  help_magnet: {"en": "Magnet\nTap to cycle: combined Regular, combined Cosmic, Regular, Cosmic. Time and Expand are in settings.", "he": "מגנט\nלחיצה למעבר: רגיל משולב, קוסמי משולב, רגיל, קוסמי. זמן והתרחבות זמינים בהגדרות.", "ru": "Магнит\nЦикл: общее обычное поле, общее космическое поле, обычный, космический. Время и расширение — в настройках.", "nl": "Magneet\nCyclus: gecombineerd gewoon, gecombineerd kosmisch, gewoon, kosmisch. Tijd en Uitbreiden staan in de instellingen."},
   help_spiral: {"en":"Spiral\nTap to cycle: Pinwheel, Turbine, Diamond, Hexagon, Experiment A, Tornado.","he":"ספירלה\nלחיצה למעבר בין שבשבת, טורבינה, יהלום, משושה, ניסוי A וטורנדו.","ru":"Спираль\nРежимы: Вертушка, Турбина, Ромб, Шестиугольник, Эксперимент A, Торнадо.","nl":"Spiraal\nTik voor Windmolentje, Turbine, Ruit, Zeshoek, Experiment A, Tornado."},
   help_sim_settings: {"en": "Evolution settings\nAdjust how the selected evolution behaves.", "he": "הגדרות אבולוציה\nשינוי אופן הפעולה של האבולוציה שנבחרה.", "ru": "Настройки эволюции\nИзменить поведение выбранной эволюции.", "nl": "Evolutie-instellingen\nPas het gedrag van de gekozen evolutie aan."},
   help_step: {"en": "Single step\nAdvance the selected evolution by one generation.", "he": "צעד אחד קדימה\nקידום דור אחד באבולוציה שנבחרה.", "ru": "Один шаг вперёд\nПродвинуть выбранную эволюцию на одно поколение.", "nl": "Eén stap vooruit\nGa één generatie vooruit met de gekozen evolutie."},

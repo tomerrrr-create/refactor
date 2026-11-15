@@ -1,3 +1,4 @@
+import {isCombinedMagnetMode} from './magnet-modes.js';
 import { magnetAnchorIndex } from './magnet-anchor.js';
 import { initializeMacroOverlaySettings } from './macro-overlay-settings.js';
 import { createCompactColorPicker } from './compact-color-picker.js';
@@ -2119,7 +2120,6 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
 // ====================== MAGNET SETTINGS MODAL ======================
 let tempMagnetRules = { method: 'magnet', anchorColorIndex: -1 };
 let tempMagnetAnchorLimit = 300;
-let tempMagnetCombinedField = false;
 const magnetAutumnAccents = ['#CD853F', '#607D8B', '#C2A14A', '#FF7F50'];
 
 function closeMagnetSettingsModal() {
@@ -2132,6 +2132,8 @@ function renderMagnetMethodButtons() {
     container.innerHTML = '';
 
     const modes = [
+        { method:'field_magnet',iconId:'iconModeFieldMagnet' },
+        { method:'field_cosmic_magnet',iconId:'iconModeFieldCosmicMagnet' },
         { method: 'magnet',        iconId: 'iconModeMagnet' },
         { method: 'cosmic_magnet', iconId: 'iconModeCosmicMagnet' },
         { method: 'time_magnet',   iconId: 'iconModeTimeMagnet' },
@@ -2142,7 +2144,7 @@ function renderMagnetMethodButtons() {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'magnet-method-button';
-        btn.style.setProperty('--magnet-accent', magnetAutumnAccents[index]);
+        btn.style.setProperty('--magnet-accent', magnetAutumnAccents[index%magnetAutumnAccents.length]);
         btn.setAttribute('aria-pressed', String(tempMagnetRules.method === m.method));
         btn.title = app.getText('magnet_method_' + m.method);
         btn.setAttribute('aria-label', btn.title);
@@ -2162,6 +2164,8 @@ function renderMagnetMethodButtons() {
 
         btn.addEventListener('click', () => {
             tempMagnetRules.method = m.method;
+            if(m.method==='magnet'||m.method==='cosmic_magnet')tempMagnetAnchorLimit=600;
+            renderMagnetLimitButtons();
             renderMagnetMethodButtons();
             container.querySelector(`[data-method="${m.method}"]`).focus({ preventScroll: true });
         });
@@ -2179,7 +2183,7 @@ function renderMagnetLimitButtons() {
     for (const [index, limit] of app.magnetAnchorLimits.entries()) {
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'magnet-limit-button';
-        button.disabled = tempMagnetCombinedField;
+        button.disabled = isCombinedMagnetMode(tempMagnetRules.method);
         button.dataset.limit = String(limit);
         button.textContent = limit.toLocaleString('en-US');
         button.style.setProperty('--magnet-accent', accents[index]);
@@ -2328,14 +2332,6 @@ function openMagnetSettingsModal() {
     const currentRules = app.getMagnetRules();
     tempMagnetRules = { ...currentRules };
     tempMagnetAnchorLimit = app.getMagnetAnchorLimit();
-    tempMagnetCombinedField = app.getMagnetCombinedField();
-    const fieldToggle = document.getElementById('magnetCombinedField');
-    fieldToggle.checked = tempMagnetCombinedField;
-    fieldToggle.onchange = () => {
-        tempMagnetCombinedField = fieldToggle.checked;
-        renderMagnetLimitButtons();
-    };
-
     app.dom.btnMagnetModalClose.setAttribute('aria-label', app.getText('saveModal_close'));
     app.dom.magnetSettingsTitle.textContent = app.getText('magnet_modal_title');
     app.dom.magnetModeLabel.textContent = app.getText('magnet_mode_label');
@@ -2353,7 +2349,6 @@ function saveMagnetSettings() {
     // התיקון שלנו: שימוש ב"טלפון" כדי לשמור את הנתונים חזרה בצורה מסודרת
     app.setMagnetRules({ ...tempMagnetRules });
     app.setMagnetAnchorLimit(tempMagnetAnchorLimit, { record: false });
-    app.setMagnetCombinedField(tempMagnetCombinedField, { record: false });
 
     if (typeof app.syncMagnetFromModal === 'function') {
         app.syncMagnetFromModal(tempMagnetRules.method, tempMagnetRules.anchorColorIndex);

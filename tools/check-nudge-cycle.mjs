@@ -18,11 +18,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  setup:()=>{pauseLife();resetArmedState();n=9;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=5+i%4;t.isGold=i===0;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');evolutionSlots=validateEvolutionSlots(['nudgeDarker',...DEFAULT_EVOLUTION_SLOTS.slice(1)]);evolutionDrawer.applyLayout();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();},
  state:()=>({board:boardState.map(t=>t.k),armed:armedSimulation,playing:isLifePlaying,gen:currentGenerationCount,history:history.length,logs:[...artRecipeLog],loaded:isMacroLoaded,macro:isMacroPlaying}),
  record:()=>artRecipeLog.join(String.fromCharCode(10)),replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},legacy:()=>executeMacroAction({eventName:'NUDGE',details:'Brighter | Sort: luminance'}),pause:pauseLife,
+ open:()=>modals.openNudgeSettingsModal(),
  };initializeApp().then(()=>nudgeTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  await page.goto(base);await page.waitForFunction(()=>nudgeTest.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>nudgeTest.setup());
  const state=()=>page.evaluate(()=>nudgeTest.state()),button=page.locator('#btnNudgeBrighter'),step=page.locator('#btnStepForward'),play=page.locator('#btnPlayPauseLife');
+ // Fresh profile settings and the inverted speed slider agree on 35 ms.
+ await button.click();await page.evaluate(()=>nudgeTest.open());
+ assert.equal(await page.locator('#nudgeSpeed').inputValue(),'165');
+ assert.match(await page.locator('#nudgeSpeed').getAttribute('aria-valuetext'),/35/);
+ await page.locator('#btnCloseNudgeSettings').click();await page.evaluate(()=>nudgeTest.setup());
  // Repeated hover/cycle transitions must restore the original unarmed pixels.
  await page.mouse.move(0,0);await page.waitForTimeout(500);
  const cleanIcon=await button.screenshot({animations:'disabled'});

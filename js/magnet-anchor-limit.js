@@ -1,9 +1,11 @@
+import {isCombinedMagnetMode} from './magnet-modes.js';
 // Session-only Magnet setting; it is never part of profile settings.
 export const DEFAULT_MAGNET_ANCHOR_LIMIT = 300;
-export const MAGNET_ANCHOR_LIMITS = Object.freeze([300, 600, 1000, 1500, 2000]);
+export const MAGNET_ANCHOR_LIMITS = Object.freeze([300, 600, 1000]);
 
 export function validateMagnetAnchorLimit(value) {
-    if (!MAGNET_ANCHOR_LIMITS.includes(value)) throw new Error('Invalid Magnet anchor limit');
+    // Retired UI choices remain valid in historical recording payloads.
+    if (!MAGNET_ANCHOR_LIMITS.includes(value) && value!==1500 && value!==2000) throw new Error('Invalid Magnet anchor limit');
     return value;
 }
 
@@ -13,7 +15,7 @@ export function recordedMagnetAnchorLimit(rules) {
 
 export const COMBINED_MAGNET_FIELD = 'combined-v1';
 export function recordedMagnetCombinedField(rules) {
-    if (rules?.fieldModel === undefined) return false;
+    if (rules?.fieldModel === undefined) return isCombinedMagnetMode(rules?.method);
     if (rules.fieldModel !== COMBINED_MAGNET_FIELD) throw new Error('Invalid Magnet field model');
     return true;
 }

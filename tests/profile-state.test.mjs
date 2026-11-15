@@ -7,7 +7,7 @@ import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, lo
 import { CHI_FLOW_PRESETS } from '../js/constants.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
-const initial = () => { const settings = defaultWorkspaceSettings(); settings.simulationInit.brushSize = 1; settings.startup.separatorPx = 5; settings.rules.erosion.erosionStages = { 'channels-solid': 0, channels: 0 }; return { settings: { ...settings, simulationTheme: 'blue' } }; };
+const initial = () => { const settings = defaultWorkspaceSettings(); settings.nudgeIntervalMs = 35; settings.simulationInit.brushSize = 1; settings.startup.separatorPx = 5; settings.rules.erosion.erosionStages = { 'channels-solid': 0, channels: 0 }; return { settings: { ...settings, simulationTheme: 'blue' } }; };
 const storage = () => {
     const data = new Map();
     return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
@@ -22,11 +22,11 @@ test('initial slots are independent, select 1, and compare actual settings inclu
     const edited = change(baseline, s => { s.nudgeIntervalMs = 25; });
     assert(state.capture(edited));
     assert.equal(state.dirty(0), true);
-    assert.equal(state.draft(1).settings.nudgeIntervalMs, 100);
+    assert.equal(state.draft(1).settings.nudgeIntervalMs, 35);
     state.capture(baseline);
     assert.equal(state.dirty(0), false);
     const copy = state.draft(); copy.settings.nudgeIntervalMs = 1;
-    assert.equal(state.draft().settings.nudgeIntervalMs, 100);
+    assert.equal(state.draft().settings.nudgeIntervalMs, 35);
 });
 
 test('session switching keeps edits but reopening restores only explicitly saved simulations', () => {
@@ -41,7 +41,7 @@ test('session switching keeps edits but reopening restores only explicitly saved
     const reopened = createProfileState(initial(), disk);
     assert(reopened.restored);
     assert.equal(reopened.selected, 2);
-    assert.deepEqual([0, 1, 2].map(i => reopened.draft(i).settings.nudgeIntervalMs), [100, 100, 60]);
+    assert.deepEqual([0, 1, 2].map(i => reopened.draft(i).settings.nudgeIntervalMs), [35, 35, 60]);
     assert.deepEqual([0, 1, 2].map(i => reopened.dirty(i)), [false, false, false]);
     reopened.save();
     const again = createProfileState(initial(), disk);
@@ -74,7 +74,7 @@ test('macro settings never enter drafts, including later manual edits after play
     assert.equal(state.dirty(0), false);
     state.capture(change(replay, s => { s.brush.size = 5; s.cycles.gameOfLife[0].birth = [2]; }));
     assert.equal(state.draft().settings.brush.size, 5);
-    assert.equal(state.draft().settings.nudgeIntervalMs, 100);
+    assert.equal(state.draft().settings.nudgeIntervalMs, 35);
     assert.deepEqual(state.draft().settings.cycles.gameOfLife[2], initial().settings.cycles.gameOfLife[2]);
     assert.deepEqual(state.draft().settings.cycles.gameOfLife[0].birth, [2]);
 });
@@ -202,7 +202,7 @@ test('factory reset restores the selected profile independently of personal save
         state.replace(factoryProfileSnapshot(index));
         assert.equal(state.dirty(index), false);
         assert.equal(state.draft().settings.brush.size, 1);
-        assert.equal(state.draft().settings.nudgeIntervalMs, 100);
+        assert.equal(state.draft().settings.nudgeIntervalMs, 35);
         assert.equal(state.draft().settings.smoothing.display, true);
         for (const other of [0, 1, 2].filter(i => i !== index)) assert.deepEqual(state.draft(other), otherProfiles[other]);
         assert.deepEqual(createProfileState(initial(), disk).draft(), factoryProfileSnapshot(index));
