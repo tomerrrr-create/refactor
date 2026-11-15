@@ -459,7 +459,7 @@ currentSortMethod,
             ...(armedSimulation === 'ink' ? {inkState:getInkSnapshot()} : {}),
             ...(armedSimulation === 'oil' ? {oilState:getOilSnapshot()} : {}),
             ...(armedSimulation === 'network' ? {networkState:getNetworkSnapshot()} : {}),
-            ...(armedSimulation === 'islands' && islandsSession ? { islandsState: { ...islandsSession } } : {}),
+            ...(armedSimulation === 'islands' && islandsSession ? { islandsState: restoreIslandsSession(islandsSession) } : {}),
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
                 isGold: tile.isGold,
@@ -1904,7 +1904,7 @@ function restoreCycleMode(simulation, mode) {
             gameOfLifeMode=mode;gameOfLifeRules={...cloneGameOfLifeRules(gameOfLifeCycle[['personal','shuffle','coral'].indexOf(mode)]),...shared};break;
         }
         case 'sandpile':chiFlowMode=mode;chiFlowRules=cloneChiFlowRules(chiFlowCycle[['personal','ripples','nova'].indexOf(mode)]);break;
-        case 'islands':islandsSession=restoreIslandsSession({...islandsSession,islandsVersion:mode==='proximity'?2:1,mode});break;
+        case 'islands':islandsSession=restoreIslandsSession({...islandsSession,islandsVersion:mode==='oil'?3:mode==='proximity'?2:1,mode});break;
         case 'contour':saveCracksSettings(getCracksMaterial(),{...getCracksGrowth(),area:mode});break;
         case 'cymatics':{
             const selected=selectCymaticsMap(getCymaticsRules(),mode,cymaticsFrequencies,cymaticsStrengths);
@@ -4204,9 +4204,11 @@ function cycleGravitationalSortMode() {
 function updateIslandsButtonUI() {
     const active = armedSimulation === 'islands';
     dom.btnIslands.classList.toggle('simulation-active', active);
-    const proximity = (active?islandsSession?.mode:typeof cycleMemory!=='undefined'?cycleMemory.entry('islands'):undefined)==='proximity';
+    const mode=active?islandsSession?.mode:typeof cycleMemory!=='undefined'?cycleMemory.entry('islands'):undefined;
+    const proximity=mode==='proximity',oil=mode==='oil';
+    dom.btnIslands.classList.toggle('mode-oil',oil);
     dom.btnIslands.classList.toggle('mode-proximity', proximity);
-    dom.btnIslands.title = getText(proximity ? 'tooltip_islands_proximity' : 'tooltip_islands');
+    dom.btnIslands.title = getText(oil?'tooltip_islands_oil':proximity ? 'tooltip_islands_proximity' : 'tooltip_islands');
     dom.btnIslands.setAttribute('aria-label', dom.btnIslands.title);
     dom.btnIslands.setAttribute('aria-pressed', String(active));
 }
@@ -4215,7 +4217,7 @@ function cycleIslandsMode() {
     if (isLifePlaying && armedSimulation !== 'islands') return;
     if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
     const current = armedSimulation === 'islands' ? islandsSession?.mode || 'classic' : 'off';
-    const next = nextEvolutionMode(current, ['off', 'classic', 'proximity']);
+    const next = current==='proximity'?'classic':nextEvolutionMode(current, ['off', 'classic', 'oil']);
     if (next === 'off') {
         armSimulation(null);
     } else if (current === 'off') {
@@ -4223,7 +4225,7 @@ function cycleIslandsMode() {
     } else {
         // Live cycling keeps the board, activity, generation count and random cursor.
         islandsSession = restoreIslandsSession({ ...islandsSession,
-            islandsVersion: next === 'proximity' ? 2 : 1, mode: next });
+            islandsVersion: next === 'oil' ? 3 : 1, mode: next });
     }
     updateIslandsButtonUI();
     window.logArtEvent('Islands Mode Changed', JSON.stringify(next === 'off' ? { mode: next }
@@ -4761,7 +4763,7 @@ function validateIslandsMacroAction(action) {
         }
     } else if (action.eventName === 'Islands Mode Changed') {
         const snapshot = JSON.parse(action.details);
-        if (!['off', 'classic', 'proximity'].includes(snapshot.mode)) throw new Error('Invalid Islands mode');
+        if (!['off', 'classic', 'proximity', 'oil'].includes(snapshot.mode)) throw new Error('Invalid Islands mode');
         if (snapshot.mode !== 'off') restoreIslandsSession(snapshot);
     } else if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
         const match = action.details.match(/^Armed: islands\s+\|(?:\s+Sort:\s+[\w-]+\s+\|)?\s+Rules:\s+(.*)$/);
@@ -6093,7 +6095,7 @@ syncGsModeFromModal: (direction) => {
             },
             getEvolutionTuning: () => structuredClone(evolutionTuning),
             getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation],
-            canEditEvolutionTuning: simulation => armedSimulation === simulation && !isBreathing && !isMacroLoaded && !isMacroPlaying,
+            canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning,
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             canEditCracksSettings: () => armedSimulation === 'contour' && contourMode === 'cracks' && !isBreathing && !isMacroLoaded && !isMacroPlaying,
@@ -6451,7 +6453,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),
+                canOpen: () => Boolean(onOpen) && !(simulation==='islands'&&islandsSession?.mode==='oil') && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });

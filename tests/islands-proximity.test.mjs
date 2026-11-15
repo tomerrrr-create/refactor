@@ -54,16 +54,16 @@ function cycleHarness(){
  vm.runInContext(source.slice(source.indexOf('function cycleIslandsMode('),source.indexOf('function updateBreatheEvoButtonUI(')),c);
  return {c,logs};
 }
-test('paused Islands cycle is Classic, Proximity, Off and preserves configured activity',()=>{
+test('paused Islands cycle is Classic, Oil, Off and preserves configured activity',()=>{
  const {c,logs}=cycleHarness();c.cycleIslandsMode();assert.equal(c.armedSimulation,'islands');assert.equal(c.islandsSession.islandsVersion,1);
- c.cycleIslandsMode();assert.equal(c.islandsSession.mode,'proximity');assert.equal(c.islandsSession.activity,.17);
+ c.cycleIslandsMode();assert.equal(c.islandsSession.mode,'oil');assert.equal(c.islandsSession.activity,.17);
  c.cycleIslandsMode();assert.equal(c.armedSimulation,null);
- assert.deepEqual(logs.map(e=>e.details.mode),['classic','proximity','off']);
+ assert.deepEqual(logs.map(e=>e.details.mode),['classic','oil','off']);
 });
 test('live Islands cycle skips Off and keeps board, random cursor, steps and generation counter',()=>{
  const {c}=cycleHarness();c.cycleIslandsMode();advance(c.boardState,c.islandsSession,8);c.isLifePlaying=true;
  const tiles=c.boardState,cursor=c.islandsSession.state;
- for(const expected of ['proximity','classic','proximity','classic']){
+ for(const expected of ['oil','classic','oil','classic']){
   c.cycleIslandsMode();assert.equal(c.armedSimulation,'islands');assert.equal(c.isLifePlaying,true);
   assert.equal(c.islandsSession.mode??'classic',expected);assert.equal(c.islandsSession.state,cursor);
   assert.equal(c.islandsSession.steps,8);assert.equal(c.islandsSession.activity,.17);

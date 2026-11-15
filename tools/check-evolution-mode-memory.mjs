@@ -20,7 +20,7 @@ const cases=[
  ['spiral','btnSpiral','b','left','.mode-left'],['magnet','btnMagnetModes','field_magnet','field_cosmic_magnet','.mode-field_cosmic_magnet'],
  ['brightnessEvo','btnBrightnessEvo','brightness','contrast','.mode-contrast'],['dla','btnDla','genetics','no-genetics','.mode-no-genetics'],
  ['breathe','btnShowBreatheMenu','solo','group','.mode-group'],['erosion','btnErosion','channels','channels-solid','svg#iconErosionSolid'],
- ['islands','btnIslands','classic','proximity','.mode-proximity'],['contour','btnContour','all','dead','[data-cracks-area="dead"]'],
+ ['islands','btnIslands','classic','oil','.mode-oil'],['contour','btnContour','all','dead','[data-cracks-area="dead"]'],
  ['cymatics','btnCymatics',3,4,'[data-cymatics-map="interference"]'],['nudgeBrighter','btnNudgeBrighter','nudgeBrighter','nudgeDarker','[data-nudge-mode="darker"]'],
  ['gameOfLife','btnGameOfLife','personal','shuffle','stars'],['sandpile','btnSandpile','personal','ripples','stars']
 ];

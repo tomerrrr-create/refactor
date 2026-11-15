@@ -2759,3 +2759,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnNetwork:not(.network-spatial) .network-spatial-icon { display:none !important; }
 #btnNetwork.network-spatial > svg:not(.network-spatial-icon) { display:none !important; }
 #btnNetwork.network-spatial .network-spatial-icon { display:block !important; }
+
+#btnIslands:not(.mode-oil) .islands-oil-icon { display:none !important; }
+#btnIslands.mode-oil > svg:not(.islands-oil-icon) { display:none !important; }
+#btnIslands.mode-oil .islands-oil-icon { display:block !important; }

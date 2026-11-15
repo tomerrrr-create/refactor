@@ -1,28 +1,34 @@
+import {runOilGeneration,restoreOilState} from './oil.js';
 import { validateEvolutionTuning } from '../evolution-tuning.js';
 // Version 1: asynchronous voter model. Keep old versions stable for recipe replay.
 const VERSION = 1;
 const PROXIMITY_VERSION = 2;
+const OIL_VERSION = 3;
+// Version 3 owns these fixed defaults; B keeps its separate editable rules.
+export const ISLANDS_OIL_RULES=Object.freeze({tension:80,drift:20,mobility:70});
 const UINT32_MAX = 0xffffffff;
 const isUint32 = value => Number.isInteger(value) && value >= 0 && value <= UINT32_MAX;
 
 export function createIslandsSession(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0], rules = {}, mode = 'classic') {
     if (!isUint32(seed)) throw new Error('Invalid Islands seed');
-    if (!['classic', 'proximity'].includes(mode)) throw new Error('Invalid Islands mode');
+    if (!['classic', 'proximity', 'oil'].includes(mode)) throw new Error('Invalid Islands mode');
     const { activity } = validateEvolutionTuning({ islands: rules }).islands;
-    return { islandsVersion: mode === 'proximity' ? PROXIMITY_VERSION : VERSION, seed, state: seed, steps: 0,
-        ...(mode === 'proximity' ? { mode } : {}), ...(activity === .05 ? {} : { activity }) };
+    return { islandsVersion: mode === 'oil' ? OIL_VERSION : mode === 'proximity' ? PROXIMITY_VERSION : VERSION, seed, state: seed, steps: 0,
+        ...(mode === 'classic' ? {} : { mode }), ...(activity === .05 ? {} : { activity }) };
 }
 
 export function restoreIslandsSession(snapshot) {
-    if (!snapshot || ![VERSION, PROXIMITY_VERSION].includes(snapshot.islandsVersion) ||
+    if (!snapshot || ![VERSION, PROXIMITY_VERSION, OIL_VERSION].includes(snapshot.islandsVersion) ||
         (snapshot.islandsVersion === PROXIMITY_VERSION && snapshot.mode !== 'proximity') ||
+        (snapshot.islandsVersion === OIL_VERSION && snapshot.mode !== 'oil') ||
         (snapshot.islandsVersion === VERSION && snapshot.mode !== undefined && snapshot.mode !== 'classic') || !isUint32(snapshot.seed) ||
         !isUint32(snapshot.state) || !Number.isSafeInteger(snapshot.steps) || snapshot.steps < 0) {
         throw new Error('Unsupported or invalid Islands recording');
     }
     if (Object.hasOwn(snapshot, 'activity')) validateEvolutionTuning({ islands: { activity: snapshot.activity } });
     return { islandsVersion: snapshot.islandsVersion, seed: snapshot.seed, state: snapshot.state, steps: snapshot.steps,
-        ...(snapshot.islandsVersion === PROXIMITY_VERSION ? { mode: 'proximity' } : {}),
+        ...(snapshot.islandsVersion === PROXIMITY_VERSION ? { mode: 'proximity' } : snapshot.islandsVersion === OIL_VERSION ? {mode:'oil'} : {}),
+        ...(snapshot.oilState ? {oilState:restoreOilState(snapshot.oilState)} : {}),
         ...(Object.hasOwn(snapshot, 'activity') ? { activity: snapshot.activity } : {}) };
 }
 
@@ -37,6 +43,10 @@ function random(session) {
 
 export function runIslandsGeneration({ n, currentBoardState, currentPalette }, session) {
     if (!session) throw new Error('Islands session is missing');
+    if(session.islandsVersion===OIL_VERSION){
+        const result=runOilGeneration({n,currentBoardState,currentPalette,oilRules:ISLANDS_OIL_RULES},session.oilState);
+        session.oilState=result.nextOilState;session.steps++;return result.nextBoardState;
+    }
     const proximity = session.islandsVersion === PROXIMITY_VERSION;
     if (proximity && !currentPalette?.length) throw new Error('Islands proximity needs a palette');
     const paletteLength = currentPalette?.length || 1;

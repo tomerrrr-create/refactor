@@ -21,10 +21,10 @@ export const evolutionExplanations = {
         ['Inkt in vloeistof','De kleuren rekken en wervelen. Tekenen voedt de stroming; sortering verandert het transport.']
     ],
     islands: [
-        ['Islands', 'Pixels copy a random neighbor’s color, gradually forming islands of color.'],
-        ['איים', 'פיקסלים מעתיקים צבע משכן אקראי ויוצרים בהדרגה איים של צבע.'],
-        ['Острова', 'Пиксели копируют цвет случайного соседа, постепенно образуя цветные острова.'],
-        ['Eilanden', 'Pixels nemen de kleur van een willekeurige buur over en vormen geleidelijk kleureilanden.']
+        ['Islands','The leaf copies neighboring colors. The drop gathers pigments using fixed Oil on water defaults. B keeps its own editable Oil settings.'],
+        ['איים','העלה מעתיק צבעים שכנים. הטיפה מרכזת צבעים בברירות המחדל הקבועות של שמן במים. לכפתור B הגדרות שמן נפרדות.'],
+        ['Острова','Лист копирует соседние цвета. Капля собирает пигменты с фиксированными настройками масла. B сохраняет отдельные настройки.'],
+        ['Eilanden','Het blad kopieert buurkleuren. De druppel groepeert pigmenten met vaste olie-instellingen. B behoudt eigen olie-instellingen.']
     ],
     cymatics: [
         ['Cymatics', 'Existing colors gather along the quiet lines of standing waves, forming Chladni-inspired patterns.'],
