@@ -20,11 +20,14 @@ export function validateNetworkRules(value=INITIAL_NETWORK_RULES){
 }
 export function createNetworkState(n){
     if(!Number.isInteger(n)||n<1||n>327)throw Error('Invalid Network size');
-    return {networkVersion:1,n,frame:0,nextId:0,palette:[],background:0,sources:[],agents:[],trails:[]};
+    return {networkVersion:1,growthVersion:2,n,frame:0,nextId:0,palette:[],background:0,sources:[],agents:[],trails:[]};
 }
 export function restoreNetworkState(value){
     if(!value||value.networkVersion!==1||!Number.isSafeInteger(value.frame)||value.frame<0||!Number.isSafeInteger(value.nextId)||value.nextId<0)throw Error('Invalid Network state');
     const state=createNetworkState(value.n),n=state.n;
+    // Missing growthVersion is the original engine, retained for recorded journeys.
+    if(value.growthVersion===undefined)delete state.growthVersion;
+    else if(value.growthVersion!==2)throw Error('Invalid Network growth version');
     if(!Array.isArray(value.palette)||value.palette.length>4096||value.palette.some(c=>typeof c!=='string'||!/^#[\da-f]{3,8}$/i.test(c)))throw Error('Invalid Network palette');
     if(value.backgroundMode!==undefined&&!NETWORK_BACKGROUND_MODES.includes(value.backgroundMode))throw Error('Invalid Network background mode');
     const p=Math.max(1,value.palette.length),integer=(v,max)=>Number.isInteger(v)&&v>=0&&v<max;
@@ -114,7 +117,7 @@ function addAgent(state,source,angle,p,target=-1){
 }
 export function runNetworkGeneration({n,currentBoardState:board,currentPalette,originalPalette=currentPalette,networkRules=INITIAL_NETWORK_RULES},state){
     if(!state||state.n!==n)state=createNetworkState(n);
-    const p=Math.max(1,currentPalette.length),rules=networkRules;
+    const p=Math.max(1,currentPalette.length),rules=networkRules,continuous=state.growthVersion===2;
     if(!scratch||scratch.n!==n)scratch={n,marks:new Map(),labels:new Int32Array(n*n),queue:new Int32Array(n*n)};
     const marks=scratch.marks;marks.clear();
     const previousBackgroundMode=state.backgroundMode??'auto';
@@ -138,8 +141,17 @@ export function runNetworkGeneration({n,currentBoardState:board,currentPalette,o
     }
     const previous=new Map(state.sources.map(s=>[s[0],s]));
     const observed=readSources(board,n,p,state.background,marks,scratch);state.sources=observed.sources;
+    const firstNewAgentId=state.nextId;
+    // A bucket is a sampling location, not a source identity. Its old source
+    // must still belong to the observed patch and retain its pigment.
+    const retainedOrigins=new Set();
+    if(continuous)for(const source of state.sources){
+        const old=previous.get(source[0]);if(!old)continue;
+        const index=Math.round(old[2])*n+Math.round(old[1]);
+        if(scratch.labels[index]===source[4]+1&&norm(board[index].k,p)===old[3])retainedOrigins.add(source[0]);
+    }
     // New brush islands are immediate new buds. Later launches reinforce links.
-    for(const source of state.sources)if(!previous.has(source[0])||previous.get(source[0])[3]!==source[3]){
+    for(const source of state.sources)if(!previous.has(source[0])||previous.get(source[0])[3]!==source[3]||(continuous&&!retainedOrigins.has(source[0]))){
         addAgent(state,source,random(source[0],state.frame)*Math.PI*2-Math.PI,p);
         if(state.agents.length<32)addAgent(state,source,random(source[0],state.frame,12345)*Math.PI*2-Math.PI,p);
     }
@@ -156,7 +168,7 @@ export function runNetworkGeneration({n,currentBoardState:board,currentPalette,o
     const speed=(.25+rules.growth*.009)*Math.min(1,n/149),alive=[],children=[];
     for(const agent of state.agents){
         if(agent.age++>600)continue;
-        if(!sourceMap.has(agent.origin))continue;
+        if(!sourceMap.has(agent.origin)||(continuous&&agent.id<firstNewAgentId&&!retainedOrigins.has(agent.origin)))continue;
         if(agent.age%18===0||!sourceMap.has(agent.target))agent.target=chooseTarget(agent,state.sources,p);
         const target=sourceMap.get(agent.target);
         if(target&&Math.hypot(target[1]-agent.x,target[2]-agent.y)<.65)continue;
@@ -188,8 +200,17 @@ export function runNetworkGeneration({n,currentBoardState:board,currentPalette,o
         if(x<0||x>n-1){agent.angle=wrap(Math.PI-agent.angle);x=clamp(x,0,n-1);}
         if(y<0||y>n-1){agent.angle=wrap(-agent.angle);y=clamp(y,0,n-1);}
         const index=Math.round(y)*n+Math.round(x);
+        const path=[];
+        if(continuous){
+            const x0=Math.round(agent.x),y0=Math.round(agent.y),x1=Math.round(x),y1=Math.round(y);
+            const steps=Math.max(1,Math.abs(x1-x0),Math.abs(y1-y0));
+            for(let step=1;step<=steps;step++)path.push(Math.round(y0+(y1-y0)*step/steps)*n+Math.round(x0+(x1-x0)*step/steps));
+            // Do not jump across a protected cell on the way to a free endpoint.
+            if(path.some(i=>board[i].isGold)){agent.angle=wrap(agent.angle+Math.PI*.65);alive.push(agent);continue;}
+        }
         if(board[index].isGold){agent.angle=wrap(agent.angle+Math.PI*.65);alive.push(agent);continue;}
         agent.x=Math.fround(x);agent.y=Math.fround(y);agent.angle=Math.fround(wrap(agent.angle));
+        if(continuous)for(const at of path.slice(0,-1))deposit(at,agent.k,95);
         const trail=deposit(index,agent.k,95);
         if(trail&&trail[3]>700&&state.frame%4===0){
             const side=state.frame%8?-1:1,c=Math.round(x-Math.sin(agent.angle)*side),r=Math.round(y+Math.cos(agent.angle)*side);
