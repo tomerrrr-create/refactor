@@ -3,7 +3,7 @@ import {magnetAnchorIndex} from '../magnet-anchor.js';
 // Trails retain underlying colors and yield ownership to brush overwrites.
 export const INITIAL_NETWORK_RULES=Object.freeze({growth:65,branching:40,persistence:75});
 // New UI defaults are separate from legacy rule snapshots with no background field.
-export const DEFAULT_NETWORK_PREFERENCES=Object.freeze({...INITIAL_NETWORK_RULES,backgroundMode:'first'});
+export const DEFAULT_NETWORK_PREFERENCES=Object.freeze({...INITIAL_NETWORK_RULES,mode:'spatial',backgroundMode:'luminance'});
 export const NETWORK_BACKGROUND_MODES=Object.freeze(['auto','first','luminance']);
 const MAX_AGENTS=128,MAX_SOURCES=96,MAX_TRAILS=12000;
 const norm=(k,p)=>((k%p)+p)%p;

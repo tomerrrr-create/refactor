@@ -2037,7 +2037,7 @@ if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
     if (simulationName === 'ink')inkState=createInkState(n);
     if (simulationName === 'oil')oilState=createOilState(n);
-    if (simulationName === 'network'){networkState=createNetworkState(n);if(!isExecutingMacroCommand&&!isMacroPlaying)networkRules=validateNetworkRules({...networkRules,mode:'palette'});}
+    if (simulationName === 'network'){networkState=createNetworkState(n);if(!isExecutingMacroCommand&&!isMacroPlaying)networkRules=validateNetworkRules({...networkRules,mode:'spatial'});}
     if (simulationName === 'cymatics')cymaticsState=createCymaticsState(n);
     if (simulationName === 'contour') {
         contourMode = 'cracks';
@@ -3757,14 +3757,14 @@ function updateNetworkButtonUI(){
     if(!dom.btnNetwork)return;
     dom.btnNetwork.classList.toggle('simulation-active',armedSimulation==='network');
     dom.btnNetwork.setAttribute('aria-pressed',String(armedSimulation==='network'));
-    const mode=(armedSimulation==='network'?getNetworkRules().mode:cycleMemory.entry('network'))??'palette';
+    const mode=armedSimulation==='network'?(getNetworkRules().mode??'palette'):(cycleMemory.entry('network')??'spatial');
     dom.btnNetwork.classList.toggle('network-spatial',mode==='spatial');
     dom.btnNetwork.title=getText(mode==='spatial'?'network_mode_spatial':'network_mode_palette');
     dom.btnNetwork.setAttribute('aria-label',dom.btnNetwork.title);
 }
 function cycleNetworkMode(){
     if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
-    if(armedSimulation==='network'&&(getNetworkRules().mode!=='spatial'||isLifePlaying)){
+    if(armedSimulation==='network'&&(getNetworkRules().mode==='spatial'||isLifePlaying)){
         const mode=getNetworkRules().mode==='spatial'?'palette':'spatial';
         networkRules=validateNetworkRules({...networkRules,mode});
         window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());

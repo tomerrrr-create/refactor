@@ -29,8 +29,8 @@ test('forced background checkpoints continue exactly through painting and sortin
  }
 });
 
-test('new Network UI defaults use first, while legacy and explicit calculated rules remain calculated',()=>{
- assert.equal(DEFAULT_NETWORK_PREFERENCES.backgroundMode,'first');assert.deepEqual(validateNetworkRules(INITIAL_NETWORK_RULES),INITIAL_NETWORK_RULES);
+test('new Network defaults use Spatial and luminance, while legacy calculated rules remain calculated',()=>{
+ assert.equal(DEFAULT_NETWORK_PREFERENCES.backgroundMode,'luminance');assert.equal(DEFAULT_NETWORK_PREFERENCES.mode,'spatial');assert.deepEqual(validateNetworkRules(INITIAL_NETWORK_RULES),INITIAL_NETWORK_RULES);
  const settings=defaultWorkspaceSettings();settings.rules.network={...INITIAL_NETWORK_RULES};const imported=deserializeWorkspaceSettings(serializeWorkspaceSettings(settings));assert.deepEqual(imported.rules.network,INITIAL_NETWORK_RULES);
  assert(!Object.hasOwn(defaultWorkspaceSettings().rules,'network'),'V1 factory baseline is unchanged');
 });

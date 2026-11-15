@@ -9,7 +9,7 @@ export function createNetworkSettingsDialog({getRules,saveRules,getText,getLang,
   const controls=dialog.querySelector('[data-network-controls]');controls.replaceChildren();
   const modeGroup=document.createElement('fieldset');modeGroup.className='network-background-options';
   const modeLegend=document.createElement('legend');modeLegend.textContent=getText('network_mode');modeGroup.append(modeLegend);
-  for(const mode of ['palette','spatial']){
+  for(const mode of ['spatial','palette']){
    const button=document.createElement('button');button.type='button';button.dataset.networkMode=mode;
    button.textContent=getText('network_mode_'+mode);button.setAttribute('aria-pressed',String((draft.mode??'palette')===mode));
    button.addEventListener('click',()=>{if(mode==='palette')delete draft.mode;else draft.mode=mode;render();});modeGroup.append(button);
@@ -28,6 +28,6 @@ export function createNetworkSettingsDialog({getRules,saveRules,getText,getLang,
    const row=document.createElement('label');row.className='ink-setting-row network-setting-row';row.htmlFor='network-'+key;const title=document.createElement('span');title.textContent=getText('network_'+key);const output=document.createElement('output');output.htmlFor=row.htmlFor;output.textContent=draft[key]+'%';const input=document.createElement('input');input.id=row.htmlFor;input.type='range';input.min='0';input.max='100';input.step='1';input.value=draft[key];input.addEventListener('input',()=>{draft[key]=Number(input.value);output.textContent=draft[key]+'%';});row.append(title,output,input);controls.append(row);
   }
  }
- const close=()=>dialog.close();dialog.querySelector('[data-close]').onclick=close;dialog.querySelector('[data-cancel]').onclick=close;dialog.querySelector('[data-reset]').onclick=()=>{draft={...DEFAULT_NETWORK_PREFERENCES,...(draft.mode==='spatial'?{mode:'spatial'}:{})};render();};dialog.addEventListener('click',event=>{if(event.target===dialog)close();});dialog.querySelector('form').addEventListener('submit',event=>{event.preventDefault();if(saveRules(validateNetworkRules(draft))!==false)close();});onLanguageChange(()=>{if(dialog.open)render();});
+ const close=()=>dialog.close();dialog.querySelector('[data-close]').onclick=close;dialog.querySelector('[data-cancel]').onclick=close;dialog.querySelector('[data-reset]').onclick=()=>{draft=validateNetworkRules({...DEFAULT_NETWORK_PREFERENCES,mode:draft.mode??'palette'});render();};dialog.addEventListener('click',event=>{if(event.target===dialog)close();});dialog.querySelector('form').addEventListener('submit',event=>{event.preventDefault();if(saveRules(validateNetworkRules(draft))!==false)close();});onLanguageChange(()=>{if(dialog.open)render();});
  return {open(){draft=validateNetworkRules(getRules());render();dialog.showModal();dialog.querySelector('h2').tabIndex=-1;dialog.querySelector('h2').focus();}};
 }
