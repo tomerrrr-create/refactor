@@ -1,3 +1,10 @@
+import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
+import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
+import {createNetworkSettingsDialog} from './network-settings-dialog.js';
+import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
+import {createOilSettingsDialog} from './oil-settings-dialog.js';
+import {INITIAL_INK_RULES,validateInkRules,createInkState,restoreInkState,validateInkSnapshot,runInkGeneration} from './simulations/ink.js';
+import {createInkSettingsDialog} from './ink-settings-dialog.js';
 import { createMacroEnding } from './macro-ending.js';
 import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
@@ -65,6 +72,9 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let recordPausedBrushMotion = loadBrushMotionRecording();
       let replayBrushBefore = null;
       let islandsSession = null;
+      let inkState=null,inkRules={...INITIAL_INK_RULES},replayInkRules=null,inkSettingsUI=null;
+      let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null,oilSettingsUI=null;
+      let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
       let evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
       
@@ -402,6 +412,7 @@ let magnetMode = 'off';
       const originalColorPickerIconHTML = dom.btnColorPicker.innerHTML;
       
       let evolutionDrawer;
+      const experimentalSimulations=createExperimentalSimulationFlags();
       let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
       let modals;
       let settingsProfiles;
@@ -445,6 +456,9 @@ currentSortMethod,
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
             ...(armedSimulation === 'cymatics' ? {cymaticsState:getCymaticsSnapshot()} : {}),
+            ...(armedSimulation === 'ink' ? {inkState:getInkSnapshot()} : {}),
+            ...(armedSimulation === 'oil' ? {oilState:getOilSnapshot()} : {}),
+            ...(armedSimulation === 'network' ? {networkState:getNetworkSnapshot()} : {}),
             ...(armedSimulation === 'islands' && islandsSession ? { islandsState: { ...islandsSession } } : {}),
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
@@ -478,6 +492,9 @@ currentSortMethod,
         if (stateA.tornadoVersion !== stateB.tornadoVersion || stateA.tornadoFrame !== stateB.tornadoFrame) return false;
         if (JSON.stringify(stateA.gravityRules) !== JSON.stringify(stateB.gravityRules)) return false;
         if(JSON.stringify(stateA.cymaticsState)!==JSON.stringify(stateB.cymaticsState))return false;
+        if(JSON.stringify(stateA.inkState)!==JSON.stringify(stateB.inkState))return false;
+        if(JSON.stringify(stateA.oilState)!==JSON.stringify(stateB.oilState))return false;
+        if(JSON.stringify(stateA.networkState)!==JSON.stringify(stateB.networkState))return false;
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
         if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
         if (JSON.stringify(stateA.contourState?.cracksState?.rainbowTrail) !== JSON.stringify(stateB.contourState?.cracksState?.rainbowTrail)) return false;
@@ -498,6 +515,12 @@ currentSortMethod,
             if (state.contourState.cracksState && state.contourState.cracksState.n !== state.n) throw new Error('Cracks board size mismatch');
         }
         if(state.cymaticsState){const c=validateCymaticsSnapshot(state.cymaticsState);if(c.state.n!==state.n)throw new Error('Cymatics board size mismatch');}
+        if(state.inkState){const ink=validateInkSnapshot(state.inkState);if(ink.state.n!==state.n)throw new Error('Ink board size mismatch');}
+        if(state.oilState){const oil=validateOilSnapshot(state.oilState);if(oil.state.n!==state.n)throw new Error('Oil board size mismatch');}
+        if(state.networkState){const network=validateNetworkSnapshot(state.networkState);if(network.state.n!==state.n)throw new Error('Network board size mismatch');}
+        if(!state.inkState)inkState=null;
+        if(!state.oilState)oilState=null;
+        if(!state.networkState)networkState=null;
         clearPaletteColorTransition(dom.board);
         if (state.evolutionTuning) {
             validateEvolutionTuning(state.evolutionTuning);
@@ -580,6 +603,9 @@ k: tileState.k,
         }
         if (state.contourState) restoreContourSnapshot(state.contourState, { preservePreferences: preserveCracksPreferences && (contourMode === 'cracks' || state.contourState.mode === 'cracks') });
         if(state.cymaticsState)restoreCymaticsSnapshot(state.cymaticsState,{preservePreferences:preserveCymaticsPreferences});
+        if(state.inkState)restoreInkSnapshot(state.inkState);
+        if(state.oilState)restoreOilSnapshot(state.oilState);
+        if(state.networkState)restoreNetworkSnapshot(state.networkState);
         applySeparator();
       }
 
@@ -1021,7 +1047,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         });
 
 dlaState = null; // איפוס לפרקטלים
-        turingState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
+        turingState = null; inkState = null; oilState = null; networkState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
         startAnimationLoop();
 
       }
@@ -1330,7 +1356,7 @@ function handlePaletteSwitch(backwards = false) {
                 window.logArtEvent('GRID_RESIZE', newSize);
                 _performResize(newSize);
                 cracksState = null;
-                cymaticsState = null;
+                cymaticsState = null; inkState = null; oilState = null; networkState = null;
             });
             if (resume) togglePlayPauseLife();
         });
@@ -1405,6 +1431,9 @@ case 'brightnessEvo':
     break;
 
             case 'cymatics': boardState=runCymaticsEvolution(context); break;
+                case 'ink': boardState=runInkEvolution(context); break;
+                case 'oil': boardState=runOilEvolution(context); break;
+                case 'network': boardState=runNetworkEvolution(context); break;
             case 'islands': boardState = runIslandsGeneration(context, islandsSession); break;
             case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration(context); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
@@ -1504,6 +1533,9 @@ break;
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
         else if (armedSimulation === 'cymatics') simDetails=JSON.stringify(getCymaticsSnapshot());
+        else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
+        else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
+        else if (armedSimulation === 'network') simDetails=JSON.stringify(getNetworkSnapshot());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
@@ -1539,6 +1571,9 @@ case 'brightnessEvo':
     break;
 
                 case 'cymatics': boardState=runCymaticsEvolution(context); break;
+                case 'ink': boardState=runInkEvolution(context); break;
+                case 'oil': boardState=runOilEvolution(context); break;
+                case 'network': boardState=runNetworkEvolution(context); break;
                 case 'islands':
                     boardState = runIslandsGeneration(context, islandsSession);
                     break;
@@ -1622,7 +1657,7 @@ function pauseLife() {
           
           // מחזירים לפעולה את כל כפתורי הסימולציה
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnOil, dom.btnNetwork,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1655,7 +1690,7 @@ function pauseLife() {
 
        
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnOil, dom.btnNetwork,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1721,7 +1756,7 @@ function pauseLife() {
           });
 
           // Install queued generation-one commands before the macro's first frame.
-          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || armedSimulation === 'cymatics' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
+          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
               animationFrameId = requestAnimationFrame(gameLoop);
           } else {
               gameLoop();
@@ -1734,6 +1769,9 @@ function getSimulationRecordingDetails() {
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
         else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
         else if (armedSimulation === 'cymatics') simDetails=JSON.stringify(getCymaticsSnapshot());
+        else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
+        else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
+        else if (armedSimulation === 'network') simDetails=JSON.stringify(getNetworkSnapshot());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
@@ -1828,7 +1866,7 @@ function currentCycleMode(simulation) {
     return ({gameOfLife:gameOfLifeMode,sandpile:chiFlowMode,gravitationalSort:gsMode,
         spiral:spiralMode,magnet:magnetMode,brightnessEvo:brightnessEvoMode,dla:dlaMode,
         breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
-        contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
+        ink:'flow',oil:'droplets',network:'growth',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
         nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
 }
 function rememberCurrentCycle() {
@@ -1847,6 +1885,9 @@ function refreshCycleIcons() {
     updateGravitationalSortButtonUI();updateSpiralButtonUI();updateMagnetButtonUI();
     updateGameOfLifeButtonUI();updateChiFlowButtonUI();updateCymaticsButtonUI();
     updateContourButtonUI();updateBreatheEvoButtonUI();updateNudgeButtonUI();updateWindButtonUI();
+    if(typeof updateInkButtonUI==='function')updateInkButtonUI();
+    if(typeof updateOilButtonUI==='function')updateOilButtonUI();
+    if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
 }
 function restoreCycleMode(simulation, mode) {
     switch(simulation){
@@ -1942,7 +1983,7 @@ function handleEvolutionTap(simulation, onTap) {
 
 function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     if (isLifePlaying) return;
-    if (!isExecutingMacroCommand) { replayCymaticsRules=null; replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
+    if (!isExecutingMacroCommand) { replayInkRules=null; replayOilRules=null; replayNetworkRules=null; replayCymaticsRules=null; replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
 
     // --- MACRO KILL SWITCH ---
     // אם לחצו על כפתור סימולציה באופן ידני (ולא מתוך פקודת מאקרו), אנחנו משמידים את המאקרו הטעון
@@ -1961,13 +2002,13 @@ function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
     brightnessEvoMode = 'off';
     dlaMode = 'off';
     breatheEvoMode = 'off';
-    turingState = null;
+    turingState = null; inkState = null; oilState = null; networkState = null;
     gsMode = 'off'; // איפוס הגרביטציה
     spiralMode = 'off'; // איפוס הספירלה (התיקון לבאג)
 magnetMode = 'off';
 if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnOil, dom.btnNetwork, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     
@@ -1977,6 +2018,9 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     updateErosionButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
+    if(typeof updateInkButtonUI==='function')updateInkButtonUI();
+    if(typeof updateOilButtonUI==='function')updateOilButtonUI();
+    if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     updateBreatheEvoButtonUI();
     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -1990,6 +2034,9 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
 // אם אנחנו מדליקים סימולציה (ולא רק מכבים אותה)
 if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
+    if (simulationName === 'ink')inkState=createInkState(n);
+    if (simulationName === 'oil')oilState=createOilState(n);
+    if (simulationName === 'network')networkState=createNetworkState(n);
     if (simulationName === 'cymatics')cymaticsState=createCymaticsState(n);
     if (simulationName === 'contour') {
         contourMode = 'cracks';
@@ -2085,6 +2132,9 @@ if (simulationName === 'magnet') {
     updateChiFlowButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
+    if(typeof updateInkButtonUI==='function')updateInkButtonUI();
+    if(typeof updateOilButtonUI==='function')updateOilButtonUI();
+    if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
 }
 
       
@@ -2300,6 +2350,9 @@ if (simulationName === 'magnet') {
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules, lineColor:'brush' }, turing: { ...turingRules },
+                ...(JSON.stringify(inkRules)===JSON.stringify(INITIAL_INK_RULES)?{}:{ink:{...inkRules}}),
+                ...(JSON.stringify(oilRules)===JSON.stringify(INITIAL_OIL_RULES)?{}:{oil:{...oilRules}}),
+                ...(JSON.stringify(networkRules)===JSON.stringify(DEFAULT_NETWORK_PREFERENCES)?{}:{network:{...networkRules}}),
                 ...(JSON.stringify(cymaticsRules)===JSON.stringify(INITIAL_CYMATICS_RULES)?{}:{cymatics:{...cymaticsRules}}) }
         };
       }
@@ -2327,6 +2380,9 @@ if (simulationName === 'magnet') {
         contourRules.lineColor='brush';
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH,...(contourRules.growth?.area==='dead'?{area:'dead'}:{})};}
         turingRules = { ...settings.rules.turing };
+        inkRules=validateInkRules(settings.rules.ink);
+        oilRules=validateOilRules(settings.rules.oil);
+        networkRules=validateNetworkRules(settings.rules.network??DEFAULT_NETWORK_PREFERENCES);
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
         if(settings.rules.cymatics===undefined){
             cymaticsFrequencies=createCymaticsFrequencies(undefined,settings.cymaticsFrequencies);
@@ -2337,6 +2393,9 @@ if (simulationName === 'magnet') {
             cymaticsRules={...cymaticsRules,strength:cymaticsStrengths.interference};
         }else cymaticsStrengths=rememberCymaticsStrength(settings.cymaticsStrengths,cymaticsRules);
         if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
+    if(typeof updateInkButtonUI==='function')updateInkButtonUI();
+    if(typeof updateOilButtonUI==='function')updateOilButtonUI();
+    if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
         if (armedSimulation === 'magnet') magnetMode = magnetRules.method;
@@ -2579,7 +2638,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 goDark();
                 // A new board starts a new fracture run, even at the same size.
                 cracksState = null;
-                cymaticsState = null;
+                cymaticsState = null; inkState = null; oilState = null; networkState = null;
                 const currentPalette = palette();
                 const colorChoice = simulationInitSettings.brushColor || 'last';
                 selectedColorIndex = colorChoice === 'rainbow' ? -1 : colorChoice === 'first' ? 0 : colorChoice === 'lightest'
@@ -2715,6 +2774,9 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         updateContourButtonUI();
 dom.btnSpiral.title = getText('tooltip_spiral');
 dom.btnTuring.title = getText('tooltip_turing');
+if(dom.btnInk){dom.btnInk.title=getText('help_ink');dom.btnInk.setAttribute('aria-label',dom.btnInk.title);}
+if(dom.btnOil){dom.btnOil.title=getText('help_oil');dom.btnOil.setAttribute('aria-label',dom.btnOil.title);}
+if(dom.btnNetwork){dom.btnNetwork.title=getText('help_network');dom.btnNetwork.setAttribute('aria-label',dom.btnNetwork.title);}
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         dom.btnBrushMode.title = getBrushModeTitle();
 
@@ -2807,9 +2869,9 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
         armedSimulation = null;
         updateNudgeButtonUI();
         dlaState = null;
-turingState = null;
+turingState = null; inkState = null; oilState = null; networkState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnOil, dom.btnNetwork, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
@@ -2832,6 +2894,9 @@ gsMode = 'off';
     updateGravitationalSortButtonUI();
     if (typeof updateContourButtonUI === 'function') updateContourButtonUI();
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
+    if(typeof updateInkButtonUI==='function')updateInkButtonUI();
+    if(typeof updateOilButtonUI==='function')updateOilButtonUI();
+    if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.active())refreshCycleIcons();
 
       }
@@ -3090,7 +3155,7 @@ function resumeBrushCheckpoint(record) {
     dom.iconPlay.style.display = 'none';
     dom.iconPause.style.display = 'block';
     dom.btnStepForward.disabled = true;
-    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics,
+    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnOil, dom.btnNetwork,
         dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile,
         dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker]
         .filter(Boolean).forEach(button => { button.disabled = armedSimulation === 'breathe'
@@ -3675,6 +3740,96 @@ function cycleChiFlowMode() {
     }
     updateChiFlowButtonUI();
     window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
+}
+
+function getNetworkRules(){return replayNetworkRules??networkRules;}
+function getNetworkSnapshot(){return {networkVersion:1,rules:{...getNetworkRules()},state:restoreNetworkState(networkState?.n===n?networkState:createNetworkState(n))};}
+function restoreNetworkSnapshot(value,{preservePreferences=false}={}){
+    const snapshot=validateNetworkSnapshot(value);
+    if(armedSimulation!=='network')armSimulation('network');
+    networkState=snapshot.state;
+    if(isMacroPlaying||isExecutingMacroCommand)replayNetworkRules=snapshot.rules;
+    else {replayNetworkRules=null;if(!preservePreferences)networkRules=snapshot.rules;}
+    updateNetworkButtonUI();
+}
+function runNetworkEvolution(context){const result=runNetworkGeneration({...context,originalPalette:C.PALETTES[activePaletteIndex].originalColors,networkRules:getNetworkRules()},networkState);networkState=result.nextNetworkState;return result.nextBoardState;}
+function updateNetworkButtonUI(){
+    if(!dom.btnNetwork)return;
+    dom.btnNetwork.classList.toggle('simulation-active',armedSimulation==='network');
+    dom.btnNetwork.setAttribute('aria-pressed',String(armedSimulation==='network'));
+}
+function cycleNetworkMode(){
+    if(isLifePlaying&&armedSimulation==='network')return;
+    if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
+    if(armedSimulation==='network'){
+        const snapshot=getNetworkSnapshot();armSimulation(null);
+        window.logArtEvent('Network Mode Changed',JSON.stringify({mode:'off',...snapshot}));
+    }else{armSimulation('network');window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());}
+    updateNetworkButtonUI();
+}
+function saveNetworkSettings(value){
+    if(armedSimulation!=='network'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
+    networkRules=validateNetworkRules(value);recordLiveSimulationRules('network');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
+}
+
+function getOilRules(){return replayOilRules??oilRules;}
+function getOilSnapshot(){return {oilVersion:1,rules:{...getOilRules()},state:restoreOilState(oilState?.n===n?oilState:createOilState(n))};}
+function restoreOilSnapshot(value,{preservePreferences=false}={}){
+    const snapshot=validateOilSnapshot(value);
+    if(armedSimulation!=='oil')armSimulation('oil');
+    oilState=snapshot.state;
+    if(isMacroPlaying||isExecutingMacroCommand)replayOilRules=snapshot.rules;
+    else {replayOilRules=null;if(!preservePreferences)oilRules=snapshot.rules;}
+    updateOilButtonUI();
+}
+function runOilEvolution(context){const result=runOilGeneration({...context,oilRules:getOilRules()},oilState);oilState=result.nextOilState;return result.nextBoardState;}
+function updateOilButtonUI(){
+    if(!dom.btnOil)return;
+    dom.btnOil.classList.toggle('simulation-active',armedSimulation==='oil');
+    dom.btnOil.setAttribute('aria-pressed',String(armedSimulation==='oil'));
+}
+function cycleOilMode(){
+    if(isLifePlaying&&armedSimulation==='oil')return;
+    if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
+    if(armedSimulation==='oil'){
+        const snapshot=getOilSnapshot();armSimulation(null);
+        window.logArtEvent('Oil Mode Changed',JSON.stringify({mode:'off',...snapshot}));
+    }else{armSimulation('oil');window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());}
+    updateOilButtonUI();
+}
+function saveOilSettings(value){
+    if(armedSimulation!=='oil'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
+    oilRules=validateOilRules(value);recordLiveSimulationRules('oil');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
+}
+
+function getInkRules(){return replayInkRules??inkRules;}
+function getInkSnapshot(){return {inkVersion:1,rules:{...getInkRules()},state:restoreInkState(inkState?.n===n?inkState:createInkState(n))};}
+function restoreInkSnapshot(value,{preservePreferences=false}={}){
+    const snapshot=validateInkSnapshot(value);
+    if(armedSimulation!=='ink')armSimulation('ink');
+    inkState=snapshot.state;
+    if(isMacroPlaying||isExecutingMacroCommand)replayInkRules=snapshot.rules;
+    else {replayInkRules=null;if(!preservePreferences)inkRules=snapshot.rules;}
+    updateInkButtonUI();
+}
+function runInkEvolution(context){const result=runInkGeneration({...context,inkRules:getInkRules()},inkState);inkState=result.nextInkState;return result.nextBoardState;}
+function updateInkButtonUI(){
+    if(!dom.btnInk)return;
+    dom.btnInk.classList.toggle('simulation-active',armedSimulation==='ink');
+    dom.btnInk.setAttribute('aria-pressed',String(armedSimulation==='ink'));
+}
+function cycleInkMode(){
+    if(isLifePlaying&&armedSimulation==='ink')return;
+    if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
+    if(armedSimulation==='ink'){
+        const snapshot=getInkSnapshot();armSimulation(null);
+        window.logArtEvent('Ink Mode Changed',JSON.stringify({mode:'off',...snapshot}));
+    }else{armSimulation('ink');window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());}
+    updateInkButtonUI();
+}
+function saveInkSettings(value){
+    if(armedSimulation!=='ink'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
+    inkRules=validateInkRules(value);recordLiveSimulationRules('ink');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
 }
 
 // Running evolutions cycle through active modes; paused cycles retain Off.
@@ -4267,7 +4422,7 @@ function createArtRecipeFile(prefix = '') {
         exportedLog.push(`[${timestamp}] WIND_END -> ${JSON.stringify({ windVersion: 1,
             batch: windBatch.id, elapsed: Math.max(0, performance.now() - windBatch.time), reason: 'stop' })}`);
     }
-    if ((armedSimulation === 'islands' || armedSimulation === 'cymatics' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
+    if ((armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
         const now = new Date();
         const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
         exportedLog.push(`[${timestamp}] [GEN:${currentGenerationCount}] PAUSE -> ---`);
@@ -4305,7 +4460,7 @@ function createArtRecipeFile(prefix = '') {
 // Capture live simulation progress without pausing or changing the original log.
 function createStudioRecipeFile() {
     const file = createArtRecipeFile();
-    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands' || armedSimulation === 'cymatics') return file;
+    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network') return file;
     const now = new Date();
     const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
     const generation = armedSimulation === 'breathe' ? '' : ` [GEN:${currentGenerationCount}]`;
@@ -4357,6 +4512,9 @@ function getHistorySettings(state) {
         ...(state.spiralMethod === 'tornado' ? {tornadoState:{version:state.tornadoVersion ?? 1,frame:state.tornadoFrame ?? 0}} : {}),
         ...(state.islandsState ? { islandsState: state.islandsState } : {}),
         ...(state.cymaticsState ? {cymaticsState:state.cymaticsState} : {}),
+        ...(state.inkState ? {inkState:state.inkState} : {}),
+        ...(state.oilState ? {oilState:state.oilState} : {}),
+        ...(state.networkState ? {networkState:state.networkState} : {}),
         ...(state.gravityRules ? { gravityRules: { ...state.gravityRules } } : {}),
         ...(state.contourState ? { contourState: state.contourState } : {}) };
 }
@@ -4372,6 +4530,9 @@ function validateHistorySettings(settings) {
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);
     if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
     if(settings?.cymaticsState){const c=validateCymaticsSnapshot(settings.cymaticsState);if(c.state.n!==settings.n)throw new Error('Cymatics board size mismatch');}
+    if(settings?.inkState){const ink=validateInkSnapshot(settings.inkState);if(ink.state.n!==settings.n)throw new Error('Ink board size mismatch');}
+    if(settings?.oilState){const oil=validateOilSnapshot(settings.oilState);if(oil.state.n!==settings.n)throw new Error('Oil board size mismatch');}
+    if(settings?.networkState){const network=validateNetworkSnapshot(settings.networkState);if(network.state.n!==settings.n)throw new Error('Network board size mismatch');}
     if (settings?.contourState) validateContourSnapshot(settings.contourState);
     if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 327 ||
         !Number.isInteger(settings.activePaletteIndex) || settings.activePaletteIndex < 0 ||
@@ -4409,6 +4570,9 @@ function applyHistorySettings(settings) {
         updateIslandsButtonUI();
     }
     if(settings.cymaticsState)restoreCymaticsSnapshot(settings.cymaticsState);
+    if(settings.inkState)restoreInkSnapshot(settings.inkState);
+    if(settings.oilState)restoreOilSnapshot(settings.oilState);
+    if(settings.networkState)restoreNetworkSnapshot(settings.networkState);
     if (settings.contourState) restoreContourSnapshot(settings.contourState);
     let changed = false;
     if (currentSortMethod !== settings.currentSortMethod) {
@@ -4552,7 +4716,7 @@ function parseHistoryMacro(lines) {
         if (event.eventName === 'BRUSH_END') brushMotion = false;
         previousBrushElapsed = brushMotion ? event.brushElapsed : null;
         if (event.eventName === 'PLAY') simulationRunning = true;
-        if (['PAUSE','HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed'].includes(event.eventName)) simulationRunning = false;
+        if (['PAUSE','HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed','Ink Mode Changed','Oil Mode Changed','Network Mode Changed'].includes(event.eventName)) simulationRunning = false;
         return { ...event, delta };
     });
 }
@@ -4645,7 +4809,7 @@ function parseMacroText(text) {
             if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) action.orphanedSimulation = true;
         }
         if (action.eventName === 'SIMULATION_RULES') hasSimulationContext = true;
-        if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed'].includes(action.eventName)) simulationRunning = false;
+        if (['PAUSE', 'HISTORY_SETTINGS','Cymatics Mode Changed','Cracks Mode Changed','Ink Mode Changed','Oil Mode Changed','Network Mode Changed'].includes(action.eventName)) simulationRunning = false;
         actions.push(action);
     }
     for (const action of actions) {
@@ -4665,6 +4829,14 @@ function parseMacroText(text) {
     }
     actions.forEach(validateIslandsMacroAction);
     actions.forEach(validateCymaticsMacroAction);
+    for(const action of actions){
+        if(action.eventName==='Ink Mode Changed'){const value=JSON.parse(action.details);if(value.mode!=='off')throw Error('Invalid Ink mode');validateInkSnapshot(value);}
+        if(action.eventName==='Oil Mode Changed'){const value=JSON.parse(action.details);if(value.mode!=='off')throw Error('Invalid Oil mode');validateOilSnapshot(value);}
+        if(action.eventName==='Network Mode Changed'){const value=JSON.parse(action.details);if(value.mode!=='off')throw Error('Invalid Network mode');validateNetworkSnapshot(value);}
+        if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: ink |'))validateInkSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
+        if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: oil |'))validateOilSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
+        if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: network |'))validateNetworkSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
+    }
     let brushOpen = false;
     for (const action of actions) {
         if (['BRUSH_CHECKPOINT', 'BRUSH_CONTINUE'].includes(action.eventName)) {
@@ -5040,8 +5212,11 @@ function stopMacro({ preserveFullscreen = false, preserveActivity = false } = {}
     replayNudgeTiming = null;
     replayMagnetAnchorLimit = null;
     replayMagnetCombinedField = null;
-    replayCymaticsRules=null;
+    replayCymaticsRules=null; replayInkRules=null; replayOilRules=null; replayNetworkRules=null;
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
+    if(typeof updateInkButtonUI==='function')updateInkButtonUI();
+    if(typeof updateOilButtonUI==='function')updateOilButtonUI();
+    if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     if(typeof updateContourButtonUI==='function')updateContourButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.enabled()){
@@ -5156,6 +5331,9 @@ function applyMacroRules(details) {
         rulesStr = match[2];
     }
 
+    const restoredInk=sim==='ink'?validateInkSnapshot(JSON.parse(rulesStr)):null;
+    const restoredOil=sim==='oil'?validateOilSnapshot(JSON.parse(rulesStr)):null;
+    const restoredNetwork=sim==='network'?validateNetworkSnapshot(JSON.parse(rulesStr)):null;
     const restoredCymatics=sim==='cymatics'?validateCymaticsSnapshot(JSON.parse(rulesStr)):null;
     const restoredIslands = sim === 'islands' ? restoreIslandsSession(JSON.parse(rulesStr)) : null;
 
@@ -5169,6 +5347,9 @@ if (sortMethod && currentSortMethod !== sortMethod) {
     // מוודאים שהסימולציה הנכונה חמושה בממשק
     if (armedSimulation !== sim) armSimulation(sim);
 
+    if(sim==='ink'){restoreInkSnapshot(restoredInk);return sim;}
+    if(sim==='oil'){restoreOilSnapshot(restoredOil);return sim;}
+    if(sim==='network'){restoreNetworkSnapshot(restoredNetwork);return sim;}
     if(sim==='cymatics'){restoreCymaticsSnapshot(restoredCymatics);return sim;}
     if (sim === 'islands') {
         islandsSession = restoredIslands;
@@ -5429,6 +5610,21 @@ function executeMacroAction(action) {
     else if (action.eventName === 'Cracks Mode Changed') {
         if(armedSimulation==='contour'&&contourMode==='cracks'){if(isLifePlaying)pauseLife();armSimulation(null);}
         updateContourButtonUI();
+    }
+    else if (action.eventName === 'Ink Mode Changed') {
+        validateInkSnapshot(JSON.parse(action.details));
+        if(armedSimulation==='ink'){if(isLifePlaying)pauseLife();armSimulation(null);}
+        updateInkButtonUI();
+    }
+    else if (action.eventName === 'Oil Mode Changed') {
+        validateOilSnapshot(JSON.parse(action.details));
+        if(armedSimulation==='oil'){if(isLifePlaying)pauseLife();armSimulation(null);}
+        updateOilButtonUI();
+    }
+    else if (action.eventName === 'Network Mode Changed') {
+        validateNetworkSnapshot(JSON.parse(action.details));
+        if(armedSimulation==='network'){if(isLifePlaying)pauseLife();armSimulation(null);}
+        updateNetworkButtonUI();
     }
     else if (action.eventName === 'Cymatics Mode Changed') {
         validateCymaticsMacroAction(action);
@@ -5990,10 +6186,21 @@ updateBrightnessEvoButtonUI();
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
         });
+        inkSettingsUI=createInkSettingsDialog({getRules:getInkRules,saveRules:saveInkSettings,getText,getLang:getCurrentLang,onLanguageChange});
+        oilSettingsUI=createOilSettingsDialog({getRules:getOilRules,saveRules:saveOilSettings,getText,getLang:getCurrentLang,onLanguageChange});
+        networkSettingsUI=createNetworkSettingsDialog({getRules:getNetworkRules,saveRules:saveNetworkSettings,getText,getLang:getCurrentLang,onLanguageChange});
         cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,getFrequencies:()=>cymaticsFrequencies,getStrengths:()=>cymaticsStrengths,saveRules:saveCymaticsSettings,
             canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying,
             getText,getLang:getCurrentLang,onLanguageChange});
+        initializeExperimentalSimulationControls({flags:experimentalSimulations,getText,onLanguageChange,
+            canChange:()=>!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
+            onChange:(id,enabled)=>{
+                if(!enabled&&armedSimulation===id){if(isLifePlaying)pauseLife();armSimulation(null);}
+                evolutionDrawer?.applyLayout();
+            }
+        });
         evolutionDrawer = createEvolutionDrawer({
+            isVisible:experimentalSimulations.visible,
             controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
             canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
@@ -6201,6 +6408,9 @@ dom.btnWind.addEventListener('keydown', event => {
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
             [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],
+            [dom.btnInk,'ink',cycleInkMode,()=>inkSettingsUI.open()],
+            [dom.btnOil,'oil',cycleOilMode,()=>oilSettingsUI.open()],
+            [dom.btnNetwork,'network',cycleNetworkMode,()=>networkSettingsUI.open()],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
             [dom.btnNudgeBrighter, 'nudgeBrighter', cycleNudgeMode, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, modals.openBrightnessSettingsModal],

@@ -55,6 +55,15 @@
 
       <div id="controlsContainer" class="mt-11" aria-label="Control buttons">
  <div id="simModeBackground"></div>
+ <button data-evolution-feature-hidden id="btnNetwork" class="ctrl" type="button" aria-label="Living network" title="Living network">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17 9 12l7 1 4-7M9 12 7 5M16 13l3 7M9 12l-5-5"/><circle cx="4" cy="17" r="1.8"/><circle cx="9" cy="12" r="1.8"/><circle cx="7" cy="5" r="1.6"/><circle cx="16" cy="13" r="1.8"/><circle cx="20" cy="6" r="1.5"/><circle cx="19" cy="20" r="1.5"/></svg>
+ </button>
+ <button data-evolution-feature-hidden id="btnOil" class="ctrl" type="button" aria-label="Oil on water" title="Oil on water">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><text x="12" y="18" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="currentColor" stroke="none">B</text></svg>
+ </button>
+ <button data-evolution-feature-hidden id="btnInk" class="ctrl" type="button" aria-label="Ink in fluid" title="Ink in fluid">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><text x="12" y="18" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="currentColor" stroke="none">A</text></svg>
+ </button>
  <button id="btnCymatics" class="ctrl" type="button" aria-label="Resonance" title="Resonance">
   <svg data-cymatics-audio viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
    <circle cx="7" cy="12" r="1.05" fill="currentColor" stroke="none"/>
@@ -744,6 +753,7 @@
         <span id="brushMotionRecordingNote" data-debug-text="brush_motion_recording_note"></span>
       </label>
       </section>
+      <div id="experimentalSimulationControls" class="technician-display-settings"></div>
       <section class="technician-start-settings" aria-labelledby="technicianStartupTitle">
       <h3 id="technicianStartupTitle" class="technician-group-title" data-debug-text="technician_group_startup">Initialization &amp; startup</h3>
       <button id="btnConfigureInit" type="button" class="technician-option" aria-expanded="false" aria-controls="initSettingsForm">

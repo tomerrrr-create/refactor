@@ -3,7 +3,7 @@ import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
 import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId } from './evolution-drawer-settings.js';
 
-export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
+export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
@@ -49,6 +49,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         for(const e of EVOLUTION_CATALOG){
             const button=document.getElementById(e.button),at=slots.indexOf(e.id),local=at%EVOLUTION_PAGE_SIZE;
             button.dataset.evolutionId=e.id;
+            button.toggleAttribute('data-evolution-feature-hidden',!isVisible(e.id));
             button.dataset.evolutionSlot=String(at);
             button.dataset.evolutionPage=String(Math.floor(at/EVOLUTION_PAGE_SIZE));
             button.toggleAttribute('data-evolution-page-hidden',Math.floor(at/EVOLUTION_PAGE_SIZE)!==page);
@@ -61,7 +62,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     function refresh(){
         const active=getActive(),slots=slotsNow();
         const at=active?slots.indexOf(evolutionControlId(active)):-1;
-        const otherPage=at>=0&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
+        const otherPage=at>=0&&isVisible(evolutionControlId(active))&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
         const text=getText('drawer_navigation').replace('{n}',page+1);
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);trigger.dataset.page=String(page);
@@ -104,7 +105,11 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
                 button.type='button';button.dataset.drawerSlot=String(index);
                 if(INTERNAL_NAV_SLOTS.includes(index)){
                     button.className='drawer-reserved-slot';button.disabled=true;button.innerHTML=trigger.querySelector('svg').outerHTML;button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
-                }button.setAttribute('aria-pressed',String(index===selected));
+                }
+                if(id&&!isVisible(id)){
+                    button.className='drawer-feature-hidden';button.disabled=true;button.setAttribute('aria-hidden','true');grid.append(button);continue;
+                }
+                button.setAttribute('aria-pressed',String(index===selected));
                 button.setAttribute('aria-label',`${pageLabel(drawer)}, ${getText('drawer_slot').replace('{n}',local+1)}: ${id?label(id):getText('drawer_empty')}`);
                 button.title=button.getAttribute('aria-label');
                 if(id){

@@ -6,7 +6,8 @@ export const EVOLUTION_CATALOG = Object.freeze([
     ['magnet','btnMagnetModes','help_magnet'],['gravitationalSort','btnGravitationalSort','help_gravitationalSort'],
     ['sandpile','btnSandpile','help_sandpile'],['erosion','btnErosion','help_erosion'],
     ['breathe','btnShowBreatheMenu','help_breathe'],['turing','btnTuring','help_turing'],
-    ['cymatics','btnCymatics','help_cymatics'],['nudgeBrighter','btnNudgeBrighter','help_nudge']
+    ['cymatics','btnCymatics','help_cymatics'],['nudgeBrighter','btnNudgeBrighter','help_nudge'],
+    ['ink','btnInk','help_ink'],['oil','btnOil','help_oil'],['network','btnNetwork','help_network']
 ].map(([id,button,key])=>Object.freeze({id,button,key})));
 // Historical first-page order, retained for compatibility with ten-slot files.
 export const DEFAULT_EVOLUTION_SLOTS = Object.freeze(EVOLUTION_CATALOG.slice(0,10).map(e=>e.id));
@@ -16,8 +17,8 @@ export const INTERNAL_NAV_SLOTS = Object.freeze([7,17]);
 export const DEFAULT_EVOLUTION_LAYOUT = Object.freeze([
     'cymatics', 'sandpile', 'gameOfLife', 'brightnessEvo', 'islands',
     'nudgeBrighter', 'magnet', null, 'gravitationalSort', 'erosion',
-    null, 'spiral', 'breathe', 'dla', null,
-    null, 'turing', null, 'contour', null
+    'network', 'spiral', 'breathe', 'dla', null,
+    'ink', 'turing', null, 'contour', 'oil'
 ]);
 // Older ten/twenty-place preferences remain readable. Upgrade once: layouts
 // already reserving the two navigation places keep their exact assignments.
@@ -42,6 +43,30 @@ function addNudge(slots) {
     }
     return slots;
 }
+function addInk(slots) {
+    if(!slots.includes('ink')){
+        const target=slots[15]===null?15:slots.findIndex((id,i)=>id===null&&!INTERNAL_NAV_SLOTS.includes(i));
+        if(target<0)throw new Error('No space for Ink');
+        slots[target]='ink';
+    }
+    return slots;
+}
+function addOil(slots) {
+    if(!slots.includes('oil')) {
+        const target=slots[19]===null?19:slots.findIndex((id,i)=>id===null&&!INTERNAL_NAV_SLOTS.includes(i));
+        if(target<0)throw new Error('No space for Oil');
+        slots[target]='oil';
+    }
+    return slots;
+}
+function addNetwork(slots) {
+    if(!slots.includes('network')) {
+        const target=slots[10]===null?10:slots.findIndex((id,i)=>id===null&&!INTERNAL_NAV_SLOTS.includes(i));
+        if(target<0)throw new Error('No space for Network');
+        slots[target]='network';
+    }
+    return slots;
+}
 export function validateEvolutionSlots(value=DEFAULT_EVOLUTION_LAYOUT) {
     if(!Array.isArray(value))throw new Error('Invalid evolution drawer slots');
     if(value.length===20){
@@ -50,7 +75,7 @@ export function validateEvolutionSlots(value=DEFAULT_EVOLUTION_LAYOUT) {
         if(new Set(assigned).size!==assigned.length||assigned.some(id=>!EVOLUTION_CATALOG.some(e=>e.id===id)))throw new Error('Invalid evolution drawer slots');
         const missing=EVOLUTION_CATALOG.filter(e=>!assigned.includes(e.id));
         if(missing.length===0)return reserveNavigation(slots);
-        if(missing.length===1&&missing[0].id==='nudgeBrighter')return reserveNavigation(addNudge(slots));
+        if(missing.every(e=>['nudgeBrighter','ink','oil','network'].includes(e.id)))return addNetwork(addOil(addInk(reserveNavigation(addNudge(slots)))));
         throw new Error('Invalid evolution drawer slots');
     }
     if(value.length!==10||new Set(value).size!==10||value.some(id=>!EVOLUTION_CATALOG.some(e=>e.id===evolutionControlId(id))))throw new Error('Invalid evolution drawer slots');
@@ -58,8 +83,8 @@ export function validateEvolutionSlots(value=DEFAULT_EVOLUTION_LAYOUT) {
     // first unified Nudge position and fill only the now-duplicate position.
     const seen=new Set(),slots=value.map(id=>{id=evolutionControlId(id);if(seen.has(id))return null;seen.add(id);return id;});
     for(let index=0;index<slots.length;index++)if(slots[index]===null)slots[index]=EVOLUTION_CATALOG.find(e=>!slots.includes(e.id)).id;
-    const remaining=EVOLUTION_CATALOG.filter(e=>e.id!=='nudgeBrighter'&&!slots.includes(e.id)).map(e=>e.id);
-    return reserveNavigation(addNudge([...slots,...remaining,...Array(10-remaining.length).fill(null)]));
+    const remaining=EVOLUTION_CATALOG.filter(e=>!['nudgeBrighter','ink','oil','network'].includes(e.id)&&!slots.includes(e.id)).map(e=>e.id);
+    return addNetwork(addOil(addInk(reserveNavigation(addNudge([...slots,...remaining,...Array(10-remaining.length).fill(null)])))));
 }
 export function assignEvolutionSlot(value,slot,id) {
     const slots=validateEvolutionSlots(value);

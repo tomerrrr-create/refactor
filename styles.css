@@ -2698,3 +2698,62 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     .macro-activity { transition: none; }
     #appContainer.macro-returning #controlsContainer { animation: none; }
 }
+
+.ink-settings-dialog { width: min(400px, calc(100vw - 32px)); }
+.ink-settings-dialog header { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.ink-settings-dialog h2 { margin:0; color:#e3c677; font-size:18px; }
+.ink-settings-dialog p { color:#b3b8af; line-height:1.6; font-size:13px; }
+.ink-settings-dialog .ink-setting-row { display:grid; text-align:start; grid-template-columns:1fr auto; gap:12px; margin:20px 0; color:#dcded7; }
+.ink-setting-row output { color:#d5aa48; font-variant-numeric:tabular-nums; }
+.ink-setting-row input { grid-column:1 / -1; width:100%; accent-color:#c2a14a; }
+.ink-settings-dialog button { min-height:40px; padding:8px 12px; border:1px solid #ffffff20; border-radius:9px; background:#282925; color:#deded5; font:inherit; font-size:13px; cursor:pointer; }
+.ink-settings-dialog button:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.ink-settings-dialog button[type=submit] { background:#d5b45d; color:#17160f; border-color:#d5b45d; font-weight:600; }
+.ink-settings-dialog button[data-reset] { margin-inline-end:auto; border-color:transparent; background:transparent; color:#b5b5aa; }
+.ink-settings-dialog footer { display:flex; justify-content:flex-end; gap:10px; margin-top:24px; }
+
+#btnInk { display:none; touch-action:none !important; }
+#btnInk svg { stroke:var(--sim-color); }
+#btnInk.simulation-active svg { stroke:var(--gold); stroke-width:2.5; }
+
+#btnOil { display:none; touch-action:none !important; }
+#btnOil svg { stroke:var(--sim-color); }
+#btnOil.simulation-active svg { stroke:var(--gold); stroke-width:2.2; }
+
+.fluid-presets { margin-block:20px 24px; }
+.fluid-preset-header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.fluid-preset-header h3 { margin:0; font-size:13px; color:#d8d7cd; font-weight:600; }
+.fluid-preset-status { font-size:11px; color:#d5b45d; }
+.fluid-preset-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.ink-settings-dialog .fluid-preset-card { display:flex; flex-direction:column; gap:5px; padding:11px; text-align:start; background:#242621; border-color:#45493a; }
+.ink-settings-dialog .fluid-preset-card strong { font-size:12px; line-height:1.4; color:#e2dfcc; }
+.ink-settings-dialog .fluid-preset-card span { font-size:11px; line-height:1.5; color:#aeb2a6; }
+.ink-settings-dialog .fluid-preset-card[aria-pressed="true"] { border-color:#d5b45d; background:#3a3320; box-shadow:inset 0 0 0 1px #d5b45d55; }
+.ink-settings-dialog .fluid-preset-card[aria-pressed="true"] strong { color:#f2d581; }
+
+.ink-settings-dialog .fluid-preset-card:last-child { grid-column:1 / -1; }
+
+#btnNetwork { display:none; touch-action:none !important; }
+#btnNetwork svg { stroke:var(--sim-color); }
+#btnNetwork.simulation-active svg { stroke:var(--gold); stroke-width:2; }
+
+.network-background-options { display:grid; gap:8px; margin:20px 0 24px; padding:0; border:0; min-width:0; }
+.network-background-options legend { margin-bottom:10px; font-size:13px; color:#ddd9c9; font-weight:600; }
+.network-settings-dialog .network-background-options button { display:grid; grid-template-columns:1fr 16px; column-gap:12px; row-gap:3px; text-align:start; padding:10px 12px; background:#252720; border-color:#454938; }
+.network-background-options button strong { font-size:12px; font-weight:600; line-height:1.4; }
+.network-background-options button span { grid-column:1; font-size:11px; line-height:1.5; color:#adb2a4; }
+.network-background-options button::after { content:''; grid-column:2; grid-row:1 / 3; align-self:center; width:12px; height:12px; border-radius:50%; border:1px solid #858c77; }
+.network-settings-dialog .network-background-options button[aria-pressed="true"] { border-color:#d5b45d; background:#39331f; }
+.network-background-options button[aria-pressed="true"] strong { color:#f1d582; }
+.network-background-options button[aria-pressed="true"]::after { background:#d5b45d; border-color:#d5b45d; box-shadow:inset 0 0 0 3px #39331f; }
+
+#btnInk svg, #btnOil svg { color:var(--sim-color); }
+#btnInk.simulation-active svg, #btnOil.simulation-active svg { color:var(--gold); }
+.ink-settings-dialog h2:has(.fluid-original-symbol) { display:flex; align-items:center; gap:9px; }
+.fluid-original-symbol { display:inline-flex; flex:none; color:#e3c677; }
+.fluid-original-symbol svg { width:24px; height:24px; }
+
+/* Feature exposure does not change saved drawer assignments. */
+#controlsContainer [data-evolution-feature-hidden],
+#controlsContainer.sim-mode-active [data-evolution-feature-hidden] { display:none !important; }
+#evolutionDrawerDialog .drawer-feature-hidden { visibility:hidden; }
