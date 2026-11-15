@@ -1097,10 +1097,10 @@ body {
 }
 
 /* --- DLA Button States --- */
-#btnDla.mode-genetics svg circle {
+#btnDla.mode-genetics.simulation-active svg circle {
     fill: var(--gold);
 }
-#btnDla.mode-no-genetics svg #dla-circle-top {
+#btnDla.mode-no-genetics.simulation-active svg #dla-circle-top {
     fill: var(--gold);
 }
 
@@ -1142,12 +1142,12 @@ body {
 /* Solo mode (Armed) */
 #btnShowBreatheMenu.mode-solo #iconBreatheSolo { display: block; }
 #btnShowBreatheMenu.mode-solo #iconBreatheGroup { display: none; }
-#btnShowBreatheMenu.mode-solo svg { stroke: var(--gold); }
+#btnShowBreatheMenu.mode-solo.simulation-active svg { stroke: var(--gold); }
 
 /* Group mode (Armed) */
 #btnShowBreatheMenu.mode-group #iconBreatheSolo { display: none; }
 #btnShowBreatheMenu.mode-group #iconBreatheGroup { display: block; }
-#btnShowBreatheMenu.mode-group svg { stroke: var(--gold); }
+#btnShowBreatheMenu.mode-group.simulation-active svg { stroke: var(--gold); }
 }
 
 
@@ -2755,3 +2755,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnMagnetModes.mode-field_cosmic_magnet #iconModeFieldCosmicMagnet { display:block !important; }
 #btnMagnetModes.mode-field_magnet svg:not(#iconModeFieldMagnet),
 #btnMagnetModes.mode-field_cosmic_magnet svg:not(#iconModeFieldCosmicMagnet) { display:none !important; }
+
+#btnNetwork:not(.network-spatial) .network-spatial-icon { display:none !important; }
+#btnNetwork.network-spatial > svg:not(.network-spatial-icon) { display:none !important; }
+#btnNetwork.network-spatial .network-spatial-icon { display:block !important; }

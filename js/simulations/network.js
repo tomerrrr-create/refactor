@@ -3,7 +3,7 @@ import {magnetAnchorIndex} from '../magnet-anchor.js';
 // Trails retain underlying colors and yield ownership to brush overwrites.
 export const INITIAL_NETWORK_RULES=Object.freeze({growth:65,branching:40,persistence:75});
 // New UI defaults are separate from legacy rule snapshots with no background field.
-export const DEFAULT_NETWORK_PREFERENCES=Object.freeze({...INITIAL_NETWORK_RULES,backgroundMode:'first'});
+export const DEFAULT_NETWORK_PREFERENCES=Object.freeze({...INITIAL_NETWORK_RULES,mode:'spatial',backgroundMode:'luminance'});
 export const NETWORK_BACKGROUND_MODES=Object.freeze(['auto','first','luminance']);
 const MAX_AGENTS=128,MAX_SOURCES=96,MAX_TRAILS=12000;
 const norm=(k,p)=>((k%p)+p)%p;
@@ -11,20 +11,28 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
 function random(id,frame,salt=0){let h=(Math.imul(id+1,0x85ebca6b)^Math.imul(frame+1,0x9e3779b1)^salt)>>>0;h=Math.imul(h^(h>>>16),0x7feb352d);h=Math.imul(h^(h>>>15),0x846ca68b);return ((h^(h>>>16))>>>0)/4294967296;}
 export function validateNetworkRules(value=INITIAL_NETWORK_RULES){
-    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>k!=='backgroundMode'&&!Object.hasOwn(INITIAL_NETWORK_RULES,k)))throw Error('Invalid Network rules');
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>k!=='mode'&&k!=='backgroundMode'&&!Object.hasOwn(INITIAL_NETWORK_RULES,k)))throw Error('Invalid Network rules');
     const rules={...INITIAL_NETWORK_RULES,...value};
     if(Object.keys(INITIAL_NETWORK_RULES).some(k=>!Number.isInteger(rules[k])||rules[k]<0||rules[k]>100)||
         (rules.backgroundMode!==undefined&&!NETWORK_BACKGROUND_MODES.includes(rules.backgroundMode)))throw Error('Invalid Network rules');
+    if(rules.mode!==undefined&&!['palette','spatial'].includes(rules.mode))throw Error('Invalid Network mode');
+    if(rules.mode==='palette')delete rules.mode;
     if(rules.backgroundMode==='auto')delete rules.backgroundMode;
     return rules;
 }
 export function createNetworkState(n){
     if(!Number.isInteger(n)||n<1||n>327)throw Error('Invalid Network size');
-    return {networkVersion:1,growthVersion:2,n,frame:0,nextId:0,palette:[],background:0,sources:[],agents:[],trails:[]};
+    return {networkVersion:1,growthVersion:2,transitionVersion:1,n,frame:0,nextId:0,palette:[],background:0,sources:[],agents:[],trails:[]};
 }
 export function restoreNetworkState(value){
     if(!value||value.networkVersion!==1||!Number.isSafeInteger(value.frame)||value.frame<0||!Number.isSafeInteger(value.nextId)||value.nextId<0)throw Error('Invalid Network state');
     const state=createNetworkState(value.n),n=state.n;
+    if(value.mode!==undefined&&value.mode!=='spatial')throw Error('Invalid Network mode');
+    if(value.mode==='spatial')state.mode='spatial';
+    if(value.transitionVersion===undefined)delete state.transitionVersion;
+    else if(value.transitionVersion!==1)throw Error('Invalid Network transition version');
+    if(value.sourceMode!==undefined){if(!['palette','spatial'].includes(value.sourceMode)||value.transitionVersion!==1)throw Error('Invalid Network source mode');state.sourceMode=value.sourceMode;}
+    if(value.stableSources!==undefined){if(value.stableSources!==true||value.transitionVersion!==1)throw Error('Invalid Network source identity');state.stableSources=true;}
     // Missing growthVersion is the original engine, retained for recorded journeys.
     if(value.growthVersion===undefined)delete state.growthVersion;
     else if(value.growthVersion!==2)throw Error('Invalid Network growth version');
@@ -73,59 +81,78 @@ function remapPalette(state,palette,board){
 }
 // One representative per spatial bucket, chosen from original source edges.
 // Generated trails are excluded, so they cannot turn into self-replicating seeds.
-function readSources(board,n,p,background,marks,scratch){
-    const g=Math.min(n,17),buckets=new Map(),{labels,queue}=scratch;labels.fill(0);let externalCount=0;
-    const external=i=>!board[i].isGold&&!marks.has(i)&&norm(board[i].k,p)!==background;
+function readSources(board,n,p,background,marks,scratch,spatial=false,colors=null,preferred=[]){
+    const g=Math.min(n,17),buckets=new Map(),{labels,queue}=scratch;labels.fill(0);let externalCount=0;const sizes=new Map(),contacts=new Map();
+    const external=i=>!board[i].isGold&&!marks.has(i)&&(spatial?colors[norm(board[i].k,p)]!==colors[background]:norm(board[i].k,p)!==background);
     // Connected painted patches are distinct nutrient sources. Tips target
     // other patches rather than making invisible shortcuts inside their own.
     for(let start=0;start<n*n;start++){
         if(labels[start]||!external(start))continue;
-        let head=0,tail=1;queue[0]=start;labels[start]=start+1;
+        let head=0,tail=1;queue[0]=start;labels[start]=start+1;const touching=spatial?new Set():null;
         while(head<tail){
             externalCount++;const i=queue[head++],r=Math.floor(i/n),c=i%n;
             for(const at of [c>0?i-1:-1,c+1<n?i+1:-1,r>0?i-n:-1,r+1<n?i+n:-1]){
+                if(spatial&&marks.has(at))touching.add(at);
                 if(at<0||labels[at]||!external(at))continue;labels[at]=start+1;queue[tail++]=at;
             }
         }
+        if(spatial){sizes.set(start,tail);contacts.set(start,touching.size);}
     }
     for(let i=0;i<n*n;i++){
         if(!labels[i])continue;const k=norm(board[i].k,p),r=Math.floor(i/n),c=i%n;
         const edge=r===0||r===n-1||c===0||c===n-1||[i-1,i+1,i-n,i+n].some(at=>at>=0&&at<board.length&&!labels[at]);
         if(!edge)continue;
         const id=Math.min(g-1,Math.floor(r*g/n))*g+Math.min(g-1,Math.floor(c*g/n));
-        const score=Math.abs(k-background)+random(i,0)*.01,previous=buckets.get(id);
+        const score=spatial?random(i,0):Math.abs(k-background)+random(i,0)*.01,previous=buckets.get(id);
         if(!previous||score>previous.score)buckets.set(id,{source:[id,c,r,k,labels[i]-1],score});
     }
-    return {sources:[...buckets.values()].sort((a,b)=>random(a.source[0],0)-random(b.source[0],0)).slice(0,MAX_SOURCES).map(v=>v.source).sort((a,b)=>a[0]-b[0]),dense:externalCount>n*n*.7};
+    // Once modes have been exchanged, a valid representative remains the same
+    // source. Different scoring must not turn another point of its patch into a birth.
+    const pinned=new Set();
+    for(const source of preferred){
+        const index=Math.round(source[2])*n+Math.round(source[1]);
+        if(!labels[index]||colors[norm(board[index].k,p)]!==colors[source[3]])continue;
+        const k=norm(board[index].k,p);pinned.add(source[0]);
+        buckets.set(source[0],{source:[source[0],source[1],source[2],k,labels[index]-1],score:Infinity});
+    }
+    return {sources:[...buckets.values()].sort((a,b)=>Number(pinned.has(b.source[0]))-Number(pinned.has(a.source[0]))||random(a.source[0],0)-random(b.source[0],0)).slice(0,MAX_SOURCES).map(v=>v.source).sort((a,b)=>a[0]-b[0]),dense:externalCount>n*n*.7,sizes,contacts};
 }
-function chooseTarget(agent,sources,p,avoid=-1){
+function chooseTarget(agent,sources,p,avoid=-1,spatial=null){
     let best=-1,score=Infinity;const origin=sources.find(s=>s[0]===agent.origin);
     for(const source of sources){
         if(source[0]===agent.origin||source[0]===avoid||source[4]===origin?.[4])continue;
         const dx=source[1]-agent.x,dy=source[2]-agent.y,distance=Math.hypot(dx,dy),rank=source[3]/Math.max(1,p-1);
-        if((distance<2&&source[0]!==agent.target)||rank<.15)continue;
-        const candidate=distance/(.5+rank)*(1+Math.abs(wrap(Math.atan2(dy,dx)-agent.angle))*.12)*(.5+random(agent.id,source[0],91)*1.5);
+        if((distance<2&&source[0]!==agent.target)||(!spatial&&rank<.15))continue;
+        const weight=spatial?(1+Math.min(2,Math.sqrt(spatial.sizes.get(source[4])??1)/8))/(1+.35*(spatial.traffic.get(source[4])??0)):.5+rank;
+        const candidate=distance/weight*(1+Math.abs(wrap(Math.atan2(dy,dx)-agent.angle))*.12)*(.5+random(agent.id,source[0],91)*1.5);
         if(candidate<score){score=candidate;best=source[0];}
     }
     return best;
 }
-function addAgent(state,source,angle,p,target=-1){
+function addAgent(state,source,angle,p,target=-1,spatial=null){
     if(state.agents.length>=MAX_AGENTS)return;
     const agent={id:state.nextId++,x:source[1],y:source[2],angle:Math.fround(wrap(angle)),k:source[3],origin:source[0],target,age:0};
-    if(target===-1)agent.target=chooseTarget(agent,state.sources,p);
+    if(target===-1)agent.target=chooseTarget(agent,state.sources,p,-1,spatial);
     state.agents.push(agent);
 }
 export function runNetworkGeneration({n,currentBoardState:board,currentPalette,originalPalette=currentPalette,networkRules=INITIAL_NETWORK_RULES},state){
     if(!state||state.n!==n)state=createNetworkState(n);
-    const p=Math.max(1,currentPalette.length),rules=networkRules,continuous=state.growthVersion===2;
+    const p=Math.max(1,currentPalette.length),rules=networkRules,spatialMode=rules.mode==='spatial',continuous=state.growthVersion===2;
     if(!scratch||scratch.n!==n)scratch={n,marks:new Map(),labels:new Int32Array(n*n),queue:new Int32Array(n*n)};
     const marks=scratch.marks;marks.clear();
-    const previousBackgroundMode=state.backgroundMode??'auto';
+    const previousBackgroundMode=state.backgroundMode??'auto',wasSpatial=state.mode==='spatial';
     remapPalette(state,currentPalette,board);
-    const mode=rules.backgroundMode??'auto';
+    const mode=spatialMode?(rules.backgroundMode==='luminance'?'luminance':'auto'):(rules.backgroundMode??'auto');
+    if(spatialMode&&(!wasSpatial||(mode==='auto'&&previousBackgroundMode!=='auto'))){
+        // Stable color ties and a fixed pigment identity remove sorting from background selection.
+        const counts=new Map();for(const tile of board)if(!tile.isGold){const color=currentPalette[norm(tile.k,p)];counts.set(color,(counts.get(color)??0)+1);}
+        const selected=[...counts].sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:a[0]>b[0]?1:0))[0]?.[0];
+        state.background=Math.max(0,currentPalette.indexOf(selected));
+    }
+    if(spatialMode)state.mode='spatial';else delete state.mode;
     if(mode==='first')state.background=0;
     else if(mode==='luminance')state.background=Math.max(0,magnetAnchorIndex(currentPalette,{anchorColor:'luminance'},originalPalette));
-    else if(previousBackgroundMode!=='auto'){
+    else if(!spatialMode&&previousBackgroundMode!=='auto'){
         const counts=new Uint32Array(p);for(const tile of board)if(!tile.isGold)counts[norm(tile.k,p)]++;
         state.background=0;for(let k=1;k<p;k++)if(counts[k]>counts[state.background])state.background=k;
     }
@@ -139,8 +166,19 @@ export function runNetworkGeneration({n,currentBoardState:board,currentPalette,o
         trail[1]=norm(tile.k,p);trail[3]-=decay;
         if(trail[3]<=0)paint(tile,trail[2]);else marks.set(trail[0],trail);
     }
+    const sourceMode=spatialMode?'spatial':'palette';
+    const modeTransition=state.transitionVersion===1&&state.sourceMode!==undefined&&state.sourceMode!==sourceMode;
+    if(modeTransition)state.stableSources=true;
+    const preferred=state.stableSources?state.sources:[];
+    if(state.transitionVersion===1)state.sourceMode=sourceMode;
     const previous=new Map(state.sources.map(s=>[s[0],s]));
-    const observed=readSources(board,n,p,state.background,marks,scratch);state.sources=observed.sources;
+    const observed=readSources(board,n,p,state.background,marks,scratch,spatialMode,currentPalette,preferred);state.sources=observed.sources;
+    const spatial=spatialMode?{sizes:observed.sizes,traffic:new Map([...observed.contacts].map(([id,count])=>[id,Math.min(32,count)/4]))}:null;
+    if(spatial){
+        const byId=new Map(state.sources.map(source=>[source[0],source[4]]));
+        for(const agent of state.agents){const patch=byId.get(agent.target);if(patch!==undefined)spatial.traffic.set(patch,(spatial.traffic.get(patch)??0)+1);}
+        if(!wasSpatial)for(const agent of state.agents)agent.target=-1;
+    }
     const firstNewAgentId=state.nextId;
     // A bucket is a sampling location, not a source identity. Its old source
     // must still belong to the observed patch and retain its pigment.
@@ -148,34 +186,35 @@ export function runNetworkGeneration({n,currentBoardState:board,currentPalette,o
     if(continuous)for(const source of state.sources){
         const old=previous.get(source[0]);if(!old)continue;
         const index=Math.round(old[2])*n+Math.round(old[1]);
-        if(scratch.labels[index]===source[4]+1&&norm(board[index].k,p)===old[3])retainedOrigins.add(source[0]);
+        if(scratch.labels[index]===source[4]+1&&(spatialMode?currentPalette[norm(board[index].k,p)]===currentPalette[old[3]]:norm(board[index].k,p)===old[3]))retainedOrigins.add(source[0]);
     }
     // New brush islands are immediate new buds. Later launches reinforce links.
-    for(const source of state.sources)if(!previous.has(source[0])||previous.get(source[0])[3]!==source[3]||(continuous&&!retainedOrigins.has(source[0]))){
-        addAgent(state,source,random(source[0],state.frame)*Math.PI*2-Math.PI,p);
-        if(state.agents.length<32)addAgent(state,source,random(source[0],state.frame,12345)*Math.PI*2-Math.PI,p);
+    if(!modeTransition)for(const source of state.sources)if(!previous.has(source[0])||(spatialMode?currentPalette[previous.get(source[0])[3]]!==currentPalette[source[3]]:previous.get(source[0])[3]!==source[3])||(continuous&&!retainedOrigins.has(source[0]))){
+        addAgent(state,source,random(source[0],state.frame)*Math.PI*2-Math.PI,p,-1,spatial);
+        if(state.agents.length<32)addAgent(state,source,random(source[0],state.frame,12345)*Math.PI*2-Math.PI,p,-1,spatial);
     }
-    if(state.sources.length&&state.frame%10===0){const source=state.sources[Math.floor(state.frame/10)%state.sources.length];addAgent(state,source,random(source[0],state.frame)*Math.PI*2-Math.PI,p);}
+    if(state.sources.length&&state.frame%10===0){const source=state.sources[Math.floor(state.frame/10)%state.sources.length];addAgent(state,source,random(source[0],state.frame)*Math.PI*2-Math.PI,p,-1,spatial);}
+    if(!spatialMode&&wasSpatial)for(const agent of state.agents)agent.target=-1;
     const sourceMap=new Map(state.sources.map(s=>[s[0],s]));
     const sourceCells=new Set(state.sources.map(s=>Math.round(s[2])*n+Math.round(s[1])));
     const deposit=(i,k,amount)=>{
         const tile=board[i];if(!tile||tile.isGold)return null;
         let trail=marks.get(i);
         if(trail){trail[3]=Math.min(1024,trail[3]+amount);return trail;}
-        if(sourceCells.has(i)||(!observed.dense&&norm(tile.k,p)!==state.background)||marks.size>=Math.min(MAX_TRAILS,n*n))return null;
+        if(sourceCells.has(i)||(!observed.dense&&(spatialMode?currentPalette[norm(tile.k,p)]!==currentPalette[state.background]:norm(tile.k,p)!==state.background))||marks.size>=Math.min(MAX_TRAILS,n*n))return null;
         trail=[i,k,norm(tile.k,p),240+rules.persistence*2];marks.set(i,trail);paint(tile,k);return trail;
     };
     const speed=(.25+rules.growth*.009)*Math.min(1,n/149),alive=[],children=[];
     for(const agent of state.agents){
         if(agent.age++>600)continue;
         if(!sourceMap.has(agent.origin)||(continuous&&agent.id<firstNewAgentId&&!retainedOrigins.has(agent.origin)))continue;
-        if(agent.age%18===0||!sourceMap.has(agent.target))agent.target=chooseTarget(agent,state.sources,p);
+        if(agent.age%18===0||!sourceMap.has(agent.target))agent.target=chooseTarget(agent,state.sources,p,-1,spatial);
         const target=sourceMap.get(agent.target);
         if(target&&Math.hypot(target[1]-agent.x,target[2]-agent.y)<.65)continue;
         let vx=Math.cos(agent.angle),vy=Math.sin(agent.angle);
         if(target){const dx=target[1]-agent.x,dy=target[2]-agent.y,d=Math.hypot(dx,dy)||1;vx=dx/d;vy=dy/d;}
         // Low-ranked nearby source colors oppose growth; sorted high ranks attract.
-        for(const source of state.sources){
+        if(!spatialMode)for(const source of state.sources){
             if(source[0]===agent.origin||source[3]/Math.max(1,p-1)>=.15)continue;
             const dx=agent.x-source[1],dy=agent.y-source[2],d=Math.hypot(dx,dy);
             if(d>0&&d<n/8){const force=(1-d/(n/8))*.65;vx+=dx/d*force;vy+=dy/d*force;}
@@ -218,7 +257,7 @@ export function runNetworkGeneration({n,currentBoardState:board,currentPalette,o
         }
         if(agent.age>8&&random(agent.id,state.frame,0x13579)<rules.branching*.00025&&alive.length+children.length<MAX_AGENTS){
             const child={...agent,id:state.nextId++,age:0,angle:Math.fround(wrap(agent.angle+(random(agent.id,state.frame,77)<.5?-1:1)*.8))};
-            child.target=chooseTarget(child,state.sources,p,agent.target);children.push(child);
+            child.target=chooseTarget(child,state.sources,p,agent.target,spatial);children.push(child);
         }
         alive.push(agent);
     }

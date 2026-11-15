@@ -1866,7 +1866,7 @@ function currentCycleMode(simulation) {
     return ({gameOfLife:gameOfLifeMode,sandpile:chiFlowMode,gravitationalSort:gsMode,
         spiral:spiralMode,magnet:magnetMode,brightnessEvo:brightnessEvoMode,dla:dlaMode,
         breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
-        ink:'flow',oil:'droplets',network:'growth',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
+        ink:'flow',oil:'droplets',network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
         nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
 }
 function rememberCurrentCycle() {
@@ -1894,6 +1894,7 @@ function restoreCycleMode(simulation, mode) {
         case 'gravitationalSort':gsMode=mode;gravitationalSortRules.direction=mode;break;
         case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;break;
         case 'magnet':selectMagnetMode(mode);break;
+        case 'network':saveNetworkSettings({...networkRules,mode});break;
         case 'brightnessEvo':brightnessEvoMode=mode;break;
         case 'dla':dlaMode=mode;break;
         case 'breathe':breatheEvoMode=mode;break;
@@ -2036,7 +2037,7 @@ if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
     if (simulationName === 'ink')inkState=createInkState(n);
     if (simulationName === 'oil')oilState=createOilState(n);
-    if (simulationName === 'network')networkState=createNetworkState(n);
+    if (simulationName === 'network'){networkState=createNetworkState(n);if(!isExecutingMacroCommand&&!isMacroPlaying)networkRules=validateNetworkRules({...networkRules,mode:'spatial'});}
     if (simulationName === 'cymatics')cymaticsState=createCymaticsState(n);
     if (simulationName === 'contour') {
         contourMode = 'cracks';
@@ -3756,11 +3757,18 @@ function updateNetworkButtonUI(){
     if(!dom.btnNetwork)return;
     dom.btnNetwork.classList.toggle('simulation-active',armedSimulation==='network');
     dom.btnNetwork.setAttribute('aria-pressed',String(armedSimulation==='network'));
+    const mode=armedSimulation==='network'?(getNetworkRules().mode??'palette'):(cycleMemory.entry('network')??'spatial');
+    dom.btnNetwork.classList.toggle('network-spatial',mode==='spatial');
+    dom.btnNetwork.title=getText(mode==='spatial'?'network_mode_spatial':'network_mode_palette');
+    dom.btnNetwork.setAttribute('aria-label',dom.btnNetwork.title);
 }
 function cycleNetworkMode(){
-    if(isLifePlaying&&armedSimulation==='network')return;
     if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
-    if(armedSimulation==='network'){
+    if(armedSimulation==='network'&&(getNetworkRules().mode==='spatial'||isLifePlaying)){
+        const mode=getNetworkRules().mode==='spatial'?'palette':'spatial';
+        networkRules=validateNetworkRules({...networkRules,mode});
+        window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+    }else if(armedSimulation==='network'){
         const snapshot=getNetworkSnapshot();armSimulation(null);
         window.logArtEvent('Network Mode Changed',JSON.stringify({mode:'off',...snapshot}));
     }else{armSimulation('network');window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());}
@@ -3768,7 +3776,7 @@ function cycleNetworkMode(){
 }
 function saveNetworkSettings(value){
     if(armedSimulation!=='network'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
-    networkRules=validateNetworkRules(value);recordLiveSimulationRules('network');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
+    networkRules=validateNetworkRules(value);updateNetworkButtonUI();recordLiveSimulationRules('network');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
 }
 
 function getOilRules(){return replayOilRules??oilRules;}

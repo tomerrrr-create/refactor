@@ -13,7 +13,20 @@ try{for(const touch of [false,true]){
  visual:()=>{networkTest.setup(149);boardState.forEach((t,i)=>{const x=i%n/n,y=Math.floor(i/n)/n;let k=0;for(const[a,b,rank]of [[.18,.22,.9],[.76,.25,.7],[.27,.73,.55],[.8,.78,.85],[.51,.48,.95]])if((x-a)**2+(y-b)**2<.0008)k=Math.floor(paletteLen()*rank);t.k=t.v=k;});renderToScreen(null);},open:()=>networkSettingsUI.open(),tech:()=>modals.openTechnicianMenu(),project:getCurrentState,restore:applyState,sort:applySortMethod,resize:resizeBoard,
  state:()=>({palette:[...palette()],darkest:sortColorsArray(C.PALETTES[activePaletteIndex].originalColors,'luminance')[0],armed:armedSimulation,rules:{...getNetworkRules()},personal:{...networkRules},runtime:networkState?restoreNetworkState(networkState):null,playing:isLifePlaying,loaded:isMacroLoaded,gen:currentGenerationCount,tiles:boardState.map(t=>({k:t.k,v:t.v,isGold:!!t.isGold})),logs:[...artRecipeLog],settings:getWorkspaceSettings()}),
  replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},done:()=>!isMacroPlaying&&!isLifePlaying&&!isMacroLoaded,
- stepMany:count=>{for(let i=0;i<count;i++){boardState=runNetworkEvolution({n,currentBoardState:boardState,currentPalette:palette()});}renderToScreen(null);}
+ transitionAudit:()=>{
+   networkTest.setup(149);networkRules=validateNetworkRules({...DEFAULT_NETWORK_PREFERENCES,branching:0});armSimulation('network');
+   boardState.forEach((t,i)=>{t.k=t.v=(i*13+Math.floor(i/n)*7)%paletteLen();t.isGold=i===0;});
+   networkTest.stepMany(180);let modes=[];isLifePlaying=true;
+   for(let i=0;i<40;i++){
+    cycleNetworkMode();const frame=networkState.frame,before=networkState.nextId,generation=currentGenerationCount;
+    networkTest.stepMany(1);const created=networkState.nextId-before;
+    if(created>(frame%10===0?1:0))throw Error('Mode change launched '+created+' tips');
+    networkTest.stepMany(1);if(networkState.nextId-before>(frame%10===0||(frame+1)%10===0?1:0))throw Error('Delayed mode-change burst');
+    if(currentGenerationCount!==generation)throw Error('Manual audit changed generation clock');
+    modes.push(getNetworkRules().mode??'palette');
+   }isLifePlaying=false;return {modes,frame:networkState.frame};
+  },
+  stepMany:count=>{for(let i=0;i<count;i++){boardState=runNetworkEvolution({n,currentBoardState:boardState,currentPalette:palette()});}renderToScreen(null);}
  };initializeApp().then(()=>networkTest.ready=true);`);for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  const boot=async reload=>{await(reload?page.reload():page.goto(base));await page.waitForFunction(()=>window.networkTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));};
@@ -21,18 +34,44 @@ try{for(const touch of [false,true]){
  const open=async()=>{await page.evaluate(()=>networkTest.open());await page.locator('#networkSettingsDialog').waitFor({state:'visible'});await page.waitForTimeout(240);};
  const replay=async text=>{await page.evaluate(text=>networkTest.replay(text),text);await page.waitForFunction(()=>networkTest.done(),null,{timeout:20000});return state();};
  await boot(false);
+ if(process.env.NETWORK_SPATIAL_ONLY){
+  await page.evaluate(()=>networkTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(350);await tap('#btnNetwork');
+  const before=await state();assert.equal(before.rules.mode,'spatial');assert.equal(before.rules.backgroundMode,'luminance');
+  assert(await page.locator('#btnNetwork .network-spatial-icon').isVisible());
+  await page.locator('#btnNetwork').screenshot({path:path.join(artifacts,touch?'spatial-icon-he.png':'spatial-icon-en.png')});
+  await tap('#btnNetwork');assert.equal((await state()).rules.mode,undefined);assert.deepEqual((await state()).tiles,before.tiles);assert(await page.locator('#btnNetwork .network-palette-icon').isVisible());
+  await page.locator('#btnNetwork').screenshot({path:path.join(artifacts,touch?'palette-icon-he.png':'palette-icon-en.png')});
+  await tap('#btnNetwork');assert.equal((await state()).armed,null);await tap('#btnNetwork');assert.equal((await state()).rules.mode,'spatial');
+  await open();assert.deepEqual(await page.locator('[data-network-mode]').evaluateAll(buttons=>buttons.map(b=>b.dataset.networkMode)),['spatial','palette']);
+  assert.equal(await page.locator('[data-network-background="first"]').isDisabled(),true);
+  assert.equal(await page.locator('[data-network-background="luminance"]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-network-mode="palette"]').click();await page.locator('#networkSettingsDialog [data-cancel]').click();assert.equal((await state()).rules.mode,'spatial');
+  await open();await page.locator('[data-network-background="auto"]').click();await page.locator('#networkSettingsDialog [data-reset]').click();assert.equal(await page.locator('[data-network-mode="spatial"]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('[data-network-background="luminance"]').getAttribute('aria-pressed'),'true');await page.locator('#networkSettingsDialog [data-cancel]').click();
+  // Reset retains Palette order too, while restoring its new luminance default.
+  await tap('#btnNetwork');await open();await page.locator('[data-network-background="auto"]').click();await page.locator('#networkSettingsDialog [data-reset]').click();assert.equal(await page.locator('[data-network-mode="palette"]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('[data-network-background="luminance"]').getAttribute('aria-pressed'),'true');await page.locator('#networkSettingsDialog [type=submit]').click();
+  await tap('#btnNetwork');await tap('#btnNetwork');await tap('#btnStepForward');assert.equal((await state()).runtime.frame,1);assert.equal((await state()).runtime.mode,'spatial');
+  await tap('#btnPlayPauseLife');await page.waitForFunction(()=>networkTest.state().gen>=8);
+  const gen=(await state()).gen;await tap('#btnNetwork');assert.equal((await state()).rules.mode,undefined);assert((await state()).playing);assert((await state()).gen>=gen);
+  await tap('#btnNetwork');assert.equal((await state()).rules.mode,'spatial');assert((await state()).playing);
+  await tap('#btnPlayPauseLife');const live=await state();await tap('#btnUndo');await tap('#btnRedo');assert.deepEqual((await state()).tiles,live.tiles);
+  const played=await replay(live.logs.join('\n'));assert.deepEqual(played.tiles,live.tiles);assert.deepEqual(played.runtime,live.runtime);
+  const audit=await page.evaluate(()=>networkTest.transitionAudit());assert.equal(audit.modes.length,40);assert(audit.modes.includes('spatial'));assert(audit.modes.includes('palette'));
+  await page.evaluate(()=>networkTest.setup());await tap('#btnNetwork');assert.equal((await state()).rules.mode,'spatial');
+  await page.evaluate(()=>networkTest.tech());if(!(await page.locator('#profileActions').isVisible()))await tap('[data-profile-dot="0"]');await tap('#btnProfileSave');await boot(true);assert.equal((await state()).personal.mode,'spatial');assert.equal((await state()).personal.backgroundMode,'luminance');
+  assert.deepEqual(errors,[]);console.log('PASS spatial-first defaults',JSON.stringify({touch,icons:true,live:true,replay:true,profile:true}));await context.close();continue;
+ }
  if(process.env.NETWORK_BACKGROUND_ONLY){
-  await page.evaluate(()=>networkTest.backgroundScene());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(350);await tap('#btnNetwork');
+  await page.evaluate(()=>networkTest.backgroundScene());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(350);await tap('#btnNetwork');await tap('#btnNetwork');
   const dialog=page.locator('#networkSettingsDialog'),choice=mode=>dialog.locator('[data-network-background="'+mode+'"]');
   const save=async mode=>{await open();await choice(mode).click();await dialog.locator('[type=submit]').click();};
   const pressed=mode=>choice(mode).getAttribute('aria-pressed');
-  await open();assert.equal(await pressed('first'),'true');assert.equal(await dialog.locator('[data-network-background]').count(),3);await choice('auto').click();await dialog.locator('[data-cancel]').click();assert.equal((await state()).personal.backgroundMode,'first');
+  await open();assert.equal(await pressed('luminance'),'true');assert.equal(await dialog.locator('[data-network-background]').count(),3);await choice('first').click();await dialog.locator('[data-cancel]').click();assert.equal((await state()).personal.backgroundMode,'luminance');
   await save('first');await tap('#btnStepForward');let first=await state();assert.equal(first.runtime.background,0);assert.equal(first.personal.backgroundMode,'first');
   await page.evaluate(()=>networkTest.sort('reversed'));await tap('#btnStepForward');let reversed=await state();assert.equal(reversed.runtime.background,0);assert.notEqual(first.palette[0],reversed.palette[0]);
   await save('luminance');await tap('#btnStepForward');let darkest=await state();assert.equal(darkest.palette[darkest.runtime.background],darkest.darkest);
   await page.evaluate(()=>networkTest.sort('luminance'));await tap('#btnStepForward');darkest=await state();assert.equal(darkest.palette[darkest.runtime.background],darkest.darkest);
   await save('auto');const beforeVote=await state(),counts=Array(beforeVote.palette.length).fill(0);for(const tile of beforeVote.tiles)if(!tile.isGold)counts[tile.k]++;const majority=counts.indexOf(Math.max(...counts));await tap('#btnStepForward');assert.equal((await state()).runtime.background,majority);
-  await open();await choice('auto').click();await dialog.locator('[data-reset]').click();assert.equal(await pressed('first'),'true');await dialog.locator('[type=submit]').click();assert.equal((await state()).personal.backgroundMode,'first');
+  await open();await choice('auto').click();await dialog.locator('[data-reset]').click();assert.equal(await pressed('luminance'),'true');await dialog.locator('[type=submit]').click();assert.equal((await state()).personal.backgroundMode,'luminance');
   await tap('#btnPlayPauseLife');await page.waitForFunction(()=>networkTest.state().gen>=8);await save('first');await page.waitForTimeout(100);await tap('#btnPlayPauseLife');const live=await state();assert(live.logs.some(l=>l.includes('SIMULATION_RULES')&&l.includes('"backgroundMode":"first"')));
   await tap('#btnUndo');await tap('#btnRedo');assert.deepEqual((await state()).runtime,live.runtime);assert.deepEqual((await state()).tiles,live.tiles);
   const played=await replay((await state()).logs.join('\n'));assert.deepEqual(played.runtime,live.runtime);assert.deepEqual(played.tiles,live.tiles);
@@ -57,7 +96,7 @@ try{for(const touch of [false,true]){
  const liveRecipe=live.logs.join('\n');await tap('#btnUndo');await tap('#btnRedo');assert.deepEqual((await state()).tiles,live.tiles);assert.deepEqual((await state()).runtime,live.runtime);const recipe=(await state()).logs.join('\n');const played=await replay(recipe);assert.deepEqual(played.tiles,live.tiles);assert.deepEqual(played.runtime,live.runtime);
  assert.deepEqual((await replay(liveRecipe)).tiles,live.tiles,'unresolved live replay is exact too');
  const project=await page.evaluate(()=>networkTest.project());await tap('#btnStepForward');await page.evaluate(p=>networkTest.restore(p),JSON.parse(JSON.stringify(project)));assert.deepEqual((await state()).runtime,project.networkState.state);assert.deepEqual((await state()).tiles,live.tiles);
- await page.evaluate(()=>networkTest.setup());await tap('#btnNetwork');await tap('#btnStepForward');await tap('#btnTuring');assert.equal((await state()).armed,'turing');await tap('#btnNetwork');assert.equal((await state()).armed,'network');await tap('#btnNetwork');assert.equal((await state()).armed,null);assert.equal(await page.locator('#btnNetwork').getAttribute('aria-pressed'),'false');await tap('#btnNetwork');assert.equal((await state()).runtime.frame,0);
+ await page.evaluate(()=>networkTest.setup());await tap('#btnNetwork');await tap('#btnStepForward');await tap('#btnTuring');assert.equal((await state()).armed,'turing');await tap('#btnNetwork');assert.equal((await state()).armed,'network');await tap('#btnNetwork');assert.equal((await state()).rules.mode,undefined);await tap('#btnNetwork');assert.equal((await state()).armed,null);assert.equal(await page.locator('#btnNetwork').getAttribute('aria-pressed'),'false');await tap('#btnNetwork');assert.equal((await state()).runtime.frame,0);
  const mixed=await state();const mixedPlayed=await replay(mixed.logs.join('\n'));assert.deepEqual(mixedPlayed.tiles,mixed.tiles);assert.deepEqual(mixedPlayed.runtime,mixed.runtime);
  await open();await page.screenshot({path:path.join(artifacts,touch?'touch-settings.png':'desktop-settings.png')});await page.locator('#networkSettingsDialog [data-cancel]').click();
  // Visual sample begins with the user's existing pigments, rather than a generated object.
