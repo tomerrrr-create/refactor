@@ -1,5 +1,5 @@
 import test from 'node:test';
-import {CHAPTER_TWO_STEPS,CHAPTER_TWO_ORDERS} from '../js/chapter-two-tour.js';
+import {CHAPTER_TWO_STEPS,CHAPTER_TWO_ORDERS,orderPracticeProgress} from '../js/chapter-two-tour.js';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
@@ -42,4 +42,12 @@ test('chapter two progress resumes six palette orders and rejects unknown steps'
         assert.deepEqual(readChapterOneProgress({getItem:()=>JSON.stringify(progress)}),progress);
     }
     assert.equal(readChapterOneProgress({getItem:()=>JSON.stringify({version:1,status:'active',step:'order-random'})}),null);
+});
+
+test('order practice follows the last clicked tile and accepts different tiles',()=>{
+ const tile=(index,sortMethod)=>({type:'tile',index,sortMethod});
+ const events=[tile(10,'luminance'),tile(11,'dark-rainbow'),tile(12,'dark-rainbow'),tile(13,'dark-rainbow')];
+ assert.deepEqual(orderPracticeProgress(events,'dark-rainbow'),{count:3,index:13});
+ assert.deepEqual(orderPracticeProgress([], 'dark-rainbow'),{count:0,index:null});
+ assert.deepEqual(orderPracticeProgress([tile(1,'luminance')],'dark-rainbow'),{count:0,index:1});
 });

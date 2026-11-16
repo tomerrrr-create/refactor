@@ -94,18 +94,20 @@ try{for(const config of process.env.CHAPTER_TWO_DIRECT_ONLY?[]:[{width:1280,heig
             assert.equal(afterSort.paletteIndex,finalState.paletteIndex);
         }
         await page.waitForFunction(()=>document.querySelector('.chapter-frame').contentDocument.querySelectorAll('.chapter-guide-muted,.chapter-guide-glow').length===0);
-        await clickTile(101);await clickTile(101);await clickTile(101);assert(await card.locator('[data-next]').isDisabled(),'a different square does not satisfy the same-square task');
-        for(let click=0;click<3;click++)await clickTile(100);
+        await clickTile(101);await clickTile(102);assert(await card.locator('[data-next]').isDisabled(),'the step still needs three clicks');
+        const afterTwo=await readPractice();
+        assert.equal(await card.locator('.chapter-order-strip span.is-current').evaluate(el=>[...el.parentNode.children].indexOf(el)),afterTwo.tiles[102],'the strip follows a newly clicked square');
+        await clickTile(103);
         await page.waitForFunction(()=>!document.querySelector('.chapter-coach [data-next]').disabled);
         const state=await readPractice();
         assert.equal(await card.locator('.chapter-order-strip span').count(),state.colors.length);
-        assert.equal(await card.locator('.chapter-order-strip span.is-current').evaluate(el=>[...el.parentNode.children].indexOf(el)),state.tiles[100]);
+        assert.equal(await card.locator('.chapter-order-strip span.is-current').evaluate(el=>[...el.parentNode.children].indexOf(el)),state.tiles[103]);
         assert.equal(state.selectedColorIndex,-1,'the color strip never loads the brush');
         assert.equal(await card.locator('.chapter-order-strip').getAttribute('dir'),'ltr','color progression has a stable direction in RTL');
         assert.deepEqual(await card.locator('.chapter-order-strip span').evaluateAll(nodes=>nodes.map(node=>node.style.backgroundColor)),await page.evaluate(colors=>colors.map(color=>{const node=document.createElement('span');node.style.backgroundColor=color;return node.style.backgroundColor;}),state.colors));
         if(order===0){
-            for(let i=0;i<state.colors.length;i++)await clickTile(100);
-            assert.equal((await readPractice()).tiles[100],state.tiles[100],'the native palette sequence wraps to its first color');
+            for(let i=0;i<state.colors.length;i++)await clickTile(103);
+            assert.equal((await readPractice()).tiles[103],state.tiles[103],'the native palette sequence wraps to its first color');
         }
         const geometry=await card.locator('[data-order]').evaluate(el=>{const a=el.getBoundingClientRect(),b=el.closest('section').querySelector('footer').getBoundingClientRect();return {top:a.top,bottom:a.bottom,footer:b.top};});
         assert(geometry.top>=0&&geometry.bottom<=geometry.footer,'color order strip does not cover navigation');

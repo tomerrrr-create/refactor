@@ -1,4 +1,4 @@
-import {CHAPTER_TWO_STEPS,CHAPTER_TWO_ORDERS,chapterTwoCopy,renderOrderStrip} from './chapter-two-tour.js';
+import {CHAPTER_TWO_STEPS,CHAPTER_TWO_ORDERS,chapterTwoCopy,renderOrderStrip,orderPracticeProgress} from './chapter-two-tour.js';
 import {getCurrentLang,onLanguageChange,setCurrentLang} from './i18n.js';
 
 export const CHAPTER_ONE_KEY='colorGridChapterOneV1';
@@ -41,7 +41,7 @@ export function initializeChapterOne({beforeStart}){
     }
     function show(index){
         const s=session;if(!s?.bridge)return;
-        const previous=sameSquareRun(s.bridge.events(s.cursor||0));if(s.focusTile==null&&previous.index!==null)s.focusTile=previous.index;
+        const previous=sameSquareRun(s.bridge.events(s.cursor||0));if(previous.index!==null)s.focusTile=previous.index;
         if(index===5)s.bridge.prepareOrder();
         s.index=index;s.cursor=s.bridge.cursor();s.done=index===0;s.paletteChanges=0;s.lastPalette=s.bridge.read().paletteIndex;s.startTiles=s.bridge.read().tiles.join(',');s.pickerApplied=false;
         if(index!==2)s.bridge.closePalette();
@@ -99,9 +99,9 @@ export function initializeChapterOne({beforeStart}){
         const orderHost=s.card.querySelector('[data-order]');orderHost.hidden=!orderStep;
         if(orderStep){
             const method=CHAPTER_TWO_ORDERS[orderIndex],ready=state.sortMethod===method;
-            const clicks=events.filter(e=>e.type==='tile'&&e.sortMethod===method);
-            if(s.focusTile==null&&clicks.length)s.focusTile=clicks[0].index;
-            const run=sameSquareRun(clicks);s.done=s.done||ready&&run.index===s.focusTile&&run.count>=3;
+            const interaction=orderPracticeProgress(events,method);
+            if(interaction.index!==null)s.focusTile=interaction.index;
+            s.done=s.done||ready&&interaction.count>=3;
             title=orderIndex===0?two.title:two.change;
             body=orderIndex===0?two.first:!ready?`${two.switch} ${two.names[orderIndex]}.`:`${two.descriptions[orderIndex]} ${two.tap}`;
             status=s.done?(orderIndex===5?two.future:two.done):'';
