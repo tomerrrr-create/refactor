@@ -35,8 +35,10 @@ test('practice storage cannot touch the real browser preferences or replace top-
     }
 });
 
-test('chapter two progress resumes six palette orders and rejects unknown steps',()=>{
-    assert.deepEqual(CHAPTER_TWO_ORDERS,['luminance','dark-rainbow','reversed','center-out','temperature','outside-in']);
+test('chapter two progress resumes three palette orders and gestures and rejects unknown steps',()=>{
+    assert.deepEqual(CHAPTER_TWO_ORDERS,['luminance','dark-rainbow','reversed']);
+    assert.deepEqual(CHAPTER_TWO_STEPS.slice(3),['sort-reset','sort-manage']);
+    assert.equal(readChapterOneProgress({getItem:()=>JSON.stringify({version:1,status:'active',step:'order-temperature'})}).step,'sort-reset');
     for(const step of CHAPTER_TWO_STEPS){
         const progress={version:1,status:'active',step};
         assert.deepEqual(readChapterOneProgress({getItem:()=>JSON.stringify(progress)}),progress);

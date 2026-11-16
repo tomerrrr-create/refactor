@@ -30,10 +30,13 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
     const events=[];
     const record=(type,detail={})=>{events.push({sequence:++sequence,type,...detail});if(events.length>100)events.shift();};
     document.addEventListener('pointerdown',event=>{
-        if(event.button===0)down={x:event.clientX,y:event.clientY,time:performance.now(),board:!!event.target.closest('#boardCanvas')};
+        if(event.button===0)down={x:event.clientX,y:event.clientY,time:performance.now(),sort:!!event.target.closest('#btnCycleSort'),board:!!event.target.closest('#boardCanvas')};
     },true);
     document.addEventListener('pointerup',event=>{
         const start=down;down=null;
+        if(start?.sort&&performance.now()-start.time>=600&&Math.hypot(event.clientX-start.x,event.clientY-start.y)<8){
+            setTimeout(()=>record('sort-hold',{sortMethod:read().sortMethod}),0);
+        }
         if(!start?.board||performance.now()-start.time>=550||Math.hypot(event.clientX-start.x,event.clientY-start.y)>=8)return;
         const index=tileAt(event.clientX,event.clientY);
         if(index<0)return;

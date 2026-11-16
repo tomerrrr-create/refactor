@@ -82,7 +82,7 @@ try{for(const config of process.env.CHAPTER_TWO_DIRECT_ONLY?[]:[{width:1280,heig
     const readPractice=()=>page.evaluate(()=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read());
     assert.equal((await readPractice()).paletteIndex,finalState.paletteIndex,'chapter two keeps the chosen palette');
     assert.deepEqual((await readPractice()).tiles,finalState.tiles,'chapter transition keeps the existing board');
-    for(const [order,method] of ['luminance','dark-rainbow','reversed','center-out','temperature','outside-in'].entries()){
+    for(const [order,method] of ['luminance','dark-rainbow','reversed'].entries()){
         await step('order-'+method);assert(await card.locator('[data-next]').isDisabled());
         if(order){
             await frame.locator('#btnCycleSort.chapter-guide-glow').waitFor();
@@ -115,6 +115,24 @@ try{for(const config of process.env.CHAPTER_TWO_DIRECT_ONLY?[]:[{width:1280,heig
         await page.screenshot({path:`${artifacts}/${config.lang}-${config.width}-order-${method}-done.png`});
         await card.locator('[data-next]').click();
     }
+    await step('sort-reset');assert(await card.locator('[data-next]').isDisabled(),'reset needs a real hold');
+    const resetColors=await readPractice();
+    const sortButton=await frame.locator('#btnCycleSort').boundingBox();
+    await page.mouse.move(sortButton.x+sortButton.width/2,sortButton.y+sortButton.height/2);await page.mouse.down();await page.waitForTimeout(720);await page.mouse.up();
+    await page.waitForFunction(()=>!document.querySelector('.chapter-coach [data-next]').disabled);
+    const resetState=await readPractice();assert.equal(resetState.sortMethod,'luminance');
+    assert.deepEqual(resetState.tiles.map(k=>resetState.colors[k]),resetColors.tiles.map(k=>resetColors.colors[k]),'hold preserves visible cell colors');
+    await card.locator('[data-next]').click();await step('sort-manage');assert(await card.locator('[data-next]').isDisabled());
+    assert(await card.locator('[data-order]').isHidden());
+    const manageButton=await frame.locator('#btnCycleSort').boundingBox();
+    await page.mouse.move(manageButton.x+manageButton.width/2,manageButton.y+manageButton.height/2);await page.mouse.down();await page.mouse.move(manageButton.x+manageButton.width/2,manageButton.y+manageButton.height/2-65,{steps:6});await page.mouse.up();
+    await frame.locator('#sortCycleDialog[open]').waitFor();await page.waitForTimeout(150);
+    assert(await frame.locator('#sortCycleOptions input').count()>3,'additional native methods remain available');
+    await page.screenshot({path:`${artifacts}/${config.lang}-${config.width}-sort-manage-open.png`});
+    assert(await card.locator('[data-next]').isDisabled(),'closing the manager completes the visit');
+    await frame.locator('#btnSortCycleCloseTop').click();await page.waitForFunction(()=>!document.querySelector('.chapter-coach [data-next]').disabled);
+    await page.screenshot({path:`${artifacts}/${config.lang}-${config.width}-sort-manage-done.png`});
+    await card.locator('[data-next]').click();
     assert.equal(await page.locator('.chapter-one-tour').count(),0);assert.deepEqual(await page.evaluate(()=>chapterTest.state()),original,'outer artwork/settings/undo/log are untouched');
     for(const [key,value]of Object.entries(storage))if(key!=='colorGridChapterOneV1')assert.equal(await page.evaluate(key=>localStorage.getItem(key),key),value);
     assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('colorGridChapterOneV1')).status),'complete');

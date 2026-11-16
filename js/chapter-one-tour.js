@@ -14,6 +14,7 @@ const PALETTE_TIP={
 };
 export function readChapterOneProgress(storage){
     try{const value=JSON.parse(storage.getItem(CHAPTER_ONE_KEY));
+        if(value?.version===1&&['order-center-out','order-temperature','order-outside-in'].includes(value.step))value.step=value.status==='complete'?'sort-manage':'sort-reset';
         return value?.version===1&&['active','complete','dismissed'].includes(value.status)&&TOUR_STEPS.includes(value.step)?value:null;
     }catch{return null;}
 }
@@ -43,8 +44,9 @@ export function initializeChapterOne({beforeStart}){
         const s=session;if(!s?.bridge)return;
         const previous=sameSquareRun(s.bridge.events(s.cursor||0));if(previous.index!==null)s.focusTile=previous.index;
         if(index===5)s.bridge.prepareOrder();
-        s.index=index;s.cursor=s.bridge.cursor();s.done=index===0;s.paletteChanges=0;s.lastPalette=s.bridge.read().paletteIndex;s.startTiles=s.bridge.read().tiles.join(',');s.pickerApplied=false;
+        s.index=index;s.cursor=s.bridge.cursor();s.done=index===0;s.paletteChanges=0;s.lastPalette=s.bridge.read().paletteIndex;s.startTiles=s.bridge.read().tiles.join(',');s.pickerApplied=false;s.sortManagerOpened=false;
         if(index!==2)s.bridge.closePalette();
+        s.bridge.visible('#sortCycleDialog[open] #btnSortCycleCloseTop')?.click();
         persist('active',TOUR_STEPS[index]);s.root.dataset.step=TOUR_STEPS[index];
         update();s.card.querySelector('h2').focus({preventScroll:true});
     }
@@ -97,20 +99,31 @@ export function initializeChapterOne({beforeStart}){
         }
         const orderIndex=s.index-5,orderStep=orderIndex>=0,two=chapterTwoCopy(getCurrentLang());
         const orderHost=s.card.querySelector('[data-order]');orderHost.hidden=!orderStep;
-        if(orderStep){
+        if(orderStep&&orderIndex<CHAPTER_TWO_ORDERS.length){
             const method=CHAPTER_TWO_ORDERS[orderIndex],ready=state.sortMethod===method;
             const interaction=orderPracticeProgress(events,method);
             if(interaction.index!==null)s.focusTile=interaction.index;
             s.done=s.done||ready&&interaction.count>=3;
             title=orderIndex===0?two.title:two.change;
             body=orderIndex===0?two.first:!ready?`${two.switch} ${two.names[orderIndex]}.`:`${two.descriptions[orderIndex]} ${two.tap}`;
-            status=s.done?(orderIndex===5?two.future:two.done):'';
+            status=s.done?two.done:'';
             target=b.visible(ready?'#boardCanvas':'#btnCycleSort');
             renderOrderStrip(orderHost,state,s.focusTile,getCurrentLang());
+        }else if(id==='sort-reset'){
+            s.done=s.done||state.sortMethod==='luminance'&&events.some(event=>event.type==='sort-hold'&&event.sortMethod==='luminance');
+            title=two.resetTitle;body=two.resetBody;status=s.done?two.resetDone:'';
+            target=b.visible(s.done?'#boardCanvas':'#btnCycleSort');
+            renderOrderStrip(orderHost,state,s.focusTile,getCurrentLang());
+        }else if(id==='sort-manage'){
+            const modal=b.visible('#sortCycleDialog[open]');
+            s.sortManagerOpened=s.sortManagerOpened||!!modal;s.done=s.done||s.sortManagerOpened&&!modal;
+            title=two.manageTitle;body=modal?two.manageOpen:two.manageBody;status=s.done?two.manageDone:'';
+            orderHost.hidden=true;
+            target=b.visible(s.done?'#boardCanvas':modal?'#btnSortCycleCloseTop':'#btnCycleSort');
         }
         const card=s.card;card.querySelector('[data-chapter]').textContent=orderStep?two.chapter:c.chapter;
-        card.querySelector('.chapter-count').textContent=`${c.step} ${orderStep?orderIndex+1:s.index+1} ${getCurrentLang()==='he'?'מתוך':'of'} ${orderStep?6:5}`;
-        card.querySelector('progress').max=orderStep?6:5;
+        card.querySelector('.chapter-count').textContent=`${c.step} ${orderStep?orderIndex+1:s.index+1} ${getCurrentLang()==='he'?'מתוך':'of'} ${orderStep?CHAPTER_TWO_STEPS.length:5}`;
+        card.querySelector('progress').max=orderStep?CHAPTER_TWO_STEPS.length:5;
         card.querySelector('progress').value=orderStep?orderIndex+1:s.index+1;card.querySelector('progress').setAttribute('aria-label',orderStep?two.chapter:c.chapter);
         card.querySelector('h2').textContent=title;card.querySelector('[data-body]').textContent=body;
         card.querySelector('[data-open]').hidden=!helper;card.querySelector('[data-open]').textContent=c.open;
