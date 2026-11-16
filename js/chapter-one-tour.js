@@ -46,7 +46,7 @@ export function initializeChapterOne({beforeStart}){
     function open(trigger){
         if(session||!desktop())return;
         beforeStart();const c=copy(),root=document.createElement('dialog');root.className='chapter-one-tour';root.dir=getCurrentLang()==='he'?'rtl':'ltr';root.setAttribute('aria-labelledby','chapterOneTitle');
-        root.innerHTML='<div class="chapter-stage"><iframe class="chapter-frame"></iframe><div class="chapter-board-shade" hidden></div><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-cell-glow" hidden></div></div><section class="chapter-coach"><header><span data-chapter></span><button data-exit type="button">×</button></header><progress max="5" value="1"></progress><p class="chapter-count"></p><div class="chapter-copy"><h2 id="chapterOneTitle" tabindex="-1"></h2><p data-body></p><button data-open type="button" hidden></button></div><aside class="chapter-palette-tip" data-palette-tip hidden></aside><p class="chapter-status" role="status" aria-live="polite"></p><footer><button data-back type="button"></button><button data-skip type="button"></button><button data-next type="button" disabled></button></footer></section>';
+        root.innerHTML='<div class="chapter-stage"><iframe class="chapter-frame"></iframe><div class="chapter-board-shade" hidden></div></div><section class="chapter-coach"><header><span data-chapter></span><button data-exit type="button">×</button></header><progress max="5" value="1"></progress><p class="chapter-count"></p><div class="chapter-copy"><h2 id="chapterOneTitle" tabindex="-1"></h2><p data-body></p><button data-open type="button" hidden></button></div><aside class="chapter-palette-tip" data-palette-tip hidden></aside><p class="chapter-status" role="status" aria-live="polite"></p><footer><button data-back type="button"></button><button data-skip type="button"></button><button data-next type="button" disabled></button></footer></section>';
         const frame=root.querySelector('iframe'),card=root.querySelector('section');frame.title=c.practice;
         const url=new URL('./index.html',location.href);url.search='';url.searchParams.set('chapter-one-practice','1');url.searchParams.set('lang',getCurrentLang());frame.src=url.href;
         const index=progress?.status==='active'?CHAPTER_ONE_STEPS.indexOf(progress.step):0;
@@ -107,20 +107,10 @@ export function initializeChapterOne({beforeStart}){
             for(const [group,description]of content.rows){const row=document.createElement('div'),term=document.createElement('dt'),detail=document.createElement('dd');term.textContent=group;detail.textContent=description;row.append(term,detail);list.append(row);}
             tip.append(list);const note=document.createElement('p');note.className='chapter-tip-note';note.textContent=content.note;tip.append(note);s.tipLanguage=getCurrentLang();
         }
-        b.guide(target);
-        const stage=s.root.querySelector('.chapter-stage'),rect=target?.getBoundingClientRect();
-        const clip=r=>({left:Math.max(3,r.left-5),top:Math.max(3,r.top-5),right:Math.min(stage.clientWidth-3,r.right+5),bottom:Math.min(stage.clientHeight-3,r.bottom+5)});
+        const toolbarFocused=b.guide(target);
         const place=(el,r)=>Object.assign(el.style,{left:r.left+'px',top:r.top+'px',width:Math.max(0,r.right-r.left)+'px',height:Math.max(0,r.bottom-r.top)+'px'});
-        const area=rect?clip(rect):null;
-        const controls=b.visible('#controlsContainer')?.getBoundingClientRect(),dim=[...s.root.querySelectorAll('.chapter-dim')];
-        const dimControls=area&&['palette','random','picker'].includes(id)&&!b.visible('#paletteModal.modal-visible')&&target?.id!=='boardCanvas';
-        dim.forEach(e=>e.hidden=!dimControls);
-        if(dimControls&&controls){const r=controls,a={left:Math.max(r.left,area.left),right:Math.min(r.right,area.right),top:Math.max(r.top,area.top),bottom:Math.min(r.bottom,area.bottom)};
-            [{left:r.left,top:r.top,right:r.right,bottom:a.top},{left:r.left,top:a.top,right:a.left,bottom:a.bottom},{left:a.right,top:a.top,right:r.right,bottom:a.bottom},{left:r.left,top:a.bottom,right:r.right,bottom:r.bottom}].forEach((r,i)=>place(dim[i],r));}
-        const shade=s.root.querySelector('.chapter-board-shade');shade.hidden=!dimControls;
-        const board=b.visible('#boardCanvas')?.getBoundingClientRect();if(!shade.hidden&&board)place(shade,board);
-        const hint=s.root.querySelector('.chapter-cell-glow');hint.hidden=id!=='tile'||events.some(e=>e.type==='tile');
-        if(!hint.hidden){const r=b.tileRect(8*state.n+8);place(hint,{left:r.left-r.width,top:r.top-r.height,right:r.left+2*r.width,bottom:r.top+2*r.height});}
+        const board=b.visible('#boardCanvas')?.getBoundingClientRect(),shade=s.root.querySelector('.chapter-board-shade');shade.hidden=!toolbarFocused||!board;
+        if(!shade.hidden)place(shade,board);
     }
     entries.forEach(e=>e.onclick=()=>{if(progress?.status!=='active')progress=null;open(e);});
     if(reset)reset.onclick=()=>{try{storage.removeItem(CHAPTER_ONE_KEY);progress=null;document.querySelector('[data-chapter-one-reset-status]').textContent=copy().resetDone;}catch{/* Keep existing artwork untouched. */}};

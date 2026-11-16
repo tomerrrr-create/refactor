@@ -12,13 +12,20 @@ if (isChapterOnePractice) {
 
 export function installChapterOnePractice({read, tileAt, openPalette, layout}) {
     let sequence=0, down=null;
-    let guided=[];
+    let guided=[],muted=[];
     const guide=target=>{
         // Light the actual glyphs, never a rectangular overlay around a group.
         const next=target?.matches('button')?[target]:[...(target?.querySelectorAll('.palette-choice-symbol')||[])];
         guided.filter(node=>!next.includes(node)).forEach(node=>node.classList.remove('chapter-guide-glow'));
         next.filter(node=>!guided.includes(node)).forEach(node=>node.classList.add('chapter-guide-glow'));
         guided=next;
+        const toolbar=target?.matches('button')?target.closest('#controlsContainer'):null;
+        const palettePanel=target?.id==='palette-apply'?target.closest('.palette-picker-panel'):null;
+        const quiet=toolbar?[...toolbar.querySelectorAll('.ctrl')].filter(node=>node!==target):palettePanel?[...palettePanel.querySelectorAll('button')].filter(node=>node!==target):[];
+        muted.filter(node=>!quiet.includes(node)).forEach(node=>node.classList.remove('chapter-guide-muted'));
+        quiet.filter(node=>!muted.includes(node)).forEach(node=>node.classList.add('chapter-guide-muted'));
+        muted=quiet;
+        return !!toolbar;
     };
     const events=[];
     const record=(type,detail={})=>{events.push({sequence:++sequence,type,...detail});if(events.length>100)events.shift();};
@@ -55,9 +62,6 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout}) {
     addEventListener('resize',fit);new ResizeObserver(fit).observe(document.getElementById('controlsContainer'));fit();
     window.chapterOnePractice={read,visible,openPalette,guide,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
         closePalette:()=>document.querySelector('#btnPaletteModalClose')?.click(),
-        fit, tileRect:index=>{
-            const r=document.getElementById('boardCanvas').getBoundingClientRect(),n=read().n;
-            return {left:r.left+(index%n)*r.width/n,top:r.top+Math.floor(index/n)*r.height/n,width:r.width/n,height:r.height/n};
-        }
+        fit
     };
 }

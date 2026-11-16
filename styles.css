@@ -2796,14 +2796,12 @@ dialog.chapter-one-tour { position:fixed; inset:0; margin:0; padding:0; border:0
 .chapter-coach [data-skip] { border:0; background:transparent; font-size:11px; padding-inline:4px; }
 /* Guidance follows the glyph alpha, with no border, ring or group rectangle. */
 :root[data-chapter-one-practice] .chapter-guide-glow { animation:chapter-guide-breathe 4.8s ease-in-out infinite !important; }
+:root[data-chapter-one-practice] .chapter-guide-muted { opacity:.16 !important; transition:opacity .35s ease; }
 @keyframes chapter-guide-breathe {
  0%,100% { filter:brightness(1.04) drop-shadow(0 0 3px #efd79b66) drop-shadow(0 0 8px #d5aa4833); }
  50% { filter:brightness(1.16) drop-shadow(0 0 6px #ffe9afbb) drop-shadow(0 0 18px #d5aa4899); }
 }
-.chapter-dim,.chapter-board-shade { position:absolute; background:#0004; pointer-events:none; }
-.chapter-board-shade { background:#0002; }
-.chapter-cell-glow { position:absolute; border:0; border-radius:50%; background:radial-gradient(ellipse,#ffe6a855 0%,#e5bf6533 30%,transparent 70%); pointer-events:none; animation:chapter-cell-breathe 4.8s ease-in-out infinite; }
-@keyframes chapter-cell-breathe { 0%,100% { opacity:.45; } 50% { opacity:1; } }
+.chapter-board-shade { position:absolute; background:#0002; pointer-events:none; }
 .chapter-palette-tip { flex:0 1 auto; min-height:0; max-height:48%; overflow:auto; scrollbar-width:thin; padding-top:14px; border-top:1px solid #c8af6429; color:#c2cbbb; font-size:12px; line-height:1.55; }
 .chapter-palette-tip h3 { margin:0 0 7px; font-size:13px; font-weight:500; color:#d8c38e; }
 .chapter-palette-tip p { margin:0 0 8px; }
@@ -2822,5 +2820,5 @@ dialog.chapter-one-tour { position:fixed; inset:0; margin:0; padding:0; border:0
 :root[data-chapter-one-practice] #controlsContainer { margin-top:14px !important; }
 @media(prefers-reduced-motion:reduce) {
  :root[data-chapter-one-practice] .chapter-guide-glow { animation:none !important; filter:brightness(1.08) drop-shadow(0 0 5px #f5d99388) drop-shadow(0 0 12px #d5aa4855); }
- .chapter-cell-glow { animation:none; opacity:.7; }
+ :root[data-chapter-one-practice] .chapter-guide-muted { transition:none; }
 }

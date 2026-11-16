@@ -32,6 +32,12 @@ try{for(const config of [{width:1280,height:900,lang:'he'},{width:1024,height:76
     await card.locator('[data-next]').click();await step('palette');assert(await card.locator('[data-next]').isDisabled());
     assert.equal(await page.locator('.chapter-highlight,.chapter-touch-hint').count(),0,'there are no rectangular guidance frames or stroke rings');
     const paletteGlow=frame.locator('#btnPalette.chapter-guide-glow');await paletteGlow.waitFor();
+    await page.waitForFunction(()=>{
+        const doc=document.querySelector('.chapter-frame').contentDocument;
+        return [...doc.querySelectorAll('#controlsContainer .ctrl:not(#btnPalette)')].every(el=>Number(doc.defaultView.getComputedStyle(el).opacity)<=.2);
+    });
+    assert(Number(await paletteGlow.evaluate(el=>getComputedStyle(el).opacity))>=.95,'the taught button retains full brightness');
+    await page.screenshot({path:`${artifacts}/${config.lang}-${config.width}-palette-focus.png`});
     const pulse=await paletteGlow.evaluate(el=>{
         const animation=el.getAnimations().find(a=>a.animationName==='chapter-guide-breathe');
         if(!animation)return {animated:false,filter:getComputedStyle(el).filter};
@@ -49,21 +55,25 @@ try{for(const config of [{width:1280,height:900,lang:'he'},{width:1024,height:76
     await frame.locator('#paletteModal.modal-visible').waitFor();assert(await card.locator('[data-next]').isDisabled());
     await card.locator('[data-palette-tip]').waitFor();assert.deepEqual(await card.locator('[data-palette-tip] dt').allTextContents(),['23','64','264','•']);
     await page.waitForFunction(()=>document.querySelector('.chapter-frame').contentDocument.querySelectorAll('.palette-choice-symbol.chapter-guide-glow').length>1);
+    assert.equal(await frame.locator('#controlsContainer .chapter-guide-muted').count(),0,'toolbar muting clears when focus moves into the palette window');
     assert.equal(await frame.locator('#palette-choice-panel.chapter-guide-glow').count(),0,'the collection has glowing icons, not a glowing rectangle');
     const tipGeometry=await card.locator('[data-palette-tip]').evaluate(el=>{const r=el.getBoundingClientRect(),c=el.closest('section').getBoundingClientRect(),f=el.closest('section').querySelector('footer').getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,coachTop:c.top,coachLeft:c.left,coachRight:c.right,footerTop:f.top};});
     assert(tipGeometry.top>=tipGeometry.coachTop&&tipGeometry.bottom<=tipGeometry.footerTop&&tipGeometry.left>=tipGeometry.coachLeft&&tipGeometry.right<=tipGeometry.coachRight,'palette advice stays within the coach and above its navigation');
     const selected=frame.locator('#palette-choice-panel .palette-choice:not(.is-current)').first();const selectedIndex=Number(await selected.getAttribute('data-palette-index'));await selected.click();await page.waitForTimeout(100);
     await frame.locator('#palette-apply.chapter-guide-glow').waitFor();assert.equal(await frame.locator('.palette-choice-symbol.chapter-guide-glow').count(),0,'guidance follows the current action');
+    await page.waitForFunction(()=>{const doc=document.querySelector('.chapter-frame').contentDocument;return [...doc.querySelectorAll('#paletteModal button:not(#palette-apply)')].every(el=>Number(doc.defaultView.getComputedStyle(el).opacity)<=.2);});
     await page.screenshot({path:`${artifacts}/${config.lang}-${config.width}-picker-choice.png`});await frame.locator('#palette-apply').click();await page.waitForFunction(()=>!document.querySelector('.chapter-coach [data-next]').disabled);
     assert.equal((await page.evaluate(()=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read())).paletteIndex,selectedIndex,'chosen palette is applied and kept');
     await card.locator('[data-next]').click();await step('random');assert(await card.locator('[data-next]').isDisabled());
     await frame.locator('#btnRandom.chapter-guide-glow').waitFor();assert.equal(await frame.locator('#btnPalette.chapter-guide-glow').count(),0);
+    await page.waitForFunction(()=>{const doc=document.querySelector('.chapter-frame').contentDocument;return Number(doc.defaultView.getComputedStyle(doc.querySelector('#btnPalette')).opacity)<=.2;});
     assert(await card.locator('[data-palette-tip]').isHidden(),'palette advice is limited to the picker');
     const tiles=await page.evaluate(()=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read().tiles);
     await frame.locator('#btnRandom').click();await page.waitForFunction(()=>!document.querySelector('.chapter-coach [data-next]').disabled);
     assert.notDeepEqual(await page.evaluate(()=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read().tiles),tiles);
     await card.locator('[data-next]').click();await step('tile');
-    const hint=page.locator('.chapter-cell-glow');assert.equal(await hint.evaluate(el=>getComputedStyle(el).borderTopWidth),'0px','cell guidance is soft light without a ring');
+    assert.equal(await page.locator('.chapter-cell-glow,.chapter-touch-hint,.chapter-highlight').count(),0,'board interaction has no added glow, rings or frames');
+    assert.equal(await frame.locator('.chapter-guide-glow,.chapter-guide-muted').count(),0,'board interaction restores the toolbar to its native appearance');
     const canvas=frame.locator('#boardCanvas');const clickTile=async index=>{const r=await canvas.boundingBox();await page.mouse.click(r.x+(index%21+.5)*r.width/21,r.y+(Math.floor(index/21)+.5)*r.height/21);await page.waitForTimeout(130);};
     for(const i of [100,101,100])await clickTile(i);assert(await card.locator('[data-next]').isDisabled(),'three different-square clicks do not complete the task');
     await clickTile(100);assert(await card.locator('[data-next]').isDisabled());await clickTile(100);await page.waitForFunction(()=>!document.querySelector('.chapter-coach [data-next]').disabled);
