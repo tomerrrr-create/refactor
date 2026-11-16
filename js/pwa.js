@@ -1,4 +1,3 @@
-import {isFtuePractice} from './ftue-storage.js';
 import { getText, onLanguageChange } from './i18n.js';
 
 // Keep updates separate from drawing state: activation/reload needs an explicit tap.
@@ -59,7 +58,7 @@ async function register() {
         console.warn('FYI offline installation unavailable:', error.message);
     }
 }
-if (!isFtuePractice && 'serviceWorker' in navigator && window.isSecureContext) {
+if ('serviceWorker' in navigator && window.isSecureContext) {
     if (document.readyState === 'complete') register();
     else window.addEventListener('load', register, { once: true });
 }

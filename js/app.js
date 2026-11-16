@@ -1,7 +1,3 @@
-import {isFtuePractice} from './ftue-storage.js';
-import {FTUE_PALETTE,FTUE_CREATION_SIZE,ftueDemoSize,createFtueArtwork} from './ftue-scenes.js';
-import {installFtuePractice} from './ftue-practice.js';
-import {initializeFirstTimeExperience} from './first-time-experience.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
@@ -6479,77 +6475,6 @@ dom.btnWind.addEventListener('keydown', event => {
         window.addEventListener('resize', updateLayout);
         window.addEventListener('contextmenu', e => e.preventDefault());
         
-        if (isFtuePractice) {
-            const modalSelectors={color:'#colorPickerModal',palette:'#paletteModal',save:'#saveModal',tech:'#technicianDialog',drawer:'#evolutionDrawerDialog',help:'#helpModal',magnet:'#magnetSettingsModal',sort:'#sortCycleDialog',resize:'#resizeModal'};
-            const isOpen=selector=>{const element=document.querySelector(selector);return element&&(element.open||element.classList.contains('modal-visible'));};
-            function closePracticeModals(){
-                for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
-                for(const modal of document.querySelectorAll('.modal-visible')){
-                    const close=modal.querySelector('.modal-dismiss,button[id*="Close"],button[id*="Cancel"]');
-                    if(close)close.click();
-                    else modal.classList.remove('modal-visible');
-                }
-            }
-            function openPracticeOptions(name){
-                if(isOpen(modalSelectors[name]))return;
-                closePracticeModals();
-                const openers={color:()=>modals.openColorPickerModal(),palette:()=>modals.openPaletteModal(),save:openSaveModalWithPreview,
-                    tech:()=>modals.openTechnicianMenu(),drawer:()=>evolutionDrawer.open(),help:()=>modals.openHelpModal(),magnet:()=>modals.openMagnetSettingsModal(),
-                    sort:()=>modals.openSortCycleModal(),resize:()=>modals.openResizeModal()};
-                openers[name]?.();
-            }
-            let practiceDemo=null;
-            function preparePracticeArtwork(scene){
-                if(practiceDemo===scene)return;
-                pauseLife();resetArmedState();
-                activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName===FTUE_PALETTE);
-                currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,currentSortMethod));
-                updateSortButtonUI();updatePaletteHeader();
-                n=scene==='creation'?FTUE_CREATION_SIZE:ftueDemoSize(scene);
-                restoreSeparatorWidth(scene==='creation'?1:0);initializeBoardAndCanvas(true);
-                boardState=createFtueArtwork(scene,n,paletteLen());currentGenerationCount=0;
-                symmetryMode='off';brushSize=scene==='creation'?1:scene==='gravitationalSort'?3:9;
-                selectedColorIndex=paletteLen()-1;selectedColor=palette()[selectedColorIndex];isRainbowModeActive=false;setBrushMode(true,true);
-                updateSymmetryUI();updateColorPickerButtonUI();
-                history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();updateUndoRedoButtons();
-                practiceDemo=scene;renderToScreen(null);
-            }
-            preparePracticeArtwork('creation');
-            installFtuePractice({open:openPracticeOptions,layout:updateLayout,
-                read:()=>({playing:isLifePlaying,simulation:isSimModeActive,armed:armedSimulation,n,palette:C.PALETTES[activePaletteIndex].originalName,demo:practiceDemo,generation:currentGenerationCount,history:history.length,future:future.length,selectedColor,brushSize,brushShape}),
-                prepare:step=>{
-                    if(!step.playing||step.arm&&armedSimulation!==step.arm)pauseLife();
-                    if(!step.wind&&windMode)setWindMode(false);
-                    if(!step.open)closePracticeModals();
-                    if(step.mode&&isSimModeActive!==(step.mode==='simulation')){
-                        isSimModeActive=step.mode==='simulation';resetArmedState();
-                        dom.controlsContainer.classList.toggle('sim-mode-active',isSimModeActive);
-                        for(const button of [dom.btnBrushMode,dom.btnResetBoard,dom.btnTutorial,dom.btnSpecialReset])button.classList.toggle('control-hidden',isSimModeActive);
-                        dom.btnPlayPauseLife.classList.toggle('control-hidden',!isSimModeActive);dom.btnToggleSimMode.classList.toggle('active',isSimModeActive);updateSimulationUtilityControl();
-                    }
-                    if(step.experiment&&!experimentalSimulations.visible(step.experiment)){
-                        experimentalSimulations.set(step.experiment,true);evolutionDrawer.applyLayout();
-                    }
-                    if(step.demo)preparePracticeArtwork(step.demo);
-                    if(step.arm&&armedSimulation!==step.arm)armSimulation(step.arm);
-                    if(step.demo==='gameOfLife'){gameOfLifeRules={survival:[2,3],birth:[3]};personalGameOfLifeRules=cloneGameOfLifeRules(gameOfLifeRules);updateGameOfLifeButtonUI();}
-                    if(step.demo==='sandpile'){chiFlowRules=cloneChiFlowRules(C.CHI_FLOW_PRESETS.Fluent);personalChiFlowRules=cloneChiFlowRules(chiFlowRules);updateChiFlowButtonUI();}
-                    if(step.reveal){const entry=EVOLUTION_CATALOG.find(entry=>entry.id===step.reveal),button=document.getElementById(entry?.button);
-                        if(button?.hasAttribute('data-evolution-page-hidden'))evolutionDrawer.trigger.click();}
-                    if(step.utility){dom.controlsContainer.classList.remove('sim-separator-control');updateSimulationUtilityControl();}
-                    if(step.brush){setBrushMode(true,true);if(!selectedColor){selectedColorIndex=paletteLen()-1;selectedColor=palette()[selectedColorIndex];isRainbowModeActive=false;updateColorPickerButtonUI();}}
-                    if(step.wind&&!windMode)setWindMode(true);
-                    if(step.id==='undo'&&history.length===0)performAction(()=>{boardState[0].k=(boardState[0].k+1)%paletteLen();boardState[0].v=boardState[0].k;});
-                    if(step.id==='redo'&&future.length===0){if(history.length===0)performAction(()=>{boardState[0].k=(boardState[0].k+1)%paletteLen();boardState[0].v=boardState[0].k;});undo();}
-                    if(step.playing&&!isLifePlaying)togglePlayPauseLife();
-                    if(step.open)openPracticeOptions(step.open);
-                    if(step.id==='palette-apply'&&document.querySelector('#palette-apply')?.disabled){document.querySelector('#palette-choice-panel .palette-choice:not(.is-current)')?.click();}
-                    renderToScreen(null);
-                }
-            });
-            splashScreen.remove();return;
-        }
-
         splashText.style.animation = 'fadeInText 2.5s linear forwards';
         dom.btnPalette.classList.add('splash-palette-reveal');
         await new Promise(r => setTimeout(r, 5000));
@@ -6559,7 +6484,6 @@ dom.btnWind.addEventListener('keydown', event => {
         await new Promise(r => setTimeout(r, 2000));
         splashScreen.remove();
         dom.btnPalette.classList.remove('splash-palette-reveal');
-        initializeFirstTimeExperience({beforeStart:()=>{if(isMacroPlaying)pauseMacro();finishBrushGesture();pauseLife();if(windMode)setWindMode(false);}});
       }
 
       initializeApp();
