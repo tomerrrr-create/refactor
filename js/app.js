@@ -1,4 +1,5 @@
 import {isFtuePractice} from './ftue-storage.js';
+import {FTUE_PALETTE,FTUE_CREATION_SIZE,ftueDemoSize,createFtueArtwork} from './ftue-scenes.js';
 import {installFtuePractice} from './ftue-practice.js';
 import {initializeFirstTimeExperience} from './first-time-experience.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
@@ -6497,8 +6498,25 @@ dom.btnWind.addEventListener('keydown', event => {
                     sort:()=>modals.openSortCycleModal(),resize:()=>modals.openResizeModal()};
                 openers[name]?.();
             }
+            let practiceDemo=null;
+            function preparePracticeArtwork(scene){
+                if(practiceDemo===scene)return;
+                pauseLife();resetArmedState();
+                activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName===FTUE_PALETTE);
+                currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,currentSortMethod));
+                updateSortButtonUI();updatePaletteHeader();
+                n=scene==='creation'?FTUE_CREATION_SIZE:ftueDemoSize(scene);
+                restoreSeparatorWidth(scene==='creation'?1:0);initializeBoardAndCanvas(true);
+                boardState=createFtueArtwork(scene,n,paletteLen());currentGenerationCount=0;
+                symmetryMode='off';brushSize=scene==='creation'?1:scene==='gravitationalSort'?3:9;
+                selectedColorIndex=paletteLen()-1;selectedColor=palette()[selectedColorIndex];isRainbowModeActive=false;setBrushMode(true,true);
+                updateSymmetryUI();updateColorPickerButtonUI();
+                history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();updateUndoRedoButtons();
+                practiceDemo=scene;renderToScreen(null);
+            }
+            preparePracticeArtwork('creation');
             installFtuePractice({open:openPracticeOptions,layout:updateLayout,
-                read:()=>({playing:isLifePlaying,simulation:isSimModeActive,armed:armedSimulation,n,generation:currentGenerationCount,history:history.length,future:future.length,selectedColor,brushSize,brushShape}),
+                read:()=>({playing:isLifePlaying,simulation:isSimModeActive,armed:armedSimulation,n,palette:C.PALETTES[activePaletteIndex].originalName,demo:practiceDemo,generation:currentGenerationCount,history:history.length,future:future.length,selectedColor,brushSize,brushShape}),
                 prepare:step=>{
                     if(!step.playing||step.arm&&armedSimulation!==step.arm)pauseLife();
                     if(!step.wind&&windMode)setWindMode(false);
@@ -6510,12 +6528,12 @@ dom.btnWind.addEventListener('keydown', event => {
                         dom.btnPlayPauseLife.classList.toggle('control-hidden',!isSimModeActive);dom.btnToggleSimMode.classList.toggle('active',isSimModeActive);updateSimulationUtilityControl();
                     }
                     if(step.experiment&&!experimentalSimulations.visible(step.experiment)){
-                        openPracticeOptions('tech');
-                        const toggle=document.getElementById(step.experiment+'ExperimentToggle');
-                        if(toggle&&!toggle.checked){toggle.checked=true;toggle.dispatchEvent(new Event('change',{bubbles:true}));}
-                        closePracticeModals();
+                        experimentalSimulations.set(step.experiment,true);evolutionDrawer.applyLayout();
                     }
+                    if(step.demo)preparePracticeArtwork(step.demo);
                     if(step.arm&&armedSimulation!==step.arm)armSimulation(step.arm);
+                    if(step.demo==='gameOfLife'){gameOfLifeRules={survival:[2,3],birth:[3]};personalGameOfLifeRules=cloneGameOfLifeRules(gameOfLifeRules);updateGameOfLifeButtonUI();}
+                    if(step.demo==='sandpile'){chiFlowRules=cloneChiFlowRules(C.CHI_FLOW_PRESETS.Fluent);personalChiFlowRules=cloneChiFlowRules(chiFlowRules);updateChiFlowButtonUI();}
                     if(step.reveal){const entry=EVOLUTION_CATALOG.find(entry=>entry.id===step.reveal),button=document.getElementById(entry?.button);
                         if(button?.hasAttribute('data-evolution-page-hidden'))evolutionDrawer.trigger.click();}
                     if(step.utility){dom.controlsContainer.classList.remove('sim-separator-control');updateSimulationUtilityControl();}

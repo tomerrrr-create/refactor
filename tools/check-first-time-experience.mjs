@@ -17,12 +17,22 @@ const context=await browser.newContext({viewport:touch?{width:Number(process.env
 const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));const boot=async(reload=false)=>{await(reload?page.reload():page.goto(base));await page.waitForFunction(()=>window.ftueTest?.ready);};await boot();
 const intro=page.locator('.ftue-intro');await intro.waitFor({state:'visible'});const original=await page.evaluate(()=>ftueTest.state());const originalStorage=await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage)));
 await intro.locator('[data-begin]').click();await page.waitForFunction(()=>document.querySelector('.ftue-frame')?.contentWindow?.fyiPractice&&document.querySelector('.ftue-card [data-count]')?.textContent);const frame=page.frameLocator('.ftue-frame'),card=page.locator('.ftue-card');
+const startAt=process.env.FTUE_CHAPTER?FTUE_STEPS.findIndex(step=>step.chapter===process.env.FTUE_CHAPTER):0;if(process.env.FTUE_CHAPTER)await chapter(card,process.env.FTUE_CHAPTER);
 const tap=async locator=>{if(touch){await locator.tap();await page.waitForTimeout(100);}else await locator.click();};
-for(let index=0;index<FTUE_STEPS.length;index++){
+for(let index=startAt;index<FTUE_STEPS.length;index++){
  const step=FTUE_STEPS[index];console.log('STEP',touch,index+1,step.id);await page.waitForFunction(index=>document.querySelector('[data-count]')?.textContent.includes(String(index+1)+' '),index);await page.waitForTimeout(180);if(touch)await unobscured(page);
- if(index===0||step.id==='play'||['magnet-options','anchor','controls','pick-color','palette-choice','enter-simulation','sim-magnet','image','done'].includes(step.id))await page.screenshot({path:`${artifacts}/${touch?'he-touch':'en'}-${step.id}.png`});
+ const actual=await page.evaluate(()=>document.querySelector('.ftue-frame').contentWindow.fyiPractice.read());
+ if(index===0){assert.equal(actual.palette,'Journey');assert.equal(actual.n,21);}
+ if(step.demo){assert.equal(actual.palette,'Journey');assert.equal(actual.n,step.demo==='gravitationalSort'?50:249);}
+ if(index===0||step.task==='watch'||step.id==='play'||['magnet-options','anchor','controls','pick-color','palette-choice','enter-simulation','sim-magnet','image','done'].includes(step.id))await page.screenshot({path:`${artifacts}/${touch?'he-touch':'en'}-${step.id}.png`});
  try{if(step.task){const [type]=step.task.split(':');
- if(type==='paint'||type==='drag'){
+ if(type==='watch'){
+  assert(actual.playing,'the example must really be running');
+  const signature=canvas=>{const data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;let sum=2166136261;for(let i=0;i<data.length;i+=4)sum=Math.imul(sum^((data[i]<<16)|(data[i+1]<<8)|data[i+2]),16777619);return sum>>>0;};
+  const initial=await frame.locator('#boardCanvas').evaluate(signature);let changed=false;
+  for(let i=0;i<12;i++){await page.waitForTimeout(180);if(await frame.locator('#boardCanvas').evaluate(signature)!==initial){changed=true;break;}}
+  assert(changed,'the '+step.demo+' example must visibly evolve without a drawing click');
+ }else if(type==='paint'||type==='drag'){
   const r=await frame.locator('#boardCanvas').boundingBox(),a={x:r.x+r.width*.3,y:r.y+r.height*.3},b={x:r.x+r.width*.6,y:r.y+r.height*.55};
   if(touch){const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[a]});if(type==='drag')for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:a.x+(b.x-a.x)*i/5,y:a.y+(b.y-a.y)*i/5}]});await page.waitForTimeout(30);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}else{await page.mouse.move(a.x,a.y);await page.mouse.down();if(type==='drag')await page.mouse.move(b.x,b.y,{steps:5});await page.mouse.up();}
  }else if(type==='visible'){
@@ -33,7 +43,7 @@ for(let index=0;index<FTUE_STEPS.length;index++){
   }else await tap(card.locator('[data-helper]'));
  }
  else{let selector=step.taskTarget||step.target;if(step.id==='palette-choice')selector='#palette-choice-panel .palette-choice:not(.is-current)';let target=frame.locator(selector).filter({visible:true}).first();await tap(target);}
- await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled,null,{timeout:7000});
+ await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled,null,{timeout:15000});
  }
  await tap(card.locator('[data-next]'));
  }catch(error){await page.screenshot({path:`${artifacts}/failure-${touch}-${step.id}.png`});throw error;}
@@ -42,6 +52,8 @@ await page.locator('.ftue-root').waitFor({state:'detached'});const after=await p
 const afterStorage=await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage)));
 for(const [key,value]of Object.entries(originalStorage))assert.equal(afterStorage[key],value,'practice cannot alter preference '+key);
 assert.equal(JSON.parse(afterStorage.colorGridFirstTimeExperienceV1).status,'complete');await boot(true);assert.equal(await page.locator('.ftue-root').count(),0,'completed tour must not open again');
+// Starting again after completion is a fresh course, not pre-completed actions.
+await page.evaluate(()=>ftueTest.tech());await page.locator('#technicianDialog [data-open-ftue]').click();await intro.locator('[data-begin]').click();await page.waitForFunction(()=>document.querySelector('.ftue-frame')?.contentWindow?.fyiPractice&&document.querySelector('.ftue-card [data-count]')?.textContent);const replayInitial=await page.evaluate(()=>document.querySelector('.ftue-frame').contentWindow.fyiPractice.read());assert.equal(replayInitial.palette,'Journey');assert.equal(replayInitial.n,21);await page.locator('.ftue-card [data-next]').click();assert(await page.locator('.ftue-card [data-next]').isDisabled());await page.keyboard.press('Escape');
 // Reset is in Technicians and schedules the next visit, without resetting art/preferences.
 await page.evaluate(()=>ftueTest.tech());await page.locator('[data-reset-ftue]').click();assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridFirstTimeExperienceV1')),null);await boot(true);await intro.waitFor({state:'visible'});await intro.locator('[data-later]').click();await boot(true);assert.equal(await page.locator('.ftue-root').count(),0,'dismissed welcome must not repeat');
 // Replay can open above a native settings dialog; exit releases focus and frame.
