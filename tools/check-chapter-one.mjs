@@ -11,7 +11,7 @@ for(const ms of [5000,1500,2000])app=app.replace('await new Promise(r => setTime
 const server=createServer(async(req,res)=>{try{const name=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html');res.end(name==='js/app.js'?app:await readFile(path.join(root,name)));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
-try{for(const config of [{width:1280,height:900,lang:'he'},{width:1024,height:768,lang:'en'},{width:1440,height:900,lang:'en'},{width:900,height:600,lang:'he'}]){
+try{for(const config of process.env.CHAPTER_TWO_DIRECT_ONLY?[]:[{width:1280,height:900,lang:'he'},{width:1024,height:768,lang:'en'},{width:1440,height:900,lang:'en'},{width:900,height:600,lang:'he'}].filter(config=>!process.env.CHAPTER_VIEWPORT_WIDTH||config.width===Number(process.env.CHAPTER_VIEWPORT_WIDTH))){
     const motion=config.width===1280?'no-preference':'reduce';
     const context=await browser.newContext({viewport:{width:config.width,height:config.height},serviceWorkers:'block',reducedMotion:motion});
     await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
@@ -78,7 +78,42 @@ try{for(const config of [{width:1280,height:900,lang:'he'},{width:1024,height:76
     for(const i of [100,101,100])await clickTile(i);assert(await card.locator('[data-next]').isDisabled(),'three different-square clicks do not complete the task');
     await clickTile(100);assert(await card.locator('[data-next]').isDisabled());await clickTile(100);await page.waitForFunction(()=>!document.querySelector('.chapter-coach [data-next]').disabled);
     const finalState=await page.evaluate(()=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read());assert.equal(finalState.selectedColorIndex,-1);assert.equal(finalState.n,21);assert.equal(finalState.playing,false);
-    await card.locator('[data-next]').click();assert.equal(await page.locator('.chapter-one-tour').count(),0);assert.deepEqual(await page.evaluate(()=>chapterTest.state()),original,'outer artwork/settings/undo/log are untouched');
+    await card.locator('[data-next]').click();await step('order-luminance');
+    const readPractice=()=>page.evaluate(()=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read());
+    assert.equal((await readPractice()).paletteIndex,finalState.paletteIndex,'chapter two keeps the chosen palette');
+    assert.deepEqual((await readPractice()).tiles,finalState.tiles,'chapter transition keeps the existing board');
+    for(const [order,method] of ['luminance','dark-rainbow','reversed','center-out','temperature','outside-in'].entries()){
+        await step('order-'+method);assert(await card.locator('[data-next]').isDisabled());
+        if(order){
+            await frame.locator('#btnCycleSort.chapter-guide-glow').waitFor();
+            await page.waitForFunction(()=>{const d=document.querySelector('.chapter-frame').contentDocument;return Number(d.defaultView.getComputedStyle(d.querySelector('#btnPalette')).opacity)<=.2;});
+            const beforeSort=await readPractice();await frame.locator('#btnCycleSort').click();
+            await page.waitForFunction(method=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read().sortMethod===method,method);
+            const afterSort=await readPractice();
+            assert.deepEqual(afterSort.tiles.map(k=>afterSort.colors[k]),beforeSort.tiles.map(k=>beforeSort.colors[k]),'sorting preserves each visible cell color');
+            assert.equal(afterSort.paletteIndex,finalState.paletteIndex);
+        }
+        await page.waitForFunction(()=>document.querySelector('.chapter-frame').contentDocument.querySelectorAll('.chapter-guide-muted,.chapter-guide-glow').length===0);
+        await clickTile(101);await clickTile(101);await clickTile(101);assert(await card.locator('[data-next]').isDisabled(),'a different square does not satisfy the same-square task');
+        for(let click=0;click<3;click++)await clickTile(100);
+        await page.waitForFunction(()=>!document.querySelector('.chapter-coach [data-next]').disabled);
+        const state=await readPractice();
+        assert.equal(await card.locator('.chapter-order-strip span').count(),state.colors.length);
+        assert.equal(await card.locator('.chapter-order-strip span.is-current').evaluate(el=>[...el.parentNode.children].indexOf(el)),state.tiles[100]);
+        assert.equal(state.selectedColorIndex,-1,'the color strip never loads the brush');
+        assert.equal(await card.locator('.chapter-order-strip').getAttribute('dir'),'ltr','color progression has a stable direction in RTL');
+        assert.deepEqual(await card.locator('.chapter-order-strip span').evaluateAll(nodes=>nodes.map(node=>node.style.backgroundColor)),await page.evaluate(colors=>colors.map(color=>{const node=document.createElement('span');node.style.backgroundColor=color;return node.style.backgroundColor;}),state.colors));
+        if(order===0){
+            for(let i=0;i<state.colors.length;i++)await clickTile(100);
+            assert.equal((await readPractice()).tiles[100],state.tiles[100],'the native palette sequence wraps to its first color');
+        }
+        const geometry=await card.locator('[data-order]').evaluate(el=>{const a=el.getBoundingClientRect(),b=el.closest('section').querySelector('footer').getBoundingClientRect();return {top:a.top,bottom:a.bottom,footer:b.top};});
+        assert(geometry.top>=0&&geometry.bottom<=geometry.footer,'color order strip does not cover navigation');
+        assert(await card.locator('.chapter-copy').evaluate(el=>el.scrollHeight<=el.clientHeight+1),'the order instruction fits without scrolling');
+        await page.screenshot({path:`${artifacts}/${config.lang}-${config.width}-order-${method}-done.png`});
+        await card.locator('[data-next]').click();
+    }
+    assert.equal(await page.locator('.chapter-one-tour').count(),0);assert.deepEqual(await page.evaluate(()=>chapterTest.state()),original,'outer artwork/settings/undo/log are untouched');
     for(const [key,value]of Object.entries(storage))if(key!=='colorGridChapterOneV1')assert.equal(await page.evaluate(key=>localStorage.getItem(key),key),value);
     assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('colorGridChapterOneV1')).status),'complete');
     await boot();assert.equal(await page.locator('.chapter-one-tour').count(),0,'completed chapter does not reopen');
@@ -90,8 +125,27 @@ try{for(const config of [{width:1280,height:900,lang:'he'},{width:1024,height:76
     await card.locator('[data-next]').click();await step('picker');await card.locator('[data-open]').click();await frame.locator('#paletteModal.modal-visible').waitFor();
     await frame.locator('#paletteModal [aria-selected="true"]').press('Escape');await page.waitForTimeout(350);assert.equal(await page.locator('.chapter-one-tour').count(),1,'Escape closes the palette window first');assert.equal(await frame.locator('#paletteModal.modal-visible').count(),0);
     await frame.locator('#btnPalette').focus();await frame.locator('#btnPalette').press('Escape');assert.equal(await page.locator('.chapter-one-tour').count(),0,'Escape outside a picker exits the lesson');
-    assert.deepEqual(errors,[]);console.log('PASS chapter one',config);await context.close();
+    assert.deepEqual(errors,[]);console.log('PASS chapters one and two',config);await context.close();
 }
 // Desktop-only first release: phones keep the regular app.
 const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});const page=await context.newPage();await page.goto(base+'?tour=1');await page.waitForFunction(()=>window.chapterTest?.ready);assert.equal(await page.locator('.chapter-one-tour').count(),0);console.log('PASS desktop-only gate');await context.close();
+
+const direct=await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'});
+await direct.addInitScript(()=>{localStorage.setItem('colorGridSortCycle','["temperature"]');localStorage.setItem('colorGridChapterOneV1',JSON.stringify({version:1,status:'complete',step:'tile'}));});
+const review=await direct.newPage();await review.goto(base+'?tour=2&lang=he');
+await review.waitForFunction(()=>document.querySelector('.chapter-one-tour')?.dataset.step==='order-luminance');
+assert.equal(await review.locator('.chapter-order-strip span').count(),(await review.evaluate(()=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read())).colors.length);
+await review.locator('.chapter-coach [data-skip]').click();
+await review.frameLocator('.chapter-frame').locator('#btnCycleSort').click();
+await review.waitForFunction(()=>document.querySelector('.chapter-frame').contentWindow.chapterOnePractice.read().sortMethod==='dark-rainbow');
+await review.locator('.chapter-coach [data-exit]').click();
+assert.equal(await review.evaluate(()=>JSON.parse(localStorage.getItem('colorGridChapterOneV1')).step),'order-dark-rainbow');
+assert.equal(await review.evaluate(()=>localStorage.getItem('colorGridSortCycle')),'["temperature"]','lesson sort cycle never replaces real preferences');
+// Remove the init script by opening a second context with the saved storage.
+const resume=await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block',storageState:await direct.storageState()});
+const resumed=await resume.newPage();await resumed.goto(base);
+await resumed.waitForFunction(()=>document.querySelector('.chapter-one-tour')?.dataset.step==='order-dark-rainbow');
+assert(await resumed.locator('.chapter-coach [data-next]').isDisabled(),'resumed chapter two requires new native actions');
+assert(await resumed.frameLocator('.chapter-frame').locator('#btnCycleSort').evaluate(el=>el.classList.contains('chapter-guide-glow')));
+await resume.close();await direct.close();console.log('PASS direct chapter-two link and resume');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

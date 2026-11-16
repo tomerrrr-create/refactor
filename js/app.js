@@ -6480,6 +6480,7 @@ dom.btnWind.addEventListener('keydown', event => {
         if (isChapterOnePractice) {
             pauseLife();if(isSimModeActive)toggleSimMode();resetArmedState();
             n=21;activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Journey');
+            sortCycleMethods=['luminance','dark-rainbow','reversed','center-out','temperature','outside-in'];
             currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,currentSortMethod));
             restoreSeparatorWidth(1);initializeBoardAndCanvas(true);fillRandom();
             selectedColorIndex=-1;selectedColor=null;isRainbowModeActive=false;
@@ -6488,7 +6489,8 @@ dom.btnWind.addEventListener('keydown', event => {
             history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();
             updatePaletteHeader();updateSortButtonUI();updateColorPickerButtonUI();updateSymmetryUI();updateUndoRedoButtons();
             installChapterOnePractice({
-                read:()=>({n,paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
+                prepareOrder:()=>{selectedColorIndex=-1;selectedColor=null;isRainbowModeActive=false;brushSize=1;symmetryMode='off';setBrushMode(true,true);selectSortMethod('luminance');updateColorPickerButtonUI();updateSymmetryUI();},
+                read:()=>({n,sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
                 tileAt:getTileIndexFromCoords,openPalette:()=>modals.openPaletteModal(),layout:updateLayout
             });
             splashScreen.remove();return;

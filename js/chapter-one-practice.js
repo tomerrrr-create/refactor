@@ -10,7 +10,7 @@ if (isChapterOnePractice) {
     }});
 }
 
-export function installChapterOnePractice({read, tileAt, openPalette, layout}) {
+export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder}) {
     let sequence=0, down=null;
     let guided=[],muted=[];
     const guide=target=>{
@@ -38,7 +38,7 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout}) {
         const index=tileAt(event.clientX,event.clientY);
         if(index<0)return;
         // Observe the result after the application's own pointerup handler.
-        setTimeout(()=>record('tile',{index,color:read().tiles[index]}),0);
+        setTimeout(()=>record('tile',{index,color:read().tiles[index],sortMethod:read().sortMethod}),0);
     },true);
     document.addEventListener('pointercancel',()=>{down=null;},true);
     let pressTime=0;
@@ -60,7 +60,7 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout}) {
         layout();
     };
     addEventListener('resize',fit);new ResizeObserver(fit).observe(document.getElementById('controlsContainer'));fit();
-    window.chapterOnePractice={read,visible,openPalette,guide,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
+    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
         closePalette:()=>document.querySelector('#btnPaletteModalClose')?.click(),
         fit
     };

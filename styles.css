@@ -2766,7 +2766,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnIslands.mode-oil > svg:not(.islands-oil-icon) { display:none !important; }
 #btnIslands.mode-oil .islands-oil-icon { display:block !important; }
 
-/* First visit: chapter one only. Removable, desktop coaching and practice scope. */
+/* First visit: chapters one and two. Removable, desktop coaching and practice scope. */
 .chapter-one-tour,.chapter-one-tour * { box-sizing:border-box; }
 dialog.chapter-one-tour { position:fixed; inset:0; margin:0; padding:0; border:0; max-width:none; max-height:none; width:100vw; height:100dvh; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) clamp(300px,28vw,360px); background:#080b09; color:#eeeae1; font:15px/1.6 system-ui,sans-serif; }
 .chapter-one-tour::backdrop { background:#000c; }
@@ -2821,4 +2821,25 @@ dialog.chapter-one-tour { position:fixed; inset:0; margin:0; padding:0; border:0
 @media(prefers-reduced-motion:reduce) {
  :root[data-chapter-one-practice] .chapter-guide-glow { animation:none !important; filter:brightness(1.08) drop-shadow(0 0 5px #f5d99388) drop-shadow(0 0 12px #d5aa4855); }
  :root[data-chapter-one-practice] .chapter-guide-muted { transition:none; }
+}
+
+.chapter-order { margin-top:20px; padding-top:16px; border-top:1px solid #c8af6429; }
+.chapter-order h3 { font-size:16px; font-weight:500; color:#dec994; margin:0 0 12px; }
+.chapter-order-direction,.chapter-order-hint { font-size:11px; line-height:1.7; color:#aab5a1; margin:8px 0; }
+.chapter-order-strip { display:flex; width:100%; height:34px; margin:12px 0 20px; isolation:isolate; }
+.chapter-order-strip span { flex:1; min-width:0; position:relative; }
+.chapter-order-strip span.is-current { box-shadow:0 3px 0 #f6e6b7; z-index:1; }
+.chapter-order-strip span.is-current::after { content:''; position:absolute; left:50%; top:calc(100% + 8px); transform:translateX(-50%); border:4px solid transparent; border-bottom-color:#f6e6b7; }
+
+@media(max-height:700px) {
+ .chapter-coach { padding:18px; }
+ .chapter-copy { padding-top:16px; }
+ .chapter-copy h2 { font-size:22px; margin-bottom:12px; }
+ .chapter-copy [data-body] { font-size:14px; line-height:1.65; margin-bottom:12px; }
+ .chapter-order { margin-top:12px; padding-top:12px; }
+ .chapter-order h3 { margin-bottom:6px; }
+ .chapter-order-direction,.chapter-order-hint { font-size:10px; margin:6px 0; }
+ .chapter-order-strip { height:28px; }
+ .chapter-status { font-size:12px; margin:8px 0; }
+ .chapter-coach footer { padding-top:10px; }
 }
