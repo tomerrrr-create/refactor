@@ -6497,7 +6497,7 @@ dom.btnWind.addEventListener('keydown', event => {
                     sort:()=>modals.openSortCycleModal(),resize:()=>modals.openResizeModal()};
                 openers[name]?.();
             }
-            installFtuePractice({open:openPracticeOptions,
+            installFtuePractice({open:openPracticeOptions,layout:updateLayout,
                 read:()=>({playing:isLifePlaying,simulation:isSimModeActive,armed:armedSimulation,n,generation:currentGenerationCount,history:history.length,future:future.length,selectedColor,brushSize,brushShape}),
                 prepare:step=>{
                     if(!step.playing||step.arm&&armedSimulation!==step.arm)pauseLife();

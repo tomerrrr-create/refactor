@@ -2,8 +2,8 @@ import {getCurrentLang,onLanguageChange,setCurrentLang} from './i18n.js';
 import {FTUE_STEPS,FTUE_CHAPTERS,ftueText} from './first-time-content.js';
 export const FTUE_STORAGE_KEY='colorGridFirstTimeExperienceV1';
 const UI={
- en:{entry:'Interactive first visit',reset:'Show first-visit tutorial next time',resetDone:'Reset. The tutorial will appear on your next visit.',welcome:'Make something. Learn by doing.',intro:'A complete guided tour of your canvas, tools and simulations. Practice on a separate board; your artwork and preferences stay safe.',begin:'Start the guided tour',resume:'Continue the tour',restart:'Start from the beginning',later:'Not now',chapter:'Chapter',step:'Step',of:'of',back:'Back',next:'Next',finish:'Finish & return',skip:'Skip this step',exit:'Exit lesson',practice:'Practice board',waiting:'Try the highlighted action to continue.',success:'Done — you can continue.',read:'Explore this explanation, then continue.',helper:'Open options',focus:'Focus the tool',loading:'Preparing your practice board…',error:'The practice board could not load. Close the lesson and try again.',unavailable:'This tool is not visible yet. You can skip this step.',resetNote:'Only tutorial progress was reset.',storage:'Progress cannot be saved in this browser session.',chapters:'Explore at your own pace',saved:'Your original artwork is waiting outside this lesson.'},
- he:{entry:'הדרכה אינטראקטיבית למתחילים',reset:'הצגת הדרכת כניסה ראשונה בביקור הבא',resetDone:'אופס. ההדרכה תופיע בכניסה הבאה.',welcome:'יוצרים משהו. לומדים תוך כדי.',intro:'סיור מקיף בגריד, בכלים ובסימולציות. מתאמנים בלוח נפרד; היצירה וההגדרות שלכם נשארות שמורות.',begin:'מתחילים את ההדרכה',resume:'ממשיכים את ההדרכה',restart:'מתחילים מההתחלה',later:'לא עכשיו',chapter:'פרק',step:'צעד',of:'מתוך',back:'הקודם',next:'הבא',finish:'סיום וחזרה ליצירה',skip:'דלגו על הצעד',exit:'יציאה מההדרכה',practice:'לוח אימון',waiting:'בצעו את הפעולה המסומנת כדי להמשיך.',success:'בוצע — אפשר להמשיך.',read:'קראו את ההסבר והמשיכו כשתרצו.',helper:'פתיחת האפשרויות',focus:'מיקוד בכלי',loading:'מכינים את לוח האימון…',error:'לוח האימון לא נטען. סגרו את ההדרכה ונסו שוב.',unavailable:'הכלי עדיין לא מופיע. אפשר לדלג על הצעד.',resetNote:'רק התקדמות ההדרכה אופסה.',storage:'לא ניתן לשמור התקדמות בדפדפן הזה.',chapters:'חוקרים בקצב שלכם',saved:'היצירה המקורית מחכה מחוץ להדרכה.'}
+ en:{entry:'Interactive first visit',reset:'Show first-visit tutorial next time',resetDone:'Reset. The tutorial will appear on your next visit.',welcome:'Make something. Learn by doing.',intro:'A complete guided tour of your canvas, tools and simulations. Practice on a separate board; your artwork and preferences stay safe.',begin:'Start the guided tour',resume:'Continue the tour',restart:'Start from the beginning',later:'Not now',chapter:'Chapter',navigation:'Chapters',step:'Step',of:'of',back:'Back',next:'Next',finish:'Finish & return',skip:'Skip this step',exit:'Exit lesson',practice:'Practice board',waiting:'Try the highlighted action to continue.',success:'Done — you can continue.',read:'Explore this explanation, then continue.',helper:'Open options',focus:'Focus the tool',loading:'Preparing your practice board…',error:'The practice board could not load. Close the lesson and try again.',unavailable:'This tool is not visible yet. You can skip this step.',resetNote:'Only tutorial progress was reset.',storage:'Progress cannot be saved in this browser session.',chapters:'Explore at your own pace',saved:'Your original artwork is waiting outside this lesson.'},
+ he:{entry:'הדרכה אינטראקטיבית למתחילים',reset:'הצגת הדרכת כניסה ראשונה בביקור הבא',resetDone:'אופס. ההדרכה תופיע בכניסה הבאה.',welcome:'יוצרים משהו. לומדים תוך כדי.',intro:'סיור מקיף בגריד, בכלים ובסימולציות. מתאמנים בלוח נפרד; היצירה וההגדרות שלכם נשארות שמורות.',begin:'מתחילים את ההדרכה',resume:'ממשיכים את ההדרכה',restart:'מתחילים מההתחלה',later:'לא עכשיו',chapter:'פרק',navigation:'פרקים',step:'צעד',of:'מתוך',back:'הקודם',next:'הבא',finish:'סיום וחזרה ליצירה',skip:'דלגו על הצעד',exit:'יציאה מההדרכה',practice:'לוח אימון',waiting:'בצעו את הפעולה המסומנת כדי להמשיך.',success:'בוצע — אפשר להמשיך.',read:'קראו את ההסבר והמשיכו כשתרצו.',helper:'פתיחת האפשרויות',focus:'מיקוד בכלי',loading:'מכינים את לוח האימון…',error:'לוח האימון לא נטען. סגרו את ההדרכה ונסו שוב.',unavailable:'הכלי עדיין לא מופיע. אפשר לדלג על הצעד.',resetNote:'רק התקדמות ההדרכה אופסה.',storage:'לא ניתן לשמור התקדמות בדפדפן הזה.',chapters:'חוקרים בקצב שלכם',saved:'היצירה המקורית מחכה מחוץ להדרכה.'}
 };
 export function readFtueProgress(storage){
  try{const value=JSON.parse(storage.getItem(FTUE_STORAGE_KEY));
@@ -55,18 +55,19 @@ export function initializeFirstTimeExperience({beforeStart=()=>{}}={}){
   const shields=Array.from({length:4},()=>{const element=document.createElement('div');element.className='ftue-shield';return element;});
   const spotlight=document.createElement('div');spotlight.className='ftue-spotlight';spotlight.setAttribute('aria-hidden','true');
   const card=document.createElement('section');card.className='ftue-card';card.setAttribute('aria-labelledby','ftueStepTitle');
-  card.innerHTML='<header><span class="ftue-kicker" data-practice></span><button type="button" data-exit>×</button></header><label class="ftue-chapter"><span data-chapter-label></span><select data-chapter></select></label><div class="ftue-progress"><span></span></div><p class="ftue-count" data-count></p><h2 id="ftueStepTitle" tabindex="-1"></h2><p data-body></p><p class="ftue-action-status" role="status" aria-live="polite"></p><div class="ftue-assist"><button type="button" data-helper></button><button type="button" data-focus></button></div><footer><button type="button" data-back></button><button type="button" data-skip></button><button type="button" data-next></button></footer>';
+  card.innerHTML='<header><span class="ftue-kicker" data-practice></span><p class="ftue-count" data-count></p><button type="button" data-navigation aria-expanded="false" aria-controls="ftueChapterNavigation"></button><button type="button" data-exit>×</button></header><div class="ftue-more" id="ftueChapterNavigation"><label class="ftue-chapter"><span data-chapter-label></span><select data-chapter></select></label><button type="button" data-focus></button></div><div class="ftue-progress"><span></span></div><div class="ftue-copy"><h2 id="ftueStepTitle" tabindex="-1"></h2><p data-body></p></div><p class="ftue-action-status" role="status" aria-live="polite"></p><div class="ftue-assist"><button type="button" data-helper></button></div><footer><button type="button" data-back></button><button type="button" data-skip></button><button type="button" data-next></button></footer>';
   s.card=card;s.shields=shields;s.spotlight=spotlight;s.root.append(frame,...shields,spotlight,card);
   card.querySelector('[data-practice]').textContent=c.practice;card.querySelector('[data-exit]').setAttribute('aria-label',c.exit);card.querySelector('[data-chapter-label]').textContent=c.chapter;
   for(const [id,en,he]of FTUE_CHAPTERS){const option=new Option(getCurrentLang()==='he'?he:en,id);card.querySelector('select').add(option);}
   card.querySelector('[data-exit]').addEventListener('click',()=>exit());card.querySelector('[data-back]').textContent=c.back;card.querySelector('[data-skip]').textContent=c.skip;
-  card.querySelector('[data-helper]').textContent=c.helper;card.querySelector('[data-focus]').textContent=c.focus;
+  card.querySelector('[data-helper]').textContent=c.helper;card.querySelector('[data-focus]').textContent=c.focus;card.querySelector('[data-navigation]').textContent=c.navigation;
+  card.querySelector('[data-navigation]').addEventListener('click',()=>{const open=card.classList.toggle('ftue-navigation-open');card.querySelector('[data-navigation]').setAttribute('aria-expanded',String(open));});
   card.querySelector('[data-back]').addEventListener('click',()=>show(s.index-1));card.querySelector('[data-skip]').addEventListener('click',()=>advance());
   card.querySelector('[data-next]').addEventListener('click',()=>{if(!card.querySelector('[data-next]').disabled)advance();});
   card.querySelector('[data-helper]').addEventListener('click',()=>s.bridge?.open(FTUE_STEPS[s.index].helper));
   card.querySelector('[data-focus]').addEventListener('click',()=>s.bridge?.focus(FTUE_STEPS[s.index].target));
-  card.querySelector('select').addEventListener('change',event=>show(FTUE_STEPS.findIndex(step=>step.chapter===event.target.value)));
-  card.querySelector('h2').textContent=c.loading;card.querySelector('[data-next]').disabled=true;card.querySelector('[data-next]').textContent=c.next;
+  card.querySelector('select').addEventListener('change',event=>{card.classList.remove('ftue-navigation-open');card.querySelector('[data-navigation]').setAttribute('aria-expanded','false');show(FTUE_STEPS.findIndex(step=>step.chapter===event.target.value));});
+  layoutPracticeStage(s);card.querySelector('h2').textContent=c.loading;card.querySelector('[data-next]').disabled=true;card.querySelector('[data-next]').textContent=c.next;
   card.querySelector('[data-chapter]').disabled=true;card.querySelector('[data-back]').disabled=true;
   for(const selector of ['[data-skip]','[data-helper]','[data-focus]'])card.querySelector(selector).hidden=true;
   const escape=event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();exit();}};
@@ -96,10 +97,30 @@ export function initializeFirstTimeExperience({beforeStart=()=>{}}={}){
   card.querySelector('[data-back]').disabled=s.index===0;card.querySelector('[data-helper]').hidden=!step.helper;card.querySelector('[data-focus]').hidden=!step.task;
   card.querySelector('[data-next]').textContent=s.index===FTUE_STEPS.length-1?c.finish:c.next;card.querySelector('[data-skip]').hidden=!step.task;
   const target=s.bridge.visible(step.target);target?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
-  card.scrollTop=0;update();card.querySelector('h2').focus({preventScroll:true});
+  card.scrollTop=0;card.querySelector('.ftue-copy').scrollTop=0;update();card.querySelector('h2').focus({preventScroll:true});
+ }
+ function layoutPracticeStage(s){
+  const width=s.root.clientWidth||innerWidth,height=s.root.clientHeight||innerHeight;
+  const layout=width<=600?'bottom':height<=500&&width<=1100?'side':'floating';
+  const resized=s.stageWidth!==width||s.stageHeight!==height;
+  s.stageWidth=width;s.stageHeight=height;s.root.dataset.layout=layout;
+  if(resized&&s.bridge)requestAnimationFrame(()=>{if(session===s)s.bridge.visible(FTUE_STEPS[s.index].target)?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});});
+  if(layout==='bottom'){
+   const coach=Math.round(Math.min(292,Math.max(238,height*.33))),stage=height-coach;
+   Object.assign(s.frame.style,{left:'0px',top:'0px',width:width+'px',height:stage+'px'});
+   Object.assign(s.card.style,{left:'0px',top:stage+'px',width:width+'px',height:coach+'px',maxHeight:coach+'px'});
+  }else if(layout==='side'){
+   const coach=Math.round(Math.min(320,Math.max(280,width*.36))),stage=width-coach;
+   Object.assign(s.frame.style,{left:'0px',top:'0px',width:stage+'px',height:height+'px'});
+   Object.assign(s.card.style,{left:stage+'px',top:'0px',width:coach+'px',height:height+'px',maxHeight:height+'px'});
+  }else{
+   Object.assign(s.frame.style,{left:'0px',top:'0px',width:width+'px',height:height+'px'});
+   s.card.style.height='';
+  }
+  return {layout,width,height};
  }
  function update(){
-  const s=session;if(!s?.bridge)return;const step=FTUE_STEPS[s.index],c=copy(),target=s.bridge.visible(step.target),card=s.card;
+  const s=session;if(!s?.bridge)return;const stage=layoutPracticeStage(s),step=FTUE_STEPS[s.index],c=copy(),target=s.bridge.visible(step.target),card=s.card;
   if(!s.done&&step.task){
    const [type,...rest]=step.task.split(':'),value=rest.join(':');let done=false;
    if(type==='visible')done=!!s.bridge.visible(value);
@@ -110,12 +131,13 @@ export function initializeFirstTimeExperience({beforeStart=()=>{}}={}){
   card.querySelector('[data-next]').disabled=!s.done;
   const status=!target&&!s.done?'unavailable':step.task?(s.done?'success':'waiting'):'read';
   if(status!==s.lastStatus){card.querySelector('[role=status]').textContent=c[status];card.querySelector('[role=status]').classList.toggle('is-done',status==='success');s.lastStatus=status;}
-  const width=innerWidth,height=innerHeight;
-  const rect=target?.getBoundingClientRect();let r=rect?{left:Math.max(4,rect.left-6),top:Math.max(4,rect.top-6),right:Math.min(width-4,rect.right+6),bottom:Math.min(height-4,rect.bottom+6)}:{left:width/2,top:height/3,right:width/2,bottom:height/3};
+  const {width,height}=stage,frame=s.frame.getBoundingClientRect(),local=target?.getBoundingClientRect();
+  const rect=local?{left:local.left+frame.left,top:local.top+frame.top,right:local.right+frame.left,bottom:local.bottom+frame.top}:null;let r=rect?{left:Math.max(4,rect.left-6),top:Math.max(4,rect.top-6),right:Math.min(width-4,rect.right+6),bottom:Math.min(height-4,rect.bottom+6)}:{left:width/2,top:height/3,right:width/2,bottom:height/3};
   if(r.bottom<r.top||r.right<r.left)r={left:width/2,top:height/3,right:width/2,bottom:height/3};
   const place=(el,left,top,w,h)=>Object.assign(el.style,{left:left+'px',top:top+'px',width:Math.max(0,w)+'px',height:Math.max(0,h)+'px'});
   place(s.shields[0],0,0,width,r.top);place(s.shields[1],0,r.top,r.left,r.bottom-r.top);place(s.shields[2],r.right,r.top,width-r.right,r.bottom-r.top);place(s.shields[3],0,r.bottom,width,height-r.bottom);
   place(s.spotlight,r.left,r.top,r.right-r.left,r.bottom-r.top);s.spotlight.hidden=!target;
+  if(stage.layout!=='floating')return;
   const below=height-r.bottom-14,above=r.top-14,budget=Math.max(below,above);
   // Wide/short screens can put the coach beside a tool. On narrow screens,
   // scroll the coach rather than covering the control the user must press.

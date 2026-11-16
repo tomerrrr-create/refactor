@@ -2783,7 +2783,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .ftue-root button[data-begin],.ftue-root button[data-next]:not(:disabled) { background:#d8bf82; color:#151b13; border-color:#d8bf82; font-weight:600; }
 .ftue-intro-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
 .ftue-root [hidden] { display:none !important; }
-.ftue-frame { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; }
+.ftue-frame { position:absolute; inset:auto; left:0; top:0; width:100%; height:100%; border:0; background:#000; }
 .ftue-shield { position:absolute; background:#020503b3; touch-action:none; }
 .ftue-spotlight { position:absolute; border:2px solid #e2c783; border-radius:12px; box-shadow:0 0 0 4px #e2c78322,0 0 22px #e2c78333; pointer-events:none; }
 .ftue-card { position:absolute; width:min(420px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; padding:16px 18px 14px; border:1px solid #ac995a80; border-radius:18px; background:#141b16fa; box-shadow:0 14px 60px #0009; text-align:start; }
@@ -2815,3 +2815,41 @@ dialog.ftue-root::backdrop { background:#000b; }
 .ftue-intro-heading select { min-height:40px; max-width:120px; border:1px solid #87917b55; border-radius:9px; background:#1b241d; color:#eee9dc; padding:6px 8px; font-size:13px; }
 .ftue-card footer { position:sticky; bottom:-14px; background:#141b16; padding:6px 0 0; }
 .ftue-card h2:focus { outline:none; }
+
+/* Dock the mobile coach outside the practice viewport, never over the artwork. */
+dialog.ftue-root { height:100dvh; }
+.ftue-card .ftue-count { margin:0; flex:1; }
+.ftue-card header [data-navigation] { min-height:30px; padding:4px 9px; }
+.ftue-more { display:flex; align-items:center; gap:8px; }
+.ftue-more .ftue-chapter { flex:1; min-width:0; }
+.ftue-more [data-focus] { min-height:30px; font-size:11px; padding:4px 8px; }
+.ftue-copy { min-height:0; }
+.ftue-copy h2 { margin-top:10px; }
+.ftue-root[data-layout="floating"] [data-navigation] { display:none; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-card {
+ display:flex; flex-direction:column; gap:0; max-width:none; overflow:hidden;
+ padding:10px 14px max(10px,env(safe-area-inset-bottom)); border-radius:0; box-shadow:none;
+}
+.ftue-root[data-layout="bottom"] .ftue-card { border-width:1px 0 0; border-radius:16px 16px 0 0; }
+.ftue-root[data-layout="side"] .ftue-card { border-width:0 0 0 1px; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-card header { flex-shrink:0; margin:0 0 5px; gap:8px; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) [data-practice] { display:none; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-more { display:none; flex-shrink:0; padding-bottom:5px; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-navigation-open .ftue-more { display:flex; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-copy { flex:1; overflow:auto; overscroll-behavior:contain; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-copy h2 { font-size:19px; margin:8px 0 5px; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-copy [data-body] { font-size:13px; line-height:1.55; padding-bottom:4px; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-progress { flex-shrink:0; margin:0; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-action-status { flex-shrink:0; font-size:11px; margin:5px 0 0; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-assist { flex-shrink:0; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) footer { position:static; flex-shrink:0; padding:0; margin-top:5px; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) footer button { min-height:40px; }
+.ftue-root:is([data-layout="bottom"],[data-layout="side"]) .ftue-shield { background:#02050333; }
+@media(max-width:600px),(max-height:500px) {
+ :root[data-ftue-practice] #appContainer { padding:12px 16px !important; min-height:100dvh; }
+ :root[data-ftue-practice] .app-shell { width:100% !important; max-width:720px; }
+ :root[data-ftue-practice] .app-shell > .relative { width:var(--ftue-board-size,200px); margin-inline:auto; }
+ :root[data-ftue-practice] #controlsContainer { margin-top:14px !important; }
+ :root[data-ftue-practice][data-ftue-focus="canvas"] #controlsContainer { display:none !important; }
+ :root[data-ftue-practice][data-ftue-focus="canvas"] #appContainer { justify-content:center !important; }
+}
