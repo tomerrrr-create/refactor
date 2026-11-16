@@ -6,6 +6,10 @@ const TEXT={
  he:{chapter:'פרק 1 · הלוח והפלטה',intro:'לוח של ריבועים',introBody:'זה הלוח שלכם. כל ריבוע מחזיק צבע. בואו נראה מה אפשר לעשות איתו.',palette:'הצבעים מגיעים מפלטה',paletteBody:'לחצו על כפתור הפלטה כדי לנסות צבעים אחרים.',picker:'בוחרים מתוך האוסף',pickerOpen:'החליקו את כפתור הפלטה למטה כדי לפתוח את האוסף.',pickerChoose:'בחרו פלטה אחרת מתוך האוסף.',pickerApply:'לחצו על החלה כדי לראות את הבחירה על הלוח.',pickerDone:'אותו לוח, בצבעים שבחרתם.',random:'ערבוב חדש',randomBody:'לחצו על אקראי כדי לקבל ערבוב חדש של צבעי הפלטה על הלוח.',tile:'לחיצה משנה צבע',tileBody:'לחצו על ריבוע וראו איך הצבע שלו משתנה. לחצו עליו עוד כמה פעמים.',tileDone:'כל לחיצה מקדמת את המשבצת לצבע הבא.',paletteMore:'הצבעים השתנו. לחצו שוב על כפתור הפלטה.',paletteDone:'אותו לוח, פלטה אחרת.',randomDone:'הצבעים התערבבו מחדש.',sameTile:'המשיכו ללחוץ על אותה משבצת.',start:'מתחילים',next:'המשך',finish:'סיום הפרק',back:'הקודם',skip:'דלגו',exit:'יציאה מההדרכה',open:'פתיחת אוסף הפלטות',loading:'מכינים את הלוח…',error:'הלוח לא נטען. אפשר לסגור ולנסות שוב.',replay:'הדרכת כניסה ראשונה · פרק 1',reset:'הצגת פרק 1 בכניסה הבאה',resetDone:'ההדרכה תוצג בכניסה הבאה.',practice:'לוח ההדרכה',step:'חלק'},
  en:{chapter:'Chapter 1 · The board and palette',intro:'A board of squares',introBody:'This is your board. Every square holds a color. Let’s see what you can do with it.',palette:'Colors come from a palette',paletteBody:'Click the palette button to try different colors.',picker:'Choose from the collection',pickerOpen:'Drag the palette button downward to open the collection.',pickerChoose:'Choose a different palette from the collection.',pickerApply:'Click Apply to see your choice on the board.',pickerDone:'The same board, in your chosen colors.',random:'A fresh mix',randomBody:'Click Random to fill the board with a fresh mix of palette colors.',tile:'A click changes color',tileBody:'Click a square and watch its color change. Click the same square a few more times.',tileDone:'Every click advances the square to the next color.',paletteMore:'The colors changed. Click the palette button again.',paletteDone:'The same board, a different palette.',randomDone:'The colors have been mixed again.',sameTile:'Keep clicking the same square.',start:'Let’s begin',next:'Continue',finish:'Finish chapter',back:'Back',skip:'Skip',exit:'Exit lesson',open:'Open the palette collection',loading:'Preparing your board…',error:'The board could not load. Close the lesson and try again.',replay:'First visit · Chapter 1',reset:'Show chapter 1 on the next visit',resetDone:'The lesson will appear on your next visit.',practice:'Lesson board',step:'Part'}
 };
+const PALETTE_TIP={
+ he:{title:'טיפ · קבוצות צבעים',intro:'הקבוצות מאגדות פלטות לפי כמות הצבעים.',rows:[['23','פלטות מצומצמות — פיקסל־ארט וצורות מובחנות.'],['64','יותר גוונים — איור, פרטים והצללות.'],['264','פלטות עשירות — מעברים רכים וציור זורם.'],['•','הארכיון — עוד פלטות לגלות.']],note:'כמות הצבעים משתנה בין הפלטות. כל קבוצה פתוחה לכל סגנון.'},
+ en:{title:'Tip · Color families',intro:'The groups collect palettes by their number of colors.',rows:[['23','Smaller palettes — pixel art and distinct shapes.'],['64','More shades — illustration, detail and shading.'],['264','Rich palettes — soft transitions and flowing paintings.'],['•','The archive — more palettes to discover.']],note:'Exact color counts vary between palettes. Every group is open to every style.'}
+};
 export function readChapterOneProgress(storage){
     try{const value=JSON.parse(storage.getItem(CHAPTER_ONE_KEY));
         return value?.version===1&&['active','complete','dismissed'].includes(value.status)&&CHAPTER_ONE_STEPS.includes(value.step)?value:null;
@@ -42,7 +46,7 @@ export function initializeChapterOne({beforeStart}){
     function open(trigger){
         if(session||!desktop())return;
         beforeStart();const c=copy(),root=document.createElement('dialog');root.className='chapter-one-tour';root.dir=getCurrentLang()==='he'?'rtl':'ltr';root.setAttribute('aria-labelledby','chapterOneTitle');
-        root.innerHTML='<div class="chapter-stage"><iframe class="chapter-frame"></iframe><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-highlight" hidden></div><div class="chapter-touch-hint" hidden></div></div><section class="chapter-coach"><header><span data-chapter></span><button data-exit type="button">×</button></header><progress max="5" value="1"></progress><p class="chapter-count"></p><div class="chapter-copy"><h2 id="chapterOneTitle" tabindex="-1"></h2><p data-body></p><button data-open type="button" hidden></button></div><p class="chapter-status" role="status" aria-live="polite"></p><footer><button data-back type="button"></button><button data-skip type="button"></button><button data-next type="button" disabled></button></footer></section>';
+        root.innerHTML='<div class="chapter-stage"><iframe class="chapter-frame"></iframe><div class="chapter-board-shade" hidden></div><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-dim"></div><div class="chapter-cell-glow" hidden></div></div><section class="chapter-coach"><header><span data-chapter></span><button data-exit type="button">×</button></header><progress max="5" value="1"></progress><p class="chapter-count"></p><div class="chapter-copy"><h2 id="chapterOneTitle" tabindex="-1"></h2><p data-body></p><button data-open type="button" hidden></button></div><aside class="chapter-palette-tip" data-palette-tip hidden></aside><p class="chapter-status" role="status" aria-live="polite"></p><footer><button data-back type="button"></button><button data-skip type="button"></button><button data-next type="button" disabled></button></footer></section>';
         const frame=root.querySelector('iframe'),card=root.querySelector('section');frame.title=c.practice;
         const url=new URL('./index.html',location.href);url.search='';url.searchParams.set('chapter-one-practice','1');url.searchParams.set('lang',getCurrentLang());frame.src=url.href;
         const index=progress?.status==='active'?CHAPTER_ONE_STEPS.indexOf(progress.step):0;
@@ -66,7 +70,7 @@ export function initializeChapterOne({beforeStart}){
     }
     function update(){
         const s=session;if(!s?.bridge)return;const c=copy(),b=s.bridge,state=b.read(),events=b.events(s.cursor),id=CHAPTER_ONE_STEPS[s.index];
-        let target=null,body=c[id+'Body']||'',status='',title=c[id],helper=false;
+        let target=null,body=c[id+'Body']||'',status='',title=c[id],helper=false,showPaletteTip=false;
         if(id==='palette'){
             const taps=events.filter(e=>e.type==='palette');let last=s.lastPalette,changes=0;
             for(const tap of taps){if(tap.paletteIndex!==last){changes++;last=tap.paletteIndex;}}
@@ -76,6 +80,7 @@ export function initializeChapterOne({beforeStart}){
             status=s.done?c.paletteDone:s.paletteChanges?c.paletteMore:'';
         }else if(id==='picker'){
             const modal=b.visible('#paletteModal.modal-visible'),pending=b.visible('#palette-apply:not(:disabled)');
+            showPaletteTip=!!modal;
             s.pickerApplied=s.pickerApplied||events.some(e=>e.type==='apply');
             s.done=s.done||s.pickerApplied&&!modal&&state.paletteIndex!==s.lastPalette;
             title=c.picker;body=s.done?c.pickerDone:!modal?c.pickerOpen:pending?c.pickerApply:c.pickerChoose;
@@ -93,17 +98,29 @@ export function initializeChapterOne({beforeStart}){
         card.querySelector('[data-skip]').textContent=c.skip;card.querySelector('[data-skip]').hidden=s.index===0;
         const next=card.querySelector('[data-next]');next.textContent=s.index===0?c.start:s.index===4?c.finish:c.next;next.disabled=!s.done;
         const feedback=card.querySelector('[role=status]');if(feedback.textContent!==status)feedback.textContent=status;feedback.hidden=!status;
-        const stage=s.root.querySelector('.chapter-stage'),rect=target?.getBoundingClientRect(),highlight=s.root.querySelector('.chapter-highlight');
+        const tip=card.querySelector('[data-palette-tip]');tip.hidden=!showPaletteTip;
+        if(showPaletteTip&&s.tipLanguage!==getCurrentLang()){
+            const content=PALETTE_TIP[getCurrentLang()]||PALETTE_TIP.en;tip.replaceChildren();
+            const heading=document.createElement('h3');heading.textContent=content.title;tip.append(heading);
+            const intro=document.createElement('p');intro.textContent=content.intro;tip.append(intro);
+            const list=document.createElement('dl');
+            for(const [group,description]of content.rows){const row=document.createElement('div'),term=document.createElement('dt'),detail=document.createElement('dd');term.textContent=group;detail.textContent=description;row.append(term,detail);list.append(row);}
+            tip.append(list);const note=document.createElement('p');note.className='chapter-tip-note';note.textContent=content.note;tip.append(note);s.tipLanguage=getCurrentLang();
+        }
+        b.guide(target);
+        const stage=s.root.querySelector('.chapter-stage'),rect=target?.getBoundingClientRect();
         const clip=r=>({left:Math.max(3,r.left-5),top:Math.max(3,r.top-5),right:Math.min(stage.clientWidth-3,r.right+5),bottom:Math.min(stage.clientHeight-3,r.bottom+5)});
         const place=(el,r)=>Object.assign(el.style,{left:r.left+'px',top:r.top+'px',width:Math.max(0,r.right-r.left)+'px',height:Math.max(0,r.bottom-r.top)+'px'});
-        const area=rect?clip(rect):null;highlight.hidden=!area||id==='tile'||area.right<=area.left||area.bottom<=area.top;if(!highlight.hidden)place(highlight,area);
+        const area=rect?clip(rect):null;
         const controls=b.visible('#controlsContainer')?.getBoundingClientRect(),dim=[...s.root.querySelectorAll('.chapter-dim')];
         const dimControls=area&&['palette','random','picker'].includes(id)&&!b.visible('#paletteModal.modal-visible')&&target?.id!=='boardCanvas';
         dim.forEach(e=>e.hidden=!dimControls);
         if(dimControls&&controls){const r=controls,a={left:Math.max(r.left,area.left),right:Math.min(r.right,area.right),top:Math.max(r.top,area.top),bottom:Math.min(r.bottom,area.bottom)};
             [{left:r.left,top:r.top,right:r.right,bottom:a.top},{left:r.left,top:a.top,right:a.left,bottom:a.bottom},{left:a.right,top:a.top,right:r.right,bottom:a.bottom},{left:r.left,top:a.bottom,right:r.right,bottom:r.bottom}].forEach((r,i)=>place(dim[i],r));}
-        const hint=s.root.querySelector('.chapter-touch-hint');hint.hidden=id!=='tile'||events.some(e=>e.type==='tile');
-        if(!hint.hidden){const r=b.tileRect(8*state.n+8);place(hint,r);}
+        const shade=s.root.querySelector('.chapter-board-shade');shade.hidden=!dimControls;
+        const board=b.visible('#boardCanvas')?.getBoundingClientRect();if(!shade.hidden&&board)place(shade,board);
+        const hint=s.root.querySelector('.chapter-cell-glow');hint.hidden=id!=='tile'||events.some(e=>e.type==='tile');
+        if(!hint.hidden){const r=b.tileRect(8*state.n+8);place(hint,{left:r.left-r.width,top:r.top-r.height,right:r.left+2*r.width,bottom:r.top+2*r.height});}
     }
     entries.forEach(e=>e.onclick=()=>{if(progress?.status!=='active')progress=null;open(e);});
     if(reset)reset.onclick=()=>{try{storage.removeItem(CHAPTER_ONE_KEY);progress=null;document.querySelector('[data-chapter-one-reset-status]').textContent=copy().resetDone;}catch{/* Keep existing artwork untouched. */}};

@@ -2794,10 +2794,24 @@ dialog.chapter-one-tour { position:fixed; inset:0; margin:0; padding:0; border:0
 .chapter-coach footer { display:flex; align-items:center; gap:8px; padding-top:14px; }
 .chapter-coach [data-next] { margin-inline-start:auto; background:#d8bf82; border-color:#d8bf82; color:#161c14; font-weight:600; }
 .chapter-coach [data-skip] { border:0; background:transparent; font-size:11px; padding-inline:4px; }
-.chapter-highlight { position:absolute; border:2px solid #e0c783; border-radius:10px; box-shadow:0 0 0 3px #e0c78320; pointer-events:none; }
-.chapter-dim { position:absolute; background:#0004; pointer-events:none; }
-.chapter-touch-hint { position:absolute; border:2px solid #f4dd99; border-radius:50%; box-shadow:0 0 0 3px #0005; pointer-events:none; animation:chapter-touch 1.3s ease-out 1 both; }
-@keyframes chapter-touch { 0% { transform:scale(.5);opacity:0; } 35% { opacity:1; } 100% { transform:scale(1.5);opacity:0; } }
+/* Guidance follows the glyph alpha, with no border, ring or group rectangle. */
+:root[data-chapter-one-practice] .chapter-guide-glow { animation:chapter-guide-breathe 4.8s ease-in-out infinite !important; }
+@keyframes chapter-guide-breathe {
+ 0%,100% { filter:brightness(1.04) drop-shadow(0 0 3px #efd79b66) drop-shadow(0 0 8px #d5aa4833); }
+ 50% { filter:brightness(1.16) drop-shadow(0 0 6px #ffe9afbb) drop-shadow(0 0 18px #d5aa4899); }
+}
+.chapter-dim,.chapter-board-shade { position:absolute; background:#0004; pointer-events:none; }
+.chapter-board-shade { background:#0002; }
+.chapter-cell-glow { position:absolute; border:0; border-radius:50%; background:radial-gradient(ellipse,#ffe6a855 0%,#e5bf6533 30%,transparent 70%); pointer-events:none; animation:chapter-cell-breathe 4.8s ease-in-out infinite; }
+@keyframes chapter-cell-breathe { 0%,100% { opacity:.45; } 50% { opacity:1; } }
+.chapter-palette-tip { flex:0 1 auto; min-height:0; max-height:48%; overflow:auto; scrollbar-width:thin; padding-top:14px; border-top:1px solid #c8af6429; color:#c2cbbb; font-size:12px; line-height:1.55; }
+.chapter-palette-tip h3 { margin:0 0 7px; font-size:13px; font-weight:500; color:#d8c38e; }
+.chapter-palette-tip p { margin:0 0 8px; }
+.chapter-palette-tip dl { margin:0; }
+.chapter-palette-tip dl > div { display:grid; grid-template-columns:30px minmax(0,1fr); gap:8px; margin-bottom:7px; }
+.chapter-palette-tip dt { color:#d8bf82; font-weight:500; }
+.chapter-palette-tip dd { margin:0; }
+.chapter-palette-tip .chapter-tip-note { color:#96a38d; font-size:11px; margin:9px 0 0; }
 .chapter-one-entry { display:block; width:100%; margin:8px 0; padding:10px 12px; border:1px solid #9e9b7755; border-radius:9px; background:#c8af6410; color:#d8d0b5; font:13px/1.5 system-ui,sans-serif; cursor:pointer; }
 .chapter-one-entry[hidden] { display:none; }
 .chapter-one-entries [role=status] { font-size:12px; color:#bfcaad; }
@@ -2806,4 +2820,7 @@ dialog.chapter-one-tour { position:fixed; inset:0; margin:0; padding:0; border:0
 :root[data-chapter-one-practice] .app-shell { width:var(--chapter-board-size,600px) !important; max-width:calc(100vw - 32px) !important; }
 :root[data-chapter-one-practice] .app-shell > .relative { width:100%; }
 :root[data-chapter-one-practice] #controlsContainer { margin-top:14px !important; }
-@media(prefers-reduced-motion:reduce) { .chapter-touch-hint { animation:none; opacity:0; } }
+@media(prefers-reduced-motion:reduce) {
+ :root[data-chapter-one-practice] .chapter-guide-glow { animation:none !important; filter:brightness(1.08) drop-shadow(0 0 5px #f5d99388) drop-shadow(0 0 12px #d5aa4855); }
+ .chapter-cell-glow { animation:none; opacity:.7; }
+}

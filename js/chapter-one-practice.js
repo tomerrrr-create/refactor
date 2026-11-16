@@ -12,6 +12,14 @@ if (isChapterOnePractice) {
 
 export function installChapterOnePractice({read, tileAt, openPalette, layout}) {
     let sequence=0, down=null;
+    let guided=[];
+    const guide=target=>{
+        // Light the actual glyphs, never a rectangular overlay around a group.
+        const next=target?.matches('button')?[target]:[...(target?.querySelectorAll('.palette-choice-symbol')||[])];
+        guided.filter(node=>!next.includes(node)).forEach(node=>node.classList.remove('chapter-guide-glow'));
+        next.filter(node=>!guided.includes(node)).forEach(node=>node.classList.add('chapter-guide-glow'));
+        guided=next;
+    };
     const events=[];
     const record=(type,detail={})=>{events.push({sequence:++sequence,type,...detail});if(events.length>100)events.shift();};
     document.addEventListener('pointerdown',event=>{
@@ -45,7 +53,7 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout}) {
         layout();
     };
     addEventListener('resize',fit);new ResizeObserver(fit).observe(document.getElementById('controlsContainer'));fit();
-    window.chapterOnePractice={read,visible,openPalette,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
+    window.chapterOnePractice={read,visible,openPalette,guide,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
         closePalette:()=>document.querySelector('#btnPaletteModalClose')?.click(),
         fit, tileRect:index=>{
             const r=document.getElementById('boardCanvas').getBoundingClientRect(),n=read().n;
