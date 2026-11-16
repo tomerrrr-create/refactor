@@ -75,5 +75,5 @@ export async function runChapterThree(page,{artifacts='/tmp/chapter-one-check',l
   assert(fits.footer,'navigation fits the coach');assert(fits.copy,'chapter three instruction fits without scrolling');
   await card.locator('[data-next]').click();
  }
- assert.equal(await page.locator('.chapter-one-tour').count(),0);
+ await page.waitForFunction(()=>document.querySelector('.chapter-one-tour')?.dataset.step==='evolution-door');
 }

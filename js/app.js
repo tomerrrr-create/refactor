@@ -6518,7 +6518,19 @@ dom.btnWind.addEventListener('keydown', event => {
                     }
                     updateColorPickerButtonUI();
                 },
-                read:()=>({n,brushMode:isContinuousBrushOn?'continuous':isBrushModeOn?'paint':'copy',resizeIncreasing,simMode:isSimModeActive,armedSimulation,richPaletteIndex:C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD'),sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
+                prepareChapterFour:async(step,{resume=false}={})=>{
+                    if(step!=='evolution-pause')pauseLife();
+                    if(n!==249||paletteLen()<264){
+                        if(paletteLen()<264){activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD');updatePaletteHeader();}
+                        _performResize(249);restoreSeparatorWidth(0);fillRandom();
+                    }
+                    if(!isSimModeActive){toggleSimMode();await new Promise(resolve=>setTimeout(resolve,550));}
+                    if(resume&&['evolution-step','evolution-play','evolution-pause'].includes(step)){
+                        gsMode='up';gravitationalSortRules.direction='up';armSimulation('gravitationalSort');updateGravitationalSortButtonUI();
+                    }
+                },
+                pausePractice:pauseLife,
+                read:()=>({n,generation:currentGenerationCount,playEnabled:!dom.btnPlayPauseLife.disabled,stepEnabled:!dom.btnStepForward.disabled,brushMode:isContinuousBrushOn?'continuous':isBrushModeOn?'paint':'copy',resizeIncreasing,simMode:isSimModeActive,armedSimulation,richPaletteIndex:C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD'),sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
                 tileAt:getTileIndexFromCoords,openPalette:()=>modals.openPaletteModal(),layout:updateLayout
             });
             splashScreen.remove();return;

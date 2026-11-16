@@ -4,6 +4,7 @@ import {createServer} from 'node:http';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {runChapterThree} from './chapter-three-browser-flow.mjs';
+import {runChapterFour} from './chapter-four-browser-flow.mjs';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve('dist'),artifacts='/tmp/chapter-one-check';await mkdir(artifacts,{recursive:true});
 let app=await readFile(root+'/js/app.js','utf8');
@@ -135,6 +136,7 @@ try{for(const config of process.env.CHAPTER_TWO_DIRECT_ONLY?[]:[{width:1280,heig
     await page.screenshot({path:`${artifacts}/${config.lang}-${config.width}-sort-manage-done.png`});
     await card.locator('[data-next]').click();
     await runChapterThree(page,{...config,artifacts});
+    await runChapterFour(page,{...config,artifacts});
     assert.equal(await page.locator('.chapter-one-tour').count(),0);assert.deepEqual(await page.evaluate(()=>chapterTest.state()),original,'outer artwork/settings/undo/log are untouched');
     for(const [key,value]of Object.entries(storage))if(key!=='colorGridChapterOneV1')assert.equal(await page.evaluate(key=>localStorage.getItem(key),key),value);
     assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('colorGridChapterOneV1')).status),'complete');
@@ -147,7 +149,7 @@ try{for(const config of process.env.CHAPTER_TWO_DIRECT_ONLY?[]:[{width:1280,heig
     await card.locator('[data-next]').click();await step('picker');await card.locator('[data-open]').click();await frame.locator('#paletteModal.modal-visible').waitFor();
     await frame.locator('#paletteModal [aria-selected="true"]').press('Escape');await page.waitForTimeout(350);assert.equal(await page.locator('.chapter-one-tour').count(),1,'Escape closes the palette window first');assert.equal(await frame.locator('#paletteModal.modal-visible').count(),0);
     await frame.locator('#btnPalette').focus();await frame.locator('#btnPalette').press('Escape');assert.equal(await page.locator('.chapter-one-tour').count(),0,'Escape outside a picker exits the lesson');
-    assert.deepEqual(errors,[]);console.log('PASS chapters one to three',config);await context.close();
+    assert.deepEqual(errors,[]);console.log('PASS chapters one to four',config);await context.close();
 }
 // Desktop-only first release: phones keep the regular app.
 const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});const page=await context.newPage();await page.goto(base+'?tour=1');await page.waitForFunction(()=>window.chapterTest?.ready);assert.equal(await page.locator('.chapter-one-tour').count(),0);console.log('PASS desktop-only gate');await context.close();

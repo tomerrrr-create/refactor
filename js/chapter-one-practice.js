@@ -10,10 +10,10 @@ if (isChapterOnePractice) {
     }});
 }
 
-export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder, prepareChapterThree}) {
+export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder, prepareChapterThree, prepareChapterFour, pausePractice}) {
     let sequence=0, down=null;
     let guided=[],muted=[];
-    const guide=target=>{
+    const guide=(target,{dim=true}={})=>{
         // Light the actual glyphs, never a rectangular overlay around a group.
         const next=target?.matches('button')?[target]:[...(target?.querySelectorAll('.palette-choice-symbol')||[])];
         guided.filter(node=>!next.includes(node)).forEach(node=>node.classList.remove('chapter-guide-glow'));
@@ -21,11 +21,11 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
         guided=next;
         const toolbar=target?.matches('button')?target.closest('#controlsContainer'):null;
         const palettePanel=target?.id==='palette-apply'?target.closest('.palette-picker-panel'):null;
-        const quiet=toolbar?[...toolbar.querySelectorAll('.ctrl')].filter(node=>node!==target):palettePanel?[...palettePanel.querySelectorAll('button')].filter(node=>node!==target):[];
+        const quiet=!dim?[]:toolbar?[...toolbar.querySelectorAll('.ctrl')].filter(node=>node!==target):palettePanel?[...palettePanel.querySelectorAll('button')].filter(node=>node!==target):[];
         muted.filter(node=>!quiet.includes(node)).forEach(node=>node.classList.remove('chapter-guide-muted'));
         quiet.filter(node=>!muted.includes(node)).forEach(node=>node.classList.add('chapter-guide-muted'));
         muted=quiet;
-        return !!toolbar;
+        return !!toolbar&&dim;
     };
     const events=[];
     const record=(type,detail={})=>{events.push({sequence:++sequence,type,...detail});if(events.length>100)events.shift();};
@@ -63,6 +63,14 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
     document.addEventListener('pointerdown',()=>{pressTime=performance.now();},true);
     document.addEventListener('click',event=>{
         if(!event.isTrusted||event.detail&&performance.now()-pressTime>=550)return;
+        const button=event.target.closest('#btnToggleSimMode,#btnRandom,#btnGravitationalSort,#btnStepForward,#btnPlayPauseLife');
+        if(button&&!button.disabled){
+            const before=read();
+            setTimeout(()=>{
+                const after=read(),summary=state=>({playing:state.playing,armedSimulation:state.armedSimulation,simMode:state.simMode});
+                record('evolution-action',{id:button.id,before:summary(before),after:summary(after),changed:before.tiles.some((color,i)=>after.tiles[i]!==color)});
+            },0);
+        }
         if(event.target.closest('#btnPalette'))record('palette',{paletteIndex:read().paletteIndex});
         if(event.target.closest('#btnRandom'))record('random');
         if(event.target.closest('#palette-apply'))record('apply');
@@ -80,7 +88,7 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
         layout();
     };
     addEventListener('resize',fit);new ResizeObserver(fit).observe(document.getElementById('controlsContainer'));fit();
-    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,prepareChapterThree,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
+    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,prepareChapterThree,prepareChapterFour,pausePractice,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
         closePalette:()=>document.querySelector('#btnPaletteModalClose')?.click(),
         closePracticeModals:()=>{for(const selector of ['#colorPickerModal.modal-visible #btnColorPickerCloseTop','#resizeModal.modal-visible #btnResizeModalClose','#sortCycleDialog[open] #btnSortCycleCloseTop'])document.querySelector(selector)?.click();},
         fit

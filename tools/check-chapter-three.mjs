@@ -15,7 +15,7 @@ try{for(const config of [{width:900,height:600,lang:'he'},{width:1280,height:900
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},serviceWorkers:'block',reducedMotion:'reduce'});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'?tour=3&lang='+config.lang);await page.waitForFunction(()=>window.chapterTest?.ready);const original=await page.evaluate(()=>chapterTest.state());
- await runChapterThree(page,config);assert.deepEqual(await page.evaluate(()=>chapterTest.state()),original,'the outer board, history and preferences remain untouched');assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('colorGridChapterOneV1')).status),'complete');
+ await runChapterThree(page,config);assert.deepEqual(await page.evaluate(()=>chapterTest.state()),original,'the outer board, history and preferences remain untouched');assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('colorGridChapterOneV1')).status),'active');
  console.log('PASS chapter three',config);
  await page.goto(base+'?tour=3&lang='+config.lang);await page.waitForFunction(()=>document.querySelector('.chapter-one-tour')?.dataset.step==='source-drag');
  await page.locator('.chapter-coach [data-skip]').click();await page.waitForFunction(()=>document.querySelector('.chapter-one-tour')?.dataset.step==='load-color');
