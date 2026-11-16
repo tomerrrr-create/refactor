@@ -1,0 +1,54 @@
+// Native guided actions, first/repeat visits, reset and practice isolation.
+import {readFile,mkdir,writeFile} from 'node:fs/promises';import {createServer} from 'node:http';import path from 'node:path';import {fileURLToPath} from 'node:url';import assert from 'node:assert/strict';
+import {FTUE_STEPS} from '../js/first-time-content.js';
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright'),root=fileURLToPath(new URL('../dist/',import.meta.url)),artifacts='/tmp/ftue-check';await mkdir(artifacts,{recursive:true});
+let app=await readFile(root+'js/app.js','utf8');app=app.replace('      initializeApp();',`window.ftueTest={state:()=>({board:getCurrentState(),settings:getWorkspaceSettings(),history:history.length,logs:[...artRecipeLog]}),tech:()=>modals.openTechnicianMenu()};initializeApp().then(()=>ftueTest.ready=true);`);for(const ms of [5000,1500,2000])app=app.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
+const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':'text/html');res.end(f==='js/app.js'?app:await readFile(path.join(root,f)));}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
+try{for(const touch of [false,true].filter(t=>!process.env.FTUE_LAYOUT_ONLY&&(!process.env.FTUE_TOUCH||String(t)===process.env.FTUE_TOUCH))){
+const context=await browser.newContext({viewport:touch?{width:390,height:844}:{width:1280,height:900},isMobile:touch,hasTouch:touch,serviceWorkers:'block'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),touch?'he':'en');
+const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));const boot=async(reload=false)=>{await(reload?page.reload():page.goto(base));await page.waitForFunction(()=>window.ftueTest?.ready);};await boot();
+const intro=page.locator('.ftue-intro');await intro.waitFor({state:'visible'});const original=await page.evaluate(()=>ftueTest.state());const originalStorage=await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage)));
+await intro.locator('[data-begin]').click();await page.waitForFunction(()=>document.querySelector('.ftue-frame')?.contentWindow?.fyiPractice&&document.querySelector('.ftue-card [data-count]')?.textContent);const frame=page.frameLocator('.ftue-frame'),card=page.locator('.ftue-card');
+const tap=async locator=>{if(touch){await locator.tap();await page.waitForTimeout(100);}else await locator.click();};
+for(let index=0;index<FTUE_STEPS.length;index++){
+ const step=FTUE_STEPS[index];console.log('STEP',touch,index+1,step.id);await page.waitForFunction(index=>document.querySelector('[data-count]')?.textContent.includes(String(index+1)+' '),index);await page.waitForTimeout(180);
+ if(index===0||step.id==='play'||step.id==='magnet-options'||step.id==='done')await page.screenshot({path:`${artifacts}/${touch?'he-touch':'en'}-${step.id}.png`});
+ try{if(step.task){const [type]=step.task.split(':');
+ if(type==='paint'||type==='drag'){
+  const r=await frame.locator('#boardCanvas').boundingBox(),a={x:r.x+r.width*.3,y:r.y+r.height*.3},b={x:r.x+r.width*.6,y:r.y+r.height*.55};
+  if(touch){const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[a]});if(type==='drag')for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:a.x+(b.x-a.x)*i/5,y:a.y+(b.y-a.y)*i/5}]});await page.waitForTimeout(30);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}else{await page.mouse.move(a.x,a.y);await page.mouse.down();if(type==='drag')await page.mouse.move(b.x,b.y,{steps:5});await page.mouse.up();}
+ }else if(type==='visible'){
+  if(['palette-open','picker-open','technicians'].includes(step.id)){
+   const r=await frame.locator(step.target).boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2,dy=step.id==='palette-open'?65:-65;
+   if(touch){const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y+dy*i/5}]});await page.waitForTimeout(30);}await page.waitForTimeout(100);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}
+   else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:5});await page.mouse.up();}
+  }else await tap(card.locator('[data-helper]'));
+ }
+ else{let selector=step.taskTarget||step.target;if(step.id==='palette-choice')selector='#palette-choice-panel .palette-choice:not(.is-current)';let target=frame.locator(selector).filter({visible:true}).first();await tap(target);}
+ await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled,null,{timeout:7000});
+ }
+ await tap(card.locator('[data-next]'));
+ }catch(error){await page.screenshot({path:`${artifacts}/failure-${touch}-${step.id}.png`});throw error;}
+}
+await page.locator('.ftue-root').waitFor({state:'detached'});const after=await page.evaluate(()=>ftueTest.state());assert.deepEqual(after,original,'practice must preserve original artwork, settings, history and recording');
+const afterStorage=await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage)));
+for(const [key,value]of Object.entries(originalStorage))assert.equal(afterStorage[key],value,'practice cannot alter preference '+key);
+assert.equal(JSON.parse(afterStorage.colorGridFirstTimeExperienceV1).status,'complete');await boot(true);assert.equal(await page.locator('.ftue-root').count(),0,'completed tour must not open again');
+// Reset is in Technicians and schedules the next visit, without resetting art/preferences.
+await page.evaluate(()=>ftueTest.tech());await page.locator('[data-reset-ftue]').click();assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridFirstTimeExperienceV1')),null);await boot(true);await intro.waitFor({state:'visible'});await intro.locator('[data-later]').click();await boot(true);assert.equal(await page.locator('.ftue-root').count(),0,'dismissed welcome must not repeat');
+// Replay can open above a native settings dialog; exit releases focus and frame.
+await page.evaluate(()=>ftueTest.tech());await page.locator('#technicianDialog [data-open-ftue]').click();await intro.waitFor({state:'visible'});await intro.locator('[data-begin]').click();await page.waitForFunction(()=>document.querySelector('.ftue-frame')?.contentWindow?.fyiPractice&&document.querySelector('.ftue-card [data-count]')?.textContent);assert(await page.locator('.ftue-card [data-skip]').isHidden());await page.locator('.ftue-card [data-next]').click();await page.keyboard.press('Escape');assert.equal(await page.locator('.ftue-frame').count(),0);
+await boot(true);assert.equal(await page.locator('.ftue-root').count(),0);await page.evaluate(()=>ftueTest.tech());await page.locator('#technicianDialog [data-open-ftue]').click();await intro.locator('[data-begin]').click();await page.waitForFunction(()=>document.querySelector('.ftue-frame')?.contentWindow?.fyiPractice&&document.querySelector('.ftue-card [data-count]')?.textContent);await page.waitForFunction(()=>document.querySelector('[data-count]').textContent.includes('2 '));assert(await page.locator('.ftue-card [data-next]').isDisabled());await page.locator('.ftue-card [data-skip]').click();await page.waitForFunction(()=>document.querySelector('[data-count]').textContent.includes('3 '));await page.locator('.ftue-card [data-exit]').click();
+
+assert.deepEqual(errors,[]);console.log('PASS FTUE',JSON.stringify({touch,steps:FTUE_STEPS.length,firstVisit:true,completion:true,reset:true,replay:true,isolated:true}));await context.close();
+}
+if(!process.env.FTUE_TOUCH)for(const viewport of [{width:320,height:568},{width:844,height:390}]){
+ const context=await browser.newContext({viewport,isMobile:viewport.width<600,hasTouch:true,serviceWorkers:'block',reducedMotion:'reduce'});await context.addInitScript(()=>localStorage.setItem('userLanguage','he'));
+ const page=await context.newPage();await page.goto(base);await page.waitForFunction(()=>window.ftueTest?.ready);await page.locator('[data-ftue-language]').selectOption('en');assert.equal(await page.locator('.ftue-root').getAttribute('dir'),'ltr');await page.locator('[data-ftue-language]').selectOption('he');assert.equal(await page.locator('.ftue-root').getAttribute('dir'),'rtl');await page.locator('[data-begin]').click();await page.waitForFunction(()=>document.querySelector('.ftue-frame')?.contentWindow?.fyiPractice&&document.querySelector('.ftue-card [data-count]')?.textContent);
+ const frame=page.frameLocator('.ftue-frame'),card=page.locator('.ftue-card');await card.locator('[data-chapter]').selectOption('motion');await frame.locator('#btnToggleSimMode').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();
+ await card.locator('[data-chapter]').selectOption('colors');await frame.locator('#btnPalette').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();await card.locator('[data-helper]').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();await card.locator('[data-next]').click();await frame.locator('#palette-choice-panel .palette-choice:not(.is-current)').first().click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);
+ await card.locator('[data-chapter]').selectOption('save');await card.locator('[data-helper]').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();await card.locator('[data-next]').click();await frame.locator('#saveImageOptions summary').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);
+ await page.screenshot({path:`${artifacts}/layout-${viewport.width}x${viewport.height}.png`});assert(await card.evaluate(e=>{const r=e.getBoundingClientRect();return r.x>=0&&r.right<=innerWidth&&r.y>=0&&r.bottom<=innerHeight+1;}));await page.keyboard.press('Escape');assert.equal(await page.locator('.ftue-root').count(),0);console.log('PASS FTUE layout',JSON.stringify(viewport));await context.close();
+}
+}finally{await browser.close();await new Promise(r=>server.close(r));}
