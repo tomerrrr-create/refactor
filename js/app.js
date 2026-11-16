@@ -1,3 +1,4 @@
+import {CHAPTER_FIVE_ENGINES} from './chapter-five-tour.js';
 import {isChapterOnePractice,installChapterOnePractice} from './chapter-one-practice.js';
 import {initializeChapterOne} from './chapter-one-tour.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
@@ -416,6 +417,7 @@ let magnetMode = 'off';
       let evolutionDrawer;
       const experimentalSimulations=createExperimentalSimulationFlags();
       let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
+      let practiceEvolutionScope=null;
       let modals;
       let settingsProfiles;
 
@@ -3045,6 +3047,7 @@ const windRecordingEpoch = Date.now().toString(36);
 const nextWindBatchId = () => `wind-${windRecordingEpoch}-${++windBatchSerial}`;
 let windSettings = loadWindSettings();
 function recordLiveWindWave(wave, config) {
+    if(isChapterOnePractice)window.chapterOnePractice?.observe('wave-created',{playing:isLifePlaying,windEffect:windSettings.mode});
     if (!windBatch) windBatch = { id: nextWindBatchId(), time: wave.time };
     window.logArtEvent('WIND_WAVE', JSON.stringify(recordWindWave(wave, config, windBatch.id,
         Math.max(0, wave.time - windBatch.time))));
@@ -3117,7 +3120,8 @@ function initializeWindMode() {
         event.preventDefault(); event.stopPropagation(); setWindMode(false);
     }, true);
     document.addEventListener('visibilitychange', () => { if (document.hidden) { finishBrushGesture(); if (windMode) setWindMode(false); } });
-    window.addEventListener('blur', () => { finishBrushGesture(); if (windMode) setWindMode(false); });
+    // Moving focus to the tutorial coach is still part of the same interaction.
+    window.addEventListener('blur', () => { finishBrushGesture(); if (windMode&&(!isChapterOnePractice||!window.parent.document.hasFocus())) setWindMode(false); });
     windSettingsUI = createWindSettingsDialog({ getText, getLang: getCurrentLang, onLanguageChange,
         getSettings: () => windSettings, onSave: settings => { windSettings = settings; saveWindSettings(settings); updateColorPickerButtonUI(); },
         onOpen: () => windPainter.stop(), trigger: dom.btnWind });
@@ -3174,6 +3178,7 @@ function resumeBrushCheckpoint(record) {
 // Only brush targets enter this map. Simulation generations are never diffed
 // against a pointer-down snapshot or serialized as part of a brush sample.
 function flushLiveBrushChanges() {
+    if(isChapterOnePractice&&pointerState.changes?.size)window.chapterOnePractice?.observe('brush-applied',{playing:isLifePlaying,selectedColorIndex,windMode});
     if (pointerState.changes?.size && armedSimulation === 'contour' && contourMode === 'cracks') {
         cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, cracksBrush:getCracksBrush(), contourRules: { ...contourRules, lineColor:'brush', material: getCracksMaterial(), growth:getCracksGrowth() } },
             cracksState, pointerState.changes.values());
@@ -6216,7 +6221,7 @@ updateBrightnessEvoButtonUI();
             }
         });
         evolutionDrawer = createEvolutionDrawer({
-            isVisible:experimentalSimulations.visible,
+            isVisible:id=>experimentalSimulations.visible(id)&&(!practiceEvolutionScope||practiceEvolutionScope.has(id)),
             controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
             canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
@@ -6529,8 +6534,32 @@ dom.btnWind.addEventListener('keydown', event => {
                         gsMode='up';gravitationalSortRules.direction='up';armSimulation('gravitationalSort');updateGravitationalSortButtonUI();
                     }
                 },
-                pausePractice:pauseLife,
-                read:()=>({n,generation:currentGenerationCount,playEnabled:!dom.btnPlayPauseLife.disabled,stepEnabled:!dom.btnStepForward.disabled,brushMode:isContinuousBrushOn?'continuous':isBrushModeOn?'paint':'copy',resizeIncreasing,simMode:isSimModeActive,armedSimulation,richPaletteIndex:C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD'),sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
+                prepareChapterFive:async(step,{resume=false}={})=>{
+                    if(step!=='live-explore'&&practiceEvolutionScope){practiceEvolutionScope=null;evolutionSlots=[...DEFAULT_EVOLUTION_LAYOUT];evolutionDrawer.applyLayout();}
+                    const needed=step==='live-islands'?dom.btnIslands:['live-gravity','live-variation','live-sort-one','live-sort-two'].includes(step)?dom.btnGravitationalSort:null;
+                    if(needed?.hasAttribute('data-evolution-page-hidden'))evolutionDrawer.trigger.click();
+                    if(resume||n!==249||paletteLen()<264||!isSimModeActive){
+                        pauseLife();
+                        if(n!==249||paletteLen()<264){
+                            if(paletteLen()<264){activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD');updatePaletteHeader();}
+                            _performResize(249);restoreSeparatorWidth(0);fillRandom();
+                        }
+                        if(!isSimModeActive){toggleSimMode();await new Promise(resolve=>setTimeout(resolve,550));}
+                        gsMode='up';gravitationalSortRules.direction='up';armSimulation('gravitationalSort');updateGravitationalSortButtonUI();
+                        if(step==='live-gravity')armSimulation('islands');
+                        if(['live-wave','live-brush-return'].includes(step)){windSettings=selectWindMode(windSettings,'ripple');setWindMode(true);}
+                    }
+                    if(step==='live-play'&&windMode)setWindMode(false);
+                    if(['live-brush','live-draw'].includes(step)){setBrushMode(true,true);if(brushSize<3)brushSize=7;updateColorPickerButtonUI();}
+                    if(step==='live-explore'){
+                        practiceEvolutionScope=new Set(CHAPTER_FIVE_ENGINES);experimentalSimulations.set('network',true);
+                        const available=[...CHAPTER_FIVE_ENGINES,...EVOLUTION_CATALOG.filter(entry=>!practiceEvolutionScope.has(entry.id)).map(entry=>entry.id)],slots=Array(20).fill(null);
+                        for(let i=0;i<20&&available.length;i++)if(i!==7&&i!==17)slots[i]=available.shift();
+                        evolutionSlots=slots;evolutionDrawer.applyLayout();
+                    }
+                },
+                pausePractice:()=>{if(windMode)setWindMode(false);pauseLife();},
+                read:()=>({n,initializations:artRecipeLog.filter(line=>line.includes('INIT_STATE ->')).length,windMode,windEffect:windSettings.mode,gravityMode:gsMode,islandsMode:armedSimulation==='islands'?(islandsSession?.mode||'classic'):'off',sortName:getText('startup_sort_'+currentSortMethod),engineName:armedSimulation?getText(EVOLUTION_CATALOG.find(e=>e.id===armedSimulation||e.id==='nudgeBrighter'&&armedSimulation==='nudgeDarker')?.key||'help_gravitationalSort').split('\n')[0]:'',generation:currentGenerationCount,playEnabled:!dom.btnPlayPauseLife.disabled,stepEnabled:!dom.btnStepForward.disabled,brushMode:isContinuousBrushOn?'continuous':isBrushModeOn?'paint':'copy',resizeIncreasing,simMode:isSimModeActive,armedSimulation,richPaletteIndex:C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD'),sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
                 tileAt:getTileIndexFromCoords,openPalette:()=>modals.openPaletteModal(),layout:updateLayout
             });
             splashScreen.remove();return;

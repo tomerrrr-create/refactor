@@ -15,7 +15,7 @@ try{for(const config of [{width:900,height:600,lang:'he'},{width:1280,height:900
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},serviceWorkers:'block',reducedMotion:'reduce'});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'?tour=4&lang='+config.lang);await page.waitForFunction(()=>window.chapterTest?.ready);const original=await page.evaluate(()=>chapterTest.state());
- await runChapterFour(page,config);assert.deepEqual(await page.evaluate(()=>chapterTest.state()),original,'outer artwork, preferences and history remain untouched');assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('colorGridChapterOneV1')).status),'complete');
+ await runChapterFour(page,config);assert.deepEqual(await page.evaluate(()=>chapterTest.state()),original,'outer artwork, preferences and history remain untouched');assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('colorGridChapterOneV1')).status),'active');
  console.log('PASS chapter four',config);
  // A resumed Pause lesson must never start playback without a user action.
  await page.evaluate(()=>localStorage.setItem('colorGridChapterOneV1',JSON.stringify({version:1,status:'active',step:'evolution-pause'})));await page.goto(base);

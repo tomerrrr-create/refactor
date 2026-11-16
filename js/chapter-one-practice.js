@@ -10,7 +10,7 @@ if (isChapterOnePractice) {
     }});
 }
 
-export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder, prepareChapterThree, prepareChapterFour, pausePractice}) {
+export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder, prepareChapterThree, prepareChapterFour, prepareChapterFive, pausePractice}) {
     let sequence=0, down=null;
     let guided=[],muted=[];
     const guide=(target,{dim=true}={})=>{
@@ -43,7 +43,7 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
             const direction=Math.abs(dy)>=24&&Math.abs(dy)>=Math.abs(dx)*1.25?(dy<0?'up':'down'):Math.abs(dx)>=24&&Math.abs(dx)>=Math.abs(dy)*2?(dx<0?'left':'right'):distance<8?(duration>=600?'hold':'tap'):null;
             if(direction)setTimeout(()=>{
                 const state=read();
-                const summary={selectedColorIndex:state.selectedColorIndex,rainbow:state.rainbow,brushSize:state.brushSize,symmetryMode:state.symmetryMode};
+                const summary={selectedColorIndex:state.selectedColorIndex,rainbow:state.rainbow,brushSize:state.brushSize,symmetryMode:state.symmetryMode,playing:state.playing};
                 record('control-gesture',{id:start.id,direction,duration,state:summary});
                 if(start.id==='btnCycleSort'&&direction==='hold')record('sort-hold',{sortMethod:state.sortMethod});
             },0);
@@ -52,7 +52,7 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
         const index=tileAt(event.clientX,event.clientY);if(index<0)return;
         setTimeout(()=>{
             const state=read(),before=start.before;
-            const detail={index,color:state.tiles[index],sortMethod:state.sortMethod,selectedColorIndex:before.selectedColorIndex,rainbow:before.rainbow,brushMode:before.brushMode,symmetryMode:before.symmetryMode,n:before.n,changed:state.tiles.some((color,i)=>color!==before.tiles[i])};
+            const detail={index,color:state.tiles[index],sortMethod:state.sortMethod,selectedColorIndex:before.selectedColorIndex,rainbow:before.rainbow,brushMode:before.brushMode,symmetryMode:before.symmetryMode,n:before.n,playing:before.playing,windMode:before.windMode,changed:state.tiles.some((color,i)=>color!==before.tiles[i])};
             if(Math.max(distance,start.travel||0)>=8&&start.index>=0){
                 record('stroke',{...detail,from:start.index,sourceColor:before.tiles[start.index],sourceAfter:state.tiles[start.index]});
             }else if(duration<550&&distance<8)record('tile',detail);
@@ -63,11 +63,11 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
     document.addEventListener('pointerdown',()=>{pressTime=performance.now();},true);
     document.addEventListener('click',event=>{
         if(!event.isTrusted||event.detail&&performance.now()-pressTime>=550)return;
-        const button=event.target.closest('#btnToggleSimMode,#btnRandom,#btnGravitationalSort,#btnStepForward,#btnPlayPauseLife');
+        const button=event.target.closest('#btnToggleSimMode,#btnRandom,#btnGravitationalSort,#btnStepForward,#btnPlayPauseLife,#btnCycleSort,#btnIslands,#btnWind');
         if(button&&!button.disabled){
             const before=read();
             setTimeout(()=>{
-                const after=read(),summary=state=>({playing:state.playing,armedSimulation:state.armedSimulation,simMode:state.simMode});
+                const after=read(),summary=state=>({playing:state.playing,armedSimulation:state.armedSimulation,simMode:state.simMode,sortMethod:state.sortMethod,gravityMode:state.gravityMode,windMode:state.windMode});
                 record('evolution-action',{id:button.id,before:summary(before),after:summary(after),changed:before.tiles.some((color,i)=>after.tiles[i]!==color)});
             },0);
         }
@@ -88,7 +88,7 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
         layout();
     };
     addEventListener('resize',fit);new ResizeObserver(fit).observe(document.getElementById('controlsContainer'));fit();
-    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,prepareChapterThree,prepareChapterFour,pausePractice,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
+    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,prepareChapterThree,prepareChapterFour,prepareChapterFive,pausePractice,observe:record,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
         closePalette:()=>document.querySelector('#btnPaletteModalClose')?.click(),
         closePracticeModals:()=>{for(const selector of ['#colorPickerModal.modal-visible #btnColorPickerCloseTop','#resizeModal.modal-visible #btnResizeModalClose','#sortCycleDialog[open] #btnSortCycleCloseTop'])document.querySelector(selector)?.click();},
         fit
