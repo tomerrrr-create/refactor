@@ -1,3 +1,5 @@
+import {isChapterOnePractice,installChapterOnePractice} from './chapter-one-practice.js';
+import {initializeChapterOne} from './chapter-one-tour.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
@@ -6475,6 +6477,22 @@ dom.btnWind.addEventListener('keydown', event => {
         window.addEventListener('resize', updateLayout);
         window.addEventListener('contextmenu', e => e.preventDefault());
         
+        if (isChapterOnePractice) {
+            pauseLife();if(isSimModeActive)toggleSimMode();resetArmedState();
+            n=21;activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Journey');
+            currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,currentSortMethod));
+            restoreSeparatorWidth(1);initializeBoardAndCanvas(true);fillRandom();
+            selectedColorIndex=-1;selectedColor=null;isRainbowModeActive=false;
+            brushSize=1;brushShape='circle';symmetryMode='off';setBrushMode(true,true);
+            hasPerformedInitialAutofill=true;hasUsedRandomize=true;hasTriggeredFirstNudge=true;
+            history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();
+            updatePaletteHeader();updateSortButtonUI();updateColorPickerButtonUI();updateSymmetryUI();updateUndoRedoButtons();
+            installChapterOnePractice({
+                read:()=>({n,paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
+                tileAt:getTileIndexFromCoords,openPalette:()=>modals.openPaletteModal(),layout:updateLayout
+            });
+            splashScreen.remove();return;
+        }
         splashText.style.animation = 'fadeInText 2.5s linear forwards';
         dom.btnPalette.classList.add('splash-palette-reveal');
         await new Promise(r => setTimeout(r, 5000));
@@ -6484,6 +6502,7 @@ dom.btnWind.addEventListener('keydown', event => {
         await new Promise(r => setTimeout(r, 2000));
         splashScreen.remove();
         dom.btnPalette.classList.remove('splash-palette-reveal');
+        initializeChapterOne({beforeStart:()=>{if(isMacroPlaying)pauseMacro();finishBrushGesture();pauseLife();if(windMode)setWindMode(false);}});
       }
 
       initializeApp();

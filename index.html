@@ -609,6 +609,7 @@
         <p id="helpIntroText" class="text-base text-gray-400 italic text-center mb-6"></p>
 
         <button type="button" class="quick-start-entry" data-open-guide aria-haspopup="dialog" aria-controls="quickStartDialog"></button>
+        <button type="button" class="chapter-one-entry" data-chapter-one-open hidden></button>
         <div id="helpTabs" class="help-tabs" role="tablist" aria-label="Help topics">
           <button id="helpTabCreation" type="button" role="tab" data-help-tab="creation" aria-controls="helpPanelCreation" aria-selected="true" data-debug-text="help_tab_creation"></button>
           <button id="helpTabEvolution" type="button" role="tab" data-help-tab="evolution" aria-controls="helpPanelEvolution" aria-selected="false" tabindex="-1" data-debug-text="help_tab_evolution"></button>
@@ -699,6 +700,11 @@
       <p id="technicianSubtitle" data-debug-text="debug_subtitle"></p>
     </header>
     <div id="technicianSettingsScroll" class="technician-panel">
+      <div class="chapter-one-entries">
+        <button type="button" class="chapter-one-entry" data-chapter-one-open hidden></button>
+        <button type="button" class="chapter-one-entry" data-chapter-one-reset hidden></button>
+        <p data-chapter-one-reset-status role="status"></p>
+      </div>
       <section id="profileControls" class="profile-controls" aria-label="Profiles" data-i18n-label="profiles_title" aria-labelledby="technicianProfilesTitle">
         <h3 id="technicianProfilesTitle" class="technician-group-title" data-debug-text="profiles_title">Profiles</h3>
         <div class="profile-buttons">
