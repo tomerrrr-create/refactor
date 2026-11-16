@@ -10,7 +10,7 @@ if (isChapterOnePractice) {
     }});
 }
 
-export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder}) {
+export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder, prepareChapterThree}) {
     let sequence=0, down=null;
     let guided=[],muted=[];
     const guide=target=>{
@@ -30,18 +30,33 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
     const events=[];
     const record=(type,detail={})=>{events.push({sequence:++sequence,type,...detail});if(events.length>100)events.shift();};
     document.addEventListener('pointerdown',event=>{
-        if(event.button===0)down={x:event.clientX,y:event.clientY,time:performance.now(),sort:!!event.target.closest('#btnCycleSort'),board:!!event.target.closest('#boardCanvas')};
+        if(event.button!==0)return;
+        const board=!!event.target.closest('#boardCanvas'),control=event.target.closest('.ctrl');
+        down={swatch:event.target.closest('#colorPickerSwatches [data-color]')?.dataset.color,x:event.clientX,y:event.clientY,time:performance.now(),board,id:control?.id,before:board?read():null,index:board?tileAt(event.clientX,event.clientY):-1};
     },true);
+    document.addEventListener('pointermove',event=>{if(down?.board)down.travel=Math.max(down.travel||0,Math.hypot(event.clientX-down.x,event.clientY-down.y));},true);
     document.addEventListener('pointerup',event=>{
-        const start=down;down=null;
-        if(start?.sort&&performance.now()-start.time>=600&&Math.hypot(event.clientX-start.x,event.clientY-start.y)<8){
-            setTimeout(()=>record('sort-hold',{sortMethod:read().sortMethod}),0);
+        const start=down;down=null;if(!start)return;
+        const dx=event.clientX-start.x,dy=event.clientY-start.y,distance=Math.hypot(dx,dy),duration=performance.now()-start.time;
+        if(start.swatch)setTimeout(()=>{const state=read();if(!state.rainbow&&state.colors[state.selectedColorIndex]===start.swatch)record('color-select');},0);
+        if(start.id){
+            const direction=Math.abs(dy)>=24&&Math.abs(dy)>=Math.abs(dx)*1.25?(dy<0?'up':'down'):Math.abs(dx)>=24&&Math.abs(dx)>=Math.abs(dy)*2?(dx<0?'left':'right'):distance<8?(duration>=600?'hold':'tap'):null;
+            if(direction)setTimeout(()=>{
+                const state=read();
+                const summary={selectedColorIndex:state.selectedColorIndex,rainbow:state.rainbow,brushSize:state.brushSize,symmetryMode:state.symmetryMode};
+                record('control-gesture',{id:start.id,direction,duration,state:summary});
+                if(start.id==='btnCycleSort'&&direction==='hold')record('sort-hold',{sortMethod:state.sortMethod});
+            },0);
         }
-        if(!start?.board||performance.now()-start.time>=550||Math.hypot(event.clientX-start.x,event.clientY-start.y)>=8)return;
-        const index=tileAt(event.clientX,event.clientY);
-        if(index<0)return;
-        // Observe the result after the application's own pointerup handler.
-        setTimeout(()=>record('tile',{index,color:read().tiles[index],sortMethod:read().sortMethod}),0);
+        if(!start.board)return;
+        const index=tileAt(event.clientX,event.clientY);if(index<0)return;
+        setTimeout(()=>{
+            const state=read(),before=start.before;
+            const detail={index,color:state.tiles[index],sortMethod:state.sortMethod,selectedColorIndex:before.selectedColorIndex,rainbow:before.rainbow,brushMode:before.brushMode,symmetryMode:before.symmetryMode,n:before.n,changed:state.tiles.some((color,i)=>color!==before.tiles[i])};
+            if(Math.max(distance,start.travel||0)>=8&&start.index>=0){
+                record('stroke',{...detail,from:start.index,sourceColor:before.tiles[start.index],sourceAfter:state.tiles[start.index]});
+            }else if(duration<550&&distance<8)record('tile',detail);
+        },0);
     },true);
     document.addEventListener('pointercancel',()=>{down=null;},true);
     let pressTime=0;
@@ -51,6 +66,8 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
         if(event.target.closest('#btnPalette'))record('palette',{paletteIndex:read().paletteIndex});
         if(event.target.closest('#btnRandom'))record('random');
         if(event.target.closest('#palette-apply'))record('apply');
+        if(event.target.closest('#colorPickerSwatches .color-swatch'))record('color-select');
+        if(event.target.closest('#brushSizeOptions button'))record('brush-size-select');
     },true);
     const visible=selector=>[...document.querySelectorAll(selector)].find(element=>{
         const r=element.getBoundingClientRect(),s=getComputedStyle(element);
@@ -63,8 +80,9 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
         layout();
     };
     addEventListener('resize',fit);new ResizeObserver(fit).observe(document.getElementById('controlsContainer'));fit();
-    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
+    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,prepareChapterThree,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
         closePalette:()=>document.querySelector('#btnPaletteModalClose')?.click(),
+        closePracticeModals:()=>{for(const selector of ['#colorPickerModal.modal-visible #btnColorPickerCloseTop','#resizeModal.modal-visible #btnResizeModalClose','#sortCycleDialog[open] #btnSortCycleCloseTop'])document.querySelector(selector)?.click();},
         fit
     };
 }

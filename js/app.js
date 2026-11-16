@@ -6490,7 +6490,35 @@ dom.btnWind.addEventListener('keydown', event => {
             updatePaletteHeader();updateSortButtonUI();updateColorPickerButtonUI();updateSymmetryUI();updateUndoRedoButtons();
             installChapterOnePractice({
                 prepareOrder:()=>{selectedColorIndex=-1;selectedColor=null;isRainbowModeActive=false;brushSize=1;symmetryMode='off';setBrushMode(true,true);selectSortMethod('luminance');updateColorPickerButtonUI();updateSymmetryUI();},
-                read:()=>({n,sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
+                prepareChapterThree:(step,{resume=false}={})=>{
+                    if(['source-drag','paint-try','brush-right','brush-left','brush-first','brush-rainbow','single-color'].includes(step))setBrushMode(true,true);
+                    if(step==='source-drag'){
+                        if(isSimModeActive)toggleSimMode();
+                        resetSelectedColor();brushSize=1;symmetryMode='off';setBrushMode(true,true);updateSymmetryUI();
+                    }
+                    if(step==='sym-off'||resume&&step.startsWith('sym-')){
+                        setBrushMode(true,true);
+                        if(selectedColorIndex<0||isRainbowModeActive){isRainbowModeActive=false;selectedColorIndex=paletteLen()-1;selectedColor=palette()[selectedColorIndex];}
+                        const modes=['off','vertical','horizontal','mandala','kaleidoscope'];
+                        const requested=step.replace('sym-','');
+                        symmetryMode=step==='sym-off'?'off':modes[Math.max(0,modes.indexOf(requested)-1)];
+                        updateSymmetryUI();updateColorPickerButtonUI();
+                    }
+                    if(resume&&['paint-try','cycle-color'].includes(step)){
+                        selectedColorIndex=paletteLen()-1;selectedColor=palette()[selectedColorIndex];isRainbowModeActive=false;updateColorPickerButtonUI();
+                    }
+                    if(step==='resize-grow'){resizeIncreasing=true;updateResizeButtonUI();}
+                    if(resume&&step==='resize-plus'){resizeIncreasing=false;updateResizeButtonUI();}
+                    if(resume&&['resize-dialog','resize-minus','resize-plus','palette-rich'].includes(step)&&n!==27)_performResize(27);
+                    if(step==='prepare-large'||step==='free-draw'){
+                        simulationInitSettings={boardSize:249,brushSize:7,brushColor:'lightest'};
+                        selectSortMethod('luminance');
+                        if(resume&&paletteLen()<264){activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD');updatePaletteHeader();}
+                        if(resume&&step==='free-draw'){if(!isSimModeActive)toggleSimMode();prepareBoardForSimMode();}
+                    }
+                    updateColorPickerButtonUI();
+                },
+                read:()=>({n,brushMode:isContinuousBrushOn?'continuous':isBrushModeOn?'paint':'copy',resizeIncreasing,simMode:isSimModeActive,armedSimulation,richPaletteIndex:C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD'),sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
                 tileAt:getTileIndexFromCoords,openPalette:()=>modals.openPaletteModal(),layout:updateLayout
             });
             splashScreen.remove();return;

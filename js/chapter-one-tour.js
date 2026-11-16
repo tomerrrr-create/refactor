@@ -1,9 +1,10 @@
+import {CHAPTER_THREE_STEPS,chapterThreeView,chapterThreeCopy} from './chapter-three-tour.js';
 import {CHAPTER_TWO_STEPS,CHAPTER_TWO_ORDERS,chapterTwoCopy,renderOrderStrip,orderPracticeProgress} from './chapter-two-tour.js';
 import {getCurrentLang,onLanguageChange,setCurrentLang} from './i18n.js';
 
 export const CHAPTER_ONE_KEY='colorGridChapterOneV1';
 export const CHAPTER_ONE_STEPS=['intro','palette','picker','random','tile'];
-const TOUR_STEPS=[...CHAPTER_ONE_STEPS,...CHAPTER_TWO_STEPS];
+const TOUR_STEPS=[...CHAPTER_ONE_STEPS,...CHAPTER_TWO_STEPS,...CHAPTER_THREE_STEPS];
 const TEXT={
  he:{chapter:'פרק 1 · הלוח והפלטה',intro:'לוח של ריבועים',introBody:'זה הלוח שלכם. כל ריבוע מחזיק צבע. בואו נראה מה אפשר לעשות איתו.',palette:'הצבעים מגיעים מפלטה',paletteBody:'לחצו על כפתור הפלטה כדי לנסות צבעים אחרים.',picker:'בוחרים מתוך האוסף',pickerOpen:'החליקו את כפתור הפלטה למטה כדי לפתוח את האוסף.',pickerChoose:'בחרו פלטה אחרת מתוך האוסף.',pickerApply:'לחצו על החלה כדי לראות את הבחירה על הלוח.',pickerDone:'אותו לוח, בצבעים שבחרתם.',random:'ערבוב חדש',randomBody:'לחצו על אקראי כדי לקבל ערבוב חדש של צבעי הפלטה על הלוח.',tile:'לחיצה משנה צבע',tileBody:'לחצו על ריבוע וראו איך הצבע שלו משתנה. לחצו עליו עוד כמה פעמים.',tileDone:'כל לחיצה מקדמת את המשבצת לצבע הבא.',paletteMore:'הצבעים השתנו. לחצו שוב על כפתור הפלטה.',paletteDone:'אותו לוח, פלטה אחרת.',randomDone:'הצבעים התערבבו מחדש.',sameTile:'המשיכו ללחוץ על אותה משבצת.',start:'מתחילים',next:'המשך',finish:'סיום הפרק',back:'הקודם',skip:'דלגו',exit:'יציאה מההדרכה',open:'פתיחת אוסף הפלטות',loading:'מכינים את הלוח…',error:'הלוח לא נטען. אפשר לסגור ולנסות שוב.',replay:'הדרכת כניסה ראשונה · פרק 1',reset:'הצגת פרק 1 בכניסה הבאה',resetDone:'ההדרכה תוצג בכניסה הבאה.',practice:'לוח ההדרכה',step:'חלק'},
  en:{chapter:'Chapter 1 · The board and palette',intro:'A board of squares',introBody:'This is your board. Every square holds a color. Let’s see what you can do with it.',palette:'Colors come from a palette',paletteBody:'Click the palette button to try different colors.',picker:'Choose from the collection',pickerOpen:'Drag the palette button downward to open the collection.',pickerChoose:'Choose a different palette from the collection.',pickerApply:'Click Apply to see your choice on the board.',pickerDone:'The same board, in your chosen colors.',random:'A fresh mix',randomBody:'Click Random to fill the board with a fresh mix of palette colors.',tile:'A click changes color',tileBody:'Click a square and watch its color change. Click the same square a few more times.',tileDone:'Every click advances the square to the next color.',paletteMore:'The colors changed. Click the palette button again.',paletteDone:'The same board, a different palette.',randomDone:'The colors have been mixed again.',sameTile:'Keep clicking the same square.',start:'Let’s begin',next:'Continue',finish:'Finish chapter',back:'Back',skip:'Skip',exit:'Exit lesson',open:'Open the palette collection',loading:'Preparing your board…',error:'The board could not load. Close the lesson and try again.',replay:'First visit · Chapter 1',reset:'Show chapter 1 on the next visit',resetDone:'The lesson will appear on your next visit.',practice:'Lesson board',step:'Part'}
@@ -34,19 +35,20 @@ export function initializeChapterOne({beforeStart}){
     let progress=readChapterOneProgress(storage),session=null;
     const entries=[...document.querySelectorAll('[data-chapter-one-open]')],reset=document.querySelector('[data-chapter-one-reset]');
     const persist=(status,step)=>{progress={version:1,status,step};try{storage.setItem(CHAPTER_ONE_KEY,JSON.stringify(progress));}catch{/* Lesson remains usable without persistence. */}};
-    const refresh=()=>{entries.forEach(e=>{e.textContent=chapterTwoCopy(getCurrentLang()).replay;e.hidden=!desktop();});if(reset){reset.textContent=chapterTwoCopy(getCurrentLang()).reset;reset.hidden=!desktop();}};
+    const refresh=()=>{entries.forEach(e=>{e.textContent=chapterThreeCopy(getCurrentLang()).replay;e.hidden=!desktop();});if(reset){reset.textContent=chapterTwoCopy(getCurrentLang()).reset;reset.hidden=!desktop();}};
     function close(status){
         const s=session;if(!s)return;persist(status||(s.index===0?'dismissed':'active'),TOUR_STEPS[s.index]);
         clearInterval(s.timer);clearTimeout(s.timeout);s.root.close();s.root.remove();session=null;
         s.trigger?.focus({preventScroll:true});
     }
-    function show(index){
+    function show(index,{resume=false}={}){
         const s=session;if(!s?.bridge)return;
         const previous=sameSquareRun(s.bridge.events(s.cursor||0));if(previous.index!==null)s.focusTile=previous.index;
         if(index===5)s.bridge.prepareOrder();
-        s.index=index;s.cursor=s.bridge.cursor();s.done=index===0;s.paletteChanges=0;s.lastPalette=s.bridge.read().paletteIndex;s.startTiles=s.bridge.read().tiles.join(',');s.pickerApplied=false;s.sortManagerOpened=false;
+        s.index=index;s.cursor=s.bridge.cursor();s.done=index===0;s.paletteChanges=0;s.lastPalette=s.bridge.read().paletteIndex;s.startTiles=s.bridge.read().tiles.join(',');s.pickerApplied=false;s.sortManagerOpened=false;s.three={};
         if(index!==2)s.bridge.closePalette();
-        s.bridge.visible('#sortCycleDialog[open] #btnSortCycleCloseTop')?.click();
+        s.bridge.closePracticeModals();
+        if(CHAPTER_THREE_STEPS.includes(TOUR_STEPS[index]))s.bridge.prepareChapterThree(TOUR_STEPS[index],{resume});
         persist('active',TOUR_STEPS[index]);s.root.dataset.step=TOUR_STEPS[index];
         update();s.card.querySelector('h2').focus({preventScroll:true});
     }
@@ -70,7 +72,7 @@ export function initializeChapterOne({beforeStart}){
             if(session!==s)return;
             if(!s.bridge){const bridge=frame.contentWindow?.chapterOnePractice;if(!bridge)return;s.bridge=bridge;clearTimeout(s.timeout);
                 frame.contentDocument.addEventListener('keydown',event=>{if(event.key==='Escape'&&!bridge.visible('.modal-visible,dialog[open]')){event.preventDefault();close();}},true);
-                show(index);}
+                show(index,{resume:true});}
             update();
         },80);
         s.timeout=setTimeout(()=>{if(session===s&&!s.bridge)card.querySelector('h2').textContent=c.error;},20000);
@@ -97,7 +99,7 @@ export function initializeChapterOne({beforeStart}){
         }else if(id==='tile'){
             const run=sameSquareRun(events);s.done=s.done||run.count>=3;target=b.visible('#boardCanvas');status=s.done?c.tileDone:run.count?c.sameTile:'';
         }
-        const orderIndex=s.index-5,orderStep=orderIndex>=0,two=chapterTwoCopy(getCurrentLang());
+        const orderIndex=s.index-5,thirdIndex=CHAPTER_THREE_STEPS.indexOf(id),thirdStep=thirdIndex>=0,orderStep=orderIndex>=0&&!thirdStep,two=chapterTwoCopy(getCurrentLang()),three=chapterThreeCopy(getCurrentLang());
         const orderHost=s.card.querySelector('[data-order]');orderHost.hidden=!orderStep;
         if(orderStep&&orderIndex<CHAPTER_TWO_ORDERS.length){
             const method=CHAPTER_TWO_ORDERS[orderIndex],ready=state.sortMethod===method;
@@ -121,15 +123,19 @@ export function initializeChapterOne({beforeStart}){
             orderHost.hidden=true;
             target=b.visible(s.done?'#boardCanvas':modal?'#btnSortCycleCloseTop':'#btnCycleSort');
         }
-        const card=s.card;card.querySelector('[data-chapter]').textContent=orderStep?two.chapter:c.chapter;
-        card.querySelector('.chapter-count').textContent=`${c.step} ${orderStep?orderIndex+1:s.index+1} ${getCurrentLang()==='he'?'מתוך':'of'} ${orderStep?CHAPTER_TWO_STEPS.length:5}`;
-        card.querySelector('progress').max=orderStep?CHAPTER_TWO_STEPS.length:5;
-        card.querySelector('progress').value=orderStep?orderIndex+1:s.index+1;card.querySelector('progress').setAttribute('aria-label',orderStep?two.chapter:c.chapter);
+        if(thirdStep){
+            const view=chapterThreeView({id,state,events,context:s.three,b,language:getCurrentLang()});
+            title=view.title;body=view.body;status=view.status;s.done=s.done||view.done;target=b.visible(view.target);
+        }
+        const card=s.card;card.querySelector('[data-chapter]').textContent=thirdStep?three.chapter:orderStep?two.chapter:c.chapter;
+        card.querySelector('.chapter-count').textContent=`${c.step} ${thirdStep?thirdIndex+1:orderStep?orderIndex+1:s.index+1} ${getCurrentLang()==='he'?'מתוך':'of'} ${thirdStep?CHAPTER_THREE_STEPS.length:orderStep?CHAPTER_TWO_STEPS.length:5}`;
+        card.querySelector('progress').max=thirdStep?CHAPTER_THREE_STEPS.length:orderStep?CHAPTER_TWO_STEPS.length:5;
+        card.querySelector('progress').value=thirdStep?thirdIndex+1:orderStep?orderIndex+1:s.index+1;card.querySelector('progress').setAttribute('aria-label',thirdStep?three.chapter:orderStep?two.chapter:c.chapter);
         card.querySelector('h2').textContent=title;card.querySelector('[data-body]').textContent=body;
         card.querySelector('[data-open]').hidden=!helper;card.querySelector('[data-open]').textContent=c.open;
         card.querySelector('[data-back]').textContent=c.back;card.querySelector('[data-back]').disabled=s.index===0;
         card.querySelector('[data-skip]').textContent=c.skip;card.querySelector('[data-skip]').hidden=s.index===0;
-        const next=card.querySelector('[data-next]');next.textContent=s.index===0?c.start:s.index===4?two.continue:s.index===TOUR_STEPS.length-1?c.finish:c.next;next.disabled=!s.done;
+        const next=card.querySelector('[data-next]');next.textContent=s.index===0?c.start:s.index===4?two.continue:id==='sort-manage'?three.next:s.index===TOUR_STEPS.length-1?c.finish:c.next;next.disabled=!s.done;
         const feedback=card.querySelector('[role=status]');if(feedback.textContent!==status)feedback.textContent=status;feedback.hidden=!status;
         const tip=card.querySelector('[data-palette-tip]');tip.hidden=!showPaletteTip;
         if(showPaletteTip&&s.tipLanguage!==getCurrentLang()){
@@ -149,8 +155,8 @@ export function initializeChapterOne({beforeStart}){
     if(reset)reset.onclick=()=>{try{storage.removeItem(CHAPTER_ONE_KEY);progress=null;document.querySelector('[data-chapter-one-reset-status]').textContent=copy().resetDone;}catch{/* Keep existing artwork untouched. */}};
     onLanguageChange(refresh);addEventListener('resize',refresh);refresh();
     const requestedTour=new URLSearchParams(location.search).get('tour');
-    const forced=['1','2'].includes(requestedTour);
-    if(forced)progress=requestedTour==='2'?{version:1,status:'active',step:CHAPTER_TWO_STEPS[0]}:null;
+    const forced=['1','2','3'].includes(requestedTour);
+    if(forced)progress=requestedTour==='3'?{version:1,status:'active',step:CHAPTER_THREE_STEPS[0]}:requestedTour==='2'?{version:1,status:'active',step:CHAPTER_TWO_STEPS[0]}:null;
     if(desktop()&&(!progress||progress.status==='active'||forced))open();
     return {open};
 }
