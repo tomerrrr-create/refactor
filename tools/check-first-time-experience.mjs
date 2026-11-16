@@ -1,15 +1,17 @@
 // Native guided actions, first/repeat visits, reset and practice isolation.
 import {readFile,mkdir,writeFile} from 'node:fs/promises';import {createServer} from 'node:http';import path from 'node:path';import {fileURLToPath} from 'node:url';import assert from 'node:assert/strict';
 import {FTUE_STEPS} from '../js/first-time-content.js';
-const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright'),root=fileURLToPath(new URL('../dist/',import.meta.url)),artifacts='/tmp/ftue-check';await mkdir(artifacts,{recursive:true});
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright'),root=fileURLToPath(new URL('../dist/',import.meta.url)),artifacts=process.env.FTUE_ARTIFACTS||'/tmp/ftue-check';await mkdir(artifacts,{recursive:true});
 let app=await readFile(root+'js/app.js','utf8');app=app.replace('      initializeApp();',`window.ftueTest={state:()=>({board:getCurrentState(),settings:getWorkspaceSettings(),history:history.length,logs:[...artRecipeLog]}),tech:()=>modals.openTechnicianMenu()};initializeApp().then(()=>ftueTest.ready=true);`);for(const ms of [5000,1500,2000])app=app.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
 const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':'text/html');res.end(f==='js/app.js'?app:await readFile(path.join(root,f)));}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
 const chapter=async(card,name)=>{const select=card.locator('[data-chapter]');if(!await select.isVisible())await card.locator('[data-navigation]').click();await select.selectOption(name);};
 const unobscured=async(page)=>{
  const geometry=await page.evaluate(()=>{const root=document.querySelector('.ftue-root'),frame=root.querySelector('iframe').getBoundingClientRect(),card=root.querySelector('.ftue-card').getBoundingClientRect(),canvas=root.querySelector('iframe').contentDocument.querySelector('#boardCanvas').getBoundingClientRect();return {layout:root.dataset.layout,frame:{x:frame.x,y:frame.y,right:frame.right,bottom:frame.bottom},card:{x:card.x,y:card.y,right:card.right,bottom:card.bottom},canvas:{x:canvas.x+frame.x,y:canvas.y+frame.y,right:canvas.right+frame.x,bottom:canvas.bottom+frame.y},canvasFocus:root.querySelector('iframe').contentDocument.documentElement.dataset.ftueFocus==='canvas'};});
+ const ui=await page.locator('.ftue-card').evaluate(card=>{const footer=card.querySelector('footer').getBoundingClientRect(),copy=card.querySelector('.ftue-copy'),r=card.getBoundingClientRect();return {footer:{top:footer.top,bottom:footer.bottom,left:footer.left,right:footer.right},card:{top:r.top,bottom:r.bottom,left:r.left,right:r.right},copyHeight:copy.clientHeight};});
+ assert(ui.copyHeight>=40,'coach must reserve readable text space');assert(ui.footer.top>=ui.card.top&&ui.footer.bottom<=ui.card.bottom+1,'navigation must stay inside the coach');assert(ui.footer.left>=ui.card.left&&ui.footer.right<=ui.card.right+1,'navigation must not overflow horizontally');
  if(geometry.layout==='bottom')assert(geometry.frame.bottom<=geometry.card.y+1,'mobile coach must reserve its own space below the app');
  else if(geometry.layout==='side')assert(geometry.frame.right<=geometry.card.x+1,'landscape coach must reserve its own side panel '+JSON.stringify(geometry));
- if(geometry.layout!=='floating'&&geometry.canvasFocus){assert(geometry.canvas.y>=geometry.frame.y-1);assert(geometry.canvas.bottom<=geometry.frame.bottom+1,'the whole drawing board must stay visible');}
+ if(geometry.canvasFocus){assert(geometry.canvas.y>=geometry.frame.y-1);assert(geometry.canvas.bottom<=geometry.frame.bottom+1,'the whole drawing board must stay visible');}
 };
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
 try{for(const touch of [false,true].filter(t=>!process.env.FTUE_LAYOUT_ONLY&&(!process.env.FTUE_TOUCH||String(t)===process.env.FTUE_TOUCH))){
@@ -20,11 +22,12 @@ await intro.locator('[data-begin]').click();await page.waitForFunction(()=>docum
 const startAt=process.env.FTUE_CHAPTER?FTUE_STEPS.findIndex(step=>step.chapter===process.env.FTUE_CHAPTER):0;if(process.env.FTUE_CHAPTER)await chapter(card,process.env.FTUE_CHAPTER);
 const tap=async locator=>{if(touch){await locator.tap();await page.waitForTimeout(100);}else await locator.click();};
 for(let index=startAt;index<FTUE_STEPS.length;index++){
- const step=FTUE_STEPS[index];console.log('STEP',touch,index+1,step.id);await page.waitForFunction(index=>document.querySelector('[data-count]')?.textContent.includes(String(index+1)+' '),index);await page.waitForTimeout(180);if(touch)await unobscured(page);
+ const step=FTUE_STEPS[index];console.log('STEP',touch,index+1,step.id);await page.waitForFunction(index=>document.querySelector('[data-count]')?.textContent.includes(String(index+1)+' '),index);await page.waitForTimeout(180);await unobscured(page);
  const actual=await page.evaluate(()=>document.querySelector('.ftue-frame').contentWindow.fyiPractice.read());
  if(index===0){assert.equal(actual.palette,'Journey');assert.equal(actual.n,21);}
+ if(step.id==='colored-draw'){assert.equal(actual.brushSize,3,'chosen brush size must survive closing the picker');assert.equal(actual.brushShape,'diamond','a different shape can be tried without being blocked by the tutorial');}
  if(step.demo){assert.equal(actual.palette,'Journey');assert.equal(actual.n,step.demo==='gravitationalSort'?50:249);}
- if(index===0||step.task==='watch'||step.id==='play'||['magnet-options','anchor','controls','pick-color','palette-choice','enter-simulation','sim-magnet','image','done'].includes(step.id))await page.screenshot({path:`${artifacts}/${touch?'he-touch':'en'}-${step.id}.png`});
+ await page.screenshot({path:`${artifacts}/${touch?'he-touch':'en'}-${step.id}.png`});
  try{if(step.task){const [type]=step.task.split(':');
  if(type==='watch'){
   assert(actual.playing,'the example must really be running');
@@ -42,7 +45,7 @@ for(let index=startAt;index<FTUE_STEPS.length;index++){
    else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:5});await page.mouse.up();}
   }else await tap(card.locator('[data-helper]'));
  }
- else{let selector=step.taskTarget||step.target;if(step.id==='palette-choice')selector='#palette-choice-panel .palette-choice:not(.is-current)';let target=frame.locator(selector).filter({visible:true}).first();await tap(target);}
+ else{if(step.id==='brush-size')await tap(frame.locator('[data-brush-shape="diamond"]'));let selector=step.id==='brush-size'?'[data-brush-size="3"]':step.taskTarget||step.target;if(step.id==='palette-choice')selector='#palette-choice-panel .palette-choice:not(.is-current)';let target=frame.locator(selector).filter({visible:true}).first();await tap(target);}
  await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled,null,{timeout:15000});
  }
  await tap(card.locator('[data-next]'));
@@ -62,11 +65,11 @@ await boot(true);assert.equal(await page.locator('.ftue-root').count(),0);await 
 
 assert.deepEqual(errors,[]);console.log('PASS FTUE',JSON.stringify({touch,steps:FTUE_STEPS.length,firstVisit:true,completion:true,reset:true,replay:true,isolated:true}));await context.close();
 }
-if(!process.env.FTUE_TOUCH)for(const viewport of [{width:320,height:568},{width:844,height:390}]){
+if(!process.env.FTUE_TOUCH)for(const viewport of [{width:320,height:480},{width:320,height:568},{width:844,height:390},{width:768,height:1024},{width:1024,height:768}]){
  const context=await browser.newContext({viewport,isMobile:viewport.width<600,hasTouch:true,serviceWorkers:'block',reducedMotion:'reduce'});await context.addInitScript(()=>localStorage.setItem('userLanguage','he'));
  const page=await context.newPage();await page.goto(base);await page.waitForFunction(()=>window.ftueTest?.ready);await page.locator('[data-ftue-language]').selectOption('en');assert.equal(await page.locator('.ftue-root').getAttribute('dir'),'ltr');await page.locator('[data-ftue-language]').selectOption('he');assert.equal(await page.locator('.ftue-root').getAttribute('dir'),'rtl');await page.locator('[data-begin]').click();await page.waitForFunction(()=>document.querySelector('.ftue-frame')?.contentWindow?.fyiPractice&&document.querySelector('.ftue-card [data-count]')?.textContent);
  const frame=page.frameLocator('.ftue-frame'),card=page.locator('.ftue-card');await chapter(card,'motion');await frame.locator('#btnToggleSimMode').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();
- await chapter(card,'colors');await frame.locator('#btnPalette').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();await card.locator('[data-helper]').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();await card.locator('[data-next]').click();await frame.locator('#palette-choice-panel .palette-choice:not(.is-current)').first().click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);
+ await chapter(card,'colors');await card.locator('[data-helper]').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();await frame.locator('#palette-choice-panel .palette-choice:not(.is-current)').first().click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);
  await chapter(card,'save');await card.locator('[data-helper]').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);await card.locator('[data-next]').click();await card.locator('[data-next]').click();await frame.locator('#saveImageOptions summary').click();await page.waitForFunction(()=>!document.querySelector('.ftue-card [data-next]').disabled);
  await unobscured(page);await page.screenshot({path:`${artifacts}/layout-${viewport.width}x${viewport.height}.png`});assert(await card.evaluate(e=>{const r=e.getBoundingClientRect();return r.x>=0&&r.right<=innerWidth&&r.y>=0&&r.bottom<=innerHeight+1;}));const beforeRotation=await page.evaluate(()=>({step:document.querySelector('[data-count]').textContent,tiles:document.querySelector('.ftue-frame').contentWindow.ftueTest.state().board.tiles}));
  await page.setViewportSize(viewport.width<600?{width:844,height:390}:{width:390,height:844});await page.waitForTimeout(250);await page.screenshot({path:`${artifacts}/rotation-check-${viewport.width}.png`});await unobscured(page);

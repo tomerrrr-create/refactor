@@ -24,18 +24,30 @@ export function installFtuePractice({prepare, open, read, layout}) {
     });
     const fit = () => {
         const controls=document.getElementById('controlsContainer');
-        const small=innerWidth<=600||innerHeight<=500;
-        if(small){
-            const available=innerHeight-controls.getBoundingClientRect().height-38;
-            document.documentElement.style.setProperty('--ftue-board-size',Math.max(64,Math.min(innerWidth-32,available))+'px');
-        }
+        const available=innerHeight-controls.getBoundingClientRect().height-38;
+        document.documentElement.style.setProperty('--ftue-board-size',Math.max(64,Math.min(720,innerWidth-32,available))+'px');
         layout?.();
     };
     addEventListener('resize',fit);
     new ResizeObserver(fit).observe(document.getElementById('controlsContainer'));
     fit();
     window.fyiPractice = {
-        prepare: step => {document.documentElement.dataset.ftueFocus=step.target==='#boardCanvas'?'canvas':'tools';prepare(step);fit();}, open, read, visible,
+        prepare: step => {document.documentElement.dataset.ftueFocus=step.target==='#boardCanvas'?'canvas':'tools';if(step.mode)document.documentElement.dataset.ftueMode=step.mode;prepare(step);fit();}, open, read, visible,
+        reveal: selector => {
+            const target=visible(selector);if(!target)return;
+            // Scroll only inside the containing modal; scrolling the outer
+            // document can move the entire canvas out of its reserved viewport.
+            let parent=target.parentElement;
+            while(parent&&parent!==document.body){
+                const style=getComputedStyle(parent);
+                if(/auto|scroll/.test(style.overflowY)&&parent.scrollHeight>parent.clientHeight){
+                    const rect=target.getBoundingClientRect(),bounds=parent.getBoundingClientRect();
+                    if(rect.top<bounds.top)parent.scrollTop+=rect.top-bounds.top-8;
+                    else if(rect.bottom>bounds.bottom)parent.scrollTop+=Math.min(rect.top-bounds.top-8,rect.bottom-bounds.bottom+8);
+                }
+                parent=parent.parentElement;
+            }
+        },
         cursor: () => sequence,
         watch: selector => {watched=selector;},
         happened: (type, selector, after) => events.some(event => event.sequence>after&&event.type===type&&event.selector===selector&&event.matched),

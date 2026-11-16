@@ -1,16 +1,16 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
 import {FTUE_STEPS,FTUE_CHAPTERS} from '../js/first-time-content.js';
 import {readFtueProgress,FTUE_STORAGE_KEY} from '../js/first-time-experience.js';
-test('the broad tour covers the real tools and simulations with stable bilingual steps',()=>{
+test('the creative tour covers drawing, live simulations and exports with stable bilingual steps',()=>{
  assert.equal(new Set(FTUE_STEPS.map(step=>step.id)).size,FTUE_STEPS.length);
  for(const [chapter]of FTUE_CHAPTERS)assert(FTUE_STEPS.some(step=>step.chapter===chapter));
  for(const step of FTUE_STEPS){assert(step.en.every(Boolean));assert(step.he.every(Boolean));assert(FTUE_CHAPTERS.some(([id])=>id===step.chapter));}
- for(const id of ['draw','drag','undo','redo','palette-apply','brush-shape','brush-size','separators','sort','play','paint-live','pause','choose-gravity','larger-board','demo-intro','anchor','ink','oil','network','idea','journey','done'])assert(FTUE_STEPS.some(step=>step.id===id),id);
+ for(const id of ['draw','drag','undo','redo','palette-apply','brush-size','colored-draw','sort','play','paint-live','pause','choose-gravity','larger-board','demo-intro','ink','oil','network','idea','journey','done'])assert(FTUE_STEPS.some(step=>step.id===id),id);
  for(const id of ['islands','gameOfLife','sandpile','cymatics','magnet','gravitationalSort','spiral','brightnessEvo','erosion','turing','dla','breathe','nudgeBrighter','contour'])assert(FTUE_STEPS.some(step=>step.id==='sim-'+id),id);
 });
 test('lesson focuses on creating and moves sorting after the first simulation run',()=>{
  for(const step of FTUE_STEPS){assert.notEqual(step.open,'tech');assert.notEqual(step.helper,'tech');assert.notEqual(step.chapter,'settings');}
- for(const id of ['technicians','profiles','display','features','startup','experiments','language','help','drawer-map'])assert(!FTUE_STEPS.some(step=>step.id===id),id);
+ for(const id of ['technicians','profiles','display','features','startup','experiments','language','help','drawer-map','sort-settings','anchor','resize-exact','brush-mode'])assert(!FTUE_STEPS.some(step=>step.id===id),id);
  const at=id=>FTUE_STEPS.findIndex(step=>step.id===id);assert(at('sort')>at('play'));assert.equal(FTUE_STEPS[at('sort')].mode,'simulation');
  for(const step of FTUE_STEPS.filter(step=>step.task==='watch')){assert.equal(step.playing,true);assert(step.demo);assert.equal(step.arm,step.demo);}
  for(const id of ['image','idea','journey','settings-file'])assert(at(id)>=0,id);
