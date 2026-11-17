@@ -10,7 +10,7 @@ if (isChapterOnePractice) {
     }});
 }
 
-export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder, prepareChapterThree, prepareChapterFour, prepareChapterFive, pausePractice}) {
+export function installChapterOnePractice({read, tileAt, openPalette, layout, prepareOrder, prepareChapterThree, prepareChapterFour, prepareChapterFive, prepareGallery, galleryIcon, pausePractice}) {
     let sequence=0, down=null;
     let guided=[],muted=[];
     const guide=(target,{dim=true}={})=>{
@@ -63,11 +63,11 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
     document.addEventListener('pointerdown',()=>{pressTime=performance.now();},true);
     document.addEventListener('click',event=>{
         if(!event.isTrusted||event.detail&&performance.now()-pressTime>=550)return;
-        const button=event.target.closest('#btnToggleSimMode,#btnRandom,#btnGravitationalSort,#btnStepForward,#btnPlayPauseLife,#btnCycleSort,#btnIslands,#btnWind');
+        const button=event.target.closest('#btnToggleSimMode,#btnRandom,#btnGravitationalSort,#btnStepForward,#btnPlayPauseLife,#btnCycleSort,#btnIslands,#btnWind,#btnPalette,#btnBrightnessEvo');
         if(button&&!button.disabled){
             const before=read();
             setTimeout(()=>{
-                const after=read(),summary=state=>({playing:state.playing,armedSimulation:state.armedSimulation,simMode:state.simMode,sortMethod:state.sortMethod,gravityMode:state.gravityMode,windMode:state.windMode});
+                const after=read(),summary=state=>({playing:state.playing,armedSimulation:state.armedSimulation,simMode:state.simMode,sortMethod:state.sortMethod,gravityMode:state.gravityMode,windMode:state.windMode,paletteIndex:state.paletteIndex});
                 record('evolution-action',{id:button.id,before:summary(before),after:summary(after),changed:before.tiles.some((color,i)=>after.tiles[i]!==color)});
             },0);
         }
@@ -88,7 +88,7 @@ export function installChapterOnePractice({read, tileAt, openPalette, layout, pr
         layout();
     };
     addEventListener('resize',fit);new ResizeObserver(fit).observe(document.getElementById('controlsContainer'));fit();
-    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,prepareChapterThree,prepareChapterFour,prepareChapterFive,pausePractice,observe:record,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
+    window.chapterOnePractice={read,visible,openPalette,guide,prepareOrder,prepareChapterThree,prepareChapterFour,prepareChapterFive,prepareGallery,galleryIcon,pausePractice,observe:record,cursor:()=>sequence,events:after=>events.filter(e=>e.sequence>after),
         closePalette:()=>document.querySelector('#btnPaletteModalClose')?.click(),
         closePracticeModals:()=>{for(const selector of ['#colorPickerModal.modal-visible #btnColorPickerCloseTop','#resizeModal.modal-visible #btnResizeModalClose','#sortCycleDialog[open] #btnSortCycleCloseTop'])document.querySelector(selector)?.click();},
         fit

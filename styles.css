@@ -2843,3 +2843,9 @@ dialog.chapter-one-tour { position:fixed; inset:0; margin:0; padding:0; border:0
  .chapter-status { font-size:12px; margin:8px 0; }
  .chapter-coach footer { padding-top:10px; }
 }
+
+.chapter-coach .chapter-gallery-icon { flex:0 0 28px; width:28px; height:28px; color:#dfc788; }
+.chapter-gallery-icon svg { display:block; width:28px !important; height:28px !important; }
+.chapter-coach [data-gallery] { color:#e0cc99; border-color:#c6ac6577; background:#d8bf8210; }
+.chapter-gallery-anchor { display:flex; align-items:center; gap:10px; margin:12px 0; color:#d4c392; font-size:12px; }
+.chapter-gallery-anchor::before { content:''; display:block; flex:none; width:22px; height:22px; border-radius:50%; background:var(--anchor-color); box-shadow:0 0 0 1px #d4c39288; }

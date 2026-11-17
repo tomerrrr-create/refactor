@@ -1,3 +1,4 @@
+import {GALLERY_DEMOS,createGalleryRanks} from './evolution-gallery.js';
 import {CHAPTER_FIVE_ENGINES} from './chapter-five-tour.js';
 import {isChapterOnePractice,installChapterOnePractice} from './chapter-one-practice.js';
 import {initializeChapterOne} from './chapter-one-tour.js';
@@ -417,7 +418,7 @@ let magnetMode = 'off';
       let evolutionDrawer;
       const experimentalSimulations=createExperimentalSimulationFlags();
       let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
-      let practiceEvolutionScope=null;
+      let practiceEvolutionScope=null,practiceGalleryId=null,practiceGallerySerial=0;
       let modals;
       let settingsProfiles;
 
@@ -6558,8 +6559,44 @@ dom.btnWind.addEventListener('keydown', event => {
                         evolutionSlots=slots;evolutionDrawer.applyLayout();
                     }
                 },
+                prepareGallery:async(id,task,{force=false}={})=>{
+                    const demo=GALLERY_DEMOS.find(item=>item.id===id);if(!demo)throw Error('Unknown gallery demo');
+                    if(task==='intro'){if(windMode)setWindMode(false);pauseLife();return;}
+                    if(practiceGalleryId===id&&!force)return;
+                    if(windMode)setWindMode(false);pauseLife();resetArmedState();
+                    if(!isSimModeActive){toggleSimMode();await new Promise(resolve=>setTimeout(resolve,550));}
+                    practiceEvolutionScope=new Set(CHAPTER_FIVE_ENGINES);experimentalSimulations.set('network',true);
+                    evolutionSlots=[...DEFAULT_EVOLUTION_LAYOUT];evolutionDrawer.applyLayout();
+                    activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD');
+                    selectSortMethod('luminance');n=249;restoreSeparatorWidth(0);initializeBoardAndCanvas(true);
+                    const ranks=createGalleryRanks(id,n,paletteLen());
+                    for(let i=0;i<ranks.length;i++){boardState[i].k=ranks[i];boardState[i].v=ranks[i];}
+                    symmetryMode='off';brushSize=7;setBrushMode(true,true);
+                    armSimulation(demo.engine);
+                    if(id==='life')gameOfLifeRules=cloneGameOfLifeRules(C.GAME_OF_LIFE_PRESETS.btnGolPresetNaive);
+                    if(id==='chi')chiFlowRules=cloneChiFlowRules(C.CHI_FLOW_PRESETS.Fluent);
+                    if(id==='magnet'){magnetRules={...C.defaultMagnetRules,anchorColorIndex:0};selectMagnetMode('field_magnet');updateMagnetButtonUI();}
+                    if(id==='erosion')erosionRules={...C.defaultErosionRules};
+                    if(id==='cracks'){contourRules={...C.defaultContourRules,lineColor:'brush',growth:{...INITIAL_CRACKS_GROWTH}};contourMode='cracks';cracksState=createCracksSession(n);}
+                    if(id==='network'){networkRules={...DEFAULT_NETWORK_PREFERENCES};networkState=createNetworkState(n);}
+                    selectedColorIndex=id==='magnet'?0:Math.floor((paletteLen()-1)*.9);
+                    selectedColor=palette()[selectedColorIndex];isRainbowModeActive=false;
+                    const target=document.getElementById(demo.button);
+                    if(target?.hasAttribute('data-evolution-page-hidden'))evolutionDrawer.trigger.click();
+                    updatePaletteHeader();updateSortButtonUI();updateSymmetryUI();updateColorPickerButtonUI();
+                    history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();updateUndoRedoButtons();
+                    practiceGalleryId=id;practiceGallerySerial++;renderToScreen(null);updateLayout();
+                },
+                galleryIcon:id=>{
+                    const button=document.getElementById(GALLERY_DEMOS.find(item=>item.id===id)?.button);
+                    const svg=[...(button?.querySelectorAll(':scope > svg')||[])].find(node=>getComputedStyle(node).display!=='none');
+                    if(!svg)return '';
+                    const copy=svg.cloneNode(true),from=[svg,...svg.querySelectorAll('*')],to=[copy,...copy.querySelectorAll('*')];
+                    for(let i=0;i<to.length;i++)if(getComputedStyle(from[i]).display==='none')to[i].style.display='none';
+                    copy.style.display='block';return copy.outerHTML;
+                },
                 pausePractice:()=>{if(windMode)setWindMode(false);pauseLife();},
-                read:()=>({n,initializations:artRecipeLog.filter(line=>line.includes('INIT_STATE ->')).length,windMode,windEffect:windSettings.mode,gravityMode:gsMode,islandsMode:armedSimulation==='islands'?(islandsSession?.mode||'classic'):'off',sortName:getText('startup_sort_'+currentSortMethod),engineName:armedSimulation?getText(EVOLUTION_CATALOG.find(e=>e.id===armedSimulation||e.id==='nudgeBrighter'&&armedSimulation==='nudgeDarker')?.key||'help_gravitationalSort').split('\n')[0]:'',generation:currentGenerationCount,playEnabled:!dom.btnPlayPauseLife.disabled,stepEnabled:!dom.btnStepForward.disabled,brushMode:isContinuousBrushOn?'continuous':isBrushModeOn?'paint':'copy',resizeIncreasing,simMode:isSimModeActive,armedSimulation,richPaletteIndex:C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD'),sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
+                read:()=>({n,galleryId:practiceGalleryId,gallerySerial:practiceGallerySerial,galleryAnchor:magnetRules.anchorColorIndex,galleryIconClass:document.getElementById(GALLERY_DEMOS.find(item=>item.id===practiceGalleryId)?.button)?.className||'',lifeRules:gameOfLifeRules,brightnessMode:brightnessEvoMode,networkMode:networkRules.mode,initializations:artRecipeLog.filter(line=>line.includes('INIT_STATE ->')).length,windMode,windEffect:windSettings.mode,gravityMode:gsMode,islandsMode:armedSimulation==='islands'?(islandsSession?.mode||'classic'):'off',sortName:getText('startup_sort_'+currentSortMethod),engineName:armedSimulation?getText(EVOLUTION_CATALOG.find(e=>e.id===armedSimulation||e.id==='nudgeBrighter'&&armedSimulation==='nudgeDarker')?.key||'help_gravitationalSort').split('\n')[0]:'',generation:currentGenerationCount,playEnabled:!dom.btnPlayPauseLife.disabled,stepEnabled:!dom.btnStepForward.disabled,brushMode:isContinuousBrushOn?'continuous':isBrushModeOn?'paint':'copy',resizeIncreasing,simMode:isSimModeActive,armedSimulation,richPaletteIndex:C.PALETTES.findIndex(p=>p.originalName==='Northern Lights HD'),sortMethod:currentSortMethod,colors:[...C.PALETTES[activePaletteIndex].colors],paletteIndex:activePaletteIndex,paletteName:C.PALETTES[activePaletteIndex].originalName,tiles:boardState.map(t=>t.k),selectedColorIndex,rainbow:isRainbowModeActive,brushSize,symmetryMode,separatorPx,playing:isLifePlaying}),
                 tileAt:getTileIndexFromCoords,openPalette:()=>modals.openPaletteModal(),layout:updateLayout
             });
             splashScreen.remove();return;
