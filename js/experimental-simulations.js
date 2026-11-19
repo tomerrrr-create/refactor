@@ -1,8 +1,7 @@
 // One registry owns the opt-in exposure of these removable experiments.
 // Preferences are device-local, never profile, artwork or replay settings.
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
-    {id:'spiral',button:'btnSpiral',key:'tooltip_spiral'},
-    {id:'network',button:'btnNetwork',key:'help_network'}
+    {id:'spiral',button:'btnSpiral',key:'tooltip_spiral'}
 ].map(Object.freeze));
 export const EXPERIMENTAL_SIMULATIONS_KEY='colorGridExperimentalSimulationsV1';
 export function createExperimentalSimulationFlags({storage}={}) {

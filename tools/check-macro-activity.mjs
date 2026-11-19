@@ -35,13 +35,14 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
  const boot=async reload=>{await (reload?page.reload():page.goto(base));await page.waitForFunction(()=>window.activityTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));};
  await boot(false);
  const panel=page.locator('#macroActivity'),toggle=page.locator('#macroActivityToggle');
+ const openDisplay=async()=>{await page.evaluate(()=>activityTest.tech());await page.locator('#btnConfigureDisplay').click();};
  assert.equal(await toggle.isChecked(),false);assert.equal(await panel.isVisible(),false);
  const start=async()=>{await page.locator('#projectFileInput').setInputFiles({name:'activity.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});await page.waitForFunction(()=>activityTest.state().loaded);await page.locator('#btnMacroPlay').click();await page.waitForFunction(()=>activityTest.state().gen>=5&&activityTest.state().index>=5);};
  const finish=async()=>{await page.waitForFunction(()=>!activityTest.state().loaded&&!activityTest.state().animating,{timeout:25000});return page.evaluate(()=>activityTest.state().board);};
  const recipeLog=()=>page.evaluate(()=>{const logs=activityTest.state().logs;const from=logs.findLastIndex(line=>line.includes('INIT_STATE ->')&&line.includes('"n":9'));return logs.slice(from).filter(line=>!line.includes('HISTORY_ACTION ->'));});
  // Baseline replay with the switch off.
  await start();assert.equal(await panel.isVisible(),false);const baseline=await finish(),baselineLog=await recipeLog();
- await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();
+ await openDisplay();await toggle.check();await page.locator('#btnTechnicianCloseTop').click();
  await boot(true);assert.equal(await toggle.isChecked(),true,'device-local preference survives reopening');
  if(config.lang==='he')await page.evaluate(()=>activityTest.zoom(90));
  await start();assert.equal(await panel.isVisible(),false,'normal board mode stays uncluttered');
@@ -66,16 +67,17 @@ try{for(const config of [{width:1700,height:1000,lang:'en',desktop:true},{width:
   assert.equal(await panel.locator('.macro-activity-title').count(),0,'no visible word labels');
   assert.deepEqual(await panel.evaluate(e=>[getComputedStyle(e).borderTopWidth,getComputedStyle(e).borderBottomWidth]),['0px','0px']);
   assert(side.x>=0);
-  await page.evaluate(()=>activityTest.tech());await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();await page.waitForTimeout(150);
+  await openDisplay();await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();await page.waitForTimeout(150);
   assert.equal(await panel.isVisible(),false);assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'off never resizes or moves board');
   if(config.lang==='en')await page.waitForFunction(()=>activityTest.state().simulation==='nudgeBrighter'&&activityTest.state().gen>=5);
-  await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en'){assert((await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label')).includes('Nudge'),'enabling mid-play shows the latest action');assert(!/Pause|Settings changed|Generation/.test(await panel.textContent()),'Pause and settings are excluded when recovering the current action');}assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
+  await openDisplay();await toggle.check();await page.locator('#btnTechnicianCloseTop').click();await panel.waitFor({state:'visible'});if(config.lang==='en'){assert((await panel.locator('.macro-activity-row:not([aria-hidden])').getAttribute('aria-label')).includes('Nudge'),'enabling mid-play shows the latest action');assert(!/Pause|Settings changed|Generation/.test(await panel.textContent()),'Pause and settings are excluded when recovering the current action');}assert.deepEqual(await page.locator('#board').boundingBox(),geometry,'on never resizes or moves board');
   await page.screenshot({path:path.join(artifacts,config.lang+'-fullscreen.png')});
   await page.setViewportSize({width:844,height:390});await page.waitForTimeout(300);assert.equal(await panel.isVisible(),false,'insufficient free space hides it');
-  const cramped=await page.locator('#board').boundingBox();await page.evaluate(()=>activityTest.tech());await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();assert.deepEqual(await page.locator('#board').boundingBox(),cramped,'hidden activity never changes board geometry');await page.evaluate(()=>activityTest.tech());await toggle.check();await page.locator('#btnTechnicianCloseTop').click();
+  const cramped=await page.locator('#board').boundingBox();await openDisplay();await toggle.uncheck();await page.locator('#btnTechnicianCloseTop').click();assert.deepEqual(await page.locator('#board').boundingBox(),cramped,'hidden activity never changes board geometry');await openDisplay();await toggle.check();await page.locator('#btnTechnicianCloseTop').click();
   await page.setViewportSize({width:config.width,height:config.height});await panel.waitFor({state:'visible'});
  }
- const replayed=await finish();assert.deepEqual(replayed,baseline,'display does not change replayed artwork');assert.deepEqual(await recipeLog(),baselineLog,'display does not change recorded playback commands');assert.equal(await panel.isVisible(),false,'completion cleans panel');
+ const replayed=await finish();assert.deepEqual(replayed,baseline,'display does not change replayed artwork');assert.deepEqual(await recipeLog(),baselineLog,'display does not change recorded playback commands');
+ await panel.waitFor({state:'hidden',timeout:6000});
  // A stopped replacement file also clears presentation immediately.
  await start();await page.locator('#boardCanvas').click();await page.waitForFunction(()=>activityTest.state().fullscreen&&!activityTest.state().animating);
  await page.evaluate(()=>activityTest.stop());assert.equal(await panel.isVisible(),false,'manual Stop clears panel');await page.waitForFunction(()=>!activityTest.state().animating);

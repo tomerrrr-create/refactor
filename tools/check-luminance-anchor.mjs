@@ -31,7 +31,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
   const button=name==='magnet'?(save?'#btnMagnetSettingsSave':'#btnMagnetSettingsCancel'):(save?'#btnGolSettingsSave':'#btnGolSettingsCancel');
   await page.locator(button).click();await page.waitForTimeout(250);
  };
- await boot();assert(!(await state()).magnet&&!(await state()).life);let toggle=await tech();assert(!(await toggle.isChecked()));await closeTech();await page.evaluate(()=>anchorTest.setup());const original=await state();
+ await boot();assert((await state()).magnet&&(await state()).life);let toggle=await tech();assert(await toggle.isChecked());await toggle.uncheck();await closeTech();await page.evaluate(()=>anchorTest.setup());const original=await state();
  toggle=await tech();await toggle.check();assert((await state()).magnet&&(await state()).life);assert.deepEqual((await state()).tiles,original.tiles);assert.equal((await state()).sort,'reversed');await page.screenshot({path:`/tmp/luminance-anchor-check/${config.lang}-technicians.png`});await closeTech();
  await modal('magnet',false,false);toggle=await tech();assert(await toggle.isChecked(),'Cancel does not change the technician preference');await closeTech();
  await modal('magnet',false);assert(!(await state()).magnet&&(await state()).life);toggle=await tech();assert(!(await toggle.isChecked()));await closeTech();
