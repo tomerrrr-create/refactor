@@ -28,8 +28,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const surface=()=>backdrop.evaluate(e=>{
   const style=getComputedStyle(e,'::after');return {color:style.backgroundColor,image:style.backgroundImage};
  });
- const darkSurfaces=new Map();
- const graphiteInk={graphite:'rgb(104, 116, 129)','graphite-edge':'rgb(112, 125, 138)','graphite-dust':'rgb(114, 124, 132)'};
+ const deepBlueInk={'deep-blue':'rgb(57, 73, 152)'};
  const ink=()=>page.locator('#btnGravitationalSort svg').first().evaluate(e=>getComputedStyle(e).stroke);
  await boot(false);const fresh=await state();assert.equal(fresh.settings.simulationTheme,'gold');assert.equal(fresh.settings.simulationPlaybackTheme,'gold');await page.evaluate(()=>themeTest.setup());await tech();
  assert.equal(await page.locator('#technicianDialog #simulationThemeSettings,#technicianDialog #simulationPlaybackThemeSettings').count(),0);
@@ -44,28 +43,24 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.locator('.drawer-appearance').scrollIntoViewIfNeeded();await page.screenshot({path:artifacts+'/'+config.lang+'-themes-in-map.png'});
 
  for(const group of ['#simulationThemeSettings','#simulationPlaybackThemeSettings']){
-  assert.deepEqual(await page.locator(group+' [data-theme]').evaluateAll(es=>es.map(e=>e.dataset.theme)),['blue','gold','teal','graphite','graphite-edge','graphite-dust']);
-  assert.deepEqual(await page.locator(group+' .simulation-theme-number').allTextContents(),['1','2','3']);
+  assert.deepEqual(await page.locator(group+' [data-theme]').evaluateAll(es=>es.map(e=>e.dataset.theme)),['blue','gold','teal','deep-blue']);
   assert((await page.locator(group+' [data-theme]').evaluateAll(es=>es.map(e=>e.getAttribute('aria-label')))).every(Boolean));
  }
  assert.equal(await page.locator('#simModeBackground .sim-theme-layer').count(),0);
- for(const [rest,playback]of [['blue','gold'],['gold','teal'],['teal','blue'],['graphite','graphite'],['graphite-edge','gold'],['graphite-dust','graphite-edge'],['graphite-dust','graphite-dust']]){
+ for(const [rest,playback]of [['blue','gold'],['gold','teal'],['teal','blue'],['deep-blue','gold'],['deep-blue','deep-blue']]){
   const before=await state();await tap('#simulationThemeSettings [data-theme='+rest+']');await tap('#simulationPlaybackThemeSettings [data-theme='+playback+']');
   const selected=await state();assert.deepEqual(selected.board,before.board);assert.equal(selected.history,before.history);assert.equal(selected.settings.simulationTheme,rest);assert.equal(selected.settings.simulationPlaybackTheme,playback);
-  await tap('#evolutionDrawerDialog [data-close]');const frame=await backdrop.boundingBox(),buttonBounds=await page.locator('#btnNudgeBrighter').boundingBox();assert.equal(await opacity(),'1');assert((await backdrop.evaluate(e=>getComputedStyle(e).transitionProperty)).includes('opacity'));const pausedSurface=await surface();if(rest.startsWith('graphite'))darkSurfaces.set(rest,JSON.stringify(pausedSurface));await page.screenshot({path:artifacts+'/'+config.lang+'-'+rest+'-paused.png'});await tap('#btnPlayPauseLife');assert((await state()).playing);assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),playback);await page.waitForTimeout(450);
-  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(118, 103, 65)',teal:'rgb(104, 189, 181)',...graphiteInk})[playback]);assert.equal(await opacity(),'0');if(rest.startsWith('graphite'))assert.deepEqual(await surface(),pausedSurface);assert.deepEqual(await backdrop.boundingBox(),frame);assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);await page.screenshot({path:artifacts+'/'+config.lang+'-'+playback+'-running.png'});
+  await tap('#evolutionDrawerDialog [data-close]');const frame=await backdrop.boundingBox(),buttonBounds=await page.locator('#btnNudgeBrighter').boundingBox();assert.equal(await opacity(),'1');assert((await backdrop.evaluate(e=>getComputedStyle(e).transitionProperty)).includes('opacity'));const pausedSurface=await surface();if(rest==='deep-blue')assert(pausedSurface.image.includes('rgb(8, 14, 29)'));await page.screenshot({path:artifacts+'/'+config.lang+'-'+rest+'-paused.png'});await tap('#btnPlayPauseLife');assert((await state()).playing);assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),playback);await page.waitForTimeout(450);
+  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(118, 103, 65)',teal:'rgb(104, 189, 181)',...deepBlueInk})[playback]);assert.equal(await opacity(),'0');if(rest==='deep-blue')assert.deepEqual(await surface(),pausedSurface);assert.deepEqual(await backdrop.boundingBox(),frame);assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);await page.screenshot({path:artifacts+'/'+config.lang+'-'+playback+'-running.png'});
   await tap('#btnPlayPauseLife');assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);await page.waitForTimeout(450);
-  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(165, 139, 84)',teal:'rgb(104, 189, 181)',...graphiteInk})[rest]);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);await map();
+  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(165, 139, 84)',teal:'rgb(104, 189, 181)',...deepBlueInk})[rest]);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);await map();
  }
- assert.equal(new Set(darkSurfaces.values()).size,3,'all three numbered options have distinct surfaces');
- assert.deepEqual(JSON.parse(darkSurfaces.get('graphite')),{color:'rgb(9, 11, 14)',image:'none'});
- assert(darkSurfaces.get('graphite-edge').includes('14px'));
  // Reduced motion retains the same visibility states without transitions.
  await tap('#evolutionDrawerDialog [data-close]');await page.emulateMedia({reducedMotion:'reduce'});
  assert.equal(await opacity(),'1');assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
  await tap('#btnPlayPauseLife');assert.equal(await opacity(),'0');await tap('#btnPlayPauseLife');assert.equal(await opacity(),'1');
  await page.emulateMedia({reducedMotion:'no-preference'});
- await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,'graphite-dust');assert.equal(current.settings.simulationPlaybackTheme,'graphite-dust');
+ await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,'deep-blue');assert.equal(current.settings.simulationPlaybackTheme,'deep-blue');
  // Saved legacy profiles normalize only the retired appearance fields.
  await page.evaluate(()=>{const key='colorGridProfileDraftsV1',saved=JSON.parse(localStorage.getItem(key));for(const p of saved.profiles)for(const kind of ['saved','draft']){p[kind].settings.simulationTheme='silver';p[kind].settings.simulationPlaybackTheme='pink';p[kind].settings.brush.size=7;p[kind].settings.startup.boardSize=27;p[kind].settings.startup.brushSize=7;}localStorage.setItem(key,JSON.stringify(saved));localStorage.setItem('colorGridSimulationTheme','ice');localStorage.setItem('colorGridSimulationPlaybackTheme','silver');});
  await boot(true);current=await state();assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');assert.equal(current.settings.brush.size,7);assert.equal(current.settings.startup.boardSize,27);
