@@ -107,61 +107,7 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  // The switch stays visible during macro playback and after completion.
  await page.evaluate(()=>{modeTest.setup('nudgeBrighter');modeTest.macro('[00:00:00.000] INIT_STATE -> {"recipeVersion":2,"n":13,"pal":0,"sort":"luminance","sep":0,"board":"169x1"}\n[00:00:00.100] PLAY -> Armed: nudgeBrighter | Sort: luminance | Rules: {"nudgeTimingVersion":1,"intervalMs":100}\n[00:00:00.500] [GEN:3] PAUSE -> ---');});
  await page.waitForFunction(()=>modeTest.state().playing);await visibleWhite();await page.waitForFunction(()=>!modeTest.state().loaded);assert(await button.isVisible());
- // Precision Icons changes just the paused glyphs, using the same ink and backdrop in every theme.
- await page.emulateMedia({reducedMotion:'reduce'});
- await page.evaluate(()=>modeTest.setup('gameOfLife'));
- await page.mouse.move(0,0);
- const precision=page.locator('#precisionIconsToggle');
- assert.equal(await precision.isChecked(),false);
- const pausedAppearance=theme=>page.evaluate(theme=>{
-  modeTest.restingTheme(theme);
-  const life=getComputedStyle(document.querySelector('#btnGameOfLife svg'));
-  const dla=getComputedStyle(document.querySelector('#btnDla svg circle'));
-  const backdrop=document.getElementById('simModeBackground');
-  return {
-   width:life.strokeWidth,join:life.strokeLinejoin,
-   themeInk:document.documentElement.dataset.simulationEffectiveTheme,lifeInk:life.stroke,dlaInk:dla.fill,
-   backdrop:[getComputedStyle(backdrop).borderColor,getComputedStyle(backdrop).opacity,
-    ...['::before','::after'].map(pseudo=>getComputedStyle(backdrop,pseudo).backgroundImage)],
-  };
- },theme);
- const themes=['blue','gold','teal'];
- const original=[];
- for(const theme of themes)original.push(await pausedAppearance(theme));
- // Open Technicians using the restored control's existing upward swipe.
- const restored=await button.boundingBox();
- await page.mouse.move(restored.x+restored.width/2,restored.y+restored.height/2);
- await page.mouse.down();
- await page.mouse.move(restored.x+restored.width/2,restored.y+restored.height/2-40,{steps:5});
- await page.mouse.up();
- await page.locator('#technicianDialog').waitFor({state:'visible'});
- await page.locator('#btnConfigureFeatures').click();
- await precision.check();
- await page.evaluate(()=>document.getElementById('technicianDialog').close());
- await page.mouse.move(0,0);
- for(const [index,theme] of themes.entries()){
-  assert.deepEqual(await pausedAppearance(theme),{...original[index],width:'1.65px',join:'bevel'});
- }
- const lifeGlyph=page.locator(life+' > svg');
- const dlaGlyph=page.locator('#btnDla > svg');
- const awaitGlyphFilter=(id,expected)=>page.waitForFunction(({id,expected})=>
-  getComputedStyle(document.querySelector(id+' > svg')).filter.includes(expected),{id,expected});
- await awaitGlyphFilter(life,'drop-shadow');
- if(cfg.lang==='en')await page.locator('#controlsContainer').screenshot({path:'/tmp/mode-switch-playback/precision-drawer-1.png'});
- await drawer.click();
- await awaitGlyphFilter('#btnDla','drop-shadow');
- assert(await dlaGlyph.isVisible());
- if(cfg.lang==='en')await page.locator('#controlsContainer').screenshot({path:'/tmp/mode-switch-playback/precision-drawer-2.png'});
- await drawer.click();
- await page.locator('#btnPlayPauseLife').click();
- await awaitGlyphFilter(life,'none');
- assert.equal(await lifeGlyph.evaluate(svg=>getComputedStyle(svg).strokeWidth),'2.5px');
- await awaitHalo(life,1);
- await page.locator('#btnPlayPauseLife').click();
- await awaitGlyphFilter(life,'drop-shadow');
- await page.reload();
- await page.waitForFunction(()=>window.modeTest?.ready);
- assert.equal(await precision.isChecked(),true,'enabled choice survives reopening');
- assert(await page.locator('html[data-precision-icons]').count());
+ // The restored control still opens Technicians by the existing upward swipe.
+ const restored=await button.boundingBox();await page.mouse.move(restored.x+restored.width/2,restored.y+restored.height/2);await page.mouse.down();await page.mouse.move(restored.x+restored.width/2,restored.y+restored.height/2-40,{steps:5});await page.mouse.up();await page.locator('#technicianDialog').waitFor({state:'visible'});await page.evaluate(()=>document.getElementById('technicianDialog').close());
  await mkdir('/tmp/mode-switch-playback',{recursive:true});await page.screenshot({path:`/tmp/mode-switch-playback/${cfg.lang}-paused.png`});assert.deepEqual(errors,[]);console.log(JSON.stringify({...cfg,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}

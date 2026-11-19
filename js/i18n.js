@@ -19,7 +19,6 @@ export const translations = {
   technician_group_startup: {en:"Initialization & startup",he:"אתחול ופתיחה",ru:"Инициализация и запуск",nl:"Initialisatie en opstarten"},
   macro_control_dimming: {en:"Dimming",he:"הכהיה",ru:"Затемнение",nl:"Dimmen"},
   compact_colors_experiment: {en:"Brush Modal: One Page Colors",he:"חלון המברשת: צבעים בעמוד אחד",ru:"Окно кисти: цвета на одной странице",nl:"Penseelvenster: kleuren op één pagina"},
-  precision_icons_experiment: {en:"Precision Icons · Experiment",he:"אייקונים מדויקים · ניסוי",ru:"Тонкие значки · эксперимент",nl:"Fijne pictogrammen · experiment"},
   remember_evolution_modes: {en:"Remember Simulation Modes",he:"זכור מצב סימולציה אחרון",ru:"Запоминать режимы симуляций",nl:"Simulatiemodi onthouden"},
   macro_activity_icon_setting: {en:"Display Icon During Macro",he:"הצגת אייקון בזמן מאקרו",ru:"Показывать значок при макросе",nl:"Pictogram tonen tijdens macro"},
   macro_activity_setting: {"en": "Macro activity", "he": "פעולות מקרו", "ru": "Действия макроса", "nl": "Macroactiviteit"},
