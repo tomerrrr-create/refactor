@@ -34,9 +34,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual(await page.evaluate(()=>presetTest.lifeRules()),{survival:[0,1,2,3,4,5,6,7,8],birth:[3,4,5,6,7,8]});
  await swipe(lifeButton,0,-35);await lifeModal.waitFor({state:'visible'});
  const lifePresets=await lifeModal.locator('button[id^="btnGolPreset"]').evaluateAll(nodes=>nodes.map(node=>node.id));
- assert.deepEqual(lifePresets.slice(0,2),['btnGolPresetPaint3','btnGolPresetPaint']);
- assert.equal(lifePresets[12],'btnGolPresetPaint2');
- assert(!lifePresets.includes('btnGolPresetMeditation'));
+ assert.deepEqual(lifePresets,['Paint3','Paint','Naive','Paint2','Shuffle','Amoeba','LivingTexture',
+  'Vibration','Coral','Space','Harmonic','Hive','Joelson','Charlie','Continuum'].map(name=>'btnGolPreset'+name));
+ const chiPresets=await page.locator('#chiFlowSettingsModal button[id^="btnChiPreset"]').evaluateAll(nodes=>nodes.map(node=>node.id));
+ assert.deepEqual(chiPresets,['Harmony','Topography','Electric','Nova','Fluent','Crystals',
+  'Ripples','Wildfire','Alexis','Zen'].map(name=>'btnChiPreset'+name));
  assert(await lifeModal.locator('#btnGolPresetPaint3.active').isVisible());
  await tap(page.locator('#btnGolSettingsCancel'));await lifeModal.waitFor({state:'hidden'});
  for(const [sim,key,id,modalId,saveId,cancelId,prefix] of [['gameOfLife','gol','btnGameOfLife','gameOfLifeSettingsModal','btnGolSettingsSave','btnGolSettingsCancel','btnGolPreset'],['sandpile','chi','btnSandpile','chiFlowSettingsModal','btnChiSettingsSave','btnChiSettingsCancel','btnChiPreset']]){
