@@ -8,10 +8,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
     trigger.setAttribute('aria-keyshortcuts','Alt+ArrowUp');
-    const ring=document.createElement('span');
-    ring.className='drawer-internal-symbol';
-    ring.setAttribute('aria-hidden','true');
-    trigger.append(ring);
+    trigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><svg class="drawer-yin-icon" viewBox="0 0 32 32" stroke-width=".65" stroke-linejoin="round"><path class="drawer-yin-half" data-yin-half="0" d="M16 4A12 12 0 0 0 16 28A6 6 0 0 0 16 16A6 6 0 0 1 16 4Z"/><path class="drawer-yin-half" data-yin-half="1" transform="rotate(180 16 16)" d="M16 4A12 12 0 0 0 16 28A6 6 0 0 0 16 16A6 6 0 0 1 16 4Z"/><circle class="drawer-yin-dot" data-yin-dot="0" cx="16" cy="22" r="2"/><circle class="drawer-yin-dot" data-yin-dot="1" cx="16" cy="10" r="2"/></svg><span class="drawer-active-mark"></span></span>';
     controls.append(trigger);
     const dialog=document.createElement('dialog');
     dialog.id='evolutionDrawerDialog';
@@ -107,7 +104,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
                 const index=drawer*EVOLUTION_PAGE_SIZE+local,id=draft[index],button=document.createElement('button');
                 button.type='button';button.dataset.drawerSlot=String(index);
                 if(INTERNAL_NAV_SLOTS.includes(index)){
-                    button.className='drawer-reserved-slot';button.disabled=true;button.append(ring.cloneNode());button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
+                    button.className='drawer-reserved-slot';button.disabled=true;button.innerHTML=trigger.querySelector('svg').outerHTML;button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
                 }
                 if(id&&!isVisible(id)){
                     button.className='drawer-feature-hidden';button.disabled=true;button.setAttribute('aria-hidden','true');grid.append(button);continue;
@@ -142,8 +139,9 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         if(!navigateAllowed()||typeof onResetCycles!=='function'||onResetCycles()===false)return;
         refresh();
         if(dialog.open){render();dialog.querySelector('[data-reset-cycles-status]').textContent=getText('drawer_modes_reset_done');}
-        if(!matchMedia('(prefers-reduced-motion: reduce)').matches)ring.animate([
-            {borderColor:'#c0a25c'}, {borderColor:getComputedStyle(ring).borderColor}
+        const symbol=trigger.querySelector('.drawer-internal-symbol');
+        if(symbol&&!matchMedia('(prefers-reduced-motion: reduce)').matches)symbol.animate([
+            {boxShadow:'0 0 10px #ffd70088'}, {boxShadow:getComputedStyle(symbol).boxShadow}
         ],{duration:400,easing:'ease-out'});
     }
     const canSwipePage = () => navigateAllowed() && !document.querySelector(

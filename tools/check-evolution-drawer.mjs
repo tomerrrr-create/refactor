@@ -59,23 +59,20 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   assert(await trigger.evaluate(e=>{const r=e.getBoundingClientRect();const island=e.querySelector('.drawer-internal-symbol').getBoundingClientRect();return island.left>=r.left-1&&island.right<=r.right+1&&getComputedStyle(e).gridRowStart==='3'&&getComputedStyle(e).gridColumnStart==='5'&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e;}),'central navigation remains independently clickable at interface zoom');
  }
  await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
- const ring=trigger.locator('.drawer-internal-symbol');
- const ringStyle=()=>ring.evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),b=e.parentElement.getBoundingClientRect();return {width:s.width,height:s.height,radius:s.borderRadius,border:s.borderTopWidth,background:s.backgroundColor,shadow:s.boxShadow,fits:r.left>=b.left&&r.right<=b.right&&r.top>=b.top&&r.bottom<=b.bottom};});
- assert.deepEqual(await ringStyle(),{width:'34px',height:'34px',radius:'50%',border:'1px',background:'rgba(0, 0, 0, 0)',shadow:'none',fits:true});
- assert.equal(await trigger.locator('svg').count(),0);
+ const island=await trigger.locator('.drawer-internal-symbol').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),b=e.parentElement.getBoundingClientRect();return {w:s.width,h:s.height,radius:s.borderRadius,background:s.backgroundColor,image:s.backgroundImage,shadow:s.boxShadow,fits:r.left>=b.left&&r.right<=b.right&&r.top>=b.top&&r.bottom<=b.bottom};});
+ assert(Math.abs(parseFloat(island.w)-34)<.1&&Math.abs(parseFloat(island.h)-34)<.1);assert.equal(island.radius,'50%');assert.equal(island.background,'rgb(20, 23, 25)');assert(island.image.includes('gradient')&&island.shadow!=='none'&&island.fits,'neutral island stays inside the original tap target');
+ const yinColors=()=>trigger.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill));
  await page.evaluate(()=>drawerTest.theme('gold'));
- const mutedGold='rgb(118, 103, 65)';
- const awaitRingColor=color=>page.waitForFunction(expected=>getComputedStyle(document.querySelector('#btnEvolutionDrawerInternal .drawer-internal-symbol')).borderTopColor===expected,color);
- await awaitRingColor(mutedGold);
- if(config.width>=600){
-  await trigger.hover();await awaitRingColor('rgb(192, 162, 92)');
-  await page.mouse.move(0,0);await awaitRingColor(mutedGold);
- }
- if(config.lang==='he')assert.equal(await ring.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
+ const mutedGold='rgb(118, 103, 65)', nearBlack='rgb(8, 10, 9)';
+ await page.waitForFunction(color=>getComputedStyle(document.querySelector('#btnEvolutionDrawerInternal [data-yin-half="0"]')).fill===color,mutedGold);
+ assert.deepEqual(await yinColors(),[mutedGold,nearBlack]);
+ assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),[nearBlack,mutedGold]);
+ assert.equal(await trigger.locator('circle').count(),2);
+ assert.equal(await trigger.locator('svg').evaluate(e=>getComputedStyle(e).filter),'none');
+ if(config.lang==='he')assert.equal(await trigger.locator('[data-yin-half]').first().evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
  const position=await trigger.boundingBox(),frame=await page.locator('#simModeBackground').boundingBox();
- await tap(trigger);
- if(config.width>=600)await page.mouse.move(0,0);
- await awaitRingColor(mutedGold);
+ await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),[nearBlack,mutedGold]);
+ assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),[mutedGold,nearBlack]);
  assert.deepEqual(await physicalRows(),[['network','cymatics','turing','breathe'],['contour','dla','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&id!=='spiral'));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
  const pageIndex=()=>container.getAttribute('data-evolution-page');
@@ -93,7 +90,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await pageIndex(),'0','active settings swipe has priority');
  await drag(frame.x+10,frame.y+10,36,0);assert.equal(await pageIndex(),'0','open settings block navigation');
  await tap(page.locator('#btnGolSettingsCancel'));await lifeSettings.waitFor({state:'hidden'});await page.evaluate(()=>drawerTest.setup());initial=await state();
- await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled .drawer-internal-symbol').count(),2);
+ await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled').count(),2);
  assert.equal(await dialog.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
  await move(0,13);await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,initial.slots);assert(await trigger.evaluate(e=>document.activeElement===e));
  await open();await move(0,13);await move(2,14);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-editor.png'),animations:'disabled'});await save();
@@ -109,7 +106,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  if(config.lang==='en'){
   await trigger.focus();await page.keyboard.press('Alt+ArrowUp');await dialog.waitFor({state:'visible'});await page.keyboard.press('Escape');
   await trigger.press('Space');assert.equal(await container.getAttribute('data-evolution-page'),'1');await trigger.press('Enter');
-  await page.emulateMedia({reducedMotion:'reduce'});await tap(trigger);assert.equal(await ring.evaluate(e=>e.getAnimations().length),0);await tap(trigger);await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.emulateMedia({reducedMotion:'reduce'});await tap(trigger);assert.equal(await trigger.locator('path').evaluateAll(es=>es.flatMap(e=>e.getAnimations()).length),0);await tap(trigger);await page.emulateMedia({reducedMotion:'no-preference'});
  }
  // Genuine old settings files migrate once; every simulation remains represented.
  for(const legacy of [['cymatics',...DEFAULT_EVOLUTION_SLOTS.slice(1)],[...DEFAULT_EVOLUTION_SLOTS,'breathe','turing','cymatics',...Array(7).fill(null)],['dla','contour','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort',null,'sandpile','erosion','spiral','breathe','turing','cymatics',null,null,null,null,'nudgeBrighter',null]]){
