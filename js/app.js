@@ -3870,7 +3870,7 @@ function selectVorticesMode(mode) {
         if (armedSimulation !== engine) armSimulation(engine, {spiralEntry:mode, gravityEntry:mode});
         if (engine === 'gravitationalSort') {
             gsMode = mode;
-            vorticesGravityRules = {direction:mode, strength:.6, ...(mode==='turbine_combined'?{frame:0,fieldVersion:2}:{})};
+            vorticesGravityRules = {direction:mode, strength:.6, ...(mode==='turbine_combined'?{frame:0}:{})};
             updateGravitationalSortButtonUI();
         } else if (engine === 'spiral') {
             spiralMode = mode;
@@ -4237,7 +4237,6 @@ function restoreGravityRules(rules) {
     if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:direction});
     gsMode = direction;
     const activeRules=getActiveGravityRules();
-    delete activeRules.fieldVersion;
     if(direction==='turbine_combined')activeRules.frame=rules.frame??0;
     else delete activeRules.frame;
     Object.assign(activeRules, rules);
@@ -4619,8 +4618,7 @@ function getHistorySettings(state) {
 function validateGravitySnapshot(rules) {
     if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'turbine_combined', 'black_hole', 'pinwheel'].includes(rules.direction) ||
         !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1 ||
-        (rules.direction==='turbine_combined' && (!Number.isInteger(rules.frame)||rules.frame<0||rules.frame>0xffffffff||
-            (rules.fieldVersion!==undefined&&![1,2].includes(rules.fieldVersion))))) throw new Error('Invalid gravity rules');
+        (rules.direction==='turbine_combined' && (!Number.isInteger(rules.frame)||rules.frame<0||rules.frame>0xffffffff))) throw new Error('Invalid gravity rules');
 }
 
 function validateHistorySettings(settings) {
