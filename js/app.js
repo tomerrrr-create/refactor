@@ -1,3 +1,4 @@
+import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
@@ -415,7 +416,7 @@ let magnetMode = 'off';
       const experimentalSimulations=createExperimentalSimulationFlags();
       let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
       let modals;
-      let settingsProfiles;
+      let settingsProfiles, luminanceAnchorPreference;
 
       function palette() { return C.PALETTES[activePaletteIndex].colors; }
       function getErosionRecordingRules() { return recordErosionRules(erosionRules, palette().length); }
@@ -2469,6 +2470,7 @@ if (simulationName === 'magnet') {
         const storedWorkspace = persistWorkspaceSettings(settings);
         const storedSmooth = persistSmoothRendering(settings.smoothing.display);
         modals.refreshLocalizedModalText();
+        luminanceAnchorPreference?.sync();
         modals.refreshTechnicianSettings();
         return storedStartup && storedInit && storedSort && storedWorkspace && storedSmooth;
       }
@@ -5913,6 +5915,8 @@ else if (action.eventName === 'Invert Colors') {
                 isSimModeActive && armedSimulation === simulation && !isBreathing &&
                 !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             refreshProfiles: () => settingsProfiles?.refresh(),
+            refreshLuminanceAnchor: () => luminanceAnchorPreference?.refresh(),
+            syncLuminanceAnchor: () => luminanceAnchorPreference?.sync(),
             isSimulationMode: () => isSimModeActive,
             SORT_MODES,
             getRelativeSeparatorMode: () => isRelativeSeparatorMode,
@@ -6200,6 +6204,20 @@ updateBrightnessEvoButtonUI();
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
         });
+        luminanceAnchorPreference=createLuminanceAnchorPreference({
+            input:document.getElementById('luminanceAnchorToggle'),
+            read:()=>({magnet:magnetRules.anchorColor==='luminance',life:gameOfLifeRules.deadColor==='luminance'}),
+            canChange:()=>!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
+            apply:(enabled,{startup})=>{
+                if(enabled){magnetRules.anchorColor='luminance';gameOfLifeRules.deadColor='luminance';}
+                else{delete magnetRules.anchorColor;magnetRules.anchorColorIndex=-1;delete gameOfLifeRules.deadColor;}
+                if(!startup){
+                    recordLiveSimulationRules('magnet');recordLiveSimulationRules('gameOfLife');
+                    persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();
+                }
+            }
+        });
+        luminanceAnchorPreference.restore();
         inkSettingsUI=createInkSettingsDialog({getRules:getInkRules,saveRules:saveInkSettings,getText,getLang:getCurrentLang,onLanguageChange});
         oilSettingsUI=createOilSettingsDialog({getRules:getOilRules,saveRules:saveOilSettings,getText,getLang:getCurrentLang,onLanguageChange});
         networkSettingsUI=createNetworkSettingsDialog({getRules:getNetworkRules,saveRules:saveNetworkSettings,getText,getLang:getCurrentLang,onLanguageChange});
