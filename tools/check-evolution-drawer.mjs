@@ -59,18 +59,24 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   assert(await trigger.evaluate(e=>{const r=e.getBoundingClientRect();const island=e.querySelector('.drawer-internal-symbol').getBoundingClientRect();return island.left>=r.left-1&&island.right<=r.right+1&&getComputedStyle(e).gridRowStart==='3'&&getComputedStyle(e).gridColumnStart==='5'&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e;}),'central navigation remains independently clickable at interface zoom');
  }
  await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
- const island=await trigger.locator('.drawer-internal-symbol').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),b=e.parentElement.getBoundingClientRect();return {w:s.width,h:s.height,radius:s.borderRadius,background:s.backgroundColor,image:s.backgroundImage,shadow:s.boxShadow,fits:r.left>=b.left&&r.right<=b.right&&r.top>=b.top&&r.bottom<=b.bottom};});
- assert(Math.abs(parseFloat(island.w)-35)<.1&&Math.abs(parseFloat(island.h)-17)<.1);assert.equal(island.radius,'9px');assert.equal(island.background,'rgb(20, 20, 19)');assert(island.shadow.includes('inset')&&island.fits,'the recessed track stays inside the original tap target');
- const dotColors=()=>trigger.locator('.drawer-page-dot').evaluateAll(es=>es.map(e=>getComputedStyle(e).backgroundColor));
- const thumbStyle=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>{
-  const thumb=getComputedStyle(e,'::before');return {left:thumb.left,transition:thumb.transitionDuration};
- });
- const mutedGold='rgb(173, 139, 74)', hollow='rgba(0, 0, 0, 0)';
- assert.deepEqual(await dotColors(),[mutedGold,hollow]);
- assert.deepEqual(await thumbStyle(),{left:'2px',transition:config.lang==='he'?'0s':'0.2s'});
+ const island=await trigger.locator('.drawer-internal-symbol').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),b=e.parentElement.getBoundingClientRect();return {w:s.width,h:s.height,radius:s.borderRadius,shadow:s.boxShadow,fits:r.left>=b.left&&r.right<=b.right&&r.top>=b.top&&r.bottom<=b.bottom};});
+ assert(Math.abs(parseFloat(island.w)-30)<.1&&Math.abs(parseFloat(island.h)-15)<.1);assert.equal(island.radius,'4px');assert(island.shadow.includes('inset')&&island.fits,'the recessed switch stays inside the original tap target');
+ const cells=trigger.locator('.drawer-page-cell');
+ const dotColors=()=>cells.evaluateAll(es=>es.map(e=>getComputedStyle(e,'::after').backgroundColor));
+ const hollow='rgba(0, 0, 0, 0)';
+ const seenThemes=new Set();
+ for(const theme of ['blue','teal','gold']){
+  await page.evaluate(theme=>drawerTest.theme(theme),theme);
+  await page.waitForTimeout(620);
+  const [filled,empty]=await dotColors();
+  assert.notEqual(filled,hollow);assert.equal(empty,hollow);
+  seenThemes.add(filled);
+ }
+ assert.equal(seenThemes.size,3,'the dot follows each overlay while paused');
+ const gold=(await dotColors())[0];
+ assert.equal(await cells.first().evaluate(e=>getComputedStyle(e,'::after').transitionDuration.split(',')[0]),config.lang==='he'?'0s':'0.18s');
  const position=await trigger.boundingBox(),frame=await page.locator('#simModeBackground').boundingBox();
- await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await dotColors(),[hollow,mutedGold]);
- assert.equal((await thumbStyle()).left,'17px');
+ await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await dotColors(),[hollow,gold]);
  assert.deepEqual(await physicalRows(),[['network','cymatics','turing','breathe'],['contour','dla','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&id!=='spiral'));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
  const pageIndex=()=>container.getAttribute('data-evolution-page');
