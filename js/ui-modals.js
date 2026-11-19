@@ -2149,8 +2149,6 @@ function renderMagnetMethodButtons() {
         btn.className = 'magnet-method-button';
         btn.style.setProperty('--magnet-accent', magnetAutumnAccents[index%magnetAutumnAccents.length]);
         btn.setAttribute('aria-pressed', String(tempMagnetRules.method === m.method));
-        btn.title = app.getText('magnet_method_' + m.method);
-        btn.setAttribute('aria-label', btn.title);
         btn.dataset.method = m.method;
 
         const originalIcon = document.getElementById(m.iconId);
@@ -2158,12 +2156,16 @@ function renderMagnetMethodButtons() {
             const iconClone = originalIcon.cloneNode(true);
             iconClone.style.display = 'block';
             iconClone.removeAttribute('id');
-            iconClone.style.width = '28px';
-            iconClone.style.height = '28px';
+            iconClone.setAttribute('aria-hidden', 'true');
             btn.appendChild(iconClone);
         } else {
-            btn.innerHTML = `<span class="text-4xl">⬡</span>`;
+            btn.innerHTML = `<span aria-hidden="true" class="text-4xl">⬡</span>`;
         }
+
+        const label = document.createElement('bdi');
+        label.className = 'magnet-method-label';
+        label.textContent = app.getText('magnet_method_' + m.method);
+        btn.append(label);
 
         btn.addEventListener('click', () => {
             tempMagnetRules.method = m.method;

@@ -31,6 +31,15 @@ try{for(const touch of [false,true]){
  }
  await tap('#btnMagnetModes');await open();assert.equal(await page.locator('#magnetCombinedField').count(),0);assert.deepEqual(await page.locator('#magnetAnchorLimit button').evaluateAll(buttons=>buttons.map(b=>Number(b.dataset.limit))),[300,600,1000]);
  assert.equal(await page.locator('#magnetMethodContainer button').count(),6);
+ const names=touch?['רגיל משולב','קוסמי משולב','רגיל','קוסמי','מגנט זמן','התרחבות']:
+  ['Combined Regular','Combined Cosmic','Regular','Cosmic','Time Magnet','Expand'];
+ assert.deepEqual(await page.locator('#magnetMethodContainer .magnet-method-label').allTextContents(),names);
+ assert.equal(await page.locator('#magnetMethodContainer').getByRole('button',{name:names[0],exact:true}).getAttribute('aria-pressed'),'true');
+ const toolbarIcons=['iconModeFieldMagnet','iconModeFieldCosmicMagnet','iconModeMagnet','iconModeCosmicMagnet','iconModeTimeMagnet','iconModeExpand'];
+ for(const [index,method] of [...cycle,'time_magnet','expand'].entries()){
+  assert.equal(await page.locator('#magnetMethodContainer [data-method="'+method+'"] svg').innerHTML(),
+   await page.locator('#'+toolbarIcons[index]).innerHTML());
+ }
  assert.equal(await page.locator('#magnetAnchorLimit button:disabled').count(),3);
  const unchanged=(await state()).tiles;await choose('magnet');assert.equal(await page.locator('#magnetAnchorLimit [aria-pressed="true"]').getAttribute('data-limit'),'600');await cancel();assert.equal((await state()).mode,'field_magnet');assert.deepEqual((await state()).tiles,unchanged);
  for(const method of [...cycle,'time_magnet','expand']){
@@ -50,5 +59,14 @@ try{for(const touch of [false,true]){
  // The named type persists through the existing profile path.
  await page.evaluate(()=>fieldTest.setup());await tap('#btnMagnetModes');await open();await choose('field_cosmic_magnet');await save();await page.evaluate(()=>fieldTest.tech());
  if(!(await page.locator('#profileActions').isVisible()))await tap('[data-profile-dot="0"]');await tap('#btnProfileSave');await page.reload();await page.waitForFunction(()=>fieldTest.ready);assert.equal((await state()).settings.rules.magnet.method,'field_cosmic_magnet');
+ await page.setViewportSize({width:320,height:568});await open();
+ assert(await page.locator('#magnetMethodContainer').evaluate(container=>{
+  const bounds=container.getBoundingClientRect();
+  return [...container.querySelectorAll('button')].every(button=>{
+   const rect=button.getBoundingClientRect(),label=button.querySelector('bdi');
+   return rect.left>=bounds.left&&rect.right<=bounds.right+1&&rect.height>=44&&label.scrollWidth<=label.clientWidth+1;
+  });
+ }));
+ await cancel();
  assert.deepEqual(errors,[]);console.log('PASS Magnet types',JSON.stringify({touch,cycle:true,drafts:true,icons:true,live:true,replay:true,legacy:true,profile:true}));await context.close();
 }}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
