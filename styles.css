@@ -20,9 +20,9 @@
   --glow-color: var(--gold);
   --sim-color: #a58b54;
   --sim-gold-muted: #766741;
-  --sim-graphite-ink: #9aa6b4;
-  --sim-graphite-border: #9daab057;
-  --sim-graphite-background: linear-gradient(180deg,#c4d2e00b,transparent 44%), linear-gradient(135deg,#1b222c,#0d1016);
+  --sim-graphite-ink: #75818e;
+  --sim-graphite-border: #77849350;
+  --sim-graphite-background: linear-gradient(180deg,#b5c3d008,transparent 40%), linear-gradient(135deg,#10141a,#050709);
   transition: --sim-color 400ms ease-in-out;
 
 }
@@ -1934,7 +1934,7 @@ button, .ctrl {
 /* Keep the Graphite surface as it fades out when starting with a different playback ink. */
 :root:is([data-simulation-effective-theme="graphite"], [data-simulation-running][data-simulation-theme="graphite"]) .sim-mode-active #simModeBackground {
   border-color: var(--sim-graphite-border);
-  box-shadow: inset 0 1px 0 #c4d2e00e, 0 4px 20px #0006;
+  box-shadow: inset 0 1px 0 #b5c3d008, 0 4px 20px #0006;
 }
 :root:is([data-simulation-effective-theme="graphite"], [data-simulation-running][data-simulation-theme="graphite"]) .sim-mode-active #simModeBackground::after {
   background: var(--sim-graphite-background);
