@@ -103,7 +103,7 @@ try {
                 assert.equal(selected.settings.rules.gravity.strength,.25);
             }
             if (mode==='turbine_combined') {
-                assert.deepEqual(selected.project.gravityRules,{direction:'turbine_combined',strength:.6,frame:0,fieldVersion:2});
+                assert.deepEqual(selected.project.gravityRules,{direction:'turbine_combined',strength:.6,frame:0,fieldVersion:3});
             }
             if (mode==='flow') {
                 await swipeUp(hub);

@@ -25,6 +25,8 @@ export function runTurbine2Generation(n,board,strength = .6,field) {
     }
     const {center,radius,angle,order,moved}=geometry;
     const random=field?.random??Math.random;
+    const coverage=field?.coverage;
+    const weights=field?.weight;
     moved.fill(0);
     // Start from the same enumeration each frame: no hidden board/session state
     // is needed to interpret a recipe, JSON artwork or an Undo-restored board.
@@ -40,14 +42,15 @@ export function runTurbine2Generation(n,board,strength = .6,field) {
     for(let col=0;col<n;col++)columnCosines[col]=Math.cos(col*.03-phase);
     for(const i of order){
         if(moved[i]||board[i].isGold||radius[i]===0)continue;
+        if(coverage&&(coverage[i]===0||(coverage[i]<1&&random()>=coverage[i])))continue;
         const row=Math.floor(i/n),col=i%n,r=radius[i];
         const eddy=rowSines[row]*columnCosines[col];
         const targetRadius=Math.max(0,r-.8+eddy*.25),targetAngle=angle[i]+eddy*.06;
         const targetR=Math.max(0,Math.min(n-1,center+targetRadius*Math.sin(targetAngle)));
         const targetC=Math.max(0,Math.min(n-1,center+targetRadius*Math.cos(targetAngle)));
         let dx=targetC-col,dy=targetR-row;
-        if(field?.weight[i]){
-            const weight=field.weight[i],scale=Math.max(1,Math.hypot(dx,dy));
+        if(weights?.[i]){
+            const weight=weights[i],scale=Math.max(1,Math.hypot(dx,dy));
             dx=(1-weight)*dx/scale+weight*field.x[i];
             dy=(1-weight)*dy/scale+weight*field.y[i];
         }
