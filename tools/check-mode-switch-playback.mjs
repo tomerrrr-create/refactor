@@ -27,6 +27,17 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  const visibleWhite=async()=>{assert(await button.isVisible());assert.deepEqual(await button.evaluate(e=>({visibility:getComputedStyle(e).visibility,opacity:getComputedStyle(e).opacity,stroke:getComputedStyle(e.querySelector('svg')).stroke})),{visibility:'visible',opacity:'1',stroke:creationStroke});};
  // The playing halo follows the active button, independent of the playback theme.
  const life='#btnGameOfLife', gravity='#btnGravitationalSort', breathe='#btnShowBreatheMenu';
+ const drawer=page.locator('#btnEvolutionDrawerInternal');
+ const readDrawerInk=svg=>({
+  fills:[...svg.querySelectorAll('[data-yin-half]')].map(half=>getComputedStyle(half).fill),
+  glow:getComputedStyle(svg).filter
+ });
+ const drawerInk=()=>drawer.locator('svg').evaluate(readDrawerInk);
+ const awaitDrawerInk=(fills,glow)=>page.waitForFunction(({fills,glow})=>{
+  const svg=document.querySelector('#btnEvolutionDrawerInternal svg');
+  return getComputedStyle(svg).filter===glow&&[...svg.querySelectorAll('[data-yin-half]')]
+   .every((half,index)=>getComputedStyle(half).fill===fills[index]);
+ },{fills,glow});
  const halo=id=>page.locator(id).evaluate(e=>{
   const style=getComputedStyle(e,'::before');
   return {opacity:Number(style.opacity),name:style.animationName,playState:style.animationPlayState,
@@ -36,7 +47,12 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
   Number(getComputedStyle(document.querySelector(id),'::before').opacity)===opacity,{id,opacity});
  await page.evaluate(()=>{modeTest.setup('gameOfLife');modeTest.playbackTheme('teal');modeTest.step();});
  assert.equal((await halo(life)).opacity,0,'arming and single step have no playback halo');
+ const pausedDrawer=await drawerInk(),drawerBounds=await drawer.boundingBox();
+ assert.deepEqual(pausedDrawer.fills,['rgb(255, 215, 0)','rgb(8, 10, 9)']);
+ assert.notEqual(pausedDrawer.glow,'none');
  await page.locator('#btnPlayPauseLife').click();await awaitHalo(life,1);
+ await awaitDrawerInk(['rgb(104, 189, 181)','rgb(8, 10, 9)'],'none');
+ assert.deepEqual(await drawer.boundingBox(),drawerBounds);
  const firstPulse=await halo(life);
  assert.equal(firstPulse.name,'simulation-halo-breathe');
  assert.equal(firstPulse.playState,'running');
@@ -46,8 +62,18 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
   {id:life,transform:firstPulse.transform});
  await mkdir('/tmp/mode-switch-playback',{recursive:true});
  await page.locator('#controlsContainer').screenshot({path:`/tmp/mode-switch-playback/${cfg.lang}-halo.png`});
+ await drawer.click();
+ assert.equal(await drawer.getAttribute('data-page'),'1');
+ assert.equal(await drawer.getAttribute('data-parked-active'),'true');
+ assert.equal(await drawer.locator('.drawer-active-mark').evaluate(mark=>getComputedStyle(mark).backgroundColor),'rgb(104, 189, 181)');
+ assert((await state()).playing);
+ assert.equal((await state()).armed,'gameOfLife');
+ await drawer.click();
+ assert.equal(await drawer.getAttribute('data-page'),'0');
+ await page.evaluate(()=>modeTest.playbackTheme('gold'));
  await page.locator(gravity).click();assert((await state()).playing);
  await awaitHalo(life,0);await awaitHalo(gravity,1);
+ await awaitDrawerInk(['rgb(118, 103, 65)','rgb(8, 10, 9)'],'none');
  await page.locator('#btnPlayPauseLife').click();
  await page.waitForFunction(id=>{
   const opacity=Number(getComputedStyle(document.querySelector(id),'::before').opacity);
@@ -55,14 +81,15 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  },gravity);
  await awaitHalo(gravity,0);
  assert.equal((await halo(gravity)).playState,'paused');
- await page.locator('#btnEvolutionDrawerInternal').click();
+ await awaitDrawerInk(pausedDrawer.fills,pausedDrawer.glow);
+ await drawer.click();
  await page.locator(breathe).click();
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.locator('#btnPlayPauseLife').click();await awaitHalo(breathe,1);
  assert.equal((await halo(breathe)).name,'none','reduced motion keeps a steady halo for Breathe');
  await page.locator('#btnPlayPauseLife').click();await awaitHalo(breathe,0);
  await page.emulateMedia({reducedMotion:'no-preference'});
- await page.locator('#btnEvolutionDrawerInternal').click();
+ await drawer.click();
  await page.evaluate(()=>modeTest.playbackTheme('gold'));
  for(const sim of ['nudgeBrighter','nudgeDarker','gameOfLife','brightnessEvo','gravitationalSort','erosion','dla','contour','cymatics','islands','turing','magnet','spiral','sandpile','breathe']){
   await page.evaluate(sim=>modeTest.setup(sim),sim);assert(await button.isVisible());const before=await rects();await page.evaluate(()=>modeTest.start());await visibleWhite();assert.deepEqual(await rects(),before,'grid geometry remains fixed during '+sim);
