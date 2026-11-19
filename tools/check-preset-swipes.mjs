@@ -33,7 +33,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   async function open(){await swipe(button,0,-35);await modal.waitFor({state:'visible'});}
   async function close(id){await tap(page.locator('#'+id));await modal.waitFor({state:'hidden'});}
   const keyFor=id=>sim==='gameOfLife'?id:id.replace('btnChiPreset','');
-  async function setup(index=0){await page.evaluate(({sim,index})=>presetTest.setup(sim,index),{sim,index});if(await page.locator('#controlsContainer').getAttribute('data-evolution-page')==='1')await tap(page.locator('#btnEvolutionDrawer'));}
+  async function setup(index=0){await page.evaluate(({sim,index})=>presetTest.setup(sim,index),{sim,index});if(await page.locator('#controlsContainer').getAttribute('data-evolution-page')==='1')await tap(page.locator('#btnEvolutionDrawerInternal'));}
   for(const index of [0,1,2])for(const direction of [1,-1]){
    await setup(index);const before=await state(),current=before[key].sources[index],at=order.findIndex(id=>keyFor(id)===current),target=order[(at+direction+order.length)%order.length];
    await swipe(button,direction*35);const swiped=await state();sameBoard(before,swiped);assert.equal(swiped[key].index,index);assert.equal(swiped[key].sources[index],keyFor(target));assert.deepEqual(swiped[key].yoursRules,before[key].yoursRules);
@@ -71,10 +71,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await page.evaluate(({modalId,prefix})=>{const buttons=[...document.querySelectorAll('#'+modalId+' button[id^="'+prefix+'"]')];buttons.reverse().forEach(b=>b.parentElement.append(b));},{modalId,prefix});
   await swipe(button,35);assert.equal((await state())[key].sources[0],keyFor(order.at(-2)),'reordering UI changes swipe order');
   await page.evaluate(({modalId,prefix,order})=>{const parent=document.querySelector('#'+modalId+' button[id^="'+prefix+'"]').parentElement;order.forEach(id=>parent.append(document.getElementById(id)));},{modalId,prefix,order});
-  // Not selected: no arming, no rule/board/log changes.
-  await setup();await tap(page.locator('#btnGravitationalSort'));const inactive=await state();await swipe(button,35);assert.deepEqual(await state(),inactive);
+  // Inactive preset buttons use the drawer swipe without arming or changing rules.
+  await setup();await tap(page.locator('#btnGravitationalSort'));const inactive=await state();await swipe(button,35);assert.equal(await page.locator('#controlsContainer').getAttribute('data-evolution-page'),'1');assert.deepEqual(await state(),inactive);
   // Live changes on either drawer continue the same generation cursor and replay.
-  await setup(1);await page.evaluate(s=>presetTest.moveToSecond(s),sim);await tap(page.locator('#btnEvolutionDrawer'));await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>presetTest.state().gen>=4);
+  await setup(1);await page.evaluate(s=>presetTest.moveToSecond(s),sim);await tap(page.locator('#btnEvolutionDrawerInternal'));await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(()=>presetTest.state().gen>=4);
   const running=await state();await swipe(button,35);assert((await state()).playing);assert((await state()).gen>=running.gen);assert.equal((await state())[key].index,1);
   const liveChoice=await state();await open();await close(saveId);assert.deepEqual(effective(await state()),effective(liveChoice),'live Save without edits retains choice');assert((await state()).gen>=liveChoice.gen);
   await open();await tap(page.locator('#'+order[2]));await close(saveId);assert((await state()).playing);assert.equal((await state())[key].index,1);

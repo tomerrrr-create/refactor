@@ -144,7 +144,24 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
             {boxShadow:'0 0 10px #ffd70088'}, {boxShadow:getComputedStyle(symbol).boxShadow}
         ],{duration:400,easing:'ease-out'});
     }
-    bindPickerGestures(trigger,{onTap:nextPage,onOpen:open,onHold:resetCycles,canInteract:navigateAllowed,canOpen:canEdit});
+    const canSwipePage = () => navigateAllowed() && !document.querySelector(
+        'dialog[open], .modal-visible, .evolution-explanation.is-visible'
+    );
+    const swipePage = () => { if (canSwipePage()) nextPage(); };
+    bindPickerGestures(trigger,{onTap:nextPage,onOpen:open,onHold:resetCycles,canInteract:navigateAllowed,canOpen:canEdit,onSwipeFallback:swipePage});
+
+    // Empty slots and gutters may hit the backdrop or the grid itself.
+    const backdrop = controls.querySelector('#simModeBackground');
+    bindPickerGestures(controls, {
+        canInteract: canSwipePage,
+        canStart: event => {
+            if (event.target !== controls && event.target !== backdrop) return false;
+            const {left, right, top, bottom} = backdrop.getBoundingClientRect();
+            return event.clientX >= left && event.clientX < right &&
+                event.clientY >= top && event.clientY < bottom;
+        },
+        onSwipeFallback: swipePage
+    });
     dialog.querySelector('[data-reset-cycles]').addEventListener('click',resetCycles);
     trigger.addEventListener('keydown',event=>{
         if(event.altKey&&event.key==='ArrowUp'&&canEdit()){event.preventDefault();open();}
@@ -161,5 +178,5 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-simulation-running']});
     observer.observe(controls,{attributes:true,subtree:true,attributeFilter:['class']});
     onLanguageChange(()=>{refresh();if(dialog.open)render();});
-    applyLayout();return {applyLayout,refresh,open,dialog,trigger};
+    applyLayout();return {applyLayout,refresh,open,dialog,trigger,swipePage};
 }
