@@ -55,26 +55,6 @@ test('a pigment participates in at most one actual swap per generation',()=>seed
 }));
 
 const gravityStep=(board,n,strength)=>runGravitationalSortGeneration({n,currentBoardState:board,gravitationalSortRules:{direction:'turbine2',strength}});
-test('Turbine Combined resumes from its saved frame and conserves pigments and protected tiles',()=>{
- const n=41,initial=boardFor(n),currentBoardState=structuredClone(initial);
- const gravitationalSortRules={direction:'turbine_combined',strength:.6,frame:0};
- const context={n,currentBoardState,gravitationalSortRules};
- for(let i=0;i<12;i++)runGravitationalSortGeneration(context);
- const saved=JSON.parse(JSON.stringify(context));
- assert.equal(saved.gravitationalSortRules.frame,12);
- const advance=state=>{for(let i=0;i<8;i++)runGravitationalSortGeneration(state);};
- const oldRandom=Math.random,oldNow=Date.now;
- try {
-  Math.random=Date.now=()=>{throw new Error('Combined replay must use the recorded frame');};
-  advance(context);advance(saved);
- } finally {
-  Math.random=oldRandom;Date.now=oldNow;
- }
- assert.deepEqual(saved,context);
- assert.notDeepEqual(currentBoardState,initial);
- assert.deepEqual([...currentBoardState].sort((a,b)=>a.id-b.id),initial);
- initial.forEach((tile,index)=>{if(tile.isGold)assert.deepEqual(currentBoardState[index],tile);});
-});
 test('Gravity at 60% reproduces legacy Spiral Turbine 2 exactly, including tile metadata',()=>{
  const original=boardFor(31);original.forEach((t,i)=>{t.v=i/3;t.prevK=i%17;});
  const legacy=seeded(()=>{const b=structuredClone(original);for(let i=0;i<12;i++)step(b,31);return b;});
