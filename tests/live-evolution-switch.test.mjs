@@ -1,3 +1,4 @@
+import {vorticesModeFor} from '../js/vortices-modes.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import {magnetRecordingRules, recordedMagnetAnchorLimit} from '../js/magnet-anchor-limit.js';
 import test from 'node:test';
@@ -19,7 +20,7 @@ const simulations = {
 function harness() {
     const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
-    const c = vm.createContext({MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
+    const c = vm.createContext({vorticesModeFor, vorticesSpiralRules:{method:'left'}, vorticesGravityRules:{direction:'turbine2',strength:.6},MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
         C:{PALETTES:[{originalColors:[]}]}, activePaletteIndex:0, palette:()=>[], getCracksBrush:()=>({color:null,rainbow:false}), getCracksGrowth:()=>({branchChance:65,branchInterval:11,curvature:100}), getCracksMaterial:()=>({enabled:false,strength:40}), dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
         setSimulationRunning(value) { c.runningAppearance = value; }, isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
         boardState: [{k: 1}, {k: 2}], simulationStartState: null, simulationHasBrushInput: false,
@@ -49,6 +50,7 @@ function harness() {
     vm.runInContext(section('let replayMagnetCombinedField =', 'let chiFlowRules ='), c);
     vm.runInContext(section('window.logArtEvent = function', '// ------------------------------------------'), c);
     vm.runInContext(section('function pauseLife()', 'function getRandomGridPosition('), c);
+    vm.runInContext(section('function isTornadoSelected(', '// Remember a selection'), c);
     vm.runInContext(section('function handleEvolutionTap(', 'function setBrushMode('), c);
     vm.runInContext(section('function nextEvolutionMode(', 'function updateErosionButtonUI('), c);
     for (const name of ['selectMagnetMode','cycleSpiralMode','cycleGravitationalSortMode','cycleMagnetMode','cycleErosionMode','cycleGameOfLifeMode','cycleChiFlowMode','cycleIslandsMode','cycleDlaMode']) {
@@ -105,7 +107,7 @@ test('live rule snapshots replay at their recorded generation without restarting
     vm.runInContext(section('function applyMacroRules(', '        async function initializeApp('), c);
     c.isWindCommand=()=>false;
     select(c,'spiral'); c.togglePlayPauseLife(); c.currentGenerationCount=37;
-    c.spiralRules.method='left'; c.spiralMode='left'; c.recordLiveSimulationRules('spiral');
+    c.vorticesSpiralRules.method='left'; c.spiralMode='left'; c.recordLiveSimulationRules('spiral');
     const recorded=c.artRecipeLog.at(-1);
     assert.match(recorded,/\[GEN:37\] SIMULATION_RULES/);
     const action=c.parseMacroText(recorded)[0];
@@ -113,7 +115,7 @@ test('live rule snapshots replay at their recorded generation without restarting
     c.spiralRules.method='b'; c.spiralMode='b';
     const start=c.simulationStartState;
     c.executeMacroAction(action);
-    assert.equal(c.spiralRules.method,'left'); assert.equal(c.spiralMode,'left');
+    assert.equal(c.vorticesSpiralRules.method,'left'); assert.equal(c.spiralMode,'left');
     assert.equal(c.isLifePlaying,true); assert.equal(c.currentGenerationCount,37);
     assert.equal(c.simulationStartState,start); assert.equal(c.history.length,0);
 });
@@ -168,6 +170,6 @@ test('Nudge arms and cycles without paint; live cycling keeps the same generatio
 test('Spiral button starts at Pinwheel, follows the requested order live, and preserves legacy arming',()=>{
  const c=harness();select(c,'spiral');assert.equal(c.spiralMode,'b');assert.equal(c.spiralRules.method,'b');
  c.togglePlayPauseLife();c.currentGenerationCount=23;
- for(const mode of ['left','radial','down','a','b']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
+ for(const mode of ['radial','down','b']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
  const legacy=harness();legacy.isExecutingMacroCommand=true;legacy.armSimulation('spiral');assert.equal(legacy.spiralMode,'b');assert.equal(legacy.spiralRules.method,'b');
 });

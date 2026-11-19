@@ -10,7 +10,7 @@ function harness(t,type){
  const handlers=new Map(),timers=new Map(),actions=[];let now=0,id=0;
  const button={disabled:false,contains:e=>e===button,setPointerCapture(){},hasPointerCapture:()=>false,releasePointerCapture(){},classList:{toggle(){},remove(){}},addEventListener:(name,fn)=>handlers.set(name,fn)};
  Object.assign(globalThis,{document:{elementFromPoint:(x,y)=>y>=0&&y<=50?button:null,addEventListener(){}},window:{addEventListener(){}},setTimeout(fn,ms){timers.set(++id,{fn,at:now+ms});return id;},clearTimeout:key=>timers.delete(key)});
- const context=vm.createContext({bindPickerGestures,evolutionPickers:[[button,'gravitationalSort',()=>actions.push('tap'),()=>actions.push('settings')]],isBreathing:false,isMacroLoaded:false,armedSimulation:'gravitationalSort',C:{LONG_PRESS_SHOW_MS:600},handleEvolutionTap:(sim,fn)=>fn(),resetEvolutionCycle:sim=>actions.push('reset:'+sim),isNudgeSimulation:()=>false,hideLongPressDisplay(){},contextForModals:{canBrowseEvolutionPreset:()=>false},evolutionExplanation:{isOpen:()=>false,show:(b,sim)=>actions.push('help:'+sim)}});
+ const context=vm.createContext({bindPickerGestures,evolutionDrawer:{swipePage(){}},matchesEvolutionControl:sim=>sim==='gravitationalSort',evolutionPickers:[[button,'gravitationalSort',()=>actions.push('tap'),()=>actions.push('settings')]],isBreathing:false,isMacroLoaded:false,armedSimulation:'gravitationalSort',C:{LONG_PRESS_SHOW_MS:600},handleEvolutionTap:(sim,fn)=>fn(),resetEvolutionCycle:sim=>actions.push('reset:'+sim),isNudgeSimulation:()=>false,hideLongPressDisplay(){},contextForModals:{canBrowseEvolutionPreset:()=>false},evolutionExplanation:{isOpen:()=>false,show:(b,sim)=>actions.push('help:'+sim)}});
  const start=source.indexOf('evolutionPickers.forEach('),end=source.indexOf("dom.btnPlayPauseLife.addEventListener",start);vm.runInContext(source.slice(start,end),context);
  const event=(name,x=25,y=25)=>handlers.get(name)?.({pointerId:1,pointerType:type,isPrimary:true,button:0,clientX:x,clientY:y,detail:1});
  return{actions,event,advance(time){for(;;){const next=[...timers].filter(([,v])=>v.at<=time).sort((a,b)=>a[1].at-b[1].at)[0];if(!next)break;now=next[1].at;timers.delete(next[0]);next[1].fn();}now=time;},down:()=>event('pointerdown'),release(){event('pointerup');event('click');}};
@@ -31,6 +31,6 @@ for(const type of ['mouse','touch']){
 }
 test('defaults describe first cycle choices, with Nudge directions sharing one default',()=>{
  assert.equal(Object.keys(DEFAULT_EVOLUTION_CYCLE_MODES).length,17);
- assert.equal(defaultEvolutionCycleMode('gravitationalSort'),'up');assert.equal(defaultEvolutionCycleMode('cymatics'),3);
+ assert.equal(defaultEvolutionCycleMode('gravitationalSort'),'up');assert.equal(defaultEvolutionCycleMode('cymatics'),4);
  assert.equal(defaultEvolutionCycleMode('nudgeDarker'),'nudgeBrighter');assert.equal(defaultEvolutionCycleMode('turing'),undefined);
 });

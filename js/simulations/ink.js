@@ -1,6 +1,8 @@
 // Version 1: image-driven fluid velocity and conservative discrete pigment transport.
 // Coarse velocity is checkpoint state; scratch buffers are derived and reusable.
 export const INITIAL_INK_RULES = Object.freeze({flow:65,swirl:65,viscosity:25});
+// UI defaults are separate from the version 1 engine's legacy rule fallback.
+export const DEFAULT_INK_PREFERENCES = Object.freeze({flow:75,swirl:100,viscosity:15});
 const MAX_GRID = 33;
 export function validateInkRules(value = INITIAL_INK_RULES) {
     if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(key=>!Object.hasOwn(INITIAL_INK_RULES,key)))throw Error('Invalid Ink rules');

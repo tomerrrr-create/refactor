@@ -5,11 +5,13 @@ import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,rest
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
 import {createOilSettingsDialog} from './oil-settings-dialog.js';
-import {INITIAL_INK_RULES,validateInkRules,createInkState,restoreInkState,validateInkSnapshot,runInkGeneration} from './simulations/ink.js';
+import {DEFAULT_INK_PREFERENCES,validateInkRules,createInkState,restoreInkState,validateInkSnapshot,runInkGeneration} from './simulations/ink.js';
 import {createInkSettingsDialog} from './ink-settings-dialog.js';
 import { createMacroEnding } from './macro-ending.js';
 import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
+import {VORTICES_MODES,VORTICES_SETTINGS_ENTRY_MODES,VORTICES_RESONANCE_MAPS,RESONANCE_MAPS,vorticesModeFor,loadVorticesCycle,persistVorticesCycle,nextVorticesMode} from './vortices-modes.js';
+import {createVorticesCycleDialog} from './vortices-cycle-dialog.js';
 import {createEvolutionModeMemory,defaultEvolutionCycleMode} from './evolution-mode-memory.js';
 import { createMacroActivity } from './macro-activity.js';
 import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour-action-settings.js';
@@ -74,7 +76,8 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let recordPausedBrushMotion = loadBrushMotionRecording();
       let replayBrushBefore = null;
       let islandsSession = null;
-      let inkState=null,inkRules={...INITIAL_INK_RULES},replayInkRules=null,inkSettingsUI=null;
+      let inkState=null,inkRules={...DEFAULT_INK_PREFERENCES},replayInkRules=null,inkSettingsUI=null;
+      let vorticesEnabledModes=loadVorticesCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null,oilSettingsUI=null;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
@@ -321,6 +324,7 @@ gameOfLifeSources = gameOfLifeIdentity.sources;
 personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       gameOfLifeRules = cloneGameOfLifeRules(gameOfLifeCycle[0]);
       let gravitationalSortRules = { ...C.defaultGravitationalSortRules };
+      let vorticesGravityRules = { direction:'turbine2', strength:.6 };
       let erosionRules = { ...C.defaultErosionRules };
       let dlaRules = { ...C.defaultDlaRules };
       let replayBrightnessPreferences = null;
@@ -328,6 +332,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null, replayCracksGrowth = null, replayCracksBrush = null, lastCracksBrushKey = '';
       let contourRules = { ...C.defaultContourRules, lineColor:'brush', growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
+const vorticesSpiralRules = { method: 'tornado', tornadoVersion: 3, tornadoFrame: 0 };
 let magnetRules = { ...C.defaultMagnetRules };
 let magnetAnchorLimit = 600;
 let replayMagnetAnchorLimit = null;
@@ -394,7 +399,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'left', 'radial', 'down', 'a'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'radial', 'down'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -451,9 +456,9 @@ currentSortMethod,
             evolutionTuning: structuredClone(evolutionTuning),
             brightnessEvoMode, breatheEvoMode, dlaMode,
             ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
-            spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
-            ...(spiralMode === 'tornado' ? {tornadoVersion: spiralRules.tornadoVersion ?? 3, tornadoFrame: spiralRules.tornadoFrame ?? 0} : {}),
-            ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...gravitationalSortRules } } : {}),
+            spiralMethod: armedSimulation === 'spiral' ? spiralMode : undefined,
+            ...(isTornadoSelected() ? {tornadoVersion: vorticesSpiralRules.tornadoVersion, tornadoFrame: vorticesSpiralRules.tornadoFrame} : {}),
+            ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...getActiveGravityRules() } } : {}),
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
             ...(armedSimulation === 'cymatics' ? {cymaticsState:getCymaticsSnapshot()} : {}),
@@ -576,19 +581,17 @@ k: tileState.k,
         }));
 
         if (state.gravityRules) {
-            if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
-            gravitationalSortRules = { ...state.gravityRules };
-            gsMode = gravitationalSortRules.direction;
-            updateGravitationalSortButtonUI();
+            restoreGravityRules(state.gravityRules);
         }
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'black_hole', 'vortex', 'turbine2', 'tornado'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
-            if (armedSimulation !== 'spiral') armSimulation('spiral');
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+            if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry: state.spiralMethod });
             spiralMode = state.spiralMethod;
-            spiralRules.method = state.spiralMethod;
-            spiralRules.tornadoVersion = [2, 3].includes(state.tornadoVersion) ? state.tornadoVersion : 1;
-            spiralRules.tornadoFrame = Number.isSafeInteger(state.tornadoFrame) && state.tornadoFrame >= 0 ? state.tornadoFrame : 0;
+            const rules = getActiveSpiralRules();
+            rules.method = state.spiralMethod;
+            rules.tornadoVersion = [2, 3].includes(state.tornadoVersion) ? state.tornadoVersion : 1;
+            rules.tornadoFrame = Number.isSafeInteger(state.tornadoFrame) && state.tornadoFrame >= 0 ? state.tornadoFrame : 0;
             updateSpiralButtonUI();
         }
         
@@ -1416,7 +1419,7 @@ dlaState.emptyIndices.push(index);
 
       function gameLoop() {
         if (!isLifePlaying) return;
-        const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, gravitationalSortRules, erosionRules, dlaState, dlaRules, contourRules,
+        const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, erosionRules, dlaState, dlaRules, contourRules,
             brightnessRules: evolutionTuning.brightnessEvo, dlaTuning: evolutionTuning.dla };
         let nextState;
         let didAdvance = true;
@@ -1436,7 +1439,7 @@ case 'brightnessEvo':
                 case 'oil': boardState=runOilEvolution(context); break;
                 case 'network': boardState=runNetworkEvolution(context); break;
             case 'islands': boardState = runIslandsGeneration(context, islandsSession); break;
-            case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration(context); boardState = nextState; break;
+            case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration({...context, gravitationalSortRules:getActiveGravityRules()}); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
        case 'contour': 
                 nextState = runContourEvolution(context);
@@ -1444,7 +1447,7 @@ case 'brightnessEvo':
                 break;
 
 case 'spiral': 
-                nextState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
+                nextState = Simulations.runSpiralGeneration({ ...context, spiralRules: getActiveSpiralRules() });
                 boardState = nextState; 
                 break;
 case 'magnet': 
@@ -1532,7 +1535,7 @@ break;
         // --- תוספת: תיעוד מורחב ב-Art Logger כולל מצב וחוקים ---
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
-        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(getActiveGravityRules());
         else if (armedSimulation === 'cymatics') simDetails=JSON.stringify(getCymaticsSnapshot());
         else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
@@ -1541,7 +1544,7 @@ break;
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(getContourRecordingRules());
-        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
+        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(getActiveSpiralRules());
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(getMagnetRecordingRules());
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
@@ -1556,7 +1559,7 @@ break;
                 syncDlaCrystalState();
             }
       
-            const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, gravitationalSortRules, erosionRules, dlaState, dlaRules, contourRules,
+            const context = { n, currentBoardState: boardState, currentPalette: palette(), gameOfLifeRules, erosionRules, dlaState, dlaRules, contourRules,
             brightnessRules: evolutionTuning.brightnessEvo, dlaTuning: evolutionTuning.dla };
             
             switch(armedSimulation) {
@@ -1579,7 +1582,7 @@ case 'brightnessEvo':
                     boardState = runIslandsGeneration(context, islandsSession);
                     break;
                 case 'gravitationalSort': 
-                    boardState = Simulations.runGravitationalSortGeneration(context);
+                    boardState = Simulations.runGravitationalSortGeneration({...context, gravitationalSortRules:getActiveGravityRules()});
                     break;
                 case 'erosion': 
                     boardState = Simulations.runErosionGeneration(context); 
@@ -1590,7 +1593,7 @@ case 'contour':
                 break;
 
 case 'spiral': 
-                boardState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
+                boardState = Simulations.runSpiralGeneration({ ...context, spiralRules: getActiveSpiralRules() });
                 break;
 
 
@@ -1768,7 +1771,7 @@ function pauseLife() {
 function getSimulationRecordingDetails() {
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
-        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(gravitationalSortRules);
+        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(getActiveGravityRules());
         else if (armedSimulation === 'cymatics') simDetails=JSON.stringify(getCymaticsSnapshot());
         else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
@@ -1777,7 +1780,7 @@ function getSimulationRecordingDetails() {
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(getContourRecordingRules());
-        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
+        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(getActiveSpiralRules());
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(getMagnetRecordingRules());
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
@@ -1862,23 +1865,46 @@ function initializeDla() {
 
 
 
+function isTornadoSelected() {
+    return armedSimulation === 'spiral' && spiralMode === 'tornado';
+}
+function getActiveSpiralRules() {
+    return vorticesModeFor('spiral', spiralMode) ? vorticesSpiralRules : spiralRules;
+}
+function getActiveGravityRules() {
+    return vorticesModeFor('gravitationalSort', gsMode) ? vorticesGravityRules : gravitationalSortRules;
+}
+function activeVorticesMode() {
+    if (armedSimulation === 'gravitationalSort') return vorticesModeFor(armedSimulation, gsMode);
+    if (armedSimulation === 'spiral') return vorticesModeFor(armedSimulation, spiralMode);
+    if (armedSimulation === 'cymatics') return vorticesModeFor(armedSimulation, getCymaticsRules().resonanceVersion);
+    return vorticesModeFor(armedSimulation);
+}
+function activeEvolutionControl() {
+    return activeVorticesMode() ? 'ink' : armedSimulation;
+}
+function matchesEvolutionControl(simulation) {
+    return activeEvolutionControl() === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation());
+}
+
 // Remember a selection, never an engine's running cursor or artwork.
 function currentCycleMode(simulation) {
     return ({gameOfLife:gameOfLifeMode,sandpile:chiFlowMode,gravitationalSort:gsMode,
         spiral:spiralMode,magnet:magnetMode,brightnessEvo:brightnessEvoMode,dla:dlaMode,
         breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
-        ink:'flow',oil:'droplets',network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
+        ink:activeVorticesMode(),oil:'droplets',network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
         nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
 }
 function rememberCurrentCycle() {
     if(selectingCycleMode||!cycleMemory.active())return;
+    const selected = activeEvolutionControl();
     if(cycleMemoryAfterReplay){
         // A subsequent manual settings edit is a new choice; an untouched
         // playback result must never replace the user's remembered mode.
-        if(cycleMemoryAfterReplay.simulation!==armedSimulation||cycleMemoryAfterReplay.mode===currentCycleMode(armedSimulation))return;
+        if(cycleMemoryAfterReplay.simulation!==selected||cycleMemoryAfterReplay.mode===currentCycleMode(selected))return;
         cycleMemoryAfterReplay=false;
     }
-    if(armedSimulation)cycleMemory.remember(armedSimulation,currentCycleMode(armedSimulation));
+    if(selected)cycleMemory.remember(selected,currentCycleMode(selected));
     if(windMode)cycleMemory.remember('wind',windSettings.mode);
 }
 function refreshCycleIcons() {
@@ -1916,22 +1942,21 @@ function restoreCycleMode(simulation, mode) {
 }
 function resetEvolutionCycle(simulation, {refresh=true} = {}) {
     if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
-    const mode=defaultEvolutionCycleMode(simulation);
+    const mode=simulation==='ink'?vorticesEnabledModes[0]:defaultEvolutionCycleMode(simulation);
     if(mode===undefined)return false;
-    const selected=armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation());
+    const selected=matchesEvolutionControl(simulation);
     cycleMemory.remember(simulation,mode);
     if(!selected){
-        // Clouds is settings-only and normally survives re-entry. An explicit
-        // reset must also replace that inactive preference with Circular.
-        if(simulation==='cymatics'){
-            const selectedMap=selectCymaticsMap(getCymaticsRules(),mode,cymaticsFrequencies,cymaticsStrengths);
-            cymaticsRules=selectedMap.rules;cymaticsFrequencies=selectedMap.frequencies;cymaticsStrengths=selectedMap.strengths;
-            persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();
-        }
         if(refresh)refreshCycleIcons();return true;
     }
     cycleMemoryAfterReplay=false;
-    if(currentCycleMode(armedSimulation)!==mode){
+    if(currentCycleMode(simulation)!==mode){
+        if (simulation === 'ink') {
+            selectVorticesMode(mode);
+            rememberCurrentCycle();
+            if (refresh) refreshCycleIcons();
+            return true;
+        }
         // Breathe's existing mode changes require Pause. Other active engines
         // keep their current generation clock, just like normal live cycling.
         if(simulation==='breathe'&&isLifePlaying)pauseLife();
@@ -1954,14 +1979,19 @@ function cycleMemoryTap(simulation, onTap) {
     return ()=>{
         selectingCycleMode=true;
         try {
-            const selected=armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation());
-            if(!selected&&remembered!==undefined){
-                armSimulation(simulation);restoreCycleMode(simulation,remembered);
-                // Existing context commands keep recipes independent of this preference.
-                window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+            const selected=matchesEvolutionControl(simulation);
+            if(!selected&&remembered!==undefined&&(simulation!=='ink'||vorticesEnabledModes.includes(remembered))){
+                if (simulation === 'ink') selectVorticesMode(remembered);
+                else {
+                    // The same engine may already be armed on the circular modes button.
+                    if (armedSimulation !== simulation) armSimulation(simulation);
+                    restoreCycleMode(simulation,remembered);
+                    // Existing context commands keep recipes independent of this preference.
+                    window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+                }
             }else onTap();
             if(selected&&armedSimulation===null)cycleMemory.finishCycle(simulation);
-            else if(armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation()))cycleMemory.enterCycle(simulation);
+            else if(matchesEvolutionControl(simulation))cycleMemory.enterCycle(simulation);
         }finally{
             selectingCycleMode=false;cycleMemoryAfterReplay=false;
             rememberCurrentCycle();refreshCycleIcons();
@@ -1973,17 +2003,17 @@ function cycleMemoryTap(simulation, onTap) {
 // generations, rules and Undo boundary. Only breathing retains manual Pause.
 function handleEvolutionTap(simulation, onTap) {
     if(typeof cycleMemory!=='undefined'&&cycleMemory.active())onTap=cycleMemoryTap(simulation,onTap);
-    if (!isLifePlaying || armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())) {
+    if (!isLifePlaying || matchesEvolutionControl(simulation)) {
         onTap();
         return;
     }
     if (armedSimulation === 'breathe' || simulation === 'breathe') return;
     pauseLife();
     onTap();
-    if ((armedSimulation === simulation || (isNudgeSimulation(simulation)&&isNudgeSimulation())) && !isLifePlaying) togglePlayPauseLife();
+    if (matchesEvolutionControl(simulation) && !isLifePlaying) togglePlayPauseLife();
 }
 
-function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
+function armSimulation(simulationName, { recordIslandsStart = true, spiralEntry = 'b', gravityEntry = 'up' } = {}) {
     if (isLifePlaying) return;
     if (!isExecutingMacroCommand) { replayInkRules=null; replayOilRules=null; replayNetworkRules=null; replayCymaticsRules=null; replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
 
@@ -2087,13 +2117,13 @@ if (!isTogglingOff && simulationName !== null) {
             breatheEvoMode = 'solo';
         }
         if (simulationName === 'gravitationalSort') {
-            gsMode = 'up';
-            if (typeof gravitationalSortRules !== 'undefined') gravitationalSortRules.direction = 'up';
+            gsMode = gravityEntry;
+            if (!vorticesModeFor('gravitationalSort', gravityEntry)) gravitationalSortRules.direction = gravityEntry;
         }
 
 if (simulationName === 'spiral') {
-    spiralMode = 'b';
-    if (typeof spiralRules !== 'undefined') spiralRules.method = 'b';
+    spiralMode = spiralEntry;
+    if (!vorticesModeFor('spiral', spiralEntry)) spiralRules.method = spiralEntry;
 }
 
 
@@ -2351,7 +2381,7 @@ if (simulationName === 'magnet') {
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules, lineColor:'brush' }, turing: { ...turingRules },
-                ...(JSON.stringify(inkRules)===JSON.stringify(INITIAL_INK_RULES)?{}:{ink:{...inkRules}}),
+                ...(JSON.stringify(inkRules)===JSON.stringify(DEFAULT_INK_PREFERENCES)?{}:{ink:{...inkRules}}),
                 ...(JSON.stringify(oilRules)===JSON.stringify(INITIAL_OIL_RULES)?{}:{oil:{...oilRules}}),
                 ...(JSON.stringify(networkRules)===JSON.stringify(DEFAULT_NETWORK_PREFERENCES)?{}:{network:{...networkRules}}),
                 ...(JSON.stringify(cymaticsRules)===JSON.stringify(INITIAL_CYMATICS_RULES)?{}:{cymatics:{...cymaticsRules}}) }
@@ -2372,7 +2402,9 @@ if (simulationName === 'magnet') {
         applySimulationPlaybackTheme(settings.simulationPlaybackTheme);
         separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
+        if (vorticesModeFor('gravitationalSort', gravitationalSortRules.direction)) gravitationalSortRules.direction = 'up';
         spiralRules = { ...settings.rules.spiral };
+        if (vorticesModeFor('spiral', spiralRules.method)) spiralRules = { ...C.defaultSpiralRules };
         magnetRules = { ...settings.rules.magnet };
         erosionRules = { ...settings.rules.erosion };
         dlaRules = { ...settings.rules.dla };
@@ -2381,9 +2413,10 @@ if (simulationName === 'magnet') {
         contourRules.lineColor='brush';
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH,...(contourRules.growth?.area==='dead'?{area:'dead'}:{})};}
         turingRules = { ...settings.rules.turing };
-        inkRules=validateInkRules(settings.rules.ink);
+        inkRules=validateInkRules(settings.rules.ink ?? DEFAULT_INK_PREFERENCES);
         oilRules=validateOilRules(settings.rules.oil);
         networkRules=validateNetworkRules(settings.rules.network??DEFAULT_NETWORK_PREFERENCES);
+        const activeMap = armedSimulation === 'cymatics' ? getCymaticsRules().resonanceVersion : undefined;
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
         if(settings.rules.cymatics===undefined){
             cymaticsFrequencies=createCymaticsFrequencies(undefined,settings.cymaticsFrequencies);
@@ -2397,8 +2430,8 @@ if (simulationName === 'magnet') {
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateOilButtonUI==='function')updateOilButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
-        if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
-        if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
+        if (activeEvolutionControl() === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
+        if (activeEvolutionControl() === 'spiral') spiralMode = spiralRules.method;
         if (armedSimulation === 'magnet') magnetMode = magnetRules.method;
         if (armedSimulation === 'dla') dlaMode = dlaRules.colorGenetics ? 'genetics' : 'no-genetics';
         updateGravitationalSortButtonUI(); updateSpiralButtonUI();
@@ -2776,7 +2809,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         updateContourButtonUI();
 dom.btnSpiral.title = getText('tooltip_spiral');
 dom.btnTuring.title = getText('tooltip_turing');
-if(dom.btnInk){dom.btnInk.title=getText('help_ink');dom.btnInk.setAttribute('aria-label',dom.btnInk.title);}
+updateInkButtonUI();
 if(dom.btnOil){dom.btnOil.title=getText('help_oil');dom.btnOil.setAttribute('aria-label',dom.btnOil.title);}
 if(dom.btnNetwork){dom.btnNetwork.title=getText('help_network');dom.btnNetwork.setAttribute('aria-label',dom.btnNetwork.title);}
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
@@ -3822,19 +3855,60 @@ function restoreInkSnapshot(value,{preservePreferences=false}={}){
     updateInkButtonUI();
 }
 function runInkEvolution(context){const result=runInkGeneration({...context,inkRules:getInkRules()},inkState);inkState=result.nextInkState;return result.nextBoardState;}
-function updateInkButtonUI(){
-    if(!dom.btnInk)return;
-    dom.btnInk.classList.toggle('simulation-active',armedSimulation==='ink');
-    dom.btnInk.setAttribute('aria-pressed',String(armedSimulation==='ink'));
+function updateInkButtonUI() {
+    const button = dom.btnInk;
+    if (!button) return;
+    const activeMode = activeVorticesMode();
+    const remembered = cycleMemory.entry('ink');
+    const mode = activeMode ?? (vorticesEnabledModes.includes(remembered) ? remembered : vorticesEnabledModes[0]);
+    button.dataset.mode = mode;
+    button.classList.toggle('simulation-active', Boolean(activeMode));
+    button.setAttribute('aria-pressed', String(Boolean(activeMode)));
+    button.title = getText(VORTICES_MODES[mode].label);
+    button.setAttribute('aria-label', button.title);
 }
-function cycleInkMode(){
-    if(isLifePlaying&&armedSimulation==='ink')return;
-    if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
-    if(armedSimulation==='ink'){
-        const snapshot=getInkSnapshot();armSimulation(null);
-        window.logArtEvent('Ink Mode Changed',JSON.stringify({mode:'off',...snapshot}));
-    }else{armSimulation('ink');window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());}
+
+function selectVorticesMode(mode) {
+    const running = isLifePlaying;
+    if (running) pauseLife();
+    if (mode === 'off') {
+        if (armedSimulation === 'spiral') window.logArtEvent('Spiral Mode Changed', 'off');
+        else if (armedSimulation === 'gravitationalSort') window.logArtEvent('Gravitational Sort Mode', 'off');
+        else if (armedSimulation === 'cymatics') window.logArtEvent('Cymatics Mode Changed', JSON.stringify({mode:'off', ...getCymaticsSnapshot()}));
+        else window.logArtEvent('Ink Mode Changed', JSON.stringify({mode:'off', ...getInkSnapshot()}));
+        armSimulation(null);
+    } else {
+        const {engine, map} = VORTICES_MODES[mode];
+        if (armedSimulation !== engine) armSimulation(engine, {spiralEntry:mode, gravityEntry:mode});
+        if (engine === 'gravitationalSort') {
+            gsMode = mode;
+            vorticesGravityRules = {direction:mode, strength:.6};
+            updateGravitationalSortButtonUI();
+        } else if (engine === 'spiral') {
+            spiralMode = mode;
+            Object.assign(vorticesSpiralRules, {method:mode, tornadoVersion:3, tornadoFrame:0});
+            updateSpiralButtonUI();
+        } else if (engine === 'cymatics') {
+            const selected = selectCymaticsMap(getCymaticsRules(), map, cymaticsFrequencies, cymaticsStrengths);
+            cymaticsState = createCymaticsState(n);
+            saveCymaticsSettings(selected.rules, selected.frequencies, selected.strengths);
+        }
+        window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
+    }
     updateInkButtonUI();
+    if (running) togglePlayPauseLife();
+}
+
+function cycleInkMode() {
+    if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
+    const activeMode = activeVorticesMode();
+    const nextMode = nextVorticesMode(activeMode ?? 'off', vorticesEnabledModes, isLifePlaying);
+    if (nextMode !== activeMode) selectVorticesMode(nextMode);
+}
+
+function canEditVorticesCycle() {
+    return !isBreathing && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand &&
+        VORTICES_SETTINGS_ENTRY_MODES.includes(activeVorticesMode());
 }
 function saveInkSettings(value){
     if(armedSimulation!=='ink'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
@@ -3844,27 +3918,26 @@ function saveInkSettings(value){
 // Running evolutions cycle through active modes; paused cycles retain Off.
 function updateCymaticsButtonUI(){
     if(typeof dom==='undefined'||!dom.btnCymatics)return;
-    const button=dom.btnCymatics,rules=getCymaticsRules();
-    const map=Object.keys(CYMATICS_RESONANCE_MAPS).find(key=>CYMATICS_RESONANCE_MAPS[key]===((typeof cycleMemory!=='undefined'&&armedSimulation!=='cymatics'?cycleMemory.entry('cymatics'):undefined)??rules.resonanceVersion??1));
+    const button=dom.btnCymatics, active=activeEvolutionControl()==='cymatics';
+    const version=active ? getCymaticsRules().resonanceVersion : cycleMemory.entry('cymatics');
+    const map=RESONANCE_MAPS.find(name=>CYMATICS_RESONANCE_MAPS[name]===version) ?? RESONANCE_MAPS[0];
     for(const name of Object.keys(CYMATICS_RESONANCE_MAPS))button.classList.toggle('cymatics-'+name,name===map);
-    button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',armedSimulation==='cymatics');
+    button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',active);
     const title=getText('tooltip_cymatics')+' — '+getText('cymatics_map_'+map);
-    button.title=title;button.setAttribute('aria-label',title);button.setAttribute('aria-pressed',String(armedSimulation==='cymatics'));
+    button.title=title;button.setAttribute('aria-label',title);button.setAttribute('aria-pressed',String(active));
+    updateInkButtonUI();
 }
 function recordCymaticsSelection(){
     window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
 }
 function cycleCymaticsMode(){
-    if(isLifePlaying&&armedSimulation!=='cymatics')return;
+    if(isLifePlaying&&activeEvolutionControl()!=='cymatics')return;
     if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
-    const activating=armedSimulation!=='cymatics';
-    if(activating)armSimulation('cymatics');
-    const rules=getCymaticsRules(),current=rules.resonanceVersion??1;
-    const first=CYMATICS_RESONANCE_MAPS.circular;
-    const cycle=['off',first,CYMATICS_RESONANCE_MAPS.interference,CYMATICS_RESONANCE_MAPS.diagonal,CYMATICS_RESONANCE_MAPS.grid];
-    // Clouds and Cosmological empathy stay settings-only; the cycle starts with Circular.
-    const next=activating?(cycle.includes(current)?first:current):(cycle.includes(current)?nextEvolutionMode(current,cycle):first);
-    const selected=selectCymaticsMap(rules,next==='off'?first:next,cymaticsFrequencies,cymaticsStrengths);
+    const current=activeEvolutionControl()==='cymatics' ? getCymaticsRules().resonanceVersion : 'off';
+    if(armedSimulation!=='cymatics')armSimulation('cymatics');
+    const cycle=['off', ...RESONANCE_MAPS.filter(name=>name!=='clouds').map(name=>CYMATICS_RESONANCE_MAPS[name])];
+    const next=nextEvolutionMode(current,cycle.includes(current)?cycle:cycle.slice(1));
+    const selected=selectCymaticsMap(getCymaticsRules(),next==='off'?cycle[1]:next,cymaticsFrequencies,cymaticsStrengths);
     const running=isLifePlaying;
     if(saveCymaticsSettings(selected.rules,selected.frequencies,selected.strengths)===false)return;
     if(next==='off'){
@@ -3879,7 +3952,16 @@ function restoreCymaticsSnapshot(value,{preservePreferences=false}={}){
     if(armedSimulation!=='cymatics')armSimulation('cymatics');
     cymaticsState=snapshot.state;
     if(isMacroPlaying||isExecutingMacroCommand)replayCymaticsRules=snapshot.rules;
-    else {replayCymaticsRules=null;if(!preservePreferences){cymaticsRules=snapshot.rules;cymaticsFrequencies=rememberCymaticsFrequency(cymaticsFrequencies,cymaticsRules);cymaticsStrengths=rememberCymaticsStrength(cymaticsStrengths,cymaticsRules);}}
+    else {
+        replayCymaticsRules=null;
+        if(!preservePreferences){
+            cymaticsRules=snapshot.rules;
+            cymaticsFrequencies=rememberCymaticsFrequency(cymaticsFrequencies,cymaticsRules);
+            cymaticsStrengths=rememberCymaticsStrength(cymaticsStrengths,cymaticsRules);
+        } else if (Boolean(vorticesModeFor('cymatics', cymaticsRules.resonanceVersion)) !== Boolean(vorticesModeFor('cymatics', snapshot.rules.resonanceVersion))) {
+            cymaticsRules=selectCymaticsMap(cymaticsRules,snapshot.rules.resonanceVersion,cymaticsFrequencies,cymaticsStrengths).rules;
+        }
+    }
     updateCymaticsButtonUI();
 }
 function runCymaticsEvolution(context){
@@ -4163,39 +4245,34 @@ function logIslandsSessionStart() {
 }
 
 // --- NEW: Gravitational Sort UI and Cycling ---
-function updateGravitationalSortButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='gravitationalSort'?cycleMemory.entry('gravitationalSort'):undefined)??gsMode;
-    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
+function restoreGravityRules(rules) {
+    const direction = rules.direction ?? gsMode;
+    if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:direction});
+    gsMode = direction;
+    Object.assign(getActiveGravityRules(), rules);
+    updateGravitationalSortButtonUI();
+}
 
-    if (displayMode !== 'off') {
-        dom.btnGravitationalSort.classList.add('mode-' + displayMode);
-        if (armedSimulation === 'gravitationalSort') {
-             dom.btnGravitationalSort.classList.add('simulation-active');
-        }
-    }
+function updateGravitationalSortButtonUI() {
+    const active = activeEvolutionControl() === 'gravitationalSort';
+    const mode = active ? gsMode : (typeof cycleMemory!=='undefined' ? cycleMemory.entry('gravitationalSort') : undefined) ?? 'off';
+    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'simulation-active');
+    if (mode !== 'off') dom.btnGravitationalSort.classList.add('mode-' + mode);
+    if (active) dom.btnGravitationalSort.classList.add('simulation-active');
+    if(typeof updateInkButtonUI==='function')updateInkButtonUI();
 }
 
 function cycleGravitationalSortMode() {
-    const oldMode = gsMode;
-    const sequence = ['off', 'up', 'right', 'center_x', 'turbine2', 'black_hole'];
-
-    gsMode = nextEvolutionMode(gsMode, sequence);
-
-    if (gsMode !== 'off') {
-        gravitationalSortRules.direction = gsMode; // מעדכן את חוקי הסימולציה בפועל
+    const current = armedSimulation === 'gravitationalSort' && !['turbine2','black_hole'].includes(gsMode) ? gsMode : 'off';
+    const next = nextEvolutionMode(current, ['off', 'up', 'right', 'center_x']);
+    window.logArtEvent('Gravitational Sort Mode', next);
+    if (next === 'off') {
+        if (armedSimulation === 'gravitationalSort') armSimulation(null);
+    } else {
+        if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
+        gsMode = gravitationalSortRules.direction = next;
     }
-    
-    window.logArtEvent('Gravitational Sort Mode', gsMode);
-    
-    // הדלקה או כיבוי של הסימולציה בהתאם למצב
-    if (oldMode === 'off' && gsMode !== 'off') {
-        armSimulation('gravitationalSort');
-    } else if (oldMode !== 'off' && gsMode === 'off') {
-        if (armedSimulation === 'gravitationalSort') {
-            armSimulation(null);
-        }
-    }
-    
+    gsMode = next;
     updateGravitationalSortButtonUI();
 }
 // --- END: Gravitational Sort Functions ---
@@ -4267,25 +4344,29 @@ function cycleBreatheEvoMode() {
 
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='spiral'?cycleMemory.entry('spiral'):undefined)??spiralMode;
+    const active = activeEvolutionControl() === 'spiral';
+    const saved = typeof cycleMemory !== 'undefined' ? cycleMemory.entry('spiral') : undefined;
+    const mode = active ? spiralMode : saved ?? 'off';
+    const displayMode = mode;
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-tornado', 'mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
-    dom.btnSpiral.title = ['black_hole', 'turbine2', 'tornado'].includes(displayMode)
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(displayMode)
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${displayMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);
 
     if (displayMode !== 'off') {
         dom.btnSpiral.classList.add('mode-' + displayMode);
-        if (armedSimulation === 'spiral') {
+        if (active) {
              dom.btnSpiral.classList.add('simulation-active');
         }
     }
+    if (typeof updateInkButtonUI === 'function') updateInkButtonUI();
 }
 
 
 function cycleSpiralMode() {
-    const oldMode = armedSimulation === 'spiral' ? spiralMode : 'off';
+    const oldMode = armedSimulation === 'spiral' && !['tornado','left','a'].includes(spiralMode) ? spiralMode : 'off';
 const sequence = SPIRAL_MODE_SEQUENCE;
 
 
@@ -4530,6 +4611,7 @@ function getHistorySettings(state) {
         ...(state.evolutionTuning ? { evolutionTuning: state.evolutionTuning, brightnessEvoMode: state.brightnessEvoMode,
             breatheEvoMode: state.breatheEvoMode, dlaMode: state.dlaMode,
             ...(state.tuningSimulation ? { tuningSimulation: state.tuningSimulation } : {}) } : {}),
+        ...(['left','a'].includes(state.spiralMethod) ? {spiralMethod:state.spiralMethod} : {}),
         ...(state.spiralMethod === 'tornado' ? {tornadoState:{version:state.tornadoVersion ?? 1,frame:state.tornadoFrame ?? 0}} : {}),
         ...(state.islandsState ? { islandsState: state.islandsState } : {}),
         ...(state.cymaticsState ? {cymaticsState:state.cymaticsState} : {}),
@@ -4546,6 +4628,7 @@ function validateGravitySnapshot(rules) {
 }
 
 function validateHistorySettings(settings) {
+    if (settings?.spiralMethod && !['left','a'].includes(settings.spiralMethod)) throw new Error('Invalid Vortices spiral method');
     if (settings?.tornadoState && (![1,2,3].includes(settings.tornadoState.version) || !Number.isSafeInteger(settings.tornadoState.frame) || settings.tornadoState.frame < 0)) throw new Error('Invalid Tornado checkpoint');
     if (settings?.gravityRules) validateGravitySnapshot(settings.gravityRules);
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);
@@ -4565,18 +4648,20 @@ function validateHistorySettings(settings) {
 
 function applyHistorySettings(settings) {
     validateHistorySettings(settings);
+    if (settings.spiralMethod) {
+        if (armedSimulation !== 'spiral') armSimulation('spiral', {spiralEntry:settings.spiralMethod});
+        spiralMode = vorticesSpiralRules.method = settings.spiralMethod;
+        updateSpiralButtonUI();
+    }
     if (settings.tornadoState) {
-        if (armedSimulation !== 'spiral') armSimulation('spiral');
-        spiralMode = spiralRules.method = 'tornado';
-        spiralRules.tornadoVersion = settings.tornadoState.version;
-        spiralRules.tornadoFrame = settings.tornadoState.frame;
+        if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry:'tornado' });
+        spiralMode = vorticesSpiralRules.method = 'tornado';
+        vorticesSpiralRules.tornadoVersion = settings.tornadoState.version;
+        vorticesSpiralRules.tornadoFrame = settings.tornadoState.frame;
         updateSpiralButtonUI();
     }
     if (settings.gravityRules) {
-        if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
-        gravitationalSortRules = { ...settings.gravityRules };
-        gsMode = gravitationalSortRules.direction;
-        updateGravitationalSortButtonUI();
+        restoreGravityRules(settings.gravityRules);
     }
     if (settings.evolutionTuning) {
         if (['brightnessEvo', 'breathe', 'islands', 'dla'].includes(settings.tuningSimulation) && armedSimulation !== settings.tuningSimulation) {
@@ -5241,7 +5326,7 @@ function stopMacro({ preserveFullscreen = false, preserveActivity = false } = {}
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     if(typeof updateContourButtonUI==='function')updateContourButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.enabled()){
-        if(cycleMemoryAfterReplay)cycleMemoryAfterReplay={simulation:armedSimulation,mode:currentCycleMode(armedSimulation)};
+        if(cycleMemoryAfterReplay)cycleMemoryAfterReplay={simulation:activeEvolutionControl(),mode:currentCycleMode(activeEvolutionControl())};
         refreshCycleIcons();
     }
     currentMacroStep = 0;
@@ -5366,7 +5451,10 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
 
     // מוודאים שהסימולציה הנכונה חמושה בממשק
-    if (armedSimulation !== sim) armSimulation(sim);
+    if (armedSimulation !== sim) armSimulation(sim, {
+        ...(sim === 'spiral' && /"method"\s*:\s*"(tornado|left|a)"/.test(rulesStr) ? {spiralEntry:rulesStr.match(/"method"\s*:\s*"(tornado|left|a)"/)[1]} : {}),
+        ...(sim === 'gravitationalSort' && /"direction"\s*:\s*"(turbine2|black_hole)"/.test(rulesStr) ? {gravityEntry:rulesStr.match(/"direction"\s*:\s*"(turbine2|black_hole)"/)[1]} : {})
+    });
 
     if(sim==='ink'){restoreInkSnapshot(restoredInk);return sim;}
     if(sim==='oil'){restoreOilSnapshot(restoredOil);return sim;}
@@ -5414,9 +5502,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 const parsedRules = JSON.parse(rulesStr);
                 if (sim === 'gameOfLife') restoreGameOfLifeRules(parsedRules);
                 else if (sim === 'gravitationalSort') {
-                    Object.assign(gravitationalSortRules, parsedRules);
-                    gsMode = parsedRules.direction || gsMode;
-                    if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
+                    restoreGravityRules(parsedRules);
                 }
                 else if (sim === 'erosion') {
                     erosionRules = restoreErosionRules(parsedRules);
@@ -5443,8 +5529,8 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     updateContourButtonUI();
                 }
                 else if (sim === 'spiral') {
-                    Object.assign(spiralRules, parsedRules, {tornadoVersion: [2, 3].includes(parsedRules.tornadoVersion) ? parsedRules.tornadoVersion : 1, tornadoFrame: Number.isSafeInteger(parsedRules.tornadoFrame) && parsedRules.tornadoFrame >= 0 ? parsedRules.tornadoFrame : 0});
                     spiralMode = parsedRules.method || spiralMode;
+                    Object.assign(getActiveSpiralRules(), parsedRules, {tornadoVersion: [2, 3].includes(parsedRules.tornadoVersion) ? parsedRules.tornadoVersion : 1, tornadoFrame: Number.isSafeInteger(parsedRules.tornadoFrame) && parsedRules.tornadoFrame >= 0 ? parsedRules.tornadoFrame : 0});
                     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
                 }
                 else if (sim === 'magnet') {
@@ -5725,8 +5811,7 @@ function executeMacroAction(action) {
                 if (action.details === 'off') {
                     if (armedSimulation === 'gravitationalSort') armSimulation(null);
                 } else {
-                    if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
-                    gravitationalSortRules.direction = action.details;
+                    restoreGravityRules({direction:action.details, strength:getActiveGravityRules().strength});
                 }
                 gsMode = action.details;
                 if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
@@ -5735,9 +5820,11 @@ function executeMacroAction(action) {
                 if (action.details === 'off') {
                     if (armedSimulation === 'spiral') armSimulation(null);
                 } else {
-                    if (armedSimulation !== 'spiral') armSimulation('spiral');
-                    spiralRules.method = action.details;
-                    if (spiralRules.tornadoVersion === 3) spiralRules.tornadoFrame = 0;
+                    if (armedSimulation !== 'spiral') armSimulation('spiral', {spiralEntry:action.details});
+                    spiralMode = action.details;
+                    const rules = getActiveSpiralRules();
+                    rules.method = action.details;
+                    if (rules.tornadoVersion === 3) rules.tornadoFrame = 0;
                 }
                 spiralMode = action.details;
                 if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -5900,7 +5987,7 @@ else if (action.eventName === 'Invert Colors') {
         onLanguageChange(updateAllUIText);
         macroActivity = createMacroActivity({ board: dom.board, getText, getLang: getCurrentLang,
             readState: () => ({ loaded: isMacroLoaded, playing: isMacroPlaying, lifePlaying: isLifePlaying,
-                simulation: armedSimulation, generation: currentGenerationCount, boardSize:n,
+                simulation: armedSimulation === 'ink' || !activeVorticesMode() ? armedSimulation : 'vortices-'+activeVorticesMode(), generation: currentGenerationCount, boardSize:n,
                 queue: macroQueue, index: currentMacroStep, fullscreen: isMacroFullscreen }) });
         onLanguageChange(updateNudgeButtonUI);
         onLanguageChange(updateContourButtonUI);
@@ -6219,21 +6306,35 @@ updateBrightnessEvoButtonUI();
         });
         luminanceAnchorPreference.restore();
         inkSettingsUI=createInkSettingsDialog({getRules:getInkRules,saveRules:saveInkSettings,getText,getLang:getCurrentLang,onLanguageChange});
+        const vorticesCycleUI=createVorticesCycleDialog({
+            getModes:()=>vorticesEnabledModes,
+            saveModes:enabledModes=>{
+                if(!canEditVorticesCycle())return false;
+                vorticesEnabledModes=enabledModes;
+                persistVorticesCycle(enabledModes);
+                updateInkButtonUI();
+                return true;
+            },
+            getText,getLang:getCurrentLang,onLanguageChange
+        });
         oilSettingsUI=createOilSettingsDialog({getRules:getOilRules,saveRules:saveOilSettings,getText,getLang:getCurrentLang,onLanguageChange});
         networkSettingsUI=createNetworkSettingsDialog({getRules:getNetworkRules,saveRules:saveNetworkSettings,getText,getLang:getCurrentLang,onLanguageChange});
         cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,getFrequencies:()=>cymaticsFrequencies,getStrengths:()=>cymaticsStrengths,saveRules:saveCymaticsSettings,
             canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying,
+            getMaps:()=>activeVorticesMode() ? VORTICES_RESONANCE_MAPS : RESONANCE_MAPS,
+            getTrigger:()=>activeVorticesMode() ? dom.btnInk : dom.btnCymatics,
             getText,getLang:getCurrentLang,onLanguageChange});
         initializeExperimentalSimulationControls({flags:experimentalSimulations,getText,onLanguageChange,
             canChange:()=>!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             onChange:(id,enabled)=>{
-                if(!enabled&&armedSimulation===id){if(isLifePlaying)pauseLife();armSimulation(null);}
+                if(!enabled&&activeEvolutionControl()===id){if(isLifePlaying)pauseLife();armSimulation(null);}
+                updateInkButtonUI();
                 evolutionDrawer?.applyLayout();
             }
         });
         evolutionDrawer = createEvolutionDrawer({
             isVisible:experimentalSimulations.visible,
-            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
+            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:activeEvolutionControl,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
             canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             getText,getLang:getCurrentLang,onLanguageChange,
@@ -6440,7 +6541,11 @@ dom.btnWind.addEventListener('keydown', event => {
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
             [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],
-            [dom.btnInk,'ink',cycleInkMode,()=>inkSettingsUI.open()],
+            [dom.btnInk,'ink',cycleInkMode,()=>{
+                if(armedSimulation==='cymatics')cymaticsSettingsUI.open();
+                else if(armedSimulation==='ink')inkSettingsUI.open();
+                else vorticesCycleUI.open();
+            }],
             [dom.btnOil,'oil',cycleOilMode,()=>oilSettingsUI.open()],
             [dom.btnNetwork,'network',cycleNetworkMode,()=>networkSettingsUI.open()],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
@@ -6472,7 +6577,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && !(simulation==='islands'&&islandsSession?.mode==='oil') && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),
+                canOpen: () => Boolean(onOpen) && !(simulation==='islands'&&islandsSession?.mode==='oil') && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });

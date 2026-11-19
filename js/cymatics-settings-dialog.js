@@ -1,6 +1,6 @@
 import { focusSettingsHeading } from './dialog-focus.js';
 import {INITIAL_CYMATICS_RULES,CYMATICS_RESONANCE_MAPS,validateCymaticsRules,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap} from './cymatics-settings.js';
-export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),getStrengths=()=>({}),saveRules,canEdit,getText,getLang,onLanguageChange}){
+export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),getStrengths=()=>({}),saveRules,canEdit,getMaps=()=>Object.keys(CYMATICS_RESONANCE_MAPS),getTrigger=()=>document.getElementById('btnCymatics'),getText,getLang,onLanguageChange}){
     const dialog=document.createElement('dialog');dialog.id='cymaticsSettingsDialog';dialog.className='resonance-settings-dialog';dialog.setAttribute('aria-labelledby','cymaticsSettingsTitle');
     dialog.innerHTML=`<form>
       <header class="cracks-settings-header"><h2 id="cymaticsSettingsTitle"></h2><button type="button" data-close>×</button></header>
@@ -14,7 +14,7 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
       </div>
       <footer class="cracks-settings-actions"><button type="button" data-cancel></button><button type="submit" class="save-btn"></button><button type="button" data-reset></button></footer>
     </form>`;
-    document.body.append(dialog);let draft=null,draftFrequencies=null,draftStrengths=null;const strength=dialog.querySelector('#cymaticsStrength');
+    document.body.append(dialog);let draft=null,draftFrequencies=null,draftStrengths=null,allowedMaps=[],trigger=null;const strength=dialog.querySelector('#cymaticsStrength');
     const frequency=dialog.querySelector('#cymaticsFrequency');
     const maps=dialog.querySelector('.resonance-map-grid');
     for(const [name,version] of Object.entries(CYMATICS_RESONANCE_MAPS)){
@@ -23,7 +23,7 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
         const accents={diagonal:'#CD853F',grid:'#C2A14A',circular:'#6B8E23',interference:'#607D8B',clouds:'#91A0A6',cosmic:'#FF7F50'};
         b.style.setProperty('--preset-ink',accents[name]);
         b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">'+paths[name]+'</svg><span class="sr-only"></span>';
-        b.addEventListener('click',()=>{const selected=selectCymaticsMap(draft,version,draftFrequencies,draftStrengths);draft=selected.rules;draftFrequencies=selected.frequencies;draftStrengths=selected.strengths;render();});maps.append(b);
+        b.addEventListener('click',()=>{if(!draft||!allowedMaps.includes(name))return;const selected=selectCymaticsMap(draft,version,draftFrequencies,draftStrengths);draft=selected.rules;draftFrequencies=selected.frequencies;draftStrengths=selected.strengths;render();});maps.append(b);
     }
     frequency.addEventListener('input',()=>{draft.frequency=Math.round(20*Math.pow(1000,Number(frequency.value)/1000));draftFrequencies=rememberCymaticsFrequency(draftFrequencies,draft);render();});
     const motion=dialog.querySelector('#cymaticsPhaseMotion');
@@ -32,7 +32,7 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
         dialog.querySelector('.cymatics-phase span').textContent=getText('cymatics_phase_motion');
         motion.checked=Boolean(draft?.phaseMotion);
         dialog.querySelector('#cymaticsMapLabel').textContent=getText('cymatics_map');
-        for(const b of maps.children){const label=getText('cymatics_map_'+b.dataset.cymaticsMap);b.querySelector('span').textContent=label;b.title=label;b.setAttribute('aria-label',label);b.setAttribute('aria-pressed',String((draft?.resonanceVersion??1)===CYMATICS_RESONANCE_MAPS[b.dataset.cymaticsMap]));}
+        for(const b of maps.children){b.hidden=!allowedMaps.includes(b.dataset.cymaticsMap);const label=getText('cymatics_map_'+b.dataset.cymaticsMap);b.querySelector('span').textContent=label;b.title=label;b.setAttribute('aria-label',label);b.setAttribute('aria-pressed',String((draft?.resonanceVersion??1)===CYMATICS_RESONANCE_MAPS[b.dataset.cymaticsMap]));}
         dialog.querySelector('label[for=cymaticsFrequency]').textContent=getText('cymatics_frequency');
         {frequency.value=Math.round(1000*Math.log(draft.frequency/20)/Math.log(1000));frequency.setAttribute('aria-valuetext',draft.frequency+' Hz');frequency.style.setProperty('--range-fill',Number(frequency.value)/10+'%');dialog.querySelector('output[for=cymaticsFrequency]').value=draft.frequency+' Hz';}
 
@@ -44,10 +44,21 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
     }
     strength.addEventListener('input',()=>{draft.strength=Number(strength.value);draftStrengths=rememberCymaticsStrength(draftStrengths,draft);render();});
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
-    dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft={...INITIAL_CYMATICS_RULES};draftFrequencies=createCymaticsFrequencies();draftStrengths=createCymaticsStrengths();render();});
+    dialog.querySelector('[data-reset]').addEventListener('click',()=>{
+        const frequencies=createCymaticsFrequencies(), strengths=createCymaticsStrengths();
+        for (const name of allowedMaps) {
+            draftFrequencies[name]=frequencies[name];
+            draftStrengths[name]=strengths[name];
+        }
+        const version=allowedMaps.includes('interference') ? CYMATICS_RESONANCE_MAPS.interference : draft.resonanceVersion;
+        const reset=selectCymaticsMap({...INITIAL_CYMATICS_RULES,resonanceVersion:version,
+            frequency:frequencies[allowedMaps.find(name=>CYMATICS_RESONANCE_MAPS[name]===version)],
+            strength:INITIAL_CYMATICS_RULES.strength},version,draftFrequencies,draftStrengths);
+        draft=reset.rules;draftFrequencies=reset.frequencies;draftStrengths=reset.strengths;render();
+    });
     dialog.querySelector('form').addEventListener('submit',e=>{e.preventDefault();if(canEdit()&&saveRules(validateCymaticsRules(draft),draftFrequencies,draftStrengths)!==false)dialog.close();});
     const outside=e=>{const r=dialog.getBoundingClientRect();return e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom);};let beganOutside=false;
     dialog.addEventListener('pointerdown',e=>{beganOutside=outside(e);});dialog.addEventListener('click',e=>{if(beganOutside&&outside(e))dialog.close();beganOutside=false;});
-    dialog.addEventListener('close',()=>{draft=null;draftFrequencies=null;draftStrengths=null;document.getElementById('btnCymatics').focus({preventScroll:true});});onLanguageChange(()=>{if(dialog.open)render();});
-    return {dialog,open(){if(!canEdit()||dialog.open)return;const rules=getRules();draft={...rules};delete draft.pattern;draftFrequencies=rememberCymaticsFrequency(getFrequencies(),draft);draftStrengths=rememberCymaticsStrength(getStrengths(),draft);render();dialog.showModal();focusSettingsHeading(dialog);}};
+    dialog.addEventListener('close',()=>{draft=null;draftFrequencies=null;draftStrengths=null;trigger?.focus({preventScroll:true});trigger=null;});onLanguageChange(()=>{if(dialog.open)render();});
+    return {dialog,open(){if(!canEdit()||dialog.open)return;allowedMaps=getMaps();trigger=getTrigger();const rules=getRules();draft={...rules};delete draft.pattern;draftFrequencies=rememberCymaticsFrequency(getFrequencies(),draft);draftStrengths=rememberCymaticsStrength(getStrengths(),draft);render();dialog.showModal();focusSettingsHeading(dialog);}};
 }

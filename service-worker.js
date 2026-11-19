@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '8fbdb9b1036b0e64d898';
+const VERSION = 'fc99e6e1a1222d0a034d';
 const ASSETS = [
     "./",
     "./index.html",
@@ -110,6 +110,8 @@ const ASSETS = [
     "./js/startup-settings.js",
     "./js/studio-link.js",
     "./js/ui-modals.js",
+    "./js/vortices-cycle-dialog.js",
+    "./js/vortices-modes.js",
     "./js/wind-paint.js",
     "./js/wind-recording.js",
     "./js/wind-settings.js",

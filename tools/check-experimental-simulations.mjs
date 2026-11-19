@@ -22,7 +22,7 @@ try{for(const touch of [false,true]){
  recipe:()=>{armSimulation('network');stepForward();return artRecipeLog.join('\\n');},
  replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
  done:()=>!isMacroPlaying&&!isLifePlaying&&!isMacroLoaded,
- start:()=>{armSimulation('ink');togglePlayPauseLife();},
+ start:()=>{armSimulation('oil');togglePlayPauseLife();},
  loaded:value=>{isMacroLoaded=value;}
  };initializeApp().then(()=>flagsTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -32,25 +32,24 @@ try{for(const touch of [false,true]){
  const close=()=>page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const tech=async()=>{await page.evaluate(()=>flagsTest.tech());await page.waitForTimeout(100);};
  const toggle=async(id,value)=>{await page.locator('#'+id+'ExperimentToggle').setChecked(value);};
- const ids=['ink','oil','network'],buttons={ink:'btnInk',oil:'btnOil',network:'btnNetwork'};
+ const ids=['oil','network'],buttons={oil:'btnOil',network:'btnNetwork'};
  await boot(false);
  await page.locator('#btnEvolutionDrawerInternal').click();await page.waitForTimeout(300);
  const original=(await state()).slots;
  for(const id of ids)assert(!(await page.locator('#'+buttons[id]).isVisible()),id+' defaults hidden');
  await page.evaluate(()=>flagsTest.map());
  for(const id of ids)assert.equal(await page.locator('[data-drawer-evolution="'+id+'"]').count(),0);
- assert.equal(await page.locator('.drawer-feature-hidden').count(),3);await close();
- await tech();for(const id of ids)assert(!(await page.locator('#'+id+'ExperimentToggle').isChecked()));
- await toggle('ink',true);await close();assert(await page.locator('#btnInk').isVisible());assert(!(await page.locator('#btnOil').isVisible()));
- await page.evaluate(()=>flagsTest.map());assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);assert.equal(await page.locator('.drawer-feature-hidden').count(),2);await close();
- assert.deepEqual((await state()).slots,original);
- await boot(true);await page.locator('#btnEvolutionDrawerInternal').click();await page.waitForTimeout(300);assert(await page.locator('#btnInk').isVisible());
- await tech();assert(await page.locator('#inkExperimentToggle').isChecked());
+ assert.equal(await page.locator('.drawer-feature-hidden').count(),2);
+ assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
+ assert(await page.locator('#btnInk').isVisible());
+ await tech();assert.equal(await page.locator('#inkExperimentToggle').count(),0);
+ for(const id of ids)assert(!(await page.locator('#'+id+'ExperimentToggle').isChecked()));
  // A different profile must not change device opt-ins.
- await page.locator('[data-profile-choice="1"]').click();assert(await page.locator('#inkExperimentToggle').isChecked());
+ await toggle('network',true);
+ await page.locator('[data-profile-choice="1"]').click();assert(await page.locator('#networkExperimentToggle').isChecked());
  await toggle('oil',true);await toggle('network',true);await close();
  for(const id of ids)assert(await page.locator('#'+buttons[id]).isVisible());
- await page.evaluate(()=>flagsTest.start());await tech();await toggle('ink',false);
+ await page.evaluate(()=>flagsTest.start());await tech();await toggle('oil',false);
  assert.equal((await state()).playing,false);assert.equal((await state()).armed,null);await close();
  const recipe=await page.evaluate(()=>flagsTest.recipe()),recorded=(await state()).pixels;
  await tech();await toggle('oil',false);await toggle('network',false);await close();

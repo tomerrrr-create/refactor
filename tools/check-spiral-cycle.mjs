@@ -30,31 +30,38 @@ try{
   await page.goto(base);await page.waitForFunction(()=>window.spiralTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   await page.evaluate(()=>spiralTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
-  const modes=['b','left','radial','down','a'],icons=['iconSpiralB','iconSpiralLeft','iconSpiralRadial','iconSpiralDown','iconSpiralA'];
+  const modes=['b','radial','down'],icons=['iconSpiralB','iconSpiralRadial','iconSpiralDown'];
   const before=(await state()).tiles;
   for(const [i,mode] of [...modes,'off'].entries()){await tap('#btnSpiral');assert.equal((await state()).mode,mode);assert.deepEqual((await state()).tiles,before);assert.deepEqual(await page.locator('#btnSpiral svg').evaluateAll(ns=>ns.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id)),[icons[i]||'iconSpiralB']);}
+  const tornado=async()=>{for(let i=0;i<9&&(await state()).mode!=='tornado';i++)await tap('#btnInk');assert.equal((await state()).mode,'tornado');assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'tornado');assert(await page.locator('#btnInk .vortices-tornado-badge').isVisible());};
   const open=async()=>{await page.evaluate(()=>spiralTest.open());await page.waitForTimeout(350);};
   const choose=async(method,save=true)=>{await open();await tap('.spiral-method-btn[data-method="'+method+'"]');await tap(save?'#btnSpiralSettingsSave':'#btnSpiralSettingsCancel');await page.waitForTimeout(350);};
-  await tap('#btnSpiral');await open();assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),[...modes,'tornado']);assert.equal(await page.locator('.spiral-method-btn[data-method="vortex"]').count(),0);await page.screenshot({path:path.join(artifacts,config.lang+'-settings.png')});await tap('#btnSpiralSettingsCancel');await page.waitForTimeout(350);
-  await choose('a',false);assert.equal((await state()).mode,'b');await choose('a');assert.equal((await state()).mode,'a');await tap('#btnSpiral');assert.equal((await state()).mode,'off');
+  await tap('#btnSpiral');await open();assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),modes);assert.equal(await page.locator('.spiral-method-btn[data-method="vortex"]').count(),0);await page.screenshot({path:path.join(artifacts,config.lang+'-settings.png')});await tap('#btnSpiralSettingsCancel');await page.waitForTimeout(350);
+  await choose('down',false);assert.equal((await state()).mode,'b');await choose('down');assert.equal((await state()).mode,'down');await tap('#btnSpiral');assert.equal((await state()).mode,'off');
   await page.evaluate(()=>spiralTest.setup());
   for(const method of modes){await tap('#btnSpiral');assert.equal((await state()).mode,method);await tap('#btnStepForward');}
   const after=(await state()).tiles,recipe=(await state()).logs.join('\n');assert.notDeepEqual(after,before);
   for(const method of modes){assert(recipe.includes('Spiral Mode Changed -> '+method));assert(recipe.includes('"method":"'+method+'"'));}
-  assert.deepEqual(await replay(page,recipe),after,'new logger-to-player steps retain the five cycle modes');
-  await choose('tornado');const project=await page.evaluate(()=>spiralTest.project());assert.equal(project.spiralMethod,'tornado');await choose('radial');await page.evaluate(p=>spiralTest.restore(p),project);assert.equal((await state()).mode,'tornado');
-  await choose('tornado');const undoBefore=(await state()).tiles;await tap('#btnStepForward');const undoAfter=(await state()).tiles;await tap('#btnUndo');assert.deepEqual((await state()).tiles,undoBefore);await tap('#btnRedo');assert.deepEqual((await state()).tiles,undoAfter);assert.deepEqual(await replay(page,(await state()).logs.join('\n')),undoAfter,'Tornado Undo/Redo checkpoints replay exactly');
+  assert.deepEqual(await replay(page,recipe),after,'new logger-to-player steps retain the three Spiral modes');
+  await tornado();const project=await page.evaluate(()=>spiralTest.project());assert.equal(project.spiralMethod,'tornado');await choose('radial');await page.evaluate(p=>spiralTest.restore(p),project);assert.equal((await state()).mode,'tornado');
+  await tornado();const undoBefore=(await state()).tiles;await tap('#btnStepForward');const undoAfter=(await state()).tiles;await tap('#btnUndo');assert.deepEqual((await state()).tiles,undoBefore);await tap('#btnRedo');assert.deepEqual((await state()).tiles,undoAfter);assert.deepEqual(await replay(page,(await state()).logs.join('\n')),undoAfter,'Tornado Undo/Redo checkpoints replay exactly');
   if(baseline)for(const method of Object.keys(oldBoards))assert.deepEqual(await replay(page,recipeFor(method)),oldBoards[method],'pre-change recipe still plays '+method);
   await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await tap('#btnPlayPauseLife');await page.waitForFunction(()=>spiralTest.state().gen>=2);
-  for(const mode of ['left','radial','down','a','b']){const gen=(await state()).gen;await tap('#btnSpiral');const s=await state();assert.equal(s.mode,mode);assert(s.playing);assert(s.gen>=gen);}
-  await choose('tornado');assert((await state()).playing);await tap('#btnSpiral');assert.equal((await state()).mode,'b');await tap('#btnPlayPauseLife');
-  const live=(await state()).logs.join('\n');for(const mode of ['left','radial','down','a','b'])assert(live.split('\n').some(l=>/\[GEN:\d+\]/.test(l)&&l.endsWith('Spiral Mode Changed -> '+mode)));const liveFinal=(await state()).tiles;assert.deepEqual(await replay(page,live),liveFinal,'live cycle log replays under controlled random/time');
+  for(const mode of ['radial','down','b']){const gen=(await state()).gen;await tap('#btnSpiral');const s=await state();assert.equal(s.mode,mode);assert(s.playing);assert(s.gen>=gen);}
+  await tornado();assert((await state()).playing);await tap('#btnSpiral');assert.equal((await state()).mode,'b');await tap('#btnPlayPauseLife');
+  const live=(await state()).logs.join('\n');for(const mode of ['radial','down','b'])assert(live.split('\n').some(l=>/\[GEN:\d+\]/.test(l)&&l.endsWith('Spiral Mode Changed -> '+mode)));const liveFinal=(await state()).tiles;assert.deepEqual(await replay(page,live),liveFinal,'live cycle log replays under controlled random/time');
   // Current sort remaps remain recordable and replayable in Tornado.
-  await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await choose('tornado');await tap('#btnStepForward');await tap('#btnCycleSort');await tap('#btnStepForward');
+  await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await tornado();await tap('#btnStepForward');await tap('#btnCycleSort');await tap('#btnStepForward');
   const sorted=(await state()).tiles;assert.deepEqual(await replay(page,(await state()).logs.join('\n')),sorted,'Tornado follows recorded sorting changes');
-  // Remember the new mode during handoff; explicit Off must still restart at Pinwheel.
-  await page.evaluate(()=>spiralTest.setup());await page.evaluate(()=>spiralTest.memory(true));await tap('#btnSpiral');await choose('tornado');await tap('#btnTuring');assert(await page.locator('#btnSpiral').evaluate(e=>e.classList.contains('mode-tornado')));await tap('#btnSpiral');assert.equal((await state()).mode,'tornado');await tap('#btnSpiral');assert.equal((await state()).mode,'off');await tap('#btnSpiral');assert.equal((await state()).mode,'b');await choose('tornado');await page.evaluate(()=>spiralTest.reset());assert.equal((await state()).mode,'b');await page.evaluate(()=>spiralTest.memory(false));
-  await choose('tornado');await page.evaluate(()=>spiralTest.tech());if(!(await page.locator('#profileActions').isVisible()))await tap('[data-profile-dot="0"]');await tap('#btnProfileSave');await page.reload();await page.waitForFunction(()=>window.spiralTest?.ready);assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'tornado','personal preference retained');
+  // The remembered state belongs to the Vortices button and never enters Spiral preferences.
+  await page.evaluate(()=>spiralTest.setup());await page.evaluate(()=>spiralTest.memory(true));
+  await tornado();await tap('#btnSpiral');assert.equal((await state()).mode,'b');
+  assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'tornado');
+  await tap('#btnInk');assert.equal((await state()).mode,'tornado');
+  assert(!(await page.locator('#btnSpiral').evaluate(e=>e.classList.contains('simulation-active'))));
+  await tap('#btnInk');assert.equal((await state()).armed,null);
+  await tap('#btnInk');assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'turbine2');
+  assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   assert.deepEqual(errors,[]);console.log('PASS',JSON.stringify(config));await context.close();
  }
 }finally{await browser.close();await new Promise(r=>server.close(r));}

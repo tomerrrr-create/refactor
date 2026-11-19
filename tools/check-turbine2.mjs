@@ -11,7 +11,7 @@ source=source.replace('      initializeApp();',`window.turbineTest={
  setup:()=>{stopMacro();pauseLife();resetArmedState();activePaletteIndex=0;currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,'luminance'));n=31;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*7+3)%paletteLen();t.isGold=i===0;});gravitationalSortRules={direction:'up',strength:.6};isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');dom.btnStepForward.classList.remove('control-hidden');history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();renderToScreen(null);},
  dark:goDarkAction,open:()=>modals.openGravitationalSortSettingsModal(),tech:()=>modals.openTechnicianMenu(),
  project:getCurrentState,restore:applyState,settings:()=>serializeWorkspaceSettings(getWorkspaceSettings()),
- state:()=>({armed:armedSimulation,gravity:{...gravitationalSortRules},mode:gsMode,spiral:spiralMode,playing:isLifePlaying,loaded:isMacroLoaded,animating:isAnimating,gen:currentGenerationCount,tiles:boardState.map(t=>[t.k,t.v,t.isGold]),logs:[...artRecipeLog]})};initializeApp().then(()=>turbineTest.ready=true);`);
+ state:()=>({armed:armedSimulation,gravity:{...getActiveGravityRules()},vortices:activeVorticesMode(),mode:gsMode,spiral:spiralMode,playing:isLifePlaying,loaded:isMacroLoaded,animating:isAnimating,gen:currentGenerationCount,tiles:boardState.map(t=>[t.k,t.v,t.isGold]),logs:[...artRecipeLog]})};initializeApp().then(()=>turbineTest.ready=true);`);
 for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
 const server=createServer(async(req,res)=>{try{const file=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');res.end(file==='js/app.js'?source:await readFile(path.join(root,file)));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
@@ -29,51 +29,41 @@ try{for(const config of [{width:1440,height:1000,lang:'en'},{width:390,height:84
  const choose=async(direction,strength=60,save=true)=>{await open();await tap('.gs-direction-btn[data-direction="'+direction+'"]');if(!(await page.locator('#gsStrength').isDisabled()))await page.locator('#gsStrength').evaluate((e,v)=>{e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},strength);await tap(save?'#btnGsSettingsSave':'#btnGsSettingsCancel');await page.waitForTimeout(350);};
  const replay=async text=>{await page.locator('#projectFileInput').setInputFiles({name:'turbine2.txt',mimeType:'text/plain',buffer:Buffer.from(text)});await page.waitForFunction(()=>turbineTest.state().loaded);await tap('#btnMacroPlay');await page.waitForFunction(()=>!turbineTest.state().loaded&&!turbineTest.state().animating,{timeout:20000});};
  const replayCircle=async text=>{await replay(text);return (await state()).tiles;};
- const icon=()=>page.locator('#btnGravitationalSort svg').evaluateAll(nodes=>nodes.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id));
- await boot(false);await page.evaluate(()=>turbineTest.setup());
- assert.equal(await page.locator('.spiral-method-btn[data-method="turbine2"]').count(),0);
- assert.deepEqual(await page.locator('#gravitationalSortSettingsModal .gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),['up','right','center_x','turbine2','black_hole']);
- for(const [mode,id] of [['up','iconGsUp'],['right','iconGsRight'],['center_x','iconGsCenterX'],['turbine2','iconGsTurbine2'],['black_hole','iconGsCircle'],['off','iconGsUp']]){
-  await tap('#btnGravitationalSort');assert.equal((await state()).mode,mode);assert.deepEqual(await icon(),[id]);
- }
- await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
- for(const mode of ['b','left','radial','down','a','off']){await tap('#btnSpiral');assert.equal((await state()).spiral,mode);}
- await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
- await tap('#btnGravitationalSort');await choose('turbine2',27,false);assert.deepEqual((await state()).gravity,{direction:'up',strength:.6});
- await choose('turbine2',60);assert.equal((await state()).mode,'turbine2');assert.deepEqual(await icon(),['iconGsTurbine2']);
- await open();assert.equal(await page.locator('#gsStrength').inputValue(),'60');await page.screenshot({path:path.join(artifacts,config.lang+'-gravity-settings.png')});await tap('#btnGsSettingsCancel');await page.waitForTimeout(350);
- const before=(await state()).tiles;await tap('#btnStepForward');const after=(await state()).tiles;assert.notDeepEqual(after,before);assert.deepEqual(after[0],before[0]);
- await tap('#btnUndo');assert.deepEqual((await state()).tiles,before);assert.deepEqual((await state()).gravity,{direction:'turbine2',strength:.6});await tap('#btnRedo');assert.deepEqual((await state()).tiles,after);
- const project=await page.evaluate(()=>turbineTest.project());assert.deepEqual(project.gravityRules,{direction:'turbine2',strength:.6});
- const recipe=(await state()).logs.join('\n');assert(recipe.includes('"direction":"turbine2"'));await replay(recipe);assert.deepEqual((await state()).tiles,after,'Gravity history recipe reproduces the step under controlled random/time');
- await choose('right',27);await page.evaluate(p=>turbineTest.restore(p),project);assert.deepEqual((await state()).gravity,project.gravityRules);assert.equal((await state()).armed,'gravitationalSort');
- const init=(await state()).logs.find(line=>line.includes(' INIT_STATE ->'));
- await replay(init+'\n[00:00:00.100] STEP FORWARD -> Armed: spiral | Sort: luminance | Rules: {"method":"turbine2"}');assert.deepEqual((await state()).tiles,after,'legacy Spiral recipe retains its fixed 60% behavior');assert.equal((await state()).spiral,'turbine2');
- const legacy=await page.evaluate(()=>turbineTest.project());await page.evaluate(()=>turbineTest.setup());await page.evaluate(p=>turbineTest.restore(p),legacy);assert.equal((await state()).spiral,'turbine2','old JSON remains readable');
- // Circle is now the last Gravity choice and keeps its deterministic engine.
- await page.evaluate(()=>turbineTest.setup());await tap('#btnGravitationalSort');await choose('right',27);await choose('black_hole');
- assert.equal(await page.locator('.spiral-method-btn[data-method="black_hole"]').count(),0);
- assert.deepEqual(await icon(),['iconGsCircle']);assert.deepEqual((await state()).gravity,{direction:'black_hole',strength:.27});
- await open();assert.equal(await page.locator('#gravitationalSortSettingsModal > div').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);assert(await page.locator('#gsStrength').isDisabled());assert.equal(await page.locator('[data-gravity-strength]').evaluate(e=>getComputedStyle(e).opacity),'0.35');
- await tap('.gs-direction-btn[data-direction="right"]');assert(await page.locator('#gsStrength').isEnabled());await tap('.gs-direction-btn[data-direction="black_hole"]');assert(await page.locator('#gsStrength').isDisabled());
- await page.screenshot({path:path.join(artifacts,config.lang+'-circle-settings.png')});await tap('#btnGsSettingsCancel');await page.waitForTimeout(350);
- const circleBefore=(await state()).tiles;await tap('#btnStepForward');const circleAfter=(await state()).tiles;assert.notDeepEqual(circleAfter,circleBefore);
- const circleProject=await page.evaluate(()=>turbineTest.project());assert.deepEqual(circleProject.gravityRules,{direction:'black_hole',strength:.27});
- await tap('#btnUndo');assert.deepEqual((await state()).tiles,circleBefore);await tap('#btnRedo');assert.deepEqual((await state()).tiles,circleAfter);
- const circleRecipe=(await state()).logs.join('\n');assert(circleRecipe.includes('"direction":"black_hole"'));assert.deepEqual(await replayCircle(circleRecipe),circleAfter);
- const circleInit=(await state()).logs.find(line=>line.includes(' INIT_STATE ->'));
- assert.deepEqual(await replayCircle(circleInit+'\n[00:00:00.100] STEP FORWARD -> Armed: spiral | Sort: luminance | Rules: {"method":"black_hole"}'),circleAfter,'old Spiral Circle and new Gravity Circle produce the same artwork');
- await choose('right',9);await page.evaluate(p=>turbineTest.restore(p),circleProject);assert.deepEqual((await state()).gravity,circleProject.gravityRules);
- const zeroProject={...circleProject,gravityRules:{direction:'black_hole',strength:0}};await page.evaluate(p=>turbineTest.restore(p),zeroProject);await open();assert(await page.locator('#gsStrength').isDisabled());await tap('#btnGsSettingsSave');await page.waitForTimeout(350);assert.equal((await state()).gravity.strength,0,'disabled/clamped slider must not rewrite saved Strength');
- await page.evaluate(p=>turbineTest.restore(p),circleProject);
- await page.evaluate(()=>turbineTest.tech());if(!(await page.locator('#profileActions').isVisible()))await tap('[data-profile-dot="0"]');await tap('#btnProfileSave');await boot(true);assert.deepEqual((await state()).gravity,{direction:'black_hole',strength:.27});await open();assert(await page.locator('#gsStrength').isDisabled());await tap('#btnGsSettingsCancel');await page.waitForTimeout(350);
- await page.evaluate(()=>turbineTest.setup());await tap('#btnGravitationalSort');await choose('turbine2',27);
+ const nav='#btnEvolutionDrawerInternal';
+ const first=async()=>{if(!(await page.locator('#btnGravitationalSort').isVisible()))await tap(nav);};
+ const selectCircular=async mode=>{
+  if(!(await page.locator('#btnInk').isVisible()))await tap(nav);
+  for(let i=0;i<9&&(await state()).vortices!==mode;i++)await tap('#btnInk');
+  assert.equal((await state()).vortices,mode);
+ };
+ await boot(false);await page.evaluate(()=>turbineTest.setup());await first();
+ await tap('#btnGravitationalSort');await choose('right',27);
+ await selectCircular('turbine2');
+ assert.deepEqual((await state()).gravity,{direction:'turbine2',strength:.6});
+ assert(await page.locator('#btnInk #iconGsTurbine2').isVisible());
  assert.equal(JSON.parse((await page.evaluate(()=>turbineTest.settings())).split('\n').slice(1).join('\n')).settings.rules.gravity.strength,.27);
- await page.evaluate(()=>turbineTest.tech());if(!(await page.locator('#profileActions').isVisible()))await tap('[data-profile-dot="0"]');await tap('#btnProfileSave');await boot(true);assert.deepEqual((await state()).gravity,{direction:'turbine2',strength:.27});
- await page.evaluate(()=>turbineTest.setup());await tap('#btnGravitationalSort');await tap('#btnPlayPauseLife');await page.waitForFunction(()=>turbineTest.state().gen>=2);
- for(const mode of ['right','center_x','turbine2','black_hole','up']){const gen=(await state()).gen;await tap('#btnGravitationalSort');const s=await state();assert.equal(s.mode,mode);assert(s.playing);assert(s.gen>=gen);}
- await choose('turbine2',31);assert((await state()).playing);assert.equal((await state()).gravity.strength,.31);await tap('#btnPlayPauseLife');
- const liveRecipe=(await state()).logs.join('\n');assert(liveRecipe.split('\n').some(l=>l.includes('SIMULATION_RULES')&&l.includes('"strength":0.31')));await replay(liveRecipe);assert.deepEqual((await state()).gravity,{direction:'turbine2',strength:.31});
- await page.evaluate(()=>turbineTest.dark());await page.waitForTimeout(900);assert.equal((await state()).mode,'turbine2');
+ const before=(await state()).tiles;await tap('#btnStepForward');const after=(await state()).tiles;
+ assert.notDeepEqual(after,before);assert.deepEqual(after[0],before[0]);
+ await tap('#btnUndo');assert.deepEqual((await state()).tiles,before);await tap('#btnRedo');assert.deepEqual((await state()).tiles,after);
+ const project=await page.evaluate(()=>turbineTest.project());
+ assert.deepEqual(project.gravityRules,{direction:'turbine2',strength:.6});
+ const recipe=(await state()).logs.join('\n');await replay(recipe);
+ assert.deepEqual((await state()).tiles,after,'Turbine 2 history and recipe retain the fixed engine');
+ await first();await tap('#btnGravitationalSort');await page.evaluate(p=>turbineTest.restore(p),project);
+ assert.deepEqual((await state()).gravity,project.gravityRules);
+ const init=recipe.split('\n').find(line=>line.includes(' INIT_STATE ->'));
+ assert.deepEqual(await replayCircle(init+'\n[00:00:00.100] STEP FORWARD -> Armed: spiral | Sort: luminance | Rules: {"method":"turbine2"}'),after,'legacy Spiral recipe uses the same engine');
+ await page.evaluate(()=>turbineTest.setup());await selectCircular('black_hole');
+ assert(await page.locator('#btnInk #iconGsCircle').isVisible());
+ const circleBefore=(await state()).tiles;await tap('#btnStepForward');const circleAfter=(await state()).tiles;
+ assert.notDeepEqual(circleAfter,circleBefore);
+ const circleProject=await page.evaluate(()=>turbineTest.project());
+ await tap('#btnUndo');assert.deepEqual((await state()).tiles,circleBefore);await tap('#btnRedo');assert.deepEqual((await state()).tiles,circleAfter);
+ const circleRecipe=(await state()).logs.join('\n');assert.deepEqual(await replayCircle(circleRecipe),circleAfter);
+ const circleInit=circleRecipe.split('\n').find(line=>line.includes(' INIT_STATE ->'));
+ assert.deepEqual(await replayCircle(circleInit+'\n[00:00:00.100] STEP FORWARD -> Armed: spiral | Sort: luminance | Rules: {"method":"black_hole"}'),circleAfter);
+ const zeroProject={...circleProject,tiles:circleBefore.map(([k,v,isGold])=>({k,v,isGold})),gravityRules:{direction:'black_hole',strength:0}};
+ await page.evaluate(p=>turbineTest.restore(p),zeroProject);await tap('#btnStepForward');
+ assert.deepEqual((await state()).tiles,circleAfter,'π does not depend on Strength');
  assert.deepEqual(errors,[]);console.log('PASS',JSON.stringify(config));await context.close();
 }}finally{await browser.close();await new Promise(r=>server.close(r));}
