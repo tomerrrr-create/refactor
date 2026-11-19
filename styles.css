@@ -2696,6 +2696,33 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .ink-settings-dialog button[type=submit] { background:#d5b45d; color:#17160f; border-color:#d5b45d; font-weight:600; }
 .ink-settings-dialog button[data-reset] { margin-inline-end:auto; border-color:transparent; background:transparent; color:#b5b5aa; }
 .ink-settings-dialog footer { display:flex; justify-content:flex-end; gap:10px; margin-top:24px; }
+.vortices-cycle-dialog .vortices-cycle-options {
+  display: grid;
+  gap: 4px;
+}
+.vortices-cycle-dialog .vortices-cycle-options label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #ffffff08;
+  color: #dcded7;
+  text-align: start;
+  cursor: pointer;
+}
+.vortices-cycle-options input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #d5b45d;
+  cursor: inherit;
+}
+.vortices-cycle-options input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.vortices-cycle-options label:has(input:disabled) { cursor: default; }
 
 #btnInk { display:none; touch-action:none !important; }
 #btnInk svg { stroke:var(--sim-color); }

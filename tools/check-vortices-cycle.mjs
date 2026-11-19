@@ -51,6 +51,9 @@ try {
         const state=()=>page.evaluate(()=>circularTest.state());
         const hub='#btnInk', nav='#btnEvolutionDrawerInternal', play='#btnPlayPauseLife';
         const menu=page.locator('#cymaticsSettingsDialog');
+        const cycleDialog='#vorticesCycleDialog';
+        const cycleMenu=page.locator(cycleDialog);
+        const checkbox=mode=>cycleMenu.locator('input[value='+mode+']');
         async function swipeUp(id) {
             const r=await page.locator(id).boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
             if (!touch) {
@@ -102,6 +105,11 @@ try {
                     await menu.waitFor({state:'hidden'});
                     assert.equal((await state()).project.cymaticsState.rules.strength,65);
                 } else {await dialogAction('#cymaticsSettingsDialog [data-cancel]');await menu.waitFor({state:'hidden'});}
+            } else if (mode!=='flow') {
+                await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+                assert.deepEqual(await cycleMenu.locator('input:checked').evaluateAll(nodes=>nodes.map(input=>input.value)),order);
+                await dialogAction(cycleDialog+' [data-cancel]');
+                await cycleMenu.waitFor({state:'hidden'});
             }
         }
         await tap(hub);assert.equal((await state()).control,null);
@@ -146,6 +154,34 @@ try {
         await tap('#btnMacroPlay');
         await page.waitForFunction(()=>!circularTest.state().loaded&&!circularTest.state().animated,null,{timeout:30000});
         assert.deepEqual((await state()).project.tiles,final.project.tiles,'controlled clock/RNG round trip through all engines');
+
+        await page.evaluate(()=>circularTest.enter());
+        await tap(hub);assert.equal((await state()).mode,'turbine2');
+        await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+        await checkbox('turbine2').uncheck();
+        await dialogAction(cycleDialog+' [data-cancel]');
+        await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+        assert(await checkbox('turbine2').isChecked(),'Cancel discards the draft');
+        for (const mode of order.filter(mode=>mode!=='left')) await checkbox(mode).uncheck();
+        assert(await checkbox('left').isDisabled(),'The last mode that can open the list stays selected');
+        await dialogAction(cycleDialog+' [type=submit]');
+        await cycleMenu.waitFor({state:'hidden'});
+        assert.equal((await state()).mode,'turbine2','Saving does not interrupt the current mode');
+        await tap(hub);assert.equal((await state()).mode,'left','Cycle continues forward from an excluded active mode');
+        await tap(play);
+        await page.waitForFunction(()=>circularTest.state().gen>=3);
+        await tap(hub);
+        assert((await state()).playing);
+        assert((await state()).gen>=3,'A single enabled mode keeps playing without restarting');
+        await tap(play);
+        await tap(hub);assert.equal((await state()).control,null,'Pause still permits Off');
+        await page.reload();
+        await page.waitForFunction(()=>window.circularTest?.ready);
+        await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());circularTest.enter();});
+        if (!(await page.locator(hub).isVisible())) await tap(nav);
+        await tap(hub);assert.equal((await state()).mode,'left','The enabled selection survives reload');
+        await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+        assert.deepEqual(await cycleMenu.locator('input:checked').evaluateAll(nodes=>nodes.map(input=>input.value)),['left']);
         assert.deepEqual(errors,[]);console.log('PASS circular mode cycle',lang);await context.close();
     }
 }finally{await browser.close();server.close();}

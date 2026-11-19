@@ -10,7 +10,8 @@ import {createInkSettingsDialog} from './ink-settings-dialog.js';
 import { createMacroEnding } from './macro-ending.js';
 import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
-import {VORTICES_MODES,VORTICES_CYCLE,VORTICES_RESONANCE_MAPS,RESONANCE_MAPS,vorticesModeFor} from './vortices-modes.js';
+import {VORTICES_MODES,VORTICES_SETTINGS_ENTRY_MODES,VORTICES_RESONANCE_MAPS,RESONANCE_MAPS,vorticesModeFor,loadVorticesCycle,persistVorticesCycle,nextVorticesMode} from './vortices-modes.js';
+import {createVorticesCycleDialog} from './vortices-cycle-dialog.js';
 import {createEvolutionModeMemory,defaultEvolutionCycleMode} from './evolution-mode-memory.js';
 import { createMacroActivity } from './macro-activity.js';
 import {DEFAULT_CONTOUR_ACTION_RULES,validateContourActionRules} from './contour-action-settings.js';
@@ -76,6 +77,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let replayBrushBefore = null;
       let islandsSession = null;
       let inkState=null,inkRules={...DEFAULT_INK_PREFERENCES},replayInkRules=null,inkSettingsUI=null;
+      let vorticesEnabledModes=loadVorticesCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null,oilSettingsUI=null;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
@@ -1940,7 +1942,7 @@ function restoreCycleMode(simulation, mode) {
 }
 function resetEvolutionCycle(simulation, {refresh=true} = {}) {
     if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
-    const mode=defaultEvolutionCycleMode(simulation);
+    const mode=simulation==='ink'?vorticesEnabledModes[0]:defaultEvolutionCycleMode(simulation);
     if(mode===undefined)return false;
     const selected=matchesEvolutionControl(simulation);
     cycleMemory.remember(simulation,mode);
@@ -1978,7 +1980,7 @@ function cycleMemoryTap(simulation, onTap) {
         selectingCycleMode=true;
         try {
             const selected=matchesEvolutionControl(simulation);
-            if(!selected&&remembered!==undefined){
+            if(!selected&&remembered!==undefined&&(simulation!=='ink'||vorticesEnabledModes.includes(remembered))){
                 if (simulation === 'ink') selectVorticesMode(remembered);
                 else {
                     // The same engine may already be armed on the circular modes button.
@@ -3858,7 +3860,7 @@ function updateInkButtonUI() {
     if (!button) return;
     const activeMode = activeVorticesMode();
     const remembered = cycleMemory.entry('ink');
-    const mode = activeMode ?? (Object.hasOwn(VORTICES_MODES, remembered) ? remembered : defaultEvolutionCycleMode('ink'));
+    const mode = activeMode ?? (vorticesEnabledModes.includes(remembered) ? remembered : vorticesEnabledModes[0]);
     button.dataset.mode = mode;
     button.classList.toggle('simulation-active', Boolean(activeMode));
     button.setAttribute('aria-pressed', String(Boolean(activeMode)));
@@ -3899,7 +3901,14 @@ function selectVorticesMode(mode) {
 
 function cycleInkMode() {
     if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
-    selectVorticesMode(nextEvolutionMode(activeVorticesMode() ?? 'off', VORTICES_CYCLE));
+    const activeMode = activeVorticesMode();
+    const nextMode = nextVorticesMode(activeMode ?? 'off', vorticesEnabledModes, isLifePlaying);
+    if (nextMode !== activeMode) selectVorticesMode(nextMode);
+}
+
+function canEditVorticesCycle() {
+    return !isBreathing && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand &&
+        VORTICES_SETTINGS_ENTRY_MODES.includes(activeVorticesMode());
 }
 function saveInkSettings(value){
     if(armedSimulation!=='ink'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
@@ -6297,6 +6306,17 @@ updateBrightnessEvoButtonUI();
         });
         luminanceAnchorPreference.restore();
         inkSettingsUI=createInkSettingsDialog({getRules:getInkRules,saveRules:saveInkSettings,getText,getLang:getCurrentLang,onLanguageChange});
+        const vorticesCycleUI=createVorticesCycleDialog({
+            getModes:()=>vorticesEnabledModes,
+            saveModes:enabledModes=>{
+                if(!canEditVorticesCycle())return false;
+                vorticesEnabledModes=enabledModes;
+                persistVorticesCycle(enabledModes);
+                updateInkButtonUI();
+                return true;
+            },
+            getText,getLang:getCurrentLang,onLanguageChange
+        });
         oilSettingsUI=createOilSettingsDialog({getRules:getOilRules,saveRules:saveOilSettings,getText,getLang:getCurrentLang,onLanguageChange});
         networkSettingsUI=createNetworkSettingsDialog({getRules:getNetworkRules,saveRules:saveNetworkSettings,getText,getLang:getCurrentLang,onLanguageChange});
         cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,getFrequencies:()=>cymaticsFrequencies,getStrengths:()=>cymaticsStrengths,saveRules:saveCymaticsSettings,
@@ -6521,7 +6541,11 @@ dom.btnWind.addEventListener('keydown', event => {
             [dom.btnSpiral, 'spiral', cycleSpiralMode, modals.openSpiralSettingsModal],
             [dom.btnMagnetModes, 'magnet', cycleMagnetMode, modals.openMagnetSettingsModal],
             [dom.btnSandpile, 'sandpile', cycleChiFlowMode, modals.openChiFlowSettingsModal],
-            [dom.btnInk,'ink',cycleInkMode,()=>armedSimulation==='cymatics'?cymaticsSettingsUI.open():inkSettingsUI.open()],
+            [dom.btnInk,'ink',cycleInkMode,()=>{
+                if(armedSimulation==='cymatics')cymaticsSettingsUI.open();
+                else if(armedSimulation==='ink')inkSettingsUI.open();
+                else vorticesCycleUI.open();
+            }],
             [dom.btnOil,'oil',cycleOilMode,()=>oilSettingsUI.open()],
             [dom.btnNetwork,'network',cycleNetworkMode,()=>networkSettingsUI.open()],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
@@ -6553,7 +6577,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && !(simulation==='islands'&&islandsSession?.mode==='oil') && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (simulation === 'ink' ? matchesEvolutionControl('ink') && ['ink','cymatics'].includes(armedSimulation) : matchesEvolutionControl(simulation)),
+                canOpen: () => Boolean(onOpen) && !(simulation==='islands'&&islandsSession?.mode==='oil') && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });
