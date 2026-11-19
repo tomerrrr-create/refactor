@@ -45,6 +45,23 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  // Updating the switch during a run uses existing live-rule recording and leaves playback running.
  await page.evaluate(()=>anchorTest.start('magnet'));toggle=await tech();await toggle.check();assert((await state()).playing);await closeTech();assert((await page.evaluate(()=>anchorTest.record())).includes('SIMULATION_RULES'));await page.evaluate(()=>anchorTest.pause());
  toggle=await tech();await toggle.uncheck();await closeTech();await page.evaluate(()=>anchorTest.start('gameOfLife'));toggle=await tech();await toggle.check();assert((await state()).playing);await closeTech();assert((await page.evaluate(()=>anchorTest.record())).split('\n').filter(line=>line.includes('SIMULATION_RULES')).at(-1).includes('"deadColor":"luminance"'));await page.evaluate(()=>anchorTest.pause());
+ // Profile Reset restores the factory anchors and the device switch together.
+ toggle=await tech();await toggle.uncheck();
+ const beforeReset=await state();
+ const resetDialog=page.locator('#workspaceResetConfirmation');
+ await page.locator('#btnResetWorkspace').click();
+ await page.locator('#btnCancelWorkspaceReset').click();
+ await resetDialog.waitFor({state:'hidden'});
+ assert(!(await toggle.isChecked()));
+ await page.locator('#btnResetWorkspace').click();
+ await page.locator('#btnConfirmWorkspaceReset').click();
+ await resetDialog.waitFor({state:'hidden'});
+ const afterReset=await state();
+ assert(afterReset.magnet&&afterReset.life);
+ assert(await toggle.isChecked());
+ assert.deepEqual(afterReset.tiles,beforeReset.tiles);
+ await closeTech();await boot();
+ assert((await state()).magnet&&(await state()).life,'Reset saves On for the next visit');
  assert.deepEqual(errors,[]);console.log('PASS Luminance Anchor',config);await context.close();
 }
 }finally{await browser.close();await new Promise(r=>server.close(r));}
