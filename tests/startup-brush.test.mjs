@@ -1,3 +1,4 @@
+import {vorticesModeFor} from '../js/vortices-modes.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules} from '../js/simulations/network.js';
 import {validateOilRules} from '../js/simulations/oil.js';
 import {DEFAULT_INK_PREFERENCES,validateInkRules} from '../js/simulations/ink.js';
@@ -15,7 +16,7 @@ const source = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const apply = source.slice(source.indexOf('function applyWorkspacePreferences('), source.indexOf('function captureProfileSettings('));
 function harness() {
     const noop = () => {};
-    const context = vm.createContext({DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,validateOilRules,validateInkRules,DEFAULT_INK_PREFERENCES,
+    const context = vm.createContext({vorticesModeFor,activeEvolutionControl:()=>null,DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,validateOilRules,validateInkRules,DEFAULT_INK_PREFERENCES,
         validateContourActionRules, INITIAL_CYMATICS_RULES, validateCymaticsRules, createCymaticsFrequencies, rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength, INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],

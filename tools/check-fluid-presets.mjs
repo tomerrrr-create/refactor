@@ -15,7 +15,7 @@ try{for(const [lang,touch] of [['en',false],['he',true],['ru',false],['nl',true]
  await context.addInitScript(()=>{if(!localStorage.getItem('colorGridExperimentalSimulationsV1'))localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({ink:true,oil:true,network:true}));});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.fluidTest={
- setup:kind=>{stopMacro();pauseLife();resetArmedState();n=61;restoreSeparatorWidth(0);initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*17)%paletteLen();t.isGold=i===0;});inkRules={...DEFAULT_INK_PREFERENCES};oilRules={...INITIAL_OIL_RULES};history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();kind==='ink'?cycleInkMode():cycleOilMode();renderToScreen(null);},
+ setup:kind=>{stopMacro();pauseLife();resetArmedState();n=61;restoreSeparatorWidth(0);initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*17)%paletteLen();t.isGold=i===0;});inkRules={...DEFAULT_INK_PREFERENCES};oilRules={...INITIAL_OIL_RULES};history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();kind==='ink'?selectVorticesMode('flow'):cycleOilMode();renderToScreen(null);},
  open:kind=>kind==='ink'?inkSettingsUI.open():oilSettingsUI.open(),
  state:()=>({ink:{...inkRules},oil:{...oilRules},board:boardState.map(t=>({k:t.k,v:t.v,gold:!!t.isGold})),runtime:armedSimulation==='ink'?getInkSnapshot():getOilSnapshot(),logs:[...artRecipeLog],playing:isLifePlaying,generation:currentGenerationCount,loaded:isMacroLoaded}),
  play:togglePlayPauseLife,replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},done:()=>!isMacroPlaying&&!isLifePlaying&&!isMacroLoaded
@@ -28,7 +28,7 @@ try{for(const [lang,touch] of [['en',false],['he',true],['ru',false],['nl',true]
   await page.evaluate(kind=>fluidTest.setup(kind),kind);const initial=await state();
   const toolbar=page.locator(kind==='ink'?'#btnInk':'#btnOil');
   const defaultPreset=kind==='ink'?'whirlpools':'balanced';
-  const paths=await toolbar.locator('svg path:not(.vortices-tornado-badge)').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('d')));
+  const paths=await toolbar.locator(kind==='ink'?'[data-vortices-icon=flow] path:not(.vortices-tornado-badge)':'svg path').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('d')));
   if(kind==='ink'){
    const name={en:'Color Vortices',he:'מערבולות צבע',ru:'Цветовые вихри',nl:'Kleurwervels'}[lang];
    assert.equal(await toolbar.getAttribute('aria-label'),name);

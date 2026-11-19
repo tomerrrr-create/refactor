@@ -9,9 +9,9 @@ const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const spiralSequence = JSON.parse(source.match(/const SPIRAL_MODE_SEQUENCE = (\[[^\]]+\])/)[1].replaceAll("'", '"'));
 const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
-    { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x', 'turbine2', 'black_hole'], get: c => c.gsMode },
+    { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x'], get: c => c.gsMode },
     { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: MAGNET_CYCLE.slice(1), get: c => c.magnetMode },
-    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['b', 'left', 'radial', 'down', 'a'], get: c => c.spiralMode },
+    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['b', 'radial', 'down'], get: c => c.spiralMode },
     { sim: 'brightnessEvo', fn: 'cycleBrightnessEvoMode', event: 'Brightness Evo Mode Changed', modes: ['brightness', 'contrast'], get: c => c.brightnessEvoMode },
     { sim: 'dla', fn: 'cycleDlaMode', event: 'DLA Mode Changed', modes: ['genetics', 'no-genetics'], get: c => c.dlaMode }
 ];
@@ -38,6 +38,8 @@ function harness() {
     vm.runInContext(source.slice(loggerStart, source.indexOf('// ------------------------------------------', loggerStart)), c);
     c.recordLiveSimulationRules=()=>{};
     c.getActiveSpiralRules=()=>c.spiralRules;
+    c.getActiveGravityRules=()=>c.gravitationalSortRules;
+    c.restoreGravityRules=rules=>{if(!c.armedSimulation)c.armSimulation('gravitationalSort');Object.assign(c.gravitationalSortRules,rules);};
     vm.runInContext(functionSource('selectMagnetMode'),c);
     vm.runInContext(functionSource('nextEvolutionMode') + cases.map(item => functionSource(item.fn)).join('\n'), c);
     vm.runInContext(source.slice(source.indexOf('function getHistorySettings('), source.indexOf('function toggleMacroFullScreen(')), c);

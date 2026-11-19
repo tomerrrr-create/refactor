@@ -1123,10 +1123,6 @@ body {
 
 
 
-#btnGravitationalSort.mode-turbine2 #iconGsTurbine2 { display: block !important; }
-#btnGravitationalSort.mode-turbine2 svg:not(#iconGsTurbine2) { display: none !important; }
-#btnGravitationalSort.mode-black_hole #iconGsCircle { display: block !important; }
-#btnGravitationalSort.mode-black_hole svg:not(#iconGsCircle) { display: none !important; }
 #gravitationalSortSettingsModal .gravity-directions { gap:12px; flex-wrap:wrap; }
 #gravitationalSortSettingsModal .gravity-directions .gs-direction-btn { flex-shrink:0; }
 [data-gravity-strength].gravity-strength-inactive { opacity:.35; }
@@ -1335,8 +1331,6 @@ body {
 #btnSpiral.mode-down #iconSpiralDown { display: block !important; }
 #btnSpiral.mode-down svg:not(#iconSpiralDown) { display: none !important; }
 
-#btnSpiral.mode-left #iconSpiralLeft { display: block !important; }
-#btnSpiral.mode-left svg:not(#iconSpiralLeft) { display: none !important; }
 #btnSpiral.mode-turbine2 #iconSpiralTurbine2 { display:block !important; }
 #btnSpiral.mode-turbine2 svg:not(#iconSpiralTurbine2) { display:none !important; }
 
@@ -1344,8 +1338,6 @@ body {
 #btnSpiral.mode-black_hole svg:not(#iconSpiralBlackHole) { display: none !important; }
 
 
-#btnSpiral.mode-a #iconSpiralA { display: block !important; }
-#btnSpiral.mode-a svg:not(#iconSpiralA) { display: none !important; }
 
 
 /* --- Magnet Modes Button States --- */
@@ -2486,6 +2478,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 #btnCymatics { display:none; }
 #cymaticsSettingsDialog .resonance-map-grid { grid-template-columns:repeat(3,minmax(44px,1fr)); width:min(100%,272px); }
+#cymaticsSettingsDialog .resonance-map-grid [hidden] { display:none; }
 #cymaticsSettingsDialog #cymaticsMapLabel { margin:0 0 10px; color:#c8c5bb; font-size:13px; font-weight:500; }
 #cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; text-align:start; }
 #cymaticsSettingsDialog .cymatics-phase input { order:1; width:18px; height:18px; margin:0; flex-shrink:0; accent-color:var(--gold); }
@@ -2706,6 +2699,15 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 #btnInk { display:none; touch-action:none !important; }
 #btnInk svg { stroke:var(--sim-color); }
+#btnInk [data-vortices-icon] { display:none; }
+#btnInk[data-mode="flow"] [data-vortices-icon="flow"],
+#btnInk[data-mode="turbine2"] [data-vortices-icon="turbine2"],
+#btnInk[data-mode="left"] [data-vortices-icon="left"],
+#btnInk[data-mode="a"] [data-vortices-icon="a"],
+#btnInk[data-mode="cosmic"] [data-vortices-icon="cosmic"],
+#btnInk[data-mode="circular"] [data-vortices-icon="circular"],
+#btnInk[data-mode="black_hole"] [data-vortices-icon="black_hole"],
+#btnInk[data-mode="tornado"] [data-vortices-icon="flow"] { display:block; }
 .vortices-tornado-badge { display:none; }
 #btnInk[data-mode="tornado"] .vortices-tornado-badge { display:inline; }
 #btnInk.simulation-active svg { stroke:var(--gold); stroke-width:1.85; }

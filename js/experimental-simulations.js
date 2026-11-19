@@ -1,7 +1,6 @@
 // One registry owns the opt-in exposure of these removable experiments.
 // Preferences are device-local, never profile, artwork or replay settings.
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
-    {id:'ink',button:'btnInk',key:'help_ink'},
     {id:'oil',button:'btnOil',key:'help_oil'},
     {id:'network',button:'btnNetwork',key:'help_network'}
 ].map(Object.freeze));
