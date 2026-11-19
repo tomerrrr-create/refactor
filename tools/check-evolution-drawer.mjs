@@ -60,19 +60,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  }
  await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
  const island=await trigger.locator('.drawer-internal-symbol').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),b=e.parentElement.getBoundingClientRect();return {w:s.width,h:s.height,radius:s.borderRadius,background:s.backgroundColor,image:s.backgroundImage,shadow:s.boxShadow,fits:r.left>=b.left&&r.right<=b.right&&r.top>=b.top&&r.bottom<=b.bottom};});
- assert(Math.abs(parseFloat(island.w)-34)<.1&&Math.abs(parseFloat(island.h)-34)<.1);assert.equal(island.radius,'50%');assert.equal(island.background,'rgb(20, 23, 25)');assert(island.image.includes('gradient')&&island.shadow!=='none'&&island.fits,'neutral island stays inside the original tap target');
- const yinColors=()=>trigger.locator('[data-yin-half]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill));
- await page.evaluate(()=>drawerTest.theme('gold'));
- const mutedGold='rgb(118, 103, 65)', nearBlack='rgb(8, 10, 9)';
- await page.waitForFunction(color=>getComputedStyle(document.querySelector('#btnEvolutionDrawerInternal [data-yin-half="0"]')).fill===color,mutedGold);
- assert.deepEqual(await yinColors(),[mutedGold,nearBlack]);
- assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),[nearBlack,mutedGold]);
- assert.equal(await trigger.locator('circle').count(),2);
- assert.equal(await trigger.locator('svg').evaluate(e=>getComputedStyle(e).filter),'none');
- if(config.lang==='he')assert.equal(await trigger.locator('[data-yin-half]').first().evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
+ assert(Math.abs(parseFloat(island.w)-35)<.1&&Math.abs(parseFloat(island.h)-17)<.1);assert.equal(island.radius,'9px');assert.equal(island.background,'rgb(20, 20, 19)');assert(island.shadow.includes('inset')&&island.fits,'the recessed track stays inside the original tap target');
+ const dotColors=()=>trigger.locator('.drawer-page-dot').evaluateAll(es=>es.map(e=>getComputedStyle(e).backgroundColor));
+ const thumbStyle=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>{
+  const thumb=getComputedStyle(e,'::before');return {left:thumb.left,transition:thumb.transitionDuration};
+ });
+ const mutedGold='rgb(173, 139, 74)', hollow='rgba(0, 0, 0, 0)';
+ assert.deepEqual(await dotColors(),[mutedGold,hollow]);
+ assert.deepEqual(await thumbStyle(),{left:'2px',transition:config.lang==='he'?'0s':'0.2s'});
  const position=await trigger.boundingBox(),frame=await page.locator('#simModeBackground').boundingBox();
- await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),[nearBlack,mutedGold]);
- assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),[mutedGold,nearBlack]);
+ await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await dotColors(),[hollow,mutedGold]);
+ assert.equal((await thumbStyle()).left,'17px');
  assert.deepEqual(await physicalRows(),[['network','cymatics','turing','breathe'],['contour','dla','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&id!=='spiral'));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
  const pageIndex=()=>container.getAttribute('data-evolution-page');
@@ -90,7 +88,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await pageIndex(),'0','active settings swipe has priority');
  await drag(frame.x+10,frame.y+10,36,0);assert.equal(await pageIndex(),'0','open settings block navigation');
  await tap(page.locator('#btnGolSettingsCancel'));await lifeSettings.waitFor({state:'hidden'});await page.evaluate(()=>drawerTest.setup());initial=await state();
- await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled').count(),2);
+ await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled .drawer-internal-symbol').count(),2);
  assert.equal(await dialog.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
  await move(0,13);await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,initial.slots);assert(await trigger.evaluate(e=>document.activeElement===e));
  await open();await move(0,13);await move(2,14);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-editor.png'),animations:'disabled'});await save();
