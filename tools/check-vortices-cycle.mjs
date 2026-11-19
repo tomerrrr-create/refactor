@@ -67,11 +67,22 @@ try {
         }
         const visibleMaps=()=>menu.locator('[data-cymatics-map]:visible').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMap).sort());
         const order=['turbine2','flow','left','cosmic','circular','a','black_hole','tornado'];
+        const defaultOrder=order.filter(mode=>mode!=='a'&&mode!=='tornado');
         await tap(nav);
         assert(await page.locator(hub).isVisible());
         await page.evaluate(()=>circularTest.openTech());
         assert.equal(await page.locator('#inkExperimentToggle').count(),0);
         await tap('#btnTechnicianCloseTop');
+        for (const mode of defaultOrder) {
+            await tap(hub);assert.equal((await state()).mode,mode);
+        }
+        await tap(hub);assert.equal((await state()).control,null);
+        await tap(hub);await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+        assert.deepEqual(await cycleMenu.locator('input:checked').evaluateAll(nodes=>nodes.map(input=>input.value)),defaultOrder);
+        await checkbox('a').check();await checkbox('tornado').check();
+        await dialogAction(cycleDialog+' [type=submit]');
+        await cycleMenu.waitFor({state:'hidden'});
+        await page.evaluate(()=>circularTest.enter());
         for (const mode of order) {
             const before=(await state()).project.tiles;
             await tap(hub);
@@ -115,16 +126,26 @@ try {
             }
         }
         await tap(hub);assert.equal((await state()).control,null);
-        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'b');
+        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'radial');
         await swipeUp('#btnSpiral');
         await page.locator("#spiralSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['b','radial','down']);
+        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['radial','down']);
         await dialogAction('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
         await tap(nav);
         await tap('#btnGravitationalSort');await swipeUp('#btnGravitationalSort');
         await page.locator("#gravitationalSortSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),['up','right','center_x']);
-        await dialogAction('#btnGsSettingsCancel');await page.locator('#gravitationalSortSettingsModal').waitFor({state:'hidden'});
+        assert.deepEqual(await page.locator('.gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),['up','right','center_x','pinwheel']);
+        await dialogAction('.gs-direction-btn[data-direction=pinwheel]');
+        assert(await page.locator('#gsStrength').isDisabled());
+        await dialogAction('#btnGsSettingsSave');
+        await page.locator('#gravitationalSortSettingsModal').waitFor({state:'hidden'});
+        assert.equal((await state()).project.gravityRules.direction,'pinwheel');
+        assert(await page.locator('#iconGsPinwheel').isVisible());
+        await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
+        for (const direction of ['up','right','center_x','pinwheel']) {
+            await tap('#btnGravitationalSort');assert.equal((await state()).project.gravityRules.direction,direction);
+        }
+        await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
         await tap('#btnCymatics');
         assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,4);
         await swipeUp('#btnCymatics');await menu.waitFor({state:'visible'});
@@ -142,6 +163,11 @@ try {
         await page.evaluate(()=>circularTest.memory(false));
         await tap(nav);
         await page.evaluate(()=>circularTest.enter());
+        await tap(nav);
+        for (let i=0;i<4;i++) await tap('#btnGravitationalSort');
+        assert.equal((await state()).project.gravityRules.direction,'pinwheel');
+        await tap('#btnStepForward');
+        await tap(nav);
         await tap(hub);await tap(play);
         for (const mode of [...order.slice(1),order[0]]) {
             await page.waitForFunction(()=>circularTest.state().gen>=3);

@@ -92,7 +92,7 @@
         <circle cx="12" cy="12" r="11" stroke-width="0.4"></circle>
     </svg>
   <svg data-vortices-icon="cosmic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
-  <svg data-vortices-icon="circular" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+  <svg data-vortices-icon="circular" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-32 12 12)"/><path d="M7.8 7.3a6.3 6.3 0 0 1 9.8 2.1m-1.4 7.3a6.3 6.3 0 0 1-9.8-2.1" stroke-linecap="round"/><circle cx="12" cy="12" r="1.45" fill="currentColor" stroke="none"/><circle cx="18.4" cy="15.5" r="1" fill="currentColor" stroke="none"/></svg>
  </button>
  <button id="btnCymatics" class="ctrl" type="button" aria-label="Resonance" title="Resonance">
   <svg data-cymatics-audio viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -219,6 +219,10 @@
     <svg id="iconGsCenterX" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
         <line x1="4" y1="4" x2="20" y2="20"/>
         <line x1="4" y1="20" x2="20" y2="4"/>
+    </svg>
+    <svg id="iconGsPinwheel" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+        <path stroke-width="1.0" d="M 12 10.5 Q 15 7 12 3 M 13.06 10.94 Q 17.5 8.5 18.36 5.64 M 13.5 12 Q 17 15 21 12 M 13.06 13.06 Q 15.5 17.5 18.36 18.36 M 12 13.5 Q 9 17 12 21 M 10.94 13.06 Q 6.5 15.5 5.64 18.36 M 10.5 12 Q 7 9 3 12 M 10.94 10.94 Q 8.5 6.5 5.64 5.64"></path>
     </svg>
     <svg id="iconGsVortex" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
         <circle cx="12" cy="12" r="8"/>
@@ -1095,16 +1099,7 @@
 <h3 id="spiralMethodLabel" class="font-semibold text-gray-300 text-center" data-debug-text="spiral_method_label">שיטת סיבוב</h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
           
-          <button class="spiral-method-btn gol-preset-btn active flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="b">
-              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
-                  <path stroke-width="1.0" d="M 12 10.5 Q 15 7 12 3 M 13.06 10.94 Q 17.5 8.5 18.36 5.64 M 13.5 12 Q 17 15 21 12 M 13.06 13.06 Q 15.5 17.5 18.36 18.36 M 12 13.5 Q 9 17 12 21 M 10.94 13.06 Q 6.5 15.5 5.64 18.36 M 10.5 12 Q 7 9 3 12 M 10.94 10.94 Q 8.5 6.5 5.64 5.64"></path>
-              </svg>
-              <span class="text-xs" data-debug-text="spiral_b">Pinwheel</span>
-          </button>
-
-
-          <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="radial">
+          <button class="spiral-method-btn gol-preset-btn active flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="radial">
               <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="12,3 21,12 12,21 3,12"/>
               </svg>
@@ -1172,6 +1167,13 @@
             </button>
 
 
+
+            <button class="gs-direction-btn" data-direction="pinwheel" data-i18n-title="spiral_b" title="Pinwheel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+                    <path stroke-width="1.0" d="M 12 10.5 Q 15 7 12 3 M 13.06 10.94 Q 17.5 8.5 18.36 5.64 M 13.5 12 Q 17 15 21 12 M 13.06 13.06 Q 15.5 17.5 18.36 18.36 M 12 13.5 Q 9 17 12 21 M 10.94 13.06 Q 6.5 15.5 5.64 18.36 M 10.5 12 Q 7 9 3 12 M 10.94 10.94 Q 8.5 6.5 5.64 5.64"></path>
+                </svg>
+            </button>
 
         </div>
 

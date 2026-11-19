@@ -1,5 +1,8 @@
 import { runBlackHoleGeneration } from './circle.js';
 import { runTurbine2Generation } from './spiral-turbine2.js';
+import { runSpiralGeneration } from './spiral.js';
+
+const PINWHEEL_RULES = Object.freeze({method:'b'});
 
 let cachedRadialOrder = null;
 let cachedRadialN = null;
@@ -10,12 +13,13 @@ const gsNeighborsCoords = [
     {dr: 0, dc: -1}, {dr: 0, dc: 1}
 ];
 
-export function runGravitationalSortGeneration({ n, currentBoardState, gravitationalSortRules }) {
+export function runGravitationalSortGeneration({ n, currentBoardState, currentPalette, gravitationalSortRules }) {
     const nextBoardState = currentBoardState; // Zero Allocation! מוטציה על המקום
     const strength = gravitationalSortRules.strength;
 
     if (gravitationalSortRules.direction === 'black_hole') return runBlackHoleGeneration(n, nextBoardState);
     if (gravitationalSortRules.direction === 'turbine2') return runTurbine2Generation(n, nextBoardState, strength);
+    if (gravitationalSortRules.direction === 'pinwheel') return runSpiralGeneration({n, currentBoardState, currentPalette, spiralRules:PINWHEEL_RULES});
 
     switch (gravitationalSortRules.direction) {
 

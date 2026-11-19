@@ -399,7 +399,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'b', 'radial', 'down'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'radial', 'down'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -585,7 +585,7 @@ k: tileState.k,
         }
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry: state.spiralMethod });
             spiralMode = state.spiralMethod;
             const rules = getActiveSpiralRules();
@@ -2013,7 +2013,7 @@ function handleEvolutionTap(simulation, onTap) {
     if (matchesEvolutionControl(simulation) && !isLifePlaying) togglePlayPauseLife();
 }
 
-function armSimulation(simulationName, { recordIslandsStart = true, spiralEntry = 'b', gravityEntry = 'up' } = {}) {
+function armSimulation(simulationName, { recordIslandsStart = true, spiralEntry = isExecutingMacroCommand ? 'b' : 'radial', gravityEntry = 'up' } = {}) {
     if (isLifePlaying) return;
     if (!isExecutingMacroCommand) { replayInkRules=null; replayOilRules=null; replayNetworkRules=null; replayCymaticsRules=null; replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
 
@@ -4256,7 +4256,7 @@ function restoreGravityRules(rules) {
 function updateGravitationalSortButtonUI() {
     const active = activeEvolutionControl() === 'gravitationalSort';
     const mode = active ? gsMode : (typeof cycleMemory!=='undefined' ? cycleMemory.entry('gravitationalSort') : undefined) ?? 'off';
-    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-radial', 'mode-vortex', 'simulation-active');
+    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-pinwheel', 'mode-radial', 'mode-vortex', 'simulation-active');
     if (mode !== 'off') dom.btnGravitationalSort.classList.add('mode-' + mode);
     if (active) dom.btnGravitationalSort.classList.add('simulation-active');
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
@@ -4264,7 +4264,7 @@ function updateGravitationalSortButtonUI() {
 
 function cycleGravitationalSortMode() {
     const current = armedSimulation === 'gravitationalSort' && !['turbine2','black_hole'].includes(gsMode) ? gsMode : 'off';
-    const next = nextEvolutionMode(current, ['off', 'up', 'right', 'center_x']);
+    const next = nextEvolutionMode(current, ['off', 'up', 'right', 'center_x', 'pinwheel']);
     window.logArtEvent('Gravitational Sort Mode', next);
     if (next === 'off') {
         if (armedSimulation === 'gravitationalSort') armSimulation(null);
@@ -4381,10 +4381,7 @@ const sequence = SPIRAL_MODE_SEQUENCE;
     window.logArtEvent('Spiral Mode Changed', spiralMode);
 
     if (spiralMode !== 'off' && armedSimulation !== 'spiral') {
-        armSimulation('spiral');
-        // Arming retains the legacy default; the button applies its explicit choice.
-        spiralMode = nextMode;
-        spiralRules.method = nextMode;
+        armSimulation('spiral', {spiralEntry:nextMode});
     } else if (oldMode !== 'off' && spiralMode === 'off') {
         if (armedSimulation === 'spiral') {
             armSimulation(null);
@@ -4623,7 +4620,7 @@ function getHistorySettings(state) {
 }
 
 function validateGravitySnapshot(rules) {
-    if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'black_hole'].includes(rules.direction) ||
+    if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'black_hole', 'pinwheel'].includes(rules.direction) ||
         !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1) throw new Error('Invalid gravity rules');
 }
 

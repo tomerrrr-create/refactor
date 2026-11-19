@@ -17,7 +17,7 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
 const cases=[
  ['gravitationalSort','btnGravitationalSort','up','right','.mode-right'],
- ['spiral','btnSpiral','b','left','.mode-left'],['magnet','btnMagnetModes','field_magnet','field_cosmic_magnet','.mode-field_cosmic_magnet'],
+ ['spiral','btnSpiral','radial','down','.mode-down'],['magnet','btnMagnetModes','field_magnet','field_cosmic_magnet','.mode-field_cosmic_magnet'],
  ['brightnessEvo','btnBrightnessEvo','brightness','contrast','.mode-contrast'],['dla','btnDla','genetics','no-genetics','.mode-no-genetics'],
  ['breathe','btnShowBreatheMenu','solo','group','.mode-group'],['erosion','btnErosion','channels','channels-solid','svg#iconErosionSolid'],
  ['islands','btnIslands','classic','oil','.mode-oil'],['contour','btnContour','all','dead','[data-cracks-area="dead"]'],

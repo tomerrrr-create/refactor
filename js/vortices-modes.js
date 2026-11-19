@@ -17,6 +17,7 @@ export const VORTICES_SETTINGS_ENTRY_MODES = Object.freeze(
 export const RESONANCE_MAPS = Object.freeze(['interference', 'diagonal', 'grid', 'clouds']);
 
 const cycleStorageKey = 'colorGridVorticesCycleV1';
+const defaultCycleModes = Object.keys(VORTICES_MODES).filter(mode => mode !== 'a' && mode !== 'tornado');
 
 export function loadVorticesCycle() {
     try {
@@ -27,7 +28,7 @@ export function loadVorticesCycle() {
     } catch {
         // Use the default cycle if browser storage is unavailable or invalid.
     }
-    return Object.keys(VORTICES_MODES);
+    return [...defaultCycleModes];
 }
 
 export function persistVorticesCycle(enabledModes) {

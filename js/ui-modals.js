@@ -194,7 +194,7 @@ function openSpiralSettingsModal() {
     
     // סימון הכפתור הנכון לפי מה ששמור בהגדרות
 
-const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'b';
+const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'radial';
     app.dom.spiralMethodButtons.forEach(btn => {
 
 
@@ -1215,9 +1215,9 @@ function resetGolSettings() {
 }
 
 function refreshGravitationalStrength(direction) {
-    const circle = direction === 'black_hole';
-    app.dom.gsStrengthSlider.disabled = circle;
-    app.dom.gravitationalSortSettingsModal.querySelector('[data-gravity-strength]').classList.toggle('gravity-strength-inactive', circle);
+    const fixedStrength = direction === 'black_hole' || direction === 'pinwheel';
+    app.dom.gsStrengthSlider.disabled = fixedStrength;
+    app.dom.gravitationalSortSettingsModal.querySelector('[data-gravity-strength]').classList.toggle('gravity-strength-inactive', fixedStrength);
 }
 
 function openGravitationalSortSettingsModal() {
