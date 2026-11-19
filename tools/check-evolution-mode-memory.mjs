@@ -27,6 +27,7 @@ const cases=[
 await mkdir('/tmp/evolution-mode-memory',{recursive:true});
 try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:375,height:667},{lang:'nl',width:1024,height:768}].filter(c=>!process.env.MEMORY_LANG||process.env.MEMORY_LANG===c.lang)){
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
+ await context.addInitScript(()=>localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({spiral:true})));
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.memoryTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));

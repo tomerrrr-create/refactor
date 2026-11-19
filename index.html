@@ -66,9 +66,6 @@
     <circle cx="5.5" cy="5.5" r="2.3" fill="var(--bg-color,#000)"/><circle cx="19" cy="10.5" r="2" fill="var(--bg-color,#000)"/><circle cx="8" cy="19" r="2.5" fill="var(--bg-color,#000)"/>
     <circle cx="12" cy="11" r="1.4" fill="currentColor" stroke="none"/>
   </svg></button>
- <button data-evolution-feature-hidden id="btnOil" class="ctrl" type="button" aria-label="Oil on water" title="Oil on water">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><text x="12" y="18" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="currentColor" stroke="none">B</text></svg>
- </button>
  <button id="btnInk" data-mode="turbine2" class="ctrl" type="button" aria-label="Turbine 2" title="Turbine 2">
   <svg data-vortices-icon="flow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
    <path d="M20.7 5.6c-2-2.5-9.1-3.2-14-1.1C2 6.5 3.1 9.3 8.3 9.7c4.1.3 9.5-1.3 10.1-2.9.7-2-4.8-2.4-7.7-1.3"/>
@@ -125,7 +122,7 @@
         <path d="M10.7 13.1C13.5 13 15.4 13.1 17.5 14"/>
         <circle class="islands-proximity-mark" cx="19" cy="20" r="1.5" fill="currentColor" stroke="none"/>
     </svg>
-    <svg class="islands-oil-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <svg id="iconIslandsOil" class="islands-oil-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M12 2C10 5 7 7.5 7 10a5 5 0 0 0 10 0c0-2.5-3-5-5-8Z"/><path d="M10 10c0 1 .5 2 1.5 2.5M3 18c3-2 5 2 8 0s5 2 10 0M3 22c3-2 5 2 8 0s5 2 10 0"/>
     </svg>
 </button>
@@ -289,7 +286,7 @@
 
 
 
-<button id="btnSpiral" class="ctrl">
+<button data-evolution-feature-hidden id="btnSpiral" class="ctrl">
     <svg id="iconSpiralB" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
         <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
         <path stroke-width="1.0" d="M 12 10.5 Q 15 7 12 3 M 13.06 10.94 Q 17.5 8.5 18.36 5.64 M 13.5 12 Q 17 15 21 12 M 13.06 13.06 Q 15.5 17.5 18.36 18.36 M 12 13.5 Q 9 17 12 21 M 10.94 13.06 Q 6.5 15.5 5.64 18.36 M 10.5 12 Q 7 9 3 12 M 10.94 10.94 Q 8.5 6.5 5.64 5.64"></path>
@@ -1093,10 +1090,10 @@
       <button id="btnSpiralCloseTop" type="button" class="modal-dismiss" data-i18n-title="saveModal_close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
         </button>
-    <h2 id="spiralSettingsTitle" class="text-xl font-bold text-center text-gray-200" data-debug-text="spiral_modal_title">הגדרות ספירלה</h2>
+    <h2 id="spiralSettingsTitle" class="text-xl font-bold text-center text-gray-200" data-debug-text="spiral_modal_title">הגדרות זרימה גאומטרית</h2>
     
 <div class="flex flex-col gap-2">
-<h3 id="spiralMethodLabel" class="font-semibold text-gray-300 text-center" data-debug-text="spiral_method_label">שיטת סיבוב</h3>
+<h3 id="spiralMethodLabel" class="font-semibold text-gray-300 text-center" data-debug-text="spiral_method_label">צורה</h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
           
           <button class="spiral-method-btn gol-preset-btn active flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="radial">

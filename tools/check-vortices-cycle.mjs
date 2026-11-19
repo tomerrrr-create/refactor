@@ -39,6 +39,7 @@ try {
         if (process.env.VORTICES_LANG && process.env.VORTICES_LANG!==lang) continue;
         const context=await browser.newContext({viewport:touch?{width:390,height:844}:{width:1280,height:900},
             hasTouch:touch,isMobile:touch,serviceWorkers:'block'});
+        await context.addInitScript(()=>localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({spiral:true})));
         await context.addInitScript(language=>localStorage.setItem('userLanguage',language),lang);
         const page=await context.newPage(),errors=[];
         page.on('pageerror',e=>errors.push(e.message));

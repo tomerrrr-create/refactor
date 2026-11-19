@@ -18,7 +18,9 @@ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||u
 const modes=[['btnGravitationalSort','gravitationalSort','up'],['btnSpiral','spiral','radial'],['btnMagnetModes','magnet','magnet'],['btnBrightnessEvo','brightnessEvo','brightness'],['btnDla','dla','genetics'],['btnShowBreatheMenu','breathe','solo'],['btnErosion','erosion','channels'],['btnIslands','islands','classic'],['btnContour','contour','all'],['btnCymatics','cymatics',3],['btnNudgeBrighter','nudgeBrighter','nudgeBrighter'],['btnGameOfLife','gameOfLife','personal'],['btnSandpile','sandpile','personal']];
 await mkdir('/tmp/reset-all-cycles',{recursive:true});
 try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844}]){
- const touch=config.width<600,context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:touch,hasTouch:touch,serviceWorkers:'block',reducedMotion:touch?'reduce':'no-preference'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ const touch=config.width<600,context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:touch,hasTouch:touch,serviceWorkers:'block',reducedMotion:touch?'reduce':'no-preference'});
+ await context.addInitScript(()=>localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({spiral:true})));
+ await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.allResetTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const state=()=>page.evaluate(()=>allResetTest.state()),params=()=>page.evaluate(()=>allResetTest.params()),tap=id=>page.locator('#'+id).evaluate(e=>e.click()),dialog=page.locator('#evolutionDrawerDialog');
  await page.evaluate(()=>allResetTest.tech());await page.locator('#rememberEvolutionModesToggle').check();await page.locator('#btnTechnicianCloseTop').click();

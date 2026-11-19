@@ -24,7 +24,9 @@ try{
  const oldBoards={};if(baseline){const c=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'});await c.addInitScript(init,'en');const p=await c.newPage();await p.goto(base+'/baseline/');await p.waitForFunction(()=>window.spiralTest?.ready);await p.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));for(const method of ['b','left','radial','down','black_hole','a','vortex','turbine2','tornado','tornado2'])oldBoards[method]=await replay(p,recipeFor(method));await c.close();console.log('Captured old recipe results from',baseline);}
  for(const config of [{width:1440,height:1000,lang:'en'},{width:390,height:844,lang:'he'},{width:360,height:800,lang:'ru'},{width:844,height:390,lang:'nl'}]){
   if(process.env.SPIRAL_LANG&&config.lang!==process.env.SPIRAL_LANG)continue;
-  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});await context.addInitScript(init,config.lang);
+  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
+  await context.addInitScript(()=>localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({spiral:true})));
+  await context.addInitScript(init,config.lang);
   await context.addInitScript(()=>localStorage.setItem('colorGridVorticesCycleV1',JSON.stringify(['turbine2','flow','left','cosmic','circular','a','black_hole','tornado'])));
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{errors.push(d.message());await d.dismiss();});
   const tap=async s=>config.width<600?page.locator(s).tap():page.locator(s).click(),state=()=>page.evaluate(()=>spiralTest.state());

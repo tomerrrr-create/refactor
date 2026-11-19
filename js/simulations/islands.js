@@ -1,10 +1,10 @@
-import {runOilGeneration,restoreOilState} from './oil.js';
+import {runOilGeneration,restoreOilState,validateOilRules} from './oil.js';
 import { validateEvolutionTuning } from '../evolution-tuning.js';
 // Version 1: asynchronous voter model. Keep old versions stable for recipe replay.
 const VERSION = 1;
 const PROXIMITY_VERSION = 2;
 const OIL_VERSION = 3;
-// Version 3 owns these fixed defaults; B keeps its separate editable rules.
+// Legacy Islands recordings without explicit Oil rules keep their fixed values.
 export const ISLANDS_OIL_RULES=Object.freeze({tension:80,drift:20,mobility:70});
 const UINT32_MAX = 0xffffffff;
 const isUint32 = value => Number.isInteger(value) && value >= 0 && value <= UINT32_MAX;
@@ -26,9 +26,11 @@ export function restoreIslandsSession(snapshot) {
         throw new Error('Unsupported or invalid Islands recording');
     }
     if (Object.hasOwn(snapshot, 'activity')) validateEvolutionTuning({ islands: { activity: snapshot.activity } });
+    if (Object.hasOwn(snapshot, 'oilRules') && snapshot.islandsVersion !== OIL_VERSION) throw new Error('Invalid Islands Oil rules');
     return { islandsVersion: snapshot.islandsVersion, seed: snapshot.seed, state: snapshot.state, steps: snapshot.steps,
         ...(snapshot.islandsVersion === PROXIMITY_VERSION ? { mode: 'proximity' } : snapshot.islandsVersion === OIL_VERSION ? {mode:'oil'} : {}),
         ...(snapshot.oilState ? {oilState:restoreOilState(snapshot.oilState)} : {}),
+        ...(Object.hasOwn(snapshot, 'oilRules') ? {oilRules:validateOilRules(snapshot.oilRules)} : {}),
         ...(Object.hasOwn(snapshot, 'activity') ? { activity: snapshot.activity } : {}) };
 }
 
@@ -44,7 +46,7 @@ function random(session) {
 export function runIslandsGeneration({ n, currentBoardState, currentPalette }, session) {
     if (!session) throw new Error('Islands session is missing');
     if(session.islandsVersion===OIL_VERSION){
-        const result=runOilGeneration({n,currentBoardState,currentPalette,oilRules:ISLANDS_OIL_RULES},session.oilState);
+        const result=runOilGeneration({n,currentBoardState,currentPalette,oilRules:session.oilRules??ISLANDS_OIL_RULES},session.oilState);
         session.oilState=result.nextOilState;session.steps++;return result.nextBoardState;
     }
     const proximity = session.islandsVersion === PROXIMITY_VERSION;

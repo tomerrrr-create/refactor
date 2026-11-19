@@ -8,12 +8,6 @@ export const evolutionExplanations = {
         ['Живая сеть','Нити растут из пятен, ветвятся, крепнут и исчезают. Выбирайте рост по палитре или пространственный рост.'],
         ['Levend netwerk','Draden groeien uit vlekken, vertakken, versterken en vervagen. Wissel tussen paletgestuurde en ruimtelijke groei.']
     ],
-    oil: [
-        ['Oil on water','Related pigments gather into droplets. Surface tension rounds their edges; sorting changes the groups and upward drift.'],
-        ['שמן במים','גוונים קרובים מתכנסים לטיפות. מתח פנים מעגל את השוליים; המיון משנה את קבוצות הצבע ואת הציפה.'],
-        ['Масло в воде','Близкие цвета собираются в капли. Натяжение округляет края; сортировка меняет группы и плавучесть.'],
-        ['Olie op water','Verwante kleuren vormen druppels. Oppervlaktespanning rondt de randen af; sortering verandert de groepen en opwaartse drift.']
-    ],
     ink: [
         ['Color Vortices','Existing colors stretch and curl into vortices. New strokes feed the motion, and changing palette order changes how the colors drift.'],
         ['מערבולות צבע','הצבעים שכבר על הלוח נמתחים ומסתחררים במערבולות. משיכות חדשות מזינות את התנועה, וסדר הפלטה משנה איך הצבעים נסחפים.'],
@@ -21,10 +15,10 @@ export const evolutionExplanations = {
         ['Kleurwervels','De kleuren op het bord rekken uit en draaien in wervels. Nieuwe streken voeden de beweging. De paletvolgorde verandert hoe de kleuren meedrijven.']
     ],
     islands: [
-        ['Islands','The leaf copies neighboring colors. The drop gathers pigments using fixed Oil on water defaults. B keeps its own editable Oil settings.'],
-        ['איים','העלה מעתיק צבעים שכנים. הטיפה מרכזת צבעים בברירות המחדל הקבועות של שמן במים. לכפתור B הגדרות שמן נפרדות.'],
-        ['Острова','Лист копирует соседние цвета. Капля собирает пигменты с фиксированными настройками масла. B сохраняет отдельные настройки.'],
-        ['Eilanden','Het blad kopieert buurkleuren. De druppel groepeert pigmenten met vaste olie-instellingen. B behoudt eigen olie-instellingen.']
+        ['Islands','The leaf copies neighboring colors. The drop gathers pigments into pools. Swipe up on the drop for presets and settings.'],
+        ['איים','העלה מעתיק צבעים שכנים. הטיפה מרכזת צבעים בכתמים. החליקו למעלה על הטיפה לבחירת פריסט או לכוונון ההגדרות.'],
+        ['Острова','Лист копирует соседние цвета. Капля собирает пигменты в пятна. Смахните вверх на капле для выбора готового варианта или настройки масла.'],
+        ['Eilanden','Het blad kopieert buurkleuren. De druppel groepeert pigmenten. Veeg omhoog op de druppel voor presets en instellingen.']
     ],
     cymatics: [
         ['Cymatics', 'Existing colors gather along the quiet lines of standing waves, forming Chladni-inspired patterns.'],
@@ -51,10 +45,10 @@ export const evolutionExplanations = {
         ['Zwaartekracht', 'Orden kleuren in een gekozen richting, volgens de volgorde van het palet.']
     ],
     spiral: [
-        ['Spiral', 'Arrange colors around the center in spirals and geometric patterns.'],
-        ['ספירלה', 'הצבעים מסתדרים סביב המרכז בספירלות ובצורות גאומטריות.'],
-        ['Спираль', 'Цвета выстраиваются вокруг центра в спирали и геометрические узоры.'],
-        ['Spiraal', 'Orden kleuren rond het midden in spiralen en geometrische patronen.']
+        ['Geometric Flow', 'Arrange colors around the center in a diamond or a hexagon.'],
+        ['זרימה גאומטרית', 'הצבעים מסתדרים סביב המרכז בצורת יהלום או משושה.'],
+        ['Геометрический поток', 'Цвета выстраиваются вокруг центра в ромб или шестиугольник.'],
+        ['Geometrische stroming', 'Orden kleuren rond het midden in een diamant of zeshoek.']
     ],
     magnet: [
         ['Magnet', 'Draw colors toward an anchor color, forming shifting patterns.'],

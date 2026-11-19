@@ -17,7 +17,7 @@ const simulations = {
     erosion: ['help_erosion', 'btnErosion'], dla: ['help_dla', 'btnDla'],
     turing: ['help_turing', 'btnTuring'], breathe: ['help_breathe', 'btnShowBreatheMenu'],
     network: ['help_network','btnNetwork'],
-    oil: ['help_oil','btnOil'],
+    oil: ['help_oil','iconIslandsOil'],
     ink: ['help_ink','btnInk'],
     ...Object.fromEntries(Object.entries(VORTICES_MODES).map(([mode,{label}])=>['vortices-'+mode,[label,'btnInk']])),
     contour: ['help_contour', 'btnContour'], cymatics: ['help_cymatics', 'btnCymatics'],
@@ -114,7 +114,7 @@ export function captureMacroActivityIcon(button) {
     const win = button.ownerDocument.defaultView;
     // Fullscreen/drawers can hide the whole control via inherited visibility.
     // Per-symbol display still identifies the selected variant while it is hidden.
-    const original = [...button.querySelectorAll('svg, .glyph, .glyph-dark')]
+    const original = button.localName === 'svg' ? button : [...button.querySelectorAll('svg, .glyph, .glyph-dark')]
         .find(node => win.getComputedStyle(node).display !== 'none');
     if (!original) return null;
     const clone = original.cloneNode(true), originals = [original, ...original.querySelectorAll('*')];

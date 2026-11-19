@@ -19,10 +19,10 @@ try{for(const touch of [false,true]){
  panel:()=>{isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');},
  tech:()=>modals.openTechnicianMenu(),map:()=>evolutionDrawer.open(),
  state:()=>({armed:armedSimulation,playing:isLifePlaying,slots:[...evolutionSlots],pixels:boardState.map(t=>t.k),settings:getWorkspaceSettings(),logs:[...artRecipeLog]}),
- recipe:()=>{armSimulation('network');stepForward();return artRecipeLog.join('\\n');},
+ recipe:()=>{history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();armSimulation('network');stepForward();return artRecipeLog.join('\\n');},
  replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
  done:()=>!isMacroPlaying&&!isLifePlaying&&!isMacroLoaded,
- start:()=>{armSimulation('oil');togglePlayPauseLife();},
+ start:()=>{armSimulation('spiral');togglePlayPauseLife();},
  loaded:value=>{isMacroLoaded=value;}
  };initializeApp().then(()=>flagsTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -32,7 +32,7 @@ try{for(const touch of [false,true]){
  const close=()=>page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const tech=async()=>{await page.evaluate(()=>flagsTest.tech());await page.waitForTimeout(100);};
  const toggle=async(id,value)=>{await page.locator('#'+id+'ExperimentToggle').setChecked(value);};
- const ids=['oil','network'],buttons={oil:'btnOil',network:'btnNetwork'};
+ const ids=['spiral','network'],buttons={spiral:'btnSpiral',network:'btnNetwork'};
  await boot(false);
  await page.locator('#btnEvolutionDrawerInternal').click();await page.waitForTimeout(300);
  const original=(await state()).slots;
@@ -42,22 +42,29 @@ try{for(const touch of [false,true]){
  assert.equal(await page.locator('.drawer-feature-hidden').count(),2);
  assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
  assert(await page.locator('#btnInk').isVisible());
- await tech();assert.equal(await page.locator('#inkExperimentToggle').count(),0);
+ await tech();assert.equal(await page.locator('#inkExperimentToggle, #oilExperimentToggle, #btnOil').count(),0);
  for(const id of ids)assert(!(await page.locator('#'+id+'ExperimentToggle').isChecked()));
  // A different profile must not change device opt-ins.
  await toggle('network',true);
  await page.locator('[data-profile-choice="1"]').click();assert(await page.locator('#networkExperimentToggle').isChecked());
- await toggle('oil',true);await toggle('network',true);await close();
+ await toggle('spiral',true);await toggle('network',true);await close();
  for(const id of ids)assert(await page.locator('#'+buttons[id]).isVisible());
- await page.evaluate(()=>flagsTest.start());await tech();await toggle('oil',false);
+ const geometric=page.locator('#btnSpiral');
+ assert.equal(await geometric.getAttribute('aria-label'),touch?'זרימה גאומטרית':'Geometric Flow');
+ await geometric.click();assert.equal((await state()).armed,'spiral');assert(await page.locator('#iconSpiralRadial').isVisible());
+ await geometric.click();assert(await page.locator('#iconSpiralDown').isVisible());
+ await geometric.click();assert.equal((await state()).armed,null);
+ await page.evaluate(()=>flagsTest.start());await tech();await toggle('spiral',false);
  assert.equal((await state()).playing,false);assert.equal((await state()).armed,null);await close();
  const recipe=await page.evaluate(()=>flagsTest.recipe()),recorded=(await state()).pixels;
- await tech();await toggle('oil',false);await toggle('network',false);await close();
+ await tech();await toggle('spiral',false);await toggle('network',false);await close();
  assert.deepEqual((await state()).slots,original);
  await page.evaluate(text=>flagsTest.replay(text),recipe);await page.waitForFunction(()=>flagsTest.done(),null,{timeout:20000});assert.deepEqual((await state()).pixels,recorded);
  for(const id of ids)assert(!(await page.locator('#'+buttons[id]).isVisible()));
  // Loaded recipes cannot change the device flags underneath replay.
  await page.evaluate(()=>flagsTest.loaded(true));await tech();for(const id of ids)assert(await page.locator('#'+id+'ExperimentToggle').isDisabled());await close();await page.evaluate(()=>flagsTest.loaded(false));
- await boot(true);await tech();for(const id of ids)assert(!(await page.locator('#'+id+'ExperimentToggle').isChecked()));
+ await tech();await toggle('spiral',true);await close();await boot(true);await tech();
+ assert(await page.locator('#spiralExperimentToggle').isChecked());
+ assert(!(await page.locator('#networkExperimentToggle').isChecked()));
  assert.deepEqual(errors,[]);console.log('PASS experimental visibility',JSON.stringify({touch,persistence:true,profiles:true,layout:true,replay:true}));await context.close();
 }}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

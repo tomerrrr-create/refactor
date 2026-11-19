@@ -12,40 +12,40 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`htt
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
 try{for(const [lang,touch] of [['en',false],['he',true],['ru',false],['nl',true]]){
  const context=await browser.newContext({viewport:touch?{width:390,height:844}:{width:1280,height:900},hasTouch:touch,isMobile:touch,serviceWorkers:'block'});
- await context.addInitScript(()=>{if(!localStorage.getItem('colorGridExperimentalSimulationsV1'))localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({ink:true,oil:true,network:true}));});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),lang);
+ await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.fluidTest={
- setup:kind=>{stopMacro();pauseLife();resetArmedState();n=61;restoreSeparatorWidth(0);initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*17)%paletteLen();t.isGold=i===0;});inkRules={...DEFAULT_INK_PREFERENCES};oilRules={...INITIAL_OIL_RULES};history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();kind==='ink'?selectVorticesMode('flow'):cycleOilMode();renderToScreen(null);},
- open:kind=>kind==='ink'?inkSettingsUI.open():oilSettingsUI.open(),
- state:()=>({ink:{...inkRules},oil:{...oilRules},board:boardState.map(t=>({k:t.k,v:t.v,gold:!!t.isGold})),runtime:armedSimulation==='ink'?getInkSnapshot():getOilSnapshot(),logs:[...artRecipeLog],playing:isLifePlaying,generation:currentGenerationCount,loaded:isMacroLoaded}),
+ setup:kind=>{stopMacro();pauseLife();resetArmedState();n=61;restoreSeparatorWidth(0);initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*17)%paletteLen();t.isGold=i===0;});inkRules={...DEFAULT_INK_PREFERENCES};oilRules={...INITIAL_OIL_RULES};history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();if(kind==='ink')selectVorticesMode('flow');else{cycleIslandsMode();cycleIslandsMode();}renderToScreen(null);},
+ open:kind=>kind==='ink'?inkSettingsUI.open():fluidTest.openOil(),
+ state:()=>({ink:{...inkRules},oil:{...oilRules},board:boardState.map(t=>({k:t.k,v:t.v,gold:!!t.isGold})),runtime:armedSimulation==='ink'?getInkSnapshot():{state:islandsSession?.oilState},logs:[...artRecipeLog],playing:isLifePlaying,generation:currentGenerationCount,loaded:isMacroLoaded}),
  play:togglePlayPauseLife,replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},done:()=>!isMacroPlaying&&!isLifePlaying&&!isMacroLoaded
  };initializeApp().then(()=>fluidTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
+ source=source.replace('        networkSettingsUI=createNetworkSettingsDialog','        fluidTest.openOil=()=>oilSettingsUI.open();networkSettingsUI=createNetworkSettingsDialog');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  await page.goto(base);await page.waitForFunction(()=>window.fluidTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const state=()=>page.evaluate(()=>fluidTest.state());
  for(const kind of ['ink','oil']){
   await page.evaluate(kind=>fluidTest.setup(kind),kind);const initial=await state();
-  const toolbar=page.locator(kind==='ink'?'#btnInk':'#btnOil');
+  const toolbar=page.locator(kind==='ink'?'#btnInk':'#btnIslands');
   const defaultPreset=kind==='ink'?'whirlpools':'balanced';
-  const paths=await toolbar.locator(kind==='ink'?'[data-vortices-icon=flow] path:not(.vortices-tornado-badge)':'svg path').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('d')));
+  const paths=await toolbar.locator(kind==='ink'?'[data-vortices-icon=flow] path:not(.vortices-tornado-badge)':'.islands-oil-icon path').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('d')));
   if(kind==='ink'){
    const name={en:'Color Vortices',he:'מערבולות צבע',ru:'Цветовые вихри',nl:'Kleurwervels'}[lang];
    assert.equal(await toolbar.getAttribute('aria-label'),name);
    assert.equal(await toolbar.locator('svg text').count(),0);
    assert(paths.length>0);
   }else{
-   assert.equal((await toolbar.locator('svg text').textContent()).trim(),'B');
-   assert.equal(paths.length,0);
+   assert.equal(await toolbar.locator('svg text').count(),0);
+   assert(paths.length>0);
   }
   const captured=await page.evaluate(async kind=>{
    const {captureMacroActivityIcon}=await import('./js/macro-activity.js');
-   const {node}=captureMacroActivityIcon(document.getElementById(kind==='ink'?'btnInk':'btnOil'));
+   const {node}=captureMacroActivityIcon(document.getElementById(kind==='ink'?'btnInk':'iconIslandsOil'));
    const label=node.querySelector('text');
    return {paths:[...node.querySelectorAll('path')].map(path=>path.getAttribute('d')),text:label?.textContent,fill:label?.style.fill,stroke:node.style.stroke};
   },kind);
-  if(kind==='ink'){assert.deepEqual(captured.paths,paths);assert(captured.stroke&&captured.stroke!=='none');}
-  else {assert.equal(captured.text,'B');assert(captured.fill.length>0);}
+  assert.deepEqual(captured.paths,paths);assert(captured.stroke&&captured.stroke!=='none');
   const open=async()=>{await page.evaluate(kind=>fluidTest.open(kind),kind);await page.waitForTimeout(250);};
   const dialog=page.locator('#'+kind+'SettingsDialog'),cards=dialog.locator('[data-preset]');
   await open();assert((await dialog.locator('h2 .fluid-original-symbol svg path').count())>0);assert.equal(await dialog.locator('h2 .fluid-original-symbol svg text').count(),0);if(kind==='ink'){assert.deepEqual(await dialog.locator('h2 svg path:not(.vortices-tornado-badge)').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('d'))),paths);assert.equal((await dialog.locator('h2').textContent()).trim(),await toolbar.getAttribute('aria-label'));}assert.equal(await cards.count(),5);assert.equal(await dialog.locator('[data-preset="'+defaultPreset+'"]').getAttribute('aria-pressed'),'true');
