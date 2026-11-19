@@ -3870,7 +3870,7 @@ function selectVorticesMode(mode) {
         if (armedSimulation !== engine) armSimulation(engine, {spiralEntry:mode, gravityEntry:mode});
         if (engine === 'gravitationalSort') {
             gsMode = mode;
-            vorticesGravityRules = {direction:mode, strength:.6, ...(mode==='turbine_combined'?{frame:0,fieldVersion:2}:{})};
+            vorticesGravityRules = {direction:mode, strength:.6};
             updateGravitationalSortButtonUI();
         } else if (engine === 'spiral') {
             spiralMode = mode;
@@ -4236,11 +4236,7 @@ function restoreGravityRules(rules) {
     const direction = rules.direction ?? gsMode;
     if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:direction});
     gsMode = direction;
-    const activeRules=getActiveGravityRules();
-    delete activeRules.fieldVersion;
-    if(direction==='turbine_combined')activeRules.frame=rules.frame??0;
-    else delete activeRules.frame;
-    Object.assign(activeRules, rules);
+    Object.assign(getActiveGravityRules(), rules);
     updateGravitationalSortButtonUI();
 }
 
@@ -4254,7 +4250,7 @@ function updateGravitationalSortButtonUI() {
 }
 
 function cycleGravitationalSortMode() {
-    const current = armedSimulation === 'gravitationalSort' && !['turbine2','turbine_combined','black_hole'].includes(gsMode) ? gsMode : 'off';
+    const current = armedSimulation === 'gravitationalSort' && !['turbine2','black_hole'].includes(gsMode) ? gsMode : 'off';
     const next = nextEvolutionMode(current, ['off', 'up', 'right', 'center_x', 'pinwheel']);
     window.logArtEvent('Gravitational Sort Mode', next);
     if (next === 'off') {
@@ -4617,10 +4613,8 @@ function getHistorySettings(state) {
 }
 
 function validateGravitySnapshot(rules) {
-    if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'turbine_combined', 'black_hole', 'pinwheel'].includes(rules.direction) ||
-        !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1 ||
-        (rules.direction==='turbine_combined' && (!Number.isInteger(rules.frame)||rules.frame<0||rules.frame>0xffffffff||
-            (rules.fieldVersion!==undefined&&![1,2].includes(rules.fieldVersion))))) throw new Error('Invalid gravity rules');
+    if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'black_hole', 'pinwheel'].includes(rules.direction) ||
+        !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1) throw new Error('Invalid gravity rules');
 }
 
 function validateHistorySettings(settings) {
@@ -5448,7 +5442,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
     // מוודאים שהסימולציה הנכונה חמושה בממשק
     if (armedSimulation !== sim) armSimulation(sim, {
         ...(sim === 'spiral' && /"method"\s*:\s*"(tornado|left|a)"/.test(rulesStr) ? {spiralEntry:rulesStr.match(/"method"\s*:\s*"(tornado|left|a)"/)[1]} : {}),
-        ...(sim === 'gravitationalSort' && /"direction"\s*:\s*"(turbine2|turbine_combined|black_hole)"/.test(rulesStr) ? {gravityEntry:rulesStr.match(/"direction"\s*:\s*"(turbine2|turbine_combined|black_hole)"/)[1]} : {})
+        ...(sim === 'gravitationalSort' && /"direction"\s*:\s*"(turbine2|black_hole)"/.test(rulesStr) ? {gravityEntry:rulesStr.match(/"direction"\s*:\s*"(turbine2|black_hole)"/)[1]} : {})
     });
 
     if(sim==='ink'){restoreInkSnapshot(restoredInk);return sim;}
@@ -5497,7 +5491,6 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 const parsedRules = JSON.parse(rulesStr);
                 if (sim === 'gameOfLife') restoreGameOfLifeRules(parsedRules);
                 else if (sim === 'gravitationalSort') {
-                    if(parsedRules.direction==='turbine_combined')validateGravitySnapshot(parsedRules);
                     restoreGravityRules(parsedRules);
                 }
                 else if (sim === 'erosion') {

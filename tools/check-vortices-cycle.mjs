@@ -67,8 +67,8 @@ try {
             }
         }
         const visibleMaps=()=>menu.locator('[data-cymatics-map]:visible').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMap).sort());
-        const order=['turbine2','flow','turbine_combined','left','cosmic','black_hole','circular','a','tornado'];
-        const defaultOrder=order.filter(mode=>!['turbine_combined','a','tornado'].includes(mode));
+        const order=['turbine2','flow','left','cosmic','black_hole','circular','a','tornado'];
+        const defaultOrder=order.filter(mode=>mode!=='a'&&mode!=='tornado');
         const circularName=lang==='he'?'אמפתיה מעגלית':'Circular Empathy';
         assert(await page.locator(hub).isVisible());
         await page.evaluate(()=>circularTest.openTech());
@@ -82,7 +82,7 @@ try {
         assert.deepEqual(await cycleMenu.locator('input').evaluateAll(nodes=>nodes.map(input=>input.value)),order);
         assert.deepEqual(await cycleMenu.locator('input:checked').evaluateAll(nodes=>nodes.map(input=>input.value)),defaultOrder);
         assert.equal(await cycleMenu.getByRole('checkbox',{name:circularName,exact:true}).inputValue(),'circular');
-        await checkbox('turbine_combined').check();await checkbox('a').check();await checkbox('tornado').check();
+        await checkbox('a').check();await checkbox('tornado').check();
         await dialogAction(cycleDialog+' [type=submit]');
         await cycleMenu.waitFor({state:'hidden'});
         await page.evaluate(()=>circularTest.enter());
@@ -101,9 +101,6 @@ try {
             if (mode==='turbine2') {
                 assert.equal(selected.project.gravityRules.strength,.6);
                 assert.equal(selected.settings.rules.gravity.strength,.25);
-            }
-            if (mode==='turbine_combined') {
-                assert.deepEqual(selected.project.gravityRules,{direction:'turbine_combined',strength:.6,frame:0,fieldVersion:2});
             }
             if (mode==='flow') {
                 await swipeUp(hub);

@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHash} from 'node:crypto';
 import {turbine2Direction} from '../js/simulations/spiral-turbine2.js';
 import {runSpiralGeneration} from '../js/simulations/spiral.js';
 import {runGravitationalSortGeneration} from '../js/simulations/gravitational_sort.js';
@@ -56,32 +55,6 @@ test('a pigment participates in at most one actual swap per generation',()=>seed
 }));
 
 const gravityStep=(board,n,strength)=>runGravitationalSortGeneration({n,currentBoardState:board,gravitationalSortRules:{direction:'turbine2',strength}});
-test('Turbine Combined resumes from its saved frame and conserves pigments and protected tiles',()=>{
- const n=41,initial=boardFor(n),currentBoardState=structuredClone(initial);
- const gravitationalSortRules={direction:'turbine_combined',strength:.6,frame:0,fieldVersion:2};
- const context={n,currentBoardState,gravitationalSortRules};
- for(let i=0;i<12;i++)runGravitationalSortGeneration(context);
- const saved=JSON.parse(JSON.stringify(context));
- assert.equal(saved.gravitationalSortRules.frame,12);
- const advance=state=>{for(let i=0;i<8;i++)runGravitationalSortGeneration(state);};
- const oldRandom=Math.random,oldNow=Date.now;
- try {
-  Math.random=Date.now=()=>{throw new Error('Combined replay must use the recorded frame');};
-  advance(context);advance(saved);
- } finally {
-  Math.random=oldRandom;Date.now=oldNow;
- }
- assert.deepEqual(saved,context);
- assert.notDeepEqual(currentBoardState,initial);
- assert.deepEqual([...currentBoardState].sort((a,b)=>a.id-b.id),initial);
- initial.forEach((tile,index)=>{if(tile.isGold)assert.deepEqual(currentBoardState[index],tile);});
- const legacyBoard=structuredClone(initial);
- const legacy={n,currentBoardState:legacyBoard,gravitationalSortRules:{direction:'turbine_combined',strength:.6,frame:0}};
- for(let i=0;i<20;i++)runGravitationalSortGeneration(legacy);
- const signature=createHash('sha256').update(JSON.stringify(legacyBoard.map(tile=>tile.id))).digest('hex');
- assert.equal(signature,'fae166423aca2e2bab85481c1348d1236ee491a7391183e87c565bc33e17028d');
- assert.notDeepEqual(legacyBoard,currentBoardState);
-});
 test('Gravity at 60% reproduces legacy Spiral Turbine 2 exactly, including tile metadata',()=>{
  const original=boardFor(31);original.forEach((t,i)=>{t.v=i/3;t.prevK=i%17;});
  const legacy=seeded(()=>{const b=structuredClone(original);for(let i=0;i<12;i++)step(b,31);return b;});

@@ -12,7 +12,7 @@ export function turbine2Direction(dx,dy,choice) {
     return steps[(dr+1)*3+dc+1];
 }
 let geometry;
-export function runTurbine2Generation(n,board,strength = .6,field) {
+export function runTurbine2Generation(n,board,strength = .6) {
     if(!geometry||geometry.n!==n){
         const center=(n-1)/2,radius=new Float64Array(n*n),angle=new Float64Array(n*n);
         for(let i=0;i<n*n;i++){
@@ -24,15 +24,14 @@ export function runTurbine2Generation(n,board,strength = .6,field) {
         geometry={n,center,radius,angle,order:new Int32Array(n*n),moved:new Uint8Array(n*n),rowSines:new Float64Array(n),columnCosines:new Float64Array(n)};
     }
     const {center,radius,angle,order,moved}=geometry;
-    const random=field?.random??Math.random;
     moved.fill(0);
     // Start from the same enumeration each frame: no hidden board/session state
     // is needed to interpret a recipe, JSON artwork or an Undo-restored board.
     for(let i=0;i<order.length;i++)order[i]=i;
     for(let i=order.length-1;i>0;i--){
-        const j=Math.floor(random()*(i+1)),saved=order[i];order[i]=order[j];order[j]=saved;
+        const j=Math.floor(Math.random()*(i+1)),saved=order[i];order[i]=order[j];order[j]=saved;
     }
-    const phase=field?.phase??Date.now()*.00015;
+    const phase=Date.now()*.00015;
     // Time still advances once per generation, after the unchanged shuffle.
     // Each wave depends on one coordinate, so compute it once per row/column.
     const {rowSines,columnCosines}=geometry;
@@ -45,16 +44,10 @@ export function runTurbine2Generation(n,board,strength = .6,field) {
         const targetRadius=Math.max(0,r-.8+eddy*.25),targetAngle=angle[i]+eddy*.06;
         const targetR=Math.max(0,Math.min(n-1,center+targetRadius*Math.sin(targetAngle)));
         const targetC=Math.max(0,Math.min(n-1,center+targetRadius*Math.cos(targetAngle)));
-        let dx=targetC-col,dy=targetR-row;
-        if(field?.weight[i]){
-            const weight=field.weight[i],scale=Math.max(1,Math.hypot(dx,dy));
-            dx=(1-weight)*dx/scale+weight*field.x[i];
-            dy=(1-weight)*dy/scale+weight*field.y[i];
-        }
-        const {dr,dc}=turbine2Direction(dx,dy,random());
+        const {dr,dc}=turbine2Direction(targetC-col,targetR-row,Math.random());
         if(!dr&&!dc)continue;
         const j=(row+dr)*n+col+dc;
-        if(moved[j]||board[j].isGold||board[i].k>=board[j].k||random()>=strength)continue;
+        if(moved[j]||board[j].isGold||board[i].k>=board[j].k||Math.random()>=strength)continue;
         const saved=board[i];board[i]=board[j];board[j]=saved;
         moved[i]=moved[j]=1;
     }

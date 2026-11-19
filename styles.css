@@ -2729,7 +2729,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnInk [data-vortices-icon] { display:none; }
 #btnInk[data-mode="flow"] [data-vortices-icon="flow"],
 #btnInk[data-mode="turbine2"] [data-vortices-icon="turbine2"],
-#btnInk[data-mode="turbine_combined"] [data-vortices-icon="turbine_combined"],
 #btnInk[data-mode="left"] [data-vortices-icon="left"],
 #btnInk[data-mode="a"] [data-vortices-icon="a"],
 #btnInk[data-mode="cosmic"] [data-vortices-icon="cosmic"],

@@ -456,9 +456,7 @@ The Color Vortices symbol appears in the Evolution map and macro activity. Macro
 
 ### Circular modes
 
-The full cycle is **Turbine 2 → Color Vortices → Turbine Combined → Turbine → Cosmological Empathy → Circle (π) → Circular Empathy → Experiment A → Tornado → Off**. Turbine Combined, Experiment A and Tornado are off by default and can be enabled in the cycle settings. Existing saved selections still apply. During playback the cycle skips Off. Turbine 2 uses fixed 60% Strength and Circle ignores Strength. Swipe up on Color Vortices to adjust its flow, or on either Resonance map for a dialog limited to those two maps. Swipe up on Turbine 2, Turbine Combined, Turbine, Experiment A, Circle (π) or Tornado to choose which of the nine modes appear in the cycle. Keep at least one of these six enabled so the list remains accessible. Save remembers the selection in this browser. The current mode stays active until the next tap if you uncheck it. Switching engines continues playback on the current board and records a new run boundary.
-
-Turbine Combined shares Turbine 2’s direction sampling and tile swaps. Four broad interior vortices sit farther from the center and fade before the outer rim. The field version and frame counter travel with Gravity checkpoints and recipes for exact continuation. Older recordings without a field version retain the original three-vortex field.
+The full cycle is **Turbine 2 → Color Vortices → Turbine → Cosmological Empathy → Circle (π) → Circular Empathy → Experiment A → Tornado → Off**. Experiment A and Tornado are off by default and can be enabled in the cycle settings. Existing saved selections still apply. During playback the cycle skips Off. Turbine 2 uses fixed 60% Strength and Circle ignores Strength. Swipe up on Color Vortices to adjust its flow, or on either Resonance map for a dialog limited to those two maps. Swipe up on Turbine 2, Turbine, Experiment A, Circle (π) or Tornado to choose which of the eight modes appear in the cycle. Keep at least one of these five enabled so the list remains accessible. Save remembers the selection in this browser. The current mode stays active until the next tap if you uncheck it. Switching engines continues playback on the current board and records a new run boundary.
 
 #### Color Vortices
 
@@ -907,7 +905,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Contours/Separators utility swap, independent Symmetry, pointer/touch, settings, history and macro replay | `tools/check-contour-utility.mjs` |
 | Cracks/Contours separation, independent settings and legacy recordings | `tools/check-contour-separation.mjs` |
 | Brightness history and mid-run macros | `tools/check-brightness-undo.mjs`, `tools/check-midrun-macro.mjs`, `tools/check-nudge-cycle.mjs`, `tools/check-nudge-legacy.mjs` |
-| Circular modes: nine-mode cycle, source settings, saved map preferences, live handoffs and replay | `tools/check-vortices-cycle.mjs` |
+| Circular modes: eight-mode cycle, source settings, saved map preferences, live handoffs and replay | `tools/check-vortices-cycle.mjs` |
 | Color Vortices/Oil presets: all five choices, manual/custom matching, Cancel/Reset/Save, unchanged artwork and live macro replay in desktop/touch | `tools/check-fluid-presets.mjs` (`FLUID_PRESETS_LAYOUT_ONLY=1` skips live playback) |
 | Living network: native painting/sort, settings drafts, checkpoint/history, mixed and resize recipes, profiles and touch | `tools/check-network.mjs` (`NETWORK_VISUAL_ONLY=1` / `NETWORK_SETTINGS_ONLY=1` / `NETWORK_BACKGROUND_ONLY=1` / `NETWORK_SPATIAL_ONLY=1`) |
 | Oil: conservative droplets, native painting, settings, history, mixed/resize recipes and profile reload | `tools/check-oil.mjs` |
