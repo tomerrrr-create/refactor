@@ -47,22 +47,16 @@ export const SEPARATORS = [6, 5, 3, 2, 0];
 export const SIZES = [327, 299, 273, 249, 199, 149, 101, 75, 65, 55, 49, 35, 27, 21, 15, 11, 9, 7, 5, 3];
 
 // --- Default Simulation Rules ---
-export const defaultGameOfLifeRules = {
-    survival: [0, 1, 2, 3, 4, 5, 6, 7, 8],
-    birth: [4, 5, 6, 7, 8]
-};
-
-
 export const GAME_OF_LIFE_PRESETS = {
   'btnGolPresetHarmonic': { survival: [3, 4, 5], birth: [3] },
   'btnGolPresetHive': { survival: [2, 3, 4, 5], birth: [4] },
   'btnGolPresetLivingTexture': { survival: [3, 4, 6, 7, 8], birth: [3, 6, 7, 8] },
   'btnGolPresetAmoeba': { survival: [1, 3, 5, 8], birth: [3, 5, 7] },
+  'btnGolPresetPaint3': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [3, 4, 5, 6, 7, 8] },
   'btnGolPresetPaint': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [4, 5, 6, 7, 8] },
   'btnGolPresetPaint2': { survival: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [1, 2, 3, 4, 5, 6, 7, 8] },
 
   'btnGolPresetCoral': { survival: [4, 5, 6, 7, 8], birth: [3] },
-    'btnGolPresetMeditation': { survival: [1, 2, 3, 4, 5], birth: [3] },
   'btnGolPresetJoelson': { survival: [2, 3, 4, 5], birth: [4, 5, 6, 7, 8] },
   'btnGolPresetVibration': { survival: [5, 6, 7, 8], birth: [4, 5, 6, 7, 8] },
 'btnGolPresetCharlie': { survival: [2, 5, 8], birth: [3, 5, 7, 8] },
@@ -72,6 +66,8 @@ export const GAME_OF_LIFE_PRESETS = {
   'btnGolPresetShuffle': { survival: [0, 1, 2, 4, 6, 7, 8], birth: [3, 5] }
 
 };
+
+export const defaultGameOfLifeRules = GAME_OF_LIFE_PRESETS.btnGolPresetPaint3;
 
 export const defaultGravitationalSortRules = {
     direction: 'up',

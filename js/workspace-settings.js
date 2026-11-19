@@ -27,7 +27,7 @@ export function defaultWorkspaceSettings() {
         sortCycle: DEFAULT_SORT_CYCLE, nudgeIntervalMs: 100,
         smoothing: { display: false, export: false },
         brush: { size: 1, mode: 'continuous', symmetry: 'off' },
-        cycles: { gameOfLife: [C.defaultGameOfLifeRules, C.GAME_OF_LIFE_PRESETS.btnGolPresetShuffle, C.GAME_OF_LIFE_PRESETS.btnGolPresetCoral],
+        cycles: { gameOfLife: [C.GAME_OF_LIFE_PRESETS.btnGolPresetPaint, C.GAME_OF_LIFE_PRESETS.btnGolPresetShuffle, C.GAME_OF_LIFE_PRESETS.btnGolPresetCoral],
             chiFlow: [C.defaultChiFlowRules, C.CHI_FLOW_PRESETS.Ripples, C.CHI_FLOW_PRESETS.Nova] },
         rules: { gravity: C.defaultGravitationalSortRules, spiral: C.defaultSpiralRules,
             magnet: C.defaultMagnetRules, erosion: C.defaultErosionRules,
