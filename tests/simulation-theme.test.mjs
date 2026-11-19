@@ -2,26 +2,23 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
-import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings, SIMULATION_THEME_COLORS } from '../js/workspace-settings.js';
+import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { validateProfileSnapshot } from '../js/profile-state.js';
 const source = readFileSync(new URL('../js/simulation-theme.js', import.meta.url), 'utf8')
-    .replace(/^import .*;\n/gm, '').replaceAll('export function ', 'function ');
+    .replace(/^import .*;\n/, '').replaceAll('export function ', 'function ');
 function harness(saved = {}, blocked = false) {
     const storage = new Map(Object.entries(saved)), attributes = new Set();
     const buttons = () => ['blue', 'gold', 'teal'].map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
         setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(k, fn) { this.handlers[k] = fn; } }));
     const rest = buttons(), playback = buttons();
-    const restSecond = buttons(), playbackSecond = buttons();
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
         toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); } };
-    const select = selector => selector.includes('Second')
-        ? (selector.includes('Playback') ? playbackSecond : restSecond)
-        : (selector.includes('Playback') ? playback : rest);
+    const select = selector => selector.includes('Playback') ? playback : rest;
     const context = vm.createContext({ document: { documentElement: root,
-        querySelectorAll: selector => selector.startsWith('#') ? select(selector) : [] },
+        getElementById: id => ({ querySelectorAll: () => select(id) }), querySelectorAll: select },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
-        SIMULATION_THEME_COLORS, getCurrentLang: () => 'he', onLanguageChange() {} });
+        getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
     return { context, root, storage, rest, playback, run: code => vm.runInContext(code, context) };
 }
@@ -94,24 +91,4 @@ test('old settings and profiles retain other choices while retired appearances n
         }
     }
     assert.throws(()=>serializeWorkspaceSettings({...defaultWorkspaceSettings(),simulationTheme:'red'}));
-});
-
-test('drawer two inherits shared choices once, then persists and applies its own colors', () => {
-    const h = harness({ colorGridSimulationTheme: 'teal', colorGridSimulationPlaybackTheme: 'blue' });
-    h.run('initializeSimulationTheme(); setSimulationThemePage(1)');
-    assert.equal(h.root.dataset.simulationEffectiveTheme, 'teal');
-    h.run("applySimulationTheme('dark-blue', 1); applySimulationPlaybackTheme('light-blue', 1); setSimulationRunning(true)");
-    assert.equal(h.root.dataset.simulationEffectiveTheme, 'light-blue');
-    h.run('setSimulationThemePage(0)');
-    assert.equal(h.root.dataset.simulationEffectiveTheme, 'blue');
-    const reload = harness(Object.fromEntries(h.storage));
-    reload.run('initializeSimulationTheme(); setSimulationThemePage(1)');
-    assert.equal(reload.root.dataset.simulationEffectiveTheme, 'dark-blue');
-    reload.run('setSimulationRunning(true)');
-    assert.equal(reload.root.dataset.simulationEffectiveTheme, 'light-blue');
-    const settings = { ...defaultWorkspaceSettings(), simulationTheme: 'teal',
-        simulationPlaybackTheme: 'blue', simulationThemeSecond: 'dark-blue',
-        simulationPlaybackThemeSecond: 'light-blue' };
-    assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
-    assert.deepEqual(validateProfileSnapshot({ settings }).settings, settings);
 });

@@ -28,8 +28,6 @@ export function validateProfileSnapshot(value) {
         ['gameOfLife','chiFlow'].map(name => [name, value.identity?.[name]?.index ?? 0])));
     settings.simulationTheme ??= 'blue';
     settings.simulationPlaybackTheme ??= 'gold';
-    settings.simulationThemeSecond ??= settings.simulationTheme;
-    settings.simulationPlaybackThemeSecond ??= settings.simulationPlaybackTheme;
     const snapshot = { settings };
     if (value.identity || selections) {
         snapshot.identity = {};
@@ -77,7 +75,6 @@ function applyProfileOneDefaults(snapshot) {
 export function defaultProfileSnapshots(initial) {
     const first = validateProfileSnapshot(initial);
     first.settings.simulationTheme = 'gold';
-    first.settings.simulationThemeSecond = 'gold';
     const profiles = [first, clone(first), clone(first)];
     for (const [index, paletteName, fill, theme] of [
         [1, 'Golden Midnight Extended', 'random', 'gold'],
@@ -86,7 +83,6 @@ export function defaultProfileSnapshots(initial) {
         const snapshot = profiles[index];
         Object.assign(snapshot.settings.startup, { paletteName, fill, interfaceMode: 'simulation' });
         snapshot.settings.simulationTheme = theme;
-        snapshot.settings.simulationThemeSecond = theme;
         snapshot.settings.cycles.chiFlow = ['Electric', 'Harmony', 'Alexis'].map(name =>
             ({ ...clone(CHI_FLOW_PRESETS[name]), reachPercent: 400 }));
         if (snapshot.identity) {
@@ -230,9 +226,6 @@ export function createProfileState(initial, storage) {
                         for (const kind of ['saved', 'draft']) {
                             if (!Object.hasOwn(value.profiles[index][kind].settings, 'simulationTheme')) {
                                 profile[kind].settings.simulationTheme = ['blue', 'gold', 'teal'][index];
-                                if (!Object.hasOwn(value.profiles[index][kind].settings, 'simulationThemeSecond')) {
-                                    profile[kind].settings.simulationThemeSecond = profile[kind].settings.simulationTheme;
-                                }
                             }
                         }
                     }

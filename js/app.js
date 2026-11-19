@@ -2340,8 +2340,6 @@ if (simulationName === 'magnet') {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
             simulationPlaybackTheme: getSimulationPlaybackTheme(),
-            simulationThemeSecond: getSimulationTheme(1),
-            simulationPlaybackThemeSecond: getSimulationPlaybackTheme(1),
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
             ...(gameOfLifeRules.genetics === 'palette-order' ? { gameOfLifeGenetics: 'palette-order' } : {}),
             ...(gameOfLifeRules.deadColor === 'luminance' ? { gameOfLifeDeadColor: 'luminance' } : {}),
@@ -2372,8 +2370,6 @@ if (simulationName === 'magnet') {
         if (islandsSession) islandsSession.activity = evolutionTuning.islands.activity;
         if (settings.simulationTheme) applySimulationTheme(settings.simulationTheme);
         applySimulationPlaybackTheme(settings.simulationPlaybackTheme);
-        applySimulationTheme(settings.simulationThemeSecond ?? getSimulationTheme(), 1);
-        applySimulationPlaybackTheme(settings.simulationPlaybackThemeSecond ?? getSimulationPlaybackTheme(), 1);
         separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
         spiralRules = { ...settings.rules.spiral };
