@@ -9,6 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  luminance_anchor:{en:'Luminance Anchor',he:'עוגן לפי Luminance',ru:'Якорь по яркости',nl:'Luminantie-anker'},
+  luminance_anchor_note:{en:'Use the first Luminance color for Magnet and Game of Life. Individual settings remain editable.',he:'צבע העוגן במגנט ובמשחק החיים לפי Luminance. אפשר לשנות כל הגדרה בנפרד.',ru:'Первый цвет по яркости для магнита и игры «Жизнь». Настройки можно менять отдельно.',nl:'Gebruik de eerste luminantiekleur voor Magneet en Game of Life. Elke instelling blijft aanpasbaar.'},
   magnet_method_field_magnet:{en:'Magnet · combined field',he:'מגנט · שדה משולב',ru:'Магнит · общее поле',nl:'Magneet · gecombineerd veld'},
   magnet_method_field_cosmic_magnet:{en:'Cosmic magnet · combined field',he:'מגנט זוויתי · שדה משולב',ru:'Космический магнит · общее поле',nl:'Kosmische magneet · gecombineerd veld'},
   technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},

@@ -49,7 +49,7 @@ try {for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390
  const legacy=recipe.replaceAll(',"anchorColor":"luminance"','');await page.evaluate(()=>magnetTest.force());await load(legacy);assert.equal((await state()).rules.anchorColor,undefined,'old macro cannot inherit anchor preference');
  await page.evaluate(()=>magnetTest.setup());await open();await toggle.click();await close(true);
  await page.evaluate(()=>magnetTest.sort());await open();assert.equal(await toggle.getAttribute('aria-checked'),'true');await close();
- await page.evaluate(()=>magnetTest.tech());if(!(await page.locator('#profileActions').isVisible()))await page.locator('[data-profile-dot="0"]').click();await page.locator('#btnProfileSave').click();await boot(true);assert.equal((await state()).rules.anchorColor,'luminance');
+ await page.evaluate(()=>magnetTest.tech());await page.locator('#luminanceAnchorToggle').check();if(!(await page.locator('#profileActions').isVisible()))await page.locator('[data-profile-dot="0"]').click();await page.locator('#btnProfileSave').click();await boot(true);assert.equal((await state()).rules.anchorColor,'luminance');
  await open();assert.equal(await toggle.getAttribute('aria-checked'),'true');await page.screenshot({path:'/tmp/magnet-anchor-'+config.lang+'.png'});await close();
  await page.evaluate(()=>magnetTest.nextPalette());await open();assert.equal(await toggle.getAttribute('aria-checked'),'true');
  const expected=await page.evaluate(async()=>{const {getLuminance}=await import('/js/colors.js');return magnetTest.colors().reduce((best,color)=>getLuminance(color)<getLuminance(best)?color:best);});

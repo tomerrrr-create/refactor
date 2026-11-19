@@ -1161,7 +1161,10 @@ updateActivePresetButton();
         defaults: [app.C.defaultGameOfLifeRules, PRESET_RULES.btnGolPresetShuffle, PRESET_RULES.btnGolPresetCoral], defaultSources: ['btnGolPresetPaint', 'btnGolPresetShuffle', 'btnGolPresetCoral'],
         readRules: readGolCycleRules,
         writeRules: rules => applyGolPreset(rules.survival, rules.birth),
-        save: (slots, index, sources, yoursRules) => app.setGameOfLifeCycle(slots, index, sources, yoursRules, golGeneticsDraft, golDeadColorDraft),
+        save: (slots, index, sources, yoursRules) => {
+            app.setGameOfLifeCycle(slots, index, sources, yoursRules, golGeneticsDraft, golDeadColorDraft);
+            app.syncLuminanceAnchor();
+        },
         saveButton: app.dom.btnGolSettingsSave, getText: app.getText
     });
     const geneticsButton = document.createElement('button');
@@ -1678,6 +1681,7 @@ export function initializeModals(appContext) {
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
         app.refreshProfiles();
+        app.refreshLuminanceAnchor();
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
@@ -2354,6 +2358,7 @@ function saveMagnetSettings() {
         app.syncMagnetFromModal(tempMagnetRules.method, tempMagnetRules.anchorColorIndex);
     }
 
+    app.syncLuminanceAnchor();
     closeMagnetSettingsModal();
 }
 
@@ -2362,6 +2367,7 @@ return {
         browseEvolutionPreset,
         refreshLocalizedModalText,
         refreshTechnicianSettings: () => {
+            app.refreshLuminanceAnchor();
             refreshSmoothControl();
             fillInitForm(app.getSimulationInit());
             fillStartupForm(app.getStartupSettings());
