@@ -8,6 +8,7 @@ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../dist/',import.meta.url)),artifacts='/tmp/preset-swipes-check';await mkdir(artifacts,{recursive:true});
 let source=await readFile(path.join(root,'js/app.js'),'utf8');
 source=source.replace('      initializeApp();',`window.presetTest={
+ showSimulations:()=>{if(!isSimModeActive)toggleSimMode();}, lifeRules:()=>cloneGameOfLifeRules(gameOfLifeRules),
  setup:(sim,index=0)=>{pauseLife();resetArmedState();evolutionSlots=[...DEFAULT_EVOLUTION_LAYOUT];evolutionDrawer.applyLayout();activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Journey');updatePaletteHeader();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=1+(i*7)%19;t.isGold=i===0});selectedColorIndex=20;selectedColor=palette()[20];isRainbowModeActive=false;isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();armSimulation(sim);gameOfLifeRules.genetics='palette-order';setGameOfLifeCycle([C.GAME_OF_LIFE_PRESETS.btnGolPresetPaint,C.GAME_OF_LIFE_PRESETS.btnGolPresetShuffle,C.GAME_OF_LIFE_PRESETS.btnGolPresetCoral],sim==='gameOfLife'?index:0,['btnGolPresetPaint','btnGolPresetShuffle','btnGolPresetCoral'],{survival:[2],birth:[3]});setChiFlowCycle([C.CHI_FLOW_PRESETS.Harmony,C.CHI_FLOW_PRESETS.Nova,C.CHI_FLOW_PRESETS.Alexis],sim==='sandpile'?index:0,['Harmony','Nova','Alexis'],{awakening:[1],flow:[2],reach:0});history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();renderToScreen(null);},
  state:()=>({settings:getWorkspaceSettings(),gol:{slots:gameOfLifeCycle.map(cloneGameOfLifeRules),sources:[...gameOfLifeSources],yoursRules:cloneGameOfLifeRules(personalGameOfLifeRules),index:['personal','shuffle','coral'].indexOf(gameOfLifeMode)},chi:{slots:chiFlowCycle.map(cloneChiFlowRules),sources:[...chiFlowSources],yoursRules:cloneChiFlowRules(personalChiFlowRules),index:['personal','ripples','nova'].indexOf(chiFlowMode)},genetics:gameOfLifeRules.genetics||'rgb',board:boardState.map(t=>t.k),logs:[...artRecipeLog],history:history.length,future:future.length,gen:currentGenerationCount,playing:isLifePlaying,armed:armedSimulation,loaded:isMacroLoaded,macro:isMacroPlaying}),
  tech:()=>modals.openTechnicianMenu(),macro:playMacro,recipe:async()=>await createArtRecipeFile().text(),browse:(s,d)=>modals.browseEvolutionPreset(s,d),moveToSecond:sim=>{const id=sim==='gameOfLife'?'gameOfLife':'sandpile';evolutionSlots=validateEvolutionSlots(evolutionSlots);const at=evolutionSlots.indexOf(id);[evolutionSlots[at],evolutionSlots[19]]=[evolutionSlots[19],evolutionSlots[at]];evolutionDrawer.applyLayout();},pause:pauseLife
@@ -27,6 +28,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  }
  const effective=s=>({settings:s.settings,gol:s.gol,chi:s.chi,genetics:s.genetics,armed:s.armed});
  const sameBoard=(a,b)=>{assert.deepEqual(a.board,b.board);assert.equal(a.history,b.history);assert.equal(a.playing,b.playing);assert.equal(a.gen,b.gen)};
+ await page.evaluate(()=>presetTest.showSimulations());
+ const lifeButton=page.locator('#btnGameOfLife'),lifeModal=page.locator('#gameOfLifeSettingsModal');
+ await tap(lifeButton);
+ assert.deepEqual(await page.evaluate(()=>presetTest.lifeRules()),{survival:[0,1,2,3,4,5,6,7,8],birth:[3,4,5,6,7,8]});
+ await swipe(lifeButton,0,-35);await lifeModal.waitFor({state:'visible'});
+ const lifePresets=await lifeModal.locator('button[id^="btnGolPreset"]').evaluateAll(nodes=>nodes.map(node=>node.id));
+ assert.deepEqual(lifePresets.slice(0,2),['btnGolPresetPaint3','btnGolPresetPaint']);
+ assert.equal(lifePresets[12],'btnGolPresetPaint2');
+ assert(!lifePresets.includes('btnGolPresetMeditation'));
+ assert(await lifeModal.locator('#btnGolPresetPaint3.active').isVisible());
+ await tap(page.locator('#btnGolSettingsCancel'));await lifeModal.waitFor({state:'hidden'});
  for(const [sim,key,id,modalId,saveId,cancelId,prefix] of [['gameOfLife','gol','btnGameOfLife','gameOfLifeSettingsModal','btnGolSettingsSave','btnGolSettingsCancel','btnGolPreset'],['sandpile','chi','btnSandpile','chiFlowSettingsModal','btnChiSettingsSave','btnChiSettingsCancel','btnChiPreset']]){
   const button=page.locator('#'+id),modal=page.locator('#'+modalId);
   const order=await modal.locator('button[id^="'+prefix+'"]').evaluateAll(es=>es.map(e=>e.id));

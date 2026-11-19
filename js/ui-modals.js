@@ -1158,7 +1158,7 @@ updateActivePresetButton();
     golCycleMembership = bindPresetCycleEditor({
         ...presetCycleDefinition('gameOfLife'),
         toolbar: document.getElementById('golCycleToolbar'),
-        defaults: [app.C.defaultGameOfLifeRules, PRESET_RULES.btnGolPresetShuffle, PRESET_RULES.btnGolPresetCoral], defaultSources: ['btnGolPresetPaint', 'btnGolPresetShuffle', 'btnGolPresetCoral'],
+        defaults: [app.C.defaultGameOfLifeRules, PRESET_RULES.btnGolPresetShuffle, PRESET_RULES.btnGolPresetCoral], defaultSources: ['btnGolPresetPaint3', 'btnGolPresetShuffle', 'btnGolPresetCoral'],
         readRules: readGolCycleRules,
         writeRules: rules => applyGolPreset(rules.survival, rules.birth),
         save: (slots, index, sources, yoursRules) => {

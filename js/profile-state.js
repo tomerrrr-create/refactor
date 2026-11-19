@@ -129,6 +129,7 @@ export function defaultProfileSnapshots(initial) {
 export function factoryProfileSnapshot(index) {
     if (!Number.isInteger(index) || index < 0 || index > 2) throw Error('Invalid profile');
     const settings = defaultWorkspaceSettings();
+    settings.cycles.gameOfLife[0] = clone(defaultGameOfLifeRules);
     settings.nudgeIntervalMs = 35;
     settings.evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
     settings.rules.contour.growth = clone(INITIAL_CRACKS_GROWTH);
@@ -197,7 +198,7 @@ export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
     const factories = [0, 1, 2].map(factoryProfileSnapshot);
     const defaults = factories.map(value => defaultComparable(value, value));
-    let state = { version: 1, defaultsVersion: 14, selected: 0,
+    let state = { version: 1, defaultsVersion: 15, selected: 0,
         profiles: defaultProfileSnapshots(initial).map((snapshot, index) => {
             const baseline = withSavedSessionPreferences(snapshot, factories[index]);
             return { saved: clone(baseline), draft: clone(baseline) };
@@ -211,7 +212,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 14, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: 15, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -283,11 +284,11 @@ export function createProfileState(initial, storage) {
                     if (simulationInit.brushSize === 3) simulationInit.brushSize = 1;
                     if (!simulationInit.brushColor || simulationInit.brushColor === 'lightest') simulationInit.brushColor = 'rainbow';
                     if (!simulationInit.symmetry || simulationInit.symmetry === 'kaleidoscope') simulationInit.symmetry = 'horizontal';
-                    if (equal(cycles.gameOfLife[0], defaultGameOfLifeRules)) {
+                    if (equal(cycles.gameOfLife[0], GAME_OF_LIFE_PRESETS.btnGolPresetPaint)) {
                         cycles.gameOfLife[0] = clone(GAME_OF_LIFE_PRESETS.btnGolPresetPaint2);
                         if (snapshot.identity) {
                             snapshot.identity.gameOfLife.sources[0] = 'btnGolPresetPaint2';
-                            if (equal(snapshot.identity.gameOfLife.yoursRules, defaultGameOfLifeRules)) {
+                            if (equal(snapshot.identity.gameOfLife.yoursRules, GAME_OF_LIFE_PRESETS.btnGolPresetPaint)) {
                                 snapshot.identity.gameOfLife.yoursRules = clone(GAME_OF_LIFE_PRESETS.btnGolPresetPaint2);
                             }
                         }
@@ -382,6 +383,19 @@ export function createProfileState(initial, storage) {
                 for (const [index, profile] of state.profiles.entries()) for (const kind of ['saved','draft']) {
                     if (value.profiles[index][kind].settings.rules?.contour?.growth === undefined) {
                         profile[kind].settings.rules.contour.growth = clone(INITIAL_CRACKS_GROWTH);
+                    }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 15) {
+                const paint4 = GAME_OF_LIFE_PRESETS.btnGolPresetPaint;
+                for (const profile of state.profiles.slice(0, 2)) {
+                    for (const snapshot of [profile.saved, profile.draft]) {
+                        const identity = snapshot.identity?.gameOfLife;
+                        const slots = snapshot.settings.cycles.gameOfLife;
+                        if (identity?.sources[0] === 'yours' && equal(identity.yoursRules, paint4) && equal(slots[0], paint4)) {
+                            slots[0] = clone(defaultGameOfLifeRules);
+                            identity.yoursRules = clone(defaultGameOfLifeRules);
+                        }
                     }
                 }
             }

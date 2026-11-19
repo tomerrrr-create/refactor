@@ -316,6 +316,7 @@ export const translations = {
   gol_birth_desc: {"en": "A dead cell is born if it has:", "he": "תא מת מתעורר עם מספר השכנים הבא:", "ru": "Мёртвая клетка оживает при таком числе живых соседей:", "nl": "Een dode cel wordt geboren met dit aantal levende buren:"},
   gol_preset_paint: {"en": "Paint 4", "he": "ציור 4", "ru": "Рисование 4", "nl": "Schilderen 4"},
   gol_preset_paint2: {"en": "Paint 1", "he": "ציור 1", "ru": "Рисование 1", "nl": "Schilderen 1"},
+  gol_preset_paint3: {"en": "Paint 3", "he": "ציור 3", "ru": "Рисование 3", "nl": "Schilderen 3"},
   gol_preset_shuffle: {"en": "Shuffle", "he": "ערבוב", "ru": "Перемешивание", "nl": "Mengen"},
   gol_preset_harmonic: {"en": "Harmonic", "he": "הרמוני", "ru": "Гармоничный", "nl": "Harmonisch"},
   gol_preset_naive: {"en": "Naive", "he": "תמים", "ru": "Наивный", "nl": "Naïef"},
@@ -326,7 +327,6 @@ export const translations = {
   gol_preset_livingtexture: {"en": "Alive", "he": "חי", "ru": "Живой", "nl": "Levend"},
   gol_preset_joelson: {"en": "Joel", "he": "ג׳ואל", "ru": "Джоэл", "nl": "Joel"},
   gol_preset_charlie: {"en": "Charlie", "he": "צ׳ארלי", "ru": "Чарли", "nl": "Charlie"},
-  gol_preset_meditation: {"en": "Meditate", "he": "מדיטציה", "ru": "Медитация", "nl": "Mediteren"},
   gol_preset_vibration: {"en": "Vibrate", "he": "רטט", "ru": "Вибрация", "nl": "Trillen"},
 
   chi_reach_fixed: {"en": "Fixed", "he": "קבוע", "ru": "Фиксированный", "nl": "Vast"},

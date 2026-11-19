@@ -4,7 +4,7 @@ import { STARTUP_PROFILE_KEY } from '../js/startup-profile.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createProfileState, defaultProfileSnapshots, factoryProfileSnapshot, loadProfileStartup, PROFILE_STORAGE_KEY, readProfileFile, validateProfileSnapshot } from '../js/profile-state.js';
-import { CHI_FLOW_PRESETS } from '../js/constants.js';
+import { CHI_FLOW_PRESETS, GAME_OF_LIFE_PRESETS } from '../js/constants.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 
 const initial = () => { const settings = defaultWorkspaceSettings(); settings.nudgeIntervalMs = 35; settings.simulationInit.brushSize = 1; settings.startup.separatorPx = 5; settings.rules.erosion.erosionStages = { 'channels-solid': 0, channels: 0 }; return { settings: { ...settings, simulationTheme: 'blue' } }; };
@@ -308,6 +308,31 @@ test('profile 3 defaults use a random 15x15 board, rainbow hold and Paint 1 in t
     assert.deepEqual(profile.identity.gameOfLife.yoursRules, profile.settings.cycles.gameOfLife[0]);
 });
 
+test('Paint 3 replaces the old factory Life slot while explicit presets and V1 settings keep their rules', () => {
+    const { btnGolPresetPaint3: paint3, btnGolPresetPaint: paint4 } = GAME_OF_LIFE_PRESETS;
+    assert.deepEqual(paint3, { survival: [0,1,2,3,4,5,6,7,8], birth: [3,4,5,6,7,8] });
+    assert.deepEqual(factoryProfileSnapshot(0).settings.cycles.gameOfLife[0], paint3);
+    assert.deepEqual(readProfileFile('FYI_SETTINGS_V1\n{"version":1,"settings":{}}').settings.cycles.gameOfLife[0], paint4);
+
+    const disk = storage();
+    const profiles = [0, 1, 2].map(index => ({ saved: factoryProfileSnapshot(index), draft: factoryProfileSnapshot(index) }));
+    for (const [index, profile] of profiles.slice(0, 2).entries()) {
+        for (const snapshot of [profile.saved, profile.draft]) {
+            snapshot.settings.cycles.gameOfLife[0] = structuredClone(paint4);
+            snapshot.identity.gameOfLife.yoursRules = structuredClone(paint4);
+            if (index === 1) snapshot.identity.gameOfLife.sources[0] = 'btnGolPresetPaint';
+        }
+    }
+    disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ version: 1, defaultsVersion: 14, selected: 0, profiles }));
+    const state = createProfileState(initial(), disk);
+    assert.deepEqual(state.draft(0).settings.cycles.gameOfLife[0], paint3);
+    assert.deepEqual(state.draft(0).identity.gameOfLife.yoursRules, paint3);
+    assert.deepEqual(state.draft(1), profiles[1].draft);
+    assert.deepEqual(state.draft(2), profiles[2].draft);
+    assert(state.persist());
+    assert.deepEqual(createProfileState(initial(), disk).draft(0), state.draft(0));
+});
+
 test('profile 3 update preserves other profiles and explicit personal initialization choices', () => {
     const disk = storage();
     const profiles = [0, 1, 2].map(i => ({ saved: factoryProfileSnapshot(i), draft: factoryProfileSnapshot(i) }));
@@ -417,11 +442,11 @@ test('version 11 updates former profile-one defaults without losing custom draft
     disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:10,selected:0,profiles}));
     const state=createProfileState(initial(),disk);state.persist();
     const saved=JSON.parse(disk.getItem(PROFILE_STORAGE_KEY));
-    assert.equal(saved.defaultsVersion,14);
+    assert.equal(saved.defaultsVersion,15);
     assert.deepEqual(saved.profiles[0].saved.settings.startup,factoryProfileSnapshot(0).settings.startup);
     assert.deepEqual(state.draft(),profiles[0].draft);
     assert.deepEqual(state.draft(1),profiles[1].draft);assert.deepEqual(state.draft(2),profiles[2].draft);
-    assert.deepEqual(saved.profiles[0].saved.settings.cycles.gameOfLife,defaultWorkspaceSettings().cycles.gameOfLife);
+    assert.deepEqual(saved.profiles[0].saved.settings.cycles.gameOfLife,factoryProfileSnapshot(0).settings.cycles.gameOfLife);
     assert.deepEqual(saved.profiles[0].saved.settings.cycles.chiFlow,['Harmony','Nova','Alexis'].map(name=>CHI_FLOW_PRESETS[name]));
     assert.deepEqual(createProfileState(initial(),disk).draft(),state.draft());
 });
