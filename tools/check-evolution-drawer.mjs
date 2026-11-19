@@ -60,7 +60,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  }
  await page.locator('#appContainer').evaluate((e,old)=>{if(old.attribute===null)e.removeAttribute('data-ui-zoom');else e.setAttribute('data-ui-zoom',old.attribute);if(old.value)e.style.setProperty('--ui-zoom',old.value);else e.style.removeProperty('--ui-zoom');},originalZoom);
  const island=await trigger.locator('.drawer-internal-symbol').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),b=e.parentElement.getBoundingClientRect();return {w:s.width,h:s.height,radius:s.borderRadius,shadow:s.boxShadow,fits:r.left>=b.left&&r.right<=b.right&&r.top>=b.top&&r.bottom<=b.bottom};});
- assert(Math.abs(parseFloat(island.w)-32)<.1&&Math.abs(parseFloat(island.h)-16)<.1);assert.equal(island.radius,'4px');assert(island.shadow.includes('inset')&&island.fits,'the recessed switch stays inside the original tap target');
+ assert(Math.abs(parseFloat(island.w)-22)<.1&&Math.abs(parseFloat(island.h)-11)<.1);assert.equal(island.radius,'3px');assert(island.shadow.includes('inset')&&island.fits,'the recessed switch stays inside the original tap target');
  const cells=trigger.locator('.drawer-page-cell');
  const dotColors=()=>cells.evaluateAll(es=>es.map(e=>getComputedStyle(e,'::after').backgroundColor));
  const hollow='rgba(0, 0, 0, 0)';
