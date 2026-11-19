@@ -58,9 +58,9 @@ try{
  assert.equal(await panel.locator('.macro-activity-row[aria-hidden]').evaluate(e=>e.outerHTML),frozen,'outgoing icon is frozen while control changes again');
  await panel.locator('.macro-activity-row').evaluateAll(rows=>rows.forEach(row=>row.getAnimations().forEach(animation=>animation.play())));
  await settled();assert.equal(await current.locator('.macro-activity-icon').getAttribute('data-source-icon'),'iconErosionLegacy');assert.equal(await current.getAttribute('aria-label'),label);assert.deepEqual(await current.boundingBox(),geometry);
- // Shared SVGs retain only the selected map mark and all original per-mode paints.
- for(const map of ['diagonal','grid','circular','interference','clouds','cosmic']){
-  await mode('cymatics',map);await settled();assert.deepEqual(await current.locator('[data-cymatics-map-mark]').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMapMark)),[map]);
+ // Resonance captures the full symbol for the selected map.
+ for(const map of ['diagonal','grid','interference','clouds']){
+  await mode('cymatics',map);await settled();assert.deepEqual(await current.locator('[data-cymatics-map-icon]').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMapIcon)),[map]);
  }
  for(const value of ['genetics','no-genetics']){
   await mode('dla',value);await settled();

@@ -3909,7 +3909,6 @@ function updateCymaticsButtonUI(){
     const button=dom.btnCymatics, active=activeEvolutionControl()==='cymatics';
     const version=active ? getCymaticsRules().resonanceVersion : cycleMemory.entry('cymatics');
     const map=RESONANCE_MAPS.find(name=>CYMATICS_RESONANCE_MAPS[name]===version) ?? RESONANCE_MAPS[0];
-    for(const name of Object.keys(CYMATICS_RESONANCE_MAPS))button.classList.toggle('cymatics-'+name,name===map);
     button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',active);
     const title=getText('tooltip_cymatics')+' — '+getText('cymatics_map_'+map);
     button.title=title;button.setAttribute('aria-label',title);button.setAttribute('aria-pressed',String(active));

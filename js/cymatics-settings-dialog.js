@@ -19,10 +19,11 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
     const maps=dialog.querySelector('.resonance-map-grid');
     for(const [name,version] of Object.entries(CYMATICS_RESONANCE_MAPS)){
         const b=document.createElement('button');b.type='button';b.dataset.cymaticsMap=name;
-        const paths={clouds:'<path d="M5 17a4 4 0 0 1-1-7 5 5 0 0 1 9-3 4 4 0 0 1 6 4 3 3 0 0 1-1 6Z"/>',cosmic:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>',diagonal:'<path d="M5 19L19 5"/>',grid:'<path d="M8 4l4 4-4 4-4-4ZM16 4l4 4-4 4-4-4ZM8 12l4 4-4 4-4-4ZM16 12l4 4-4 4-4-4Z"/>',interference:'<circle cx="6" cy="9" r="2"/><circle cx="18" cy="15" r="2"/><path d="M3 3c12 0 12 18 18 18M3 15c6 0 6-12 18-12M3 21c12 0 6-18 18-12"/>',circular:'<ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-32 12 12)"/><path d="M7.8 7.3a6.3 6.3 0 0 1 9.8 2.1m-1.4 7.3a6.3 6.3 0 0 1-9.8-2.1" stroke-linecap="round"/><circle cx="12" cy="12" r="1.45" fill="currentColor" stroke="none"/><circle cx="18.4" cy="15.5" r="1" fill="currentColor" stroke="none"/>'};
+        const icon=document.querySelector(`#btnCymatics > [data-cymatics-map-icon="${name}"], #btnInk > [data-vortices-icon="${name}"]`);
         const accents={diagonal:'#CD853F',grid:'#C2A14A',circular:'#6B8E23',interference:'#607D8B',clouds:'#91A0A6',cosmic:'#FF7F50'};
         b.style.setProperty('--preset-ink',accents[name]);
-        b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">'+paths[name]+'</svg><span class="sr-only"></span>';
+        const label=document.createElement('span');label.className='sr-only';
+        b.append(icon.cloneNode(true),label);
         b.addEventListener('click',()=>{if(!draft||!allowedMaps.includes(name))return;const selected=selectCymaticsMap(draft,version,draftFrequencies,draftStrengths);draft=selected.rules;draftFrequencies=selected.frequencies;draftStrengths=selected.strengths;render();});maps.append(b);
     }
     frequency.addEventListener('input',()=>{draft.frequency=Math.round(20*Math.pow(1000,Number(frequency.value)/1000));draftFrequencies=rememberCymaticsFrequency(draftFrequencies,draft);render();});
