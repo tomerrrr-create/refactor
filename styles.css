@@ -20,7 +20,6 @@
   --glow-color: var(--gold);
   --sim-color: #a58b54;
   --sim-gold-muted: #766741;
-  --deep-blue-background: linear-gradient(to bottom, #080e1d, #000);
   transition: --sim-color 400ms ease-in-out;
 
 }
@@ -1924,19 +1923,10 @@ button, .ctrl {
 :root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: var(--sim-gold-muted); }
 :root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }
-:root[data-simulation-effective-theme="deep-blue"] { --sim-color: #394998; }
 :root[data-simulation-effective-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
 :root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
 :root[data-simulation-effective-theme="gold"] #simModeBackground::before,
 :root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
-/* Hold the dark resting surface as it fades out, even when playback ink changes. */
-:root[data-simulation-theme="deep-blue"] .sim-mode-active #simModeBackground {
-  border-color: #212d45;
-}
-:root[data-simulation-theme="deep-blue"] .sim-mode-active #simModeBackground::after {
-  background: var(--deep-blue-background);
-  opacity: 1;
-}
 /* Fade only the decorative frame; simulation controls remain independent. */
 :root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
 
@@ -1982,7 +1972,6 @@ button, .ctrl {
 .simulation-theme-preview[data-theme="teal"] { --preview-color: #93ddd3; --preview-background: #152c2a; }
 .simulation-theme-preview[data-theme="gold"] { --preview-color: #f0d28d; --preview-background: #302513; }
 .simulation-theme-preview[data-theme="blue"] { --preview-color: #a2b7ff; --preview-background: #182449; }
-.simulation-theme-preview[data-theme="deep-blue"] { --preview-color: #a4b1ec; --preview-background: #0c1329; }
 .simulation-theme-preview::before { content: ''; position: absolute; inset: 5px; border: 1px solid color-mix(in srgb, var(--preview-color) 58%, transparent); border-radius: 50%; background: var(--preview-background); transition: border-color .2s, box-shadow .2s; }
 .simulation-theme-preview svg { position: relative; width: 18px; height: 18px; pointer-events: none; }
 .simulation-theme-preview[aria-pressed="true"]::before { border-color: var(--preview-color); box-shadow: 0 0 0 2px var(--preview-color); }
@@ -2611,7 +2600,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog .drawer-appearance .simulation-theme-preview svg { width:18px; height:18px; }
 @media (max-width:480px) {
   #evolutionDrawerDialog .simulation-theme-option .technician-option-heading { flex-direction:column; align-items:stretch; gap:2px; padding-block:4px; }
-  #evolutionDrawerDialog .simulation-theme-previews { display:grid; grid-template-columns:repeat(4, minmax(44px,1fr)); justify-items:center; width:100%; }
+  #evolutionDrawerDialog .simulation-theme-previews { display:grid; grid-template-columns:repeat(3, minmax(44px,1fr)); justify-items:center; width:100%; }
 }
 
 /* Independent dead-cell anchor, paired with the existing genetics dot. */
