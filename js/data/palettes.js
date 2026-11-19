@@ -1586,7 +1586,14 @@ colors: (function() {
 
 {
   originalName: "rozita",
-  emoji: "🌸",
+  iconHTML: `<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true">
+    <path d="M10 22c1.8-4.3 2.6-7.5 2.9-11.6" fill="none" stroke="#71B68E" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M11.5 18.6c-3.4.2-5.6-1.4-6.2-4.4 3.4.1 5.6 1.5 6.2 4.4Z" fill="#599E79"/>
+    <path d="M12.2 16.5c.7-2.9 3.2-4.1 6.1-4-.9 2.8-3 4.1-6.1 4Z" fill="#8BC6A2"/>
+    <path d="M13.2 12.2c-4.3 0-6.8-2.6-6.6-6 1.5.4 2.6.9 3.5 1.7a6 6 0 0 1 9.1-2.1c.1 3.7-2.1 6.4-6 6.4Z" fill="#D44F75"/>
+    <path d="M8.1 6.7c-.5-2.9 1.8-4.9 4.5-4.9 2.4 0 4.4 1.3 4.9 3.3-2.5 0-4.4 1-5.5 2.7-1.3-.7-2.5-1-3.9-1.1Z" fill="#F19BB2"/>
+    <path d="M10.8 4.9c1.1-.9 2.8-.9 3.7 0M9.2 8.1c2.8.1 4.3 1.4 4.5 3.9m-.9-2.6c.9-1.1 2.2-1.9 3.7-2.2" fill="none" stroke="#A52F59" stroke-width=".85" stroke-linecap="round"/>
+  </svg>`,
   isArchived: false,
   // 252 pinks across fourteen vintage/modern rose families, with 12 gold accents.
   // Perceptually ordered from deep mulberry and old rose to luminous pink whites.

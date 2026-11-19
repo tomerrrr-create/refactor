@@ -23,7 +23,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual((await page.evaluate(()=>drawerTest.state())).slots,DEFAULT_EVOLUTION_LAYOUT,'first launch uses the requested layout before any test setup');
  if(config.width<600)await page.locator('#btnToggleSimMode').tap();else await page.locator('#btnToggleSimMode').click();
  await page.waitForFunction(()=>document.getElementById('controlsContainer').classList.contains('sim-mode-active'));await page.waitForTimeout(600);
- assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top||a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId)),['cymatics','sandpile','gameOfLife','brightnessEvo','islands','nudgeBrighter','magnet','gravitationalSort','erosion'],'fresh entry uses physical left-to-right order');
+ assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top||a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId)),['nudgeBrighter','sandpile','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort','ink','erosion'],'fresh entry uses physical left-to-right order');
  await page.evaluate(()=>drawerTest.setup());
 
  const state=()=>page.evaluate(()=>drawerTest.state()),tap=target=>config.width<600?target.tap():target.click();
@@ -48,7 +48,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  async function reload(){await page.waitForTimeout(300);await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});}
  let initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
  const physicalRows=()=>page.locator('#controlsContainer [data-evolution-slot],#btnEvolutionDrawerInternal').evaluateAll(es=>[2,3].map(row=>es.filter(e=>e.getBoundingClientRect().width&&getComputedStyle(e).gridRowStart===String(row)).sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId||'navigation')));
- assert.deepEqual(await physicalRows(),[['cymatics','sandpile','gameOfLife','brightnessEvo','islands'],['nudgeBrighter','magnet','navigation','gravitationalSort','erosion']],'physical left-to-right order on the first drawer');
+ assert.deepEqual(await physicalRows(),[['nudgeBrighter','sandpile','gameOfLife','brightnessEvo','islands'],['magnet','gravitationalSort','navigation','ink','erosion']],'physical left-to-right order on the first drawer');
  assert.equal(await page.locator('.drawer-view-option,[data-drawer-view],.evolution-drawer-trigger,#btnEvolutionDrawerRight,.drawer-recess').count(),0,'removed presentations leave no controls or technician choice');
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(0,10).filter(Boolean));
  const layout=await container.evaluate(e=>({rows:getComputedStyle(e).gridTemplateRows.split(' ').length,bottom:['btnSave','btnInvert','btnToggleSimMode','btnRandom','btnCycleSort','btnUndo','btnRedo'].map(id=>getComputedStyle(document.getElementById(id)).gridRowStart)}));
@@ -70,7 +70,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const position=await trigger.boundingBox(),frame=await page.locator('#simModeBackground').boundingBox();
  await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(8, 10, 9)','rgb(255, 215, 0)']);
  assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),['rgb(255, 215, 0)','rgb(8, 10, 9)']);
- assert.deepEqual(await physicalRows(),[['spiral','breathe','dla'],['ink','turing','navigation','contour']],'second drawer retains the always-available circular modes button');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&!['oil','network'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['cymatics','turing','breathe'],['contour','dla','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&!['spiral','network'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
  const pageIndex=()=>container.getAttribute('data-evolution-page');
  await swipe(page.locator('#btnMagnetModes'),0,36);assert.equal(await pageIndex(),'0','downward swipe stays put');
@@ -128,7 +128,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual((await state()).board,result.board,'macro uses engine rules, independent of layout');assert.deepEqual((await state()).slots,custom);
  await page.evaluate(()=>drawerTest.arm('nudgeDarker'));if(await container.getAttribute('data-evolution-page')!==String(Math.floor(custom.indexOf('nudgeBrighter')/10)))await tap(trigger);
  const nudge=page.locator('#btnNudgeBrighter');assert(await nudge.isVisible());assert.equal(await nudge.getAttribute('data-evolution-slot'),String(custom.indexOf('nudgeBrighter')));assert.equal(await nudge.getAttribute('data-nudge-mode'),'darker');
- const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter');await open();await move(nudgeFrom,16);await save();custom=moveEvolutionSlot(custom,nudgeFrom,16);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
+ const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter'),nudgeTo=nudgeFrom<10?16:1;await open();await move(nudgeFrom,nudgeTo);await save();custom=moveEvolutionSlot(custom,nudgeFrom,nudgeTo);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
  await reload();assert.deepEqual((await state()).slots,custom,'moving Nudge persists alongside all other controls');
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());await tap(trigger);assert((await state()).playing);await page.evaluate(()=>drawerTest.pause());
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();

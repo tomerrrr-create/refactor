@@ -38,8 +38,10 @@ try{for(const touch of [false,true]){
   await page.evaluate(()=>networkTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(350);await tap('#btnNetwork');
   const before=await state();assert.equal(before.rules.mode,'spatial');assert.equal(before.rules.backgroundMode,'luminance');
   assert(await page.locator('#btnNetwork .network-spatial-icon').isVisible());
+  assert.equal(await page.locator('#btnNetwork .network-spatial-icon > *').count(),2);
   await page.locator('#btnNetwork').screenshot({path:path.join(artifacts,touch?'spatial-icon-he.png':'spatial-icon-en.png')});
   await tap('#btnNetwork');assert.equal((await state()).rules.mode,undefined);assert.deepEqual((await state()).tiles,before.tiles);assert(await page.locator('#btnNetwork .network-palette-icon').isVisible());
+  assert.equal(await page.locator('#btnNetwork .network-palette-icon > *').count(),1);
   await page.locator('#btnNetwork').screenshot({path:path.join(artifacts,touch?'palette-icon-he.png':'palette-icon-en.png')});
   await tap('#btnNetwork');assert.equal((await state()).armed,null);await tap('#btnNetwork');assert.equal((await state()).rules.mode,'spatial');
   await open();assert.deepEqual(await page.locator('[data-network-mode]').evaluateAll(buttons=>buttons.map(b=>b.dataset.networkMode)),['spatial','palette']);

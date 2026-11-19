@@ -5,15 +5,15 @@ test('experiments independently default off, ordinary evolutions stay visible',(
  const flags=createExperimentalSimulationFlags({storage:{getItem:()=>null}});
  for(const {id}of EXPERIMENTAL_SIMULATIONS)assert.equal(flags.visible(id),false);
  assert.equal(flags.visible('turing'),true);
- flags.set('oil',true);assert(flags.visible('oil'));assert(flags.visible('ink'));assert(!flags.visible('network'));
- assert.throws(()=>flags.set('turing',true));
+ flags.set('spiral',true);assert(flags.visible('spiral'));assert(flags.visible('ink'));assert(!flags.visible('network'));
+ assert.throws(()=>flags.set('turing',true));assert.throws(()=>flags.set('oil',true));
 });
 test('choices survive reopening; only explicit boolean true enables an experiment',()=>{
  const saved=new Map(),storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
- const flags=createExperimentalSimulationFlags({storage});flags.set('oil',true);flags.set('network',true);flags.set('oil',false);
- const restored=createExperimentalSimulationFlags({storage});assert(restored.visible('network'));assert(restored.visible('ink'));assert(!restored.visible('oil'));
- saved.set(EXPERIMENTAL_SIMULATIONS_KEY,JSON.stringify({ink:'true',oil:1,network:true,other:true}));
- const validated=createExperimentalSimulationFlags({storage});assert(validated.visible('ink'));assert(!validated.visible('oil'));assert(validated.visible('network'));
+ const flags=createExperimentalSimulationFlags({storage});flags.set('spiral',true);flags.set('network',true);flags.set('spiral',false);
+ const restored=createExperimentalSimulationFlags({storage});assert(restored.visible('network'));assert(restored.visible('ink'));assert(!restored.visible('spiral'));
+ saved.set(EXPERIMENTAL_SIMULATIONS_KEY,JSON.stringify({ink:'true',spiral:1,oil:true,network:true,other:true}));
+ const validated=createExperimentalSimulationFlags({storage});assert(validated.visible('ink'));assert(!validated.visible('spiral'));assert(validated.visible('network'));
 });
 test('invalid or unavailable storage is safe and retains session choices',()=>{
  for(const value of ['bad','[]','true','null']){
@@ -21,5 +21,5 @@ test('invalid or unavailable storage is safe and retains session choices',()=>{
   for(const {id}of EXPERIMENTAL_SIMULATIONS)assert(!flags.visible(id));
  }
  const flags=createExperimentalSimulationFlags({storage:{getItem(){throw Error('blocked');},setItem(){throw Error('blocked');}}});
- flags.set('oil',true);assert(flags.visible('oil'));flags.set('oil',false);assert(!flags.visible('oil'));assert.throws(()=>flags.set('ink',false));
+ flags.set('spiral',true);assert(flags.visible('spiral'));flags.set('spiral',false);assert(!flags.visible('spiral'));assert.throws(()=>flags.set('ink',false));
 });

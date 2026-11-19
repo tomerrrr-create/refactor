@@ -3,9 +3,9 @@ export const EVOLUTION_MODE_MEMORY_KEY = 'colorGridRememberEvolutionModes';
 export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].includes(simulation) ? 'nudge' : simulation;
 // First human-cycle choices. Turing and one-shot utilities have no cycle.
 export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
-    gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:'b',
+    gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:'radial',
     magnet:'field_magnet',brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
-    ink:'turbine2',oil:'droplets',network:'spatial',erosion:'channels',islands:'classic',contour:'all',cymatics:4,nudge:'nudgeBrighter',wind:'ripple'
+    ink:'turbine2',network:'spatial',erosion:'channels',islands:'classic',contour:'all',cymatics:4,nudge:'nudgeBrighter',wind:'ripple'
 });
 export const defaultEvolutionCycleMode = simulation => DEFAULT_EVOLUTION_CYCLE_MODES[evolutionModeKey(simulation)];
 export function createEvolutionModeMemory({storage, blocked = () => false} = {}) {

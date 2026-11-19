@@ -1,5 +1,7 @@
 import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import { recordErosionRules, restoreErosionRules } from '../js/erosion-settings.js';
+import { runGravitationalSortGeneration } from '../js/simulations/gravitational_sort.js';
+import { runSpiralGeneration } from '../js/simulations/spiral.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,9 +11,9 @@ const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const spiralSequence = JSON.parse(source.match(/const SPIRAL_MODE_SEQUENCE = (\[[^\]]+\])/)[1].replaceAll("'", '"'));
 const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
-    { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x'], get: c => c.gsMode },
+    { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x', 'pinwheel'], get: c => c.gsMode },
     { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: MAGNET_CYCLE.slice(1), get: c => c.magnetMode },
-    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['b', 'radial', 'down'], get: c => c.spiralMode },
+    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['radial', 'down'], get: c => c.spiralMode },
     { sim: 'brightnessEvo', fn: 'cycleBrightnessEvoMode', event: 'Brightness Evo Mode Changed', modes: ['brightness', 'contrast'], get: c => c.brightnessEvoMode },
     { sim: 'dla', fn: 'cycleDlaMode', event: 'DLA Mode Changed', modes: ['genetics', 'no-genetics'], get: c => c.dlaMode }
 ];
@@ -31,7 +33,12 @@ function harness() {
         armCalls: 0, pauseCalls: 0 });
     c.restoreErosionRules = restoreErosionRules;
     c.getErosionRecordingRules = () => recordErosionRules(c.erosionRules, 64);
-    c.armSimulation = sim => { c.armCalls++; if (!c.isLifePlaying) c.armedSimulation = sim; };
+    c.armSimulation = (sim, {spiralEntry} = {}) => {
+        c.armCalls++;
+        if (c.isLifePlaying) return;
+        c.armedSimulation = sim;
+        if (sim === 'spiral' && spiralEntry) c.spiralMode = c.spiralRules.method = spiralEntry;
+    };
     c.pauseLife = () => { if (c.isLifePlaying) { c.pauseCalls++; c.isLifePlaying = false; c.window.logArtEvent('PAUSE', '---'); } };
     for (const name of ['updateErosionButtonUI', 'updateGravitationalSortButtonUI', 'updateSpiralButtonUI', 'updateMagnetButtonUI', 'updateBrightnessEvoButtonUI', 'updateDlaButtonUI']) c[name] = () => {};
     const loggerStart = source.indexOf('window.logArtEvent = function');
@@ -110,10 +117,10 @@ for (const item of cases) {
 }
 test('modes selected outside the button cycle enter its first active mode while running', () => {
     const c = harness(); c.isLifePlaying = true;
-    assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x']), 'up');
+    assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x', 'pinwheel']), 'up');
     assert.equal(c.nextEvolutionMode('expand', ['off', 'magnet', 'cosmic_magnet', 'time_magnet']), 'magnet');
     c.isLifePlaying = false;
-    assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x']), 'off');
+    assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x', 'pinwheel']), 'off');
 });
 
 test('Spiral cycling repairs stale mode/arming combinations without toggling off a selected simulation', () => {
@@ -121,8 +128,8 @@ test('Spiral cycling repairs stale mode/arming combinations without toggling off
     unarmed.spiralMode = 'left';
     unarmed.cycleSpiralMode();
     assert.equal(unarmed.armedSimulation, 'spiral');
-    assert.equal(unarmed.spiralMode, 'b');
-    assert.equal(unarmed.spiralRules.method, 'b');
+    assert.equal(unarmed.spiralMode, 'radial');
+    assert.equal(unarmed.spiralRules.method, 'radial');
     assert.equal(unarmed.armCalls, 1);
 
     const selected = harness();
@@ -130,15 +137,41 @@ test('Spiral cycling repairs stale mode/arming combinations without toggling off
     selected.spiralMode = 'off';
     selected.cycleSpiralMode();
     assert.equal(selected.armedSimulation, 'spiral');
-    assert.equal(selected.spiralMode, 'b');
-    assert.equal(selected.spiralRules.method, 'b');
+    assert.equal(selected.spiralMode, 'radial');
+    assert.equal(selected.spiralRules.method, 'radial');
     assert.equal(selected.armCalls, 0);
 });
 
 
-test('Spiral starts at Pinwheel when Tornado was selected on the other button', () => {
+test('Spiral starts at Diamond when Tornado was selected on the other button', () => {
  for (const running of [false,true]) {
   const c=harness();c.armedSimulation='spiral';c.spiralMode='tornado';c.spiralRules.method='tornado';c.isLifePlaying=running;
-  c.cycleSpiralMode();assert.equal(c.spiralMode,'b');
+  c.cycleSpiralMode();assert.equal(c.spiralMode,'radial');
  }
+});
+
+test('Gravity Pinwheel matches legacy Spiral Pinwheel with the same random input', () => {
+    const n = 15;
+    const board = Array.from({length:n*n}, (_, index) => ({k:index*7%23, v:index%23, isGold:index===3}));
+    const originalRandom = Math.random;
+    function evolve(run) {
+        let seed = 1234;
+        Math.random = () => {
+            seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+            return seed / 4294967296;
+        };
+        const currentBoardState = structuredClone(board);
+        for (let i = 0; i < 12; i++) run({n,currentBoardState});
+        return currentBoardState;
+    }
+    try {
+        const legacy = evolve(context => runSpiralGeneration({...context,spiralRules:{method:'b'}}));
+        assert.notDeepEqual(legacy,board);
+        for (const strength of [0,1]) {
+            const current = evolve(context => runGravitationalSortGeneration({...context,gravitationalSortRules:{direction:'pinwheel',strength}}));
+            assert.deepEqual(current,legacy);
+        }
+    } finally {
+        Math.random = originalRandom;
+    }
 });

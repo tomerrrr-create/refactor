@@ -39,6 +39,7 @@ try {
         if (process.env.VORTICES_LANG && process.env.VORTICES_LANG!==lang) continue;
         const context=await browser.newContext({viewport:touch?{width:390,height:844}:{width:1280,height:900},
             hasTouch:touch,isMobile:touch,serviceWorkers:'block'});
+        await context.addInitScript(()=>localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({spiral:true})));
         await context.addInitScript(language=>localStorage.setItem('userLanguage',language),lang);
         const page=await context.newPage(),errors=[];
         page.on('pageerror',e=>errors.push(e.message));
@@ -66,12 +67,25 @@ try {
             }
         }
         const visibleMaps=()=>menu.locator('[data-cymatics-map]:visible').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMap).sort());
-        const order=['turbine2','flow','left','cosmic','circular','a','black_hole','tornado'];
-        await tap(nav);
+        const order=['turbine2','flow','turbine_combined','left','cosmic','black_hole','circular','a','tornado'];
+        const defaultOrder=order.filter(mode=>!['turbine_combined','a','tornado'].includes(mode));
+        const circularName=lang==='he'?'אמפתיה מעגלית':'Circular Empathy';
         assert(await page.locator(hub).isVisible());
         await page.evaluate(()=>circularTest.openTech());
         assert.equal(await page.locator('#inkExperimentToggle').count(),0);
         await tap('#btnTechnicianCloseTop');
+        for (const mode of defaultOrder) {
+            await tap(hub);assert.equal((await state()).mode,mode);
+        }
+        await tap(hub);assert.equal((await state()).control,null);
+        await tap(hub);await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+        assert.deepEqual(await cycleMenu.locator('input').evaluateAll(nodes=>nodes.map(input=>input.value)),order);
+        assert.deepEqual(await cycleMenu.locator('input:checked').evaluateAll(nodes=>nodes.map(input=>input.value)),defaultOrder);
+        assert.equal(await cycleMenu.getByRole('checkbox',{name:circularName,exact:true}).inputValue(),'circular');
+        await checkbox('turbine_combined').check();await checkbox('a').check();await checkbox('tornado').check();
+        await dialogAction(cycleDialog+' [type=submit]');
+        await cycleMenu.waitFor({state:'hidden'});
+        await page.evaluate(()=>circularTest.enter());
         for (const mode of order) {
             const before=(await state()).project.tiles;
             await tap(hub);
@@ -88,6 +102,9 @@ try {
                 assert.equal(selected.project.gravityRules.strength,.6);
                 assert.equal(selected.settings.rules.gravity.strength,.25);
             }
+            if (mode==='turbine_combined') {
+                assert.deepEqual(selected.project.gravityRules,{direction:'turbine_combined',strength:.6,frame:0,fieldVersion:2});
+            }
             if (mode==='flow') {
                 await swipeUp(hub);
                 assert(await page.locator('#inkSettingsDialog').isVisible());
@@ -95,6 +112,8 @@ try {
                 await dialogAction('#inkSettingsDialog [data-cancel]');
             }
             if (mode==='cosmic'||mode==='circular') {
+                if (mode==='circular') assert.equal(await page.locator(hub).getAttribute('aria-label'),circularName);
+                assert.equal(selected.project.cymaticsState.rules.reversePaletteOrder,true);
                 await swipeUp(hub);await menu.waitFor({state:'visible'});
                 await page.waitForTimeout(350);
                 assert.deepEqual(await visibleMaps(),['circular','cosmic']);
@@ -104,6 +123,7 @@ try {
                     await dialogAction('#cymaticsSettingsDialog [type=submit]');
                     await menu.waitFor({state:'hidden'});
                     assert.equal((await state()).project.cymaticsState.rules.strength,65);
+                    assert.equal((await state()).project.cymaticsState.rules.reversePaletteOrder,true);
                 } else {await dialogAction('#cymaticsSettingsDialog [data-cancel]');await menu.waitFor({state:'hidden'});}
             } else if (mode!=='flow') {
                 await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
@@ -113,17 +133,28 @@ try {
             }
         }
         await tap(hub);assert.equal((await state()).control,null);
-        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'b');
+        await tap(nav);
+        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'radial');
         await swipeUp('#btnSpiral');
         await page.locator("#spiralSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['b','radial','down']);
+        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['radial','down']);
         await dialogAction('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
         await tap(nav);
         await tap('#btnGravitationalSort');await swipeUp('#btnGravitationalSort');
         await page.locator("#gravitationalSortSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),['up','right','center_x']);
-        await dialogAction('#btnGsSettingsCancel');await page.locator('#gravitationalSortSettingsModal').waitFor({state:'hidden'});
-        await tap('#btnCymatics');
+        assert.deepEqual(await page.locator('.gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),['up','right','center_x','pinwheel']);
+        await dialogAction('.gs-direction-btn[data-direction=pinwheel]');
+        assert(await page.locator('#gsStrength').isDisabled());
+        await dialogAction('#btnGsSettingsSave');
+        await page.locator('#gravitationalSortSettingsModal').waitFor({state:'hidden'});
+        assert.equal((await state()).project.gravityRules.direction,'pinwheel');
+        assert(await page.locator('#iconGsPinwheel').isVisible());
+        await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
+        for (const direction of ['up','right','center_x','pinwheel']) {
+            await tap('#btnGravitationalSort');assert.equal((await state()).project.gravityRules.direction,direction);
+        }
+        await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
+        await tap(nav);await tap('#btnCymatics');
         assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,4);
         await swipeUp('#btnCymatics');await menu.waitFor({state:'visible'});
         await page.waitForTimeout(350);
@@ -131,15 +162,18 @@ try {
         await dialogAction('#cymaticsSettingsDialog [data-reset]');await dialogAction('#cymaticsSettingsDialog [type=submit]');await menu.waitFor({state:'hidden'});
         assert.equal((await state()).settings.cymaticsStrengths.cosmic,65,'Reset only resets the maps in the open dialog');
         // Handoff to the source button must not disarm the same shared engine.
+        await tap(nav);
         await page.evaluate(()=>circularTest.memory(true));
         await tap('#btnGravitationalSort');
-        await tap(nav);await tap(hub);
+        await tap(hub);
         assert.equal((await state()).mode,'turbine2');
-        await tap(nav);await tap('#btnGravitationalSort');
+        await tap('#btnGravitationalSort');
         assert.equal((await state()).control,'gravitationalSort');
         await page.evaluate(()=>circularTest.memory(false));
-        await tap(nav);
         await page.evaluate(()=>circularTest.enter());
+        for (let i=0;i<4;i++) await tap('#btnGravitationalSort');
+        assert.equal((await state()).project.gravityRules.direction,'pinwheel');
+        await tap('#btnStepForward');
         await tap(hub);await tap(play);
         for (const mode of [...order.slice(1),order[0]]) {
             await page.waitForFunction(()=>circularTest.state().gen>=3);

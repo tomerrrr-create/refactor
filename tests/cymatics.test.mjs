@@ -4,6 +4,7 @@ import {CYMATICS_RESONANCE_MAPS,DEFAULT_CYMATICS_RULES,INITIAL_CYMATICS_RULES,IN
 import {getCymaticsField,createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from '../js/simulations/cymatics.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 import {validateProfileSnapshot} from '../js/profile-state.js';
+import {sortColorsArray} from '../js/colors.js';
 const fixture=(n=21)=>({n,currentPalette:Array(23).fill('#ffffff'),currentBoardState:Array.from({length:n*n},(_,i)=>({k:(i*17+3)%23,v:(i*17+3)%23,isGold:i===Math.floor(n*n/2)}))});
 const histogram=board=>board.reduce((m,t)=>(m[t.k]=(m[t.k]??0)+1,m),{});
 function advance(ctx,state,count){for(let i=0;i<count;i++){const r=runCymaticsGeneration(ctx,state);ctx.currentBoardState=r.nextBoardState;state=r.nextCymaticsState;}return {ctx,state};}
@@ -91,8 +92,9 @@ test('all three selectable resonance maps preserve settings, pigments, gold and 
   const rules={pattern:'star',strength:100,mode:'resonance',frequency:1055,resonanceVersion};
   assert.deepEqual(validateCymaticsRules(rules),rules);
   const settings=defaultWorkspaceSettings();settings.rules.cymatics=rules;
-  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
-  assert.deepEqual(validateProfileSnapshot({settings}).settings.rules.cymatics,rules);
+  const expectedPreferences=resonanceVersion===3?{...rules,reversePaletteOrder:true}:rules;
+  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,expectedPreferences);
+  assert.deepEqual(validateProfileSnapshot({settings}).settings.rules.cymatics,expectedPreferences);
   const ctx={...fixture(41),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState),field=getCymaticsField(41,1055,resonanceVersion);
   fields.push(field);assert(field.some(v=>v>0));
   const energy=b=>b.reduce((sum,t,i)=>sum+t.k*field[i],0),result=advance(ctx,createCymaticsState(41),45),snapshot=JSON.parse(JSON.stringify(result));
@@ -296,13 +298,46 @@ test('strength drafts save atomically; history/macros preserve preferences and p
 
 test('cosmic preferences discard retired version metadata while preserving all effective settings',()=>{
  const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,strength:60};
+ const expected={...rules,cosmicFieldVersion:3,reversePaletteOrder:true};
  for(const cosmicVersion of [1,2]){
-  assert.deepEqual(migrateCymaticsPreferences({...rules,cosmicVersion}),{...rules,cosmicFieldVersion:3});
+  assert.deepEqual(migrateCymaticsPreferences({...rules,cosmicVersion}),expected);
   const settings=defaultWorkspaceSettings();settings.rules.cymatics={...rules,cosmicVersion};
-  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,{...rules,cosmicFieldVersion:3});
+  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,expected);
  }
  assert.equal(selectCymaticsMap(rules,6,createCymaticsFrequencies(),createCymaticsStrengths()).rules.cosmicVersion,undefined);
  assert.throws(()=>validateCymaticsRules({...rules,cosmicVersion:2}));
+});
+
+test('Circular and Cosmological empathy reverse the active palette ranks and record the direction',()=>{
+ const n=25;
+ const pigments=['#000000','#FFFFFF','#E63462','#F4A261','#2A9D8F','#335BCC'];
+ const initial=createCymaticsState(n);
+ for(const resonanceVersion of [CYMATICS_RESONANCE_MAPS.circular,CYMATICS_RESONANCE_MAPS.cosmic]){
+  const {rules}=selectCymaticsMap(INITIAL_CYMATICS_RULES,resonanceVersion,createCymaticsFrequencies());
+  const {reversePaletteOrder,...legacyRules}=rules;
+  assert.equal(reversePaletteOrder,true);
+  assert.deepEqual(migrateCymaticsPreferences(legacyRules),rules);
+  const snapshot=validateCymaticsSnapshot(JSON.parse(JSON.stringify({cymaticsVersion:1,rules,state:initial})));
+  assert.deepEqual(snapshot.rules,rules);
+  assert.deepEqual(validateCymaticsSnapshot({...snapshot,rules:legacyRules}).rules,legacyRules);
+  assert.equal(selectCymaticsMap(rules,CYMATICS_RESONANCE_MAPS.interference).rules.reversePaletteOrder,undefined);
+  for(const method of ['luminance','reversed','hue']){
+   const currentPalette=sortColorsArray(pigments,method);
+   const lastRank=currentPalette.length-1;
+   const board=Array.from({length:n*n},(_,index)=>{
+    const k=currentPalette.indexOf(pigments[index%pigments.length]);
+    return {k,v:k,isGold:index===0};
+   });
+   const inverted=board.map(tile=>({...tile,k:lastRank-tile.k,v:lastRank-tile.v}));
+   const context={n,currentPalette};
+   const reversed=advance({...context,currentBoardState:structuredClone(board),cymaticsRules:snapshot.rules},snapshot.state,120);
+   const legacy=advance({...context,currentBoardState:inverted,cymaticsRules:legacyRules},initial,120);
+   assert.deepEqual(reversed.ctx.currentBoardState.map(t=>t.k),legacy.ctx.currentBoardState.map(t=>lastRank-t.k));
+   assert.deepEqual(reversed.state,legacy.state);
+   assert.deepEqual(histogram(reversed.ctx.currentBoardState),histogram(board));
+   assert.deepEqual(reversed.ctx.currentBoardState[0],board[0]);
+  }
+ }
 });
 
 test('radial cosmic phase closes, frequencies vary, and live checkpoints resume exactly',()=>{

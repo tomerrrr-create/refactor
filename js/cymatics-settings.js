@@ -4,8 +4,10 @@ export const CYMATICS_RESONANCE_MAPS=Object.freeze({diagonal:1,grid:2,circular:3
 export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({diagonal:11831,grid:11831,circular:20000,interference:800,clouds:800,cosmic:800});
 export const INITIAL_CYMATICS_RULES = Object.freeze({strength:35,mode:'resonance',frequency:800,resonanceVersion:4,phaseMotion:true});
 export const DEFAULT_CYMATICS_RULES=INITIAL_CYMATICS_RULES;
+const isEmpathyMap = version => version === CYMATICS_RESONANCE_MAPS.circular || version === CYMATICS_RESONANCE_MAPS.cosmic;
+
 export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
-    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['pattern','strength','mode','frequency','resonanceVersion','phaseMotion','cosmicFieldVersion'].includes(k))||
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['pattern','strength','mode','frequency','resonanceVersion','phaseMotion','cosmicFieldVersion','reversePaletteOrder'].includes(k))||
        !Number.isInteger(value.strength)||value.strength<10||value.strength>100||
        (value.pattern!==undefined&&(typeof value.pattern!=='string'||!value.pattern.length||value.pattern.length>64)))throw new Error('Invalid Resonance settings');
     if(value.mode!=='resonance')throw new Error('The experimental Patterns mode is no longer supported');
@@ -25,6 +27,10 @@ export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
         if(![1,2,3].includes(value.cosmicFieldVersion))throw new Error('Invalid cosmic field version');
         result.cosmicFieldVersion=value.cosmicFieldVersion;
     }
+    if(value.reversePaletteOrder!==undefined){
+        if(value.reversePaletteOrder!==true||!isEmpathyMap(result.resonanceVersion))throw new Error('Invalid Resonance palette order');
+        result.reversePaletteOrder=true;
+    }
     return result;
 }
 // Preference migration only. Retired recordings must fail rather than silently
@@ -38,10 +44,13 @@ export function migrateCymaticsPreferences(value){
     }
     // Discard the retired field-version preference from the previous build.
     if(value&&value.resonanceVersion===6&&[1,2].includes(value.cosmicVersion)){
-        const {cosmicVersion,...rules}=value;return validateCymaticsRules({...rules,cosmicFieldVersion:3});
+        const {cosmicVersion,...rules}=value;
+        value=rules;
     }
     const rules=validateCymaticsRules(value);
-    return rules.resonanceVersion===6?{...rules,cosmicFieldVersion:3}:rules;
+    if(rules.resonanceVersion===6)rules.cosmicFieldVersion=3;
+    if(isEmpathyMap(rules.resonanceVersion))rules.reversePaletteOrder=true;
+    return rules;
 }
 
 // Per-map frequencies are user preferences, not engine/runtime recording fields.
@@ -82,7 +91,7 @@ export function selectCymaticsMap(rules,version,frequencies,strengths){
     const name=Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===version);
     if(!name)throw new Error('Invalid Cymatics map');
     const remembered=rememberCymaticsFrequency(frequencies,rules),rememberedStrengths=rememberCymaticsStrength(strengths,rules);
-    const {cosmicFieldVersion,...otherRules}=rules;
-    return {rules:validateCymaticsRules({...otherRules,...(version===6?{cosmicFieldVersion:3}:{}),mode:'resonance',resonanceVersion:version,frequency:remembered[name],strength:rememberedStrengths[name],
+    const {cosmicFieldVersion,reversePaletteOrder,...otherRules}=rules;
+    return {rules:validateCymaticsRules({...otherRules,...(version===6?{cosmicFieldVersion:3}:{}),...(isEmpathyMap(version)?{reversePaletteOrder:true}:{}),mode:'resonance',resonanceVersion:version,frequency:remembered[name],strength:rememberedStrengths[name],
         phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion}),frequencies:remembered,strengths:rememberedStrengths};
 }

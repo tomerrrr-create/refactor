@@ -42,7 +42,6 @@ export const dom = {
   btnShowBreatheMenu: document.getElementById('btnShowBreatheMenu'),
   btnCymatics: document.getElementById('btnCymatics'),
   btnNetwork: document.getElementById('btnNetwork'),
-  btnOil: document.getElementById('btnOil'),
   btnInk: document.getElementById('btnInk'),
   btnIslands: document.getElementById('btnIslands'),
   btnGameOfLife: document.getElementById('btnGameOfLife'),

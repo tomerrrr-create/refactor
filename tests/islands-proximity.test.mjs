@@ -46,12 +46,12 @@ test('invalid or mismatched proximity formats fail before advancing, while old s
 function cycleHarness(){
  const logs=[];
  const c=vm.createContext({createIslandsSession,restoreIslandsSession,armedSimulation:null,islandsSession:null,isLifePlaying:false,
-  isMacroLoaded:false,isExecutingMacroCommand:false,currentGenerationCount:97,boardState:board(21),
+  isMacroLoaded:false,isExecutingMacroCommand:false,currentGenerationCount:97,boardState:board(21),oilRules:{tension:80,drift:20,mobility:70},
   window:{logArtEvent:(name,details)=>logs.push({name,details:JSON.parse(details)})},
   armSimulation(sim){assert.equal(c.isLifePlaying,false);c.armedSimulation=sim;if(sim==='islands')c.islandsSession=createIslandsSession(77,{activity:.17});},
   updateIslandsButtonUI(){},pauseLife(){throw Error('cycling must never pause');},stopMacro(){c.isMacroLoaded=false;}});
  vm.runInContext(source.slice(source.indexOf('function nextEvolutionMode('),source.indexOf('function cycleBrightnessEvoMode(')),c);
- vm.runInContext(source.slice(source.indexOf('function cycleIslandsMode('),source.indexOf('function updateBreatheEvoButtonUI(')),c);
+ vm.runInContext(source.slice(source.indexOf('function setManualIslandsMode('),source.indexOf('function updateBreatheEvoButtonUI(')),c);
  return {c,logs};
 }
 test('paused Islands cycle is Classic, Oil, Off and preserves configured activity',()=>{

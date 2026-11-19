@@ -1,4 +1,4 @@
-// Islands' fixed Oil position, independent B controls, legacy replay and history.
+// Native Oil controls in Islands, configured replay, checkpoints and legacy recipes.
 import {readFile,mkdir} from 'node:fs/promises';import {createServer} from 'node:http';import path from 'node:path';import {fileURLToPath} from 'node:url';import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright'),root=fileURLToPath(new URL('../dist/',import.meta.url)),artifacts='/tmp/islands-oil-check';await mkdir(artifacts,{recursive:true});
 const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':'text/html');res.end(await readFile(path.join(root,f)));}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
@@ -10,8 +10,9 @@ try{for(const touch of [false,true]){
  let source=await readFile(path.join(root,'js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.islandOilTest={
  setup:()=>{stopMacro();pauseLife();resetArmedState();activePaletteIndex=C.PALETTES.findIndex(p=>p.originalName==='Autumn into Winter 264');if(activePaletteIndex<0)activePaletteIndex=0;currentSortMethod='luminance';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,currentSortMethod));n=31;restoreSeparatorWidth(0);initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=(i*13+Math.floor(i/n)*7)%paletteLen();t.isGold=i===0;});brushSize=3;brushShape='diamond';symmetryMode='off';selectedColorIndex=paletteLen()-1;selectedColor=palette().at(-1);setBrushMode(true,true);isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');dom.btnStepForward.classList.remove('control-hidden');history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();renderToScreen(null);},
  state:()=>({n,armed:armedSimulation,session:islandsSession?restoreIslandsSession(islandsSession):null,playing:isLifePlaying,gen:currentGenerationCount,tiles:boardState.map(t=>({k:t.k,v:t.v,isGold:!!t.isGold})),logs:[...artRecipeLog],oilRules:{...oilRules},activity:evolutionTuning.islands.activity}),
- expected:()=>{const s=restoreOilState(islandsSession?.oilState??createOilState(n));return runOilGeneration({n,currentBoardState:structuredClone(boardState),currentPalette:palette(),oilRules:INITIAL_OIL_RULES},s).nextBoardState.map(t=>({k:t.k,v:t.v,isGold:!!t.isGold}));},
- open:()=>modals.openIslandsSettingsModal(),tech:()=>modals.openTechnicianMenu(),oilOpen:()=>oilSettingsUI.open(),
+ expected:()=>{const s=restoreOilState(islandsSession?.oilState??createOilState(n));return runOilGeneration({n,currentBoardState:structuredClone(boardState),currentPalette:palette(),oilRules:islandsSession?.oilRules??INITIAL_OIL_RULES},s).nextBoardState.map(t=>({k:t.k,v:t.v,isGold:!!t.isGold}));},
+ tech:()=>modals.openTechnicianMenu(),
+ legacyOil:()=>{restoreOilSnapshot({oilVersion:1,rules:{tension:45,drift:80,mobility:30},state:createOilState(n)});window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());},
  snapshot:()=>{window.savedIslandsProject=getCurrentState();return window.savedIslandsProject;},savedFrame:()=>window.savedIslandsProject.islandsState?.oilState?.frame,restore:applyState,resize:resizeBoard,
  legacy:()=>{islandsSession=createIslandsSession(42,evolutionTuning.islands,'proximity');window.logArtEvent('Islands Mode Changed',JSON.stringify(islandsSession));updateIslandsButtonUI();},
  replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},done:()=>!isMacroPlaying&&!isLifePlaying&&!isMacroLoaded
@@ -23,12 +24,18 @@ try{for(const touch of [false,true]){
  const replay=async text=>{await page.evaluate(text=>islandOilTest.replay(text),text);await page.waitForFunction(()=>islandOilTest.done(),null,{timeout:30000});return state();};
  // Finish a paced swipe before releasing so Chromium does not fling the page.
  const swipe=async id=>{const r=await page.locator('#'+id).boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;if(touch){const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-65*i/5}]});await page.waitForTimeout(40);}await page.waitForTimeout(120);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y-65,{steps:5});await page.mouse.up();}};
- await page.evaluate(()=>islandOilTest.setup());assert.equal(await page.locator('#btnOil').getAttribute('data-evolution-feature-hidden'),'');
+ await page.evaluate(()=>islandOilTest.setup());assert.equal(await page.locator('#btnOil').count(),0);
  await tap('btnIslands');assert.equal((await state()).session.islandsVersion,1);assert(await page.locator('#iconIslands').isVisible());assert(!(await page.locator('.islands-oil-icon').isVisible()));
  await swipe('btnIslands');await page.locator('#islandsTuningDialog').waitFor({state:'visible'});await page.locator('#islandsTuning_activity').fill('0.17');await page.locator('#islandsTuningDialog [type=submit]').click();assert.equal((await state()).activity,.17);
  const original=await state();await tap('btnIslands');assert.equal((await state()).session.mode,'oil');assert.equal((await state()).gen,original.gen);assert.deepEqual((await state()).tiles,original.tiles);assert(await page.locator('.islands-oil-icon').isVisible());assert(!(await page.locator('#iconIslands').isVisible()));
  await page.locator('#btnIslands').screenshot({path:path.join(artifacts,touch?'oil-icon-he.png':'oil-icon-en.png')});
- await swipe('btnIslands');await page.waitForTimeout(450);assert(!(await page.locator('#islandsTuningDialog').isVisible()));await page.evaluate(()=>islandOilTest.open());assert(!(await page.locator('#islandsTuningDialog').isVisible()));
+ await swipe('btnIslands');await page.locator('#oilSettingsDialog').waitFor({state:'visible'});
+ assert(!(await page.locator('#islandsTuningDialog').isVisible()));
+ assert.equal(await page.locator('#oilSettingsDialog [data-preset]').count(),5);
+ assert.equal(await page.locator('#oilSettingsDialog [data-preset=balanced]').getAttribute('aria-pressed'),'true');
+ await page.locator('#oilSettingsDialog [data-preset=pearls]').click();
+ await page.locator('#oilSettingsDialog [type=submit]').click();
+ assert.deepEqual((await state()).session.oilRules,{tension:90,drift:5,mobility:25});
  const expected=await page.evaluate(()=>islandOilTest.expected());await tap('btnStepForward');const stepped=await state();assert.deepEqual(stepped.tiles,expected);assert.equal(stepped.session.oilState.frame,1);
  await tap('btnUndo');assert.deepEqual((await state()).tiles,original.tiles);await tap('btnRedo');assert.deepEqual((await state()).session,stepped.session);
  const project=await page.evaluate(()=>islandOilTest.snapshot());for(let i=0;i<4;i++)await tap('btnStepForward');assert.equal(await page.evaluate(()=>islandOilTest.savedFrame()),project.islandsState.oilState.frame,'history checkpoint owns its nested Oil state');await page.evaluate(project=>islandOilTest.restore(project),project);assert.deepEqual((await state()).session,project.islandsState);
@@ -36,7 +43,12 @@ try{for(const touch of [false,true]){
  await page.evaluate(()=>islandOilTest.setup());await tap('btnIslands');await tap('btnIslands');await tap('btnStepForward');
  await tap('btnPlayPauseLife');await page.waitForFunction(()=>islandOilTest.state().gen>=10);const beforeSwitch=await state();
  await tap('btnIslands');assert((await state()).playing);assert.equal((await state()).session.mode,undefined);assert((await state()).gen>=beforeSwitch.gen);const classic=await state();await page.waitForTimeout(70);assert.equal((await state()).session.oilState.frame,classic.session.oilState.frame);
- await tap('btnIslands');assert((await state()).playing);assert.equal((await state()).session.mode,'oil');await page.waitForTimeout(100);
+ await tap('btnIslands');assert((await state()).playing);assert.equal((await state()).session.mode,'oil');
+ await swipe('btnIslands');await page.locator('#oilSettingsDialog').waitFor({state:'visible'});
+ await page.locator('#oilSettingsDialog [data-preset=restless]').click();
+ await page.locator('#oilSettingsDialog [type=submit]').click();
+ assert((await state()).playing);assert.equal((await state()).session.oilRules.mobility,100);
+ await page.waitForTimeout(100);
  // Native brush samples during embedded Oil must replay at the same generations.
  const r=await page.locator('#boardCanvas').boundingBox(),a={x:r.x+r.width*.3,y:r.y+r.height*.4},b={x:r.x+r.width*.65,y:r.y+r.height*.55};
  if(touch){const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[a]});for(let i=1;i<=6;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:a.x+(b.x-a.x)*i/6,y:a.y+(b.y-a.y)*i/6}]});await page.waitForTimeout(30);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}else{await page.mouse.move(a.x,a.y);await page.mouse.down();await page.mouse.move(b.x,b.y,{steps:4});await page.mouse.up();}
@@ -44,9 +56,14 @@ try{for(const touch of [false,true]){
  await tap('btnIslands');assert.equal((await state()).armed,null);await tap('btnIslands');assert.equal((await state()).session.islandsVersion,1);
  // An actual legacy proximity payload remains readable.
  await page.evaluate(()=>islandOilTest.setup());await tap('btnIslands');await page.evaluate(()=>islandOilTest.legacy());for(let i=0;i<5;i++)await tap('btnStepForward');const old=await state();assert.equal(old.session.islandsVersion,2);assert.deepEqual((await replay(old.logs.join('\n'))).tiles,old.tiles);
- // Standalone B remains opt-in and editable; its choices cannot change Islands Oil.
- await page.evaluate(()=>islandOilTest.tech());await page.locator('#oilExperimentToggle').setChecked(true);await page.locator('#btnTechnicianCloseTop').click();await tap('btnOil');await page.evaluate(()=>islandOilTest.oilOpen());await page.locator('#oil-tension').fill('10');await page.locator('#oil-drift').fill('95');await page.locator('#oil-mobility').fill('25');await page.locator('#oilSettingsDialog [type=submit]').click();const personal={tension:10,drift:95,mobility:25};assert.deepEqual((await state()).oilRules,personal);
- await tap('btnIslands');await tap('btnIslands');const isolatedExpected=await page.evaluate(()=>islandOilTest.expected());await tap('btnStepForward');assert.deepEqual((await state()).tiles,isolatedExpected);assert.deepEqual((await state()).oilRules,personal);
+ // Legacy standalone Oil projects and rule payloads keep their original engine.
+ await page.evaluate(()=>islandOilTest.setup());await page.evaluate(()=>islandOilTest.legacyOil());await tap('btnStepForward');
+ const legacyOil=await state(),legacyProject=await page.evaluate(()=>islandOilTest.snapshot());
+ assert.equal(legacyProject.oilState.state.frame,1);
+ assert.deepEqual((await replay(legacyOil.logs.join('\n'))).tiles,legacyOil.tiles);
+ await page.evaluate(project=>islandOilTest.restore(project),legacyProject);
+ assert.deepEqual((await state()).tiles,legacyOil.tiles);
+ await page.evaluate(()=>islandOilTest.setup());await tap('btnIslands');await tap('btnIslands');
  await page.evaluate(()=>islandOilTest.resize(29));await tap('btnStepForward');assert.equal((await state()).session.oilState.n,29);assert.equal((await state()).session.oilState.frame,1);const resized=await state();assert.deepEqual((await replay(resized.logs.join('\n'))).tiles,resized.tiles);
- assert.deepEqual(errors,[]);console.log('PASS Islands Oil',JSON.stringify({touch,classic:true,fixedDefaults:true,noOilControls:true,independentB:true,painting:true,history:true,project:true,replay:true,legacy:true,resize:true}));await context.close();
+ assert.deepEqual(errors,[]);console.log('PASS Islands Oil',JSON.stringify({touch,classic:true,presets:true,liveSettings:true,legacyOil:true,painting:true,history:true,project:true,replay:true,legacy:true,resize:true}));await context.close();
 }}finally{await browser.close();await new Promise(r=>server.close(r));}

@@ -2,11 +2,12 @@
 export const VORTICES_MODES = Object.freeze({
     turbine2: {engine:'gravitationalSort', label:'spiral_turbine2'},
     flow: {engine:'ink', label:'help_ink'},
+    turbine_combined: {engine:'gravitationalSort', label:'spiral_turbine_combined'},
     left: {engine:'spiral', label:'spiral_left'},
     cosmic: {engine:'cymatics', label:'cymatics_map_cosmic', map:6},
+    black_hole: {engine:'gravitationalSort', label:'spiral_black_hole'},
     circular: {engine:'cymatics', label:'cymatics_map_circular', map:3},
     a: {engine:'spiral', label:'spiral_a'},
-    black_hole: {engine:'gravitationalSort', label:'spiral_black_hole'},
     tornado: {engine:'spiral', label:'spiral_tornado'}
 });
 export const VORTICES_CYCLE = Object.freeze(['off', ...Object.keys(VORTICES_MODES)]);
@@ -17,6 +18,7 @@ export const VORTICES_SETTINGS_ENTRY_MODES = Object.freeze(
 export const RESONANCE_MAPS = Object.freeze(['interference', 'diagonal', 'grid', 'clouds']);
 
 const cycleStorageKey = 'colorGridVorticesCycleV1';
+const defaultCycleModes = Object.keys(VORTICES_MODES).filter(mode => !['turbine_combined','a','tornado'].includes(mode));
 
 export function loadVorticesCycle() {
     try {
@@ -27,7 +29,7 @@ export function loadVorticesCycle() {
     } catch {
         // Use the default cycle if browser storage is unavailable or invalid.
     }
-    return Object.keys(VORTICES_MODES);
+    return [...defaultCycleModes];
 }
 
 export function persistVorticesCycle(enabledModes) {
