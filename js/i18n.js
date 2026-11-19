@@ -53,7 +53,7 @@ export const translations = {
   cymatics_map: {"en": "Resonance map", "he": "מפת תהודה", "ru": "Карта резонанса", "nl": "Resonantiekaart"},
   cymatics_map_diagonal: {"en": "Diagonals", "he": "אלכסונים", "ru": "Диагонали", "nl": "Diagonalen"},
   cymatics_map_grid: {"en": "Crosshatch", "he": "שתי וערב", "ru": "Сетка", "nl": "Raster"},
-  cymatics_map_circular: {"en": "Circular", "he": "מעגלית", "ru": "Круговая", "nl": "Cirkelvormig"},
+  cymatics_map_circular: {"en": "Circular Empathy", "he": "אמפתיה מעגלית", "ru": "Круговая эмпатия", "nl": "Cirkelvormige empathie"},
   cymatics_frequency: {"en": "Frequency", "he": "תדר", "ru": "Частота", "nl": "Frequentie"},
   cymatics_title: {"en": "Resonance settings", "he": "הגדרות תהודה", "ru": "Настройки резонанса", "nl": "Resonantie-instellingen"},
   cymatics_strength: {"en": "Strength", "he": "עוצמה", "ru": "Интенсивность", "nl": "Sterkte"},

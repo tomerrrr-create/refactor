@@ -66,8 +66,9 @@ try {
             }
         }
         const visibleMaps=()=>menu.locator('[data-cymatics-map]:visible').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMap).sort());
-        const order=['turbine2','flow','left','cosmic','circular','a','black_hole','tornado'];
+        const order=['turbine2','flow','left','cosmic','black_hole','circular','a','tornado'];
         const defaultOrder=order.filter(mode=>mode!=='a'&&mode!=='tornado');
+        const circularName=lang==='he'?'אמפתיה מעגלית':'Circular Empathy';
         await tap(nav);
         assert(await page.locator(hub).isVisible());
         await page.evaluate(()=>circularTest.openTech());
@@ -78,7 +79,9 @@ try {
         }
         await tap(hub);assert.equal((await state()).control,null);
         await tap(hub);await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+        assert.deepEqual(await cycleMenu.locator('input').evaluateAll(nodes=>nodes.map(input=>input.value)),order);
         assert.deepEqual(await cycleMenu.locator('input:checked').evaluateAll(nodes=>nodes.map(input=>input.value)),defaultOrder);
+        assert.equal(await cycleMenu.getByRole('checkbox',{name:circularName,exact:true}).inputValue(),'circular');
         await checkbox('a').check();await checkbox('tornado').check();
         await dialogAction(cycleDialog+' [type=submit]');
         await cycleMenu.waitFor({state:'hidden'});
@@ -106,6 +109,7 @@ try {
                 await dialogAction('#inkSettingsDialog [data-cancel]');
             }
             if (mode==='cosmic'||mode==='circular') {
+                if (mode==='circular') assert.equal(await page.locator(hub).getAttribute('aria-label'),circularName);
                 assert.equal(selected.project.cymaticsState.rules.reversePaletteOrder,true);
                 await swipeUp(hub);await menu.waitFor({state:'visible'});
                 await page.waitForTimeout(350);

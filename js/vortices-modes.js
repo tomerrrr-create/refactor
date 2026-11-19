@@ -4,9 +4,9 @@ export const VORTICES_MODES = Object.freeze({
     flow: {engine:'ink', label:'help_ink'},
     left: {engine:'spiral', label:'spiral_left'},
     cosmic: {engine:'cymatics', label:'cymatics_map_cosmic', map:6},
+    black_hole: {engine:'gravitationalSort', label:'spiral_black_hole'},
     circular: {engine:'cymatics', label:'cymatics_map_circular', map:3},
     a: {engine:'spiral', label:'spiral_a'},
-    black_hole: {engine:'gravitationalSort', label:'spiral_black_hole'},
     tornado: {engine:'spiral', label:'spiral_tornado'}
 });
 export const VORTICES_CYCLE = Object.freeze(['off', ...Object.keys(VORTICES_MODES)]);
