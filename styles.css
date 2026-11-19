@@ -1929,20 +1929,18 @@ button, .ctrl {
 .sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
 .sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
 :root[data-simulation-effective-theme="dark-blue"],
-.simulation-theme-preview[data-theme="dark-blue"] { --sim-color: #5676ab; }
-:root[data-simulation-backdrop-theme="dark-blue"],
 .simulation-theme-preview[data-theme="dark-blue"] {
+  --sim-color: #5676ab;
   --theme-blue-border: #293e68;
   --theme-blue-background: linear-gradient(to bottom, #0a1732, #020611);
 }
 :root[data-simulation-effective-theme="light-blue"],
-.simulation-theme-preview[data-theme="light-blue"] { --sim-color: #8ac6f4; }
-:root[data-simulation-backdrop-theme="light-blue"],
 .simulation-theme-preview[data-theme="light-blue"] {
+  --sim-color: #8ac6f4;
   --theme-blue-border: #6aa9d5;
   --theme-blue-background: linear-gradient(155deg, #345b80, #102539);
 }
-:root:is([data-simulation-backdrop-theme="dark-blue"], [data-simulation-backdrop-theme="light-blue"]) .sim-mode-active #simModeBackground {
+:root:is([data-simulation-effective-theme="dark-blue"], [data-simulation-effective-theme="light-blue"]) .sim-mode-active #simModeBackground {
   background: var(--theme-blue-background);
   border-color: var(--theme-blue-border);
 }
@@ -1950,10 +1948,10 @@ button, .ctrl {
 :root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: #766741; }
 :root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }
-:root[data-simulation-backdrop-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
-:root[data-simulation-backdrop-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
-:root[data-simulation-backdrop-theme="gold"] #simModeBackground::before,
-:root[data-simulation-backdrop-theme="teal"] #simModeBackground::after { opacity: 1; }
+:root[data-simulation-effective-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
+:root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
+:root[data-simulation-effective-theme="gold"] #simModeBackground::before,
+:root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
 /* Fade only the decorative frame; simulation controls remain independent. */
 :root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
@@ -2594,7 +2592,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog .drawer-reserved-slot { color:#abb0ac; background:#9ca3af09; border:1px dashed #abb0ac40; cursor:default; }
 #evolutionDrawerDialog .drawer-reserved-slot svg { width:24px; height:24px; }
 
-/* Resting colors by drawer, with a shared playback color below. */
+/* Each drawer has a separate pair of appearance choices. */
 #evolutionDrawerDialog .drawer-appearance {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
   margin-top: 12px;
@@ -2603,7 +2601,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   min-width: 0; margin: 0; padding: 4px 8px;
   border: 1px solid #b28b3630; border-radius: 8px;
 }
-#evolutionDrawerDialog #simulationPlaybackThemeSettings { grid-column: 1 / -1; }
 #evolutionDrawerDialog .drawer-theme-colors legend { padding-inline: 6px; color: #e3c677; font-size: 12px; }
 #evolutionDrawerDialog .simulation-theme-option { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 #evolutionDrawerDialog .simulation-theme-previews { margin-inline-start: 0; }

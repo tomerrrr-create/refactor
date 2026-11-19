@@ -16,7 +16,7 @@ import { DEFAULT_SORT_CYCLE, normalizeSortCycle } from './sort-cycle-settings.js
 import { CHI_REACH_PERCENTAGES } from './chi-reach.js';
 
 export const SIMULATION_THEME_COLORS = ['dark-blue', 'blue', 'light-blue', 'gold', 'teal'];
-const SIMULATION_THEME_FIELDS = ['simulationTheme', 'simulationPlaybackTheme', 'simulationThemeSecond'];
+const SIMULATION_THEME_FIELDS = ['simulationTheme', 'simulationPlaybackTheme', 'simulationThemeSecond', 'simulationPlaybackThemeSecond'];
 
 export const SETTINGS_HEADER = 'FYI_SETTINGS_V1';
 export const WORKSPACE_STORAGE_KEY = 'colorGridWorkspaceSettings';
@@ -51,8 +51,6 @@ function mergeKnown(defaults, overrides, path = '') {
         if (path === 'rules' && key === 'cymatics') { result[key] = migrateCymaticsPreferences(value); continue; }
         if (path === 'brush' && key === 'shape') { result[key] = clone(value); continue; }
         // Optional extension; V1’s original baseline stays unchanged.
-        // The short-lived per-drawer playback setting is retired; keep the shared choice.
-        if (path === '' && key === 'simulationPlaybackThemeSecond') continue;
         if (path === '' && SIMULATION_THEME_FIELDS.includes(key)) {
             // Retired appearance IDs remain readable in older profiles/settings.
             result[key] = ['silver', 'ice', 'pink'].includes(value)

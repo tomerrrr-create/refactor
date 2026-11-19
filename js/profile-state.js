@@ -29,6 +29,7 @@ export function validateProfileSnapshot(value) {
     settings.simulationTheme ??= 'blue';
     settings.simulationPlaybackTheme ??= 'gold';
     settings.simulationThemeSecond ??= settings.simulationTheme;
+    settings.simulationPlaybackThemeSecond ??= settings.simulationPlaybackTheme;
     const snapshot = { settings };
     if (value.identity || selections) {
         snapshot.identity = {};
