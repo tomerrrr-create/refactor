@@ -130,7 +130,6 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     expected.simulationTheme = 'gold';
     expected.simulationPlaybackTheme = 'gold';
     expected.simulationThemeSecond = 'gold';
-    expected.simulationPlaybackThemeSecond = 'gold';
     expected.rules.erosion.erosionStages.channels = 4;
     Object.assign(expected.startup, { paletteName: '@random', fill: 'random', brushColor: 'none', separatorPx: 2, boardSize: 21, symmetry: 'off' });
     expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));

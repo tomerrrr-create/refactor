@@ -9,25 +9,25 @@ const LABELS = {
 };
 
 let visibleDrawer = 0;
-const themeField = (drawer, running) => {
-  const base = running ? 'simulationPlaybackTheme' : 'simulationTheme';
-  return drawer === 1 ? base + 'Second' : base;
-};
+const restField = drawer => drawer === 1 ? 'simulationThemeSecond' : 'simulationTheme';
+const playbackField = 'simulationPlaybackTheme';
 const storageKey = field => 'colorGrid' + field[0].toUpperCase() + field.slice(1);
 const buttons = field => document.querySelectorAll('#' + field + 'Settings [data-theme]');
 
 export function getSimulationTheme(drawer = 0) {
-  return document.documentElement.dataset[themeField(drawer, false)] || 'gold';
+  return document.documentElement.dataset[restField(drawer)] || 'gold';
 }
 
-export function getSimulationPlaybackTheme(drawer = 0) {
-  return document.documentElement.dataset[themeField(drawer, true)] || 'gold';
+export function getSimulationPlaybackTheme() {
+  return document.documentElement.dataset[playbackField] || 'gold';
 }
 
 function updateEffectiveTheme() {
   const root = document.documentElement;
+  const restingTheme = getSimulationTheme(visibleDrawer);
+  root.dataset.simulationBackdropTheme = restingTheme;
   root.dataset.simulationEffectiveTheme = root.hasAttribute('data-simulation-running')
-    ? getSimulationPlaybackTheme(visibleDrawer) : getSimulationTheme(visibleDrawer);
+    ? getSimulationPlaybackTheme() : restingTheme;
 }
 
 export function setSimulationThemePage(drawer) {
@@ -52,26 +52,23 @@ function applyTheme(value, field) {
 }
 
 export function applySimulationTheme(value, drawer = 0) {
-  return applyTheme(value, themeField(drawer, false));
+  return applyTheme(value, restField(drawer));
 }
 
-export function applySimulationPlaybackTheme(value, drawer = 0) {
-  return applyTheme(value, themeField(drawer, true));
+export function applySimulationPlaybackTheme(value) {
+  return applyTheme(value, playbackField);
 }
 
 export function initializeSimulationTheme() {
   const previews = [];
-  for (const drawer of [0, 1]) {
-    for (const running of [false, true]) {
-      const field = themeField(drawer, running);
-      let saved;
-      try { saved = localStorage.getItem(storageKey(field)); } catch { /* Use the session default. */ }
-      // Older installations had one shared choice per playback state.
-      applyTheme(saved ?? document.documentElement.dataset[themeField(0, running)], field);
-      for (const preview of buttons(field)) {
-        preview.addEventListener('click', () => applyTheme(preview.dataset.theme, field));
-        previews.push(preview);
-      }
+  for (const field of [restField(0), restField(1), playbackField]) {
+    let saved;
+    try { saved = localStorage.getItem(storageKey(field)); } catch { /* Use the session default. */ }
+    // The second drawer inherits the old shared resting choice on first use.
+    applyTheme(saved ?? (field === restField(1) ? getSimulationTheme() : undefined), field);
+    for (const preview of buttons(field)) {
+      preview.addEventListener('click', () => applyTheme(preview.dataset.theme, field));
+      previews.push(preview);
     }
   }
   function translate() {

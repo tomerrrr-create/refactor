@@ -51,29 +51,38 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await tap('#btnPlayPauseLife');assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);await page.waitForTimeout(450);
   assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(165, 139, 84)',teal:'rgb(104, 189, 181)'})[rest]);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);await map();
  }
- // Drawer navigation applies the chosen colors in both playback states.
- await tap('#simulationThemeSecondSettings [data-theme=dark-blue]');
- await tap('#simulationPlaybackThemeSecondSettings [data-theme=light-blue]');
- await tap('#evolutionDrawerDialog [data-close]');
- const effective=()=>page.locator('html').getAttribute('data-simulation-effective-theme');
- const nav='#btnEvolutionDrawerInternal';
- assert.equal(await effective(),'teal');
- await tap(nav);assert.equal(await effective(),'dark-blue');
- const darkBackground=await backdrop.evaluate(e=>getComputedStyle(e).backgroundImage);
- assert(darkBackground.includes('rgb(10, 23, 50)'));
- await tap('#btnPlayPauseLife');assert.equal(await effective(),'light-blue');
- await tap(nav);assert.equal(await effective(),'blue');
- await tap('#btnPlayPauseLife');assert.equal(await effective(),'teal');
- await map();
+ // Keep the paused backdrop through the fade and use one playback color on both drawers.
+ assert.equal(await page.locator('#simulationPlaybackThemeSecondSettings').count(),0);
+ for (const [rest, rgb] of [['dark-blue','rgb(10, 23, 50)'],['light-blue','rgb(52, 91, 128)']]) {
+  await tap('#simulationThemeSecondSettings [data-theme='+rest+']');
+  await tap('#evolutionDrawerDialog [data-close]');
+  const effective=()=>page.locator('html').getAttribute('data-simulation-effective-theme');
+  const nav='#btnEvolutionDrawerInternal';
+  assert.equal(await effective(),'teal');
+  await tap(nav);assert.equal(await effective(),rest);
+  const backdropSample=await backdrop.evaluate(e=>{
+   const read=()=>({background:getComputedStyle(e).backgroundImage,opacity:Number(getComputedStyle(e).opacity)});
+   const before=read();
+   document.getElementById('btnPlayPauseLife').click();
+   return {before,playing:read()};
+  });
+  assert(backdropSample.before.background.includes(rgb));
+  assert.equal(backdropSample.playing.background,backdropSample.before.background);
+  assert(backdropSample.playing.opacity>0,'sample taken before the fade completes');
+  assert((await state()).playing);assert.equal(await effective(),'blue');
+  await tap(nav);assert.equal(await effective(),'blue');
+  await tap('#btnPlayPauseLife');assert.equal(await effective(),'teal');
+  await map();
+ }
  // Reduced motion retains the same visibility states without transitions.
  await tap('#evolutionDrawerDialog [data-close]');await page.emulateMedia({reducedMotion:'reduce'});
  assert.equal(await opacity(),'1');assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
  await tap('#btnPlayPauseLife');assert.equal(await opacity(),'0');await tap('#btnPlayPauseLife');assert.equal(await opacity(),'1');
  await page.emulateMedia({reducedMotion:'no-preference'});
- await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,'teal');assert.equal(current.settings.simulationPlaybackTheme,'blue');assert.equal(current.settings.simulationThemeSecond,'dark-blue');assert.equal(current.settings.simulationPlaybackThemeSecond,'light-blue');
+ await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,'teal');assert.equal(current.settings.simulationPlaybackTheme,'blue');assert.equal(current.settings.simulationThemeSecond,'light-blue');assert.equal(current.settings.simulationPlaybackThemeSecond,undefined);
  // Saved legacy profiles normalize only the retired appearance fields.
- await page.evaluate(()=>{const key='colorGridProfileDraftsV1',saved=JSON.parse(localStorage.getItem(key));for(const p of saved.profiles)for(const kind of ['saved','draft']){delete p[kind].settings.simulationThemeSecond;delete p[kind].settings.simulationPlaybackThemeSecond;p[kind].settings.simulationTheme='silver';p[kind].settings.simulationPlaybackTheme='pink';p[kind].settings.brush.size=7;p[kind].settings.startup.boardSize=27;p[kind].settings.startup.brushSize=7;}localStorage.setItem(key,JSON.stringify(saved));localStorage.setItem('colorGridSimulationTheme','ice');localStorage.setItem('colorGridSimulationPlaybackTheme','silver');});
- await boot(true);current=await state();assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');assert.equal(current.settings.brush.size,7);assert.equal(current.settings.startup.boardSize,27);assert.equal(current.settings.simulationThemeSecond,'blue');assert.equal(current.settings.simulationPlaybackThemeSecond,'gold');
+ await page.evaluate(()=>{const key='colorGridProfileDraftsV1',saved=JSON.parse(localStorage.getItem(key));for(const p of saved.profiles)for(const kind of ['saved','draft']){delete p[kind].settings.simulationThemeSecond;p[kind].settings.simulationPlaybackThemeSecond='light-blue';p[kind].settings.simulationTheme='silver';p[kind].settings.simulationPlaybackTheme='pink';p[kind].settings.brush.size=7;p[kind].settings.startup.boardSize=27;p[kind].settings.startup.brushSize=7;}localStorage.setItem(key,JSON.stringify(saved));localStorage.setItem('colorGridSimulationTheme','ice');localStorage.setItem('colorGridSimulationPlaybackTheme','silver');});
+ await boot(true);current=await state();assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');assert.equal(current.settings.brush.size,7);assert.equal(current.settings.startup.boardSize,27);assert.equal(current.settings.simulationThemeSecond,'blue');assert.equal(current.settings.simulationPlaybackThemeSecond,undefined);
  // Import an actual old settings TXT without losing unrelated settings.
  await page.locator('#projectFileInput').setInputFiles({name:'old-appearance-settings.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{simulationTheme:'pink',simulationPlaybackTheme:'ice',brush:{size:5},startup:{boardSize:35}}}))});
  await page.waitForFunction(()=>themeTest.state().settings.brush.size===5);current=await state();assert.equal(current.settings.startup.boardSize,35);assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');

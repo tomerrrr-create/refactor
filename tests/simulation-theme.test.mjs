@@ -11,11 +11,11 @@ function harness(saved = {}, blocked = false) {
     const buttons = () => ['blue', 'gold', 'teal'].map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
         setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(k, fn) { this.handlers[k] = fn; } }));
     const rest = buttons(), playback = buttons();
-    const restSecond = buttons(), playbackSecond = buttons();
+    const restSecond = buttons();
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
         toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); } };
     const select = selector => selector.includes('Second')
-        ? (selector.includes('Playback') ? playbackSecond : restSecond)
+        ? restSecond
         : (selector.includes('Playback') ? playback : rest);
     const context = vm.createContext({ document: { documentElement: root,
         querySelectorAll: selector => selector.startsWith('#') ? select(selector) : [] },
@@ -100,18 +100,19 @@ test('drawer two inherits shared choices once, then persists and applies its own
     const h = harness({ colorGridSimulationTheme: 'teal', colorGridSimulationPlaybackTheme: 'blue' });
     h.run('initializeSimulationTheme(); setSimulationThemePage(1)');
     assert.equal(h.root.dataset.simulationEffectiveTheme, 'teal');
-    h.run("applySimulationTheme('dark-blue', 1); applySimulationPlaybackTheme('light-blue', 1); setSimulationRunning(true)");
+    h.run("applySimulationTheme('dark-blue', 1); applySimulationPlaybackTheme('light-blue'); setSimulationRunning(true)");
     assert.equal(h.root.dataset.simulationEffectiveTheme, 'light-blue');
+    assert.equal(h.root.dataset.simulationBackdropTheme, 'dark-blue');
     h.run('setSimulationThemePage(0)');
-    assert.equal(h.root.dataset.simulationEffectiveTheme, 'blue');
+    assert.equal(h.root.dataset.simulationEffectiveTheme, 'light-blue');
+    assert.equal(h.root.dataset.simulationBackdropTheme, 'teal');
     const reload = harness(Object.fromEntries(h.storage));
     reload.run('initializeSimulationTheme(); setSimulationThemePage(1)');
     assert.equal(reload.root.dataset.simulationEffectiveTheme, 'dark-blue');
     reload.run('setSimulationRunning(true)');
     assert.equal(reload.root.dataset.simulationEffectiveTheme, 'light-blue');
     const settings = { ...defaultWorkspaceSettings(), simulationTheme: 'teal',
-        simulationPlaybackTheme: 'blue', simulationThemeSecond: 'dark-blue',
-        simulationPlaybackThemeSecond: 'light-blue' };
+        simulationPlaybackTheme: 'blue', simulationThemeSecond: 'dark-blue' };
     assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
-    assert.deepEqual(validateProfileSnapshot({ settings }).settings, settings);
+    assert.deepEqual(validateProfileSnapshot({ settings: { ...settings, simulationPlaybackThemeSecond: 'light-blue' } }).settings, settings);
 });
