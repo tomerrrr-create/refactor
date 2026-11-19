@@ -30,17 +30,23 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const trigger=page.locator('#btnEvolutionDrawerInternal'),dialog=page.locator('#evolutionDrawerDialog'),container=page.locator('#controlsContainer');
  const visible=()=>page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>+a.dataset.evolutionSlot-+b.dataset.evolutionSlot).map(e=>e.dataset.evolutionId));
  const unchanged=(a,b)=>{assert.deepEqual(a.board,b.board);assert.deepEqual(a.logs,b.logs);assert.equal(a.history,b.history);assert.equal(a.armed,b.armed);};
+ async function drag(x,y,dx,dy){
+  if(config.width<600){const input=await context.newCDPSession(page);await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx*i/5,y:y+dy*i/5}]});await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await input.detach();}
+  else {await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+dx,y+dy,{steps:5});await page.mouse.up();}
+ }
+ async function swipe(target,dx,dy){
+  const r=await target.boundingBox();
+  await drag(r.x+r.width/2,r.y+r.height/2,dx,dy);
+ }
  async function open(){
-  const r=await trigger.boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
-  if(config.width<600){const input=await context.newCDPSession(page);await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-i*7}]});await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await input.detach();}
-  else {await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y-35,{steps:5});await page.mouse.up();}
+  await swipe(trigger,0,-35);
   await dialog.waitFor({state:'visible'});await page.waitForTimeout(300);
  }
  const slot=i=>dialog.locator(`[data-drawer-slot="${i}"]`);
  async function move(from,to){await tap(slot(from));await tap(slot(to));}
  async function save(){await tap(dialog.locator('[type=submit]'));}
  async function reload(){await page.waitForTimeout(300);await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});}
- const initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
+ let initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
  const physicalRows=()=>page.locator('#controlsContainer [data-evolution-slot],#btnEvolutionDrawerInternal').evaluateAll(es=>[2,3].map(row=>es.filter(e=>e.getBoundingClientRect().width&&getComputedStyle(e).gridRowStart===String(row)).sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId||'navigation')));
  assert.deepEqual(await physicalRows(),[['cymatics','sandpile','gameOfLife','brightnessEvo','islands'],['nudgeBrighter','magnet','navigation','gravitationalSort','erosion']],'physical left-to-right order on the first drawer');
  assert.equal(await page.locator('.drawer-view-option,[data-drawer-view],.evolution-drawer-trigger,#btnEvolutionDrawerRight,.drawer-recess').count(),0,'removed presentations leave no controls or technician choice');
@@ -64,13 +70,28 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const position=await trigger.boundingBox(),frame=await page.locator('#simModeBackground').boundingBox();
  await tap(trigger);await page.waitForTimeout(300);assert.deepEqual(await yinColors(),['rgb(8, 10, 9)','rgb(255, 215, 0)']);
  assert.deepEqual(await trigger.locator('[data-yin-dot]').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill)),['rgb(255, 215, 0)','rgb(8, 10, 9)']);
- assert.deepEqual(await physicalRows(),[['spiral','breathe','dla'],['turing','navigation','contour']],'second drawer centers three controls in each row, with empty outer columns');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(Boolean));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['spiral','breathe','dla'],['turing','navigation','contour']],'second drawer centers three controls in each row, with empty outer columns');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&!['ink','oil','network'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
+ const pageIndex=()=>container.getAttribute('data-evolution-page');
+ await swipe(page.locator('#btnMagnetModes'),0,36);assert.equal(await pageIndex(),'0','downward swipe stays put');
+ await swipe(page.locator('#btnMagnetModes'),36,0);assert.equal(await pageIndex(),'1','horizontal drag from an inactive simulation');
+ await drag(frame.x+10,frame.y+10,0,-36);assert.equal(await pageIndex(),'0','upward drag from an empty slot');
+ await swipe(page.locator('#btnMagnetModes'),0,-36);assert.equal(await pageIndex(),'1','upward drag without available settings');
+ await swipe(trigger,-36,0);assert.equal(await pageIndex(),'0');
+ unchanged(initial,await state());
+ const life=page.locator('#btnGameOfLife'),lifeSettings=page.locator('#gameOfLifeSettingsModal');
+ await tap(life);const presetBefore=(await state()).logs;
+ await swipe(life,36,0);assert.equal(await pageIndex(),'0','active preset swipe has priority');
+ assert((await state()).logs.length>presetBefore.length);
+ await swipe(life,0,-36);await lifeSettings.waitFor({state:'visible'});
+ assert.equal(await pageIndex(),'0','active settings swipe has priority');
+ await drag(frame.x+10,frame.y+10,36,0);assert.equal(await pageIndex(),'0','open settings block navigation');
+ await tap(page.locator('#btnGolSettingsCancel'));await lifeSettings.waitFor({state:'hidden'});await page.evaluate(()=>drawerTest.setup());initial=await state();
  await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled').count(),2);
  assert.equal(await dialog.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
  await move(0,13);await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,initial.slots);assert(await trigger.evaluate(e=>document.activeElement===e));
- await open();await move(0,13);await move(2,19);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-editor.png'),animations:'disabled'});await save();
- let custom=moveEvolutionSlot(moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,0,13),2,19);
+ await open();await move(0,13);await move(2,14);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-editor.png'),animations:'disabled'});await save();
+ let custom=moveEvolutionSlot(moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,0,13),2,14);
  assert.deepEqual((await state()).slots,custom);unchanged(initial,await state());
  await reload();assert.deepEqual((await state()).slots,custom,'arrangement survives reopening');assert.equal(await container.getAttribute('data-evolution-page'),'0');
  await page.evaluate(()=>drawerTest.tech());assert.equal(await page.locator('[data-drawer-view]').count(),0);
@@ -91,12 +112,12 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await page.waitForFunction(slots=>JSON.stringify(drawerTest.state().slots)===JSON.stringify(slots),expected);
   await reload();assert.deepEqual((await state()).slots,expected);await reload();assert.deepEqual((await state()).slots,expected,'migration does not repeat');
  }
- await open();await tap(dialog.locator('[data-reset]'));await save();await open();await move(2,19);await save();custom=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,2,19);
+ await open();await tap(dialog.locator('[data-reset]'));await save();await open();await move(2,14);await save();custom=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,2,14);
  await tap(trigger);await tap(page.locator('#btnGameOfLife'));await tap(page.locator('#btnGameOfLife'));
  const selected=await state();assert.equal(selected.armed,'gameOfLife');const lifeClass=await page.locator('#btnGameOfLife').getAttribute('class');
  await tap(trigger);assert.equal(await trigger.getAttribute('data-parked-active'),'true');unchanged(selected,await state());
  await tap(page.locator('#btnStepForward'));const beforePlay=await state();await tap(page.locator('#btnPlayPauseLife'));await page.waitForFunction(g=>drawerTest.state().gen>=g+3,beforePlay.gen);
- await tap(trigger);const playing=await state();assert(playing.playing);assert.equal(playing.armed,'gameOfLife');assert.equal(await page.locator('#btnGameOfLife').getAttribute('class'),lifeClass);
+ await swipe(trigger,36,0);assert.equal(await pageIndex(),'1');const playing=await state();assert(playing.playing);assert.equal(playing.armed,'gameOfLife');assert.equal(await page.locator('#btnGameOfLife').getAttribute('class'),lifeClass);
  await page.evaluate(()=>drawerTest.open());assert.equal(await dialog.isVisible(),false,'editor remains unavailable during playback');
  await tap(trigger);await page.waitForFunction(g=>drawerTest.state().gen>g,playing.gen);await tap(page.locator('#btnPlayPauseLife'));const result=await state();
  await open();await move(0,13);await save();custom=moveEvolutionSlot(custom,0,13);unchanged(result,await state());assert.equal((await state()).gen,result.gen);
@@ -107,7 +128,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual((await state()).board,result.board,'macro uses engine rules, independent of layout');assert.deepEqual((await state()).slots,custom);
  await page.evaluate(()=>drawerTest.arm('nudgeDarker'));if(await container.getAttribute('data-evolution-page')!==String(Math.floor(custom.indexOf('nudgeBrighter')/10)))await tap(trigger);
  const nudge=page.locator('#btnNudgeBrighter');assert(await nudge.isVisible());assert.equal(await nudge.getAttribute('data-evolution-slot'),String(custom.indexOf('nudgeBrighter')));assert.equal(await nudge.getAttribute('data-nudge-mode'),'darker');
- const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter');await open();await move(nudgeFrom,15);await save();custom=moveEvolutionSlot(custom,nudgeFrom,15);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
+ const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter');await open();await move(nudgeFrom,16);await save();custom=moveEvolutionSlot(custom,nudgeFrom,16);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
  await reload();assert.deepEqual((await state()).slots,custom,'moving Nudge persists alongside all other controls');
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());await tap(trigger);assert((await state()).playing);await page.evaluate(()=>drawerTest.pause());
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();

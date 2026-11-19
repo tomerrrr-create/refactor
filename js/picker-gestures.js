@@ -2,6 +2,7 @@
 // swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
     onTap, onOpen, onSwipeDown, onSwipeSide, onHold, onExtendedHold, canInteract, canOpen = () => true, canSwipeSide = () => true, canSwipeDown = () => true,
+    onSwipeFallback, canStart = () => true,
     beforeStart = () => {}, onEnd = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
 }) {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
@@ -39,11 +40,11 @@ export function bindPickerGestures(button, {
             state.moved = true; clearHoldTimers();
         }
         button.classList.toggle('picker-swipe-glow', !button.disabled && canInteract() &&
-            ((swipeReady(state) && canOpen()) || (onSwipeDown && canSwipeDown() && swipeReady(state, 1)) ||
+            ((onOpen && swipeReady(state) && canOpen()) || (onSwipeDown && canSwipeDown() && swipeReady(state, 1)) ||
                 (onSwipeSide && canSwipeSide() && sidewaysReady(state))));
     }
     button.addEventListener('pointerdown', event => {
-        if (event.isPrimary === false || event.button !== 0 || active) return;
+        if (event.isPrimary === false || event.button !== 0 || active || !canStart(event)) return;
         suppressClick = false;
         if (button.disabled || !canInteract()) { suppressClick = true; return; }
         beforeStart();
@@ -75,9 +76,10 @@ export function bindPickerGestures(button, {
     button.addEventListener('pointerup', event => {
         if (!active || active.id !== event.pointerId) return;
         updatePosition(event);
-        const state = active, open = swipeReady(state) && canOpen();
+        const state = active, up = swipeReady(state), horizontal = sidewaysReady(state);
+        const open = onOpen && up && canOpen();
         const down = onSwipeDown && canSwipeDown() && swipeReady(state, 1);
-        const side = onSwipeSide && canSwipeSide() && sidewaysReady(state);
+        const side = onSwipeSide && horizontal && canSwipeSide();
         // CSS zoom geometry differs in older desktop browsers. Ask the browser's
         // hit tester, using the same viewport coordinates as pointer events.
         // Pointer capture alone cannot tell whether release was over the button.
@@ -91,7 +93,8 @@ export function bindPickerGestures(button, {
         if (open) onOpen();
         else if (down) onSwipeDown();
         else if (side) onSwipeSide(state.currentX > state.x ? 1 : -1);
-        else if (state.touch && tap) onTap();
+        else if (onSwipeFallback && (up || horizontal)) onSwipeFallback();
+        else if (state.touch && tap) onTap?.();
     });
     button.addEventListener('click', event => {
         // Ignore the compatibility click following a handled pointer gesture.
@@ -99,7 +102,7 @@ export function bindPickerGestures(button, {
         if (suppressClick && (event.detail !== 0 || event.pointerType === 'touch' || event.pointerType === 'pen')) {
             suppressClick = false; return;
         }
-        if (!button.disabled && canInteract()) onTap();
+        if (!button.disabled && canInteract()) onTap?.();
     });
     button.addEventListener('pointercancel', event => { if (active?.id === event.pointerId) cancel(); });
     button.addEventListener('lostpointercapture', event => { if (active?.id === event.pointerId) cancel(); });
