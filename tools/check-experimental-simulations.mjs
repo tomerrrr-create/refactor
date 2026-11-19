@@ -30,7 +30,12 @@ try{for(const touch of [false,true]){
  const boot=async reload=>{await(reload?page.reload():page.goto(base));await page.waitForFunction(()=>window.flagsTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());flagsTest.panel();});};
  const state=()=>page.evaluate(()=>flagsTest.state());
  const close=()=>page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
- const tech=async()=>{await page.evaluate(()=>flagsTest.tech());await page.waitForTimeout(100);};
+ const tech=async()=>{
+  await page.evaluate(()=>flagsTest.tech());
+  const features=page.locator('#btnConfigureFeatures');
+  assert.equal(await features.getAttribute('aria-expanded'),'false');
+  await features.click();
+ };
  const toggle=async(id,value)=>{await page.locator('#'+id+'ExperimentToggle').setChecked(value);};
  const geometric=page.locator('#btnSpiral'),network=page.locator('#btnNetwork');
  await boot(false);
@@ -45,6 +50,15 @@ try{for(const touch of [false,true]){
  assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
  assert.equal(await page.locator('#btnInk').getAttribute('data-evolution-feature-hidden'),null);
  await tech();assert.equal(await page.locator('#inkExperimentToggle, #oilExperimentToggle, #networkExperimentToggle, #btnOil').count(),0);
+ assert(await page.locator('#featureSettings #brushMotionRecordingNote').isVisible());
+ assert(await page.locator('#featureSettings #spiralExperimentToggle').isVisible());
+ await page.locator('#btnConfigureMacro').click();
+ assert(!(await page.locator('#featureSettings').isVisible()));
+ assert(await page.locator('#macroSettings #macroActivityToggle').isVisible());
+ await page.locator('#btnConfigureDisplay').click();
+ assert(!(await page.locator('#macroSettings').isVisible()));
+ assert(await page.locator('#displaySettings #interfaceZoom').isVisible());
+ await page.locator('#btnConfigureFeatures').click();
  assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
  // A different profile must not change device opt-ins.
  await toggle('spiral',true);

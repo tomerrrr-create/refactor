@@ -9,16 +9,18 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  luminance_anchor:{en:'Luminance Anchor',he:'עוגן לפי Luminance',ru:'Якорь по яркости',nl:'Luminantie-anker'},
+  luminance_anchor:{en:'Luminance Anchor (Magnet, GOL)',he:'עוגן לפי בהירות (מגנט, GOL)',ru:'Якорь по яркости (Магнит, GOL)',nl:'Luminantie-anker (Magneet, GOL)'},
   luminance_anchor_note:{en:'Use the first Luminance color for Magnet and Game of Life. Individual settings remain editable.',he:'צבע העוגן במגנט ובמשחק החיים לפי Luminance. אפשר לשנות כל הגדרה בנפרד.',ru:'Первый цвет по яркости для магнита и игры «Жизнь». Настройки можно менять отдельно.',nl:'Gebruik de eerste luminantiekleur voor Magneet en Game of Life. Elke instelling blijft aanpasbaar.'},
   magnet_method_field_magnet:{en:'Magnet · combined field',he:'מגנט · שדה משולב',ru:'Магнит · общее поле',nl:'Magneet · gecombineerd veld'},
   magnet_method_field_cosmic_magnet:{en:'Cosmic magnet · combined field',he:'מגנט זוויתי · שדה משולב',ru:'Космический магнит · общее поле',nl:'Kosmische magneet · gecombineerd veld'},
   technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},
+  technician_group_macro: {en:"Macro",he:"מאקרו",ru:"Макрос",nl:"Macro"},
   technician_group_features: {en:"Features",he:"אפשרויות הפעלה",ru:"Возможности",nl:"Functies"},
   technician_group_startup: {en:"Initialization & startup",he:"אתחול ופתיחה",ru:"Инициализация и запуск",nl:"Initialisatie en opstarten"},
-  macro_control_dimming: {en:"Macro Dimming",he:"הכהיית מאקרו",ru:"Затемнение макроса",nl:"Macro dimmen"},
-  compact_colors_experiment: {en:"All palette colors · experiment",he:"כל צבעי הפלטה · ניסוי",ru:"Все цвета палитры · эксперимент",nl:"Alle paletkleuren · experiment"},
-  remember_evolution_modes: {en:"Remember simulation modes",he:"זכור מצב סימולציה אחרון",ru:"Запоминать режимы симуляций",nl:"Simulatiemodi onthouden"},
+  macro_control_dimming: {en:"Dimming",he:"הכהיה",ru:"Затемнение",nl:"Dimmen"},
+  compact_colors_experiment: {en:"Brush Modal: One Page Colors",he:"חלון המברשת: צבעים בעמוד אחד",ru:"Окно кисти: цвета на одной странице",nl:"Penseelvenster: kleuren op één pagina"},
+  remember_evolution_modes: {en:"Remember Simulation Modes",he:"זכור מצב סימולציה אחרון",ru:"Запоминать режимы симуляций",nl:"Simulatiemodi onthouden"},
+  macro_activity_icon_setting: {en:"Display Icon During Macro",he:"הצגת אייקון בזמן מאקרו",ru:"Показывать значок при макросе",nl:"Pictogram tonen tijdens macro"},
   macro_activity_setting: {"en": "Macro activity", "he": "פעולות מקרו", "ru": "Действия макроса", "nl": "Macroactiviteit"},
   macro_activity_title: {"en": "MACRO · NOW", "he": "מקרו · עכשיו", "ru": "МАКРОС · СЕЙЧАС", "nl": "MACRO · NU"},
   macro_activity_generation: {"en": "Generation {n}", "he": "דור {n}", "ru": "Поколение {n}", "nl": "Generatie {n}"},
@@ -213,8 +215,8 @@ export const translations = {
   separator_cycle_note: { en: "Choose widths in pixels. 0 removes separators.", he: "בחרו עוביים בפיקסלים. 0 מבטל את המפרידים.", ru: "Выберите толщину в пикселях. 0 убирает разделители.", nl: "Kies breedtes in pixels. 0 verwijdert de tussenruimtes." },
   separator_cycle_required: { en: "Choose at least one width.", he: "בחרו לפחות עובי אחד.", ru: "Выберите хотя бы одну толщину.", nl: "Kies minstens één breedte." },
 
-  brush_motion_recording: {"en": "Brush stroke playback", "he": "ניגון משיכות ציור", "ru": "Воспроизведение мазков", "nl": "Penseelstreken afspelen"},
-  brush_motion_recording_note: {"en": "On by default · Includes paused strokes.", "he": "פעיל כברירת מחדל · גם כשהסימולציה עצורה.", "ru": "Включено по умолчанию · Запись и на паузе.", "nl": "Standaard aan · Ook tijdens pauze."},
+  brush_motion_recording: {"en": "Draw", "he": "ציור", "ru": "Рисование", "nl": "Tekenen"},
+  brush_motion_recording_note: {"en": "Record brush movement while paused so it can be replayed in a macro.", "he": "מקליט תנועות מברשת בזמן השהיה כדי לנגן אותן שוב במאקרו.", "ru": "Записывает движение кисти на паузе для воспроизведения в макросе.", "nl": "Neemt penseelbewegingen tijdens een pauze op om ze in een macro af te spelen."},
   soft_bloom_intensity: {"en": "Glow intensity", "he": "עוצמת ההילה", "ru": "Интенсивность свечения", "nl": "Sterkte van de gloed"},
   display_settings_title: {"en": "Display & effects", "he": "תצוגה ואפקטים", "ru": "Отображение и эффекты", "nl": "Weergave en effecten"},
   soft_bloom_title: {"en": "Soft Bloom", "he": "הילה רכה", "ru": "Мягкое свечение", "nl": "Zachte gloed"},

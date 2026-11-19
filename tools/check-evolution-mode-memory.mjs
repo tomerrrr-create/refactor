@@ -41,7 +41,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   erosion:[...e.querySelectorAll('svg[id^="iconErosion"]')].map(el=>[el.id,getComputedStyle(el).display]),
   wind:e.querySelector('[data-wind-mode]')?.getAttribute('data-wind-mode')??null
  }));
- async function toggle(enabled){await page.evaluate(()=>memoryTest.tech());await page.locator('#rememberEvolutionModesToggle').setChecked(enabled);await page.locator('#btnTechnicianCloseTop').click();}
+ async function toggle(enabled){await page.evaluate(()=>memoryTest.tech());await page.locator('#btnConfigureFeatures').click();await page.locator('#rememberEvolutionModesToggle').setChecked(enabled);await page.locator('#btnTechnicianCloseTop').click();}
  assert.equal(await page.locator('#rememberEvolutionModesToggle').isChecked(),false);
  for(const [sim,id,first] of cases){await setup();await tap(id);await tap(id);await tap('btnTuring');await tap(id);const result=await state();assert.equal(result.mode??(sim==='contour'?'all':sim==='islands'?'classic':undefined),first,'off retains default for '+sim);}
  await toggle(true);

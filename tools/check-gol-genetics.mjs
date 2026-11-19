@@ -93,7 +93,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await open();await dead.click();await save();assert.equal(await deadMode(),'current');assert.equal(await mode(),'palette-order');
  await open();await dead.click();await save();assert.equal(await deadMode(),'luminance');
  await boot(true);assert.equal(await deadMode(),'current','dialog Save remains session-only');
- await page.evaluate(()=>geneticsTest.setup());await open();await dead.click();await save();await page.evaluate(()=>geneticsTest.tech());await page.locator('#luminanceAnchorToggle').check();
+ await page.evaluate(()=>geneticsTest.setup());await open();await dead.click();await save();await page.evaluate(()=>geneticsTest.tech());await page.locator('#btnConfigureFeatures').click();await page.locator('#luminanceAnchorToggle').check();
  if(!(await page.locator('#profileActions').isVisible()))await page.locator('[data-profile-dot="0"]').click();await page.locator('#btnProfileSave').click();await boot(true);assert.equal(await deadMode(),'luminance','Save to profile retains dead anchor');
  await open();await page.locator('#btnGolSettingsReset').click();assert.equal(await dead.getAttribute('aria-checked'),'false');assert.equal(await deadMode(),'luminance');await close();
  await open();assert.equal(await dead.getAttribute('aria-checked'),'true');await page.locator('#btnGolSettingsReset').click();await save();assert.equal(await deadMode(),'current');

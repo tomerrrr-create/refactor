@@ -24,7 +24,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.holdTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const state=()=>page.evaluate(()=>holdTest.state()),params=()=>page.evaluate(()=>holdTest.params()),setup=()=>page.evaluate(()=>holdTest.setup()),tap=id=>page.locator('#'+id).evaluate(e=>e.click()),reset=sim=>page.evaluate(sim=>holdTest.resetMode(sim),sim);
  const help=page.locator('.evolution-explanation');
- async function toggle(value){await page.evaluate(()=>holdTest.tech());await page.locator('#rememberEvolutionModesToggle').setChecked(value);await page.locator('#btnTechnicianCloseTop').click();}
+ async function toggle(value){await page.evaluate(()=>holdTest.tech());await page.locator('#btnConfigureFeatures').click();await page.locator('#rememberEvolutionModesToggle').setChecked(value);await page.locator('#btnTechnicianCloseTop').click();}
  async function press(id){const r=await page.locator('#'+id).boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;if(touch){const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});return async()=>{await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();};}await page.mouse.move(x,y);await page.mouse.down();return()=>page.mouse.up();}
  async function dismiss(){await page.keyboard.press('Escape');await help.waitFor({state:'hidden'});}
  for(const enabled of [false,true]){

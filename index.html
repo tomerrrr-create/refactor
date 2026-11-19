@@ -736,7 +736,7 @@
         <input id="profileSettingsFile" type="file" accept=".txt,text/plain" hidden>
         <p id="profileStatus" class="init-settings-note" role="status" aria-live="polite"></p>
       </section>
-      <section class="technician-start-settings technician-display-card" aria-labelledby="technicianDisplayTitle">
+      <section class="technician-start-settings technician-settings-card" aria-labelledby="technicianDisplayTitle">
       <button id="btnConfigureDisplay" type="button" class="technician-option" aria-expanded="false" aria-controls="displaySettings">
         <span class="technician-option-heading"><bdi><span id="technicianDisplayTitle" data-debug-text="technician_group_display">Display</span> /</bdi><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4m-4 0h8"/></svg></span></span>
       </button>
@@ -746,7 +746,7 @@
         <div class="bloom-intensity-row"><input id="interfaceZoom" type="range" min="70" max="120" step="1" value="100"><output id="interfaceZoomValue" for="interfaceZoom">100%</output></div>
       </div>
       <div class="technician-option bloom-rendering-option">
-        <label for="softBloomToggle" class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity=".6"/><path d="M12 1V3M12 21V23M1 12H3M21 12H23M4 4L5.5 5.5M18.5 18.5L20 20M4 20L5.5 18.5M18.5 5.5L20 4" opacity=".8"/></svg></span><bdi>bloom /</bdi></label>
+        <label for="softBloomToggle" class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity=".6"/><path d="M12 1V3M12 21V23M1 12H3M21 12H23M4 4L5.5 5.5M18.5 18.5L20 20M4 20L5.5 18.5M18.5 5.5L20 4" opacity=".8"/></svg></span><bdi>Bloom /</bdi></label>
         <div class="bloom-intensity-control">
           <label for="softBloomIntensity" data-debug-text="soft_bloom_intensity"></label>
           <div class="bloom-intensity-row"><input id="softBloomIntensity" type="range" min="0" max="100" step="1" value="32"><output id="softBloomIntensityValue" for="softBloomIntensity">32%</output></div>
@@ -754,39 +754,49 @@
         <input id="softBloomToggle" class="technician-switch" type="checkbox" role="switch" checked>
       </div>
       <label class="technician-option technician-switch-option smooth-rendering-option">
-        <span class="technician-option-heading"><span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3 7C7 3 17 11 21 7M3 12C7 8 17 16 21 12M3 17C7 13 17 21 21 17"/></svg></span><bdi>smooth /</bdi></span><input id="smoothRenderingToggle" class="technician-switch" type="checkbox" role="switch" checked></span>
+        <span class="technician-option-heading"><span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3 7C7 3 17 11 21 7M3 12C7 8 17 16 21 12M3 17C7 13 17 21 21 17"/></svg></span><bdi>Smooth /</bdi></span><input id="smoothRenderingToggle" class="technician-switch" type="checkbox" role="switch" checked></span>
       </label>
+      </div>
+      </section>
+      <section class="technician-start-settings technician-settings-card" aria-labelledby="technicianMacroTitle">
+      <button id="btnConfigureMacro" type="button" class="technician-option" aria-expanded="false" aria-controls="macroSettings">
+        <span class="technician-option-heading"><bdi><span id="technicianMacroTitle" data-debug-text="technician_group_macro">Macro</span> /</bdi><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 6 4-6 4Z"/></svg></span></span>
+      </button>
+      <div id="macroSettings" class="technician-display-settings" hidden>
       <div class="technician-option macro-dimming-option">
-        <label for="macroControlDimming" class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M12 4a8 8 0 0 1 0 16" fill="currentColor"/></svg></span><span data-debug-text="macro_control_dimming">Macro Dimming</span></label>
+        <label for="macroControlDimming" class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M12 4a8 8 0 0 1 0 16" fill="currentColor"/></svg></span><span data-debug-text="macro_control_dimming">Dimming</span></label>
         <div class="bloom-intensity-row"><input id="macroControlDimming" type="range" min="0" max="100" step="1" value="80"><output id="macroControlDimmingValue" for="macroControlDimming">80%</output></div>
       </div>
       <label class="technician-option technician-switch-option macro-activity-option">
-        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m7 4 13 8-13 8Z"/><path d="M3 8v8"/></svg></span><span data-debug-text="macro_activity_setting">Macro activity</span></span>
+        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m7 4 13 8-13 8Z"/><path d="M3 8v8"/></svg></span><span data-debug-text="macro_activity_icon_setting">Display Icon During Macro</span></span>
         <input id="macroActivityToggle" class="technician-switch" type="checkbox" role="switch">
       </label>
       </div>
       </section>
-      <section class="technician-display-settings technician-feature-settings" aria-labelledby="technicianFeaturesTitle">
-      <h3 id="technicianFeaturesTitle" class="technician-group-title" data-debug-text="technician_group_features">Features</h3>
+      <section class="technician-start-settings technician-settings-card" aria-labelledby="technicianFeaturesTitle">
+      <button id="btnConfigureFeatures" type="button" class="technician-option" aria-expanded="false" aria-controls="featureSettings">
+        <span class="technician-option-heading"><bdi><span id="technicianFeaturesTitle" data-debug-text="technician_group_features">Features</span> /</bdi><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M9 4v4m6 2v4m-5 2v4"/></svg></span></span>
+      </button>
+      <div id="featureSettings" class="technician-display-settings" hidden>
       <label class="technician-option technician-switch-option">
-        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span data-debug-text="compact_colors_experiment">All palette colors · experiment</span></span>
+        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span data-debug-text="compact_colors_experiment">Brush Modal: One Page Colors</span></span>
         <input id="compactColorsToggle" class="technician-switch" type="checkbox" role="switch">
       </label>
       <label class="technician-option technician-switch-option remember-modes-option">
-        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 1 7M3 4v6h6M12 7v5l3 2"/></svg></span><span data-debug-text="remember_evolution_modes">Remember simulation modes</span></span>
+        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 1 7M3 4v6h6M12 7v5l3 2"/></svg></span><span data-debug-text="remember_evolution_modes">Remember Simulation Modes</span></span>
         <input id="rememberEvolutionModesToggle" class="technician-switch" type="checkbox" role="switch">
       </label>
       <label class="technician-option technician-switch-option" data-i18n-title="luminance_anchor_note">
-        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" opacity=".45"/></svg></span><span id="luminanceAnchorLabel" data-debug-text="luminance_anchor">Luminance Anchor</span></span>
+        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" opacity=".45"/></svg></span><span id="luminanceAnchorLabel" dir="auto" data-debug-text="luminance_anchor">Luminance Anchor (Magnet, GOL)</span></span>
         <input id="luminanceAnchorToggle" class="technician-switch" type="checkbox" role="switch" aria-labelledby="luminanceAnchorLabel">
       </label>
-      <label class="technician-option technician-switch-option brush-motion-option">
-        <span class="technician-option-heading"><span class="technician-effect-heading" aria-hidden="true"><span class="technician-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M6 13l10-10 5 5-10 10-6 1zM3 22c2-3 5 1 8-2"/></svg></span><bdi>draw /</bdi></span><input id="brushMotionRecordingToggle" class="technician-switch" type="checkbox" role="switch" checked aria-labelledby="brushMotionRecordingLabel" aria-describedby="brushMotionRecordingNote"></span>
-        <span id="brushMotionRecordingLabel" hidden data-debug-text="brush_motion_recording"></span>
-        <span id="brushMotionRecordingNote" data-debug-text="brush_motion_recording_note"></span>
+      <label class="technician-option technician-switch-option">
+        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M6 13l10-10 5 5-10 10-6 1zM3 22c2-3 5 1 8-2"/></svg></span><span><span id="brushMotionRecordingLabel" dir="auto" data-debug-text="brush_motion_recording">Draw</span><span id="brushMotionRecordingNote" dir="auto" data-debug-text="brush_motion_recording_note">Record brush movement while paused so it can be replayed in a macro.</span></span></span>
+        <input id="brushMotionRecordingToggle" class="technician-switch" type="checkbox" role="switch" checked aria-labelledby="brushMotionRecordingLabel" aria-describedby="brushMotionRecordingNote">
       </label>
+      <div id="experimentalSimulationControls"></div>
+      </div>
       </section>
-      <div id="experimentalSimulationControls" class="technician-display-settings"></div>
       <section class="technician-start-settings" aria-labelledby="technicianStartupTitle">
       <h3 id="technicianStartupTitle" class="technician-group-title" data-debug-text="technician_group_startup">Initialization &amp; startup</h3>
       <button id="btnConfigureInit" type="button" class="technician-option" aria-expanded="false" aria-controls="initSettingsForm">

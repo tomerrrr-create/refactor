@@ -24,7 +24,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const boot=async()=>{await page.goto(base);await page.waitForFunction(()=>window.anchorTest?.ready);};
  const state=()=>page.evaluate(()=>anchorTest.state());
  const closeTech=()=>page.locator('#btnTechnicianCloseTop').click();
- const tech=async()=>{await page.evaluate(()=>anchorTest.tech());return page.locator('#luminanceAnchorToggle');};
+ const tech=async()=>{await page.evaluate(()=>anchorTest.tech());await page.locator('#btnConfigureFeatures').click();return page.locator('#luminanceAnchorToggle');};
  const modal=async(name,on,save=true)=>{
   await page.evaluate(name=>anchorTest[name](),name);const target=page.locator(name==='magnet'?'#btnMagnetAnchorColor':'#btnGolDeadColor');await target.waitFor();
   if((await target.getAttribute('aria-checked'))!==String(on))await target.click();

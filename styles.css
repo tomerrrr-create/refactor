@@ -2012,8 +2012,7 @@ body.wind-mode :is(#btnColorPicker, #btnSymmetry, #btnColorPickerSymmetry):disab
 .tuning-modes.breathe-mode-icons button { display: grid; place-items: center; width: 48px; height: 48px; padding: 10px; border-radius: 50%; flex: 0 0 48px; }
 .breathe-mode-icons svg { width: 28px; height: 28px; }
 
-.technician-display-settings .brush-motion-option { margin-top: 18px; padding-top: 18px; border-top: 1px solid #b28b3630; gap: 8px; }
-#brushMotionRecordingNote { padding-inline-start: 48px; font-size: 12px; line-height: 1.5; color: #95958b; }
+#brushMotionRecordingNote { display: block; margin-block-start: 2px; font-size: 12px; line-height: 1.5; color: #a9a398; }
 
 /* Opt-in display zoom. At 100% all existing layout rules remain untouched. */
 #appContainer[data-ui-zoom] {
@@ -2041,8 +2040,8 @@ body.wind-mode :is(#btnColorPicker, #btnSymmetry, #btnColorPickerSymmetry):disab
 /* One compact row per display preference; controls keep their touch height. */
 .technician-display-settings { padding:6px 18px; margin-inline:0; border:1px solid #b28b3645; border-radius:12px; background:linear-gradient(135deg,#1c1a12,#0d0e0c); }
 .technician-display-settings + .technician-display-settings { margin-block-start:18px; }
-.technician-display-card > .technician-display-settings { margin: 12px 0 0; padding: 0; border: 0; background: none; }
-.technician-display-card > .technician-option svg { width: 17px; height: 17px; }
+.technician-settings-card > .technician-display-settings { margin: 12px 0 0; padding: 0; border: 0; background: none; }
+.technician-settings-card > .technician-option svg { width: 17px; height: 17px; }
 .technician-display-settings .technician-option { min-height: 56px; margin: 0; padding: 10px 0; gap: 10px; justify-content: center; border:0; border-bottom: 1px solid #b28b3630; border-radius:0; background:transparent; }
 .technician-display-settings .technician-option:last-child { border-bottom: 0; }
 .technician-display-settings .technician-option-heading { width: 100%; min-width: 0; gap: 8px; }
@@ -2050,7 +2049,7 @@ body.wind-mode :is(#btnColorPicker, #btnSymmetry, #btnColorPickerSymmetry):disab
 .technician-display-settings .technician-effect-heading { gap: 6px; flex-shrink: 0; margin: 0; color: #e3c677; }
 .technician-display-settings .technician-effect-heading .technician-badge { flex: 0 0 20px; width: 20px; min-height: 24px; padding: 0; border: 0; }
 .technician-display-settings .technician-effect-heading svg { width: 17px; height: 17px; }
-.technician-display-card .technician-display-settings :is(.interface-zoom-option, .bloom-rendering-option, .macro-dimming-option) { display: flex; flex-direction: row; align-items: center; }
+.technician-settings-card .technician-display-settings :is(.interface-zoom-option, .bloom-rendering-option, .macro-dimming-option) { display: flex; flex-direction: row; align-items: center; }
 .technician-display-settings .technician-switch-option { flex-direction:row; align-items:center; justify-content:space-between; }
 #technicianSettingsScroll .technician-display-settings .technician-switch-option .technician-effect-heading { min-width:0; flex:1; white-space:normal; }
 .technician-display-settings .technician-badge { display:inline-flex; align-items:center; justify-content:center; }
@@ -2063,11 +2062,10 @@ body.wind-mode :is(#btnColorPicker, #btnSymmetry, #btnColorPickerSymmetry):disab
 .technician-display-settings :is(#interfaceZoom, #softBloomIntensity, #macroControlDimming) { width: 0; height: 44px; margin: 0; cursor: pointer; }
 .technician-display-settings :is(#interfaceZoomValue, #softBloomIntensityValue, #macroControlDimmingValue) { min-width: 34px; font-size: 12px; text-align: end; font-variant-numeric: tabular-nums; }
 @media (max-width: 360px) {
-    .technician-display-card { padding-inline: 12px; }
-    .technician-display-card .technician-display-settings .technician-option { gap: 6px; }
-    .technician-display-card .technician-display-settings #softBloomIntensityValue { min-width: 30px; }
+    .technician-settings-card { padding-inline: 12px; }
+    .technician-settings-card .technician-display-settings .technician-option { gap: 6px; }
+    .technician-settings-card .technician-display-settings #softBloomIntensityValue { min-width: 30px; }
 }
-#brushMotionRecordingNote { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 #appContainer.macro-fullscreen[data-ui-zoom] { padding: 0; }
 
 /* Technician settings share the picker's bounded frame, retaining their

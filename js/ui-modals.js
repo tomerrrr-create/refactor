@@ -1562,9 +1562,6 @@ export function initializeModals(appContext) {
 
     // Simulation initialization preferences are separate from the current board.
     const initForm = document.getElementById('initSettingsForm');
-    const initToggle = document.getElementById('btnConfigureInit');
-    const displaySettings = document.getElementById('displaySettings');
-    const displayToggle = document.getElementById('btnConfigureDisplay');
     const initBoard = document.getElementById('initBoardSize');
     const initBrush = document.getElementById('initBrushSize');
     const initBrushValue = document.getElementById('initBrushValue');
@@ -1717,8 +1714,10 @@ export function initializeModals(appContext) {
         initStatus.textContent = app.getText(persisted ? 'init_saved' : 'init_saved_session');
     });
     const startupForm = document.getElementById('startupSettingsForm');
-    const startupToggle = document.getElementById('btnConfigureStartup');
-    const technicianSections = [[displayToggle, displaySettings], [initToggle, initForm], [startupToggle, startupForm]];
+    const technicianSections = ['Display', 'Macro', 'Features', 'Init', 'Startup'].map(name => {
+        const toggle = document.getElementById('btnConfigure' + name);
+        return [toggle, document.getElementById(toggle.getAttribute('aria-controls'))];
+    });
     function showTechnicianSection(openSection) {
         for (const [toggle, section] of technicianSections) {
             const expanded = section === openSection;
