@@ -2,6 +2,7 @@
 export const VORTICES_MODES = Object.freeze({
     turbine2: {engine:'gravitationalSort', label:'spiral_turbine2'},
     flow: {engine:'ink', label:'help_ink'},
+    turbine_combined: {engine:'gravitationalSort', label:'spiral_turbine_combined'},
     left: {engine:'spiral', label:'spiral_left'},
     cosmic: {engine:'cymatics', label:'cymatics_map_cosmic', map:6},
     black_hole: {engine:'gravitationalSort', label:'spiral_black_hole'},
@@ -17,7 +18,7 @@ export const VORTICES_SETTINGS_ENTRY_MODES = Object.freeze(
 export const RESONANCE_MAPS = Object.freeze(['interference', 'diagonal', 'grid', 'clouds']);
 
 const cycleStorageKey = 'colorGridVorticesCycleV1';
-const defaultCycleModes = Object.keys(VORTICES_MODES).filter(mode => mode !== 'a' && mode !== 'tornado');
+const defaultCycleModes = Object.keys(VORTICES_MODES).filter(mode => !['turbine_combined','a','tornado'].includes(mode));
 
 export function loadVorticesCycle() {
     try {

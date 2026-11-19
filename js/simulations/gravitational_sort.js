@@ -1,5 +1,6 @@
 import { runBlackHoleGeneration } from './circle.js';
 import { runTurbine2Generation } from './spiral-turbine2.js';
+import { runCombinedTurbineGeneration } from './spiral-turbine-combined.js';
 import { runSpiralGeneration } from './spiral.js';
 
 const PINWHEEL_RULES = Object.freeze({method:'b'});
@@ -19,6 +20,7 @@ export function runGravitationalSortGeneration({ n, currentBoardState, currentPa
 
     if (gravitationalSortRules.direction === 'black_hole') return runBlackHoleGeneration(n, nextBoardState);
     if (gravitationalSortRules.direction === 'turbine2') return runTurbine2Generation(n, nextBoardState, strength);
+    if (gravitationalSortRules.direction === 'turbine_combined') return runCombinedTurbineGeneration(n, nextBoardState, gravitationalSortRules);
     if (gravitationalSortRules.direction === 'pinwheel') return runSpiralGeneration({n, currentBoardState, currentPalette, spiralRules:PINWHEEL_RULES});
 
     switch (gravitationalSortRules.direction) {
