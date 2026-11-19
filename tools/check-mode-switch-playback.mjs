@@ -107,7 +107,7 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  // The switch stays visible during macro playback and after completion.
  await page.evaluate(()=>{modeTest.setup('nudgeBrighter');modeTest.macro('[00:00:00.000] INIT_STATE -> {"recipeVersion":2,"n":13,"pal":0,"sort":"luminance","sep":0,"board":"169x1"}\n[00:00:00.100] PLAY -> Armed: nudgeBrighter | Sort: luminance | Rules: {"nudgeTimingVersion":1,"intervalMs":100}\n[00:00:00.500] [GEN:3] PAUSE -> ---');});
  await page.waitForFunction(()=>modeTest.state().playing);await visibleWhite();await page.waitForFunction(()=>!modeTest.state().loaded);assert(await button.isVisible());
- // Precision Icons changes just the paused glyphs, using the same ink and backdrop in every theme.
+ // Precision Icons repaints the paused vectors while keeping the backdrop in every theme.
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.evaluate(()=>modeTest.setup('gameOfLife'));
  await page.mouse.move(0,0);
@@ -140,16 +140,16 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  await page.evaluate(()=>document.getElementById('technicianDialog').close());
  await page.mouse.move(0,0);
  for(const [index,theme] of themes.entries()){
-  assert.deepEqual(await pausedAppearance(theme),{...original[index],width:'1.65px',join:'bevel'});
+  assert.deepEqual(await pausedAppearance(theme),{...original[index],width:'1.55px'});
  }
  const lifeGlyph=page.locator(life+' > svg');
  const dlaGlyph=page.locator('#btnDla > svg');
  const awaitGlyphFilter=(id,expected)=>page.waitForFunction(({id,expected})=>
   getComputedStyle(document.querySelector(id+' > svg')).filter.includes(expected),{id,expected});
- await awaitGlyphFilter(life,'drop-shadow');
+ await awaitGlyphFilter(life,'#precisionIconMetal');
  if(cfg.lang==='en')await page.locator('#controlsContainer').screenshot({path:'/tmp/mode-switch-playback/precision-drawer-1.png'});
  await drawer.click();
- await awaitGlyphFilter('#btnDla','drop-shadow');
+ await awaitGlyphFilter('#btnDla','#precisionIconMetal');
  assert(await dlaGlyph.isVisible());
  if(cfg.lang==='en')await page.locator('#controlsContainer').screenshot({path:'/tmp/mode-switch-playback/precision-drawer-2.png'});
  await drawer.click();
@@ -158,7 +158,7 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  assert.equal(await lifeGlyph.evaluate(svg=>getComputedStyle(svg).strokeWidth),'2.5px');
  await awaitHalo(life,1);
  await page.locator('#btnPlayPauseLife').click();
- await awaitGlyphFilter(life,'drop-shadow');
+ await awaitGlyphFilter(life,'#precisionIconMetal');
  await page.reload();
  await page.waitForFunction(()=>window.modeTest?.ready);
  assert.equal(await precision.isChecked(),true,'enabled choice survives reopening');

@@ -54,6 +54,28 @@
       </div>
 
       <div id="controlsContainer" class="mt-11" aria-label="Control buttons">
+ <svg class="precision-icon-definitions" width="0" height="0" aria-hidden="true" focusable="false">
+   <defs>
+     <filter id="precisionIconMetal" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+       <!-- Paint the face and both bevels inside the original vector silhouette. -->
+       <feFlood flood-color="#8ca9c0"/>
+       <feComposite in2="SourceAlpha" operator="in" result="face"/>
+       <feOffset in="SourceAlpha" dx=".65" dy=".85" result="down"/>
+       <feComposite in="SourceAlpha" in2="down" operator="out" result="upperEdge"/>
+       <feFlood flood-color="#f0faff"/>
+       <feComposite in2="upperEdge" operator="in" result="light"/>
+       <feOffset in="SourceAlpha" dx="-.55" dy="-.7" result="up"/>
+       <feComposite in="SourceAlpha" in2="up" operator="out" result="lowerEdge"/>
+       <feFlood flood-color="#385473"/>
+       <feComposite in2="lowerEdge" operator="in" result="shade"/>
+       <feMerge>
+         <feMergeNode in="face"/>
+         <feMergeNode in="shade"/>
+         <feMergeNode in="light"/>
+       </feMerge>
+     </filter>
+   </defs>
+ </svg>
  <div id="simModeBackground"></div>
  <button data-evolution-feature-hidden id="btnNetwork" class="ctrl" type="button" aria-label="Living network" title="Living network">
   <svg class="network-palette-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
