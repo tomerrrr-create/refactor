@@ -91,6 +91,8 @@ export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,
     const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.frequency,rules.resonanceVersion,rules.phaseMotion?state.steps:0,rules.cosmicFieldVersion??1);
     const random=()=>{let x=state.random;x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/4294967296;};
     const length=currentPalette.length,rank=k=>((k%length)+length)%length;
+    // Older recordings omit the flag and retain the original exchange direction.
+    const rankDirection=rules.reversePaletteOrder?-1:1;
     const circle=rules.resonanceVersion===6&&rules.cosmicFieldVersion===3;
     const reach=circle?cosmicCircleReach(rules.frequency,rules.phaseMotion?state.steps:0)*n/2:0;
     const attempts=Math.max(1,Math.round(n*n*.5*rules.strength/100));
@@ -112,7 +114,7 @@ export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,
             j=y*n+x;
         }
         const a=board[i],b=board[j];
-        if(a.isGold||b.isGold||(rank(a.k)-rank(b.k))*(energy[i]-energy[j])<=0)continue;
+        if(a.isGold||b.isGold||rankDirection*(rank(a.k)-rank(b.k))*(energy[i]-energy[j])<=0)continue;
         // Move existing pigments, preserving the color histogram and gold cells.
         const k=a.k,v=a.v??a.k;a.k=b.k;a.v=b.v??b.k;b.k=k;b.v=v;a.prevK=b.prevK=null;
     }

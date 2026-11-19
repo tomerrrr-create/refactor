@@ -95,6 +95,7 @@ try {
                 await dialogAction('#inkSettingsDialog [data-cancel]');
             }
             if (mode==='cosmic'||mode==='circular') {
+                assert.equal(selected.project.cymaticsState.rules.reversePaletteOrder,true);
                 await swipeUp(hub);await menu.waitFor({state:'visible'});
                 await page.waitForTimeout(350);
                 assert.deepEqual(await visibleMaps(),['circular','cosmic']);
@@ -104,6 +105,7 @@ try {
                     await dialogAction('#cymaticsSettingsDialog [type=submit]');
                     await menu.waitFor({state:'hidden'});
                     assert.equal((await state()).project.cymaticsState.rules.strength,65);
+                    assert.equal((await state()).project.cymaticsState.rules.reversePaletteOrder,true);
                 } else {await dialogAction('#cymaticsSettingsDialog [data-cancel]');await menu.waitFor({state:'hidden'});}
             } else if (mode!=='flow') {
                 await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
