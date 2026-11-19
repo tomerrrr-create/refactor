@@ -1,21 +1,6 @@
 import {runTurbine2Generation} from './spiral-turbine2.js';
-import {runTurbineGeneration} from './spiral-turbine.js';
 
 let cachedField;
-let cachedTransition;
-
-function createRoundTransition(n) {
-    const center=(n-1)/2;
-    const interior=new Float32Array(n*n),rim=new Float32Array(n*n);
-    for(let i=0;i<interior.length;i++){
-        const radius=Math.hypot(i%n-center,Math.floor(i/n)-center)/Math.max(1,center);
-        const t=Math.max(0,Math.min(1,(radius-.73)/.22));
-        rim[i]=t*t*(3-2*t);
-        interior[i]=1-rim[i];
-    }
-    return {n,interior,rim};
-}
-
 function createInteriorField(n,version) {
     const legacy=version===1;
     const center=(n-1)/2,radius=center*(legacy ? .33 : .38);
@@ -45,6 +30,7 @@ function createInteriorField(n,version) {
 
 export function runCombinedTurbineGeneration(n,board,rules) {
     const version=rules.fieldVersion??1;
+    if(cachedField?.n!==n||cachedField.version!==version)cachedField=createInteriorField(n,version);
     const frame=rules.frame??0;
     // Mulberry32 per generation keeps replay independent of wall time and
     // restores the exact next set of swaps from a saved frame.
@@ -55,17 +41,9 @@ export function runCombinedTurbineGeneration(n,board,rules) {
         value^=value+Math.imul(value^(value>>>7),value|61);
         return ((value^(value>>>14))>>>0)/4294967296;
     };
-    const phase=(frame%1440)*Math.PI/720;
-    if(version===3){
-        if(cachedTransition?.n!==n)cachedTransition=createRoundTransition(n);
-        // Use Turbine's own flow in the center and blend into Turbine 2
-        // across a radial band so there is no hard boundary between passes.
-        runTurbineGeneration(n,board,rules.strength,{coverage:cachedTransition.interior,phase:phase*4,random});
-        runTurbine2Generation(n,board,rules.strength,{coverage:cachedTransition.rim,phase,random});
-    }else{
-        if(cachedField?.n!==n||cachedField.version!==version)cachedField=createInteriorField(n,version);
-        runTurbine2Generation(n,board,rules.strength,{...cachedField,phase,random});
-    }
+    const result=runTurbine2Generation(n,board,rules.strength,{
+        ...cachedField,phase:(frame%1440)*Math.PI/720,random
+    });
     rules.frame=(frame+1)>>>0;
-    return board;
+    return result;
 }

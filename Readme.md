@@ -458,7 +458,7 @@ The Color Vortices symbol appears in the Evolution map and macro activity. Macro
 
 The full cycle is **Turbine 2 → Color Vortices → Turbine Combined → Turbine → Cosmological Empathy → Circle (π) → Circular Empathy → Experiment A → Tornado → Off**. Turbine Combined, Experiment A and Tornado are off by default and can be enabled in the cycle settings. Existing saved selections still apply. During playback the cycle skips Off. Turbine 2 uses fixed 60% Strength and Circle ignores Strength. Swipe up on Color Vortices to adjust its flow, or on either Resonance map for a dialog limited to those two maps. Swipe up on Turbine 2, Turbine Combined, Turbine, Experiment A, Circle (π) or Tornado to choose which of the nine modes appear in the cycle. Keep at least one of these six enabled so the list remains accessible. Save remembers the selection in this browser. The current mode stays active until the next tap if you uncheck it. Switching engines continues playback on the current board and records a new run boundary.
 
-Turbine Combined runs the original Turbine flow inside the circle. A soft radial transition blends into Turbine 2’s smoother flow at the rim. The field version and frame counter travel with Gravity checkpoints and recipes for exact continuation. Older recordings retain the three- or four-vortex fields they were recorded with.
+Turbine Combined shares Turbine 2’s direction sampling and tile swaps. Four broad interior vortices sit farther from the center and fade before the outer rim. The field version and frame counter travel with Gravity checkpoints and recipes for exact continuation. Older recordings without a field version retain the original three-vortex field.
 
 #### Color Vortices
 

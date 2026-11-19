@@ -28,18 +28,15 @@ function prepareGeometry(n, phase) {
     for (let col = 0; col < n; col++) columnCosines[col] = Math.cos((col * 0.03) - phase);
 }
 
-export function runTurbineGeneration(n, board, strength = 0.6, field) {
+export function runTurbineGeneration(n, board, strength = 0.6) {
     const center = (n - 1) / 2;
-    const phase = field?.phase ?? Date.now() * 0.0005;
-    const random = field?.random ?? Math.random;
-    const coverage = field?.coverage;
+    const phase = Date.now() * 0.0005;
     prepareGeometry(n, phase);
 
     for (let row = 0; row < n; row++) {
         for (let col = 0; col < n; col++) {
             const i = row * n + col;
             if (board[i].isGold || (row === center && col === center)) continue;
-            if (coverage && (coverage[i] === 0 || (coverage[i] < 1 && random() >= coverage[i]))) continue;
             const turbulence = rowSines[row] * columnCosines[col];
             const targetRadius = Math.max(0, baseRadius[i] + (turbulence * 1.5));
             const targetAngle = baseAngle[i] + (turbulence * 0.25);
@@ -63,8 +60,8 @@ export function runTurbineGeneration(n, board, strength = 0.6, field) {
             }
             if (first < 0) continue;
             let chosen = first;
-            if (second >= 0 && random() < 0.60) chosen = second;
-            if (!board[chosen].isGold && board[i].k < board[chosen].k && random() < strength) {
+            if (second >= 0 && Math.random() < 0.60) chosen = second;
+            if (!board[chosen].isGold && board[i].k < board[chosen].k && Math.random() < strength) {
                 const tile = board[i];
                 board[i] = board[chosen];
                 board[chosen] = tile;
