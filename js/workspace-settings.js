@@ -15,6 +15,9 @@ import { DEFAULT_SIM_INIT, validateSimInit } from './sim-init-settings.js';
 import { DEFAULT_SORT_CYCLE, normalizeSortCycle } from './sort-cycle-settings.js';
 import { CHI_REACH_PERCENTAGES } from './chi-reach.js';
 
+export const SIMULATION_THEME_COLORS = ['dark-blue', 'blue', 'light-blue', 'gold', 'teal'];
+const SIMULATION_THEME_FIELDS = ['simulationTheme', 'simulationPlaybackTheme', 'simulationThemeSecond', 'simulationPlaybackThemeSecond'];
+
 export const SETTINGS_HEADER = 'FYI_SETTINGS_V1';
 export const WORKSPACE_STORAGE_KEY = 'colorGridWorkspaceSettings';
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -48,10 +51,10 @@ function mergeKnown(defaults, overrides, path = '') {
         if (path === 'rules' && key === 'cymatics') { result[key] = migrateCymaticsPreferences(value); continue; }
         if (path === 'brush' && key === 'shape') { result[key] = clone(value); continue; }
         // Optional extension; V1’s original baseline stays unchanged.
-        if (path === '' && ['simulationTheme', 'simulationPlaybackTheme'].includes(key)) {
+        if (path === '' && SIMULATION_THEME_FIELDS.includes(key)) {
             // Retired appearance IDs remain readable in older profiles/settings.
             result[key] = ['silver', 'ice', 'pink'].includes(value)
-                ? (key === 'simulationTheme' ? 'blue' : 'gold') : clone(value);
+                ? (key.startsWith('simulationTheme') ? 'blue' : 'gold') : clone(value);
             continue;
         }
         if (path === '' && ['separatorCycle', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics', 'gameOfLifeDeadColor'].includes(key)) { result[key] = clone(value); continue; }
@@ -106,8 +109,7 @@ export function validateWorkspaceSettings(value) {
         (!Object.hasOwn(settings, 'gameOfLifeGenetics') || ['rgb', 'palette-order'].includes(settings.gameOfLifeGenetics)) &&
         (!Object.hasOwn(settings, 'gameOfLifeDeadColor') || ['current','luminance'].includes(settings.gameOfLifeDeadColor)) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&
-        (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationTheme)) &&
-        (!Object.hasOwn(settings, 'simulationPlaybackTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationPlaybackTheme)) &&
+        SIMULATION_THEME_FIELDS.every(key => !Object.hasOwn(settings, key) || SIMULATION_THEME_COLORS.includes(settings[key])) &&
         typeof settings.smoothing.display === 'boolean' && typeof settings.smoothing.export === 'boolean' &&
         (!Object.hasOwn(settings.smoothing, 'bloom') || typeof settings.smoothing.bloom === 'boolean') &&
         (!Object.hasOwn(settings.smoothing, 'bloomIntensity') || integer(settings.smoothing.bloomIntensity, 0, 100)) &&

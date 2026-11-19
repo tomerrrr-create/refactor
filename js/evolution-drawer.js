@@ -1,3 +1,4 @@
+import { setSimulationThemePage } from './simulation-theme.js';
 import { focusSettingsHeading } from './dialog-focus.js';
 import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
@@ -57,6 +58,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
             button.style.setProperty('--evolution-column',3+local%5);
         }
         controls.dataset.evolutionPage=String(page);
+        setSimulationThemePage(page);
         refresh();
     }
     function refresh(){
