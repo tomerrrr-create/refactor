@@ -1,11 +1,13 @@
 import {runTurbine2Generation} from './spiral-turbine2.js';
 
 let cachedField;
-function createInteriorField(n) {
-    const center=(n-1)/2,radius=center*.33;
-    const vortices=Array.from({length:3},(_,i)=>{
-        const angle=i*2*Math.PI/3-Math.PI/2;
-        return {x:center+center*.4*Math.cos(angle),y:center+center*.4*Math.sin(angle)};
+function createInteriorField(n,version) {
+    const legacy=version===1;
+    const center=(n-1)/2,radius=center*(legacy ? .33 : .38);
+    const count=legacy ? 3 : 4,orbit=center*(legacy ? .4 : .54);
+    const vortices=Array.from({length:count},(_,i)=>{
+        const angle=i*2*Math.PI/count-(legacy ? Math.PI/2 : Math.PI*3/8);
+        return {x:center+orbit*Math.cos(angle),y:center+orbit*Math.sin(angle)};
     });
     const x=new Float32Array(n*n),y=new Float32Array(n*n),weight=new Float32Array(n*n);
     for(let i=0;i<weight.length;i++){
@@ -17,15 +19,18 @@ function createInteriorField(n) {
             x[i]=-dy/inner;
             y[i]=dx/inner;
             // Local rotation fades to zero inside the parent circle's rim.
-            weight[i]=.9*(1-(distance/radius)**2)**2;
+            const ratio=distance/radius;
+            const fade=Math.max(0,(ratio-.38)/.62);
+            weight[i]=.9*(legacy ? (1-ratio**2)**2 : 1-fade*fade*(3-2*fade));
             break;
         }
     }
-    return {n,x,y,weight};
+    return {n,version,x,y,weight};
 }
 
 export function runCombinedTurbineGeneration(n,board,rules) {
-    if(cachedField?.n!==n)cachedField=createInteriorField(n);
+    const version=rules.fieldVersion??1;
+    if(cachedField?.n!==n||cachedField.version!==version)cachedField=createInteriorField(n,version);
     const frame=rules.frame??0;
     // Mulberry32 per generation keeps replay independent of wall time and
     // restores the exact next set of swaps from a saved frame.
