@@ -1928,11 +1928,35 @@ button, .ctrl {
 :root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
 /* Fade only the decorative frame; simulation controls remain independent. */
 :root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
+
+/* The halo breathes behind the icon. Fade it separately from the pulse on Pause or handoff. */
+.sim-mode-active .ctrl[data-evolution-id] { isolation: isolate; }
+.sim-mode-active .ctrl[data-evolution-id]::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(circle, #ffdf8c5c 0%, #f5bb4744 26%, #e6972422 45%, #e6972400 70%);
+  opacity: 0;
+  transition: opacity 420ms ease-in-out;
+  animation: simulation-halo-breathe 4.8s ease-in-out infinite paused;
+}
+:root[data-simulation-running] .sim-mode-active .ctrl[data-evolution-id].simulation-active::before {
+  opacity: 1;
+  animation-play-state: running;
+}
+@keyframes simulation-halo-breathe {
+  0%, 100% { transform: scale(.82); }
+  50% { transform: scale(1.12); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root,
   .sim-mode-active #simModeBackground,
   .sim-mode-active #simModeBackground::before,
   .sim-mode-active #simModeBackground::after { transition: none; }
+  .sim-mode-active .ctrl[data-evolution-id]::before { animation: none; transition: none; }
 }
 
 .simulation-theme-option .technician-option-heading { flex-wrap: nowrap; gap: 8px; }

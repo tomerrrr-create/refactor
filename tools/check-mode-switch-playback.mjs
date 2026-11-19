@@ -9,7 +9,8 @@ let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.modeTest={
  setup(sim,creation=false){pauseLife();resetArmedState();n=13;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%7;t.isGold=false;});isSimModeActive=!creation;dom.controlsContainer.classList.toggle('sim-mode-active',!creation);dom.btnToggleSimMode.classList.toggle('active',!creation);dom.btnPlayPauseLife.classList.toggle('control-hidden',creation);updateSimulationUtilityControl();armSimulation(sim,{recordIslandsStart:false});artRecipeLog=[];historyRecipeCursor=0;},
  start:togglePlayPauseLife,pause:pauseLife,toggle:toggleSimMode,step:stepForward,
- wind:setWindMode, state:()=>({playing:isLifePlaying,armed:armedSimulation,gen:currentGenerationCount,n,mode:isSimModeActive,loaded:isMacroLoaded,log:[...artRecipeLog]}),
+ wind:setWindMode, playbackTheme:applySimulationPlaybackTheme,
+ state:()=>({playing:isLifePlaying,armed:armedSimulation,gen:currentGenerationCount,n,mode:isSimModeActive,loaded:isMacroLoaded,log:[...artRecipeLog]}),
  macro(text){if(isLifePlaying)pauseLife();macroQueue=parseMacroText(text);settingsProfiles.beginReplay();isMacroLoaded=true;currentMacroStep=0;playMacro();}
  };initializeApp().then(()=>modeTest.ready=true);`);
 for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -24,6 +25,45 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  const rects=()=>page.evaluate(()=>['btnToggleSimMode','btnSave','btnInvert','btnRandom','btnCycleSort','btnUndo','btnRedo','btnPlayPauseLife'].map(id=>{const e=document.getElementById(id);return [id,e.offsetLeft,e.offsetTop,e.offsetWidth,e.offsetHeight];}));
  const creationStroke=await button.locator('svg').evaluate(e=>getComputedStyle(e).stroke);
  const visibleWhite=async()=>{assert(await button.isVisible());assert.deepEqual(await button.evaluate(e=>({visibility:getComputedStyle(e).visibility,opacity:getComputedStyle(e).opacity,stroke:getComputedStyle(e.querySelector('svg')).stroke})),{visibility:'visible',opacity:'1',stroke:creationStroke});};
+ // The playing halo follows the active button, independent of the playback theme.
+ const life='#btnGameOfLife', gravity='#btnGravitationalSort', breathe='#btnShowBreatheMenu';
+ const halo=id=>page.locator(id).evaluate(e=>{
+  const style=getComputedStyle(e,'::before');
+  return {opacity:Number(style.opacity),name:style.animationName,playState:style.animationPlayState,
+   transform:style.transform,pointerEvents:style.pointerEvents};
+ });
+ const awaitHalo=(id,opacity)=>page.waitForFunction(({id,opacity})=>
+  Number(getComputedStyle(document.querySelector(id),'::before').opacity)===opacity,{id,opacity});
+ await page.evaluate(()=>{modeTest.setup('gameOfLife');modeTest.playbackTheme('teal');modeTest.step();});
+ assert.equal((await halo(life)).opacity,0,'arming and single step have no playback halo');
+ await page.locator('#btnPlayPauseLife').click();await awaitHalo(life,1);
+ const firstPulse=await halo(life);
+ assert.equal(firstPulse.name,'simulation-halo-breathe');
+ assert.equal(firstPulse.playState,'running');
+ assert.equal(firstPulse.pointerEvents,'none');
+ assert.equal((await halo(gravity)).opacity,0);
+ await page.waitForFunction(({id,transform})=>getComputedStyle(document.querySelector(id),'::before').transform!==transform,
+  {id:life,transform:firstPulse.transform});
+ await mkdir('/tmp/mode-switch-playback',{recursive:true});
+ await page.locator('#controlsContainer').screenshot({path:`/tmp/mode-switch-playback/${cfg.lang}-halo.png`});
+ await page.locator(gravity).click();assert((await state()).playing);
+ await awaitHalo(life,0);await awaitHalo(gravity,1);
+ await page.locator('#btnPlayPauseLife').click();
+ await page.waitForFunction(id=>{
+  const opacity=Number(getComputedStyle(document.querySelector(id),'::before').opacity);
+  return opacity>0&&opacity<1;
+ },gravity);
+ await awaitHalo(gravity,0);
+ assert.equal((await halo(gravity)).playState,'paused');
+ await page.locator('#btnEvolutionDrawerInternal').click();
+ await page.locator(breathe).click();
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.locator('#btnPlayPauseLife').click();await awaitHalo(breathe,1);
+ assert.equal((await halo(breathe)).name,'none','reduced motion keeps a steady halo for Breathe');
+ await page.locator('#btnPlayPauseLife').click();await awaitHalo(breathe,0);
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await page.locator('#btnEvolutionDrawerInternal').click();
+ await page.evaluate(()=>modeTest.playbackTheme('gold'));
  for(const sim of ['nudgeBrighter','nudgeDarker','gameOfLife','brightnessEvo','gravitationalSort','erosion','dla','contour','cymatics','islands','turing','magnet','spiral','sandpile','breathe']){
   await page.evaluate(sim=>modeTest.setup(sim),sim);assert(await button.isVisible());const before=await rects();await page.evaluate(()=>modeTest.start());await visibleWhite();assert.deepEqual(await rects(),before,'grid geometry remains fixed during '+sim);
   const running=await state();await button.evaluate(e=>{e.click();e.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));e.dispatchEvent(new PointerEvent('pointerdown',{pointerId:77,button:0,bubbles:true,clientX:10,clientY:10}));e.dispatchEvent(new PointerEvent('pointerup',{pointerId:77,button:0,bubbles:true,clientX:10,clientY:50}));});await page.evaluate(()=>modeTest.toggle());
