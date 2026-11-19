@@ -456,7 +456,7 @@ The Color Vortices symbol and Oil’s letter B also appear in Evolution map, exp
 
 ### Circular modes
 
-The button cycles **Turbine 2 → Color Vortices → Turbine → Cosmological Empathy → Experiment A → Circular → Circle (π) → Tornado → Off**, skipping Off during playback. Turbine 2 uses fixed 60% Strength and Circle ignores Strength. Swipe up on Color Vortices to adjust its flow, or on either Resonance map for a dialog limited to those two maps. Other modes have fixed settings. Switching engines continues playback on the current board and records a new run boundary.
+The button cycles **Turbine 2 → Color Vortices → Turbine → Cosmological Empathy → Circular → Experiment A → Circle (π) → Tornado → Off**, skipping Off during playback. Turbine 2 uses fixed 60% Strength and Circle ignores Strength. Swipe up on Color Vortices to adjust its flow, or on either Resonance map for a dialog limited to those two maps. Other modes have fixed settings. Switching engines continues playback on the current board and records a new run boundary.
 
 #### Color Vortices
 

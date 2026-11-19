@@ -63,7 +63,7 @@ try {
             }
         }
         const visibleMaps=()=>menu.locator('[data-cymatics-map]:visible').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMap).sort());
-        const order=['turbine2','flow','left','cosmic','a','circular','black_hole','tornado'];
+        const order=['turbine2','flow','left','cosmic','circular','a','black_hole','tornado'];
         await tap(nav);
         assert(await page.locator(hub).isVisible());
         await page.evaluate(()=>circularTest.openTech());
