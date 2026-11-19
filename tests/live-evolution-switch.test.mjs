@@ -49,6 +49,7 @@ function harness() {
     vm.runInContext(section('let replayMagnetCombinedField =', 'let chiFlowRules ='), c);
     vm.runInContext(section('window.logArtEvent = function', '// ------------------------------------------'), c);
     vm.runInContext(section('function pauseLife()', 'function getRandomGridPosition('), c);
+    vm.runInContext(section('function isTornadoSelected(', '// Remember a selection'), c);
     vm.runInContext(section('function handleEvolutionTap(', 'function setBrushMode('), c);
     vm.runInContext(section('function nextEvolutionMode(', 'function updateErosionButtonUI('), c);
     for (const name of ['selectMagnetMode','cycleSpiralMode','cycleGravitationalSortMode','cycleMagnetMode','cycleErosionMode','cycleGameOfLifeMode','cycleChiFlowMode','cycleIslandsMode','cycleDlaMode']) {

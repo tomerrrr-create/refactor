@@ -17,7 +17,7 @@ const simulations = {
     turing: ['help_turing', 'btnTuring'], breathe: ['help_breathe', 'btnShowBreatheMenu'],
     network: ['help_network','btnNetwork'],
     oil: ['help_oil','btnOil'],
-    ink: ['help_ink','btnInk'],
+    ink: ['help_ink','btnInk'], tornado: ['spiral_tornado','btnInk'],
     contour: ['help_contour', 'btnContour'], cymatics: ['help_cymatics', 'btnCymatics'],
     nudgeBrighter: ['help_nudge_forward', 'btnNudgeBrighter'], nudgeDarker: ['help_nudge_backward', 'btnNudgeBrighter']
 };
@@ -39,6 +39,7 @@ export function describeMacroActivity(action, simulation) {
     // execute and log normally; they never replace a row in this presentation.
     if (['PLAY', 'STEP FORWARD'].includes(action.eventName)) {
         simulation = String(action.details ?? '').match(/Armed:\s*(\w+)/)?.[1] || simulation;
+        if (simulation === 'spiral' && /"method"\s*:\s*"tornado"/.test(action.details)) simulation = 'tornado';
         const definition = simulations[simulation];
         return definition ? { label: definition[0], icon: definition[1],
             key: action.eventName + ':' + simulation } : null;

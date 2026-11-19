@@ -1,3 +1,5 @@
+import {DEFAULT_INK_PREFERENCES} from './simulations/ink.js';
+
 // UI-only recipes of existing parameters. Files/profiles keep numeric rules;
 // no preset identifier enters simulation state, history or macro commands.
 const preset = (id, rules, copy) => Object.freeze({id,rules:Object.freeze(rules),copy:Object.freeze(copy)});
@@ -7,7 +9,7 @@ export const FLUID_PRESETS = Object.freeze({
             ['Balanced','A mix of upward drift and curling currents.'],['מאוזן','שילוב של ציפה וזרמים מסתחררים.'],['Баланс','Сочетание подъёма и завихрений.'],['In balans','Een combinatie van opwaartse drift en wervels.']]),
         preset('gentle',{flow:30,swirl:25,viscosity:80},[
             ['Gentle current','Slower pigment transport with calmer local motion.'],['זרימה עדינה','תזוזת צבע איטית יותר ותנועה מקומית רגועה.'],['Тихое течение','Медленное перемещение и спокойное движение.'],['Zachte stroming','Langzamer kleurtransport met rustige lokale beweging.']]),
-        preset('whirlpools',{flow:75,swirl:100,viscosity:15},[
+        preset('whirlpools',DEFAULT_INK_PREFERENCES,[
             ['Whirlpools','Strong curl around color boundaries, with little smoothing.'],['מערבולות','סחרור חזק בגבולות הצבע, עם מעט ריסון מקומי.'],['Водовороты','Сильные завихрения на границах цветов, мало сглаживания.'],['Draaikolken','Sterke wervels langs kleurgrenzen, met weinig demping.']]),
         preset('rising',{flow:100,swirl:10,viscosity:45},[
             ['Rising pigments','Emphasizes rank-driven buoyancy over curling.'],['צבעים צפים','מדגיש ציפה לפי סדר המיון, עם מעט סחרור.'],['Подъём цветов','Подъём по порядку сортировки, минимум завихрений.'],['Stijgende kleuren','Benadrukt drijfkracht volgens de sortering boven wervels.']]),

@@ -37,6 +37,7 @@ function harness() {
     const loggerStart = source.indexOf('window.logArtEvent = function');
     vm.runInContext(source.slice(loggerStart, source.indexOf('// ------------------------------------------', loggerStart)), c);
     c.recordLiveSimulationRules=()=>{};
+    c.getActiveSpiralRules=()=>c.spiralRules;
     vm.runInContext(functionSource('selectMagnetMode'),c);
     vm.runInContext(functionSource('nextEvolutionMode') + cases.map(item => functionSource(item.fn)).join('\n'), c);
     vm.runInContext(source.slice(source.indexOf('function getHistorySettings('), source.indexOf('function toggleMacroFullScreen(')), c);
@@ -133,9 +134,9 @@ test('Spiral cycling repairs stale mode/arming combinations without toggling off
 });
 
 
-test('settings-only Tornado exits to Off while paused and Pinwheel while running', () => {
+test('Spiral starts at Pinwheel when Tornado was selected on the other button', () => {
  for (const running of [false,true]) {
   const c=harness();c.armedSimulation='spiral';c.spiralMode='tornado';c.spiralRules.method='tornado';c.isLifePlaying=running;
-  c.cycleSpiralMode();assert.equal(c.spiralMode,running?'b':'off');
+  c.cycleSpiralMode();assert.equal(c.spiralMode,'b');
  }
 });

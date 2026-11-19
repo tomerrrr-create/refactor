@@ -5,7 +5,7 @@ import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,rest
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
 import {createOilSettingsDialog} from './oil-settings-dialog.js';
-import {INITIAL_INK_RULES,validateInkRules,createInkState,restoreInkState,validateInkSnapshot,runInkGeneration} from './simulations/ink.js';
+import {DEFAULT_INK_PREFERENCES,validateInkRules,createInkState,restoreInkState,validateInkSnapshot,runInkGeneration} from './simulations/ink.js';
 import {createInkSettingsDialog} from './ink-settings-dialog.js';
 import { createMacroEnding } from './macro-ending.js';
 import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
@@ -74,7 +74,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let recordPausedBrushMotion = loadBrushMotionRecording();
       let replayBrushBefore = null;
       let islandsSession = null;
-      let inkState=null,inkRules={...INITIAL_INK_RULES},replayInkRules=null,inkSettingsUI=null;
+      let inkState=null,inkRules={...DEFAULT_INK_PREFERENCES},replayInkRules=null,inkSettingsUI=null;
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null,oilSettingsUI=null;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
@@ -328,6 +328,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
       let contourMode = 'cracks', cracksState = null, replayCracksMaterial = null, replayCracksGrowth = null, replayCracksBrush = null, lastCracksBrushKey = '';
       let contourRules = { ...C.defaultContourRules, lineColor:'brush', growth:{...INITIAL_CRACKS_GROWTH} }; // <-- ADDED HERE
 let spiralRules = { ...C.defaultSpiralRules };
+const tornadoRules = { method: 'tornado', tornadoVersion: 3, tornadoFrame: 0 };
 let magnetRules = { ...C.defaultMagnetRules };
 let magnetAnchorLimit = 600;
 let replayMagnetAnchorLimit = null;
@@ -451,8 +452,8 @@ currentSortMethod,
             evolutionTuning: structuredClone(evolutionTuning),
             brightnessEvoMode, breatheEvoMode, dlaMode,
             ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
-            spiralMethod: spiralMode !== 'off' ? spiralRules.method : undefined,
-            ...(spiralMode === 'tornado' ? {tornadoVersion: spiralRules.tornadoVersion ?? 3, tornadoFrame: spiralRules.tornadoFrame ?? 0} : {}),
+            spiralMethod: armedSimulation === 'spiral' ? spiralMode : undefined,
+            ...(isTornadoSelected() ? {tornadoVersion: tornadoRules.tornadoVersion, tornadoFrame: tornadoRules.tornadoFrame} : {}),
             ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...gravitationalSortRules } } : {}),
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
@@ -584,11 +585,12 @@ k: tileState.k,
 
         // Older project files have no spiralMethod and keep their old behavior.
         if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'black_hole', 'vortex', 'turbine2', 'tornado'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
-            if (armedSimulation !== 'spiral') armSimulation('spiral');
+            if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry: state.spiralMethod });
             spiralMode = state.spiralMethod;
-            spiralRules.method = state.spiralMethod;
-            spiralRules.tornadoVersion = [2, 3].includes(state.tornadoVersion) ? state.tornadoVersion : 1;
-            spiralRules.tornadoFrame = Number.isSafeInteger(state.tornadoFrame) && state.tornadoFrame >= 0 ? state.tornadoFrame : 0;
+            const rules = getActiveSpiralRules();
+            rules.method = state.spiralMethod;
+            rules.tornadoVersion = [2, 3].includes(state.tornadoVersion) ? state.tornadoVersion : 1;
+            rules.tornadoFrame = Number.isSafeInteger(state.tornadoFrame) && state.tornadoFrame >= 0 ? state.tornadoFrame : 0;
             updateSpiralButtonUI();
         }
         
@@ -1444,7 +1446,7 @@ case 'brightnessEvo':
                 break;
 
 case 'spiral': 
-                nextState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
+                nextState = Simulations.runSpiralGeneration({ ...context, spiralRules: getActiveSpiralRules() });
                 boardState = nextState; 
                 break;
 case 'magnet': 
@@ -1541,7 +1543,7 @@ break;
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(getContourRecordingRules());
-        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
+        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(getActiveSpiralRules());
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(getMagnetRecordingRules());
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
@@ -1590,7 +1592,7 @@ case 'contour':
                 break;
 
 case 'spiral': 
-                boardState = Simulations.runSpiralGeneration({ ...context, spiralRules }); 
+                boardState = Simulations.runSpiralGeneration({ ...context, spiralRules: getActiveSpiralRules() });
                 break;
 
 
@@ -1777,7 +1779,7 @@ function getSimulationRecordingDetails() {
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
         else if (armedSimulation === 'contour') simDetails = JSON.stringify(getContourRecordingRules());
-        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(spiralRules);
+        else if (armedSimulation === 'spiral') simDetails = JSON.stringify(getActiveSpiralRules());
         else if (armedSimulation === 'magnet') simDetails = JSON.stringify(getMagnetRecordingRules());
         else if (armedSimulation === 'sandpile') simDetails = JSON.stringify(getChiFlowRecordingRules());
         else if (armedSimulation === 'turing') simDetails = JSON.stringify(turingRules);
@@ -1862,23 +1864,37 @@ function initializeDla() {
 
 
 
+function isTornadoSelected() {
+    return armedSimulation === 'spiral' && spiralMode === 'tornado';
+}
+function getActiveSpiralRules() {
+    return isTornadoSelected() ? tornadoRules : spiralRules;
+}
+function activeEvolutionControl() {
+    return isTornadoSelected() ? 'ink' : armedSimulation;
+}
+function matchesEvolutionControl(simulation) {
+    return activeEvolutionControl() === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation());
+}
+
 // Remember a selection, never an engine's running cursor or artwork.
 function currentCycleMode(simulation) {
     return ({gameOfLife:gameOfLifeMode,sandpile:chiFlowMode,gravitationalSort:gsMode,
         spiral:spiralMode,magnet:magnetMode,brightnessEvo:brightnessEvoMode,dla:dlaMode,
         breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
-        ink:'flow',oil:'droplets',network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
+        ink:isTornadoSelected()?'tornado':'flow',oil:'droplets',network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
         nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
 }
 function rememberCurrentCycle() {
     if(selectingCycleMode||!cycleMemory.active())return;
+    const selected = activeEvolutionControl();
     if(cycleMemoryAfterReplay){
         // A subsequent manual settings edit is a new choice; an untouched
         // playback result must never replace the user's remembered mode.
-        if(cycleMemoryAfterReplay.simulation!==armedSimulation||cycleMemoryAfterReplay.mode===currentCycleMode(armedSimulation))return;
+        if(cycleMemoryAfterReplay.simulation!==selected||cycleMemoryAfterReplay.mode===currentCycleMode(selected))return;
         cycleMemoryAfterReplay=false;
     }
-    if(armedSimulation)cycleMemory.remember(armedSimulation,currentCycleMode(armedSimulation));
+    if(selected)cycleMemory.remember(selected,currentCycleMode(selected));
     if(windMode)cycleMemory.remember('wind',windSettings.mode);
 }
 function refreshCycleIcons() {
@@ -1918,7 +1934,7 @@ function resetEvolutionCycle(simulation, {refresh=true} = {}) {
     if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
     const mode=defaultEvolutionCycleMode(simulation);
     if(mode===undefined)return false;
-    const selected=armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation());
+    const selected=matchesEvolutionControl(simulation);
     cycleMemory.remember(simulation,mode);
     if(!selected){
         // Clouds is settings-only and normally survives re-entry. An explicit
@@ -1931,7 +1947,13 @@ function resetEvolutionCycle(simulation, {refresh=true} = {}) {
         if(refresh)refreshCycleIcons();return true;
     }
     cycleMemoryAfterReplay=false;
-    if(currentCycleMode(armedSimulation)!==mode){
+    if(currentCycleMode(simulation)!==mode){
+        if (simulation === 'ink') {
+            selectVorticesMode(mode);
+            rememberCurrentCycle();
+            if (refresh) refreshCycleIcons();
+            return true;
+        }
         // Breathe's existing mode changes require Pause. Other active engines
         // keep their current generation clock, just like normal live cycling.
         if(simulation==='breathe'&&isLifePlaying)pauseLife();
@@ -1954,14 +1976,17 @@ function cycleMemoryTap(simulation, onTap) {
     return ()=>{
         selectingCycleMode=true;
         try {
-            const selected=armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation());
+            const selected=matchesEvolutionControl(simulation);
             if(!selected&&remembered!==undefined){
-                armSimulation(simulation);restoreCycleMode(simulation,remembered);
-                // Existing context commands keep recipes independent of this preference.
-                window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+                if (simulation === 'ink') selectVorticesMode(remembered);
+                else {
+                    armSimulation(simulation);restoreCycleMode(simulation,remembered);
+                    // Existing context commands keep recipes independent of this preference.
+                    window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());
+                }
             }else onTap();
             if(selected&&armedSimulation===null)cycleMemory.finishCycle(simulation);
-            else if(armedSimulation===simulation||(isNudgeSimulation(simulation)&&isNudgeSimulation()))cycleMemory.enterCycle(simulation);
+            else if(matchesEvolutionControl(simulation))cycleMemory.enterCycle(simulation);
         }finally{
             selectingCycleMode=false;cycleMemoryAfterReplay=false;
             rememberCurrentCycle();refreshCycleIcons();
@@ -1973,17 +1998,17 @@ function cycleMemoryTap(simulation, onTap) {
 // generations, rules and Undo boundary. Only breathing retains manual Pause.
 function handleEvolutionTap(simulation, onTap) {
     if(typeof cycleMemory!=='undefined'&&cycleMemory.active())onTap=cycleMemoryTap(simulation,onTap);
-    if (!isLifePlaying || armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())) {
+    if (!isLifePlaying || matchesEvolutionControl(simulation)) {
         onTap();
         return;
     }
     if (armedSimulation === 'breathe' || simulation === 'breathe') return;
     pauseLife();
     onTap();
-    if ((armedSimulation === simulation || (isNudgeSimulation(simulation)&&isNudgeSimulation())) && !isLifePlaying) togglePlayPauseLife();
+    if (matchesEvolutionControl(simulation) && !isLifePlaying) togglePlayPauseLife();
 }
 
-function armSimulation(simulationName, { recordIslandsStart = true } = {}) {
+function armSimulation(simulationName, { recordIslandsStart = true, spiralEntry = 'b' } = {}) {
     if (isLifePlaying) return;
     if (!isExecutingMacroCommand) { replayInkRules=null; replayOilRules=null; replayNetworkRules=null; replayCymaticsRules=null; replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null; }
 
@@ -2092,8 +2117,8 @@ if (!isTogglingOff && simulationName !== null) {
         }
 
 if (simulationName === 'spiral') {
-    spiralMode = 'b';
-    if (typeof spiralRules !== 'undefined') spiralRules.method = 'b';
+    spiralMode = spiralEntry;
+    if (spiralEntry !== 'tornado') spiralRules.method = spiralEntry;
 }
 
 
@@ -2351,7 +2376,7 @@ if (simulationName === 'magnet') {
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
             rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules, lineColor:'brush' }, turing: { ...turingRules },
-                ...(JSON.stringify(inkRules)===JSON.stringify(INITIAL_INK_RULES)?{}:{ink:{...inkRules}}),
+                ...(JSON.stringify(inkRules)===JSON.stringify(DEFAULT_INK_PREFERENCES)?{}:{ink:{...inkRules}}),
                 ...(JSON.stringify(oilRules)===JSON.stringify(INITIAL_OIL_RULES)?{}:{oil:{...oilRules}}),
                 ...(JSON.stringify(networkRules)===JSON.stringify(DEFAULT_NETWORK_PREFERENCES)?{}:{network:{...networkRules}}),
                 ...(JSON.stringify(cymaticsRules)===JSON.stringify(INITIAL_CYMATICS_RULES)?{}:{cymatics:{...cymaticsRules}}) }
@@ -2373,6 +2398,7 @@ if (simulationName === 'magnet') {
         separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
         spiralRules = { ...settings.rules.spiral };
+        if (spiralRules.method === 'tornado') spiralRules = { ...C.defaultSpiralRules };
         magnetRules = { ...settings.rules.magnet };
         erosionRules = { ...settings.rules.erosion };
         dlaRules = { ...settings.rules.dla };
@@ -2381,7 +2407,7 @@ if (simulationName === 'magnet') {
         contourRules.lineColor='brush';
         if(startup){contourRules.growth={...INITIAL_CRACKS_GROWTH,...(contourRules.growth?.area==='dead'?{area:'dead'}:{})};}
         turingRules = { ...settings.rules.turing };
-        inkRules=validateInkRules(settings.rules.ink);
+        inkRules=validateInkRules(settings.rules.ink ?? DEFAULT_INK_PREFERENCES);
         oilRules=validateOilRules(settings.rules.oil);
         networkRules=validateNetworkRules(settings.rules.network??DEFAULT_NETWORK_PREFERENCES);
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
@@ -2398,7 +2424,7 @@ if (simulationName === 'magnet') {
     if(typeof updateOilButtonUI==='function')updateOilButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
         if (armedSimulation === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
-        if (armedSimulation === 'spiral') spiralMode = spiralRules.method;
+        if (armedSimulation === 'spiral' && !isTornadoSelected()) spiralMode = spiralRules.method;
         if (armedSimulation === 'magnet') magnetMode = magnetRules.method;
         if (armedSimulation === 'dla') dlaMode = dlaRules.colorGenetics ? 'genetics' : 'no-genetics';
         updateGravitationalSortButtonUI(); updateSpiralButtonUI();
@@ -2776,7 +2802,7 @@ const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
         updateContourButtonUI();
 dom.btnSpiral.title = getText('tooltip_spiral');
 dom.btnTuring.title = getText('tooltip_turing');
-if(dom.btnInk){dom.btnInk.title=getText('help_ink');dom.btnInk.setAttribute('aria-label',dom.btnInk.title);}
+updateInkButtonUI();
 if(dom.btnOil){dom.btnOil.title=getText('help_oil');dom.btnOil.setAttribute('aria-label',dom.btnOil.title);}
 if(dom.btnNetwork){dom.btnNetwork.title=getText('help_network');dom.btnNetwork.setAttribute('aria-label',dom.btnNetwork.title);}
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
@@ -3822,19 +3848,43 @@ function restoreInkSnapshot(value,{preservePreferences=false}={}){
     updateInkButtonUI();
 }
 function runInkEvolution(context){const result=runInkGeneration({...context,inkRules:getInkRules()},inkState);inkState=result.nextInkState;return result.nextBoardState;}
-function updateInkButtonUI(){
-    if(!dom.btnInk)return;
-    dom.btnInk.classList.toggle('simulation-active',armedSimulation==='ink');
-    dom.btnInk.setAttribute('aria-pressed',String(armedSimulation==='ink'));
+function updateInkButtonUI() {
+    const button = dom.btnInk;
+    if (!button) return;
+    const active = activeEvolutionControl() === 'ink';
+    const mode = active ? currentCycleMode('ink') : cycleMemory.entry('ink') ?? 'flow';
+    button.dataset.mode = mode;
+    button.classList.toggle('simulation-active', active);
+    button.setAttribute('aria-pressed', String(active));
+    button.title = getText(mode === 'tornado' ? 'spiral_tornado' : 'help_ink');
+    button.setAttribute('aria-label', button.title);
 }
-function cycleInkMode(){
-    if(isLifePlaying&&armedSimulation==='ink')return;
-    if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
-    if(armedSimulation==='ink'){
-        const snapshot=getInkSnapshot();armSimulation(null);
-        window.logArtEvent('Ink Mode Changed',JSON.stringify({mode:'off',...snapshot}));
-    }else{armSimulation('ink');window.logArtEvent('SIMULATION_RULES',getSimulationRecordingDetails());}
+
+function selectVorticesMode(mode) {
+    const running = isLifePlaying;
+    if (running) pauseLife();
+    if (mode === 'off') {
+        if (isTornadoSelected()) window.logArtEvent('Spiral Mode Changed', 'off');
+        else window.logArtEvent('Ink Mode Changed', JSON.stringify({mode:'off', ...getInkSnapshot()}));
+        armSimulation(null);
+    } else if (mode === 'tornado') {
+        Object.assign(tornadoRules, { method:'tornado', tornadoVersion:3, tornadoFrame:0 });
+        if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry:'tornado' });
+        else spiralMode = 'tornado';
+        updateSpiralButtonUI();
+        window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
+    } else {
+        armSimulation('ink');
+        window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
+    }
     updateInkButtonUI();
+    if (running) togglePlayPauseLife();
+}
+
+function cycleInkMode() {
+    if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
+    const current = activeEvolutionControl() === 'ink' ? currentCycleMode('ink') : 'off';
+    selectVorticesMode(nextEvolutionMode(current, ['off', 'flow', 'tornado']));
 }
 function saveInkSettings(value){
     if(armedSimulation!=='ink'||isBreathing||isMacroLoaded||isMacroPlaying)return false;
@@ -4267,25 +4317,29 @@ function cycleBreatheEvoMode() {
 
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
-    const displayMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='spiral'?cycleMemory.entry('spiral'):undefined)??spiralMode;
+    const active = armedSimulation === 'spiral' && !isTornadoSelected();
+    const saved = typeof cycleMemory !== 'undefined' ? cycleMemory.entry('spiral') : undefined;
+    const mode = active ? spiralMode : saved ?? 'off';
+    const displayMode = mode === 'tornado' ? 'off' : mode;
     // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-tornado', 'mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
-    dom.btnSpiral.title = ['black_hole', 'turbine2', 'tornado'].includes(displayMode)
+    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
+    dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(displayMode)
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${displayMode}`)}`
         : getText('tooltip_spiral');
     dom.btnSpiral.setAttribute('aria-label', dom.btnSpiral.title);
 
     if (displayMode !== 'off') {
         dom.btnSpiral.classList.add('mode-' + displayMode);
-        if (armedSimulation === 'spiral') {
+        if (active) {
              dom.btnSpiral.classList.add('simulation-active');
         }
     }
+    if (typeof updateInkButtonUI === 'function') updateInkButtonUI();
 }
 
 
 function cycleSpiralMode() {
-    const oldMode = armedSimulation === 'spiral' ? spiralMode : 'off';
+    const oldMode = armedSimulation === 'spiral' && spiralMode !== 'tornado' ? spiralMode : 'off';
 const sequence = SPIRAL_MODE_SEQUENCE;
 
 
@@ -4566,10 +4620,10 @@ function validateHistorySettings(settings) {
 function applyHistorySettings(settings) {
     validateHistorySettings(settings);
     if (settings.tornadoState) {
-        if (armedSimulation !== 'spiral') armSimulation('spiral');
-        spiralMode = spiralRules.method = 'tornado';
-        spiralRules.tornadoVersion = settings.tornadoState.version;
-        spiralRules.tornadoFrame = settings.tornadoState.frame;
+        if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry:'tornado' });
+        spiralMode = 'tornado';
+        tornadoRules.tornadoVersion = settings.tornadoState.version;
+        tornadoRules.tornadoFrame = settings.tornadoState.frame;
         updateSpiralButtonUI();
     }
     if (settings.gravityRules) {
@@ -5241,7 +5295,7 @@ function stopMacro({ preserveFullscreen = false, preserveActivity = false } = {}
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     if(typeof updateContourButtonUI==='function')updateContourButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.enabled()){
-        if(cycleMemoryAfterReplay)cycleMemoryAfterReplay={simulation:armedSimulation,mode:currentCycleMode(armedSimulation)};
+        if(cycleMemoryAfterReplay)cycleMemoryAfterReplay={simulation:activeEvolutionControl(),mode:currentCycleMode(activeEvolutionControl())};
         refreshCycleIcons();
     }
     currentMacroStep = 0;
@@ -5366,7 +5420,9 @@ if (sortMethod && currentSortMethod !== sortMethod) {
 
 
     // מוודאים שהסימולציה הנכונה חמושה בממשק
-    if (armedSimulation !== sim) armSimulation(sim);
+    if (armedSimulation !== sim) armSimulation(sim, {
+        ...(sim === 'spiral' && /"method"\s*:\s*"tornado"/.test(rulesStr) ? { spiralEntry:'tornado' } : {})
+    });
 
     if(sim==='ink'){restoreInkSnapshot(restoredInk);return sim;}
     if(sim==='oil'){restoreOilSnapshot(restoredOil);return sim;}
@@ -5443,8 +5499,8 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                     updateContourButtonUI();
                 }
                 else if (sim === 'spiral') {
-                    Object.assign(spiralRules, parsedRules, {tornadoVersion: [2, 3].includes(parsedRules.tornadoVersion) ? parsedRules.tornadoVersion : 1, tornadoFrame: Number.isSafeInteger(parsedRules.tornadoFrame) && parsedRules.tornadoFrame >= 0 ? parsedRules.tornadoFrame : 0});
                     spiralMode = parsedRules.method || spiralMode;
+                    Object.assign(getActiveSpiralRules(), parsedRules, {tornadoVersion: [2, 3].includes(parsedRules.tornadoVersion) ? parsedRules.tornadoVersion : 1, tornadoFrame: Number.isSafeInteger(parsedRules.tornadoFrame) && parsedRules.tornadoFrame >= 0 ? parsedRules.tornadoFrame : 0});
                     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
                 }
                 else if (sim === 'magnet') {
@@ -5736,8 +5792,10 @@ function executeMacroAction(action) {
                     if (armedSimulation === 'spiral') armSimulation(null);
                 } else {
                     if (armedSimulation !== 'spiral') armSimulation('spiral');
-                    spiralRules.method = action.details;
-                    if (spiralRules.tornadoVersion === 3) spiralRules.tornadoFrame = 0;
+                    spiralMode = action.details;
+                    const rules = getActiveSpiralRules();
+                    rules.method = action.details;
+                    if (rules.tornadoVersion === 3) rules.tornadoFrame = 0;
                 }
                 spiralMode = action.details;
                 if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -5900,7 +5958,7 @@ else if (action.eventName === 'Invert Colors') {
         onLanguageChange(updateAllUIText);
         macroActivity = createMacroActivity({ board: dom.board, getText, getLang: getCurrentLang,
             readState: () => ({ loaded: isMacroLoaded, playing: isMacroPlaying, lifePlaying: isLifePlaying,
-                simulation: armedSimulation, generation: currentGenerationCount, boardSize:n,
+                simulation: isTornadoSelected() ? 'tornado' : armedSimulation, generation: currentGenerationCount, boardSize:n,
                 queue: macroQueue, index: currentMacroStep, fullscreen: isMacroFullscreen }) });
         onLanguageChange(updateNudgeButtonUI);
         onLanguageChange(updateContourButtonUI);
@@ -6227,13 +6285,13 @@ updateBrightnessEvoButtonUI();
         initializeExperimentalSimulationControls({flags:experimentalSimulations,getText,onLanguageChange,
             canChange:()=>!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             onChange:(id,enabled)=>{
-                if(!enabled&&armedSimulation===id){if(isLifePlaying)pauseLife();armSimulation(null);}
+                if(!enabled&&activeEvolutionControl()===id){if(isLifePlaying)pauseLife();armSimulation(null);}
                 evolutionDrawer?.applyLayout();
             }
         });
         evolutionDrawer = createEvolutionDrawer({
             isVisible:experimentalSimulations.visible,
-            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:()=>armedSimulation,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
+            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:activeEvolutionControl,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
             canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             getText,getLang:getCurrentLang,onLanguageChange,
@@ -6472,7 +6530,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && !(simulation==='islands'&&islandsSession?.mode==='oil') && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (armedSimulation === simulation || (isNudgeSimulation(simulation) && isNudgeSimulation())),
+                canOpen: () => Boolean(onOpen) && !(simulation==='islands'&&islandsSession?.mode==='oil') && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && (simulation === 'ink' ? armedSimulation === 'ink' : matchesEvolutionControl(simulation)),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });
