@@ -8,7 +8,7 @@ const source = readFileSync(new URL('../js/simulation-theme.js', import.meta.url
     .replace(/^import .*;\n/, '').replaceAll('export function ', 'function ');
 function harness(saved = {}, blocked = false) {
     const storage = new Map(Object.entries(saved)), attributes = new Set();
-    const buttons = () => ['blue', 'gold', 'teal', 'deep-blue'].map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
+    const buttons = () => ['blue', 'gold', 'teal'].map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
         setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(k, fn) { this.handlers[k] = fn; } }));
     const rest = buttons(), playback = buttons();
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
@@ -23,7 +23,7 @@ function harness(saved = {}, blocked = false) {
     return { context, root, storage, rest, playback, run: code => vm.runInContext(code, context) };
 }
 test('all resting/playback color pairs restore the resting selection and never persist running state', () => {
-    for (const rest of ['blue', 'gold', 'teal', 'deep-blue']) for (const playback of ['blue', 'gold', 'teal', 'deep-blue']) {
+    for (const rest of ['blue', 'gold', 'teal']) for (const playback of ['blue', 'gold', 'teal']) {
         const h = harness(); h.run('initializeSimulationTheme()');
         h.run(`applySimulationTheme('${rest}'); applySimulationPlaybackTheme('${playback}')`);
         assert.equal(h.root.dataset.simulationEffectiveTheme, rest);
@@ -56,7 +56,7 @@ test('fresh/blocked storage defaults to gold at rest and while running; independ
     }
 });
 test('playback color round-trips through settings and profiles; legacy profiles use gold', () => {
-    for (const simulationPlaybackTheme of ['blue', 'gold', 'teal', 'deep-blue']) {
+    for (const simulationPlaybackTheme of ['blue', 'gold', 'teal']) {
         const settings = { ...defaultWorkspaceSettings(), simulationPlaybackTheme };
         assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
         assert.equal(validateProfileSnapshot({ settings }).settings.simulationPlaybackTheme, simulationPlaybackTheme);
@@ -77,27 +77,16 @@ test('retired device choices fall back independently and replace only appearance
     }
     const h = harness({colorGridSimulationTheme:'teal',colorGridSimulationPlaybackTheme:'pink'});
     h.run('initializeSimulationTheme()');assert.equal(h.root.dataset.simulationTheme,'teal');assert.equal(h.root.dataset.simulationPlaybackTheme,'gold');
-});
-
-test('saved Graphite choices resolve to Deep Blue independently in storage, profiles and settings files', () => {
-    for (const graphite of ['graphite', 'graphite-edge', 'graphite-dust']) {
-        const h = harness({colorGridSimulationTheme:graphite,colorGridSimulationPlaybackTheme:graphite});
+    for (const removed of ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue']) {
+        const h = harness({ colorGridSimulationTheme: removed, colorGridSimulationPlaybackTheme: removed });
         h.run('initializeSimulationTheme()');
-        assert.equal(h.root.dataset.simulationTheme,'deep-blue');
-        assert.equal(h.root.dataset.simulationPlaybackTheme,'deep-blue');
-        assert.equal(h.storage.get('colorGridSimulationTheme'),'deep-blue');
-        assert.equal(h.storage.get('colorGridSimulationPlaybackTheme'),'deep-blue');
-        const settings = {...defaultWorkspaceSettings(),simulationTheme:graphite,simulationPlaybackTheme:'gold'};
-        const previous = 'FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings});
-        for (const normalized of [deserializeWorkspaceSettings(previous),validateProfileSnapshot({settings}).settings]) {
-            assert.equal(normalized.simulationTheme,'deep-blue');
-            assert.equal(normalized.simulationPlaybackTheme,'gold');
-        }
+        assert.equal(h.storage.get('colorGridSimulationTheme'), 'blue');
+        assert.equal(h.storage.get('colorGridSimulationPlaybackTheme'), 'gold');
     }
 });
 
 test('old settings and profiles retain other choices while retired appearances normalize to defaults', () => {
-    for (const removed of ['silver', 'ice', 'pink']) {
+    for (const removed of ['silver', 'ice', 'pink', 'graphite', 'graphite-edge', 'graphite-dust', 'deep-blue']) {
         const settings = {...defaultWorkspaceSettings(), simulationTheme:removed, simulationPlaybackTheme:removed};
         settings.brush.size=7;settings.startup.boardSize=27;
         const text='FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings});

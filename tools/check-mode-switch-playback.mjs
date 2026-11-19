@@ -125,7 +125,7 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
     ...['::before','::after'].map(pseudo=>getComputedStyle(backdrop,pseudo).backgroundImage)],
   };
  },theme);
- const themes=['blue','gold','teal','deep-blue'];
+ const themes=['blue','gold','teal'];
  const original=[];
  for(const theme of themes)original.push(await pausedAppearance(theme));
  // Open Technicians using the restored control's existing upward swipe.

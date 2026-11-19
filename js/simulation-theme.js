@@ -3,11 +3,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 // Appearance preferences are independent of artwork and replay; profiles capture them.
 const STORAGE_KEY = 'colorGridSimulationTheme';
 const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
+const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
-  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', 'deep-blue': 'Deep Blue'},
-  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', 'deep-blue': 'כחול עמוק'},
-  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', 'deep-blue': 'Глубокий синий'},
-  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', 'deep-blue': 'Diepblauw'}
+  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise'},
+  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן'},
+  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза'},
+  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois'}
 };
 export function getSimulationTheme() {
   return document.documentElement.dataset.simulationTheme || 'gold';
@@ -29,13 +30,8 @@ export function setSimulationRunning(running) {
   updateEffectiveTheme();
 }
 
-function normalizeTheme(value) {
-  if (['graphite', 'graphite-edge', 'graphite-dust'].includes(value)) return 'deep-blue';
-  return Object.hasOwn(LABELS.en, value) ? value : 'gold';
-}
-
 export function applySimulationTheme(value) {
-  const theme = normalizeTheme(value);
+  const theme = RETIRED_DARK_THEMES.includes(value) ? 'blue' : Object.hasOwn(LABELS.en, value) ? value : 'gold';
   document.documentElement.dataset.simulationTheme = theme;
   for (const preview of document.querySelectorAll('#simulationThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
@@ -46,7 +42,7 @@ export function applySimulationTheme(value) {
 }
 
 export function applySimulationPlaybackTheme(value) {
-  const theme = normalizeTheme(value);
+  const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'gold';
   document.documentElement.dataset.simulationPlaybackTheme = theme;
   for (const preview of document.querySelectorAll('#simulationPlaybackThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
