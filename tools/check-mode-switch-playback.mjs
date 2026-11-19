@@ -9,7 +9,7 @@ let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.modeTest={
  setup(sim,creation=false){pauseLife();resetArmedState();n=13;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%7;t.isGold=false;});isSimModeActive=!creation;dom.controlsContainer.classList.toggle('sim-mode-active',!creation);dom.btnToggleSimMode.classList.toggle('active',!creation);dom.btnPlayPauseLife.classList.toggle('control-hidden',creation);updateSimulationUtilityControl();armSimulation(sim,{recordIslandsStart:false});artRecipeLog=[];historyRecipeCursor=0;},
  start:togglePlayPauseLife,pause:pauseLife,toggle:toggleSimMode,step:stepForward,
- wind:setWindMode, playbackTheme:applySimulationPlaybackTheme,
+ wind:setWindMode, restingTheme:applySimulationTheme, playbackTheme:applySimulationPlaybackTheme,
  state:()=>({playing:isLifePlaying,armed:armedSimulation,gen:currentGenerationCount,n,mode:isSimModeActive,loaded:isMacroLoaded,log:[...artRecipeLog]}),
  macro(text){if(isLifePlaying)pauseLife();macroQueue=parseMacroText(text);settingsProfiles.beginReplay();isMacroLoaded=true;currentMacroStep=0;playMacro();}
  };initializeApp().then(()=>modeTest.ready=true);`);
@@ -45,11 +45,10 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  });
  const awaitHalo=(id,opacity)=>page.waitForFunction(({id,opacity})=>
   Number(getComputedStyle(document.querySelector(id),'::before').opacity)===opacity,{id,opacity});
- await page.evaluate(()=>{modeTest.setup('gameOfLife');modeTest.playbackTheme('teal');modeTest.step();});
+ await page.evaluate(()=>{modeTest.setup('gameOfLife');modeTest.restingTheme('gold');modeTest.playbackTheme('teal');modeTest.step();});
  assert.equal((await halo(life)).opacity,0,'arming and single step have no playback halo');
  const pausedDrawer=await drawerInk(),drawerBounds=await drawer.boundingBox();
- assert.deepEqual(pausedDrawer.fills,['rgb(255, 215, 0)','rgb(8, 10, 9)']);
- assert.notEqual(pausedDrawer.glow,'none');
+ assert.deepEqual(pausedDrawer,{fills:['rgb(118, 103, 65)','rgb(8, 10, 9)'],glow:'none'});
  await page.locator('#btnPlayPauseLife').click();await awaitHalo(life,1);
  await awaitDrawerInk(['rgb(104, 189, 181)','rgb(8, 10, 9)'],'none');
  assert.deepEqual(await drawer.boundingBox(),drawerBounds);
