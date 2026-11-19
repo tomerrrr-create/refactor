@@ -67,7 +67,7 @@ try {
             }
         }
         const visibleMaps=()=>menu.locator('[data-cymatics-map]:visible').evaluateAll(nodes=>nodes.map(n=>n.dataset.cymaticsMap).sort());
-        const order=['turbine2','flow','left','cosmic','black_hole','circular','a','tornado'];
+        const order=['turbine2','flow','left','cosmic','black_hole','a','circular','tornado'];
         const defaultOrder=order.filter(mode=>mode!=='a'&&mode!=='tornado');
         const circularName=lang==='he'?'אמפתיה מעגלית':'Circular Empathy';
         assert(await page.locator(hub).isVisible());
@@ -94,6 +94,10 @@ try {
             assert.deepEqual(selected.project.tiles,before,'selecting a paused mode preserves the board');
             assert.equal(await page.locator(hub).getAttribute('aria-pressed'),'true');
             assert.deepEqual(await page.locator(hub+' svg:visible').evaluateAll(ns=>ns.map(n=>n.dataset.vorticesIcon)),[mode==='tornado'?'flow':mode]);
+            if (mode==='a') {
+                assert.equal(await page.locator(hub+' svg:visible path').getAttribute('d'),
+                    await page.locator('#iconGsCircle path').getAttribute('d'));
+            }
             assert.equal(await page.locator(hub+' .vortices-tornado-badge').isVisible(),mode==='tornado');
             for (const source of ['#btnSpiral','#btnGravitationalSort','#btnCymatics']) {
                 assert(!(await page.locator(source).getAttribute('class')).includes('simulation-active'));
