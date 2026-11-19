@@ -26,11 +26,28 @@ try{for(const [lang,touch] of [['en',false],['he',true],['ru',false],['nl',true]
  const state=()=>page.evaluate(()=>fluidTest.state());
  for(const kind of ['ink','oil']){
   await page.evaluate(kind=>fluidTest.setup(kind),kind);const initial=await state();
-  const toolbar=page.locator(kind==='ink'?'#btnInk':'#btnOil'),letter=kind==='ink'?'A':'B';assert.equal((await toolbar.locator('svg text').textContent()).trim(),letter);assert.equal(await toolbar.locator('svg path').count(),0);
-  const captured=await page.evaluate(async kind=>{const {captureMacroActivityIcon}=await import('./js/macro-activity.js');const icon=captureMacroActivityIcon(document.getElementById(kind==='ink'?'btnInk':'btnOil'));return {text:icon.node.querySelector('text').textContent,fill:icon.node.querySelector('text').style.fill};},kind);assert.equal(captured.text,letter);assert(captured.fill.length>0);
+  const toolbar=page.locator(kind==='ink'?'#btnInk':'#btnOil');
+  const paths=await toolbar.locator('svg path').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('d')));
+  if(kind==='ink'){
+   const name={en:'Color Vortices',he:'מערבולות צבע',ru:'Цветовые вихри',nl:'Kleurwervels'}[lang];
+   assert.equal(await toolbar.getAttribute('aria-label'),name);
+   assert.equal(await toolbar.locator('svg text').count(),0);
+   assert(paths.length>0);
+  }else{
+   assert.equal((await toolbar.locator('svg text').textContent()).trim(),'B');
+   assert.equal(paths.length,0);
+  }
+  const captured=await page.evaluate(async kind=>{
+   const {captureMacroActivityIcon}=await import('./js/macro-activity.js');
+   const {node}=captureMacroActivityIcon(document.getElementById(kind==='ink'?'btnInk':'btnOil'));
+   const label=node.querySelector('text');
+   return {paths:[...node.querySelectorAll('path')].map(path=>path.getAttribute('d')),text:label?.textContent,fill:label?.style.fill,stroke:node.style.stroke};
+  },kind);
+  if(kind==='ink'){assert.deepEqual(captured.paths,paths);assert(captured.stroke&&captured.stroke!=='none');}
+  else {assert.equal(captured.text,'B');assert(captured.fill.length>0);}
   const open=async()=>{await page.evaluate(kind=>fluidTest.open(kind),kind);await page.waitForTimeout(250);};
   const dialog=page.locator('#'+kind+'SettingsDialog'),cards=dialog.locator('[data-preset]');
-  await open();assert((await dialog.locator('h2 .fluid-original-symbol svg path').count())>0);assert.equal(await dialog.locator('h2 .fluid-original-symbol svg text').count(),0);assert.equal(await cards.count(),5);assert.equal(await dialog.locator('[data-preset="balanced"]').getAttribute('aria-pressed'),'true');
+  await open();assert((await dialog.locator('h2 .fluid-original-symbol svg path').count())>0);assert.equal(await dialog.locator('h2 .fluid-original-symbol svg text').count(),0);if(kind==='ink'){assert.deepEqual(await dialog.locator('h2 svg path').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('d'))),paths);assert.equal((await dialog.locator('h2').textContent()).trim(),await toolbar.getAttribute('aria-label'));}assert.equal(await cards.count(),5);assert.equal(await dialog.locator('[data-preset="balanced"]').getAttribute('aria-pressed'),'true');
   for(const preset of FLUID_PRESETS[kind]){
    const card=dialog.locator('[data-preset="'+preset.id+'"]');await(touch?card.tap():card.click());
    assert.equal(await card.getAttribute('aria-pressed'),'true');assert.equal(await card.locator('span').textContent(),fluidPresetCopy(preset,lang)[1]);

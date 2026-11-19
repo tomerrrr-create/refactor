@@ -15,10 +15,10 @@ export const evolutionExplanations = {
         ['Olie op water','Verwante kleuren vormen druppels. Oppervlaktespanning rondt de randen af; sortering verandert de groepen en opwaartse drift.']
     ],
     ink: [
-        ['Ink in fluid','Colors stretch and curl in a fluid flow. New drawing feeds the motion; sorting changes buoyancy and transport.'],
-        ['דיו בנוזל','הצבעים שבציור נמתחים ומסתחררים בזרימה. ציור חדש מניע את הנוזל; המיון משנה את הסחיפה והציפה.'],
-        ['Чернила в жидкости','Цвета рисунка растягиваются и закручиваются. Рисование питает течение; сортировка меняет движение.'],
-        ['Inkt in vloeistof','De kleuren rekken en wervelen. Tekenen voedt de stroming; sortering verandert het transport.']
+        ['Color Vortices','Existing colors stretch and curl into vortices. New strokes feed the motion, and changing palette order changes how the colors drift.'],
+        ['מערבולות צבע','הצבעים שכבר על הלוח נמתחים ומסתחררים במערבולות. משיכות חדשות מזינות את התנועה, וסדר הפלטה משנה איך הצבעים נסחפים.'],
+        ['Цветовые вихри','Цвета на доске растягиваются и закручиваются в вихри. Новые мазки усиливают движение, а порядок палитры меняет перенос цветов.'],
+        ['Kleurwervels','De kleuren op het bord rekken uit en draaien in wervels. Nieuwe streken voeden de beweging. De paletvolgorde verandert hoe de kleuren meedrijven.']
     ],
     islands: [
         ['Islands','The leaf copies neighboring colors. The drop gathers pigments using fixed Oil on water defaults. B keeps its own editable Oil settings.'],
