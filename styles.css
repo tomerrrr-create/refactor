@@ -20,6 +20,9 @@
   --glow-color: var(--gold);
   --sim-color: #a58b54;
   --sim-gold-muted: #766741;
+  --sim-graphite-ink: #9aa6b4;
+  --sim-graphite-border: #9daab057;
+  --sim-graphite-background: linear-gradient(180deg,#c4d2e00b,transparent 44%), linear-gradient(135deg,#1b222c,#0d1016);
   transition: --sim-color 400ms ease-in-out;
 
 }
@@ -1923,10 +1926,20 @@ button, .ctrl {
 :root[data-simulation-effective-theme="gold"] { --sim-color: #a58b54; }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: var(--sim-gold-muted); }
 :root[data-simulation-effective-theme="teal"] { --sim-color: #68BDB5; }
+:root[data-simulation-effective-theme="graphite"] { --sim-color: var(--sim-graphite-ink); }
 :root[data-simulation-effective-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
 :root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
 :root[data-simulation-effective-theme="gold"] #simModeBackground::before,
 :root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
+/* Keep the Graphite surface as it fades out when starting with a different playback ink. */
+:root:is([data-simulation-effective-theme="graphite"], [data-simulation-running][data-simulation-theme="graphite"]) .sim-mode-active #simModeBackground {
+  border-color: var(--sim-graphite-border);
+  box-shadow: inset 0 1px 0 #c4d2e00e, 0 4px 20px #0006;
+}
+:root:is([data-simulation-effective-theme="graphite"], [data-simulation-running][data-simulation-theme="graphite"]) .sim-mode-active #simModeBackground::after {
+  background: var(--sim-graphite-background);
+  opacity: 1;
+}
 /* Fade only the decorative frame; simulation controls remain independent. */
 :root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
 
@@ -1973,6 +1986,7 @@ button, .ctrl {
 .simulation-theme-preview[data-theme="teal"] { --preview-color: #68BDB5; --preview-border: #68bdb545; --preview-background: linear-gradient(135deg, #142724, #0a100f); }
 .simulation-theme-preview[data-theme="gold"] { --preview-color: #a58b54; --preview-border: #b28b3645; --preview-background: linear-gradient(135deg, #1c1a12, #0d0e0c); }
 .simulation-theme-preview[data-theme="blue"] { --preview-color: #3F51B5; --preview-border: #334155; --preview-background: linear-gradient(to bottom, #0f172a, #000); }
+.simulation-theme-preview[data-theme="graphite"] { --preview-color: var(--sim-graphite-ink); --preview-border: var(--sim-graphite-border); --preview-background: var(--sim-graphite-background); }
 .simulation-theme-preview::before { content: ''; position: absolute; inset: 10px; border: 1px solid var(--preview-border); border-radius: 50%; background: var(--preview-background); }
 .simulation-theme-preview svg { position: relative; width: 18px; height: 18px; pointer-events: none; }
 .simulation-theme-preview[aria-pressed="true"] { opacity: 1; filter: none; }
@@ -2573,16 +2587,24 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 /* Permanent central drawer navigation; same full target as its neighbors. */
 #controlsContainer .evolution-drawer-internal { display:none; }
 #controlsContainer.sim-mode-active .evolution-drawer-internal { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; grid-area:3 / 5; width:50px; max-width:100%; height:50px; padding:0; border:0; background:transparent; color:#c5cbc5; cursor:pointer; touch-action:none; }
-.drawer-internal-symbol { display:block; box-sizing:border-box; width:34px; height:34px; border:1px solid currentColor; border-radius:50%; transition:border-color 150ms ease; pointer-events:none; }
-.evolution-drawer-internal .drawer-internal-symbol { color:var(--sim-color); }
-:root[data-simulation-effective-theme="gold"] .evolution-drawer-internal .drawer-internal-symbol { color:var(--sim-gold-muted); }
-@media(prefers-reduced-motion:reduce) { .drawer-internal-symbol { transition:none; } }
+.drawer-internal-symbol { --yin-ink:var(--sim-color); position:relative; display:grid; place-items:center; box-sizing:border-box; width:34px; height:34px; border:1px solid #89908b50; border-radius:50%; background-color:#141719; background-image:linear-gradient(180deg,#ffffff08,transparent 55%,#00000018); box-shadow:inset 0 1px 0 #e1e7e914,0 2px 4px #0006; transition:border-color 150ms ease; pointer-events:none; }
+:root[data-simulation-effective-theme="gold"] .drawer-internal-symbol { --yin-ink:var(--sim-gold-muted); }
+.drawer-internal-symbol svg { width:30px; height:30px; }
+.drawer-yin-icon { --yin-first:var(--yin-ink, var(--gold)); --yin-second:#080a09; }
+.drawer-yin-half { stroke:color-mix(in srgb, var(--yin-ink, var(--gold)) 44%, transparent); transition:fill 260ms ease-in-out, stroke 260ms ease-in-out; }
+.drawer-yin-dot { stroke:none; transition:fill 260ms ease-in-out; }
+.drawer-yin-icon [data-yin-half="0"], .drawer-yin-icon [data-yin-dot="1"] { fill:var(--yin-first); }
+.drawer-yin-icon [data-yin-half="1"], .drawer-yin-icon [data-yin-dot="0"] { fill:var(--yin-second); }
+.evolution-drawer-internal[data-page="1"] .drawer-yin-icon { --yin-first:#080a09; --yin-second:var(--yin-ink); }
+@media(prefers-reduced-motion:reduce) { .drawer-yin-half, .drawer-yin-dot, .drawer-internal-symbol { transition:none; } }
+.evolution-drawer-internal .drawer-active-mark { display:none; position:absolute; bottom:2px; width:2px; height:2px; border-radius:50%; background:var(--yin-ink); }
+.evolution-drawer-internal[data-parked-active="true"] .drawer-active-mark { display:block; }
 .evolution-drawer-internal:disabled { opacity:.3; cursor:default; }
-@media(hover:hover) and (pointer:fine) { .evolution-drawer-internal:hover:not(:disabled) .drawer-internal-symbol { border-color:#c0a25c; } }
+@media(hover:hover) { .evolution-drawer-internal:hover:not(:disabled) .drawer-internal-symbol { border-color:#a8afa880; } }
 .evolution-drawer-internal:focus-visible { outline:2px solid #d7b65f; outline-offset:-2px; border-radius:10px; }
 @media(max-width:480px) { #controlsContainer.sim-mode-active .evolution-drawer-internal { width:44px; height:44px; } }
 #evolutionDrawerDialog .drawer-reserved-slot { color:#abb0ac; background:#9ca3af09; border:1px dashed #abb0ac40; cursor:default; }
-#evolutionDrawerDialog .drawer-reserved-slot .drawer-internal-symbol { width:24px; height:24px; opacity:.65; }
+#evolutionDrawerDialog .drawer-reserved-slot svg { width:24px; height:24px; }
 
 /* Compact appearance controls belong to Evolution map, with original listeners. */
 #evolutionDrawerDialog .drawer-appearance { display:grid; gap:0; margin-top:12px; padding-top:8px; border-top:1px solid #b28b3630; }

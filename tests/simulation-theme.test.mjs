@@ -8,7 +8,7 @@ const source = readFileSync(new URL('../js/simulation-theme.js', import.meta.url
     .replace(/^import .*;\n/, '').replaceAll('export function ', 'function ');
 function harness(saved = {}, blocked = false) {
     const storage = new Map(Object.entries(saved)), attributes = new Set();
-    const buttons = () => ['blue', 'gold', 'teal'].map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
+    const buttons = () => ['blue', 'gold', 'teal', 'graphite'].map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
         setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(k, fn) { this.handlers[k] = fn; } }));
     const rest = buttons(), playback = buttons();
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
@@ -23,7 +23,7 @@ function harness(saved = {}, blocked = false) {
     return { context, root, storage, rest, playback, run: code => vm.runInContext(code, context) };
 }
 test('all resting/playback color pairs restore the resting selection and never persist running state', () => {
-    for (const rest of ['blue', 'gold', 'teal']) for (const playback of ['blue', 'gold', 'teal']) {
+    for (const rest of ['blue', 'gold', 'teal', 'graphite']) for (const playback of ['blue', 'gold', 'teal', 'graphite']) {
         const h = harness(); h.run('initializeSimulationTheme()');
         h.run(`applySimulationTheme('${rest}'); applySimulationPlaybackTheme('${playback}')`);
         assert.equal(h.root.dataset.simulationEffectiveTheme, rest);
@@ -56,7 +56,7 @@ test('fresh/blocked storage defaults to gold at rest and while running; independ
     }
 });
 test('playback color round-trips through settings and profiles; legacy profiles use gold', () => {
-    for (const simulationPlaybackTheme of ['blue', 'gold', 'teal']) {
+    for (const simulationPlaybackTheme of ['blue', 'gold', 'teal', 'graphite']) {
         const settings = { ...defaultWorkspaceSettings(), simulationPlaybackTheme };
         assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
         assert.equal(validateProfileSnapshot({ settings }).settings.simulationPlaybackTheme, simulationPlaybackTheme);
