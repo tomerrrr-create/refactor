@@ -1940,6 +1940,28 @@ button, .ctrl {
 /* Fade only the decorative frame; simulation controls remain independent. */
 :root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
 
+/* Precision Icons experiment. Use the existing theme ink and keep the bevel on the glyph only. */
+:where(:root[data-precision-icons]:not([data-simulation-running]) #controlsContainer.sim-mode-active)
+  > .ctrl[data-evolution-id]:where(:not(.picker-swipe-glow, .glow-animation)) > svg {
+  filter: drop-shadow(0 -.45px 0 #d8eaff66) drop-shadow(0 .8px .4px #000d);
+}
+:root[data-precision-icons]:not([data-simulation-running]) #controlsContainer.sim-mode-active
+  > .ctrl[data-evolution-id] > svg[fill="none"] {
+  stroke-linecap: butt;
+  stroke-linejoin: bevel;
+}
+:root[data-precision-icons]:not([data-simulation-running]) #controlsContainer.sim-mode-active
+  > .ctrl[data-evolution-id] :where(svg[fill="none"], svg[fill="none"] [stroke-width]):is(
+    [stroke-width="1.4"], [stroke-width="1.45"], [stroke-width="1.5"], [stroke-width="1.55"],
+    [stroke-width="1.65"], [stroke-width="1.7"], [stroke-width="1.8"], [stroke-width="2"]
+  ) {
+  stroke-width: 1.35;
+}
+:root[data-precision-icons]:not([data-simulation-running]) #controlsContainer.sim-mode-active
+  > .ctrl[data-evolution-id].simulation-active > svg[fill="none"] {
+  stroke-width: 1.65;
+}
+
 /* The halo breathes behind the icon. Fade it separately from the pulse on Pause or handoff. */
 .sim-mode-active .ctrl[data-evolution-id] { isolation: isolate; }
 .sim-mode-active .ctrl[data-evolution-id]::before {

@@ -32,6 +32,7 @@ import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, getSimulationPlaybackTheme, applySimulationPlaybackTheme, setSimulationRunning } from './simulation-theme.js';
+import { initializePrecisionIcons } from './precision-icons.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
@@ -6225,6 +6226,7 @@ applySortMethod,
         modals = initializeModals(contextForModals);
         initializeQuickStart();
         initializeSimulationTheme();
+        initializePrecisionIcons(document.getElementById('precisionIconsToggle'));
         
         activePaletteIndex = resolveStartupPaletteIndex(startupSettings.paletteName);
         n = startupSettings.boardSize;
