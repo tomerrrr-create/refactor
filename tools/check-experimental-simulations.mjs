@@ -41,7 +41,7 @@ try{for(const touch of [false,true]){
  for(const id of ids)assert.equal(await page.locator('[data-drawer-evolution="'+id+'"]').count(),0);
  assert.equal(await page.locator('.drawer-feature-hidden').count(),2);
  assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
- assert(await page.locator('#btnInk').isVisible());
+ assert.equal(await page.locator('#btnInk').getAttribute('data-evolution-feature-hidden'),null);
  await tech();assert.equal(await page.locator('#inkExperimentToggle, #oilExperimentToggle, #btnOil').count(),0);
  for(const id of ids)assert(!(await page.locator('#'+id+'ExperimentToggle').isChecked()));
  // A different profile must not change device opt-ins.
@@ -49,7 +49,9 @@ try{for(const touch of [false,true]){
  await page.locator('[data-profile-choice="1"]').click();assert(await page.locator('#networkExperimentToggle').isChecked());
  await toggle('spiral',true);await toggle('network',true);await close();
  for(const id of ids)assert(await page.locator('#'+buttons[id]).isVisible());
+ assert.equal(await page.locator('#btnNetwork').getAttribute('data-evolution-slot'),'10');
  const geometric=page.locator('#btnSpiral');
+ assert.equal(await geometric.getAttribute('data-evolution-slot'),'19');
  assert.equal(await geometric.getAttribute('aria-label'),touch?'זרימה גאומטרית':'Geometric Flow');
  await geometric.click();assert.equal((await state()).armed,'spiral');assert(await page.locator('#iconSpiralRadial').isVisible());
  await geometric.click();assert(await page.locator('#iconSpiralDown').isVisible());

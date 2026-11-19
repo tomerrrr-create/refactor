@@ -37,8 +37,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   }else if(!radial&&(await state()).control!=='cymatics'){await reveal(button);await tap(button);}
   await openSettings();await tap(dialog.locator('[data-cymatics-map="'+name+'"]'));if(motion!==undefined)await dialog.locator('#cymaticsPhaseMotion').setChecked(motion);await tap(dialog.locator('[type=submit]'));}
  async function paint(col,row){const r=await canvas.boundingBox(),position={x:(col+.5)*r.width/41,y:(row+.5)*r.height/41};if(config.width<600)await canvas.tap({position});else await canvas.click({position});}
- assert(await button.isVisible());await page.evaluate(()=>cymaticsTest.drawer());await drawer.waitFor({state:'visible'});assert.equal(await drawer.locator('[data-drawer-evolution]').count(),await page.evaluate(async()=>{const {EVOLUTION_CATALOG}=await import('/js/evolution-drawer-settings.js');return EVOLUTION_CATALOG.length-2;}));assert.equal(await drawer.locator('[data-drawer-slot="0"][data-drawer-evolution=cymatics]').count(),1);await tap(drawer.locator('[data-cancel]'));await drawer.waitFor({state:'hidden'});
- await assign('cymatics');assert(await button.isVisible());
+ await reveal(button);await page.evaluate(()=>cymaticsTest.drawer());await drawer.waitFor({state:'visible'});assert.equal(await drawer.locator('[data-drawer-evolution]').count(),await page.evaluate(async()=>{const {EVOLUTION_CATALOG}=await import('/js/evolution-drawer-settings.js');return EVOLUTION_CATALOG.length-2;}));assert.equal(await drawer.locator('[data-drawer-slot="11"][data-drawer-evolution=cymatics]').count(),1);await tap(drawer.locator('[data-cancel]'));await drawer.waitFor({state:'hidden'});
+ await assign('cymatics');await reveal(button);
  await page.evaluate(async()=>{
   const theme=await import('/js/simulation-theme.js'),stroke=id=>getComputedStyle(document.querySelector('#'+id+' > svg')).stroke;
   for(const rest of ['blue','gold','teal']){

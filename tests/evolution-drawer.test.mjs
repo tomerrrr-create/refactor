@@ -7,8 +7,8 @@ const ids=slots=>slots.filter(id=>id!==null).sort();
 const complete=slots=>{assert.deepEqual(ids(slots),EVOLUTION_CATALOG.map(e=>e.id).sort());assert(INTERNAL_NAV_SLOTS.every(i=>slots[i]===null));};
 test('permanent drawers reserve bottom center and retain the approved default order',()=>{
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,20);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['cymatics','sandpile','gameOfLife','brightnessEvo','islands','nudgeBrighter','magnet',null,'gravitationalSort','erosion']);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),['network','spiral','breathe','dla',null,'ink','turing',null,'contour',null]);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['nudgeBrighter','sandpile','gameOfLife','brightnessEvo','islands','magnet','gravitationalSort',null,'ink','erosion']);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),['network','cymatics',null,'turing','breathe','contour','dla',null,null,'spiral']);
  complete(DEFAULT_EVOLUTION_LAYOUT);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
  for(const lang of ['en','he','ru','nl'])assert(translations.drawer_navigation_slot[lang]);
@@ -21,11 +21,11 @@ test('legacy ten-place layouts migrate without losing controls or mutating the i
 });
 test('arranging occupied and empty places preserves every simulation and protects navigation',()=>{
  const original=[...DEFAULT_EVOLUTION_LAYOUT],swap=moveEvolutionSlot(original,0,13);
- assert.equal(swap[0],'dla');assert.equal(swap[13],'cymatics');
- const moved=moveEvolutionSlot(swap,13,14);assert.equal(moved[13],null);assert.equal(moved[14],'cymatics');complete(moved);
- assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,14,14),moved);
- assert.deepEqual(assignEvolutionSlot(original,19,'cymatics'),moveEvolutionSlot(original,0,19));
- for(const [from,to] of [[-1,0],[0,20],[.5,0],[14,0],[0,7],[0,17],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
+ assert.equal(swap[0],'turing');assert.equal(swap[13],'nudgeBrighter');
+ const moved=moveEvolutionSlot(swap,13,12);assert.equal(moved[13],null);assert.equal(moved[12],'nudgeBrighter');complete(moved);
+ assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,12,12),moved);
+ assert.deepEqual(assignEvolutionSlot(original,19,'nudgeBrighter'),moveEvolutionSlot(original,0,19));
+ for(const [from,to] of [[-1,0],[0,20],[.5,0],[18,0],[0,7],[0,17],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
  for(const reserved of INTERNAL_NAV_SLOTS)assert.throws(()=>assignEvolutionSlot(original,reserved,'dla'));
 });
 test('new arrangements round-trip exactly through settings; legacy rules stay unchanged',()=>{
@@ -37,6 +37,15 @@ test('new arrangements round-trip exactly through settings; legacy rules stay un
  assert.equal(migrated.evolutionSlots[0],'cymatics');complete(migrated.evolutionSlots);assert.deepEqual(migrated.rules,defaultWorkspaceSettings().rules);
  assert.deepEqual(validateEvolutionSlots(deserializeWorkspaceSettings(baseline).evolutionSlots),DEFAULT_EVOLUTION_LAYOUT);
  for(const bad of [[],Array(20).fill(null),[...DEFAULT_EVOLUTION_LAYOUT.slice(0,19),'dla'],[...DEFAULT_EVOLUTION_LAYOUT.slice(0,19),'unknown']])assert.throws(()=>validateWorkspaceSettings({...settings,evolutionSlots:bad}));
+});
+test('stored arrangements from before the new default retain their physical slots',()=>{
+ const previous=[
+  'cymatics','sandpile','gameOfLife','brightnessEvo','islands',
+  'nudgeBrighter','magnet',null,'gravitationalSort','erosion',
+  'network','spiral','breathe','dla',null,'ink','turing',null,'contour',null
+ ];
+ const settings={...defaultWorkspaceSettings(),evolutionSlots:previous};
+ assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).evolutionSlots,previous);
 });
 test('historical Nudge directions normalize once and keep the first unified assignment',()=>{
  const old=[...DEFAULT_EVOLUTION_SLOTS];old[3]='nudgeDarker';old[5]='nudgeBrighter';

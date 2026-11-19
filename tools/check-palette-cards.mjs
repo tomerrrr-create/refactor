@@ -12,7 +12,7 @@ const server=createServer(async(req,res)=>{try{const file=new URL(req.url,'http:
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
 const results=[];
-try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844,lang:'he'},{width:320,height:568,lang:'ru'},{width:844,height:390,lang:'nl'}]){
+try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844,lang:'he'},{width:320,height:568,lang:'ru'},{width:844,height:390,lang:'nl'}].filter(config=>!process.env.PALETTE_LANG||config.lang===process.env.PALETTE_LANG)){
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -128,5 +128,18 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const overrideBefore=await state();await page.evaluate(()=>paletteTest.startOverride());await page.locator('#paletteModal .palette-choice.is-current').click();assert(await page.locator('#palette-apply').isEnabled());await page.locator('#palette-apply').click();assert.equal((await state()).pending,overrideBefore.index);assert.deepEqual((await state()).board,overrideBefore.board);
  await page.evaluate(()=>paletteTest.startOverride());await page.locator('#btnPaletteModalClose').click();assert.equal((await state()).selecting,false,'cancelling leaves no macro-selection tool active');
+ // The palette card and applied toolbar use the same bundled rose artwork.
+ await page.evaluate(()=>paletteTest.open());
+ await page.locator('#paletteModal [data-palette-group="continuous"]').click();
+ const name={en:'rozita',he:'רוזיטה',ru:'Розита',nl:'rozita'}[config.lang];
+ const rose=page.locator('#paletteModal .palette-choice').filter({has:page.getByText(name,{exact:true})});
+ const roseIcon=rose.locator('.palette-choice-icon svg');
+ await rose.scrollIntoViewIfNeeded();
+ assert(await roseIcon.isVisible());
+ assert.equal(await roseIcon.locator('path[stroke="#71B68E"]').count(),1);
+ await rose.screenshot({path:path.join(artifacts,config.lang+'-rozita.png')});
+ const roseMarkup=(await roseIcon.innerHTML()).trim();
+ await rose.click();await page.locator('#palette-apply').click();
+ assert.equal((await page.locator('#btnPalette svg').innerHTML()).trim(),roseMarkup);
  assert.deepEqual(errors,[]);results.push({...config,passed:true});console.log('PASS',JSON.stringify(config));await context.close();
 }await writeFile(path.join(artifacts,'results.json'),JSON.stringify(results,null,2));}finally{await browser.close();await new Promise(r=>server.close(r));}

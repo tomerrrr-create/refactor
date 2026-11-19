@@ -29,7 +29,12 @@ try{
   await context.addInitScript(init,config.lang);
   await context.addInitScript(()=>localStorage.setItem('colorGridVorticesCycleV1',JSON.stringify(['turbine2','flow','left','cosmic','circular','a','black_hole','tornado'])));
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{errors.push(d.message());await d.dismiss();});
-  const tap=async s=>config.width<600?page.locator(s).tap():page.locator(s).click(),state=()=>page.evaluate(()=>spiralTest.state());
+  const state=()=>page.evaluate(()=>spiralTest.state());
+  const press=selector=>config.width<600?page.locator(selector).tap():page.locator(selector).click();
+  const tap=async selector=>{
+   if(await page.locator(selector).getAttribute('data-evolution-page-hidden')!==null)await press('#btnEvolutionDrawerInternal');
+   await press(selector);
+  };
   await page.goto(base);await page.waitForFunction(()=>window.spiralTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   await page.evaluate(()=>spiralTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);

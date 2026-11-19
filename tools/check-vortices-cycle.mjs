@@ -70,7 +70,6 @@ try {
         const order=['turbine2','flow','left','cosmic','black_hole','circular','a','tornado'];
         const defaultOrder=order.filter(mode=>mode!=='a'&&mode!=='tornado');
         const circularName=lang==='he'?'אמפתיה מעגלית':'Circular Empathy';
-        await tap(nav);
         assert(await page.locator(hub).isVisible());
         await page.evaluate(()=>circularTest.openTech());
         assert.equal(await page.locator('#inkExperimentToggle').count(),0);
@@ -131,6 +130,7 @@ try {
             }
         }
         await tap(hub);assert.equal((await state()).control,null);
+        await tap(nav);
         await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'radial');
         await swipeUp('#btnSpiral');
         await page.locator("#spiralSettingsModal").waitFor({state:"visible"});
@@ -151,7 +151,7 @@ try {
             await tap('#btnGravitationalSort');assert.equal((await state()).project.gravityRules.direction,direction);
         }
         await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
-        await tap('#btnCymatics');
+        await tap(nav);await tap('#btnCymatics');
         assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,4);
         await swipeUp('#btnCymatics');await menu.waitFor({state:'visible'});
         await page.waitForTimeout(350);
@@ -159,20 +159,18 @@ try {
         await dialogAction('#cymaticsSettingsDialog [data-reset]');await dialogAction('#cymaticsSettingsDialog [type=submit]');await menu.waitFor({state:'hidden'});
         assert.equal((await state()).settings.cymaticsStrengths.cosmic,65,'Reset only resets the maps in the open dialog');
         // Handoff to the source button must not disarm the same shared engine.
+        await tap(nav);
         await page.evaluate(()=>circularTest.memory(true));
         await tap('#btnGravitationalSort');
-        await tap(nav);await tap(hub);
+        await tap(hub);
         assert.equal((await state()).mode,'turbine2');
-        await tap(nav);await tap('#btnGravitationalSort');
+        await tap('#btnGravitationalSort');
         assert.equal((await state()).control,'gravitationalSort');
         await page.evaluate(()=>circularTest.memory(false));
-        await tap(nav);
         await page.evaluate(()=>circularTest.enter());
-        await tap(nav);
         for (let i=0;i<4;i++) await tap('#btnGravitationalSort');
         assert.equal((await state()).project.gravityRules.direction,'pinwheel');
         await tap('#btnStepForward');
-        await tap(nav);
         await tap(hub);await tap(play);
         for (const mode of [...order.slice(1),order[0]]) {
             await page.waitForFunction(()=>circularTest.state().gen>=3);
