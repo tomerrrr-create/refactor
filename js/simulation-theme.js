@@ -4,10 +4,10 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 const STORAGE_KEY = 'colorGridSimulationTheme';
 const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const LABELS = {
-  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise'},
-  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן'},
-  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза'},
-  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois'}
+  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', graphite: 'Graphite'},
+  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', graphite: 'גרפיט'},
+  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', graphite: 'Графит'},
+  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', graphite: 'Grafiet'}
 };
 export function getSimulationTheme() {
   return document.documentElement.dataset.simulationTheme || 'gold';
@@ -30,7 +30,7 @@ export function setSimulationRunning(running) {
 }
 
 export function applySimulationTheme(value) {
-  const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'gold';
+  const theme = ['blue', 'gold', 'teal', 'graphite'].includes(value) ? value : 'gold';
   document.documentElement.dataset.simulationTheme = theme;
   for (const preview of document.querySelectorAll('#simulationThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
@@ -41,7 +41,7 @@ export function applySimulationTheme(value) {
 }
 
 export function applySimulationPlaybackTheme(value) {
-  const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'gold';
+  const theme = ['blue', 'gold', 'teal', 'graphite'].includes(value) ? value : 'gold';
   document.documentElement.dataset.simulationPlaybackTheme = theme;
   for (const preview of document.querySelectorAll('#simulationPlaybackThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
