@@ -36,7 +36,7 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  const hollow='rgba(0, 0, 0, 0)';
  const waitForFirstDot=color=>page.waitForFunction(color=>
   getComputedStyle(document.querySelector('#btnEvolutionDrawerInternal .drawer-page-cell'),'::after').backgroundColor===color,color);
- const playingFilter='saturate(0.8) brightness(0.84)';
+ const playingFilter='saturate(0.9) brightness(0.92)';
  const halo=id=>page.locator(id).evaluate(e=>{
   const style=getComputedStyle(e,'::before');
   return {opacity:Number(style.opacity),name:style.animationName,playState:style.animationPlayState,
