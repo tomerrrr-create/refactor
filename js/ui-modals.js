@@ -1562,7 +1562,6 @@ export function initializeModals(appContext) {
 
     // Simulation initialization preferences are separate from the current board.
     const initForm = document.getElementById('initSettingsForm');
-    const initToggle = document.getElementById('btnConfigureInit');
     const initBoard = document.getElementById('initBoardSize');
     const initBrush = document.getElementById('initBrushSize');
     const initBrushValue = document.getElementById('initBrushValue');
@@ -1692,21 +1691,12 @@ export function initializeModals(appContext) {
         refreshBloomControls();
         fillInitForm(app.getSimulationInit());
         fillStartupForm(app.getStartupSettings());
-        startupForm.hidden = true;
-        startupToggle.setAttribute('aria-expanded', 'false');
-        initForm.hidden = true;
-        initToggle.setAttribute('aria-expanded', 'false');
+        showTechnicianSection();
         app.dom.technicianDialog.showModal();
         document.getElementById('technicianSettingsScroll').scrollTop = 0;
         document.getElementById('btnTechnicianCloseTop').focus({ preventScroll: true });
     }
     app.dom.btnOpenDebug.addEventListener('click', () => openTechnicianMenu());
-    initToggle.addEventListener('click', () => {
-        startupForm.hidden = true;
-        startupToggle.setAttribute('aria-expanded', 'false');
-        initForm.hidden = !initForm.hidden;
-        initToggle.setAttribute('aria-expanded', String(!initForm.hidden));
-    });
     initBrush.addEventListener('input', () => {
         initBrushValue.value = brushSizeLabel(Number(initBrush.value));
         initStatus.textContent = '';
@@ -1724,7 +1714,23 @@ export function initializeModals(appContext) {
         initStatus.textContent = app.getText(persisted ? 'init_saved' : 'init_saved_session');
     });
     const startupForm = document.getElementById('startupSettingsForm');
-    const startupToggle = document.getElementById('btnConfigureStartup');
+    const technicianSections = ['Display', 'Macro', 'Features', 'Init', 'Startup'].map(name => {
+        const toggle = document.getElementById('btnConfigure' + name);
+        return [toggle, document.getElementById(toggle.getAttribute('aria-controls'))];
+    });
+    function showTechnicianSection(openSection) {
+        for (const [toggle, section] of technicianSections) {
+            const expanded = section === openSection;
+            section.hidden = !expanded;
+            toggle.setAttribute('aria-expanded', String(expanded));
+        }
+    }
+    for (const [toggle, section] of technicianSections) {
+        toggle.addEventListener('click', () => {
+            showTechnicianSection(section.hidden ? section : undefined);
+            if (section === startupForm && !section.hidden) document.getElementById('btnStartupPalette').focus();
+        });
+    }
     const startupStatus = document.getElementById('startupSettingsStatus');
     const startupFields = {
         paletteName: 'startupPalette', boardSize: 'startupBoardSize', separatorPx: 'startupSeparator',
@@ -1777,13 +1783,6 @@ export function initializeModals(appContext) {
         updateStartupPalettePreview();
         startupStatus.textContent = '';
     }
-    startupToggle.addEventListener('click', () => {
-        initForm.hidden = true;
-        initToggle.setAttribute('aria-expanded', 'false');
-        startupForm.hidden = !startupForm.hidden;
-        startupToggle.setAttribute('aria-expanded', String(!startupForm.hidden));
-        if (!startupForm.hidden) document.getElementById('btnStartupPalette').focus();
-    });
     startupForm.addEventListener('input', () => {
         document.getElementById('startupBrushValue').value = brushSizeLabel(Number(document.getElementById('startupBrushSize').value));
         startupStatus.textContent = '';
