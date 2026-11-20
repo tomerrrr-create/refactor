@@ -35,6 +35,7 @@ import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, ge
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
+import { POLYGON_CIRCULATION_MODES, normalizePolygonFlowPhase, restorePolygonFlowPhase } from './simulations/polygon-circulation.js';
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
@@ -399,7 +400,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'radial', 'down'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'radial', 'down', 'triangle_orbit', 'square_orbit', 'triangle_weave'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -457,6 +458,8 @@ currentSortMethod,
             brightnessEvoMode, breatheEvoMode, dlaMode,
             ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
             spiralMethod: armedSimulation === 'spiral' ? spiralMode : undefined,
+            ...(armedSimulation === 'spiral' && POLYGON_CIRCULATION_MODES.includes(spiralMode)
+                ? { polygonFlowPhase: normalizePolygonFlowPhase(spiralRules.polygonFlowPhase) } : {}),
             ...(isTornadoSelected() ? {tornadoVersion: vorticesSpiralRules.tornadoVersion, tornadoFrame: vorticesSpiralRules.tornadoFrame} : {}),
             ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...getActiveGravityRules() } } : {}),
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
@@ -496,6 +499,7 @@ currentSortMethod,
       function areStatesEqual(stateA, stateB) {
         if (!stateA || !stateB) return false;
         if (stateA.tornadoVersion !== stateB.tornadoVersion || stateA.tornadoFrame !== stateB.tornadoFrame) return false;
+        if (stateA.polygonFlowPhase !== stateB.polygonFlowPhase) return false;
         if (JSON.stringify(stateA.gravityRules) !== JSON.stringify(stateB.gravityRules)) return false;
         if(JSON.stringify(stateA.cymaticsState)!==JSON.stringify(stateB.cymaticsState))return false;
         if(JSON.stringify(stateA.inkState)!==JSON.stringify(stateB.inkState))return false;
@@ -587,13 +591,14 @@ k: tileState.k,
         }
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'triangle', 'square', 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
             if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry: state.spiralMethod });
             spiralMode = state.spiralMethod;
             const rules = getActiveSpiralRules();
             rules.method = state.spiralMethod;
             rules.tornadoVersion = [2, 3].includes(state.tornadoVersion) ? state.tornadoVersion : 1;
             rules.tornadoFrame = Number.isSafeInteger(state.tornadoFrame) && state.tornadoFrame >= 0 ? state.tornadoFrame : 0;
+            restorePolygonFlowPhase(rules, state.polygonFlowPhase);
             updateSpiralButtonUI();
         }
         
@@ -1920,7 +1925,7 @@ function refreshCycleIcons() {
 function restoreCycleMode(simulation, mode) {
     switch(simulation){
         case 'gravitationalSort':gsMode=mode;gravitationalSortRules.direction=mode;break;
-        case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;break;
+        case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;restorePolygonFlowPhase(spiralRules);break;
         case 'magnet':selectMagnetMode(mode);break;
         case 'network':saveNetworkSettings({...networkRules,mode});break;
         case 'brightnessEvo':brightnessEvoMode=mode;break;
@@ -2123,7 +2128,10 @@ if (!isTogglingOff && simulationName !== null) {
 
 if (simulationName === 'spiral') {
     spiralMode = spiralEntry;
-    if (!vorticesModeFor('spiral', spiralEntry)) spiralRules.method = spiralEntry;
+    if (!vorticesModeFor('spiral', spiralEntry)) {
+        spiralRules.method = spiralEntry;
+        restorePolygonFlowPhase(spiralRules);
+    }
 }
 
 
@@ -2361,6 +2369,7 @@ if (simulationName === 'magnet') {
       }
 
       function getWorkspaceSettings() {
+        const { polygonFlowPhase, ...spiralPreferences } = spiralRules;
         return {
             ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
             ...(Object.values(cymaticsStrengths).every(value=>value===INITIAL_CYMATICS_RULES.strength)?{}:{cymaticsStrengths:{...cymaticsStrengths}}),
@@ -2378,7 +2387,7 @@ if (simulationName === 'magnet') {
                 bloom: isSoftBloom, bloomIntensity: softBloomIntensity },
             brush: { size: brushSize, ...(brushShape === 'circle' ? {} : { shape: brushShape }), mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
-            rules: { gravity: { ...gravitationalSortRules }, spiral: { ...spiralRules }, magnet: { ...magnetRules },
+            rules: { gravity: { ...gravitationalSortRules }, spiral: spiralPreferences, magnet: { ...magnetRules },
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules, lineColor:'brush' }, turing: { ...turingRules },
                 ...(JSON.stringify(inkRules)===JSON.stringify(DEFAULT_INK_PREFERENCES)?{}:{ink:{...inkRules}}),
                 ...(JSON.stringify(oilRules)===JSON.stringify(INITIAL_OIL_RULES)?{}:{oil:{...oilRules}}),
@@ -2404,6 +2413,7 @@ if (simulationName === 'magnet') {
         if (vorticesModeFor('gravitationalSort', gravitationalSortRules.direction)) gravitationalSortRules.direction = 'up';
         spiralRules = { ...settings.rules.spiral };
         if (vorticesModeFor('spiral', spiralRules.method)) spiralRules = { ...C.defaultSpiralRules };
+        restorePolygonFlowPhase(spiralRules);
         magnetRules = { ...settings.rules.magnet };
         erosionRules = { ...settings.rules.erosion };
         dlaRules = { ...settings.rules.dla };
@@ -4335,8 +4345,13 @@ function updateSpiralButtonUI() {
     const saved = typeof cycleMemory !== 'undefined' ? cycleMemory.entry('spiral') : undefined;
     const mode = active ? spiralMode : saved ?? 'off';
     const displayMode = mode;
-    // הוספנו לניקוי את radial, down, left - אחרת הם נתקעים על הכפתור!
-    dom.btnSpiral.classList.remove('mode-classic', 'mode-vortex', 'mode-expand', 'mode-a', 'mode-b', 'mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-radial', 'mode-down', 'mode-left', 'mode-turbine2', 'mode-black_hole', 'simulation-active');
+    for (const name of dom.btnSpiral.classList) {
+        if (name.startsWith('mode-')) {
+            dom.btnSpiral.classList.remove(name);
+            break;
+        }
+    }
+    dom.btnSpiral.classList.remove('simulation-active');
     dom.btnSpiral.title = ['black_hole', 'turbine2'].includes(displayMode)
         ? `${getText('tooltip_spiral')}: ${getText(`spiral_${displayMode}`)}`
         : getText('tooltip_spiral');
@@ -4354,15 +4369,14 @@ function updateSpiralButtonUI() {
 
 function cycleSpiralMode() {
     const oldMode = armedSimulation === 'spiral' && !['tornado','left','a'].includes(spiralMode) ? spiralMode : 'off';
-const sequence = SPIRAL_MODE_SEQUENCE;
-
-
-    const nextMode = nextEvolutionMode(oldMode, sequence);
+    const cycleMode = oldMode === 'triangle' ? 'triangle_orbit' : oldMode === 'square' ? 'square_orbit' : oldMode;
+    const nextMode = nextEvolutionMode(cycleMode, SPIRAL_MODE_SEQUENCE);
     spiralMode = nextMode;
 
     if (spiralMode !== 'off') {
         spiralRules.tornadoVersion = 3; spiralRules.tornadoFrame = 0;
         spiralRules.method = spiralMode;
+        restorePolygonFlowPhase(spiralRules);
     }
     
     window.logArtEvent('Spiral Mode Changed', spiralMode);
@@ -4597,6 +4611,7 @@ function getHistorySettings(state) {
             ...(state.tuningSimulation ? { tuningSimulation: state.tuningSimulation } : {}) } : {}),
         ...(['left','a'].includes(state.spiralMethod) ? {spiralMethod:state.spiralMethod} : {}),
         ...(state.spiralMethod === 'tornado' ? {tornadoState:{version:state.tornadoVersion ?? 1,frame:state.tornadoFrame ?? 0}} : {}),
+        ...(state.polygonFlowPhase !== undefined ? {polygonFlowState:{method:state.spiralMethod,phase:state.polygonFlowPhase}} : {}),
         ...(state.islandsState ? { islandsState: state.islandsState } : {}),
         ...(state.cymaticsState ? {cymaticsState:state.cymaticsState} : {}),
         ...(state.inkState ? {inkState:state.inkState} : {}),
@@ -4614,6 +4629,10 @@ function validateGravitySnapshot(rules) {
 function validateHistorySettings(settings) {
     if (settings?.spiralMethod && !['left','a'].includes(settings.spiralMethod)) throw new Error('Invalid Vortices spiral method');
     if (settings?.tornadoState && (![1,2,3].includes(settings.tornadoState.version) || !Number.isSafeInteger(settings.tornadoState.frame) || settings.tornadoState.frame < 0)) throw new Error('Invalid Tornado checkpoint');
+    if (settings?.polygonFlowState) {
+        const {method,phase}=settings.polygonFlowState;
+        if (!POLYGON_CIRCULATION_MODES.includes(method) || normalizePolygonFlowPhase(phase) !== phase) throw new Error('Invalid Geometric Flow checkpoint');
+    }
     if (settings?.gravityRules) validateGravitySnapshot(settings.gravityRules);
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);
     if (settings?.islandsState) restoreIslandsSession(settings.islandsState);
@@ -4642,6 +4661,13 @@ function applyHistorySettings(settings) {
         spiralMode = vorticesSpiralRules.method = 'tornado';
         vorticesSpiralRules.tornadoVersion = settings.tornadoState.version;
         vorticesSpiralRules.tornadoFrame = settings.tornadoState.frame;
+        updateSpiralButtonUI();
+    }
+    if (settings.polygonFlowState) {
+        const {method,phase}=settings.polygonFlowState;
+        if (armedSimulation !== 'spiral') armSimulation('spiral', {spiralEntry:method});
+        spiralMode = spiralRules.method = method;
+        restorePolygonFlowPhase(spiralRules, phase);
         updateSpiralButtonUI();
     }
     if (settings.gravityRules) {
@@ -5513,7 +5539,9 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 }
                 else if (sim === 'spiral') {
                     spiralMode = parsedRules.method || spiralMode;
-                    Object.assign(getActiveSpiralRules(), parsedRules, {tornadoVersion: [2, 3].includes(parsedRules.tornadoVersion) ? parsedRules.tornadoVersion : 1, tornadoFrame: Number.isSafeInteger(parsedRules.tornadoFrame) && parsedRules.tornadoFrame >= 0 ? parsedRules.tornadoFrame : 0});
+                    const rules = getActiveSpiralRules();
+                    Object.assign(rules, parsedRules, {tornadoVersion: [2, 3].includes(parsedRules.tornadoVersion) ? parsedRules.tornadoVersion : 1, tornadoFrame: Number.isSafeInteger(parsedRules.tornadoFrame) && parsedRules.tornadoFrame >= 0 ? parsedRules.tornadoFrame : 0});
+                    restorePolygonFlowPhase(rules, parsedRules.polygonFlowPhase);
                     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
                 }
                 else if (sim === 'magnet') {
@@ -5807,6 +5835,7 @@ function executeMacroAction(action) {
                     const rules = getActiveSpiralRules();
                     rules.method = action.details;
                     if (rules.tornadoVersion === 3) rules.tornadoFrame = 0;
+                    restorePolygonFlowPhase(rules);
                 }
                 spiralMode = action.details;
                 if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -6186,6 +6215,7 @@ syncSpiralModeFromModal: (method) => {
     spiralMode = method;
     spiralRules.tornadoVersion = 3; spiralRules.tornadoFrame = 0;
     spiralRules.method = method;
+    restorePolygonFlowPhase(spiralRules);
     updateSpiralButtonUI();
     recordLiveSimulationRules('spiral');
 },

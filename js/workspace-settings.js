@@ -14,6 +14,8 @@ import { DEFAULT_STARTUP, normalizeStartup } from './startup-settings.js';
 import { DEFAULT_SIM_INIT, validateSimInit } from './sim-init-settings.js';
 import { DEFAULT_SORT_CYCLE, normalizeSortCycle } from './sort-cycle-settings.js';
 import { CHI_REACH_PERCENTAGES } from './chi-reach.js';
+import { POLYGON_FLOW_MODES } from './simulations/geometric-flow.js';
+import { POLYGON_CIRCULATION_MODES } from './simulations/polygon-circulation.js';
 
 export const SETTINGS_HEADER = 'FYI_SETTINGS_V1';
 export const WORKSPACE_STORAGE_KEY = 'colorGridWorkspaceSettings';
@@ -118,7 +120,7 @@ export function validateWorkspaceSettings(value) {
             Object.entries(settings.evolutionSelections).every(([name, rules]) => ['gameOfLife','chiFlow'].includes(name) && validCycle([rules,rules,rules],name==='chiFlow'))) &&
         validCycle(settings.cycles.gameOfLife, false) && validCycle(settings.cycles.chiFlow, true) &&
         ['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'black_hole', 'pinwheel'].includes(r.gravity.direction) && number(r.gravity.strength, 0, 1) &&
-        ['b', 'a', 'vortex', 'radial', 'down', 'left', 'black_hole', 'turbine2', 'tornado'].includes(r.spiral.method) &&
+        ['b', 'a', 'vortex', 'radial', 'down', 'left', 'black_hole', 'turbine2', 'tornado', ...POLYGON_FLOW_MODES, ...POLYGON_CIRCULATION_MODES].includes(r.spiral.method) &&
         [1, 2, 3].includes(r.spiral.tornadoVersion) && integer(r.spiral.tornadoFrame, 0, Number.MAX_SAFE_INTEGER) &&
         ['field_magnet','field_cosmic_magnet','magnet', 'cosmic_magnet', 'time_magnet', 'expand'].includes(r.magnet.method) &&
         (!Object.hasOwn(r.magnet, 'anchorColor') || r.magnet.anchorColor === 'luminance') &&

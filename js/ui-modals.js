@@ -194,11 +194,12 @@ function openSpiralSettingsModal() {
     
     // סימון הכפתור הנכון לפי מה ששמור בהגדרות
 
-const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'radial';
+    const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'radial';
+    const selectedMethod = currentMethod === 'triangle' ? 'triangle_orbit' : currentMethod === 'square' ? 'square_orbit' : currentMethod;
     app.dom.spiralMethodButtons.forEach(btn => {
 
 
-        if (btn.dataset.method === currentMethod) {
+        if (btn.dataset.method === selectedMethod) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');

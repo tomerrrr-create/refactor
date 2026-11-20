@@ -45,10 +45,10 @@ export const evolutionExplanations = {
         ['Zwaartekracht', 'Orden kleuren in een gekozen richting, volgens de volgorde van het palet.']
     ],
     spiral: [
-        ['Geometric Flow', 'Arrange colors around the center in a diamond or a hexagon.'],
-        ['זרימה גאומטרית', 'הצבעים מסתדרים סביב המרכז בצורת יהלום או משושה.'],
-        ['Геометрический поток', 'Цвета выстраиваются вокруг центра в ромб или шестиугольник.'],
-        ['Geometrische stroming', 'Orden kleuren rond het midden in een diamant of zeshoek.']
+        ['Geometric Flow', 'Guide colors along polygon sides. Triangle Weave splits the board into triangles that turn in opposite directions.'],
+        ['זרימה גאומטרית', 'הצבעים זורמים לאורך צלעות המצולע. באריג משולשים, משולשים שכנים מסתובבים בכיוונים הפוכים.'],
+        ['Геометрический поток', 'Цвета движутся вдоль сторон многоугольников. В режиме плетения соседние треугольники вращаются в разные стороны.'],
+        ['Geometrische stroming', 'Laat kleuren langs de zijden van veelhoeken stromen. In het Driehoeksweefsel draaien aangrenzende driehoeken in tegengestelde richtingen.']
     ],
     magnet: [
         ['Magnet', 'Draw colors toward an anchor color, forming shifting patterns.'],
