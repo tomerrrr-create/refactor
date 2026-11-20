@@ -1108,57 +1108,73 @@
     
 <div class="flex flex-col gap-2">
 <h3 id="spiralMethodLabel" class="font-semibold text-gray-300 text-center" data-debug-text="spiral_method_label">צורה</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
+        <p id="geometricFlowCycleHint" dir="auto" data-debug-text="geometric_flow_cycle_hint">A filled dot includes the shape in the cycle.</p>
+        <span id="geometricFlowCycleLabel" class="sr-only" data-debug-text="geometric_flow_cycle_title">Toolbar cycle</span>
+        <div id="geometricFlowCycleOptions" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2" role="group" aria-labelledby="spiralMethodLabel" aria-describedby="geometricFlowCycleHint">
           
-          <button class="spiral-method-btn gol-preset-btn active flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="radial">
-              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="12,3 21,12 12,21 3,12"/>
-              </svg>
-              <span class="text-xs" data-debug-text="spiral_radial">Diamond</span>
-          </button>
+          <div class="geometric-shape">
+            <button class="spiral-method-btn gol-preset-btn active flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="radial" aria-pressed="true">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12,3 21,12 12,21 3,12"/>
+                </svg>
+                <span class="text-xs" id="geometricShape-radial" data-debug-text="spiral_radial">Diamond</span>
+            </button>
+            <label class="geometric-cycle-toggle">
+              <input type="checkbox" value="radial" aria-labelledby="geometricFlowCycleLabel geometricShape-radial" checked>
+            </label>
+          </div>
 
-          <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="down">
-              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="4,12 9,5 15,5 20,12 15,19 9,19"/>
-                  <polyline points="10,12 14,12"/>
-                  <polyline points="13,10 14,12 13,14"/>
-              </svg>
-              <span class="text-xs" data-debug-text="spiral_down">Hexagon</span>
-          </button>
+          <div class="geometric-shape">
+            <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="down" aria-pressed="false">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="4,12 9,5 15,5 20,12 15,19 9,19"/>
+                    <polyline points="10,12 14,12"/>
+                    <polyline points="13,10 14,12 13,14"/>
+                </svg>
+                <span class="text-xs" id="geometricShape-down" data-debug-text="spiral_down">Hexagon</span>
+            </button>
+            <label class="geometric-cycle-toggle">
+              <input type="checkbox" value="down" aria-labelledby="geometricFlowCycleLabel geometricShape-down" checked>
+            </label>
+          </div>
 
-          <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="triangle_flow">
-              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
-                  <path d="M12 3 22 20H2ZM12 10 16 17H8Z"/>
-              </svg>
-              <span class="text-xs" data-debug-text="spiral_triangle">Triangle</span>
-          </button>
-          <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="square_flow">
-              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
-                  <path d="M4 4h16v16H4zM9 9h6v6H9z"/>
-              </svg>
-              <span class="text-xs" data-debug-text="spiral_square">Square</span>
-          </button>
-          <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" data-method="triangle_weave">
-              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
-                  <path d="m12 3 10 18H2ZM7 12h10m0 0-5 9m0 0-5-9"/>
-              </svg>
-              <span class="text-xs" data-debug-text="spiral_triangle_weave">Triangle Weave</span>
-          </button>
+          <div class="geometric-shape">
+            <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="triangle_flow" aria-pressed="false">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+                    <path d="M12 3 22 20H2ZM12 10 16 17H8Z"/>
+                </svg>
+                <span class="text-xs" id="geometricShape-triangle_flow" data-debug-text="spiral_triangle">Triangle</span>
+            </button>
+            <label class="geometric-cycle-toggle">
+              <input type="checkbox" value="triangle_flow" aria-labelledby="geometricFlowCycleLabel geometricShape-triangle_flow" checked>
+            </label>
+          </div>
+          <div class="geometric-shape">
+            <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="square_flow" aria-pressed="false">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+                    <path d="M4 4h16v16H4zM9 9h6v6H9z"/>
+                </svg>
+                <span class="text-xs" id="geometricShape-square_flow" data-debug-text="spiral_square">Square</span>
+            </button>
+            <label class="geometric-cycle-toggle">
+              <input type="checkbox" value="square_flow" aria-labelledby="geometricFlowCycleLabel geometricShape-square_flow" checked>
+            </label>
+          </div>
+          <div class="geometric-shape">
+            <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="triangle_weave" aria-pressed="false">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+                    <path d="m12 3 10 18H2ZM7 12h10m0 0-5 9m0 0-5-9"/>
+                </svg>
+                <span class="text-xs" id="geometricShape-triangle_weave" data-debug-text="spiral_triangle_weave">Triangle Weave</span>
+            </button>
+            <label class="geometric-cycle-toggle">
+              <input type="checkbox" value="triangle_weave" aria-labelledby="geometricFlowCycleLabel geometricShape-triangle_weave" checked>
+            </label>
+          </div>
 
         </div>
 
       </div>
-
-    <fieldset id="geometricFlowCycleOptions" class="vortices-cycle-options" aria-describedby="geometricFlowCycleHint">
-      <legend data-debug-text="geometric_flow_cycle_title">Toolbar cycle</legend>
-      <p id="geometricFlowCycleHint" data-debug-text="geometric_flow_cycle_hint">Choose which shapes appear when you tap the toolbar button. Keep at least one.</p>
-      <label><span data-debug-text="spiral_radial">Diamond</span><input type="checkbox" value="radial" checked></label>
-      <label><span data-debug-text="spiral_down">Hexagon</span><input type="checkbox" value="down" checked></label>
-      <label><span data-debug-text="spiral_triangle">Triangle</span><input type="checkbox" value="triangle_flow" checked></label>
-      <label><span data-debug-text="spiral_square">Square</span><input type="checkbox" value="square_flow" checked></label>
-      <label><span data-debug-text="spiral_triangle_weave">Triangle Weave</span><input type="checkbox" value="triangle_weave" checked></label>
-    </fieldset>
-
 
     <div class="flex justify-end items-center mt-4 border-t border-gray-700 pt-4">
       <div class="flex gap-4">

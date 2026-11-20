@@ -414,7 +414,7 @@ export const translations = {
   vortices_cycle_title: { en: "Circular modes", he: "מצבים מעגליים", ru: "Круговые режимы", nl: "Circulaire modi" },
   vortices_cycle_hint: { en: "Choose which modes appear in the cycle. Keep at least one mode that opens this list.", he: "בחרו אילו מצבים יופיעו בסבב. השאירו לפחות מצב אחד שממנו אפשר לפתוח את הרשימה.", ru: "Выберите режимы для цикла. Оставьте хотя бы один режим, из которого открывается этот список.", nl: "Kies welke modi in de cyclus verschijnen. Laat minstens één modus aan waarmee je deze lijst opent." },
   geometric_flow_cycle_title: {en:"Toolbar cycle",he:"סבב הכפתור",ru:"Цикл на панели",nl:"Werkbalkcyclus"},
-  geometric_flow_cycle_hint: {en:"Choose which shapes appear when you tap the toolbar button. Keep at least one.",he:"בחרו אילו צורות יופיעו בלחיצות על הכפתור. השאירו לפחות צורה אחת.",ru:"Выберите фигуры для переключения на панели. Оставьте хотя бы одну.",nl:"Kies welke vormen de knop doorloopt. Laat minstens één vorm aan."},
+  geometric_flow_cycle_hint: {en:"A filled dot includes the shape in the cycle.",he:"נקודה מלאה כוללת את הצורה בסבב.",ru:"Заполненная точка включает фигуру в цикл.",nl:"Een gevulde stip neemt de vorm op in de cyclus."},
   sort_cycle_title: { en: "Sorting cycle", he: "סבב שיטות המיון", ru: "Цикл сортировки", nl: "Sorteercyclus" },
   sort_position: { en: "Position", he: "מיקום", ru: "Позиция", nl: "Positie" },
   sort_order: { en: "Arrange cycle", he: "סידור הסבב", ru: "Порядок цикла", nl: "Cyclus ordenen" },

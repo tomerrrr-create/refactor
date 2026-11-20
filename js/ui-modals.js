@@ -188,6 +188,14 @@ function updateGeometricFlowCycleAvailability() {
     for (const input of inputs) input.disabled = selected.length === 1 && selected[0] === input;
 }
 
+function showSpiralMethod(method) {
+    for (const button of app.dom.spiralMethodButtons) {
+        const selected = button.dataset.method === method;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+    }
+}
+
 function closeSpiralSettingsModal() {
     app.dom.spiralSettingsModal.style.display = 'none';
     app.dom.spiralSettingsModal.classList.remove('modal-visible');
@@ -197,7 +205,6 @@ function closeSpiralSettingsModal() {
 
 function openSpiralSettingsModal() {
     spiralDraftMethod = null;
-    app.dom.geometricFlowCycleOptions.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
     const enabled = app.getGeometricFlowCycle();
     for (const input of app.dom.geometricFlowCycleInputs) input.checked = enabled.includes(input.value);
     updateGeometricFlowCycleAvailability();
@@ -213,16 +220,7 @@ function openSpiralSettingsModal() {
     // סימון הכפתור הנכון לפי מה ששמור בהגדרות
 
     const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'radial';
-    const selectedMethod = currentPolygonFlowMode(currentMethod);
-    app.dom.spiralMethodButtons.forEach(btn => {
-
-
-        if (btn.dataset.method === selectedMethod) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
+    showSpiralMethod(currentPolygonFlowMode(currentMethod));
 }
 // --- END: Spiral Settings Helper Functions ---
 
@@ -2109,9 +2107,8 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
 // שינוי עיצוב הכפתורים כשלוחצים עליהם (איזה מהם פעיל)
     app.dom.spiralMethodButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            app.dom.spiralMethodButtons.forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
             spiralDraftMethod = e.currentTarget.dataset.method;
+            showSpiralMethod(spiralDraftMethod);
         });
     });
 

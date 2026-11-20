@@ -2755,11 +2755,11 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .ink-settings-dialog button[type=submit] { background:#d5b45d; color:#17160f; border-color:#d5b45d; font-weight:600; }
 .ink-settings-dialog button[data-reset] { margin-inline-end:auto; border-color:transparent; background:transparent; color:#b5b5aa; }
 .ink-settings-dialog footer { display:flex; justify-content:flex-end; gap:10px; margin-top:24px; }
-:is(.vortices-cycle-dialog,#spiralSettingsModal) .vortices-cycle-options {
+.vortices-cycle-dialog .vortices-cycle-options {
   display: grid;
   gap: 4px;
 }
-:is(.vortices-cycle-dialog,#spiralSettingsModal) .vortices-cycle-options label {
+.vortices-cycle-dialog .vortices-cycle-options label {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2782,10 +2782,22 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .vortices-cycle-options input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .vortices-cycle-options label:has(input:disabled) { cursor: default; }
-#geometricFlowCycleOptions { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
-#geometricFlowCycleOptions legend { color:#e3c677; padding-bottom:6px; }
-#geometricFlowCycleOptions p { grid-column:1 / -1; color:#b3b8af; font-size:13px; }
-#spiralSettingsModal #geometricFlowCycleOptions label { min-height:44px; gap:6px; padding:0 8px; font-size:13px; }
+#geometricFlowCycleHint { color:#b3b8af; font-size:13px; text-align:center; }
+#geometricFlowCycleOptions { row-gap:2px; }
+.geometric-shape { min-width:0; display:grid; grid-template-rows:1fr 44px; }
+.geometric-cycle-toggle {
+  width:44px; display:grid; place-items:start center; justify-self:center;
+  padding-top:8px; cursor:pointer;
+}
+.geometric-cycle-toggle input {
+  appearance:none; display:block; width:14px; height:14px; margin:0;
+  border:1px solid #8b8166; border-radius:50%; background:transparent; cursor:inherit;
+}
+.geometric-cycle-toggle input:checked {
+  border-color:#c6a55b; background:radial-gradient(circle,#e4c378 0 3.5px,transparent 4px);
+}
+.geometric-cycle-toggle input:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.geometric-cycle-toggle:has(input:disabled) { cursor:default; }
 
 #btnInk { display:none; touch-action:none !important; }
 #btnInk svg { stroke:var(--sim-color); }
