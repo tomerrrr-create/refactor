@@ -107,7 +107,20 @@ try{
    assert(await page.locator('#geometricFlowCycleOptions input[value="square_flow"]').isDisabled());
   };
   await open();assert.deepEqual(await checked(),modes);
-  assert.equal(await page.locator('#geometricFlowCycleOptions').getAttribute('dir'),config.lang==='he'?'rtl':'ltr');
+  const shapeCards=page.locator('#geometricFlowCycleOptions .geometric-shape');
+  assert.equal(await shapeCards.count(),modes.length);
+  assert(await shapeCards.evaluateAll(cards=>cards.every(card=>{
+   const shape=card.querySelector('button'),toggle=card.querySelector('label'),dot=toggle.querySelector('input');
+   const {width,height}=toggle.getBoundingClientRect();
+   return dot.value===shape.dataset.method&&width>=44&&height>=44&&
+    dot.getBoundingClientRect().top>=shape.getBoundingClientRect().bottom&&
+    getComputedStyle(dot).borderRadius==='50%'&&getComputedStyle(dot).backgroundImage.includes('radial-gradient');
+  })));
+  const triangleDot='#geometricFlowCycleOptions input[value="triangle_flow"]';
+  await tap('.geometric-shape:has(button[data-method="triangle_flow"]) .geometric-cycle-toggle');
+  assert(!(await page.locator(triangleDot).isChecked()));
+  assert.equal(await page.locator(triangleDot).evaluate(dot=>getComputedStyle(dot).backgroundImage),'none');
+  assert.equal(await page.locator('.spiral-method-btn[data-method="triangle_flow"]').getAttribute('aria-pressed'),'true');
   await onlySquare();
   await page.keyboard.press('Escape');await open();assert.deepEqual(await checked(),modes,'a cancelled draft is discarded');
   await onlySquare();
