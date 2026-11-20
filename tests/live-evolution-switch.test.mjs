@@ -8,9 +8,9 @@ import vm from 'node:vm';
 import { createCracksState } from '../js/simulations/cracks.js';
 import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 import { currentPolygonFlowMode, restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
+import { GEOMETRIC_FLOW_MODES, nextGeometricFlowMode } from '../js/geometric-flow-cycle.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
-const spiralSequence = JSON.parse(source.match(/const SPIRAL_MODE_SEQUENCE = (\[[^\]]+\])/)[1].replaceAll("'", '"'));
 const section = (from, to) => source.slice(source.indexOf(from), source.indexOf(to, source.indexOf(from)));
 const simulations = {
     spiral: 'btnSpiral', gravitationalSort: 'btnGravitationalSort', brightnessEvo: 'btnBrightnessEvo',
@@ -31,7 +31,8 @@ function harness() {
         turingState: null, spiralRules: {method: 'b'}, gravitationalSortRules: {direction: 'up'},
         magnetAnchorLimit:300,replayMagnetAnchorLimit:null,magnetRecordingRules,recordedMagnetAnchorLimit,magnetRules: {}, erosionRules: {mode: 'legacy'}, contourRules: {}, turingRules: {},
         evolutionTuning: {islands: {activity: .05}, brightnessEvo: {}, dla: {}}, dlaRules: {},
-        gameOfLifeRules: {}, gameOfLifeCycle: [{}, {}, {}], chiFlowCycle: [{}, {}, {}], SPIRAL_MODE_SEQUENCE: spiralSequence,
+        gameOfLifeRules: {}, gameOfLifeCycle: [{}, {}, {}], chiFlowCycle: [{}, {}, {}],
+        geometricFlowCycle: [...GEOMETRIC_FLOW_MODES], nextGeometricFlowMode,
         isMacroPlaying: false, lastNudgeTime: 0, performance: {now: () => 100},
         getCurrentState: () => ({board: c.boardState.map(t => ({...t}))}),
         areStatesEqual: (a,b) => JSON.stringify(a) === JSON.stringify(b),

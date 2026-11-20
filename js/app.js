@@ -36,6 +36,7 @@ import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
 import { POLYGON_CIRCULATION_MODES, currentPolygonFlowMode, normalizePolygonFlowPhase, restorePolygonFlowPhase } from './simulations/polygon-circulation.js';
+import { GEOMETRIC_FLOW_MODES, loadGeometricFlowCycle, nextGeometricFlowMode, orderGeometricFlowModes, persistGeometricFlowCycle } from './geometric-flow-cycle.js';
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
@@ -79,6 +80,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let islandsSession = null;
       let inkState=null,inkRules={...DEFAULT_INK_PREFERENCES},replayInkRules=null,inkSettingsUI=null;
       let vorticesEnabledModes=loadVorticesCycle();
+      let geometricFlowCycle=loadGeometricFlowCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
@@ -400,7 +402,6 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'radial', 'down', 'triangle_flow', 'square_flow', 'triangle_weave'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -592,7 +593,7 @@ k: tileState.k,
 
         // Older project files have no spiralMethod and keep their old behavior.
         if (state.spiralMethod && state.spiralMethod !== 'off' &&
-            [...SPIRAL_MODE_SEQUENCE, ...POLYGON_CIRCULATION_MODES, 'triangle', 'square', 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod)) {
+            [...GEOMETRIC_FLOW_MODES, ...POLYGON_CIRCULATION_MODES, 'triangle', 'square', 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod)) {
             if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry: state.spiralMethod });
             spiralMode = state.spiralMethod;
             const rules = getActiveSpiralRules();
@@ -1949,7 +1950,7 @@ function restoreCycleMode(simulation, mode) {
 }
 function resetEvolutionCycle(simulation, {refresh=true} = {}) {
     if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
-    const mode=simulation==='ink'?vorticesEnabledModes[0]:defaultEvolutionCycleMode(simulation);
+    const mode=simulation==='ink'?vorticesEnabledModes[0]:simulation==='spiral'?geometricFlowCycle[0]:defaultEvolutionCycleMode(simulation);
     if(mode===undefined)return false;
     const selected=matchesEvolutionControl(simulation);
     cycleMemory.remember(simulation,mode);
@@ -1987,7 +1988,8 @@ function cycleMemoryTap(simulation, onTap) {
         selectingCycleMode=true;
         try {
             const selected=matchesEvolutionControl(simulation);
-            if(!selected&&remembered!==undefined&&(simulation!=='ink'||vorticesEnabledModes.includes(remembered))){
+            if(!selected&&remembered!==undefined&&(simulation!=='ink'||vorticesEnabledModes.includes(remembered))&&
+                (simulation!=='spiral'||geometricFlowCycle.includes(remembered))){
                 if (simulation === 'ink') selectVorticesMode(remembered);
                 else {
                     // The same engine may already be armed on the circular modes button.
@@ -4344,8 +4346,7 @@ function cycleBreatheEvoMode() {
 function updateSpiralButtonUI() {
     const active = activeEvolutionControl() === 'spiral';
     const saved = typeof cycleMemory !== 'undefined' ? cycleMemory.entry('spiral') : undefined;
-    const mode = active ? spiralMode : saved ?? 'off';
-    const displayMode = mode;
+    const displayMode = active ? spiralMode : geometricFlowCycle.includes(saved) ? saved : geometricFlowCycle[0];
     for (const name of dom.btnSpiral.classList) {
         if (name.startsWith('mode-')) {
             dom.btnSpiral.classList.remove(name);
@@ -4370,7 +4371,8 @@ function updateSpiralButtonUI() {
 
 function cycleSpiralMode() {
     const oldMode = armedSimulation === 'spiral' && !['tornado','left','a'].includes(spiralMode) ? spiralMode : 'off';
-    const nextMode = nextEvolutionMode(currentPolygonFlowMode(oldMode), SPIRAL_MODE_SEQUENCE);
+    const nextMode = nextGeometricFlowMode(currentPolygonFlowMode(oldMode), geometricFlowCycle, isLifePlaying);
+    if (nextMode === oldMode) return;
     spiralMode = nextMode;
 
     if (spiralMode !== 'off') {
@@ -6208,7 +6210,18 @@ syncGsModeFromModal: (direction) => {
 
 spiralRules,
 getSpiralRules: () => spiralRules,
+getGeometricFlowCycle: () => geometricFlowCycle,
+saveGeometricFlowCycle: (modes) => {
+    if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
+    const ordered = orderGeometricFlowModes(modes);
+    if (!ordered.length) return false;
+    geometricFlowCycle = ordered;
+    persistGeometricFlowCycle(ordered);
+    updateSpiralButtonUI();
+    return true;
+},
 syncSpiralModeFromModal: (method) => {
+    if (activeEvolutionControl() === 'spiral' && spiralMode === method) return;
     if (armedSimulation !== 'spiral') {
         armSimulation('spiral');
     }
@@ -6591,7 +6604,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) && (!['brightnessEvo', 'breathe', 'islands', 'dla'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
+                canOpen: () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) && (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });

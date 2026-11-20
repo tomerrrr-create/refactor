@@ -94,6 +94,51 @@ try{
   await tap('#btnInk');assert.equal((await state()).armed,null);
   await tap('#btnInk');assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'turbine2');
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'radial');
+  // Cycle membership affects only manual cycling, including the inactive preview.
+  await page.evaluate(()=>{spiralTest.memory(false);spiralTest.setup();});
+  await tap('#btnSpiral');await choose('triangle_flow');
+  const enabled=page.locator('#geometricFlowCycleOptions input');
+  const checked=()=>enabled.evaluateAll(nodes=>nodes.filter(node=>node.checked).map(node=>node.value));
+  const onlySquare=async()=>{
+   for(const mode of modes.filter(mode=>mode!=='square_flow')){
+    await page.locator('#geometricFlowCycleOptions input[value="'+mode+'"]').uncheck();
+   }
+   assert.deepEqual(await checked(),['square_flow']);
+   assert(await page.locator('#geometricFlowCycleOptions input[value="square_flow"]').isDisabled());
+  };
+  await open();assert.deepEqual(await checked(),modes);
+  assert.equal(await page.locator('#geometricFlowCycleOptions').getAttribute('dir'),config.lang==='he'?'rtl':'ltr');
+  await onlySquare();
+  await page.keyboard.press('Escape');await open();assert.deepEqual(await checked(),modes,'a cancelled draft is discarded');
+  await onlySquare();
+  const beforeSave=await state();
+  await tap('#btnSpiralSettingsSave');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
+  const afterSave=await state();
+  assert.equal(afterSave.mode,'triangle_flow');assert.deepEqual(afterSave.logs,beforeSave.logs);
+  assert.deepEqual(afterSave.tiles,beforeSave.tiles);
+  await tap('#btnSpiral');assert.equal((await state()).mode,'square_flow');
+  await tap('#btnPlayPauseLife');
+  const playing=await state();
+  await tap('#btnSpiral');
+  const stillPlaying=await state();
+  assert(stillPlaying.playing&&stillPlaying.gen>=playing.gen);
+  assert.deepEqual(stillPlaying.logs,playing.logs,'the sole mode is not restarted during playback');
+  await tap('#btnPlayPauseLife');
+  await choose('triangle_flow');assert.equal((await state()).mode,'triangle_flow','manually choosing an excluded shape still works');
+  await page.evaluate(()=>spiralTest.memory(true));
+  await tap('#btnNetwork');await tap('#btnSpiral');
+  assert.equal((await state()).mode,'square_flow','a remembered shape excluded from the cycle is skipped');
+  await choose('triangle_flow');
+  await page.evaluate(()=>spiralTest.reset());assert.equal((await state()).mode,'square_flow');
+  await tap('#btnSpiral');assert.equal((await state()).mode,'off');
+  assert(await page.locator('#iconSpiralSquare').isVisible(),'Off previews the first enabled shape');
+  await page.reload();await page.waitForFunction(()=>window.spiralTest?.ready);
+  await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());spiralTest.setup();});
+  await tap('#btnSpiral');assert.equal((await state()).mode,'square_flow');
+  await open();assert.deepEqual(await checked(),['square_flow'],'membership survives reload');
+  await tap('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
+  assert.deepEqual(await replay(page,recipe),after,'an existing recipe still plays excluded modes');
+
   assert.deepEqual(errors,[]);console.log('PASS',JSON.stringify(config));await context.close();
  }
 }finally{await browser.close();await new Promise(r=>server.close(r));}
