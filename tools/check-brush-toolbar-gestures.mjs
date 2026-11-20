@@ -1,4 +1,4 @@
-// Wind temporarily disables brush-color and Symmetry controls without changing choices.
+// Native brush toolbar gestures on desktop and touch, including while Wind is active.
 import {readFile} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {fileURLToPath} from 'node:url';
@@ -10,6 +10,7 @@ source=source.replace('      initializeApp();',`window.windTest={
  setup:()=>{pauseLife();setWindMode(false);resetArmedState();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%paletteLen();t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');updateSimulationUtilityControl();selectedColorIndex=5;selectedColor=palette()[5];isRainbowModeActive=false;brushSize=3;symmetryMode='vertical';updateSymmetryUI();updateColorPickerButtonUI();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);},
  state:()=>({brush:{color:selectedColor,index:selectedColorIndex,rainbow:isRainbowModeActive,size:brushSize,symmetry:symmetryMode},wind:windMode,mode:windSettings.mode,settings:windSettings,board:boardState.map(t=>({k:t.k,isGold:t.isGold})),history:history.length,playing:isLifePlaying,gen:currentGenerationCount,armed:armedSimulation,macro:isMacroPlaying,logs:[...artRecipeLog]}),
  recipe:async()=>await createArtRecipeFile().text(),
+ colors:()=>[...palette()],sort:applySortMethod,
  replay:text=>{pauseLife();setWindMode(false);macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
  openColors:()=>modals.openColorPickerModal(),
  live:()=>{armSimulation('nudgeBrighter');togglePlayPauseLife();},pause:pauseLife
@@ -44,6 +45,25 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  assert.equal(cleared.brush.color,null);assert.equal(cleared.brush.index,-1);assert(!cleared.brush.rainbow);assert.equal(cleared.brush.size,beforeClear.brush.size);assert.equal(cleared.brush.symmetry,beforeClear.brush.symmetry);
  await swipe('#btnColorPicker',0,45);assert.equal((await state()).brush.index,-1,'size change does not select a color');
  await tap('#btnColorPicker');assert.notEqual((await state()).brush.index,-1,'tap still selects a color');
+ for(const sort of ['luminance','reversed']){
+  await page.evaluate(sort=>windTest.sort(sort),sort);
+  const colors=await page.evaluate(()=>windTest.colors());
+  const rect=await color.boundingBox(),x=rect.x+rect.width/2,y=rect.y+rect.height/2;
+  const input=touch?await ctx.newCDPSession(page):null;
+  if(input)await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+  else{await page.mouse.move(x,y);await page.mouse.down();}
+  await page.waitForFunction(()=>windTest.state().brush.rainbow);
+  if(input){await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await input.detach();}
+  else await page.mouse.up();
+  assert((await state()).brush.rainbow,'releasing the extended hold keeps Rainbow selected');
+  await tap('#btnColorPicker');
+  const first=(await state()).brush;
+  assert.equal(first.rainbow,false);
+  assert.equal(first.index,0,'the first tap out of Rainbow selects palette index zero');
+  assert.equal(first.color,colors[0]);
+  await tap('#btnColorPicker');
+  assert.equal((await state()).brush.color,colors.at(-1),'the next tap resumes the usual backward cycle');
+ }
  const previous=(await state()).brush.size;await swipe('#btnPalette',0,45);assert.equal((await state()).brush.size,sizes[(sizes.indexOf(previous)+1)%sizes.length]);assert.equal(await page.locator('#btnPalette').textContent(),label((await state()).brush.size));
  await page.waitForTimeout(950);
  await swipe('#btnColorPicker',-40);await page.locator('#colorPickerModal').waitFor({state:'visible'});await page.locator('#btnColorPickerCloseTop').click();await page.waitForTimeout(350);
