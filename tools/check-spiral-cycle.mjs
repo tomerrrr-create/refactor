@@ -21,7 +21,7 @@ const recipeFor=(method)=>'[00:00:00.000] INIT_STATE -> '+JSON.stringify({recipe
 const init=lang=>{localStorage.setItem('userLanguage',lang);window.resetSpiralRandom=()=>{let seed=14327;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};};Date.now=()=>1700000000000;};
 const replay=async(page,text)=>{await page.locator('#projectFileInput').setInputFiles({name:'spiral.txt',mimeType:'text/plain',buffer:Buffer.from(text)});await page.waitForFunction(()=>spiralTest.state().loaded);await page.locator('#btnMacroPlay').click();await page.waitForFunction(()=>!spiralTest.state().loaded&&!spiralTest.state().animating,{timeout:20000});return page.evaluate(()=>spiralTest.state().tiles);};
 try{
- const oldBoards={};if(baseline){const c=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'});await c.addInitScript(init,'en');const p=await c.newPage();await p.goto(base+'/baseline/');await p.waitForFunction(()=>window.spiralTest?.ready);await p.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));for(const method of ['b','left','radial','down','black_hole','a','vortex','turbine2','tornado','tornado2'])oldBoards[method]=await replay(p,recipeFor(method));await c.close();console.log('Captured old recipe results from',baseline);}
+ const oldBoards={};if(baseline){const c=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'});await c.addInitScript(init,'en');const p=await c.newPage();await p.goto(base+'/baseline/');await p.waitForFunction(()=>window.spiralTest?.ready);await p.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));for(const method of ['b','left','radial','down','black_hole','a','vortex','turbine2','tornado','tornado2','triangle','square','triangle_weave'])oldBoards[method]=await replay(p,recipeFor(method));await c.close();console.log('Captured old recipe results from',baseline);}
  for(const config of [{width:1440,height:1000,lang:'en'},{width:390,height:844,lang:'he'},{width:360,height:800,lang:'ru'},{width:844,height:390,lang:'nl'}]){
   if(process.env.SPIRAL_LANG&&config.lang!==process.env.SPIRAL_LANG)continue;
   const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
@@ -38,7 +38,7 @@ try{
   await page.goto(base);await page.waitForFunction(()=>window.spiralTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   await page.evaluate(()=>spiralTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
-  const modes=['radial','down','triangle','square','triangle_weave'];
+  const modes=['radial','down','triangle_orbit','square_orbit','triangle_weave'];
   const icons=['iconSpiralRadial','iconSpiralDown','iconSpiralTriangle','iconSpiralSquare','iconSpiralTriangleWeave'];
   const before=(await state()).tiles;
   for(const [i,mode] of [...modes,'off'].entries()){await tap('#btnSpiral');assert.equal((await state()).mode,mode);assert.deepEqual((await state()).tiles,before);assert.deepEqual(await page.locator('#btnSpiral svg').evaluateAll(ns=>ns.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id)),[icons[i]||'iconSpiralRadial']);}
@@ -46,7 +46,7 @@ try{
   const open=async()=>{await page.evaluate(()=>spiralTest.open());await page.waitForTimeout(350);};
   const choose=async(method,save=true)=>{await open();await tap('.spiral-method-btn[data-method="'+method+'"]');await tap(save?'#btnSpiralSettingsSave':'#btnSpiralSettingsCancel');await page.waitForTimeout(350);};
   await tap('#btnSpiral');await open();assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),modes);assert.equal(await page.locator('.spiral-method-btn[data-method="vortex"]').count(),0);await page.screenshot({path:path.join(artifacts,config.lang+'-settings.png')});await tap('#btnSpiralSettingsCancel');await page.waitForTimeout(350);
-  await choose('triangle',false);assert.equal((await state()).mode,'radial');
+  await choose('triangle_orbit',false);assert.equal((await state()).mode,'radial');
   for(const mode of modes.slice(2)){
    await choose(mode);assert.equal((await state()).mode,mode);
    const project=await page.evaluate(()=>spiralTest.project());
@@ -60,6 +60,20 @@ try{
   const after=(await state()).tiles,recipe=(await state()).logs.join('\n');assert.notDeepEqual(after,before);
   for(const method of modes){assert(recipe.includes('Spiral Mode Changed -> '+method));assert(recipe.includes('"method":"'+method+'"'));}
   assert.deepEqual(await replay(page,recipe),after,'new logger-to-player steps retain all Geometric Flow modes');
+  for(const method of modes.slice(2,4)){
+   await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await choose(method);
+   await tap('#btnStepForward');await tap('#btnStepForward');
+   const checkpoint=await page.evaluate(()=>spiralTest.project());
+   assert.equal(checkpoint.polygonFlowPhase,2);
+   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.polygonFlowPhase,undefined);
+   await tap('#btnStepForward');const continued=(await state()).tiles;
+   await tap('#btnUndo');assert.equal((await page.evaluate(()=>spiralTest.project())).polygonFlowPhase,2);
+   await tap('#btnRedo');assert.equal((await page.evaluate(()=>spiralTest.project())).polygonFlowPhase,3);
+   assert.deepEqual(await replay(page,(await state()).logs.join('\n')),continued,'undo/redo logs restore circulation');
+   await page.evaluate(project=>spiralTest.restore(project),checkpoint);
+   await tap('#btnStepForward');
+   assert.deepEqual((await state()).tiles,continued,'artwork restores the next phase of circulation');
+  }
   await tornado();const project=await page.evaluate(()=>spiralTest.project());assert.equal(project.spiralMethod,'tornado');await choose('radial');await page.evaluate(p=>spiralTest.restore(p),project);assert.equal((await state()).mode,'tornado');
   await tornado();const undoBefore=(await state()).tiles;await tap('#btnStepForward');const undoAfter=(await state()).tiles;await tap('#btnUndo');assert.deepEqual((await state()).tiles,undoBefore);await tap('#btnRedo');assert.deepEqual((await state()).tiles,undoAfter);assert.deepEqual(await replay(page,(await state()).logs.join('\n')),undoAfter,'Tornado Undo/Redo checkpoints replay exactly');
   if(baseline)for(const method of Object.keys(oldBoards))assert.deepEqual(await replay(page,recipeFor(method)),oldBoards[method],'pre-change recipe still plays '+method);

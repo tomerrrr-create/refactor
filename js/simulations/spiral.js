@@ -5,6 +5,7 @@ import { runTornadoGeneration } from './spiral-tornado.js';
 import { runFlowTornadoGeneration } from './spiral-tornado-flow.js';
 import { runLegacyTornadoGeneration } from './spiral-tornado-legacy.js';
 import { runPolygonFlowGeneration } from './geometric-flow.js';
+import { runPolygonCirculation } from './polygon-circulation.js';
 
 let cachedRadialOrder = null;
 let cachedRadialN = null;
@@ -23,6 +24,10 @@ let strength = 0.9; // עוצמת ברירת המחדל המקורית של הס
     }
 
     switch (method) {
+        case 'triangle_orbit':
+        case 'square_orbit':
+            return runPolygonCirculation(n, nextBoardState, spiralRules);
+
         case 'triangle':
         case 'square':
         case 'triangle_weave':
