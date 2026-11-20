@@ -2785,19 +2785,27 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #geometricFlowCycleHint { color:#b3b8af; font-size:13px; text-align:center; }
 #geometricFlowCycleOptions { row-gap:2px; }
 .geometric-shape { min-width:0; display:grid; grid-template-rows:1fr 44px; }
-.geometric-cycle-toggle {
+.toolbar-cycle-toggle {
   width:44px; display:grid; place-items:start center; justify-self:center;
   padding-top:8px; cursor:pointer;
 }
-.geometric-cycle-toggle input {
+.toolbar-cycle-toggle input {
   appearance:none; display:block; width:14px; height:14px; margin:0;
   border:1px solid #8b8166; border-radius:50%; background:transparent; cursor:inherit;
 }
-.geometric-cycle-toggle input:checked {
+.toolbar-cycle-toggle input:checked {
   border-color:#c6a55b; background:radial-gradient(circle,#e4c378 0 3.5px,transparent 4px);
 }
-.geometric-cycle-toggle input:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
-.geometric-cycle-toggle:has(input:disabled) { cursor:default; }
+.toolbar-cycle-toggle input:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.toolbar-cycle-toggle:has(input:disabled) { cursor:default; }
+.resonance-cycle-toggle { margin-inline:auto; min-height:44px; }
+.resonance-cycle-toggle input, .resonance-cycle-toggle span { grid-area:1 / 1; }
+.resonance-cycle-toggle input:checked { background:transparent; }
+.resonance-cycle-toggle span {
+  color:#e4c378; font:11px/14px system-ui,sans-serif;
+  visibility:hidden; pointer-events:none;
+}
+.resonance-cycle-toggle input:checked + span { visibility:visible; }
 
 #btnInk { display:none; touch-action:none !important; }
 #btnInk svg { stroke:var(--sim-color); }

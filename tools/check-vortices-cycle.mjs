@@ -118,6 +118,7 @@ try {
                 await swipeUp(hub);await menu.waitFor({state:'visible'});
                 await page.waitForTimeout(350);
                 assert.deepEqual(await visibleMaps(),['circular','cosmic']);
+                assert.equal(await menu.locator('[data-resonance-cycle]:visible').count(),0);
                 assert.equal(await menu.locator('[data-cymatics-map='+mode+']').getAttribute('aria-pressed'),'true');
                 if(mode==='cosmic') {
                     await menu.locator('#cymaticsStrength').fill('65');

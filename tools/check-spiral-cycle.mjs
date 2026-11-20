@@ -117,7 +117,7 @@ try{
     getComputedStyle(dot).borderRadius==='50%'&&getComputedStyle(dot).backgroundImage.includes('radial-gradient');
   })));
   const triangleDot='#geometricFlowCycleOptions input[value="triangle_flow"]';
-  await tap('.geometric-shape:has(button[data-method="triangle_flow"]) .geometric-cycle-toggle');
+  await tap('.geometric-shape:has(button[data-method="triangle_flow"]) .toolbar-cycle-toggle');
   assert(!(await page.locator(triangleDot).isChecked()));
   assert.equal(await page.locator(triangleDot).evaluate(dot=>getComputedStyle(dot).backgroundImage),'none');
   assert.equal(await page.locator('.spiral-method-btn[data-method="triangle_flow"]').getAttribute('aria-pressed'),'true');

@@ -37,7 +37,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   }else if(!radial&&(await state()).control!=='cymatics'){await reveal(button);await tap(button);}
   await openSettings();await tap(dialog.locator('[data-cymatics-map="'+name+'"]'));if(motion!==undefined)await dialog.locator('#cymaticsPhaseMotion').setChecked(motion);await tap(dialog.locator('[type=submit]'));}
  async function paint(col,row){const r=await canvas.boundingBox(),position={x:(col+.5)*r.width/41,y:(row+.5)*r.height/41};if(config.width<600)await canvas.tap({position});else await canvas.click({position});}
- await reveal(button);await page.evaluate(()=>cymaticsTest.drawer());await drawer.waitFor({state:'visible'});assert.equal(await drawer.locator('[data-drawer-evolution]').count(),await page.evaluate(async()=>{const {EVOLUTION_CATALOG}=await import('/js/evolution-drawer-settings.js');return EVOLUTION_CATALOG.length-2;}));assert.equal(await drawer.locator('[data-drawer-slot="11"][data-drawer-evolution=cymatics]').count(),1);await tap(drawer.locator('[data-cancel]'));await drawer.waitFor({state:'hidden'});
+ await reveal(button);await page.evaluate(()=>cymaticsTest.drawer());await drawer.waitFor({state:'visible'});assert.equal(await drawer.locator('[data-drawer-evolution]').count(),await page.evaluate(async()=>{const {EVOLUTION_CATALOG}=await import('/js/evolution-drawer-settings.js');return EVOLUTION_CATALOG.length-1;}));assert.equal(await drawer.locator('[data-drawer-evolution=spiral]').count(),0);assert.equal(await drawer.locator('[data-drawer-slot="11"][data-drawer-evolution=cymatics]').count(),1);await tap(drawer.locator('[data-cancel]'));await drawer.waitFor({state:'hidden'});
  await assign('cymatics');await reveal(button);
  await page.evaluate(async()=>{
   const theme=await import('/js/simulation-theme.js'),stroke=id=>getComputedStyle(document.querySelector('#'+id+' > svg')).stroke;
@@ -51,6 +51,45 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await button.locator('svg:visible').evaluate(e=>getComputedStyle(e).strokeWidth),'2.5px');
  if(process.env.CYMATICS_THEME_ONLY){console.log(JSON.stringify({config,themePassed:true}));await context.close();continue;}
 const initial=await state();assert.equal(await button.getAttribute('aria-pressed'),'true');
+ if(process.env.CYMATICS_MEMBERSHIP_ONLY){
+  const mark=name=>dialog.locator('[data-resonance-cycle="'+name+'"]');
+  const checks=()=>dialog.locator('[data-resonance-cycle]:visible').evaluateAll(nodes=>nodes.filter(n=>n.checked).map(n=>n.dataset.resonanceCycle).sort());
+  const apply=async()=>{await tap(dialog.locator('[type=submit]'));await dialog.waitFor({state:'hidden'});};
+  await openSettings();
+  assert.deepEqual(await checks(),['diagonal','grid','interference']);
+  assert(await dialog.locator('.resonance-cycle-toggle:visible').evaluateAll(labels=>labels.every(label=>{
+   const box=label.getBoundingClientRect(),button=label.previousElementSibling.getBoundingClientRect();
+   return box.width>=44&&box.height>=44&&box.top>=button.bottom;
+  })));
+  await mark('clouds').check();await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+  await tap(page.locator('#btnPlayPauseLife'));await openSettings();
+  assert(!(await mark('clouds').isChecked()),'Escape discards the membership draft');
+  await mark('clouds').check();
+  for(const name of ['interference','diagonal','grid'])await mark(name).uncheck();
+  assert(await mark('clouds').isDisabled(),'the last included map cannot be unchecked');
+  const before=await state();await apply();const after=await state();
+  assert(after.playing&&after.gen>=before.gen);
+  assert.deepEqual(after.rules,before.rules);assert.deepEqual(after.logs,before.logs);
+  await tap(button);assert.equal((await state()).rules.resonanceVersion,5);
+  const cloudRun=await state();await tap(button);
+  const stillPlaying=await state();assert(stillPlaying.playing&&stillPlaying.gen>=cloudRun.gen);assert.deepEqual(stillPlaying.logs,cloudRun.logs);
+  await tap(page.locator('#btnPlayPauseLife'));
+  await saveMap('grid');assert.equal((await state()).rules.resonanceVersion,2,'excluded maps can still be selected directly');
+  await page.evaluate(()=>cymaticsTest.setup());await reveal(button);await tap(button);assert.equal((await state()).rules.resonanceVersion,5);
+  await tap(page.locator('#btnStepForward'));
+  const cloudBoard=(await state()).board;
+  const recipe=await page.evaluate(()=>cymaticsTest.recipe());
+  await openSettings();await mark('diagonal').check();await mark('clouds').uncheck();await apply();
+  await page.reload();await page.waitForFunction(()=>window.cymaticsTest?.ready);
+  await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());cymaticsTest.setup();});
+  await reveal(button);await tap(button);assert.equal((await state()).rules.resonanceVersion,1);
+  await openSettings();assert.deepEqual(await checks(),['diagonal']);await tap(dialog.locator('[data-cancel]'));
+  await page.locator('#projectFileInput').setInputFiles({name:'clouds-cycle.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});
+  await page.waitForFunction(()=>cymaticsTest.state().loaded);await page.evaluate(()=>cymaticsTest.macro());
+  await page.waitForFunction(()=>!cymaticsTest.state().loaded&&!cymaticsTest.state().macro,null,{timeout:30000});
+  assert.deepEqual((await state()).board,cloudBoard,'Clouds recipes replay even when excluded from the cycle');
+  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,membershipPassed:true}));await context.close();continue;
+ }
  if(process.env.CYMATICS_LAYOUT_ONLY){
   await openSettings();const selected=dialog.locator('[data-cymatics-map][aria-pressed="true"]');await selected.hover();await page.waitForTimeout(220);assert.equal(await selected.evaluate(e=>getComputedStyle(e).borderTopColor),'rgb(255, 215, 0)','selected map retains gold on hover');await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).rules,initial.rules);assert.deepEqual((await state()).board,initial.board);assert.deepEqual(errors,[]);console.log(JSON.stringify({config,layoutPassed:true}));await context.close();continue;
  }
