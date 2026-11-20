@@ -2,9 +2,10 @@ export function orderToolbarCycle(modes, available) {
     return Array.isArray(modes) ? available.filter(mode => modes.includes(mode)) : [];
 }
 
-export function loadToolbarCycle(key, available, defaults, storage) {
+export function loadToolbarCycle(key, available, defaults, storage, normalize = mode => mode) {
     try {
-        const modes = orderToolbarCycle(JSON.parse((storage ?? globalThis.localStorage)?.getItem(key)), available);
+        const saved = JSON.parse((storage ?? globalThis.localStorage)?.getItem(key));
+        const modes = orderToolbarCycle(Array.isArray(saved) ? saved.map(normalize) : saved, available);
         if (modes.length) return modes;
     } catch { /* Use the default cycle. */ }
     return [...defaults];
