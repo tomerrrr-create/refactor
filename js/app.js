@@ -35,7 +35,7 @@ import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, ge
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
-import { POLYGON_CIRCULATION_MODES, normalizePolygonFlowPhase, restorePolygonFlowPhase } from './simulations/polygon-circulation.js';
+import { POLYGON_CIRCULATION_MODES, currentPolygonFlowMode, normalizePolygonFlowPhase, restorePolygonFlowPhase } from './simulations/polygon-circulation.js';
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
@@ -400,7 +400,7 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
 let brightnessEvoMode = 'off'; // ישמור את המצב הנבחר: 'off', 'brightness', או 'contrast'
 let dlaMode = 'off'; // 'off', 'genetics', or 'no-genetics'
 let spiralMode = 'off';
-const SPIRAL_MODE_SEQUENCE = ['off', 'radial', 'down', 'triangle_orbit', 'square_orbit', 'triangle_weave'];
+const SPIRAL_MODE_SEQUENCE = ['off', 'radial', 'down', 'triangle_flow', 'square_flow', 'triangle_weave'];
 let magnetMode = 'off';
  let gsMode = 'off'; // 'off', 'up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex'
 
@@ -459,7 +459,7 @@ currentSortMethod,
             ...(['brightnessEvo', 'breathe', 'islands', 'dla'].includes(armedSimulation) ? { tuningSimulation: armedSimulation } : {}),
             spiralMethod: armedSimulation === 'spiral' ? spiralMode : undefined,
             ...(armedSimulation === 'spiral' && POLYGON_CIRCULATION_MODES.includes(spiralMode)
-                ? { polygonFlowPhase: normalizePolygonFlowPhase(spiralRules.polygonFlowPhase) } : {}),
+                ? { polygonFlowPhase: normalizePolygonFlowPhase(spiralRules.polygonFlowPhase, spiralMode) } : {}),
             ...(isTornadoSelected() ? {tornadoVersion: vorticesSpiralRules.tornadoVersion, tornadoFrame: vorticesSpiralRules.tornadoFrame} : {}),
             ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...getActiveGravityRules() } } : {}),
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
@@ -591,7 +591,8 @@ k: tileState.k,
         }
 
         // Older project files have no spiralMethod and keep their old behavior.
-        if (state.spiralMethod && [...SPIRAL_MODE_SEQUENCE, 'triangle', 'square', 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod) && state.spiralMethod !== 'off') {
+        if (state.spiralMethod && state.spiralMethod !== 'off' &&
+            [...SPIRAL_MODE_SEQUENCE, ...POLYGON_CIRCULATION_MODES, 'triangle', 'square', 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod)) {
             if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry: state.spiralMethod });
             spiralMode = state.spiralMethod;
             const rules = getActiveSpiralRules();
@@ -4369,8 +4370,7 @@ function updateSpiralButtonUI() {
 
 function cycleSpiralMode() {
     const oldMode = armedSimulation === 'spiral' && !['tornado','left','a'].includes(spiralMode) ? spiralMode : 'off';
-    const cycleMode = oldMode === 'triangle' ? 'triangle_orbit' : oldMode === 'square' ? 'square_orbit' : oldMode;
-    const nextMode = nextEvolutionMode(cycleMode, SPIRAL_MODE_SEQUENCE);
+    const nextMode = nextEvolutionMode(currentPolygonFlowMode(oldMode), SPIRAL_MODE_SEQUENCE);
     spiralMode = nextMode;
 
     if (spiralMode !== 'off') {
@@ -4631,7 +4631,7 @@ function validateHistorySettings(settings) {
     if (settings?.tornadoState && (![1,2,3].includes(settings.tornadoState.version) || !Number.isSafeInteger(settings.tornadoState.frame) || settings.tornadoState.frame < 0)) throw new Error('Invalid Tornado checkpoint');
     if (settings?.polygonFlowState) {
         const {method,phase}=settings.polygonFlowState;
-        if (!POLYGON_CIRCULATION_MODES.includes(method) || normalizePolygonFlowPhase(phase) !== phase) throw new Error('Invalid Geometric Flow checkpoint');
+        if (!POLYGON_CIRCULATION_MODES.includes(method) || normalizePolygonFlowPhase(phase, method) !== phase) throw new Error('Invalid Geometric Flow checkpoint');
     }
     if (settings?.gravityRules) validateGravitySnapshot(settings.gravityRules);
     if (settings?.evolutionTuning) validateEvolutionTuning(settings.evolutionTuning);

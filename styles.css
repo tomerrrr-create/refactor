@@ -1335,8 +1335,8 @@ body {
 #btnSpiral.mode-down #iconSpiralDown { display: block !important; }
 #btnSpiral.mode-down svg:not(#iconSpiralDown) { display: none !important; }
 
-#btnSpiral:is(.mode-triangle,.mode-triangle_orbit) #iconSpiralTriangle,
-#btnSpiral:is(.mode-square,.mode-square_orbit) #iconSpiralSquare,
+#btnSpiral:is(.mode-triangle,.mode-triangle_orbit,.mode-triangle_flow) #iconSpiralTriangle,
+#btnSpiral:is(.mode-square,.mode-square_orbit,.mode-square_flow) #iconSpiralSquare,
 #btnSpiral.mode-triangle_weave #iconSpiralTriangleWeave { display: block !important; }
 
 #btnSpiral.mode-turbine2 #iconSpiralTurbine2 { display:block !important; }

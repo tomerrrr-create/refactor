@@ -1,5 +1,6 @@
 import {isCombinedMagnetMode} from './magnet-modes.js';
 import { magnetAnchorIndex } from './magnet-anchor.js';
+import { currentPolygonFlowMode } from './simulations/polygon-circulation.js';
 import { initializeMacroOverlaySettings } from './macro-overlay-settings.js';
 import { createCompactColorPicker } from './compact-color-picker.js';
 import { focusSettingsHeading } from './dialog-focus.js';
@@ -195,7 +196,7 @@ function openSpiralSettingsModal() {
     // סימון הכפתור הנכון לפי מה ששמור בהגדרות
 
     const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'radial';
-    const selectedMethod = currentMethod === 'triangle' ? 'triangle_orbit' : currentMethod === 'square' ? 'square_orbit' : currentMethod;
+    const selectedMethod = currentPolygonFlowMode(currentMethod);
     app.dom.spiralMethodButtons.forEach(btn => {
 
 
