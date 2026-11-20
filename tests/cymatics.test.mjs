@@ -5,6 +5,7 @@ import {getCymaticsField,createCymaticsState,restoreCymaticsState,validateCymati
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 import {validateProfileSnapshot} from '../js/profile-state.js';
 import {sortColorsArray} from '../js/colors.js';
+import {DEFAULT_RESONANCE_CYCLE,loadResonanceCycle,persistResonanceCycle} from '../js/resonance-cycle.js';
 const fixture=(n=21)=>({n,currentPalette:Array(23).fill('#ffffff'),currentBoardState:Array.from({length:n*n},(_,i)=>({k:(i*17+3)%23,v:(i*17+3)%23,isGold:i===Math.floor(n*n/2)}))});
 const histogram=board=>board.reduce((m,t)=>(m[t.k]=(m[t.k]??0)+1,m),{});
 function advance(ctx,state,count){for(let i=0;i<count;i++){const r=runCymaticsGeneration(ctx,state);ctx.currentBoardState=r.nextBoardState;state=r.nextCymaticsState;}return {ctx,state};}
@@ -170,9 +171,9 @@ test('Resonance defaults to 35 percent and retired preferences migrate without a
  assert.deepEqual(validateCymaticsRules(old),old,'old resonance fields and explicit strength retain their meaning');
 });
 
-test('Resonance cycles Interference, Diagonal and Crosshatch, with Clouds available in settings',()=>{
+test('Resonance cycles Interference, Diagonal and Crosshatch by default and can include Clouds',()=>{
  const events=[],classes=new Set(),button={dataset:{},classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);}},setAttribute(name,value){this[name]=value;}};
- const c=vm.createContext({vorticesModeFor,RESONANCE_MAPS,CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,cymaticsRules:{...INITIAL_CYMATICS_RULES},cymaticsFrequencies:createCymaticsFrequencies(),cymaticsStrengths:createCymaticsStrengths(),replayCymaticsRules:null,cymaticsState:null,n:21,
+ const c=vm.createContext({vorticesModeFor,RESONANCE_MAPS,resonanceCycle:[...DEFAULT_RESONANCE_CYCLE],CYMATICS_RESONANCE_MAPS,INITIAL_CYMATICS_RULES,cymaticsRules:{...INITIAL_CYMATICS_RULES},cymaticsFrequencies:createCymaticsFrequencies(),cymaticsStrengths:createCymaticsStrengths(),replayCymaticsRules:null,cymaticsState:null,n:21,
   armedSimulation:null,isLifePlaying:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,isBreathing:false,dom:{btnCymatics:button},getText:key=>key,
   createCymaticsState,restoreCymaticsState,validateCymaticsRules,validateCymaticsSnapshot,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,validateCymaticsStrengths,selectCymaticsMap,
   window:{logArtEvent:(name,details)=>events.push({name,details})},persistWorkspaceSettings(){},getWorkspaceSettings:()=>({}),settingsProfiles:{scheduleCapture(){}}});
@@ -197,8 +198,19 @@ test('Resonance cycles Interference, Diagonal and Crosshatch, with Clouds availa
  assert.equal(button.dataset.cymaticsMap,'clouds');
  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,4);
  assert.equal(c.getCymaticsRules().phaseMotion,false);
+ c.resonanceCycle=[5];c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,5);
+ c.isLifePlaying=true;const eventCount=events.length;c.cycleCymaticsMode();assert.equal(events.length,eventCount);
  const validation=vm.createContext({vorticesModeFor,RESONANCE_MAPS,validateCymaticsSnapshot});vm.runInContext(source.slice(source.indexOf('function validateCymaticsMacroAction('),source.indexOf('function parseMacroText(')),validation);
  const off=events.find(e=>e.name==='Cymatics Mode Changed');assert.doesNotThrow(()=>validation.validateCymaticsMacroAction({eventName:off.name,details:off.details}));assert.throws(()=>validation.validateCymaticsMacroAction({eventName:off.name,details:off.details.replace('"mode":"off"','"mode":"bad"')}));
+});
+
+test('Resonance cycle preferences are browser-local and default to the original three maps',()=>{
+ let saved;
+ const storage={getItem:()=>saved,setItem:(_,value)=>{saved=value;}};
+ assert.deepEqual(loadResonanceCycle(storage),[4,1,2]);
+ persistResonanceCycle([5,2,3,5],storage);
+ assert.deepEqual(loadResonanceCycle(storage),[2,5]);
+ saved='[]';assert.deepEqual(loadResonanceCycle(storage),[4,1,2]);
 });
 
 test('per-map frequencies migrate legacy shared values and keep strength/phase shared',()=>{

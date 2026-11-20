@@ -37,6 +37,7 @@ import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
 import { POLYGON_CIRCULATION_MODES, currentPolygonFlowMode, normalizePolygonFlowPhase, restorePolygonFlowPhase } from './simulations/polygon-circulation.js';
 import { GEOMETRIC_FLOW_MODES, loadGeometricFlowCycle, nextGeometricFlowMode, orderGeometricFlowModes, persistGeometricFlowCycle } from './geometric-flow-cycle.js';
+import { loadResonanceCycle, orderResonanceCycle, persistResonanceCycle } from './resonance-cycle.js';
 import { parseSeparatorWidth } from './separator-recording.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel, relativeSeparatorWidth } from './relative-separators.js';
 import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, availableSeparatorCycle } from './separator-cycle.js';
@@ -81,6 +82,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let inkState=null,inkRules={...DEFAULT_INK_PREFERENCES},replayInkRules=null,inkSettingsUI=null;
       let vorticesEnabledModes=loadVorticesCycle();
       let geometricFlowCycle=loadGeometricFlowCycle();
+      let resonanceCycle=loadResonanceCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
@@ -1950,7 +1952,8 @@ function restoreCycleMode(simulation, mode) {
 }
 function resetEvolutionCycle(simulation, {refresh=true} = {}) {
     if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
-    const mode=simulation==='ink'?vorticesEnabledModes[0]:simulation==='spiral'?geometricFlowCycle[0]:defaultEvolutionCycleMode(simulation);
+    const mode=simulation==='ink'?vorticesEnabledModes[0]:simulation==='spiral'?geometricFlowCycle[0]:
+        simulation==='cymatics'?resonanceCycle[0]:defaultEvolutionCycleMode(simulation);
     if(mode===undefined)return false;
     const selected=matchesEvolutionControl(simulation);
     cycleMemory.remember(simulation,mode);
@@ -1989,7 +1992,8 @@ function cycleMemoryTap(simulation, onTap) {
         try {
             const selected=matchesEvolutionControl(simulation);
             if(!selected&&remembered!==undefined&&(simulation!=='ink'||vorticesEnabledModes.includes(remembered))&&
-                (simulation!=='spiral'||geometricFlowCycle.includes(remembered))){
+                (simulation!=='spiral'||geometricFlowCycle.includes(remembered))&&
+                (simulation!=='cymatics'||resonanceCycle.includes(remembered))){
                 if (simulation === 'ink') selectVorticesMode(remembered);
                 else {
                     // The same engine may already be armed on the circular modes button.
@@ -3914,7 +3918,8 @@ function saveInkSettings(value){
 function updateCymaticsButtonUI(){
     if(typeof dom==='undefined'||!dom.btnCymatics)return;
     const button=dom.btnCymatics, active=activeEvolutionControl()==='cymatics';
-    const version=active ? getCymaticsRules().resonanceVersion : cycleMemory.entry('cymatics');
+    const remembered=cycleMemory.entry('cymatics');
+    const version=active ? getCymaticsRules().resonanceVersion : resonanceCycle.includes(remembered)?remembered:resonanceCycle[0];
     const map=RESONANCE_MAPS.find(name=>CYMATICS_RESONANCE_MAPS[name]===version) ?? RESONANCE_MAPS[0];
     button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',active);
     const title=getText('tooltip_cymatics')+' — '+getText('cymatics_map_'+map);
@@ -3929,9 +3934,9 @@ function cycleCymaticsMode(){
     if(isMacroLoaded&&!isExecutingMacroCommand)stopMacro();
     const current=activeEvolutionControl()==='cymatics' ? getCymaticsRules().resonanceVersion : 'off';
     if(armedSimulation!=='cymatics')armSimulation('cymatics');
-    const cycle=['off', ...RESONANCE_MAPS.filter(name=>name!=='clouds').map(name=>CYMATICS_RESONANCE_MAPS[name])];
-    const next=nextEvolutionMode(current,cycle.includes(current)?cycle:cycle.slice(1));
-    const selected=selectCymaticsMap(getCymaticsRules(),next==='off'?cycle[1]:next,cymaticsFrequencies,cymaticsStrengths);
+    const next=nextEvolutionMode(resonanceCycle.includes(current)?current:'off',['off', ...resonanceCycle]);
+    if(next===current)return;
+    const selected=selectCymaticsMap(getCymaticsRules(),next==='off'?resonanceCycle[0]:next,cymaticsFrequencies,cymaticsStrengths);
     const running=isLifePlaying;
     if(saveCymaticsSettings(selected.rules,selected.frequencies,selected.strengths)===false)return;
     if(next==='off'){
@@ -6345,7 +6350,17 @@ updateBrightnessEvoButtonUI();
         const oilSettingsUI=createOilSettingsDialog({getRules:()=>islandsSession?.oilRules??ISLANDS_OIL_RULES,saveRules:saveIslandsOilSettings,getText,getLang:getCurrentLang,onLanguageChange});
         networkSettingsUI=createNetworkSettingsDialog({getRules:getNetworkRules,saveRules:saveNetworkSettings,getText,getLang:getCurrentLang,onLanguageChange});
         cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,getFrequencies:()=>cymaticsFrequencies,getStrengths:()=>cymaticsStrengths,saveRules:saveCymaticsSettings,
-            canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying,
+            getCycle:()=>activeVorticesMode() ? null : resonanceCycle,
+            saveCycle:modes=>{
+                if(activeEvolutionControl()!=='cymatics'||isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
+                const ordered=orderResonanceCycle(modes);
+                if(!ordered.length)return false;
+                resonanceCycle=ordered;
+                persistResonanceCycle(ordered);
+                updateCymaticsButtonUI();
+                return true;
+            },
+            canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             getMaps:()=>activeVorticesMode() ? VORTICES_RESONANCE_MAPS : RESONANCE_MAPS,
             getTrigger:()=>activeVorticesMode() ? dom.btnInk : dom.btnCymatics,
             getText,getLang:getCurrentLang,onLanguageChange});
