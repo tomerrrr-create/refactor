@@ -2,7 +2,7 @@ import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import { recordErosionRules, restoreErosionRules } from '../js/erosion-settings.js';
 import { runGravitationalSortGeneration } from '../js/simulations/gravitational_sort.js';
 import { runSpiralGeneration } from '../js/simulations/spiral.js';
-import { restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
+import { currentPolygonFlowMode, restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -14,7 +14,7 @@ const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
     { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x', 'pinwheel'], get: c => c.gsMode },
     { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: MAGNET_CYCLE.slice(1), get: c => c.magnetMode },
-    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['radial', 'down', 'triangle_orbit', 'square_orbit', 'triangle_weave'], get: c => c.spiralMode },
+    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['radial', 'down', 'triangle_flow', 'square_flow', 'triangle_weave'], get: c => c.spiralMode },
     { sim: 'brightnessEvo', fn: 'cycleBrightnessEvoMode', event: 'Brightness Evo Mode Changed', modes: ['brightness', 'contrast'], get: c => c.brightnessEvoMode },
     { sim: 'dla', fn: 'cycleDlaMode', event: 'DLA Mode Changed', modes: ['genetics', 'no-genetics'], get: c => c.dlaMode }
 ];
@@ -25,7 +25,7 @@ function functionSource(name) {
 }
 function harness() {
     const board = [{ k: 0 }, { k: 1 }], dlaState = { crystal: new Set([0]) };
-    const c = vm.createContext({MAGNET_CYCLE,isCombinedMagnetMode,restorePolygonFlowPhase, window: {}, artRecipeLog: [], currentGenerationCount: 0,
+    const c = vm.createContext({MAGNET_CYCLE,isCombinedMagnetMode,currentPolygonFlowMode,restorePolygonFlowPhase, window: {}, artRecipeLog: [], currentGenerationCount: 0,
         isExecutingMacroCommand: false, isLifePlaying: false, armedSimulation: null,
         brightnessEvoMode: 'off', dlaMode: 'off', gsMode: 'off', spiralMode: 'off', magnetMode: 'off',
         erosionRules: { mode: 'legacy', erosionStrength: .1 }, gravitationalSortRules: { direction: 'up' },

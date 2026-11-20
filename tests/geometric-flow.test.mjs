@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { POLYGON_FLOW_MODES } from '../js/simulations/geometric-flow.js';
-import { POLYGON_CIRCULATION_MODES, POLYGON_FLOW_PERIOD } from '../js/simulations/polygon-circulation.js';
+import { POLYGON_CIRCULATION_MODES, POLYGON_FLOW_PERIOD, restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
 import { runSpiralGeneration } from '../js/simulations/spiral.js';
 import { defaultWorkspaceSettings, deserializeWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { validateProfileSnapshot } from '../js/profile-state.js';
@@ -61,7 +61,7 @@ test('new Geometric Flow modes round-trip through settings files and profiles', 
     }
 });
 
-test('Triangle and Square keep visibly rearranging pigments after over one full cycle', () => {
+test('Triangle and Square keep visibly rearranging pigments after hundreds of generations', () => {
     const n = 81;
     const initial = makeBoard(n);
     for (const method of POLYGON_CIRCULATION_MODES) {
@@ -70,7 +70,8 @@ test('Triangle and Square keep visibly rearranging pigments after over one full 
         const step = (currentBoardState, spiralRules) => runSpiralGeneration({ n, currentBoardState, spiralRules });
         for (let i = 0; i < POLYGON_FLOW_PERIOD + 90; i++) step(board, rules);
         const checkpoint = board.slice();
-        const savedRules = { ...rules };
+        const savedRules = { method };
+        restorePolygonFlowPhase(savedRules, rules.polygonFlowPhase);
         const restored = checkpoint.slice();
         for (let i = 0; i < 24; i++) {
             step(board, rules);
@@ -84,5 +85,28 @@ test('Triangle and Square keep visibly rearranging pigments after over one full 
         initial.forEach((tile, index) => {
             if (tile.isGold) assert.strictEqual(board[index], tile);
         });
+    }
+});
+
+test('gradual Triangle and Square develop through sparse, one-cell exchanges', () => {
+    const n = 81;
+    const initial = makeBoard(n);
+    for (const method of ['triangle_flow', 'square_flow']) {
+        const board = initial.slice(), rules = { method };
+        for (let frame = 0; frame < 690; frame++) {
+            const checkMotion = [0, 30, 180, 360, 689].includes(frame);
+            const before = checkMotion ? new Map(board.map((tile, index) => [tile, index])) : null;
+            runSpiralGeneration({ n, currentBoardState: board, spiralRules: rules });
+            if (!before) continue;
+            let moved = 0;
+            board.forEach((tile, index) => {
+                const from = before.get(tile);
+                const distance = Math.abs(from % n - index % n) + Math.abs(Math.floor(from / n) - Math.floor(index / n));
+                assert(distance <= 1, `${method}, frame ${frame}`);
+                moved += distance;
+            });
+            if (frame === 0) assert(moved > 0 && moved < board.length * .12, method);
+        }
+        assert(rules.polygonFlowPhase >= 180, 'wrapping the motion never restarts the growth ramp');
     }
 });

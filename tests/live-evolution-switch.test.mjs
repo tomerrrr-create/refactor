@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { createCracksState } from '../js/simulations/cracks.js';
 import { validateEvolutionTuning } from '../js/evolution-tuning.js';
-import { restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
+import { currentPolygonFlowMode, restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const spiralSequence = JSON.parse(source.match(/const SPIRAL_MODE_SEQUENCE = (\[[^\]]+\])/)[1].replaceAll("'", '"'));
@@ -21,7 +21,7 @@ const simulations = {
 function harness() {
     const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
-    const c = vm.createContext({vorticesModeFor,restorePolygonFlowPhase, vorticesSpiralRules:{method:'left'}, vorticesGravityRules:{direction:'turbine2',strength:.6},MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
+    const c = vm.createContext({vorticesModeFor,currentPolygonFlowMode,restorePolygonFlowPhase, vorticesSpiralRules:{method:'left'}, vorticesGravityRules:{direction:'turbine2',strength:.6},MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
         C:{PALETTES:[{originalColors:[]}]}, activePaletteIndex:0, palette:()=>[], getCracksBrush:()=>({color:null,rainbow:false}), getCracksGrowth:()=>({branchChance:65,branchInterval:11,curvature:100}), getCracksMaterial:()=>({enabled:false,strength:40}), dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
         setSimulationRunning(value) { c.runningAppearance = value; }, isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
         boardState: [{k: 1}, {k: 2}], simulationStartState: null, simulationHasBrushInput: false,
@@ -171,6 +171,6 @@ test('Nudge arms and cycles without paint; live cycling keeps the same generatio
 test('Spiral button starts at Diamond, follows the requested order live, and preserves legacy arming',()=>{
  const c=harness();select(c,'spiral');assert.equal(c.spiralMode,'radial');assert.equal(c.spiralRules.method,'radial');
  c.togglePlayPauseLife();c.currentGenerationCount=23;
- for(const mode of ['down','triangle_orbit','square_orbit','triangle_weave','radial']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
+ for(const mode of ['down','triangle_flow','square_flow','triangle_weave','radial']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
  const legacy=harness();legacy.isExecutingMacroCommand=true;legacy.armSimulation('spiral');assert.equal(legacy.spiralMode,'b');assert.equal(legacy.spiralRules.method,'b');
 });

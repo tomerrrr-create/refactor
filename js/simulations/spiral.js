@@ -24,6 +24,8 @@ let strength = 0.9; // עוצמת ברירת המחדל המקורית של הס
     }
 
     switch (method) {
+        case 'triangle_flow':
+        case 'square_flow':
         case 'triangle_orbit':
         case 'square_orbit':
             return runPolygonCirculation(n, nextBoardState, spiralRules);

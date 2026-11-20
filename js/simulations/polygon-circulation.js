@@ -1,50 +1,63 @@
-export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'square_orbit']);
+const LOCAL_POLYGON_MODES = ['triangle_flow', 'square_flow'];
+export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'square_orbit', ...LOCAL_POLYGON_MODES]);
 export const POLYGON_FLOW_PERIOD = 240;
+const GROWTH_GENERATIONS = 180;
+const LOCAL_PERIOD = 480;
 
 const TAU = 2 * Math.PI;
 const fields = new Map();
 
-export function normalizePolygonFlowPhase(value) {
-    return Number.isInteger(value) && value >= 0 && value < POLYGON_FLOW_PERIOD ? value : 0;
+export function currentPolygonFlowMode(method) {
+    if (method === 'triangle' || method === 'triangle_orbit') return 'triangle_flow';
+    if (method === 'square' || method === 'square_orbit') return 'square_flow';
+    return method;
+}
+
+export function normalizePolygonFlowPhase(value, method) {
+    const limit = LOCAL_POLYGON_MODES.includes(method) ? GROWTH_GENERATIONS + LOCAL_PERIOD : POLYGON_FLOW_PERIOD;
+    return Number.isInteger(value) && value >= 0 && value < limit ? value : 0;
 }
 
 export function restorePolygonFlowPhase(rules, phase) {
-    if (POLYGON_CIRCULATION_MODES.includes(rules.method)) rules.polygonFlowPhase = normalizePolygonFlowPhase(phase);
+    if (POLYGON_CIRCULATION_MODES.includes(rules.method)) rules.polygonFlowPhase = normalizePolygonFlowPhase(phase, rules.method);
     else delete rules.polygonFlowPhase;
 }
 
 function buildField(n, method) {
-    const square = method === 'square_orbit';
+    const local = LOCAL_POLYGON_MODES.includes(method);
+    const square = method === 'square_orbit' || method === 'square_flow';
     const centerX = (n - 1) / 2;
     const centerY = square ? centerX : (n - 1) * .58;
     const ringLimit = square ? centerX : Math.min(centerY / 2, centerX / Math.sqrt(3), n - 1 - centerY);
     const count = n * n;
     const distance = new Float32Array(count);
-    const angle = new Float32Array(count);
+    const angle = local ? null : new Float32Array(count);
     const crest = new Float32Array(count);
     const trough = new Float32Array(count);
     const ranks = new Float32Array(count);
     const contours = new Map();
-    const order = Array.from({ length: count }, (_, i) => i);
 
     for (let i = 0; i < count; i++) {
         const x = i % n - centerX;
         const y = Math.floor(i / n) - centerY;
         const level = square ? Math.max(Math.abs(x), Math.abs(y)) : Math.max(y, Math.sqrt(3) / 2 * Math.abs(x) - .5 * y);
         distance[i] = level;
-        angle[i] = Math.atan2(y, x);
-        const twist = (square ? 4 : 3) * angle[i] - level / n * (square ? 28 : 30);
+        const azimuth = Math.fround(Math.atan2(y, x));
+        if (angle) angle[i] = azimuth;
+        const twist = (square ? 4 : 3) * azimuth - level / n * (square ? 28 : 30);
         const amplitude = Math.min(level * .48, n * (square ? .062 : .072));
         crest[i] = Math.cos(twist) * amplitude;
         trough[i] = Math.sin(twist) * amplitude;
         // The triangle's outer contours are clipped by the board. Do not wrap
         // across those gaps. The traveling field still moves the outer tiles.
-        if (level > ringLimit) continue;
+        if (local || level > ringLimit) continue;
         const ring = Math.floor(level + .5);
         if (!contours.has(ring)) contours.set(ring, []);
         contours.get(ring).push(i);
     }
 
+    if (local) return { n, distance, crest, trough, ranks };
+    const order = Array.from({ length: count }, (_, i) => i);
     const rings = Array.from(contours, ([level, path]) => ({
         path: path.sort((a, b) => angle[a] - angle[b] || distance[a] - distance[b]),
         stride: 1 + Math.floor(level / Math.max(4, n * (square ? .13 : .19)))
@@ -80,19 +93,46 @@ function compare(board, ranks, a, b) {
     board[b] = first;
 }
 
+function growThroughNeighbors(n, board, ranks, phase, growth) {
+    const horizontal = (phase & 1) === 0;
+    const offset = (phase >>> 1) & 1;
+    const salt = Math.imul(phase + 1, 0x9e3779b9);
+    // Early passes touch only a small fraction of pairs. The same eligibility
+    // pattern is reproduced from the phase when replaying or resuming.
+    const budget = Math.round(32 + 192 * growth);
+    for (let lane = 0; lane < n; lane++) {
+        for (let step = offset; step + 1 < n; step += 2) {
+            const a = horizontal ? lane * n + step : step * n + lane;
+            const b = a + (horizontal ? 1 : n);
+            const hash = Math.imul(a ^ salt, 0x85ebca6b);
+            if (((hash ^ (hash >>> 16)) & 255) < budget) compare(board, ranks, a, b);
+        }
+    }
+}
+
 export function runPolygonCirculation(n, board, rules) {
-    const phase = normalizePolygonFlowPhase(rules.polygonFlowPhase);
-    rules.polygonFlowPhase = (phase + 1) % POLYGON_FLOW_PERIOD;
+    const local = LOCAL_POLYGON_MODES.includes(rules.method);
+    const phase = normalizePolygonFlowPhase(rules.polygonFlowPhase, rules.method);
     let field = fields.get(rules.method);
     if (field?.n !== n) {
         field = buildField(n, rules.method);
         fields.set(rules.method, field);
     }
-    const { distance, crest, trough, ranks, order, gap } = field;
-    const cos = Math.cos(phase * TAU / POLYGON_FLOW_PERIOD);
-    const sin = Math.sin(phase * TAU / POLYGON_FLOW_PERIOD);
+    const { distance, crest, trough, ranks } = field;
+    const progress = local ? Math.min(phase / GROWTH_GENERATIONS, 1) : 1;
+    const growth = progress * progress * (3 - 2 * progress);
+    const turn = local ? (phase - GROWTH_GENERATIONS) * TAU / LOCAL_PERIOD : phase * TAU / POLYGON_FLOW_PERIOD;
+    const cos = Math.cos(turn) * growth;
+    const sin = Math.sin(turn) * growth;
     for (let i = 0; i < board.length; i++) ranks[i] = distance[i] + crest[i] * cos + trough[i] * sin;
 
+    if (local) {
+        growThroughNeighbors(n, board, ranks, phase, growth);
+        rules.polygonFlowPhase = phase + 1 < GROWTH_GENERATIONS + LOCAL_PERIOD ? phase + 1 : GROWTH_GENERATIONS;
+        return board;
+    }
+    rules.polygonFlowPhase = (phase + 1) % POLYGON_FLOW_PERIOD;
+    const { order, gap } = field;
     advectRings(board, field);
     // Compare against a traveling, twisted rank field. Reversing the scan
     // avoids a preferred edge while allowing pigment to cross contour ranks.
