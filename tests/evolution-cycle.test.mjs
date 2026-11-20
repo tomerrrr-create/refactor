@@ -3,13 +3,13 @@ import { recordErosionRules, restoreErosionRules } from '../js/erosion-settings.
 import { runGravitationalSortGeneration } from '../js/simulations/gravitational_sort.js';
 import { runSpiralGeneration } from '../js/simulations/spiral.js';
 import { currentPolygonFlowMode, restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
+import { GEOMETRIC_FLOW_MODES, nextGeometricFlowMode } from '../js/geometric-flow-cycle.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
-const spiralSequence = JSON.parse(source.match(/const SPIRAL_MODE_SEQUENCE = (\[[^\]]+\])/)[1].replaceAll("'", '"'));
 const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
     { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x', 'pinwheel'], get: c => c.gsMode },
@@ -30,7 +30,7 @@ function harness() {
         brightnessEvoMode: 'off', dlaMode: 'off', gsMode: 'off', spiralMode: 'off', magnetMode: 'off',
         erosionRules: { mode: 'legacy', erosionStrength: .1 }, gravitationalSortRules: { direction: 'up' },
         spiralRules: { method: 'b' }, magnetRules: { method: 'cosmic_magnet' },
-        SPIRAL_MODE_SEQUENCE: spiralSequence, boardState: board, dlaState,
+        geometricFlowCycle: [...GEOMETRIC_FLOW_MODES], nextGeometricFlowMode, boardState: board, dlaState,
         armCalls: 0, pauseCalls: 0 });
     c.restoreErosionRules = restoreErosionRules;
     c.getErosionRecordingRules = () => recordErosionRules(c.erosionRules, 64);

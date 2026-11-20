@@ -180,17 +180,34 @@ function closeResizeModal() {
 }
 
 // --- START: Spiral Settings Helper Functions ---
+let spiralDraftMethod = null;
+
+function updateGeometricFlowCycleAvailability() {
+    const inputs = app.dom.geometricFlowCycleInputs;
+    const selected = inputs.filter(input => input.checked);
+    for (const input of inputs) input.disabled = selected.length === 1 && selected[0] === input;
+}
+
 function closeSpiralSettingsModal() {
     app.dom.spiralSettingsModal.style.display = 'none';
     app.dom.spiralSettingsModal.classList.remove('modal-visible');
     app.resetWasLongPress(); 
+    app.dom.btnSpiral.focus({ preventScroll: true });
 }
 
 function openSpiralSettingsModal() {
+    spiralDraftMethod = null;
+    app.dom.geometricFlowCycleOptions.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
+    const enabled = app.getGeometricFlowCycle();
+    for (const input of app.dom.geometricFlowCycleInputs) input.checked = enabled.includes(input.value);
+    updateGeometricFlowCycleAvailability();
     app.dom.spiralSettingsModal.style.display = 'flex';
     // השהייה קטנטנה כדי לאפשר לאנימציה לעבוד כמו שצריך
     setTimeout(() => {
-        app.dom.spiralSettingsModal.classList.add('modal-visible');
+        if (app.dom.spiralSettingsModal.style.display === 'flex') {
+            app.dom.spiralSettingsModal.classList.add('modal-visible');
+            focusSettingsHeading(app.dom.spiralSettingsModal);
+        }
     }, 10);
     
     // סימון הכפתור הנכון לפי מה ששמור בהגדרות
@@ -2080,21 +2097,11 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
 
 // --- START: Added for Spiral Settings ---
     app.dom.btnSpiralSettingsCancel.addEventListener('click', closeSpiralSettingsModal);
-    
-
-
-
-// שמירת ההגדרות כשהמשתמש לוחץ 'שמור וסגור'
+    app.dom.geometricFlowCycleOptions.addEventListener('change', updateGeometricFlowCycleAvailability);
     app.dom.btnSpiralSettingsSave.addEventListener('click', () => {
-        const activeBtn = Array.from(app.dom.spiralMethodButtons).find(b => b.classList.contains('active'));
-        if (activeBtn && app.spiralRules) {
-            app.spiralRules.method = activeBtn.dataset.method;
-            
-            // עדכון: סנכרון האייקון בלוח הבקרה למצב החדש שנבחר בספירלה
-            if (typeof app.syncSpiralModeFromModal === 'function') {
-                app.syncSpiralModeFromModal(activeBtn.dataset.method);
-            }
-        }
+        const enabled = app.dom.geometricFlowCycleInputs.filter(input => input.checked).map(input => input.value);
+        if (!app.saveGeometricFlowCycle(enabled)) return;
+        if (spiralDraftMethod) app.syncSpiralModeFromModal(spiralDraftMethod);
         closeSpiralSettingsModal();
     });
 
@@ -2104,6 +2111,7 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
         btn.addEventListener('click', (e) => {
             app.dom.spiralMethodButtons.forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
+            spiralDraftMethod = e.currentTarget.dataset.method;
         });
     });
 
@@ -2111,6 +2119,12 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
     // סגירת החלון בלחיצה על הרקע השחור מסביב
     app.dom.spiralSettingsModal.addEventListener('click', (e) => { 
         if (e.target === app.dom.spiralSettingsModal) closeSpiralSettingsModal(); 
+    });
+    app.dom.spiralSettingsModal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeSpiralSettingsModal();
+        }
     });
     // --- END: Added for Spiral Settings ---
 

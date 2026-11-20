@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '56606328341982ed3c84';
+const VERSION = '1e2510abe89aaf8da960';
 const ASSETS = [
     "./",
     "./index.html",
@@ -36,6 +36,7 @@ const ASSETS = [
     "./js/experimental-simulations.js",
     "./js/fluid-experiment-icons.js",
     "./js/fluid-presets.js",
+    "./js/geometric-flow-cycle.js",
     "./js/guide-ripples.js",
     "./js/i18n.js",
     "./js/ink-settings-dialog.js",

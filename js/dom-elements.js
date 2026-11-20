@@ -219,6 +219,8 @@ turingFeedSlider: document.getElementById('turingFeedSlider'),
   spiralSettingsTitle: document.getElementById('spiralSettingsTitle'),
   spiralMethodLabel: document.getElementById('spiralMethodLabel'),
   spiralMethodButtons: document.querySelectorAll('.spiral-method-btn'),
+  geometricFlowCycleOptions: document.getElementById('geometricFlowCycleOptions'),
+  geometricFlowCycleInputs: [...document.querySelectorAll('#geometricFlowCycleOptions input')],
   btnSpiralSettingsCancel: document.getElementById('btnSpiralSettingsCancel'),
   btnSpiralSettingsSave: document.getElementById('btnSpiralSettingsSave'),
   // --- END: Spiral Settings Modal Elements ---

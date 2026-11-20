@@ -5,6 +5,7 @@ import { POLYGON_CIRCULATION_MODES, POLYGON_FLOW_PERIOD, restorePolygonFlowPhase
 import { runSpiralGeneration } from '../js/simulations/spiral.js';
 import { defaultWorkspaceSettings, deserializeWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { validateProfileSnapshot } from '../js/profile-state.js';
+import { GEOMETRIC_FLOW_MODES, loadGeometricFlowCycle, nextGeometricFlowMode, persistGeometricFlowCycle } from '../js/geometric-flow-cycle.js';
 
 function makeBoard(n) {
     let seed = 84;
@@ -28,6 +29,22 @@ function counts(tiles) {
     for (const tile of tiles) result[tile.k]++;
     return result;
 }
+
+test('Geometric Flow restores cycle membership in toolbar order and skips excluded modes', () => {
+    let stored;
+    const storage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
+    assert.deepEqual(loadGeometricFlowCycle(storage), GEOMETRIC_FLOW_MODES);
+    persistGeometricFlowCycle(['square_flow', 'down', 'down', 'retired'], storage);
+    const enabled = loadGeometricFlowCycle(storage);
+    assert.deepEqual(enabled, ['down', 'square_flow']);
+    assert.equal(nextGeometricFlowMode('off', enabled, false), 'down');
+    assert.equal(nextGeometricFlowMode('triangle_flow', enabled, false), 'square_flow');
+    assert.equal(nextGeometricFlowMode('square_flow', enabled, false), 'off');
+    assert.equal(nextGeometricFlowMode('square_flow', enabled, true), 'down');
+    assert.equal(nextGeometricFlowMode('square_flow', ['square_flow'], true), 'square_flow');
+    stored = '[]';
+    assert.deepEqual(loadGeometricFlowCycle(storage), GEOMETRIC_FLOW_MODES);
+});
 
 test('polygon modes preserve colors and anchored gold, including across board-size changes', () => {
     for (const method of POLYGON_FLOW_MODES) {
