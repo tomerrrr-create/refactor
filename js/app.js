@@ -2722,23 +2722,17 @@ function handlePointerDownCtrl(e) {
         actionFn();
       }
 
-function handleColorPickerClick() {
-        // אם היינו במצב קשת, נבטל אותו ונתחיל מהצבע הראשון
-        if (isRainbowModeActive) {
-            isRainbowModeActive = false;
-            selectedColorIndex = -1;
-        }
-
+      function handleColorPickerClick() {
         const p = palette();
-        // חישוב האינדקס הבא (כולל חזרה להתחלה כשהרשימה נגמרת)
-const nextIndex = (selectedColorIndex - 1 + p.length) % p.length;
-        
+        const nextIndex = isRainbowModeActive ? 0 : (selectedColorIndex - 1 + p.length) % p.length;
+
+        isRainbowModeActive = false;
         selectedColorIndex = nextIndex;
         selectedColor = p[nextIndex];
-        
+
         updateGlowEffect();
         updateColorPickerButtonUI();
-      }      
+      }
       function setTextContent() {
         dom.splashText.textContent = getText('splashTitle');
         dom.fileNameLabel.textContent = getText('saveModal_feelsLike');
