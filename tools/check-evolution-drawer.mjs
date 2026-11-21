@@ -96,7 +96,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(page.locator('#btnGolSettingsCancel'));await lifeSettings.waitFor({state:'hidden'});await page.evaluate(()=>drawerTest.setup());initial=await state();
  await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled .drawer-internal-symbol').count(),2);
  assert.equal(await dialog.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
- await move(0,13);await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,initial.slots);assert(await trigger.evaluate(e=>document.activeElement===e));
+ await move(0,13);await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,initial.slots);await page.waitForFunction(()=>document.activeElement===document.getElementById('btnEvolutionDrawerInternal'));
  await open();await move(0,13);await move(2,19);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-editor.png'),animations:'disabled'});await save();
  let custom=moveEvolutionSlot(moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,0,13),2,19);
  assert.deepEqual((await state()).slots,custom);unchanged(initial,await state());
