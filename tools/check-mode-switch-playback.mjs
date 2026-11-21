@@ -28,15 +28,13 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  // The playing halo follows the active button, independent of the playback theme.
  const life='#btnGameOfLife', gravity='#btnGravitationalSort', breathe='#btnShowBreatheMenu';
  const drawer=page.locator('#btnEvolutionDrawerInternal');
- const drawerAppearance=()=>drawer.locator('.drawer-internal-symbol').evaluate(track=>({
-  dots:[...track.querySelectorAll('.drawer-page-cell')].map(cell=>getComputedStyle(cell,'::after').backgroundColor),
-  filter:getComputedStyle(track).filter,
-  animation:getComputedStyle(track).animationName
- }));
- const hollow='rgba(0, 0, 0, 0)';
- const waitForFirstDot=color=>page.waitForFunction(color=>
-  getComputedStyle(document.querySelector('#btnEvolutionDrawerInternal .drawer-page-cell'),'::after').backgroundColor===color,color);
- const playingFilter='saturate(0.9) brightness(0.92)';
+ const drawerAppearance=()=>drawer.locator('.drawer-internal-symbol').evaluate(track=>{
+  const dot=getComputedStyle(track.querySelector('.drawer-page-dot')),lip=getComputedStyle(track,'::before');
+  return {color:dot.backgroundColor,position:dot.transform,lipColor:lip.borderBottomColor,
+   lipOpacity:Number(lip.opacity),animation:dot.animationName};
+ });
+ const waitForLip=opacity=>page.waitForFunction(opacity=>
+  Number(getComputedStyle(document.querySelector('#btnEvolutionDrawerInternal .drawer-internal-symbol'),'::before').opacity)===opacity,opacity);
  const halo=id=>page.locator(id).evaluate(e=>{
   const style=getComputedStyle(e,'::before');
   return {opacity:Number(style.opacity),name:style.animationName,playState:style.animationPlayState,
@@ -47,12 +45,10 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  await page.evaluate(()=>{modeTest.setup('gameOfLife');modeTest.restingTheme('gold');modeTest.playbackTheme('teal');modeTest.step();});
  assert.equal((await halo(life)).opacity,0,'arming and single step have no playback halo');
  const pausedDrawer=await drawerAppearance(),drawerBounds=await drawer.boundingBox();
- assert.equal(pausedDrawer.dots[1],hollow);assert.notEqual(pausedDrawer.dots[0],hollow);
- assert.equal(pausedDrawer.filter,'none');assert.equal(pausedDrawer.animation,'none');
+ assert.equal(pausedDrawer.color,'rgb(187, 192, 198)');assert.equal(pausedDrawer.lipOpacity,1);assert.equal(pausedDrawer.animation,'none');
  await page.locator('#btnPlayPauseLife').click();await awaitHalo(life,1);
- const tealDrawer=await drawerAppearance();
- assert.notEqual(tealDrawer.dots[0],pausedDrawer.dots[0]);
- assert.equal(tealDrawer.dots[1],hollow);assert.equal(tealDrawer.filter,playingFilter);assert.equal(tealDrawer.animation,'none');
+ await waitForLip(0);
+ assert.deepEqual(await drawerAppearance(),{...pausedDrawer,lipOpacity:0});
  assert.deepEqual(await drawer.boundingBox(),drawerBounds);
  const firstPulse=await halo(life);
  assert.equal(firstPulse.name,'simulation-halo-breathe');
@@ -66,9 +62,9 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  await drawer.click();
  assert.equal(await drawer.getAttribute('data-page'),'1');
  assert.equal(await drawer.getAttribute('data-parked-active'),'true');
- await waitForFirstDot(hollow);
+ await page.waitForFunction(()=>getComputedStyle(document.querySelector('#btnEvolutionDrawerInternal .drawer-page-dot')).transform==='matrix(1, 0, 0, 1, 4, 0)');
  const secondDrawer=await drawerAppearance();
- assert.notEqual(secondDrawer.dots[1],hollow);assert.equal(secondDrawer.filter,playingFilter);assert.equal(secondDrawer.animation,'none');
+ assert.deepEqual(secondDrawer,{...pausedDrawer,position:'matrix(1, 0, 0, 1, 4, 0)',lipOpacity:0});
  assert.equal(await drawer.locator('.drawer-active-mark').evaluate(mark=>getComputedStyle(mark).backgroundColor),'rgb(104, 189, 181)');
  assert((await state()).playing);
  assert.equal((await state()).armed,'gameOfLife');
@@ -77,7 +73,7 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  await page.evaluate(()=>modeTest.playbackTheme('gold'));
  await page.locator(gravity).click();assert((await state()).playing);
  await awaitHalo(life,0);await awaitHalo(gravity,1);
- assert.equal((await drawerAppearance()).filter,playingFilter);
+ assert.equal((await drawerAppearance()).lipOpacity,0);
  await page.locator('#btnPlayPauseLife').click();
  await page.waitForFunction(id=>{
   const opacity=Number(getComputedStyle(document.querySelector(id),'::before').opacity);
@@ -85,7 +81,7 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  },gravity);
  await awaitHalo(gravity,0);
  assert.equal((await halo(gravity)).playState,'paused');
- await waitForFirstDot(pausedDrawer.dots[0]);
+ await waitForLip(1);
  assert.deepEqual(await drawerAppearance(),pausedDrawer);
  await drawer.click();
  await page.locator(breathe).click();
