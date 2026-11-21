@@ -81,6 +81,19 @@ try {
         assert.equal(JSON.parse(json).families.find(entry => entry.id === 'islands').name, 'Mixed flow');
         await editor.locator('button[type=submit]').click();
         assert.deepEqual((await state()).board, board);
+        const visibleFamilyIcons = () => page.locator('#controlsContainer [data-family-preview]:visible').evaluateAll(buttons =>
+            buttons.map(button => ({
+                id: button.id,
+                visible: [...button.querySelectorAll('svg')].filter(svg => {
+                    const style = getComputedStyle(svg);
+                    return style.display !== 'none' && style.visibility !== 'hidden';
+                }).length
+            })));
+        const icons = await visibleFamilyIcons();
+        assert(icons.some(button => button.id === 'btnGravitationalSort'));
+        assert(icons.some(button => button.id === 'btnMagnetModes'));
+        assert(icons.every(button => button.visible === 1), JSON.stringify(icons));
+
         const islands = page.locator('#btnIslands');
         assert.match(await islands.getAttribute('aria-label'), /^Mixed flow/);
         assert.equal(await islands.locator('.simulation-family-icon').getAttribute('data-mode'), 'gravitationalSort:pinwheel');
@@ -127,6 +140,8 @@ try {
         if (lang === 'en') for (const mode of SIMULATION_MODES.keys()) {
             assert.equal(await page.evaluate(mode => familyTest.select(mode), mode), true, mode);
             assert.equal((await state()).active, mode);
+            const icons = await visibleFamilyIcons();
+            assert(icons.every(button => button.visible === 1), mode + ' ' + JSON.stringify(icons));
         }
         assert.deepEqual(errors, []);
         console.log('PASS', lang, viewport);

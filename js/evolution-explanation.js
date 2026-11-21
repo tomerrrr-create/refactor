@@ -227,7 +227,8 @@ export function createEvolutionExplanation(host, { onHelp } = {}) {
             clearTimeout(timer);
             icon.replaceChildren();
             const svgs = [...button.querySelectorAll(':scope > svg')];
-            const source = svgs.find(svg => getComputedStyle(svg).display !== 'none') || svgs[0];
+            const source = button.querySelector('.simulation-family-icon > svg') ??
+                svgs.find(svg => getComputedStyle(svg).display !== 'none') ?? svgs[0];
             if (source) {
                 const clone = source.cloneNode(true), ids = new Map();
                 const originals = [source, ...source.querySelectorAll('*')];

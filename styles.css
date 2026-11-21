@@ -2881,7 +2881,12 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 /* A preview changes the toolbar presentation; engine-owned SVGs remain in place. */
 .simulation-family-icon { display: none; pointer-events: none; }
-.ctrl[data-family-preview] > svg { display: none !important; }
+.ctrl[data-family-preview] > svg {
+    /* Some native mode selectors force display for use by the stock toolbar. */
+    position: absolute;
+    visibility: hidden !important;
+    pointer-events: none;
+}
 .ctrl[data-family-preview] > .simulation-family-icon { display: grid; place-items: center; }
 .ctrl[data-family-preview] > .simulation-family-icon svg { width: var(--icon-size, 24px); height: var(--icon-size, 24px); }
 .ctrl[data-family-preview]:not([data-family-active]) { transform: none; }

@@ -31,7 +31,7 @@ function harness() {
         const event = {type, clientX: 0, clientY: 0, pointerId: 1, detail: 1, code: 'Space', preventDefault() {this.consumed = true;}, stopImmediatePropagation() {}, ...data};
         listeners.get(type)?.(event); return event;
     };
-    return {panel, help, guide: context.guide, emit, helpCalls: () => context.helpCalls, show() {context.guide.show({querySelectorAll: () => [], focus() {}}, 'erosion');},
+    return {panel, help, guide: context.guide, emit, helpCalls: () => context.helpCalls, show() {context.guide.show({querySelector: () => null, querySelectorAll: () => [], focus() {}}, 'erosion');},
         flush() {for (const [id, fn] of [...timers]) {timers.delete(id); fn();}}};
 }
 test('opening release and compatibility click leave explanation open', () => {

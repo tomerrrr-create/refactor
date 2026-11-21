@@ -77,7 +77,10 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         pageAnimations.forEach(animation=>animation.cancel());pageAnimations=[];
         if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
             for(const button of controls.querySelectorAll('[data-evolution-slot]:not([data-evolution-page-hidden])')){
-                const ink=[...button.children].find(child=>getComputedStyle(child).display!=='none');
+                const ink=[...button.children].find(child=>{
+                    const style=getComputedStyle(child);
+                    return style.display!=='none'&&style.visibility!=='hidden';
+                });
                 if(ink)pageAnimations.push(ink.animate([{opacity:0},{opacity:1}],{duration:260,easing:'ease-in-out'}));
             }
         }
