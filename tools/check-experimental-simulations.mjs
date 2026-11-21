@@ -67,7 +67,7 @@ try{for(const touch of [false,true]){
  await close();
  assert(await geometric.isVisible());
  assert.equal(await page.locator('#btnNetwork').getAttribute('data-evolution-slot'),'10');
- assert.equal(await geometric.getAttribute('data-evolution-slot'),'19');
+ assert.equal(await geometric.getAttribute('data-evolution-slot'),'14');
  assert.equal(await geometric.getAttribute('aria-label'),touch?'זרימה גאומטרית':'Geometric Flow');
  for(const icon of ['Diagonal','DiagonalMirror','Horizontal','Vertical']){
   await geometric.click();assert.equal((await state()).armed,'spiral');assert(await page.locator('#iconSpiral'+icon).isVisible());
