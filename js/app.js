@@ -2388,6 +2388,7 @@ if (simulationName === 'magnet') {
                 resonanceCycle: [...resonanceCycle], circularCycle: [...vorticesEnabledModes],
                 magnetAnchorLimit, wind: structuredClone(windSettings),
                 geometricFlowVisible: experimentalSimulations.visible('spiral'),
+                breatheVisible: experimentalSimulations.visible('breathe'),
                 rememberSimulationModes: cycleMemory.enabled()
             },
             ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
@@ -2426,11 +2427,12 @@ if (simulationName === 'magnet') {
             windSettings = structuredClone(preferences.wind);
         }
         if (preferences.rememberSimulationModes !== undefined) cycleMemory.setEnabled(preferences.rememberSimulationModes);
-        if (preferences.geometricFlowVisible !== undefined) {
-            experimentalSimulations.set('spiral', preferences.geometricFlowVisible);
-            if (!preferences.geometricFlowVisible && activeEvolutionControl() === 'spiral') armSimulation(null);
-            refreshExperimentalSimulationControls?.();
+        for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible]]) {
+            if (visible === undefined) continue;
+            experimentalSimulations.set(id, visible);
+            if (!visible && activeEvolutionControl() === id) armSimulation(null);
         }
+        refreshExperimentalSimulationControls?.();
         updateWindButtonUI();
       }
 
@@ -3603,7 +3605,7 @@ function getTilesInRadius(centerIndex, size) {
               left: dom.btnSymmetry.querySelector('.part.left'), right: dom.btnSymmetry.querySelector('.part.right'),
               centerDot: dom.btnSymmetry.querySelector('.part.center-dot'),
           };
-          const activeColor = `var(--playback-control-ink, ${C.GOLD})`, inactiveColor = 'transparent';
+          const activeColor = C.GOLD, inactiveColor = 'transparent';
           parts.top.style.stroke = inactiveColor; parts.bottom.style.stroke = inactiveColor;
           parts.left.style.stroke = inactiveColor; parts.right.style.stroke = inactiveColor;
           parts.centerDot.style.fill = inactiveColor;

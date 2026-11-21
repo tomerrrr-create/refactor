@@ -2882,7 +2882,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 /* The optional third gold shade is scoped to non-simulation toolbar controls. */
 :root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker),
+  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry),
 :root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
   .evolution-drawer-internal {
   --playback-control-ink: #695938;
@@ -2890,11 +2890,11 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   color: var(--playback-control-ink);
 }
 :root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker) :is([stroke="#fff"], [stroke="#424242"]) {
+  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry) :is([stroke="#fff"], [stroke="#424242"]) {
   stroke: var(--playback-control-ink);
 }
 :root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker) [fill="#fff"],
+  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry) [fill="#fff"],
 :root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
   #btnBrushMode.brush-continuous svg path {
   fill: var(--playback-control-ink);

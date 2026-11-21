@@ -29,7 +29,7 @@ export function defaultSimulationPreferences() {
         gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
         resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
-        geometricFlowVisible: false, rememberSimulationModes: false
+        geometricFlowVisible: false, breatheVisible: false, rememberSimulationModes: false
     };
 }
 
@@ -56,7 +56,7 @@ function validateSimulationPreferences(value) {
         if (!object(value.wind)) throw new Error('Invalid Wind settings');
         result.wind = normalizeWindSettings(value.wind);
     }
-    for (const key of ['geometricFlowVisible', 'rememberSimulationModes']) {
+    for (const key of ['geometricFlowVisible', 'breatheVisible', 'rememberSimulationModes']) {
         if (!Object.hasOwn(value, key)) continue;
         if (typeof value[key] !== 'boolean') throw new Error('Invalid simulation preference: ' + key);
         result[key] = value[key];
