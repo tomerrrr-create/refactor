@@ -2,7 +2,7 @@ import { defaultGravitationalSortRules } from '../constants.js';
 
 const swapThreshold = defaultGravitationalSortRules.strength * 2 ** 32;
 
-function pullTowardDiagonal(board, from, target, stride, salt, key, keyStride) {
+function pullTowardLine(board, from, target, stride, salt, key, keyStride) {
     for (; from !== target; from += stride, key += keyStride) {
         const next = from + stride;
         const farther = board[from], nearer = board[next];
@@ -30,8 +30,26 @@ export function runDiagonalGravity(n, board, phase, mirrored) {
         const first = !mirrored ? keyFirst : horizontal ? keyFirst + n - 1 : n - 1 - lane;
         const target = first + lane * stride;
         const last = first + (n - 1) * stride;
-        pullTowardDiagonal(board, first, target, stride, salt, keyFirst, keyStride);
-        pullTowardDiagonal(board, last, target, -stride, salt, keyFirst + (n - 1) * keyStride, -keyStride);
+        pullTowardLine(board, first, target, stride, salt, keyFirst, keyStride);
+        pullTowardLine(board, last, target, -stride, salt, keyFirst + (n - 1) * keyStride, -keyStride);
+    }
+    return board;
+}
+
+export function runCenterLineGravity(n, board, phase, towardHorizontalLine) {
+    const salt = Math.imul(phase + 1, 0x9e3779b9);
+    const stride = towardHorizontalLine ? n : 1;
+    const laneStride = towardHorizontalLine ? 1 : n;
+    // Even boards have two equally central lines, one for each half.
+    const nearFromStart = Math.floor((n - 1) / 2);
+    const nearFromEnd = Math.floor(n / 2);
+    for (let lane = 0; lane < n; lane++) {
+        const first = lane * laneStride;
+        const last = first + (n - 1) * stride;
+        // Both axes use the same random decisions when transposing the board.
+        const keyFirst = lane * n;
+        pullTowardLine(board, first, first + nearFromStart * stride, stride, salt, keyFirst, 1);
+        pullTowardLine(board, last, first + nearFromEnd * stride, -stride, salt, keyFirst + n - 1, -1);
     }
     return board;
 }

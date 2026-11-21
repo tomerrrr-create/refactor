@@ -31,14 +31,19 @@ function counts(tiles) {
 }
 
 test('Geometric Flow restores cycle membership in toolbar order and skips excluded modes', () => {
-    let stored;
-    const storage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
-    const defaults = ['triangle_gravity', 'triangle_gravity_mirror'];
+    const stored = new Map();
+    const storage = { getItem: key => stored.get(key), setItem: (key, value) => stored.set(key, value) };
+    const axes = ['horizontal_gravity', 'vertical_gravity'];
+    const defaults = ['triangle_gravity', 'triangle_gravity_mirror', ...axes];
     assert.deepEqual(loadGeometricFlowCycle(storage), defaults);
     assert.equal(nextGeometricFlowMode('off', defaults, false), 'triangle_gravity');
     assert.equal(nextGeometricFlowMode('triangle_gravity', defaults, false), 'triangle_gravity_mirror');
-    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', defaults, false), 'off');
-    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', defaults, true), 'triangle_gravity');
+    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', defaults, false), 'horizontal_gravity');
+    assert.equal(nextGeometricFlowMode('horizontal_gravity', defaults, false), 'vertical_gravity');
+    assert.equal(nextGeometricFlowMode('vertical_gravity', defaults, false), 'off');
+    assert.equal(nextGeometricFlowMode('vertical_gravity', defaults, true), 'triangle_gravity');
+    stored.set('colorGridGeometricFlowCycleV1', JSON.stringify(['triangle_flow', 'square_flow', 'triangle_weave']));
+    assert.deepEqual(loadGeometricFlowCycle(storage), ['triangle_gravity', ...axes]);
     persistGeometricFlowCycle(['triangle_gravity_mirror', 'down', 'down', 'retired'], storage);
     const enabled = loadGeometricFlowCycle(storage);
     assert.deepEqual(enabled, ['down', 'triangle_gravity_mirror']);
@@ -47,16 +52,14 @@ test('Geometric Flow restores cycle membership in toolbar order and skips exclud
     assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', enabled, false), 'off');
     assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', enabled, true), 'down');
     assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', ['triangle_gravity_mirror'], true), 'triangle_gravity_mirror');
-    stored = JSON.stringify(['triangle_flow', 'square_flow', 'triangle_weave']);
-    assert.deepEqual(loadGeometricFlowCycle(storage), ['triangle_gravity']);
-    stored = '[]';
+    stored.clear();
     assert.deepEqual(loadGeometricFlowCycle(storage), defaults);
     persistGeometricFlowCycle(GEOMETRIC_FLOW_MODES, storage);
     assert.deepEqual(loadGeometricFlowCycle(storage), GEOMETRIC_FLOW_MODES);
 });
 
-test('Triangle and both diagonal modes preserve colors and anchored gold, including across board-size changes', () => {
-    for (const method of ['triangle', 'triangle_gravity', 'triangle_gravity_mirror']) {
+test('Triangle and line gravity preserve colors and anchored gold across board-size changes', () => {
+    for (const method of ['triangle', ...GEOMETRIC_FLOW_MODES.slice(2)]) {
         for (const n of [1, 16, 249, 16]) {
             const tiles = makeBoard(n);
             const after = evolve(n, tiles, method, 10);
@@ -66,6 +69,28 @@ test('Triangle and both diagonal modes preserve colors and anchored gold, includ
                 if (tile.isGold) assert.strictEqual(after[index], tile);
             });
             if (n > 1) assert.notDeepEqual(after, tiles, method);
+        }
+    }
+});
+
+test('center-line modes pull inward from both halves and transpose exactly', () => {
+    for (const n of [1, 40, 41]) {
+        const initial = makeBoard(n);
+        const transpose = tiles => tiles.map((_, i) => tiles[i % n * n + Math.floor(i / n)]);
+        const horizontal = evolve(n, initial, 'horizontal_gravity', 90);
+        const vertical = evolve(n, transpose(initial), 'vertical_gravity', 90);
+        assert(vertical.every((tile, i) => tile === horizontal[i % n * n + Math.floor(i / n)]));
+        if (n === 1) continue;
+        const middle = (n - 1) / 2;
+        for (const side of [-1, 1]) {
+            const near = [], far = [];
+            horizontal.forEach((tile, i) => {
+                const distance = side * (Math.floor(i / n) - middle);
+                if (distance >= 0 && distance < 3) near.push(tile.k);
+                if (distance > n * .4) far.push(tile.k);
+            });
+            const average = ranks => ranks.reduce((sum, rank) => sum + rank, 0) / ranks.length;
+            assert(average(far) - average(near) > 8);
         }
     }
 });

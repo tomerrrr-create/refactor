@@ -1342,7 +1342,9 @@ body {
 
 #btnSpiral:is(.mode-triangle,.mode-triangle_orbit,.mode-triangle_flow) #iconSpiralTriangle,
 #btnSpiral.mode-triangle_gravity #iconSpiralDiagonal,
-#btnSpiral.mode-triangle_gravity_mirror #iconSpiralDiagonalMirror { display: block !important; }
+#btnSpiral.mode-triangle_gravity_mirror #iconSpiralDiagonalMirror,
+#btnSpiral.mode-horizontal_gravity #iconSpiralHorizontal,
+#btnSpiral.mode-vertical_gravity #iconSpiralVertical { display: block !important; }
 
 #btnSpiral.mode-turbine2 #iconSpiralTurbine2 { display:block !important; }
 #btnSpiral.mode-turbine2 svg:not(#iconSpiralTurbine2) { display:none !important; }
