@@ -26,8 +26,8 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
         const icon=document.querySelector(`#btnCymatics > [data-cymatics-map-icon="${name}"], #btnInk > [data-vortices-icon="${name}"]`);
         const accents={diagonal:'#CD853F',grid:'#C2A14A',circular:'#6B8E23',interference:'#607D8B',clouds:'#91A0A6',cosmic:'#FF7F50'};
         b.style.setProperty('--preset-ink',accents[name]);
-        const label=document.createElement('span');label.className='sr-only';
-        b.append(icon.cloneNode(true),label);
+        const label=document.createElement('span');label.className='resonance-map-name';
+        b.append(label,icon.cloneNode(true));
         b.addEventListener('click',()=>{if(!draft||!allowedMaps.includes(name))return;rulesChanged=true;const selected=selectCymaticsMap(draft,version,draftFrequencies,draftStrengths);draft=selected.rules;draftFrequencies=selected.frequencies;draftStrengths=selected.strengths;render();});
         const toggle=document.createElement('label');toggle.className='toolbar-cycle-toggle resonance-cycle-toggle';
         const input=document.createElement('input');input.type='checkbox';input.value=String(version);input.dataset.resonanceCycle=name;

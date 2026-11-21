@@ -6,6 +6,7 @@ import {validateContourActionRules} from '../js/contour-action-settings.js';
 import {INITIAL_CYMATICS_RULES,validateCymaticsRules,validateCymaticsFrequencies,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,validateCymaticsStrengths,selectCymaticsMap} from '../js/cymatics-settings.js';
 import {INITIAL_CRACKS_GROWTH} from '../js/cracks-settings.js';
 import {validateEvolutionSlots} from '../js/evolution-drawer-settings.js';
+import {restorePolygonFlowPhase} from '../js/simulations/polygon-circulation.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -16,7 +17,7 @@ const source = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const apply = source.slice(source.indexOf('function applyWorkspacePreferences('), source.indexOf('function captureProfileSettings('));
 function harness() {
     const noop = () => {};
-    const context = vm.createContext({vorticesModeFor,activeEvolutionControl:()=>null,DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,validateOilRules,validateInkRules,DEFAULT_INK_PREFERENCES,
+    const context = vm.createContext({vorticesModeFor,restorePolygonFlowPhase,activeEvolutionControl:()=>null,DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,validateOilRules,validateInkRules,DEFAULT_INK_PREFERENCES,
         validateContourActionRules, INITIAL_CYMATICS_RULES, validateCymaticsRules, createCymaticsFrequencies, rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength, INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
         applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],
@@ -65,7 +66,7 @@ test('each app opening starts with Fibonacci despite saved growth; explicit prof
 });
 
 test('new map defaults preserve saved frequency tables even when old default rules were omitted',()=>{
- const h=harness(),settings=defaultWorkspaceSettings();h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,800);assert.equal(h.cymaticsFrequencies.circular,20000);
+ const h=harness(),settings=defaultWorkspaceSettings();h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,20000);assert.equal(h.cymaticsFrequencies.grid,20000);assert.equal(h.cymaticsFrequencies.circular,20000);assert.equal(h.cymaticsFrequencies.clouds,800);
  settings.cymaticsFrequencies={interference:11831,circular:5000,diagonal:4000,grid:6000};h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,11831);assert.equal(h.cymaticsFrequencies.circular,5000);
  settings.rules.cymatics={pattern:'petals',strength:60,mode:'resonance',frequency:440,resonanceVersion:4};delete settings.cymaticsFrequencies;h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,440);assert.deepEqual(JSON.parse(JSON.stringify(h.cymaticsFrequencies)),{diagonal:440,grid:440,circular:440,interference:440,clouds:440,cosmic:440});
 });
