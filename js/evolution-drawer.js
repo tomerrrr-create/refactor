@@ -3,7 +3,7 @@ import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
 import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId } from './evolution-drawer-settings.js';
 
-export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
+export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,getPreviewName=()=>undefined,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
@@ -27,14 +27,14 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     let draft=null,selected=null,page=0,pageAnimations=[];
     const slotsNow=()=>validateEvolutionSlots(getSlots());
     const entry=id=>EVOLUTION_CATALOG.find(e=>e.id===evolutionControlId(id));
-    const label=id=>getText(entry(id).key).split('\n')[0];
+    const label=id=>getPreviewName(evolutionControlId(id))??getText(entry(id).key).split('\n')[0];
     const pageLabel=index=>getText('drawer_page').replace('{n}',index+1);
     const navigateAllowed=()=>canNavigate();
     function icon(id){
         const source=document.getElementById(entry(id).button),holder=document.createElement('span');
         holder.className='drawer-icon';holder.setAttribute('aria-hidden','true');
         const svgs=[...source.querySelectorAll(':scope > svg')];
-        const svg=svgs.find(e=>getComputedStyle(e).display!=='none')||svgs[0];
+        const svg=(source.hasAttribute('data-family-preview')&&source.querySelector('.simulation-family-icon svg'))||svgs.find(e=>getComputedStyle(e).display!=='none')||svgs[0];
         if(svg){
             const copy=svg.cloneNode(true),original=[svg,...svg.querySelectorAll('*')],cloned=[copy,...copy.querySelectorAll('*')];
             for(let i=0;i<cloned.length;i++){

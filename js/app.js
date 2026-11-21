@@ -1,3 +1,5 @@
+import { SIMULATION_MODES, defaultSimulationFamilies, loadSimulationFamilies, saveSimulationFamilies, nextFamilyMode } from './simulation-families.js';
+import { createSimulationFamilyEditor, createSimulationFamilyMenu } from './simulation-family-editor.js';
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
@@ -424,6 +426,46 @@ let magnetMode = 'off';
       const originalColorPickerIconHTML = dom.btnColorPicker.innerHTML;
       
       let evolutionDrawer, refreshExperimentalSimulationControls;
+      let simulationFamilyLayout = loadSimulationFamilies();
+      let refreshSimulationFamilies, describeSimulationFamilies, resetFamilyCycles;
+      const familyMemory = new Map();
+      const getDefaultFamilies = () => defaultSimulationFamilies({
+          gravitationalSort: gravityCycle, spiral: geometricFlowCycle, cymatics: resonanceCycle, ink: vorticesEnabledModes
+      });
+      const simulationFamily = id => simulationFamilyLayout?.enabled ? simulationFamilyLayout.families.find(group => group.id === id) : null;
+      const previewActiveMode = () => {
+          const control = activeEvolutionControl();
+          if (!control) return undefined;
+          const family = isNudgeSimulation(control) ? 'nudgeBrighter' : control;
+          const mode = family === 'turing' ? 'turing' : currentCycleMode(family);
+          return SIMULATION_MODES.get(family + ':' + mode);
+      };
+      function displayedEvolutionControl() {
+          if (!simulationFamilyLayout?.enabled) return activeEvolutionControl();
+          const mode = previewActiveMode();
+          return simulationFamilyLayout.families.find(group => group.modes.some(item => item.id === mode?.key))?.id ?? activeEvolutionControl();
+      }
+      function applySimulationFamilyLayout(layout) {
+          if (!saveSimulationFamilies(layout)) return false;
+          simulationFamilyLayout = layout;
+          familyMemory.clear();
+          evolutionDrawer?.applyLayout();
+          refreshSimulationFamilies?.();
+          if (!layout.enabled) refreshCycleIcons();
+          return true;
+      }
+      function simulationFamilyVisible(id) {
+          const group = simulationFamily(id);
+          if (!group) return experimentalSimulations.visible(id);
+          if (!group.modes.length) return false;
+          if (experimentalSimulations.visible(id) || group.name) return true;
+          const baseline = getDefaultFamilies().families.find(family => family.id === id).modes;
+          return group.modes.length !== baseline.length ||
+              group.modes.some((mode, i) => mode.id !== baseline[i].id || mode.inCycle !== baseline[i].inCycle);
+      }
+      function exportableSettings(snapshot) {
+          return { ...snapshot, settings: { ...snapshot.settings, simulationFamilies: describeSimulationFamilies?.(simulationFamilyLayout ?? getDefaultFamilies()) } };
+      }
       const experimentalSimulations=createExperimentalSimulationFlags();
       let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
       let modals;
@@ -1983,6 +2025,7 @@ function resetEvolutionCycle(simulation, {refresh=true} = {}) {
 }
 function resetAllEvolutionCycles() {
     if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
+    if (simulationFamilyLayout?.enabled) return resetFamilyCycles?.() ?? false;
     for(const {id} of EVOLUTION_CATALOG)resetEvolutionCycle(id,{refresh:false});
     refreshCycleIcons();return true;
 }
@@ -2520,6 +2563,7 @@ if (simulationName === 'magnet') {
         // The file has been fully validated before any state or preferences change.
         if (isMacroPlaying) throw new Error('Cannot import settings during macro playback');
         cycleMemoryAfterReplay = false;
+        familyMemory.clear();
         settings = migrateEvolutionSelections(settings, {
             gameOfLife: identity?.gameOfLife.index ?? ['personal','shuffle','coral'].indexOf(gameOfLifeMode),
             chiFlow: identity?.chiFlow.index ?? ['personal','ripples','nova'].indexOf(chiFlowMode)
@@ -2549,19 +2593,21 @@ if (simulationName === 'magnet') {
         const storedStartup = persistStartup(startupSettings);
         const storedInit = persistSimInit(simulationInitSettings);
         const storedSort = persistSortCycle(sortCycleMethods);
-        const storedWorkspace = persistWorkspaceSettings(settings);
+        const { simulationFamilies, ...workspaceSettings } = settings;
+        const storedFamilies = !options.fromFile || !simulationFamilies || applySimulationFamilyLayout(simulationFamilies);
+        const storedWorkspace = persistWorkspaceSettings(workspaceSettings);
         const storedSmooth = persistSmoothRendering(settings.smoothing.display);
         modals.refreshLocalizedModalText();
         luminanceAnchorPreference?.sync();
         modals.refreshTechnicianSettings();
-        return storedStartup && storedInit && storedSort && storedWorkspace && storedSmooth;
+        return storedStartup && storedInit && storedSort && storedWorkspace && storedSmooth && storedFamilies;
       }
 
       async function handleSaveSettings() {
         const button = document.getElementById('btnSaveSettings');
         button.disabled = true;
         try {
-            const file = new File([serializeProfileFile(captureProfileSettings())],
+            const file = new File([serializeProfileFile(exportableSettings(captureProfileSettings()))],
                 getSanitizedFileName('txt').replace(/\.txt$/, '_settings.txt'), { type: 'text/plain' });
             const shareData = { files: [file], title: getText('saveModal_settings') };
             if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
@@ -2628,7 +2674,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
             if (isWorkspaceSettingsText(text)) {
                 try {
                     const { settings, identity } = readProfileFile(text);
-                    const stored = importWorkspaceSettings(settings, identity);
+                    const stored = importWorkspaceSettings(settings, identity, { fromFile: true });
                     modals.closeModalSlowly(() => showSettingsImportTransition(dom.board,
                         getText('settings_aligned'), stored ? '' : getText('settings_session_only')));
                 } catch (error) {
@@ -5489,6 +5535,12 @@ function applyMacroRules(details) {
         rulesStr = match[2];
     }
 
+    if (sim === 'null') {
+        if (isLifePlaying) pauseLife();
+        armSimulation(null);
+        return null;
+    }
+
     const restoredInk=sim==='ink'?validateInkSnapshot(JSON.parse(rulesStr)):null;
     const restoredOil=sim==='oil'?validateOilSnapshot(JSON.parse(rulesStr)):null;
     const restoredNetwork=sim==='network'?validateNetworkSnapshot(JSON.parse(rulesStr)):null;
@@ -6152,6 +6204,7 @@ else if (action.eventName === 'Invert Colors') {
             getRememberEvolutionModes: () => cycleMemory.enabled(),
             setRememberEvolutionModes: value => {
                 cycleMemory.setEnabled(value);
+                if (!value) familyMemory.clear();
                 if(!isMacroLoaded&&!isMacroPlaying)cycleMemoryAfterReplay=false;
                 rememberCurrentCycle();refreshCycleIcons();
             },
@@ -6370,7 +6423,7 @@ updateBrightnessEvoButtonUI();
         settingsProfiles = initializeProfileControls({
             capture: captureProfileSettings,
             exportSettings: (snapshot, index) => saveArtRecipeFile(new File(
-                [serializeProfileFile(snapshot)], `FYI_Profile_${index + 1}_settings.txt`, { type: 'text/plain' })),
+                [serializeProfileFile(exportableSettings(snapshot))], `FYI_Profile_${index + 1}_settings.txt`, { type: 'text/plain' })),
             apply: (snapshot, options) => importWorkspaceSettings(snapshot.settings, snapshot.identity, options),
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
@@ -6428,8 +6481,9 @@ updateBrightnessEvoButtonUI();
             }
         });
         evolutionDrawer = createEvolutionDrawer({
-            isVisible:experimentalSimulations.visible,
-            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:activeEvolutionControl,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
+            isVisible:simulationFamilyVisible,
+            controls:dom.controlsContainer,getSlots:()=>evolutionSlots,getActive:displayedEvolutionControl,isRunning:()=>isLifePlaying,onResetCycles:resetAllEvolutionCycles,
+            getPreviewName: id => simulationFamily(id)?.name,
             canNavigate:()=>isSimModeActive&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             canEdit:()=>isSimModeActive&&!isLifePlaying&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             getText,getLang:getCurrentLang,onLanguageChange,
@@ -6664,20 +6718,208 @@ dom.btnWind.addEventListener('keydown', event => {
         dom.btnContoursAction.addEventListener('keydown', event => {
             if(event.altKey && ['ArrowUp','ArrowDown'].includes(event.key) && !isBreathing && !isMacroLoaded){event.preventDefault();modals.openContourSettingsModal();}
         });
+        const familyNames = new Map(EVOLUTION_CATALOG.map(({ id, key }) => [id, id === 'ink' ? 'families_circular' :
+            id === 'cymatics' ? 'tooltip_cymatics' : id === 'spiral' ? 'tooltip_spiral' : id === 'contour' ? 'tooltip_cracks' : key]));
+        const familyName = id => getText(familyNames.get(id)).split('\n')[0];
+        function modeName(mode) {
+            if (mode.family === 'gameOfLife' || mode.family === 'sandpile') {
+                const sources = mode.family === 'gameOfLife' ? gameOfLifeSources : chiFlowSources;
+                const source = sources[Number(mode.label) - 1];
+                const name = translations[source] ? getText(source) : source === 'yours' ? getText('families_yours') :
+                    source?.startsWith('custom-') ? getText('families_custom') : source;
+                return [mode.label, name].filter(Boolean).join(' · ');
+            }
+            return (translations[mode.label] ? getText(mode.label) : mode.label).split('\n')[0];
+        }
+
+        describeSimulationFamilies = layout => ({
+            ...layout, families: layout.families.map(group => ({
+                ...group, label: group.name ?? familyName(group.id),
+                modes: group.modes.map(item => ({ ...item, label: modeName(SIMULATION_MODES.get(item.id)) }))
+            }))
+        });
+
+        function modeIcon(mode) {
+            const source = document.querySelector(mode.icon);
+            const icon = source.cloneNode(true);
+            icon.removeAttribute('id');
+            icon.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+            icon.style.setProperty('display', 'block', 'important');
+            icon.setAttribute('aria-hidden', 'true');
+            if (mode.family === 'ink') {
+                const badge = icon.querySelector('.vortices-tornado-badge');
+                if (badge) badge.style.display = mode.value === 'tornado' ? 'inline' : 'none';
+            }
+            if (mode.family === 'nudgeBrighter') icon.querySelector('path').setAttribute('d', mode.value === 'nudgeDarker'
+                ? 'M9 4 V 20 C 20 20, 20 4, 9 4 Z' : 'M8 5 C 8 12, 8 20, 17 20');
+            if (mode.family === 'contour') icon.querySelector('.cracks-area-mark')?.setAttribute('opacity', mode.value === 'dead' ? '1' : '0');
+            if (mode.family === 'dla' && mode.value === 'no-genetics') {
+                icon.querySelectorAll('circle').forEach((circle, index) => { if (index > 0) circle.style.opacity = '.42'; });
+            }
+            if (mode.family === 'brightnessEvo' && mode.value === 'contrast') icon.style.stroke = 'url(#contrastGradient)';
+            if (mode.family === 'gameOfLife' || mode.family === 'sandpile') {
+                icon.querySelectorAll('[data-gol-star],[data-chi-star]').forEach((star, index) => {
+                    star.style.display = index === Number(mode.label) - 2 ? 'inline' : 'none';
+                });
+            }
+            return icon;
+        }
+
+        createSimulationFamilyEditor({
+            getLayout: () => simulationFamilyLayout, getDefault: getDefaultFamilies, apply: applySimulationFamilyLayout,
+            canEdit: () => !isLifePlaying && !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
+            familyName, modeName, icon: modeIcon, getText, getLang: getCurrentLang
+        });
+        const settingsForMode = new Map(evolutionPickers.map(([, id, , open]) => [id, open]));
+        const openFamilySettings = mode => settingsForMode.get(mode.family)?.();
+        const familyMenu = createSimulationFamilyMenu({
+            familyName, modeName, getText, getLang: getCurrentLang, openSettings: openFamilySettings,
+            select: mode => { if (activateFamilyMode(mode)) openFamilySettings(mode); }
+        });
+        function selectFromFamily(id, reset = false) {
+            if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
+            const group = simulationFamily(id), mode = previewActiveMode();
+            const selected = displayedEvolutionControl() === id ? mode?.key : undefined;
+            const remembered = !reset && cycleMemory.active() ? familyMemory.get(id) : undefined;
+            const next = nextFamilyMode(group.modes, reset ? undefined : selected, isLifePlaying, remembered);
+            if (!next && (!selected || !group.modes.some(item => item.inCycle))) {
+                if (!reset) familyMenu(group, selected ? mode : undefined);
+                return false;
+            }
+            if (reset && !selected) {
+                familyMemory.set(id, next);
+                refreshSimulationFamilies();
+                return true;
+            }
+            if (next === selected) return true;
+            if (!next) {
+                armSimulation(null);
+                familyMemory.delete(id);
+                window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
+            } else if (!activateFamilyMode(SIMULATION_MODES.get(next))) return false;
+            else if (cycleMemory.active()) familyMemory.set(id, next);
+            refreshSimulationFamilies();
+            return true;
+        }
+        resetFamilyCycles = () => {
+            familyMemory.clear();
+            const active = displayedEvolutionControl();
+            if (active && simulationFamily(active)) selectFromFamily(active, true);
+            refreshSimulationFamilies();
+            return true;
+        };
+        function activateFamilyMode(mode) {
+            const running = isLifePlaying, before = armedSimulation;
+            const engine = mode.family === 'ink' ? VORTICES_MODES[mode.value].engine : mode.family === 'nudgeBrighter' ? mode.value : mode.family;
+            if (running && before !== engine && [before, engine].includes('breathe')) return false;
+            const previous = previewActiveMode();
+            if (previous && cycleMemory.active()) familyMemory.set(displayedEvolutionControl(), previous.key);
+            const sameEngine = (before === engine && (engine !== 'contour' || contourMode === 'cracks')) ||
+                (isNudgeSimulation(before) && isNudgeSimulation(engine));
+            if (running && (!sameEngine || engine === 'breathe')) pauseLife();
+            if (mode.family === 'ink') selectVorticesMode(mode.value);
+            else {
+                if (mode.family === 'nudgeBrighter') selectNudgeMode(mode.value);
+                else {
+                    if (engine === 'contour' && armedSimulation === engine && contourMode !== 'cracks') armSimulation(null);
+                    if (armedSimulation !== engine) armSimulation(engine);
+                    if (engine !== 'turing') restoreCycleMode(engine, mode.value);
+                }
+                if (!(isLifePlaying && (engine === 'network' || engine === 'cymatics' || engine === 'contour'))) {
+                    window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
+                }
+            }
+            if (running && !isLifePlaying && engine !== 'breathe') togglePlayPauseLife();
+            refreshCycleIcons();
+            refreshSimulationFamilies();
+            return true;
+        }
+
         const evolutionPickerButtons = new Set([...evolutionPickers.map(([button]) => button), dom.btnContoursAction]);
-        evolutionPickers.forEach(([button, simulation, onTap, onOpen]) => {
+        const familyIcons = new Map();
+        for (const [button, simulation, onTap, onOpen] of evolutionPickers) {
+            const slot = document.createElement('span');
+            slot.className = 'simulation-family-icon'; slot.setAttribute('aria-hidden', 'true');
+            button.append(slot); familyIcons.set(simulation, slot);
+            const canOpenOriginal = () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) &&
+                (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral', 'gravitationalSort'].includes(simulation) || !isMacroLoaded) &&
+                matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle());
+            const canOpen = () => !evolutionExplanation.isOpen() && (simulationFamily(simulation)
+                ? !isMacroLoaded && (displayedEvolutionControl() === simulation || simulationFamily(simulation).modes.some(item => !item.inCycle))
+                : canOpenOriginal());
+            const open = () => {
+                const group = simulationFamily(simulation);
+                if (!group) { onOpen?.(); return; }
+                const mode = displayedEvolutionControl() === simulation ? previewActiveMode() : undefined;
+                if (group.modes.some(item => !item.inCycle && item.id !== mode?.key)) familyMenu(group, mode);
+                else if (mode) openFamilySettings(mode);
+            };
+            const presetFamily = () => {
+                if (!simulationFamily(simulation)) return simulation;
+                if (displayedEvolutionControl() === simulation) return previewActiveMode()?.family;
+            };
             bindPickerGestures(button, {
-                onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
-                onSwipeSide: ['gameOfLife','sandpile'].includes(simulation) ? direction => modals.browseEvolutionPreset(simulation,direction) : undefined,
-                canSwipeSide: () => contextForModals.canBrowseEvolutionPreset(simulation) && !evolutionExplanation.isOpen(),
+                onTap: () => simulationFamily(simulation) ? selectFromFamily(simulation) : handleEvolutionTap(simulation, onTap),
+                onOpen: open,
+                onSwipeSide: direction => modals.browseEvolutionPreset(presetFamily(), direction),
+                canSwipeSide: () => ['gameOfLife','sandpile'].includes(presetFamily()) && contextForModals.canBrowseEvolutionPreset(presetFamily()) && !evolutionExplanation.isOpen(),
                 onSwipeFallback: evolutionDrawer.swipePage,
-                onHold: () => resetEvolutionCycle(simulation),
-                onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
-                canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) && (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral', 'gravitationalSort'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
+                onHold: () => simulationFamily(simulation) ? selectFromFamily(simulation, true) : resetEvolutionCycle(simulation),
+                onExtendedHold: () => {
+                    const mode = simulationFamily(simulation) && SIMULATION_MODES.get(familyIcons.get(simulation).dataset.mode);
+                    evolutionExplanation.show(button, mode?.family ?? (isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation));
+                },
+                canInteract: () => !isBreathing, canOpen,
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
+            button.addEventListener('keydown', event => {
+                if (event.altKey && event.key === 'ArrowUp' && canOpen()) { event.preventDefault(); open(); }
+            });
+        }
+        refreshSimulationFamilies = () => {
+            const enabled = !!simulationFamilyLayout?.enabled;
+            const active = enabled ? previewActiveMode() : undefined;
+            const activeControl = enabled ? displayedEvolutionControl() : undefined;
+            for (const [button, simulation] of evolutionPickers) {
+                const slot = familyIcons.get(simulation), group = simulationFamily(simulation);
+                const wasCustom = button.hasAttribute('data-family-preview');
+                button.toggleAttribute('data-family-preview', enabled);
+                button.toggleAttribute('data-family-active', enabled && activeControl === simulation);
+                if (!group) {
+                    delete slot.dataset.mode;
+                    slot.replaceChildren();
+                    if (wasCustom) {
+                        const name = familyName(simulation);
+                        button.title = name;
+                        button.setAttribute('aria-label', name);
+                        button.setAttribute('aria-pressed', String(matchesEvolutionControl(simulation)));
+                    }
+                    continue;
+                }
+                const remembered = cycleMemory.active() ? familyMemory.get(simulation) : undefined;
+                const first = nextFamilyMode(group.modes, undefined, false, remembered) ?? group.modes[0]?.id;
+                const mode = activeControl === simulation && active ? active : SIMULATION_MODES.get(first);
+                if (!mode) { delete slot.dataset.mode; slot.replaceChildren(); continue; }
+                const name = modeName(mode);
+                if (slot.dataset.mode !== mode.key) {
+                    slot.replaceChildren(modeIcon(mode));
+                    slot.dataset.mode = mode.key;
+                }
+                const title = (group.name ?? familyName(simulation)) + ' · ' + name;
+                if (button.title !== title) button.title = title;
+                if (button.getAttribute('aria-label') !== title) button.setAttribute('aria-label', title);
+                const pressed = String(activeControl === simulation);
+                if (button.getAttribute('aria-pressed') !== pressed) button.setAttribute('aria-pressed', pressed);
+            }
+            evolutionDrawer.refresh();
+        };
+        new MutationObserver(() => {
+            if (simulationFamilyLayout?.enabled) refreshSimulationFamilies();
+        }).observe(dom.controlsContainer, {
+            subtree: true, attributes: true, attributeFilter: ['class', 'data-mode', 'data-cymatics-map', 'data-nudge-mode', 'data-cracks-area']
         });
+        onLanguageChange(() => { if (simulationFamilyLayout?.enabled) refreshSimulationFamilies(); });
+        refreshSimulationFamilies();
 
 
         dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));

@@ -1954,7 +1954,7 @@ button, .ctrl {
   transition: opacity 420ms ease-in-out;
   animation: simulation-halo-breathe 4.8s ease-in-out infinite paused;
 }
-:root[data-simulation-running] .sim-mode-active .ctrl[data-evolution-id].simulation-active::before {
+:root[data-simulation-running] .sim-mode-active .ctrl[data-evolution-id]:is(.simulation-active:not([data-family-preview]), [data-family-active])::before {
   opacity: 1;
   animation-play-state: running;
 }
@@ -2878,3 +2878,80 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnIslands:not(.mode-oil) .islands-oil-icon { display:none !important; }
 #btnIslands.mode-oil > svg:not(.islands-oil-icon) { display:none !important; }
 #btnIslands.mode-oil .islands-oil-icon { display:block !important; }
+
+/* A preview changes the toolbar presentation; engine-owned SVGs remain in place. */
+.simulation-family-icon { display: none; pointer-events: none; }
+.ctrl[data-family-preview] > svg { display: none !important; }
+.ctrl[data-family-preview] > .simulation-family-icon { display: grid; place-items: center; }
+.ctrl[data-family-preview] > .simulation-family-icon svg { width: var(--icon-size, 24px); height: var(--icon-size, 24px); }
+.ctrl[data-family-preview]:not([data-family-active]) { transform: none; }
+.ctrl[data-family-preview]:not([data-family-active]) .simulation-family-icon svg {
+    color: var(--sim-color, currentColor);
+}
+.ctrl[data-family-preview][data-family-active] .simulation-family-icon svg {
+    color: var(--gold); stroke: var(--gold);
+}
+:root[data-simulation-running] .sim-mode-active .ctrl[data-evolution-id][data-family-preview]:not([data-family-active])::before {
+    opacity: 0; animation-play-state: paused;
+}
+
+.simulation-family-editor,
+.simulation-family-menu {
+    box-sizing: border-box;
+    width: min(760px, calc(100% - 28px));
+    max-height: calc(100dvh - 28px);
+    color: #eee9dc;
+    background: #171c19;
+    border: 1px solid #a68e554d;
+    border-radius: 17px;
+}
+.simulation-family-editor form { display: grid; gap: 14px; padding: 18px; }
+.simulation-family-editor header,
+.simulation-family-editor footer,
+.simulation-family-editor .family-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.simulation-family-editor footer p { flex: 1 1 140px; margin: 0; color: #debd81; font-size: .85rem; }
+.simulation-family-editor h2,
+.simulation-family-menu h2 { font-size: 1.2rem; color: #e3c688; }
+.simulation-family-editor h3 { margin: 0 0 12px; font-size: 1rem; }
+.simulation-family-editor button,
+.simulation-family-editor select,
+.simulation-family-menu button {
+    min-height: 40px; padding: 5px 9px; border: 1px solid #a68e554d;
+    border-radius: 7px; background: #202720; color: inherit; font: inherit; font-size: .84rem;
+}
+.simulation-family-editor button:hover,
+.simulation-family-editor .family-list button[aria-pressed="true"] { background: #33301f; border-color: #be9a52; }
+.simulation-family-editor .save-btn { background: #e3c688; color: #1f211b; font-weight: 650; }
+.simulation-family-editor button:disabled { opacity: .38; }
+.simulation-family-editor .family-workspace { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 3fr); gap: 16px; }
+.simulation-family-editor .family-list { display: grid; align-content: start; gap: 4px; max-height: min(47dvh, 410px); overflow: auto; }
+.simulation-family-editor .family-list button { text-align: start; }
+.simulation-family-editor .family-detail { max-height: min(47dvh, 410px); min-width: 0; overflow: auto; }
+.simulation-family-editor .family-mode {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: 5px 8px; align-items: center; padding: 8px 0; border-top: 1px solid #a68e5533;
+}
+.simulation-family-editor .family-mode-name { display: flex; gap: 8px; align-items: center; overflow-wrap: anywhere; }
+.simulation-family-editor .family-mode svg { width: 21px; height: 21px; flex: 0 0 21px; color: #e3c688; }
+.simulation-family-editor .family-mode label { display: flex; gap: 5px; align-items: center; font-size: .8rem; }
+.simulation-family-editor .family-mode input { min-width: 16px; min-height: 16px; accent-color: #e3c688; }
+.simulation-family-editor .family-mode select { min-width: 0; width: 100%; }
+.simulation-family-editor .family-order { display: flex; gap: 4px; }
+.simulation-family-editor .family-order button { min-width: 36px; }
+.simulation-family-menu { width: min(340px, calc(100% - 28px)); padding: 16px; }
+.simulation-family-menu div { display: grid; gap: 6px; margin: 12px 0; }
+.simulation-family-editor .family-picker { display: none; }
+@media (max-width: 490px) {
+    .simulation-family-editor form { padding: 12px; gap: 10px; }
+    .simulation-family-editor .family-workspace { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .simulation-family-editor .family-list { display: none; }
+    .simulation-family-editor .family-picker { display: block; width: 100%; }
+    .simulation-family-editor .family-detail { max-height: 45dvh; }
+}
+.simulation-family-editor .family-detail > input {
+    box-sizing: border-box; width: 100%; padding: 8px; margin-bottom: 10px; color: inherit;
+    background: #141915; border: 1px solid #a68e554d; border-radius: 7px; font: inherit; font-size: .84rem;
+}
+
+.family-grip { color: #b7a57b; cursor: grab; line-height: 1; }
+@media (hover: none) { .family-grip { display: none; } }

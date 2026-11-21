@@ -1,3 +1,4 @@
+import { validateSimulationFamilies } from './simulation-families.js';
 import { GRAVITY_DIRECTIONS, GRAVITY_MODES, DEFAULT_GRAVITY_CYCLE } from './gravity-cycle.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules} from './simulations/network.js';
 import {INITIAL_OIL_RULES,validateOilRules} from './simulations/oil.js';
@@ -88,6 +89,7 @@ function mergeKnown(defaults, overrides, path = '') {
     if (!object(overrides)) throw new Error('Invalid settings object');
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
+        if (path === '' && key === 'simulationFamilies') { result[key] = validateSimulationFamilies(value); continue; }
         if (path === '' && key === 'simulationPreferences') { result[key] = validateSimulationPreferences(value); continue; }
         if (path === '' && key === 'contourAction') { result[key] = validateContourActionRules(value); continue; }
         if (path === '' && key === 'cymaticsStrengths') { result[key]=validateCymaticsStrengths(value); continue; }

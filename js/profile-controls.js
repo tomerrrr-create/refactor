@@ -169,7 +169,7 @@ export function initializeProfileControls({ capture, apply, exportSettings, canU
             if (pending.kind === 'copy') {
                 stored = state.copyTo(pending.target, pending.snapshot);
             } else {
-                const applied = apply(pending.snapshot);
+                const applied = apply(pending.snapshot, { fromFile: true });
                 const saved = state.replace(capture());
                 stored = applied && saved;
             }
