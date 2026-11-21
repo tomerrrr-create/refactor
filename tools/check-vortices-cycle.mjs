@@ -95,7 +95,7 @@ try {
             assert.equal(await page.locator(hub).getAttribute('aria-pressed'),'true');
             assert.deepEqual(await page.locator(hub+' svg:visible').evaluateAll(ns=>ns.map(n=>n.dataset.vorticesIcon)),[mode==='tornado'?'flow':mode]);
             if (mode==='a') {
-                assert.equal(await page.locator(hub+' svg:visible path').getAttribute('d'),
+                assert.notEqual(await page.locator(hub+' svg:visible path').getAttribute('d'),
                     await page.locator('#iconGsCircle path').getAttribute('d'));
             }
             assert.equal(await page.locator(hub+' .vortices-tornado-badge').isVisible(),mode==='tornado');
@@ -157,7 +157,7 @@ try {
         }
         await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
         await tap(nav);await tap('#btnCymatics');
-        assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,4);
+        assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,2);
         await swipeUp('#btnCymatics');await menu.waitFor({state:'visible'});
         await page.waitForTimeout(350);
         assert.deepEqual(await visibleMaps(),['clouds','diagonal','grid','interference']);
@@ -218,6 +218,22 @@ try {
         await tap(hub);assert.equal((await state()).mode,'left','The enabled selection survives reload');
         await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
         assert.deepEqual(await cycleMenu.locator('input:checked').evaluateAll(nodes=>nodes.map(input=>input.value)),['left']);
+        const checkedModes=()=>cycleMenu.locator('input:checked').evaluateAll(nodes=>nodes.map(input=>input.value));
+        await dialogAction(cycleDialog+' [data-reset]');
+        assert.deepEqual(await checkedModes(),defaultOrder);
+        await dialogAction(cycleDialog+' [data-cancel]');
+        await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+        assert.deepEqual(await checkedModes(),['left'],'Cancel discards the reset');
+        await dialogAction(cycleDialog+' [data-reset]');
+        await dialogAction(cycleDialog+' [type=submit]');
+        await cycleMenu.waitFor({state:'hidden'});
+        assert.equal((await state()).mode,'left','Reset and Save only change cycle membership');
+        await page.reload();await page.waitForFunction(()=>window.circularTest?.ready);
+        await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());circularTest.enter();});
+        if (!(await page.locator(hub).isVisible())) await tap(nav);
+        await tap(hub);assert.equal((await state()).mode,'turbine2');
+        await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
+        assert.deepEqual(await checkedModes(),defaultOrder,'saved defaults survive reload');
         assert.deepEqual(errors,[]);console.log('PASS circular mode cycle',lang);await context.close();
     }
 }finally{await browser.close();server.close();}

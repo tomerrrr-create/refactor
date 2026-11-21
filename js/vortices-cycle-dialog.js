@@ -1,5 +1,5 @@
 import {focusSettingsHeading} from './dialog-focus.js';
-import {VORTICES_MODES, VORTICES_SETTINGS_ENTRY_MODES} from './vortices-modes.js';
+import {DEFAULT_VORTICES_CYCLE, VORTICES_MODES, VORTICES_SETTINGS_ENTRY_MODES} from './vortices-modes.js';
 
 export function createVorticesCycleDialog({getModes, saveModes, getText, getLang, onLanguageChange}) {
     const dialog = document.createElement('dialog');
@@ -13,6 +13,7 @@ export function createVorticesCycleDialog({getModes, saveModes, getText, getLang
             <p id="vorticesCycleHint"></p>
             <div class="vortices-cycle-options"></div>
             <footer>
+                <button type="button" data-reset></button>
                 <button type="button" data-cancel></button>
                 <button type="submit"></button>
             </footer>
@@ -37,16 +38,23 @@ export function createVorticesCycleDialog({getModes, saveModes, getText, getLang
         }
     }
 
+    function showModes(enabledModes) {
+        for (const {mode, input} of choices) input.checked = enabledModes.includes(mode);
+        updateAvailability();
+    }
+
     function translate() {
         dialog.dir = getLang() === 'he' ? 'rtl' : 'ltr';
         dialog.querySelector('h2').textContent = getText('vortices_cycle_title');
         dialog.querySelector('p').textContent = getText('vortices_cycle_hint');
+        dialog.querySelector('[data-reset]').textContent = getText('evolution_reset_default');
         dialog.querySelector('[data-cancel]').textContent = getText('gs_modal_cancel');
         dialog.querySelector('[type=submit]').textContent = getText('gs_modal_save_close');
         for (const {label, text} of choices) text.textContent = getText(label);
     }
 
     options.addEventListener('change', updateAvailability);
+    dialog.querySelector('[data-reset]').onclick = () => showModes(DEFAULT_VORTICES_CYCLE);
     dialog.querySelector('[data-cancel]').onclick = () => dialog.close();
     dialog.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
@@ -59,9 +67,7 @@ export function createVorticesCycleDialog({getModes, saveModes, getText, getLang
 
     return {
         open() {
-            const enabledModes = getModes();
-            for (const {mode, input} of choices) input.checked = enabledModes.includes(mode);
-            updateAvailability();
+            showModes(getModes());
             translate();
             dialog.showModal();
             focusSettingsHeading(dialog);

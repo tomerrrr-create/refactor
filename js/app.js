@@ -1986,7 +1986,7 @@ function resetAllEvolutionCycles() {
 
 function cycleMemoryTap(simulation, onTap) {
     rememberCurrentCycle();
-    const remembered=cycleMemory.entry(simulation);
+    const remembered=cycleMemory.entry(simulation, simulation==='cymatics'?resonanceCycle[0]:undefined);
     return ()=>{
         selectingCycleMode=true;
         try {
@@ -3918,7 +3918,7 @@ function saveInkSettings(value){
 function updateCymaticsButtonUI(){
     if(typeof dom==='undefined'||!dom.btnCymatics)return;
     const button=dom.btnCymatics, active=activeEvolutionControl()==='cymatics';
-    const remembered=cycleMemory.entry('cymatics');
+    const remembered=cycleMemory.entry('cymatics', resonanceCycle[0]);
     const version=active ? getCymaticsRules().resonanceVersion : resonanceCycle.includes(remembered)?remembered:resonanceCycle[0];
     const map=RESONANCE_MAPS.find(name=>CYMATICS_RESONANCE_MAPS[name]===version) ?? RESONANCE_MAPS[0];
     button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',active);

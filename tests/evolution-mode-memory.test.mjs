@@ -37,5 +37,8 @@ test('explicit Off restarts the cycle while leaving for another simulation recal
  memory.enterCycle('gravitationalSort');memory.remember('gravitationalSort','right');assert.equal(memory.entry('gravitationalSort'),'right');
  memory.remember('nudgeDarker','nudgeDarker');memory.finishCycle('nudgeDarker');assert.equal(memory.entry('nudgeBrighter'),'nudgeBrighter');
  memory.remember('wind','displace');memory.finishCycle('wind');assert.equal(memory.entry('wind'),'ripple');
+ memory.remember('cymatics',4);assert.equal(memory.entry('cymatics',2),4);
+ memory.finishCycle('cymatics');assert.equal(memory.entry('cymatics',2),2);
+ assert.equal(memory.entry('cymatics',5),5,'Off previews the current first enabled map');
  memory.clear();assert.equal(memory.entry('gravitationalSort'),undefined);
 });

@@ -27,9 +27,9 @@ export function createEvolutionModeMemory({storage, blocked = () => false} = {})
         recall: simulation => active() ? modes.get(evolutionModeKey(simulation)) : undefined,
         // Explicit Off ends this cycle. Both the inactive symbol and next tap
         // use the first mode; ordinary handoffs still recall the last selection.
-        entry(simulation) {
+        entry(simulation, firstMode = defaultEvolutionCycleMode(simulation)) {
             if(!active())return undefined;
-            return completedCycles.has(evolutionModeKey(simulation)) ? defaultEvolutionCycleMode(simulation) : modes.get(evolutionModeKey(simulation));
+            return completedCycles.has(evolutionModeKey(simulation)) ? firstMode : modes.get(evolutionModeKey(simulation));
         },
         finishCycle(simulation) {
             const key=evolutionModeKey(simulation);
