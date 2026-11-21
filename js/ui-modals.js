@@ -185,14 +185,25 @@ function closeResizeModal() {
 // --- START: Spiral Settings Helper Functions ---
 let spiralDraftMethod = null;
 
-function updateGeometricFlowCycleAvailability() {
-    const inputs = app.dom.geometricFlowCycleInputs;
-    const selected = inputs.filter(input => input.checked);
-    for (const input of inputs) input.disabled = selected.length === 1 && selected[0] === input;
+function setCycleInputs(inputs, rowClass, enabled, preview) {
+    for (const input of inputs) {
+        const belongs = !preview || preview.available.includes(input.value);
+        input.closest(rowClass).toggleAttribute('data-preview-mode-hidden', !belongs);
+        input.checked = belongs && enabled.includes(input.value);
+    }
 }
 
-function showGeometricFlowCycle(enabled) {
-    for (const input of app.dom.geometricFlowCycleInputs) input.checked = enabled.includes(input.value);
+function updateCycleAvailability(inputs, preview) {
+    const selected = inputs.filter(input => input.checked);
+    for (const input of inputs) input.disabled = !preview && selected.length === 1 && selected[0] === input;
+}
+
+function updateGeometricFlowCycleAvailability() {
+    updateCycleAvailability(app.dom.geometricFlowCycleInputs, app.getPreviewCycle('spiral'));
+}
+
+function showGeometricFlowCycle(enabled, preview = app.getPreviewCycle('spiral')) {
+    setCycleInputs(app.dom.geometricFlowCycleInputs, '.geometric-shape', enabled, preview);
     updateGeometricFlowCycleAvailability();
 }
 
@@ -213,7 +224,8 @@ function closeSpiralSettingsModal() {
 
 function openSpiralSettingsModal() {
     spiralDraftMethod = null;
-    showGeometricFlowCycle(app.getGeometricFlowCycle());
+    const preview = app.getPreviewCycle('spiral');
+    showGeometricFlowCycle(preview?.enabled ?? app.getGeometricFlowCycle(), preview);
     app.dom.spiralSettingsModal.style.display = 'flex';
     // השהייה קטנטנה כדי לאפשר לאנימציה לעבוד כמו שצריך
     setTimeout(() => {
@@ -271,9 +283,13 @@ function closeGolSettingsModal() {
     app.resetWasLongPress();
 }
 
+let gravityOpenTimer, gravityCloseTimer;
+
 function closeGravitationalSortSettingsModal() {
+    clearTimeout(gravityOpenTimer);
+    clearTimeout(gravityCloseTimer);
     app.dom.gravitationalSortSettingsModal.classList.remove('modal-visible');
-    setTimeout(() => app.dom.gravitationalSortSettingsModal.style.display = 'none', 300);
+    gravityCloseTimer = setTimeout(() => app.dom.gravitationalSortSettingsModal.style.display = 'none', 300);
     app.resetWasLongPress();
 }
 
@@ -1256,22 +1272,22 @@ function showGravityDirection(direction) {
 }
 
 function updateGravityCycleAvailability() {
-    const inputs = app.dom.gravityCycleInputs;
-    const enabled = inputs.filter(input => input.checked);
-    for (const input of inputs) input.disabled = enabled.length === 1 && enabled[0] === input;
+    updateCycleAvailability(app.dom.gravityCycleInputs, app.getPreviewCycle('gravitationalSort'));
 }
 
 function openGravitationalSortSettingsModal() {
     if (app.isBreathing()) return;
+    clearTimeout(gravityOpenTimer);
+    clearTimeout(gravityCloseTimer);
     const rules = app.getGravitationalSortRules();
-    const enabled = app.getGravityCycle();
-    for (const input of app.dom.gravityCycleInputs) input.checked = enabled.includes(input.value);
+    const preview = app.getPreviewCycle('gravitationalSort');
+    setCycleInputs(app.dom.gravityCycleInputs, '.gravity-direction', preview?.enabled ?? app.getGravityCycle(), preview);
     updateGravityCycleAvailability();
     showGravityDirection(rules.direction);
     app.dom.gsStrengthSlider.value = rules.strength * 100;
     app.dom.gsStrengthValue.textContent = `${Math.round(rules.strength * 100)}%`;
     app.dom.gravitationalSortSettingsModal.style.display = 'flex';
-    setTimeout(() => app.dom.gravitationalSortSettingsModal.classList.add('modal-visible'), 10);
+    gravityOpenTimer = setTimeout(() => app.dom.gravitationalSortSettingsModal.classList.add('modal-visible'), 10);
 }
 
 function saveGravitationalSortSettings() {
@@ -2179,7 +2195,9 @@ function renderMagnetMethodButtons() {
         { method: 'expand',        iconId: 'iconModeExpand' }
     ];
 
+    const preview = app.getPreviewCycle('magnet');
     modes.forEach((m, index) => {
+        if (preview && !preview.available.includes(m.method)) return;
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'magnet-method-button';

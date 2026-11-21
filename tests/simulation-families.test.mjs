@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EVOLUTION_CATALOG } from '../js/evolution-drawer-settings.js';
-import { defaultSimulationFamilies, nextFamilyMode, SIMULATION_MODES, validateSimulationFamilies } from '../js/simulation-families.js';
+import { defaultSimulationFamilies, nextFamilyMode, SIMULATION_MODES, validateSimulationFamilies, familyCycleFor, updateFamilyCycle } from '../js/simulation-families.js';
 import { defaultWorkspaceSettings } from '../js/workspace-settings.js';
 import { readProfileFile, serializeProfileFile } from '../js/profile-state.js';
 
@@ -36,4 +36,19 @@ test('family cycling skips excluded modes and Off during playback', () => {
     assert.equal(nextFamilyMode(rows, 'last', false), undefined);
     assert.equal(nextFamilyMode(rows, 'last', true), 'first');
     assert.equal(nextFamilyMode([], undefined, true), undefined);
+});
+
+
+test('native settings reflect and edit their modes in the displayed family only', () => {
+    const layout = defaultSimulationFamilies({ gravitationalSort: ['up', 'right'] });
+    const gravity = layout.families.find(group => group.id === 'gravitationalSort');
+    const islands = layout.families.find(group => group.id === 'islands');
+    islands.modes.unshift(gravity.modes.pop());
+    assert.deepEqual(familyCycleFor(islands, 'gravitationalSort'), { available: ['pinwheel'], enabled: [] });
+    const updated = updateFamilyCycle(layout, 'islands', 'gravitationalSort', ['pinwheel', 'up']);
+    const changed = updated.families.find(group => group.id === 'islands');
+    assert.deepEqual(familyCycleFor(changed, 'gravitationalSort'), { available: ['pinwheel'], enabled: ['pinwheel'] });
+    assert.deepEqual(familyCycleFor(changed, 'islands'), familyCycleFor(islands, 'islands'));
+    assert.equal(updated.families.find(group => group.id === 'gravitationalSort'), gravity);
+    assert.equal(islands.modes[0].inCycle, false);
 });

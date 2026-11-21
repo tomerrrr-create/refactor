@@ -2960,3 +2960,5 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 .family-grip { color: #b7a57b; cursor: grab; line-height: 1; }
 @media (hover: none) { .family-grip { display: none; } }
+
+[data-preview-mode-hidden] { display: none !important; }

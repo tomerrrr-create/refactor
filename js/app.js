@@ -1,4 +1,4 @@
-import { SIMULATION_MODES, defaultSimulationFamilies, loadSimulationFamilies, saveSimulationFamilies, nextFamilyMode } from './simulation-families.js';
+import { SIMULATION_MODES, defaultSimulationFamilies, loadSimulationFamilies, saveSimulationFamilies, nextFamilyMode, familyCycleFor, updateFamilyCycle } from './simulation-families.js';
 import { createSimulationFamilyEditor, createSimulationFamilyMenu } from './simulation-family-editor.js';
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
@@ -453,6 +453,14 @@ let magnetMode = 'off';
           refreshSimulationFamilies?.();
           if (!layout.enabled) refreshCycleIcons();
           return true;
+      }
+      const getPreviewCycle = origin => familyCycleFor(simulationFamily(displayedEvolutionControl()), origin);
+      function savePreviewCycle(origin, enabled) {
+          const group = simulationFamily(displayedEvolutionControl());
+          if (!group) return false;
+          const current = familyCycleFor(group, origin).enabled;
+          if (current.length === enabled.length && current.every(mode => enabled.includes(mode))) return true;
+          return applySimulationFamilyLayout(updateFamilyCycle(simulationFamilyLayout, group.id, origin, enabled));
       }
       function simulationFamilyVisible(id) {
           const group = simulationFamily(id);
@@ -6268,12 +6276,17 @@ else if (action.eventName === 'Invert Colors') {
                 setGameOfLifeCycle(slots, index, sources, yoursRules);
             },
             getGravitationalSortRules: () => gravitationalSortRules,
+            getPreviewCycle,
             getGravityCycle: () => gravityCycle,
             saveGravitySettings: (rules, modes) => {
                 if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
-                const enabled = saveGravityCycle(modes);
-                if (!enabled.length) return false;
-                gravityCycle = enabled;
+                if (getPreviewCycle('gravitationalSort')) {
+                    if (!savePreviewCycle('gravitationalSort', modes)) return false;
+                } else {
+                    const enabled = saveGravityCycle(modes);
+                    if (!enabled.length) return false;
+                    gravityCycle = enabled;
+                }
                 const {direction, strength} = rules;
                 if (activeEvolutionControl() !== 'gravitationalSort' || gsMode !== direction || gravitationalSortRules.strength !== strength) {
                     if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:direction});
@@ -6321,6 +6334,7 @@ getSpiralRules: () => spiralRules,
 getGeometricFlowCycle: () => geometricFlowCycle,
 saveGeometricFlowCycle: (modes) => {
     if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
+    if (getPreviewCycle('spiral')) return savePreviewCycle('spiral', modes);
     const ordered = orderGeometricFlowModes(modes);
     if (!ordered.length) return false;
     geometricFlowCycle = ordered;
@@ -6446,8 +6460,10 @@ updateBrightnessEvoButtonUI();
         inkSettingsUI=createInkSettingsDialog({getRules:getInkRules,saveRules:saveInkSettings,getText,getLang:getCurrentLang,onLanguageChange});
         const vorticesCycleUI=createVorticesCycleDialog({
             getModes:()=>vorticesEnabledModes,
+            getPreviewCycle:()=>getPreviewCycle('ink'),
             saveModes:enabledModes=>{
                 if(!canEditVorticesCycle())return false;
+                if (getPreviewCycle('ink')) return savePreviewCycle('ink', enabledModes);
                 vorticesEnabledModes=enabledModes;
                 persistVorticesCycle(enabledModes);
                 updateInkButtonUI();
@@ -6458,9 +6474,11 @@ updateBrightnessEvoButtonUI();
         const oilSettingsUI=createOilSettingsDialog({getRules:()=>islandsSession?.oilRules??ISLANDS_OIL_RULES,saveRules:saveIslandsOilSettings,getText,getLang:getCurrentLang,onLanguageChange});
         networkSettingsUI=createNetworkSettingsDialog({getRules:getNetworkRules,saveRules:saveNetworkSettings,getText,getLang:getCurrentLang,onLanguageChange});
         cymaticsSettingsUI=createCymaticsSettingsDialog({getRules:getCymaticsRules,getFrequencies:()=>cymaticsFrequencies,getStrengths:()=>cymaticsStrengths,saveRules:saveCymaticsSettings,
-            getCycle:()=>activeVorticesMode() ? null : resonanceCycle,
+            getCycle:()=>activeVorticesMode() ? null : (getPreviewCycle('cymatics')?.enabled ?? resonanceCycle),
+            isPreviewCycle:()=>Boolean(getPreviewCycle('cymatics')),
             saveCycle:modes=>{
                 if(activeEvolutionControl()!=='cymatics'||isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
+                if (getPreviewCycle('cymatics')) return savePreviewCycle('cymatics', modes);
                 const ordered=orderResonanceCycle(modes);
                 if(!ordered.length)return false;
                 resonanceCycle=ordered;
@@ -6469,7 +6487,14 @@ updateBrightnessEvoButtonUI();
                 return true;
             },
             canEdit:()=>armedSimulation==='cymatics'&&!isBreathing&&!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
-            getMaps:()=>activeVorticesMode() ? VORTICES_RESONANCE_MAPS : RESONANCE_MAPS,
+            getMaps:()=>{
+                if (activeVorticesMode()) {
+                    const preview = getPreviewCycle('ink');
+                    return preview ? VORTICES_RESONANCE_MAPS.filter(name => preview.available.includes(name)) : VORTICES_RESONANCE_MAPS;
+                }
+                const preview = getPreviewCycle('cymatics');
+                return preview ? RESONANCE_MAPS.filter(name => preview.available.includes(CYMATICS_RESONANCE_MAPS[name])) : RESONANCE_MAPS;
+            },
             getTrigger:()=>activeVorticesMode() ? dom.btnInk : dom.btnCymatics,
             getText,getLang:getCurrentLang,onLanguageChange});
         refreshExperimentalSimulationControls = initializeExperimentalSimulationControls({flags:experimentalSimulations,getText,onLanguageChange,
@@ -6773,8 +6798,8 @@ dom.btnWind.addEventListener('keydown', event => {
         const settingsForMode = new Map(evolutionPickers.map(([, id, , open]) => [id, open]));
         const openFamilySettings = mode => settingsForMode.get(mode.family)?.();
         const familyMenu = createSimulationFamilyMenu({
-            familyName, modeName, getText, getLang: getCurrentLang, openSettings: openFamilySettings,
-            select: mode => { if (activateFamilyMode(mode)) openFamilySettings(mode); }
+            familyName, modeName, getText, getLang: getCurrentLang,
+            select: mode => activateFamilyMode(mode)
         });
         function selectFromFamily(id, reset = false) {
             if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
@@ -6783,7 +6808,7 @@ dom.btnWind.addEventListener('keydown', event => {
             const remembered = !reset && cycleMemory.active() ? familyMemory.get(id) : undefined;
             const next = nextFamilyMode(group.modes, reset ? undefined : selected, isLifePlaying, remembered);
             if (!next && (!selected || !group.modes.some(item => item.inCycle))) {
-                if (!reset) familyMenu(group, selected ? mode : undefined);
+                if (!reset) familyMenu(group);
                 return false;
             }
             if (reset && !selected) {
@@ -6845,22 +6870,22 @@ dom.btnWind.addEventListener('keydown', event => {
                 (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral', 'gravitationalSort'].includes(simulation) || !isMacroLoaded) &&
                 matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle());
             const canOpen = () => !evolutionExplanation.isOpen() && (simulationFamily(simulation)
-                ? !isMacroLoaded && (displayedEvolutionControl() === simulation || simulationFamily(simulation).modes.some(item => !item.inCycle))
+                ? !isMacroLoaded && displayedEvolutionControl() === simulation && !!previewActiveMode()
                 : canOpenOriginal());
             const open = () => {
-                const group = simulationFamily(simulation);
-                if (!group) { onOpen?.(); return; }
-                const mode = displayedEvolutionControl() === simulation ? previewActiveMode() : undefined;
-                if (group.modes.some(item => !item.inCycle && item.id !== mode?.key)) familyMenu(group, mode);
-                else if (mode) openFamilySettings(mode);
+                if (simulationFamily(simulation)) openFamilySettings(previewActiveMode());
+                else onOpen?.();
             };
+            const canOpenExtraModes = () => !isMacroLoaded && !evolutionExplanation.isOpen() &&
+                !!simulationFamily(simulation)?.modes.some(item => !item.inCycle);
+            const openExtraModes = () => familyMenu(simulationFamily(simulation));
             const presetFamily = () => {
                 if (!simulationFamily(simulation)) return simulation;
                 if (displayedEvolutionControl() === simulation) return previewActiveMode()?.family;
             };
             bindPickerGestures(button, {
                 onTap: () => simulationFamily(simulation) ? selectFromFamily(simulation) : handleEvolutionTap(simulation, onTap),
-                onOpen: open,
+                onOpen: open, onSwipeDown: openExtraModes, canSwipeDown: canOpenExtraModes,
                 onSwipeSide: direction => modals.browseEvolutionPreset(presetFamily(), direction),
                 canSwipeSide: () => ['gameOfLife','sandpile'].includes(presetFamily()) && contextForModals.canBrowseEvolutionPreset(presetFamily()) && !evolutionExplanation.isOpen(),
                 onSwipeFallback: evolutionDrawer.swipePage,
@@ -6873,7 +6898,9 @@ dom.btnWind.addEventListener('keydown', event => {
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
             button.addEventListener('keydown', event => {
-                if (event.altKey && event.key === 'ArrowUp' && canOpen()) { event.preventDefault(); open(); }
+                if (!event.altKey) return;
+                if (event.key === 'ArrowUp' && canOpen()) { event.preventDefault(); open(); }
+                if (event.key === 'ArrowDown' && canOpenExtraModes()) { event.preventDefault(); openExtraModes(); }
             });
         }
         refreshSimulationFamilies = () => {

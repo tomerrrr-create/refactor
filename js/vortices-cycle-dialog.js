@@ -1,7 +1,7 @@
 import {focusSettingsHeading} from './dialog-focus.js';
 import {DEFAULT_VORTICES_CYCLE, VORTICES_MODES, VORTICES_SETTINGS_ENTRY_MODES} from './vortices-modes.js';
 
-export function createVorticesCycleDialog({getModes, saveModes, getText, getLang, onLanguageChange}) {
+export function createVorticesCycleDialog({getModes, getPreviewCycle = () => null, saveModes, getText, getLang, onLanguageChange}) {
     const dialog = document.createElement('dialog');
     dialog.id = 'vorticesCycleDialog';
     dialog.className = 'erosion-settings-dialog ink-settings-dialog vortices-cycle-dialog';
@@ -27,19 +27,24 @@ export function createVorticesCycleDialog({getModes, saveModes, getText, getLang
         input.value = mode;
         row.append(text, input);
         options.append(row);
-        return {mode, label, input, text};
+        return {mode, label, input, text, row};
     });
+    let preview = null;
     const entryChoices = choices.filter(({mode}) => VORTICES_SETTINGS_ENTRY_MODES.includes(mode));
 
     function updateAvailability() {
         const checked = entryChoices.filter(({input}) => input.checked);
         for (const choice of entryChoices) {
-            choice.input.disabled = checked.length === 1 && checked[0] === choice;
+            choice.input.disabled = !preview && checked.length === 1 && checked[0] === choice;
         }
     }
 
     function showModes(enabledModes) {
-        for (const {mode, input} of choices) input.checked = enabledModes.includes(mode);
+        for (const {mode, input, row} of choices) {
+            const belongs = !preview || preview.available.includes(mode);
+            row.toggleAttribute('data-preview-mode-hidden', !belongs);
+            input.checked = belongs && enabledModes.includes(mode);
+        }
         updateAvailability();
     }
 
@@ -58,7 +63,7 @@ export function createVorticesCycleDialog({getModes, saveModes, getText, getLang
     dialog.querySelector('[data-cancel]').onclick = () => dialog.close();
     dialog.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
-        if (!entryChoices.some(({input}) => input.checked)) return;
+        if (!preview && !entryChoices.some(({input}) => input.checked)) return;
         const enabledModes = choices.filter(({input}) => input.checked).map(({mode}) => mode);
         if (saveModes(enabledModes) !== false) dialog.close();
     });
@@ -67,7 +72,8 @@ export function createVorticesCycleDialog({getModes, saveModes, getText, getLang
 
     return {
         open() {
-            showModes(getModes());
+            preview = getPreviewCycle();
+            showModes(preview?.enabled ?? getModes());
             translate();
             dialog.showModal();
             focusSettingsHeading(dialog);

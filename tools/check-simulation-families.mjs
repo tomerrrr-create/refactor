@@ -55,6 +55,24 @@ try {
             await page.locator('#btnSimulationFamilyEditor').click();
             await editor.waitFor();
         }
+        async function swipeUp(button) {
+            const { x, y, width, height } = await button.boundingBox();
+            const center = { x: x + width / 2, y: y + height / 2 };
+            if (lang === 'en') {
+                await page.mouse.move(center.x, center.y);
+                await page.mouse.down();
+                await page.mouse.move(center.x, center.y - 38, { steps: 5 });
+                await page.mouse.up();
+                return;
+            }
+            const cdp = await context.newCDPSession(page);
+            await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [center] });
+            for (const dy of [8, 16, 24, 32, 38]) {
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: center.x, y: center.y - dy }] });
+            }
+            await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+            await cdp.detach();
+        }
         await openEditor();
         const tab = id => editor.locator(`[data-family="${id}"]`);
         const pick = id => lang === 'en' ? tab(id).click() : editor.locator('.family-picker').selectOption(id);
@@ -74,6 +92,18 @@ try {
         await row('islands:oil').locator('input').uncheck();
         await editor.locator('.family-detail > input').fill('Mixed flow');
         await editor.locator('.family-detail > input').press('Tab');
+        await pick('gravitationalSort');
+        await row('gravitationalSort:center_x').locator('input').uncheck();
+        await row('gravitationalSort:reverse_up').locator('input').check();
+        await row('gravitationalSort:reverse_right').locator('input').check();
+        await pick('ink');
+        await row('ink:a').locator('input').check();
+        await pick('spiral');
+        await row('spiral:radial').locator('input').check();
+        await pick('cymatics');
+        await row('cymatics:2').locator('input').uncheck();
+        await row('cymatics:5').locator('input').check();
+        await pick('islands');
         await page.screenshot({ path: '/tmp/fyi-simulation-family-' + lang + '.png' });
         const downloaded = page.waitForEvent('download');
         await editor.locator('[data-export]').click();
@@ -101,11 +131,22 @@ try {
         assert.equal((await state()).active, 'gravitationalSort:pinwheel');
         assert.equal((await state()).control, 'islands');
         await islands.press('Alt+ArrowUp');
+        const gravitySettings = page.locator('#gravitationalSortSettingsModal');
+        const cycleValues = (dialog, selector) => dialog.locator(selector).evaluateAll(inputs => inputs
+            .filter(input => input.getClientRects().length > 0)
+            .map(input => input.value));
+        await gravitySettings.waitFor({ state: 'visible', timeout: 3000 });
+        assert.deepEqual(await cycleValues(gravitySettings, '#gravityCycleOptions input:checked'), ['pinwheel']);
+        await page.locator('#btnGsSettingsCancel').click();
         const menu = page.locator('.simulation-family-menu');
+        assert.equal(await menu.isVisible(), false);
+        await islands.press('Alt+ArrowDown');
         await menu.waitFor();
+        assert.equal(await menu.locator('div button').count(), 1);
         await menu.locator('div button').first().click();
-        await page.locator('#gravitationalSortSettingsModal').waitFor({ state: 'visible', timeout: 3000 });
-        await page.locator('#btnGsSettingsCancel').first().click();
+        assert.equal((await state()).active, 'islands:oil');
+        await islands.click();
+        assert.equal((await state()).active, 'gravitationalSort:pinwheel');
         await page.evaluate(() => familyTest.play());
         await islands.click();
         assert.equal((await state()).active, 'islands:classic');
@@ -114,6 +155,63 @@ try {
         await islands.click();
         assert.equal((await state()).active, undefined);
         assert((await page.evaluate(() => familyTest.parseRecipe())) > 0);
+
+        const gravity = page.locator('#btnGravitationalSort');
+        await gravity.click();
+        await gravity.press('Alt+ArrowUp');
+        await gravitySettings.waitFor();
+        assert.deepEqual(await cycleValues(gravitySettings, '#gravityCycleOptions input:checked'),
+            ['up', 'right', 'reverse_up', 'reverse_right']);
+        assert.equal(await gravitySettings.locator('#gravityDirection-pinwheel').isVisible(), false);
+        await gravitySettings.locator('input[value="right"]').uncheck();
+        await page.locator('#btnGsSettingsSave').click();
+        await gravitySettings.waitFor({ state: 'hidden' });
+        await gravity.click();
+        assert.equal((await state()).active, 'gravitationalSort:reverse_up');
+        await gravity.press('Alt+ArrowUp');
+        await gravitySettings.waitFor();
+        assert.deepEqual(await cycleValues(gravitySettings, '#gravityCycleOptions input:checked'), ['up', 'reverse_up', 'reverse_right']);
+        await page.locator('#btnGsSettingsCancel').click();
+
+        const magnet = page.locator('#btnMagnetModes');
+        await magnet.click();
+        await swipeUp(magnet);
+        const magnetSettings = page.locator('#magnetSettingsModal');
+        await magnetSettings.waitFor();
+        assert.equal(await menu.isVisible(), false);
+        assert.equal(await magnetSettings.locator('#magnetMethodContainer button').count(), 6);
+        await page.locator('#btnMagnetModalClose').click();
+
+        const circular = page.locator('#btnInk');
+        await circular.click();
+        await swipeUp(circular);
+        const circularSettings = page.locator('#vorticesCycleDialog');
+        await circularSettings.waitFor();
+        assert.equal(await menu.isVisible(), false);
+        assert(await circularSettings.locator('input[value="a"]').isChecked());
+        assert.equal(await circularSettings.locator('input[value="tornado"]').isChecked(), false);
+        await circularSettings.locator('[data-cancel]').click();
+
+        const drawer = page.locator('#btnEvolutionDrawerInternal');
+        await drawer.click();
+        const geometric = page.locator('#btnSpiral');
+        await geometric.click();
+        await geometric.press('Alt+ArrowUp');
+        const geometricSettings = page.locator('#spiralSettingsModal');
+        await geometricSettings.waitFor();
+        assert(await geometricSettings.locator('#geometricFlowCycleOptions input[value="radial"]').isChecked());
+        await page.locator('#btnSpiralSettingsCancel').click();
+
+        const resonance = page.locator('#btnCymatics');
+        await resonance.click();
+        await resonance.press('Alt+ArrowUp');
+        const resonanceSettings = page.locator('#cymaticsSettingsDialog');
+        await resonanceSettings.waitFor();
+        assert(await resonanceSettings.locator('[data-resonance-cycle="clouds"]').isChecked());
+        assert.equal(await resonanceSettings.locator('[data-resonance-cycle="grid"]').isChecked(), false);
+        await resonanceSettings.locator('[data-cancel]').click();
+        await drawer.click();
+
         await page.locator('#btnSave').click();
         const settingsDownload = page.waitForEvent('download');
         await page.locator('#btnSaveSettings').click();

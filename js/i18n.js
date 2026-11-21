@@ -101,7 +101,7 @@ export const translations = {
   families_move: {en:"Move to…",he:"העברה אל…",ru:"Переместить в…",nl:"Verplaatsen naar…"},
   families_earlier: {en:"Move earlier",he:"הקדמה בסדר",ru:"Выше в списке",nl:"Eerder plaatsen"},
   families_later: {en:"Move later",he:"הזזה בהמשך",ru:"Ниже в списке",nl:"Later plaatsen"},
-  families_settings: {en:"Settings",he:"הגדרות",ru:"Настройки",nl:"Instellingen"},
+  families_extra_modes: {en:"Modes outside the cycle",he:"מצבים מחוץ לסייקל",ru:"Режимы вне цикла",nl:"Modi buiten de cyclus"},
   families_invalid: {en:"This layout file could not be loaded.",he:"לא ניתן לטעון את קובץ הפריסה.",ru:"Не удалось загрузить схему.",nl:"Deze indeling kon niet worden geladen."},
   families_storage: {en:"Could not save the layout in this browser.",he:"לא ניתן לשמור את הפריסה בדפדפן הזה.",ru:"Не удалось сохранить схему в браузере.",nl:"Opslaan in deze browser is mislukt."},
   families_pause: {en:"Pause playback before applying a layout.",he:"יש להשהות את הניגון לפני החלת פריסה.",ru:"Приостановите воспроизведение перед применением.",nl:"Pauzeer voordat je de indeling toepast."},

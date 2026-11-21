@@ -194,7 +194,7 @@ export function createSimulationFamilyEditor({ getLayout, getDefault, apply, can
     return { open };
 }
 
-export function createSimulationFamilyMenu({ familyName, modeName, getText, getLang, select, openSettings }) {
+export function createSimulationFamilyMenu({ familyName, modeName, getText, getLang, select }) {
     const dialog = document.createElement('dialog');
     dialog.className = 'erosion-settings-dialog simulation-family-menu';
     dialog.setAttribute('aria-labelledby', 'simulationFamilyMenuTitle');
@@ -208,14 +208,13 @@ export function createSimulationFamilyMenu({ familyName, modeName, getText, getL
         button.addEventListener('click', () => { dialog.close(); callback(); });
         actions.append(button);
     }
-    return (group, active) => {
+    return group => {
         if (dialog.open) return;
         dialog.dir = getLang() === 'he' ? 'rtl' : 'ltr';
-        dialog.querySelector('h2').textContent = group.name ?? familyName(group.id);
+        dialog.querySelector('h2').textContent = (group.name ?? familyName(group.id)) + ' · ' + getText('families_extra_modes');
         cancel.textContent = getText('gs_modal_cancel');
         actions.replaceChildren();
-        if (active) add(getText('families_settings') + ' · ' + modeName(active), () => openSettings(active));
-        for (const item of group.modes.filter(mode => !mode.inCycle && mode.id !== active?.key)) {
+        for (const item of group.modes.filter(mode => !mode.inCycle)) {
             const mode = SIMULATION_MODES.get(item.id);
             add(modeName(mode), () => select(mode));
         }

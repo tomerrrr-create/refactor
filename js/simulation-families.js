@@ -106,3 +106,23 @@ export function nextFamilyMode(modes, selected, playing, remembered) {
     if (index < 0) return cycle.includes(remembered) ? remembered : cycle[0];
     return cycle[index + 1] ?? (playing ? cycle[0] : undefined);
 }
+
+// Native settings edit only the modes they know about in the current toolbar family.
+export function familyCycleFor(group, origin) {
+    if (!group) return null;
+    const entries = group.modes.map(item => ({ mode: SIMULATION_MODES.get(item.id), inCycle: item.inCycle }))
+        .filter(entry => entry.mode.family === origin);
+    return {
+        available: entries.map(entry => entry.mode.value),
+        enabled: entries.filter(entry => entry.inCycle).map(entry => entry.mode.value)
+    };
+}
+
+export function updateFamilyCycle(layout, groupId, origin, enabled) {
+    return { ...layout, families: layout.families.map(group => group.id !== groupId ? group : {
+        ...group, modes: group.modes.map(item => {
+            const mode = SIMULATION_MODES.get(item.id);
+            return mode.family === origin ? { ...item, inCycle: enabled.includes(mode.value) } : item;
+        })
+    }) };
+}
