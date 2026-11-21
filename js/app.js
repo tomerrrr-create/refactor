@@ -4125,7 +4125,7 @@ function applyContoursOnce(rules = contourActionRules) {
     if (isLifePlaying) pauseLife();
     performAction(() => {
         window.logArtEvent('CONTOUR_APPLY', JSON.stringify({version:1,rules:effective}));
-        boardState = Simulations.runContourGeneration({n,currentBoardState:boardState,currentPalette:palette(),contourRules:effective});
+        boardState = Simulations.runContourGeneration({n,currentBoardState:boardState,currentPalette:palette(),originalPalette:C.PALETTES[activePaletteIndex].originalColors,contourRules:effective});
         if (armedSimulation === 'dla') syncDlaCrystalState();
     });
     renderToScreen(null);
@@ -6211,7 +6211,14 @@ syncGsModeFromModal: (direction) => {
             getCracksSettings: () => ({ ...getCracksMaterial(), ...(cracksState && cracksState.version<3 ? DEFAULT_CRACKS_GROWTH : getCracksGrowth()), ...(cracksState && cracksState.version<3 ? {enabled:false} : {}) }),
             saveCracksSettings,
             isContourReplayActive: () => isMacroLoaded,
-            getContourRules: () => ({ ...contourActionRules }), setContourRules: (r) => { if(isMacroLoaded)return;contourActionRules=validateContourActionRules(r);persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture(); }, // <-- ADDED HERE
+            getContourRules: () => ({ ...contourActionRules }),
+            setContourRules: rules => {
+                if(isMacroLoaded)return;
+                contourActionRules=validateContourActionRules(rules);
+                luminanceAnchorPreference?.sync();
+                persistWorkspaceSettings(getWorkspaceSettings());
+                settingsProfiles?.scheduleCapture();
+            },
 
 spiralRules,
 getSpiralRules: () => spiralRules,
@@ -6323,11 +6330,12 @@ updateBrightnessEvoButtonUI();
         });
         luminanceAnchorPreference=createLuminanceAnchorPreference({
             input:document.getElementById('luminanceAnchorToggle'),
-            read:()=>({magnet:magnetRules.anchorColor==='luminance',life:gameOfLifeRules.deadColor==='luminance'}),
+            read:()=>({magnet:magnetRules.anchorColor==='luminance',life:gameOfLifeRules.deadColor==='luminance',contour:contourActionRules.lineColor==='luminance'}),
             canChange:()=>!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             apply:(enabled,{startup})=>{
                 if(enabled){magnetRules.anchorColor='luminance';gameOfLifeRules.deadColor='luminance';}
                 else{delete magnetRules.anchorColor;magnetRules.anchorColorIndex=-1;delete gameOfLifeRules.deadColor;}
+                contourActionRules={...contourActionRules,lineColor:enabled?'luminance':'darkest'};
                 if(!startup){
                     recordLiveSimulationRules('magnet');recordLiveSimulationRules('gameOfLife');
                     persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();

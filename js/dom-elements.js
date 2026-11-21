@@ -157,8 +157,6 @@ btnCycleSort: document.getElementById('btnCycleSort'),
   contourSensitivityLabelHigh: document.getElementById('contourSensitivityLabelHigh'),
   contourSensitivityValue: document.getElementById('contourSensitivityValue'), // <-- ADDED HERE (New Element)
   contourColorLabel: document.getElementById('contourColorLabel'),
-  btnContourColorDark: document.getElementById('btnContourColorDark'),
-  btnContourColorLight: document.getElementById('btnContourColorLight'),
   contourColorButtons: document.querySelectorAll('.contour-color-btn'), // Helper selector
   btnContourSettingsCancel: document.getElementById('btnContourSettingsCancel'),
   btnContourSettingsSave: document.getElementById('btnContourSettingsSave'),

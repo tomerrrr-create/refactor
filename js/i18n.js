@@ -9,8 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  luminance_anchor:{en:'Luminance Anchor (Magnet, GOL)',he:'עוגן לפי בהירות (מגנט, GOL)',ru:'Якорь по яркости (Магнит, GOL)',nl:'Luminantie-anker (Magneet, GOL)'},
-  luminance_anchor_note:{en:'Use the first Luminance color for Magnet and Game of Life. Individual settings remain editable.',he:'צבע העוגן במגנט ובמשחק החיים לפי Luminance. אפשר לשנות כל הגדרה בנפרד.',ru:'Первый цвет по яркости для магнита и игры «Жизнь». Настройки можно менять отдельно.',nl:'Gebruik de eerste luminantiekleur voor Magneet en Game of Life. Elke instelling blijft aanpasbaar.'},
+  luminance_anchor:{en:'Luminance Anchor (Magnet, GOL, Contour)',he:'עוגן לפי בהירות (מגנט, GOL, קווי מתאר)',ru:'Якорь по яркости (Магнит, GOL, Контуры)',nl:'Luminantie-anker (Magneet, GOL, Contouren)'},
+  luminance_anchor_note:{en:'Use the first Luminance color for Magnet, Game of Life and Contours. Individual settings remain editable.',he:'הצבע הראשון לפי Luminance למגנט, למשחק החיים ולקווי המתאר. אפשר לשנות כל הגדרה בנפרד.',ru:'Первый цвет по яркости для магнита, игры «Жизнь» и контуров. Настройки можно менять отдельно.',nl:'Gebruik de eerste luminantiekleur voor Magneet, Game of Life en Contouren. Elke instelling blijft aanpasbaar.'},
   magnet_method_field_magnet:{en:'Combined Regular',he:'רגיל משולב',ru:'Обычный с общим полем',nl:'Gewoon gecombineerd'},
   magnet_method_field_cosmic_magnet:{en:'Combined Cosmic',he:'קוסמי משולב',ru:'Космический с общим полем',nl:'Kosmisch gecombineerd'},
   technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},
@@ -617,8 +617,9 @@ export const translations = {
   contour_sensitivity_low: { en: "Low", he: "נמוכה", ru: "Низкая", nl: "Laag" },
   contour_sensitivity_high: { en: "High", he: "גבוהה", ru: "Высокая", nl: "Hoog" },
   contour_color_label: { en: "Line Color", he: "צבע קו", ru: "Цвет линии", nl: "Lijnkleur" },
-  contour_color_darkest: { en: "Darkest", he: "הכהה ביותר", ru: "Самый темный", nl: "Donkerste" },
-  contour_color_lightest: { en: "Lightest", he: "הבהיר ביותר", ru: "Самый светлый", nl: "Lichtste" },
+  contour_color_darkest: { en: "First in current sort", he: "הראשון במיון הנוכחי", ru: "Первый в текущей сортировке", nl: "Eerste in huidige sortering" },
+  contour_color_lightest: { en: "Last in current sort", he: "האחרון במיון הנוכחי", ru: "Последний в текущей сортировке", nl: "Laatste in huidige sortering" },
+  contour_color_luminance: { en: "First by Luminance", he: "הראשון לפי Luminance", ru: "Первый по яркости", nl: "Eerste volgens luminantie" },
   // --- END: Contour Settings Modal ---
 
 

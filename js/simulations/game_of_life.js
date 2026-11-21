@@ -1,14 +1,7 @@
-import { getGeneticColor, findClosestColorIndex, getLuminance } from '../colors.js';
+import { getGeneticColor, findClosestColorIndex, firstLuminanceIndex } from '../colors.js';
 
 export function gameOfLifeDeadIndex(currentPalette, rules, originalPalette = currentPalette) {
-    if (rules.deadColor !== 'luminance' || !currentPalette.length) return 0;
-    const reference = originalPalette.length ? originalPalette : currentPalette;
-    let darkest = reference[0];
-    for (const color of reference) if (getLuminance(color) < getLuminance(darkest)) darkest = color;
-    const index = currentPalette.indexOf(darkest);
-    if (index >= 0) return index;
-    // Standalone callers may supply a palette without its original ordering.
-    return currentPalette.reduce((best, color, i) => getLuminance(color) < getLuminance(currentPalette[best]) ? i : best, 0);
+    return rules.deadColor === 'luminance' ? firstLuminanceIndex(currentPalette, originalPalette) : 0;
 }
 
 export function runGameOfLifeGeneration({ n, currentBoardState, currentPalette, originalPalette = currentPalette, gameOfLifeRules }) {

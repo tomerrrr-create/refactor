@@ -5,7 +5,7 @@ export function createLuminanceAnchorPreference({read,apply,input,canChange=()=>
  try{enabled=(storage??globalThis.localStorage).getItem(LUMINANCE_ANCHOR_KEY)!=='false';}catch{/* Session-only when storage is unavailable. */}
  const refresh=()=>{if(input){input.checked=enabled;input.disabled=!canChange();}};
  const persist=()=>{try{(storage??globalThis.localStorage).setItem(LUMINANCE_ANCHOR_KEY,String(enabled));return true;}catch{return false;}};
- const sync=()=>{const flags=read();enabled=flags.magnet===true&&flags.life===true;refresh();return persist();};
+ const sync=()=>{const flags=read();enabled=flags.magnet===true&&flags.life===true&&flags.contour===true;refresh();return persist();};
  const set=value=>{enabled=value===true;apply(enabled,{startup:false});refresh();return persist();};
  input?.addEventListener('change',()=>{if(canChange())set(input.checked);else refresh();});
  refresh();

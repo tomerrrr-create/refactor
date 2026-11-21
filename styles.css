@@ -2630,9 +2630,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   #evolutionDrawerDialog .simulation-theme-previews { display:grid; grid-template-columns:repeat(3, minmax(44px,1fr)); justify-items:center; width:100%; }
 }
 
-/* Independent dead-cell anchor, paired with the existing genetics dot. */
-.gol-dead-color::before { background: #252a2e; border: 1px solid #a5aba7; box-sizing: border-box; }
-.gol-dead-color[aria-checked="true"]::before { background: #141719; border-color: #d5aa48; box-shadow: 0 0 0 2px #d5aa48; }
+/* Luminance uses the same bird as the sort control. */
+.gol-dead-color::before { content: none; }
+.gol-dead-color, #btnContourColorLuminance { color: #fff; }
+.gol-dead-color[aria-checked="true"], #btnContourColorLuminance[aria-pressed="true"] { color: var(--gold); }
 
 /* Icon-only read-only activity, centered below the board and gallery frame. */
 .macro-activity { position:fixed; z-index:35; pointer-events:none; height:32px; padding:0; display:flex; align-items:center; justify-content:center; box-sizing:border-box;

@@ -789,7 +789,7 @@
         <input id="rememberEvolutionModesToggle" class="technician-switch" type="checkbox" role="switch">
       </label>
       <label class="technician-option technician-switch-option" data-i18n-title="luminance_anchor_note">
-        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" opacity=".45"/></svg></span><span id="luminanceAnchorLabel" dir="auto" data-debug-text="luminance_anchor">Luminance Anchor (Magnet, GOL)</span></span>
+        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true" data-luminance-bird></span><span id="luminanceAnchorLabel" dir="auto" data-debug-text="luminance_anchor">Luminance Anchor (Magnet, GOL, Contour)</span></span>
         <input id="luminanceAnchorToggle" class="technician-switch" type="checkbox" role="switch" aria-labelledby="luminanceAnchorLabel">
       </label>
       <label class="technician-option technician-switch-option">
@@ -1287,6 +1287,7 @@
           <button id="btnContourColorLight" class="gs-direction-btn contour-color-btn" data-color="lightest">
             <svg viewBox="0 0 24 24" fill="#FFFFFF" class="w-6 h-6"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
           </button>
+          <button type="button" id="btnContourColorLuminance" class="gs-direction-btn contour-color-btn" data-color="luminance" data-luminance-bird></button>
         </div>
       </div>
 

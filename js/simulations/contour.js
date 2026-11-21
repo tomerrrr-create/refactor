@@ -1,4 +1,6 @@
-export function runContourGeneration({ n, currentBoardState, currentPalette, contourRules }) {
+import { firstLuminanceIndex } from '../colors.js';
+
+export function runContourGeneration({ n, currentBoardState, currentPalette, originalPalette, contourRules }) {
     // 1. Create a copy to write to. We will only read from currentBoardState.
     const nextBoardState = currentBoardState.map(tile => ({ ...tile }));
     
@@ -7,7 +9,8 @@ export function runContourGeneration({ n, currentBoardState, currentPalette, con
     const maxIndex = pLen - 1;
 
     // Use selected line color from rules
-    const contourIndex = (contourRules.lineColor === 'lightest') ? maxIndex : 0; // Default to 0 (darkest)
+    const contourIndex = contourRules.lineColor === 'luminance' ? firstLuminanceIndex(currentPalette, originalPalette)
+        : contourRules.lineColor === 'lightest' ? maxIndex : 0;
 
     // Calculate threshold based on sensitivity (0-100)
     // 0 = Low Sensitivity -> High Threshold (50%)
