@@ -24,34 +24,40 @@ export function runGravitationalSortGeneration({ n, currentBoardState, currentPa
     switch (gravitationalSortRules.direction) {
 
         case 'up':
-             for (let row = 1; row < n; row++) {
+        case 'reverse_up': {
+            const step = gravitationalSortRules.direction === 'up' ? 1 : -1;
+            const firstRow = step === 1 ? 1 : n - 2;
+            for (let row = firstRow; row >= 0 && row < n; row += step) {
                 for (let col = 0; col < n; col++) {
                     const i = row * n + col;
-                    const above_i = (row - 1) * n + col;
-                    if (nextBoardState[i].k > nextBoardState[above_i].k && Math.random() < strength) {
-                        // התיקון: החלפה קלאסית (ללא Destructuring) - מהיר פי 100
+                    const neighbor = i - step * n;
+                    if (nextBoardState[i].k > nextBoardState[neighbor].k && Math.random() < strength) {
                         const temp = nextBoardState[i];
-                        nextBoardState[i] = nextBoardState[above_i];
-                        nextBoardState[above_i] = temp;
+                        nextBoardState[i] = nextBoardState[neighbor];
+                        nextBoardState[neighbor] = temp;
                     }
                 }
             }
             break;
-            
+        }
+
         case 'right':
-             for (let col = n - 2; col >= 0; col--) {
+        case 'reverse_right': {
+            const step = gravitationalSortRules.direction === 'right' ? -1 : 1;
+            const firstColumn = step === -1 ? n - 2 : 1;
+            for (let col = firstColumn; col >= 0 && col < n; col += step) {
                 for (let row = 0; row < n; row++) {
                     const i = row * n + col;
-                    const right_i = row * n + (col + 1);
-                    if (nextBoardState[i].k < nextBoardState[right_i].k && Math.random() < strength) {
-                        // התיקון: החלפה קלאסית
+                    const neighbor = i - step;
+                    if (nextBoardState[i].k < nextBoardState[neighbor].k && Math.random() < strength) {
                         const temp = nextBoardState[i];
-                        nextBoardState[i] = nextBoardState[right_i];
-                        nextBoardState[right_i] = temp;
+                        nextBoardState[i] = nextBoardState[neighbor];
+                        nextBoardState[neighbor] = temp;
                     }
                 }
             }
             break;
+        }
 
         case 'center_x': {
             const centerR = (n - 1) / 2;

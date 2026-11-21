@@ -1,4 +1,5 @@
 import { INITIAL_CRACKS_GROWTH } from './cracks-settings.js';
+import { DEFAULT_CONTOUR_ACTION_RULES } from './contour-action-settings.js';
 import { DEFAULT_EVOLUTION_LAYOUT } from './evolution-drawer-settings.js';
 import { INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { DEFAULT_SEPARATOR_CYCLE } from './separator-cycle.js';
@@ -132,6 +133,7 @@ export function factoryProfileSnapshot(index) {
     settings.cycles.gameOfLife[0] = clone(defaultGameOfLifeRules);
     settings.gameOfLifeDeadColor = 'luminance';
     settings.rules.magnet.anchorColor = 'luminance';
+    settings.contourAction = { ...DEFAULT_CONTOUR_ACTION_RULES };
     settings.nudgeIntervalMs = 35;
     settings.evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
     settings.rules.contour.growth = clone(INITIAL_CRACKS_GROWTH);

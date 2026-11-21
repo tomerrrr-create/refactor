@@ -1,6 +1,9 @@
 import {isCombinedMagnetMode} from './magnet-modes.js';
 import { magnetAnchorIndex } from './magnet-anchor.js';
+import { LUMINANCE_SORT_ICON } from './colors.js';
+import { DEFAULT_CONTOUR_ACTION_RULES } from './contour-action-settings.js';
 import { currentPolygonFlowMode } from './simulations/polygon-circulation.js';
+import { DEFAULT_GEOMETRIC_FLOW_CYCLE } from './geometric-flow-cycle.js';
 import { initializeMacroOverlaySettings } from './macro-overlay-settings.js';
 import { createCompactColorPicker } from './compact-color-picker.js';
 import { focusSettingsHeading } from './dialog-focus.js';
@@ -16,7 +19,7 @@ import { renderPalettePicker } from './palette-picker.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { bindPresetCycleEditor, createCycleEditorDraft, commitCycleEditorDraft, orderedCyclePresets, adjacentCyclePreset } from './preset-cycle-editor.js';
 import { getAutoChiReach, resolveChiReach, CHI_REACH_PERCENTAGES, CHI_REACH_SLIDER_PERCENTAGES } from './chi-reach.js';
-import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS, defaultContourRules } from './constants.js';
+import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel } from './relative-separators.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
@@ -188,6 +191,11 @@ function updateGeometricFlowCycleAvailability() {
     for (const input of inputs) input.disabled = selected.length === 1 && selected[0] === input;
 }
 
+function showGeometricFlowCycle(enabled) {
+    for (const input of app.dom.geometricFlowCycleInputs) input.checked = enabled.includes(input.value);
+    updateGeometricFlowCycleAvailability();
+}
+
 function showSpiralMethod(method) {
     for (const button of app.dom.spiralMethodButtons) {
         const selected = button.dataset.method === method;
@@ -205,9 +213,7 @@ function closeSpiralSettingsModal() {
 
 function openSpiralSettingsModal() {
     spiralDraftMethod = null;
-    const enabled = app.getGeometricFlowCycle();
-    for (const input of app.dom.geometricFlowCycleInputs) input.checked = enabled.includes(input.value);
-    updateGeometricFlowCycleAvailability();
+    showGeometricFlowCycle(app.getGeometricFlowCycle());
     app.dom.spiralSettingsModal.style.display = 'flex';
     // השהייה קטנטנה כדי לאפשר לאנימציה לעבוד כמו שצריך
     setTimeout(() => {
@@ -311,6 +317,8 @@ function refreshGolGeneticsButton() {
     button.title = app.getText(ordered ? 'gol_genetics_order' : 'gol_genetics_rgb');
     button.setAttribute('aria-label', button.title);
 }
+
+const luminanceBird = `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">${LUMINANCE_SORT_ICON}</svg>`;
 
 function refreshGolDeadColorButton() {
     const button = document.getElementById('btnGolDeadColor');
@@ -1197,6 +1205,7 @@ updateActivePresetButton();
     const deadColorButton = document.createElement('button');
     deadColorButton.type = 'button';deadColorButton.id = 'btnGolDeadColor';
     deadColorButton.className = 'gol-genetics-dot gol-dead-color';
+    deadColorButton.innerHTML = luminanceBird;
     deadColorButton.setAttribute('role','switch');
     deadColorButton.addEventListener('click',()=>{
         golDeadColorDraft = golDeadColorDraft === 'current' ? 'luminance' : 'current';
@@ -1237,15 +1246,30 @@ function refreshGravitationalStrength(direction) {
     app.dom.gravitationalSortSettingsModal.querySelector('[data-gravity-strength]').classList.toggle('gravity-strength-inactive', fixedStrength);
 }
 
+function showGravityDirection(direction) {
+    for (const button of app.dom.gsDirectionButtons) {
+        const selected = button.dataset.direction === direction;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+    }
+    refreshGravitationalStrength(direction);
+}
+
+function updateGravityCycleAvailability() {
+    const inputs = app.dom.gravityCycleInputs;
+    const enabled = inputs.filter(input => input.checked);
+    for (const input of inputs) input.disabled = enabled.length === 1 && enabled[0] === input;
+}
+
 function openGravitationalSortSettingsModal() {
     if (app.isBreathing()) return;
     const rules = app.getGravitationalSortRules();
-    app.dom.gsDirectionButtons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.direction === rules.direction);
-    });
+    const enabled = app.getGravityCycle();
+    for (const input of app.dom.gravityCycleInputs) input.checked = enabled.includes(input.value);
+    updateGravityCycleAvailability();
+    showGravityDirection(rules.direction);
     app.dom.gsStrengthSlider.value = rules.strength * 100;
     app.dom.gsStrengthValue.textContent = `${Math.round(rules.strength * 100)}%`;
-    refreshGravitationalStrength(rules.direction);
     app.dom.gravitationalSortSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gravitationalSortSettingsModal.classList.add('modal-visible'), 10);
 }
@@ -1257,14 +1281,8 @@ function saveGravitationalSortSettings() {
         newRules.direction = activeBtn.dataset.direction;
     }
     if (!app.dom.gsStrengthSlider.disabled) newRules.strength = parseInt(app.dom.gsStrengthSlider.value, 10) / 100;
-    app.setGravitationalSortRules(newRules);
-    
-    // עדכון: סנכרון האייקון בלוח הבקרה למצב החדש שנבחר
-    if (typeof app.syncGsModeFromModal === 'function') {
-        app.syncGsModeFromModal(newRules.direction);
-    }
-    
-    closeGravitationalSortSettingsModal();
+    const enabled = app.dom.gravityCycleInputs.filter(input => input.checked).map(input => input.value);
+    if (app.saveGravitySettings(newRules, enabled)) closeGravitationalSortSettingsModal();
 }
 // --- START: Added for Contour Settings ---
 function openContourSettingsModal() {
@@ -1281,8 +1299,10 @@ function openContourSettingsModal() {
     app.dom.contourSensitivityLabelLow.textContent = app.getText('contour_sensitivity_low');
     app.dom.contourSensitivityLabelHigh.textContent = app.getText('contour_sensitivity_high');
     app.dom.contourColorLabel.textContent = app.getText('contour_color_label');
-    app.dom.btnContourColorDark.title = app.getText('contour_color_darkest');
-    app.dom.btnContourColorLight.title = app.getText('contour_color_lightest');
+    for (const button of app.dom.contourColorButtons) {
+        button.title = app.getText('contour_color_' + button.dataset.color);
+        button.setAttribute('aria-label', button.title);
+    }
     app.dom.btnContourSettingsCancel.textContent = app.getText('gs_modal_cancel'); // Re-use "Cancel"
     app.dom.btnContourSettingsReset.textContent = app.getText('evolution_reset_default');
     app.dom.btnContourSettingsSave.textContent = app.getText('gs_modal_save_close'); // Re-use "Save & Close"
@@ -1300,12 +1320,19 @@ function openContourSettingsModal() {
     }, 10);
 }
 
+function selectContourLineColor(lineColor) {
+    for (const button of app.dom.contourColorButtons) {
+        const selected = button.dataset.color === lineColor;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+    }
+}
+
 function populateContourSettings(rules) {
     app.dom.contourSensitivitySlider.value = rules.sensitivity;
     app.dom.contourSensitivityValue.textContent = `${rules.sensitivity}%`; // Set initial text value
     
-    app.dom.btnContourColorDark.classList.toggle('active', rules.lineColor === 'darkest');
-    app.dom.btnContourColorLight.classList.toggle('active', rules.lineColor === 'lightest');
+    selectContourLineColor(rules.lineColor);
 
 }
 
@@ -1334,6 +1361,7 @@ let selectedEvoMode = 'brightness'; // ישמור את הבחירה הזמנית
 
 export function initializeModals(appContext) {
     app = appContext;
+    for (const host of document.querySelectorAll('[data-luminance-bird]')) host.innerHTML = luminanceBird;
     brushPicker = initializeBrushPicker(app);
     const openSeparatorCycleModal = initializeSeparatorCycleModal(app);
     const openErosionSettingsModal = initializeErosionModal(app);
@@ -1968,12 +1996,9 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
 
 
     // Gravitational Sort Settings Modal
+    app.dom.gravityCycleOptions.addEventListener('change', updateGravityCycleAvailability);
     app.dom.gsDirectionButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            app.dom.gsDirectionButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            if (btn.dataset.direction) refreshGravitationalStrength(btn.dataset.direction);
-        });
+        btn.addEventListener('click', () => showGravityDirection(btn.dataset.direction));
     });
     app.dom.gsStrengthSlider.addEventListener('input', () => {
         app.dom.gsStrengthValue.textContent = `${app.dom.gsStrengthSlider.value}%`;
@@ -1996,7 +2021,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     // --- START: Added for Contour Settings ---
     app.dom.btnContourModalClose.addEventListener('click', closeContourSettingsModal);
     app.dom.contourSettingsModal.addEventListener('click', (e) => { if (e.target === app.dom.contourSettingsModal) { closeContourSettingsModal(); } });
-    app.dom.btnContourSettingsReset.addEventListener('click', () => populateContourSettings(defaultContourRules));
+    app.dom.btnContourSettingsReset.addEventListener('click', () => populateContourSettings(DEFAULT_CONTOUR_ACTION_RULES));
     app.dom.btnContourSettingsSave.addEventListener('click', saveContourSettings);
     app.dom.btnContourSettingsCancel.addEventListener('click', closeContourSettingsModal);
     app.dom.contourSettingsModal.addEventListener('keydown', event => {
@@ -2014,10 +2039,7 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
     });
 
     app.dom.contourColorButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            app.dom.contourColorButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
+        btn.addEventListener('click', () => selectContourLineColor(btn.dataset.color));
     });
     // --- END: Added for Contour Settings ---
 
@@ -2095,6 +2117,7 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
 
 // --- START: Added for Spiral Settings ---
     app.dom.btnSpiralSettingsCancel.addEventListener('click', closeSpiralSettingsModal);
+    app.dom.btnSpiralSettingsReset.addEventListener('click', () => showGeometricFlowCycle(DEFAULT_GEOMETRIC_FLOW_CYCLE));
     app.dom.geometricFlowCycleOptions.addEventListener('change', updateGeometricFlowCycleAvailability);
     app.dom.btnSpiralSettingsSave.addEventListener('click', () => {
         const enabled = app.dom.geometricFlowCycleInputs.filter(input => input.checked).map(input => input.value);
@@ -2226,6 +2249,7 @@ function renderMagnetAnchorSwatches() {
         toggle = document.createElement('button');
         toggle.type = 'button'; toggle.id = 'btnMagnetAnchorColor';
         toggle.className = 'gol-genetics-dot gol-dead-color';
+        toggle.innerHTML = luminanceBird;
         toggle.setAttribute('role', 'switch');
         const heading = document.createElement('div');
         heading.className = 'flex items-center justify-center gap-2';

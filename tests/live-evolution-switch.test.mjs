@@ -1,3 +1,4 @@
+import { DEFAULT_GRAVITY_CYCLE, nextGravityMode } from '../js/gravity-cycle.js';
 import {vorticesModeFor} from '../js/vortices-modes.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import {magnetRecordingRules, recordedMagnetAnchorLimit} from '../js/magnet-anchor-limit.js';
@@ -32,7 +33,7 @@ function harness() {
         magnetAnchorLimit:300,replayMagnetAnchorLimit:null,magnetRecordingRules,recordedMagnetAnchorLimit,magnetRules: {}, erosionRules: {mode: 'legacy'}, contourRules: {}, turingRules: {},
         evolutionTuning: {islands: {activity: .05}, brightnessEvo: {}, dla: {}}, dlaRules: {},
         gameOfLifeRules: {}, gameOfLifeCycle: [{}, {}, {}], chiFlowCycle: [{}, {}, {}],
-        geometricFlowCycle: [...GEOMETRIC_FLOW_MODES], nextGeometricFlowMode,
+        geometricFlowCycle: [...GEOMETRIC_FLOW_MODES], nextGeometricFlowMode, gravityCycle: [...DEFAULT_GRAVITY_CYCLE], nextGravityMode,
         isMacroPlaying: false, lastNudgeTime: 0, performance: {now: () => 100},
         getCurrentState: () => ({board: c.boardState.map(t => ({...t}))}),
         areStatesEqual: (a,b) => JSON.stringify(a) === JSON.stringify(b),

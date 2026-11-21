@@ -158,6 +158,18 @@ try{
   await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());spiralTest.setup();});
   await tap('#btnSpiral');assert.equal((await state()).mode,'triangle_gravity_mirror');
   await open();assert.deepEqual(await checked(),['triangle_gravity_mirror'],'membership survives reload');
+  const beforeReset=await state();
+  await tap('#btnSpiralSettingsReset');assert.deepEqual(await checked(),modes.slice(2));
+  assert(await enabled.evaluateAll(inputs=>inputs.every(input=>!input.disabled)));
+  await tap('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
+  await open();assert.deepEqual(await checked(),['triangle_gravity_mirror'],'Cancel discards the reset');
+  await tap('#btnSpiralSettingsReset');await tap('#btnSpiralSettingsSave');
+  await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
+  assert.deepEqual(await state(),beforeReset,'saving reset membership keeps the active simulation and board');
+  await page.reload();await page.waitForFunction(()=>window.spiralTest?.ready);
+  await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());spiralTest.setup();});
+  await tap('#btnSpiral');assert.equal((await state()).mode,'triangle_gravity');
+  await open();assert.deepEqual(await checked(),modes.slice(2),'saved defaults survive reload');
   await tap('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
   assert.deepEqual(await replay(page,recipe),after,'an existing recipe still plays excluded modes');
 

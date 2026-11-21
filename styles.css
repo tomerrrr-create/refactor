@@ -1115,6 +1115,11 @@ body {
 #btnGravitationalSort.mode-right #iconGsRight { display: block !important; }
 #btnGravitationalSort.mode-right svg:not(#iconGsRight) { display: none !important; }
 
+#btnGravitationalSort.mode-reverse_up #iconGsReverseUp,
+#btnGravitationalSort.mode-reverse_right #iconGsReverseRight { display: block !important; }
+#btnGravitationalSort.mode-reverse_up svg:not(#iconGsReverseUp),
+#btnGravitationalSort.mode-reverse_right svg:not(#iconGsReverseRight) { display: none !important; }
+
 #btnGravitationalSort.mode-center_x #iconGsCenterX { display: block !important; }
 #btnGravitationalSort.mode-center_x svg:not(#iconGsCenterX) { display: none !important; }
 
@@ -1127,8 +1132,8 @@ body {
 
 
 
-#gravitationalSortSettingsModal .gravity-directions { gap:12px; flex-wrap:wrap; }
-#gravitationalSortSettingsModal .gravity-directions .gs-direction-btn { flex-shrink:0; }
+#gravitationalSortSettingsModal .gravity-directions { display:grid; grid-template-columns:repeat(3, minmax(44px, 1fr)); width:min(100%,240px); margin-inline:auto; }
+.gravity-direction { display:grid; justify-items:center; min-width:0; }
 [data-gravity-strength].gravity-strength-inactive { opacity:.35; }
 #gsStrength:disabled { cursor:not-allowed; }
 
@@ -2630,9 +2635,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   #evolutionDrawerDialog .simulation-theme-previews { display:grid; grid-template-columns:repeat(3, minmax(44px,1fr)); justify-items:center; width:100%; }
 }
 
-/* Independent dead-cell anchor, paired with the existing genetics dot. */
-.gol-dead-color::before { background: #252a2e; border: 1px solid #a5aba7; box-sizing: border-box; }
-.gol-dead-color[aria-checked="true"]::before { background: #141719; border-color: #d5aa48; box-shadow: 0 0 0 2px #d5aa48; }
+/* Luminance uses the same bird as the sort control. */
+.gol-dead-color::before { content: none; }
+.gol-dead-color, #btnContourColorLuminance { color: #fff; }
+.gol-dead-color[aria-checked="true"], #btnContourColorLuminance[aria-pressed="true"] { color: var(--gold); }
 
 /* Icon-only read-only activity, centered below the board and gallery frame. */
 .macro-activity { position:fixed; z-index:35; pointer-events:none; height:32px; padding:0; display:flex; align-items:center; justify-content:center; box-sizing:border-box;
@@ -2778,7 +2784,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .vortices-cycle-options input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .vortices-cycle-options label:has(input:disabled) { cursor: default; }
-#geometricFlowCycleHint { color:#b3b8af; font-size:13px; text-align:center; }
+#geometricFlowCycleHint, .cycle-membership-hint { color:#b3b8af; font-size:13px; text-align:center; }
 #geometricFlowCycleOptions { row-gap:2px; }
 .geometric-shape { min-width:0; display:grid; grid-template-rows:1fr 44px; }
 .toolbar-cycle-toggle {

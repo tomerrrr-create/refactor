@@ -9,8 +9,8 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
-  luminance_anchor:{en:'Luminance Anchor (Magnet, GOL)',he:'עוגן לפי בהירות (מגנט, GOL)',ru:'Якорь по яркости (Магнит, GOL)',nl:'Luminantie-anker (Magneet, GOL)'},
-  luminance_anchor_note:{en:'Use the first Luminance color for Magnet and Game of Life. Individual settings remain editable.',he:'צבע העוגן במגנט ובמשחק החיים לפי Luminance. אפשר לשנות כל הגדרה בנפרד.',ru:'Первый цвет по яркости для магнита и игры «Жизнь». Настройки можно менять отдельно.',nl:'Gebruik de eerste luminantiekleur voor Magneet en Game of Life. Elke instelling blijft aanpasbaar.'},
+  luminance_anchor:{en:'Luminance Anchor (Magnet, GOL, Contour)',he:'עוגן לפי בהירות (מגנט, GOL, קווי מתאר)',ru:'Якорь по яркости (Магнит, GOL, Контуры)',nl:'Luminantie-anker (Magneet, GOL, Contouren)'},
+  luminance_anchor_note:{en:'Use the first Luminance color for Magnet, Game of Life and Contours. Individual settings remain editable.',he:'הצבע הראשון לפי Luminance למגנט, למשחק החיים ולקווי המתאר. אפשר לשנות כל הגדרה בנפרד.',ru:'Первый цвет по яркости для магнита, игры «Жизнь» и контуров. Настройки можно менять отдельно.',nl:'Gebruik de eerste luminantiekleur voor Magneet, Game of Life en Contouren. Elke instelling blijft aanpasbaar.'},
   magnet_method_field_magnet:{en:'Combined Regular',he:'רגיל משולב',ru:'Обычный с общим полем',nl:'Gewoon gecombineerd'},
   magnet_method_field_cosmic_magnet:{en:'Combined Cosmic',he:'קוסמי משולב',ru:'Космический с общим полем',nl:'Kosmisch gecombineerd'},
   technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},
@@ -47,7 +47,7 @@ export const translations = {
   branches_baby: {en:"Baby mode",he:"מצב תינוק",ru:"Детская",nl:"Babymodus"},
   branches_main: {en:"Main",he:"ראשי",ru:"Основная",nl:"Hoofdversie"},
   tooltip_cymatics: {"en":"Resonance","he":"תהודה","ru":"Резонанс","nl":"Resonantie"},
-  help_cymatics: {en:"Resonance\nTap to cycle Interference, Crosshatch and Clouds by default. Swipe up to choose which maps are included.",he:"רזוננס\nכברירת מחדל, לחיצה מעבירה בין הפרעות, שתי וערב ועננים. החליקו למעלה כדי לבחור אילו מפות ייכללו בסייקל.",ru:"Резонанс\nПо умолчанию нажатие переключает интерференцию, сетку и облака. Смахните вверх, чтобы настроить цикл.",nl:"Resonantie\nTik voor Interferentie, Raster en Wolken. Veeg omhoog om de cyclus aan te passen."},
+  help_cymatics: {en:"Resonance\nTap to cycle Crosshatch, Interference and Diagonals by default. Swipe up to choose which maps are included.",he:"רזוננס\nכברירת מחדל, לחיצה מעבירה בין שתי וערב, הפרעות ואלכסונים. החליקו למעלה כדי לבחור אילו מפות ייכללו בסייקל.",ru:"Резонанс\nПо умолчанию нажатие переключает сетку, интерференцию и диагонали. Смахните вверх, чтобы настроить цикл.",nl:"Resonantie\nTik voor Raster, Interferentie en Diagonalen. Veeg omhoog om de cyclus aan te passen."},
   cymatics_map_clouds: {"en":"Clouds","he":"עננים","ru":"Облака","nl":"Wolken"},
   cymatics_map_cosmic: {"en":"Cosmological empathy","he":"אמפתיה קוסמולוגית","ru":"Космологическая эмпатия","nl":"Kosmologische empathie"},
   cymatics_map_interference: {"en": "Interference", "he": "הפרעות", "ru": "Интерференция", "nl": "Interferentie"},
@@ -281,6 +281,8 @@ export const translations = {
   spiral_a: {"en": "Experiment A", "he": "ניסוי A", "ru": "Эксперимент A", "nl": "Experiment A"},
   gs_direction_up: {"en": "Up", "he": "למעלה", "ru": "Вверх", "nl": "Omhoog"},
   gs_direction_right: {"en": "Right", "he": "ימינה", "ru": "Вправо", "nl": "Rechts"},
+  gs_direction_reverse_up: {en:"Reverse vertical · first color at top",he:"אנכי הפוך · הצבע הראשון למעלה",ru:"Обратная вертикаль · первый цвет сверху",nl:"Verticaal omgekeerd · eerste kleur boven"},
+  gs_direction_reverse_right: {en:"Reverse horizontal · first color at left",he:"אופקי הפוך · הצבע הראשון משמאל",ru:"Обратная горизонталь · первый цвет слева",nl:"Horizontaal omgekeerd · eerste kleur links"},
   gs_direction_center_x: {"en": "Center", "he": "מרכז", "ru": "Центр", "nl": "Midden"},
   gs_direction_vortex: {"en": "Vortex", "he": "מערבולת", "ru": "Вихрь", "nl": "Draaikolk"},
   turing_advanced: {"en": "Fine Tuning", "he": "כיוונון עדין", "ru": "Тонкая настройка", "nl": "Fijnafstelling"},
@@ -586,7 +588,7 @@ export const translations = {
   help_specialReset: {"en": "Random creation\nNew board with a random palette, size and spacing.", "he": "יצירה אקראית\nלוח חדש עם פלטה, גודל ומרווחים אקראיים.", "ru": "Случайная композиция\nНовая доска со случайной палитрой, размером и зазорами.", "nl": "Willekeurige creatie\nNieuw bord met een willekeurig palet, formaat en tussenruimte."},
   help_gameOfLife: {"en": "Game of Life\nCells are born and survive according to their neighbors.", "he": "משחק החיים\nתאים נולדים ושורדים לפי השכנים.", "ru": "Игра «Жизнь»\nКлетки рождаются и выживают по числу соседей.", "nl": "Game of Life\nCellen ontstaan en overleven op basis van hun buren."},
   help_brightnessEvo: {"en": "Brightness evolution\nTap to cycle: brightness or contrast, based on neighboring colors.", "he": "אבולוציית בהירות\nלחיצה למעבר בין בהירות לקונטרסט, לפי צבעי השכנים.", "ru": "Эволюция яркости\nНажатие переключает яркость и контраст по цветам соседей.", "nl": "Helderheidsevolutie\nTik om te wisselen: helderheid of contrast, op basis van naburige kleuren."},
-  help_gravitationalSort: {"en": "Gravity\nTap to cycle: Up, Right, Center-X or Pinwheel.", "he": "גרביטציה\nלחיצה למעבר בין למעלה, ימינה, מרכז X או שבשבת.", "ru": "Гравитация\nНажатие переключает сортировку вверх, вправо, к центру X или в режиме вертушки.", "nl": "Zwaartekracht\nTik om te wisselen: omhoog, rechts, midden-X of Windmolentje."},
+  help_gravitationalSort: {"en": "Gravity\nTap to cycle the enabled directions. Swipe up to choose which directions are included.", "he": "גרביטציה\nלחצו למעבר בין הכיוונים שבסייקל. החליקו למעלה כדי לבחור אילו כיוונים ייכללו.", "ru": "Гравитация\nНажимайте для смены направления. Смахните вверх, чтобы настроить цикл.", "nl": "Zwaartekracht\nTik om tussen ingeschakelde richtingen te wisselen. Veeg omhoog om de cyclus aan te passen."},
   help_erosion: {"en": "Erosion\nWater erodes earth. Tap to cycle: sideways carving, forward carving or channel carving. Groups follow palette order.", "he": "שחיקה\nמים שוחקים אדמה. לחיצה למעבר בין חציבה לצדדים, חציבה קדימה וחציבת תעלות. הקבוצות לפי סדר הפלטה.", "ru": "Эрозия\nВода размывает землю. Нажатие переключает боковое вырезание, прямую эрозию и каналы. Группы следуют порядку палитры.", "nl": "Erosie\nWater erodeert aarde. Tik om te wisselen: zijwaarts uithollen, vooruit uithollen of kanalen uithollen. Groepen volgen de paletvolgorde."},
   help_dla: {"en": "DLA growth\nParticles attach and grow structures. Tap to cycle: with or without color genetics.", "he": "צמיחת DLA\nחלקיקים נצמדים ומגדלים מבנים. לחיצה למעבר בין צמיחה עם גנטיקת צבע ובלעדיה.", "ru": "Рост DLA\nЧастицы прикрепляются и растят структуры. Нажатие переключает рост с генетикой цвета и без неё.", "nl": "DLA-groei\nDeeltjes hechten zich vast en laten structuren groeien. Tik om te wisselen: met of zonder kleurgenetica."},
   help_resetBoard: {"en": "Video Studio\nOpen a new tab with a copy of the current macro. Export video locally on your device.", "he": "סטודיו לווידאו\nפתיחת לשונית חדשה עם עותק המקרו הנוכחי. ייצוא וידאו מקומי במכשיר.", "ru": "Видеостудия\nОткрывает новую вкладку с копией текущего макроса для локального экспорта видео.", "nl": "Videostudio\nOpen een nieuw tabblad met een kopie van de huidige macro en exporteer video lokaal."},
@@ -617,8 +619,9 @@ export const translations = {
   contour_sensitivity_low: { en: "Low", he: "נמוכה", ru: "Низкая", nl: "Laag" },
   contour_sensitivity_high: { en: "High", he: "גבוהה", ru: "Высокая", nl: "Hoog" },
   contour_color_label: { en: "Line Color", he: "צבע קו", ru: "Цвет линии", nl: "Lijnkleur" },
-  contour_color_darkest: { en: "Darkest", he: "הכהה ביותר", ru: "Самый темный", nl: "Donkerste" },
-  contour_color_lightest: { en: "Lightest", he: "הבהיר ביותר", ru: "Самый светлый", nl: "Lichtste" },
+  contour_color_darkest: { en: "First in current sort", he: "הראשון במיון הנוכחי", ru: "Первый в текущей сортировке", nl: "Eerste in huidige sortering" },
+  contour_color_lightest: { en: "Last in current sort", he: "האחרון במיון הנוכחי", ru: "Последний в текущей сортировке", nl: "Laatste in huidige sortering" },
+  contour_color_luminance: { en: "First by Luminance", he: "הראשון לפי Luminance", ru: "Первый по яркости", nl: "Eerste volgens luminantie" },
   // --- END: Contour Settings Modal ---
 
 

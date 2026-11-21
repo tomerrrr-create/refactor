@@ -132,7 +132,9 @@ btnCycleSort: document.getElementById('btnCycleSort'),
 
   // Gravitational Sort Settings Modal Elements
   gsSettingsTitle: document.getElementById('gsSettingsTitle'),
-  gsDirectionButtons: document.querySelectorAll('.gs-direction-btn'),
+  gsDirectionButtons: document.querySelectorAll('#gravityCycleOptions [data-direction]'),
+  gravityCycleOptions: document.getElementById('gravityCycleOptions'),
+  gravityCycleInputs: [...document.querySelectorAll('#gravityCycleOptions input')],
   gsStrengthSlider: document.getElementById('gsStrength'),
   gsStrengthValue: document.getElementById('gsStrengthValue'),
   btnGsSettingsSave: document.getElementById('btnGsSettingsSave'),
@@ -157,8 +159,6 @@ btnCycleSort: document.getElementById('btnCycleSort'),
   contourSensitivityLabelHigh: document.getElementById('contourSensitivityLabelHigh'),
   contourSensitivityValue: document.getElementById('contourSensitivityValue'), // <-- ADDED HERE (New Element)
   contourColorLabel: document.getElementById('contourColorLabel'),
-  btnContourColorDark: document.getElementById('btnContourColorDark'),
-  btnContourColorLight: document.getElementById('btnContourColorLight'),
   contourColorButtons: document.querySelectorAll('.contour-color-btn'), // Helper selector
   btnContourSettingsCancel: document.getElementById('btnContourSettingsCancel'),
   btnContourSettingsSave: document.getElementById('btnContourSettingsSave'),
@@ -222,6 +222,7 @@ turingFeedSlider: document.getElementById('turingFeedSlider'),
   geometricFlowCycleOptions: document.getElementById('geometricFlowCycleOptions'),
   geometricFlowCycleInputs: [...document.querySelectorAll('#geometricFlowCycleOptions input')],
   btnSpiralSettingsCancel: document.getElementById('btnSpiralSettingsCancel'),
+  btnSpiralSettingsReset: document.getElementById('btnSpiralSettingsReset'),
   btnSpiralSettingsSave: document.getElementById('btnSpiralSettingsSave'),
   // --- END: Spiral Settings Modal Elements ---
 

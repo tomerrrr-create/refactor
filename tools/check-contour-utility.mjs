@@ -7,10 +7,10 @@ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
 let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.utilityTest={
- setup:()=>{pauseLife();setWindMode(false);resetArmedState();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%paletteLen();t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.controlsContainer.classList.remove('sim-separator-control');updateSimulationUtilityControl();symmetryMode='vertical';updateSymmetryUI();contourActionRules={sensitivity:75,lineColor:'darkest'};history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);},
+ setup:(reversed=false)=>{pauseLife();setWindMode(false);resetArmedState();if(reversed)applySortMethod('reversed');n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%paletteLen();t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.controlsContainer.classList.remove('sim-separator-control');updateSimulationUtilityControl();symmetryMode='vertical';updateSymmetryUI();contourActionRules={sensitivity:75,lineColor:'darkest'};history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);},
  state:()=>({symmetry:symmetryMode,separator:separatorPx,board:boardState.map(t=>({k:t.k,v:t.v,isGold:t.isGold})),history:history.length,future:future.length,playing:isLifePlaying,gen:currentGenerationCount,armed:armedSimulation,macro:isMacroPlaying,logs:[...artRecipeLog]}),
  debug:()=>({loaded:isMacroLoaded,breathing:isBreathing,executing:isExecutingMacroCommand,anim:isAnimating,pointerId:pointerState.id,classes:dom.controlsContainer.className,contours:{disabled:dom.btnContoursAction.disabled,style:getComputedStyle(dom.btnContoursAction).pointerEvents}}),
- expected:()=>Simulations.runContourGeneration({n,currentBoardState:boardState,currentPalette:palette(),contourRules:contourActionRules}).map(t=>({k:t.k,v:t.v,isGold:t.isGold})),openColors:()=>modals.openColorPickerModal(),
+ expected:()=>Simulations.runContourGeneration({n,currentBoardState:boardState,currentPalette:palette(),originalPalette:C.PALETTES[activePaletteIndex].originalColors,contourRules:contourActionRules}).map(t=>({k:t.k,v:t.v,isGold:t.isGold})),openColors:()=>modals.openColorPickerModal(),
  recipe:async()=>await createArtRecipeFile().text(),
  replay:text=>{pauseLife();setWindMode(false);macroQueue=parseMacroText(text);if(!macroQueue.some(a=>a.eventName==='CONTOUR_APPLY'))throw Error('Missing recorded contour command');currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
  live:()=>{armSimulation('nudgeBrighter');togglePlayPauseLife();},pause:pauseLife
@@ -41,6 +41,18 @@ try{for(const lang of ['en','he','ru','nl'].filter(l=>!process.env.UTILITY_LANG|
  await page.evaluate(()=>utilityTest.setup());const before=(await state()).board,expected=await page.evaluate(()=>utilityTest.expected());await tap(contour);const after=await state();assert.deepEqual(after.board,expected);assert.equal(after.history,1);assert(after.logs.some(x=>x.includes('CONTOUR_APPLY')));
  await tap('#btnUndo');assert.deepEqual((await state()).board,before);await tap('#btnRedo');assert.deepEqual((await state()).board,after.board);
  const recipe=await page.evaluate(()=>utilityTest.recipe());await page.evaluate(text=>utilityTest.replay(text),recipe);await page.waitForFunction(()=>!utilityTest.state().macro,{},{timeout:20000});assert.deepEqual((await state()).board,after.board);
+ await page.evaluate(()=>utilityTest.setup(true));
+ const firstInCurrentSort=await page.evaluate(()=>utilityTest.expected());
+ await swipe(contour,-35);await page.locator('#contourSettingsModal').waitFor({state:'visible'});
+ await tap('#btnContourColorLuminance');await tap('#btnContourSettingsSave');
+ const firstByLuminance=await page.evaluate(()=>utilityTest.expected());
+ assert.notDeepEqual(firstByLuminance,firstInCurrentSort);
+ await tap(contour);assert.deepEqual((await state()).board,firstByLuminance);
+ const luminanceRecipe=await page.evaluate(()=>utilityTest.recipe());assert(luminanceRecipe.includes('"lineColor":"luminance"'));
+ await page.evaluate(()=>utilityTest.setup());
+ await page.evaluate(text=>utilityTest.replay(text),luminanceRecipe);
+ await page.waitForFunction(()=>!utilityTest.state().macro,{},{timeout:20000});
+ assert.deepEqual((await state()).board,firstByLuminance,'recorded Luminance replays with a different current preference');
  // The picker mirrors Separators only when they are exposed on the toolbar.
  await page.evaluate(()=>utilityTest.setup());await swipe(contour,35);await page.evaluate(()=>utilityTest.openColors());await page.locator('#colorPickerModal').waitFor({state:'visible'});
  const mirror='#btnColorPickerSymmetry';assert.equal(await page.locator(mirror+' .picker-gap-value').count(),1);await swipe(mirror,35);assert.equal(await page.locator(mirror+' [data-symmetry-icon]').count(),1);const beforeMirror=await state();await swipe(mirror,35);assert.deepEqual(await state(),beforeMirror);await page.evaluate(()=>document.getElementById('btnColorPickerCloseTop').click());await page.locator('#colorPickerModal').waitFor({state:'hidden'});assert(await page.locator(contour).isVisible());assert(await page.locator(sym).isVisible());

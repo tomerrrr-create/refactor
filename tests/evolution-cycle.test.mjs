@@ -1,3 +1,5 @@
+import { DEFAULT_GRAVITY_CYCLE, loadGravityCycle, nextGravityMode, saveGravityCycle } from '../js/gravity-cycle.js';
+import { defaultWorkspaceSettings, deserializeWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import { recordErosionRules, restoreErosionRules } from '../js/erosion-settings.js';
 import { runGravitationalSortGeneration } from '../js/simulations/gravitational_sort.js';
@@ -30,7 +32,7 @@ function harness() {
         brightnessEvoMode: 'off', dlaMode: 'off', gsMode: 'off', spiralMode: 'off', magnetMode: 'off',
         erosionRules: { mode: 'legacy', erosionStrength: .1 }, gravitationalSortRules: { direction: 'up' },
         spiralRules: { method: 'b' }, magnetRules: { method: 'cosmic_magnet' },
-        geometricFlowCycle: [...GEOMETRIC_FLOW_MODES], nextGeometricFlowMode, boardState: board, dlaState,
+        geometricFlowCycle: [...GEOMETRIC_FLOW_MODES], nextGeometricFlowMode, gravityCycle: [...DEFAULT_GRAVITY_CYCLE], nextGravityMode, boardState: board, dlaState,
         armCalls: 0, pauseCalls: 0 });
     c.restoreErosionRules = restoreErosionRules;
     c.getErosionRecordingRules = () => recordErosionRules(c.erosionRules, 64);
@@ -122,6 +124,45 @@ test('modes selected outside the button cycle enter its first active mode while 
     assert.equal(c.nextEvolutionMode('expand', ['off', 'magnet', 'cosmic_magnet', 'time_magnet']), 'magnet');
     c.isLifePlaying = false;
     assert.equal(c.nextEvolutionMode('vortex', ['off', 'up', 'right', 'center_x', 'pinwheel']), 'off');
+});
+
+test('Gravity opts the reversed modes into the cycle independently of direction settings', () => {
+    let stored;
+    const storage = {getItem: () => stored, setItem: (_, value) => { stored = value; }};
+    assert.deepEqual(loadGravityCycle(storage), DEFAULT_GRAVITY_CYCLE);
+    saveGravityCycle(['reverse_right', 'reverse_up', 'vortex'], storage);
+    assert.deepEqual(loadGravityCycle(storage), ['reverse_up', 'reverse_right']);
+    assert.equal(nextGravityMode('reverse_right', loadGravityCycle(storage), true), 'reverse_up');
+    assert.equal(nextGravityMode('reverse_right', loadGravityCycle(storage), false), 'off');
+    const settings = defaultWorkspaceSettings();
+    for (const direction of ['reverse_up', 'reverse_right']) {
+        settings.rules.gravity.direction = direction;
+        assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.gravity.direction, direction);
+    }
+});
+
+test('both reverse Gravity sweeps reflect the original swaps with the same random input', () => {
+    const random = Math.random;
+    try {
+        for (const n of [1, 12, 31]) for (const [direction, reverse, reflect] of [
+            ['up', 'reverse_up', (row, col) => (n - 1 - row) * n + col],
+            ['right', 'reverse_right', (row, col) => row * n + n - 1 - col]
+        ]) {
+            const original = Array.from({length:n*n}, (_, i) => ({k:(i*17+Math.floor(i/n)*3)%23, v:0, isGold:i%29===0}));
+            const mirror = board => board.map((_, i) => ({...board[reflect(Math.floor(i/n), i%n)]}));
+            const run = (board, direction) => {
+                let seed = 149;
+                Math.random = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2**32;
+                for (let generation=0; generation<18; generation++) {
+                    runGravitationalSortGeneration({n, currentBoardState:board, gravitationalSortRules:{direction,strength:.6}});
+                }
+                return board;
+            };
+            assert.deepEqual(run(mirror(original), reverse), mirror(run(original.map(tile => ({...tile})), direction)));
+        }
+    } finally {
+        Math.random = random;
+    }
 });
 
 test('Spiral cycling repairs stale mode/arming combinations without toggling off a selected simulation', () => {
