@@ -17,8 +17,8 @@ export const INTERNAL_NAV_SLOTS = Object.freeze([7,17]);
 export const DEFAULT_EVOLUTION_LAYOUT = Object.freeze([
     'sandpile', 'magnet', 'gameOfLife', 'brightnessEvo', 'islands',
     'nudgeBrighter', 'gravitationalSort', null, 'ink', 'erosion',
-    'network', 'cymatics', null, 'turing', 'spiral',
-    'contour', 'dla', null, null, 'breathe'
+    'network', 'cymatics', 'breathe', 'turing', 'spiral',
+    'contour', 'dla', null, null, null
 ]);
 // Older ten/twenty-place preferences remain readable. Upgrade once: layouts
 // already reserving the two navigation places keep their exact assignments.

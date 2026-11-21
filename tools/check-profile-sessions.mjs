@@ -23,7 +23,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const s=captureProfileSettings();
  s.settings.simulationPreferences={gravityCycle:['reverse_right'],geometricFlowCycle:['vertical_gravity'],resonanceCycle:[5],circularCycle:['a','tornado'],
  magnetAnchorLimit:1000,wind:selectWindMode({mode:'ripple',strength:7,speed:2,range:.6,colorSpan:2,trail:false},'paint'),
- geometricFlowVisible:true,rememberSimulationModes:true};
+ geometricFlowVisible:true,breatheVisible:true,rememberSimulationModes:true};
  s.identity.gameOfLife.index=2;s.identity.gameOfLife.yoursRules={survival:[1],birth:[6]};
  s.identity.chiFlow.index=1;s.identity.chiFlow.yoursRules={awakening:[2],flow:[5],reach:0};
  importWorkspaceSettings(s.settings,s.identity);settingsProfiles.refresh();},board:()=>boardState.map(t=>[t.k,t.v,Boolean(t.isGold)]),save:()=>dom.btnSave.click()

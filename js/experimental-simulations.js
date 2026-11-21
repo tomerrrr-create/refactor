@@ -1,7 +1,8 @@
 // One registry owns the opt-in exposure of these removable experiments.
 // Browser storage preserves the legacy preference and defaults for older profiles.
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
-    {id:'spiral',button:'btnSpiral',key:'tooltip_spiral'}
+    {id:'spiral',button:'btnSpiral',key:'tooltip_spiral'},
+    {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe'}
 ].map(Object.freeze));
 export const EXPERIMENTAL_SIMULATIONS_KEY='colorGridExperimentalSimulationsV1';
 export function createExperimentalSimulationFlags({storage}={}) {

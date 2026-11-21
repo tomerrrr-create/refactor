@@ -3,6 +3,7 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 // Appearance preferences are independent of artwork and replay; profiles capture them.
 const STORAGE_KEY = 'colorGridSimulationTheme';
 const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
+const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
 const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
   en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise'},
@@ -52,7 +53,20 @@ export function applySimulationPlaybackTheme(value) {
   catch { return false; }
 }
 
+function initializeGoldPlaybackHierarchy() {
+  const toggle = document.getElementById('goldPlaybackHierarchyToggle');
+  let enabled = false;
+  try { enabled = localStorage.getItem(GOLD_HIERARCHY_STORAGE_KEY) === 'true'; } catch {}
+  toggle.checked = enabled;
+  document.documentElement.toggleAttribute('data-gold-playback-hierarchy', enabled);
+  toggle.addEventListener('change', () => {
+    document.documentElement.toggleAttribute('data-gold-playback-hierarchy', toggle.checked);
+    try { localStorage.setItem(GOLD_HIERARCHY_STORAGE_KEY, String(toggle.checked)); } catch {}
+  });
+}
+
 export function initializeSimulationTheme() {
+  initializeGoldPlaybackHierarchy();
   const section = document.getElementById('simulationThemeSettings');
   const playbackSection = document.getElementById('simulationPlaybackThemeSettings');
   const previews = section.querySelectorAll('[data-theme]');

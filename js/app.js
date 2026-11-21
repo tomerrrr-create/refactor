@@ -924,7 +924,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           dom.btnGap.setAttribute('aria-label', label);
           const isOff = isRelativeSeparatorMode ? level === 0 : separatorPx === 0;
           dom.btnGap.querySelector('svg').setAttribute('stroke', isOff ? '#424242' : '#fff');
-          dom.gapValue.style.color = isOff ? '#424242' : '';
+          dom.gapValue.style.color = isOff ? 'var(--playback-control-ink, #424242)' : '';
           dom.gapValue.hidden = isRelativeSeparatorMode && level === 0;
           dom.gapValue.textContent = isRelativeSeparatorMode
               ? ({ 5: 'L', 3: 'M', 1: 'S', 0: '' }[level])
@@ -2388,6 +2388,7 @@ if (simulationName === 'magnet') {
                 resonanceCycle: [...resonanceCycle], circularCycle: [...vorticesEnabledModes],
                 magnetAnchorLimit, wind: structuredClone(windSettings),
                 geometricFlowVisible: experimentalSimulations.visible('spiral'),
+                breatheVisible: experimentalSimulations.visible('breathe'),
                 rememberSimulationModes: cycleMemory.enabled()
             },
             ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
@@ -2426,11 +2427,12 @@ if (simulationName === 'magnet') {
             windSettings = structuredClone(preferences.wind);
         }
         if (preferences.rememberSimulationModes !== undefined) cycleMemory.setEnabled(preferences.rememberSimulationModes);
-        if (preferences.geometricFlowVisible !== undefined) {
-            experimentalSimulations.set('spiral', preferences.geometricFlowVisible);
-            if (!preferences.geometricFlowVisible && activeEvolutionControl() === 'spiral') armSimulation(null);
-            refreshExperimentalSimulationControls?.();
+        for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible]]) {
+            if (visible === undefined) continue;
+            experimentalSimulations.set(id, visible);
+            if (!visible && activeEvolutionControl() === id) armSimulation(null);
         }
+        refreshExperimentalSimulationControls?.();
         updateWindButtonUI();
       }
 
