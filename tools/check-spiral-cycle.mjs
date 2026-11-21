@@ -21,7 +21,7 @@ const recipeFor=(method)=>'[00:00:00.000] INIT_STATE -> '+JSON.stringify({recipe
 const init=lang=>{localStorage.setItem('userLanguage',lang);window.resetSpiralRandom=()=>{let seed=14327;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};};Date.now=()=>1700000000000;};
 const replay=async(page,text)=>{await page.locator('#projectFileInput').setInputFiles({name:'spiral.txt',mimeType:'text/plain',buffer:Buffer.from(text)});await page.waitForFunction(()=>spiralTest.state().loaded);await page.locator('#btnMacroPlay').click();await page.waitForFunction(()=>!spiralTest.state().loaded&&!spiralTest.state().animating,{timeout:20000});return page.evaluate(()=>spiralTest.state().tiles);};
 try{
- const oldBoards={};if(baseline){const c=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'});await c.addInitScript(init,'en');const p=await c.newPage();await p.goto(base+'/baseline/');await p.waitForFunction(()=>window.spiralTest?.ready);await p.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));for(const method of ['b','left','radial','down','black_hole','a','vortex','turbine2','tornado','tornado2','triangle','square','triangle_weave','triangle_orbit','square_orbit','triangle_flow'])oldBoards[method]=await replay(p,recipeFor(method));await c.close();console.log('Captured old recipe results from',baseline);}
+ const oldBoards={};if(baseline){const c=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'});await c.addInitScript(init,'en');const p=await c.newPage();await p.goto(base+'/baseline/');await p.waitForFunction(()=>window.spiralTest?.ready);await p.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));for(const method of ['b','left','radial','down','black_hole','a','vortex','turbine2','tornado','tornado2','triangle','triangle_orbit','triangle_flow','triangle_gravity'])oldBoards[method]=await replay(p,recipeFor(method));await c.close();console.log('Captured old recipe results from',baseline);}
  for(const config of [{width:1440,height:1000,lang:'en'},{width:390,height:844,lang:'he'},{width:360,height:800,lang:'ru'},{width:844,height:390,lang:'nl'}]){
   if(process.env.SPIRAL_LANG&&config.lang!==process.env.SPIRAL_LANG)continue;
   const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
@@ -38,8 +38,8 @@ try{
   await page.goto(base);await page.waitForFunction(()=>window.spiralTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   await page.evaluate(()=>spiralTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
-  const modes=['radial','down','triangle_gravity','square_flow','triangle_weave'];
-  const icons=['iconSpiralRadial','iconSpiralDown','iconSpiralDiagonal','iconSpiralSquare','iconSpiralTriangleWeave'];
+  const modes=['radial','down','triangle_gravity','triangle_gravity_mirror'];
+  const icons=['iconSpiralRadial','iconSpiralDown','iconSpiralDiagonal','iconSpiralDiagonalMirror'];
   const before=(await state()).tiles;
   for(const [i,mode] of [...modes,'off'].entries()){await tap('#btnSpiral');assert.equal((await state()).mode,mode);assert.deepEqual((await state()).tiles,before);assert.deepEqual(await page.locator('#btnSpiral svg').evaluateAll(ns=>ns.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id)),[icons[i]||'iconSpiralRadial']);}
   const tornado=async()=>{for(let i=0;i<9&&(await state()).mode!=='tornado';i++)await tap('#btnInk');assert.equal((await state()).mode,'tornado');assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'tornado');assert(await page.locator('#btnInk .vortices-tornado-badge').isVisible());};
@@ -60,7 +60,7 @@ try{
   const after=(await state()).tiles,recipe=(await state()).logs.join('\n');assert.notDeepEqual(after,before);
   for(const method of modes){assert(recipe.includes('Spiral Mode Changed -> '+method));assert(recipe.includes('"method":"'+method+'"'));}
   assert.deepEqual(await replay(page,recipe),after,'new logger-to-player steps retain all Geometric Flow modes');
-  for(const method of ['triangle_gravity','square_flow']){
+  for(const method of ['triangle_gravity','triangle_gravity_mirror']){
    await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await choose(method);
    await tap('#btnStepForward');await tap('#btnStepForward');
    const checkpoint=await page.evaluate(()=>spiralTest.project());
@@ -99,12 +99,12 @@ try{
   await tap('#btnSpiral');await choose('triangle_gravity');
   const enabled=page.locator('#geometricFlowCycleOptions input');
   const checked=()=>enabled.evaluateAll(nodes=>nodes.filter(node=>node.checked).map(node=>node.value));
-  const onlySquare=async()=>{
-   for(const mode of modes.filter(mode=>mode!=='square_flow')){
+  const onlyMirroredDiagonal=async()=>{
+   for(const mode of modes.filter(mode=>mode!=='triangle_gravity_mirror')){
     await page.locator('#geometricFlowCycleOptions input[value="'+mode+'"]').uncheck();
    }
-   assert.deepEqual(await checked(),['square_flow']);
-   assert(await page.locator('#geometricFlowCycleOptions input[value="square_flow"]').isDisabled());
+   assert.deepEqual(await checked(),['triangle_gravity_mirror']);
+   assert(await page.locator('#geometricFlowCycleOptions input[value="triangle_gravity_mirror"]').isDisabled());
   };
   await open();assert.deepEqual(await checked(),modes);
   const shapeCards=page.locator('#geometricFlowCycleOptions .geometric-shape');
@@ -121,15 +121,15 @@ try{
   assert(!(await page.locator(triangleDot).isChecked()));
   assert.equal(await page.locator(triangleDot).evaluate(dot=>getComputedStyle(dot).backgroundImage),'none');
   assert.equal(await page.locator('.spiral-method-btn[data-method="triangle_gravity"]').getAttribute('aria-pressed'),'true');
-  await onlySquare();
+  await onlyMirroredDiagonal();
   await page.keyboard.press('Escape');await open();assert.deepEqual(await checked(),modes,'a cancelled draft is discarded');
-  await onlySquare();
+  await onlyMirroredDiagonal();
   const beforeSave=await state();
   await tap('#btnSpiralSettingsSave');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
   const afterSave=await state();
   assert.equal(afterSave.mode,'triangle_gravity');assert.deepEqual(afterSave.logs,beforeSave.logs);
   assert.deepEqual(afterSave.tiles,beforeSave.tiles);
-  await tap('#btnSpiral');assert.equal((await state()).mode,'square_flow');
+  await tap('#btnSpiral');assert.equal((await state()).mode,'triangle_gravity_mirror');
   await tap('#btnPlayPauseLife');
   const playing=await state();
   await tap('#btnSpiral');
@@ -140,15 +140,15 @@ try{
   await choose('triangle_gravity');assert.equal((await state()).mode,'triangle_gravity','manually choosing an excluded shape still works');
   await page.evaluate(()=>spiralTest.memory(true));
   await tap('#btnNetwork');await tap('#btnSpiral');
-  assert.equal((await state()).mode,'square_flow','a remembered shape excluded from the cycle is skipped');
+  assert.equal((await state()).mode,'triangle_gravity_mirror','a remembered shape excluded from the cycle is skipped');
   await choose('triangle_gravity');
-  await page.evaluate(()=>spiralTest.reset());assert.equal((await state()).mode,'square_flow');
+  await page.evaluate(()=>spiralTest.reset());assert.equal((await state()).mode,'triangle_gravity_mirror');
   await tap('#btnSpiral');assert.equal((await state()).mode,'off');
-  assert(await page.locator('#iconSpiralSquare').isVisible(),'Off previews the first enabled shape');
+  assert(await page.locator('#iconSpiralDiagonalMirror').isVisible(),'Off previews the first enabled shape');
   await page.reload();await page.waitForFunction(()=>window.spiralTest?.ready);
   await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());spiralTest.setup();});
-  await tap('#btnSpiral');assert.equal((await state()).mode,'square_flow');
-  await open();assert.deepEqual(await checked(),['square_flow'],'membership survives reload');
+  await tap('#btnSpiral');assert.equal((await state()).mode,'triangle_gravity_mirror');
+  await open();assert.deepEqual(await checked(),['triangle_gravity_mirror'],'membership survives reload');
   await tap('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
   assert.deepEqual(await replay(page,recipe),after,'an existing recipe still plays excluded modes');
 

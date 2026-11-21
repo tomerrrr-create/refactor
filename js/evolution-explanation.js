@@ -45,7 +45,7 @@ export const evolutionExplanations = {
         ['Zwaartekracht', 'Orden kleuren in een gekozen richting, volgens de volgorde van het palet.']
     ],
     spiral: [
-        ['Geometric Flow', 'Guide colors along polygon sides. Triangle Weave splits the board into triangles that turn in opposite directions.'],
+        ['Geometric Flow', 'Guide colors along a diamond or hexagon, or pull the first colors in the palette toward either diagonal.'],
         ['זרימה גאומטרית', 'הצבעים זורמים לאורך צלעות המצולע. באריג משולשים, משולשים שכנים מסתובבים בכיוונים הפוכים.'],
         ['Геометрический поток', 'Цвета движутся вдоль сторон многоугольников. В режиме плетения соседние треугольники вращаются в разные стороны.'],
         ['Geometrische stroming', 'Laat kleuren langs de zijden van veelhoeken stromen. In het Driehoeksweefsel draaien aangrenzende driehoeken in tegengestelde richtingen.']

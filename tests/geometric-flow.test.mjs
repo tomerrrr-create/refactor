@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { POLYGON_FLOW_MODES } from '../js/simulations/geometric-flow.js';
 import { POLYGON_CIRCULATION_MODES, POLYGON_FLOW_PERIOD, restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
 import { runSpiralGeneration } from '../js/simulations/spiral.js';
 import { defaultWorkspaceSettings, deserializeWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
@@ -35,22 +34,22 @@ test('Geometric Flow restores cycle membership in toolbar order and skips exclud
     let stored;
     const storage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
     assert.deepEqual(loadGeometricFlowCycle(storage), GEOMETRIC_FLOW_MODES);
-    persistGeometricFlowCycle(['square_flow', 'down', 'down', 'retired'], storage);
+    persistGeometricFlowCycle(['triangle_gravity_mirror', 'down', 'down', 'retired'], storage);
     const enabled = loadGeometricFlowCycle(storage);
-    assert.deepEqual(enabled, ['down', 'square_flow']);
+    assert.deepEqual(enabled, ['down', 'triangle_gravity_mirror']);
     assert.equal(nextGeometricFlowMode('off', enabled, false), 'down');
-    assert.equal(nextGeometricFlowMode('triangle_gravity', enabled, false), 'square_flow');
-    assert.equal(nextGeometricFlowMode('square_flow', enabled, false), 'off');
-    assert.equal(nextGeometricFlowMode('square_flow', enabled, true), 'down');
-    assert.equal(nextGeometricFlowMode('square_flow', ['square_flow'], true), 'square_flow');
-    stored = JSON.stringify(['triangle_flow', 'square_flow']);
-    assert.deepEqual(loadGeometricFlowCycle(storage), ['triangle_gravity', 'square_flow']);
+    assert.equal(nextGeometricFlowMode('triangle_gravity', enabled, false), 'triangle_gravity_mirror');
+    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', enabled, false), 'off');
+    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', enabled, true), 'down');
+    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', ['triangle_gravity_mirror'], true), 'triangle_gravity_mirror');
+    stored = JSON.stringify(['triangle_flow', 'square_flow', 'triangle_weave']);
+    assert.deepEqual(loadGeometricFlowCycle(storage), ['triangle_gravity']);
     stored = '[]';
     assert.deepEqual(loadGeometricFlowCycle(storage), GEOMETRIC_FLOW_MODES);
 });
 
-test('polygon modes preserve colors and anchored gold, including across board-size changes', () => {
-    for (const method of POLYGON_FLOW_MODES) {
+test('Triangle and both diagonal modes preserve colors and anchored gold, including across board-size changes', () => {
+    for (const method of ['triangle', 'triangle_gravity', 'triangle_gravity_mirror']) {
         for (const n of [1, 16, 249, 16]) {
             const tiles = makeBoard(n);
             const after = evolve(n, tiles, method, 10);
@@ -64,16 +63,8 @@ test('polygon modes preserve colors and anchored gold, including across board-si
     }
 });
 
-test('the three polygon modes arrange the same board differently', () => {
-    const n = 49;
-    const initial = makeBoard(n);
-    const signatures = POLYGON_FLOW_MODES.map(method =>
-        evolve(n, initial, method, 40).map(tile => tile.k).join(','));
-    assert.equal(new Set(signatures).size, POLYGON_FLOW_MODES.length);
-});
-
 test('new Geometric Flow modes round-trip through settings files and profiles', () => {
-    for (const method of [...POLYGON_FLOW_MODES, ...POLYGON_CIRCULATION_MODES]) {
+    for (const method of ['triangle', ...POLYGON_CIRCULATION_MODES]) {
         const settings = defaultWorkspaceSettings();
         settings.rules.spiral.method = method;
         assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.spiral.method, method);
@@ -81,10 +72,10 @@ test('new Geometric Flow modes round-trip through settings files and profiles', 
     }
 });
 
-test('Triangle and Square keep visibly rearranging pigments after hundreds of generations', () => {
+test('Historical Triangle modes keep visibly rearranging pigments after hundreds of generations', () => {
     const n = 81;
     const initial = makeBoard(n);
-    for (const method of ['triangle_orbit', 'square_orbit', 'triangle_flow', 'square_flow']) {
+    for (const method of ['triangle_orbit', 'triangle_flow']) {
         const board = initial.slice();
         const rules = { method };
         const step = (currentBoardState, spiralRules) => runSpiralGeneration({ n, currentBoardState, spiralRules });
@@ -128,6 +119,22 @@ test('Triangle draws lower palette ranks toward the diagonal from either side', 
     }
 });
 
+test('the opposite diagonal exactly mirrors every generation, including protected tiles', () => {
+    for (const n of [1, 16, 49]) {
+        const board = makeBoard(n);
+        const mirrorIndex = index => index + n - 1 - 2 * (index % n);
+        const mirroredBoard = board.map((_, index) => board[mirrorIndex(index)]);
+        const spiralRules = { method: 'triangle_gravity' };
+        const mirroredRules = { method: 'triangle_gravity_mirror' };
+        for (let generation = 0; generation < 40; generation++) {
+            runSpiralGeneration({ n, currentBoardState: board, spiralRules });
+            runSpiralGeneration({ n, currentBoardState: mirroredBoard, spiralRules: mirroredRules });
+            assert(mirroredBoard.every((tile, index) => tile === board[mirrorIndex(index)]));
+            assert.equal(mirroredRules.polygonFlowPhase, spiralRules.polygonFlowPhase);
+        }
+    }
+});
+
 test('Triangle swaps roughly 60% of eligible neighboring pairs', () => {
     const n = 102;
     let eligible = 0;
@@ -164,25 +171,24 @@ test('Triangle can move colors multiple cells in one generation and resumes from
     assert(resumed.every((tile, index) => tile === uninterrupted[index]));
 });
 
-test('gradual Triangle and Square develop through sparse, one-cell exchanges', () => {
+test('historical gradual Triangle develops through sparse, one-cell exchanges', () => {
     const n = 81;
     const initial = makeBoard(n);
-    for (const method of ['triangle_flow', 'square_flow']) {
-        const board = initial.slice(), rules = { method };
-        for (let frame = 0; frame < 690; frame++) {
-            const checkMotion = [0, 30, 180, 360, 689].includes(frame);
-            const before = checkMotion ? new Map(board.map((tile, index) => [tile, index])) : null;
-            runSpiralGeneration({ n, currentBoardState: board, spiralRules: rules });
-            if (!before) continue;
-            let moved = 0;
-            board.forEach((tile, index) => {
-                const from = before.get(tile);
-                const distance = Math.abs(from % n - index % n) + Math.abs(Math.floor(from / n) - Math.floor(index / n));
-                assert(distance <= 1, `${method}, frame ${frame}`);
-                moved += distance;
-            });
-            if (frame === 0) assert(moved > 0 && moved < board.length * .12, method);
-        }
-        assert(rules.polygonFlowPhase >= 180, 'wrapping the motion never restarts the growth ramp');
+    const method = 'triangle_flow';
+    const board = initial.slice(), rules = { method };
+    for (let frame = 0; frame < 690; frame++) {
+        const checkMotion = [0, 30, 180, 360, 689].includes(frame);
+        const before = checkMotion ? new Map(board.map((tile, index) => [tile, index])) : null;
+        runSpiralGeneration({ n, currentBoardState: board, spiralRules: rules });
+        if (!before) continue;
+        let moved = 0;
+        board.forEach((tile, index) => {
+            const from = before.get(tile);
+            const distance = Math.abs(from % n - index % n) + Math.abs(Math.floor(from / n) - Math.floor(index / n));
+            assert(distance <= 1, `${method}, frame ${frame}`);
+            moved += distance;
+        });
+        if (frame === 0) assert(moved > 0 && moved < board.length * .12, method);
     }
+    assert(rules.polygonFlowPhase >= 180, 'wrapping the motion never restarts the growth ramp');
 });

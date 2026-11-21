@@ -595,7 +595,7 @@ k: tileState.k,
 
         // Older project files have no spiralMethod and keep their old behavior.
         if (state.spiralMethod && state.spiralMethod !== 'off' &&
-            [...GEOMETRIC_FLOW_MODES, ...POLYGON_CIRCULATION_MODES, 'triangle', 'square', 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod)) {
+            [...GEOMETRIC_FLOW_MODES, ...POLYGON_CIRCULATION_MODES, 'triangle', 'b', 'black_hole', 'vortex', 'turbine2', 'tornado', 'left', 'a'].includes(state.spiralMethod)) {
             if (armedSimulation !== 'spiral') armSimulation('spiral', { spiralEntry: state.spiralMethod });
             spiralMode = state.spiralMethod;
             const rules = getActiveSpiralRules();

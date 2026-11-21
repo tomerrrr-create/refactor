@@ -172,6 +172,6 @@ test('Nudge arms and cycles without paint; live cycling keeps the same generatio
 test('Spiral button starts at Diamond, follows the requested order live, and preserves legacy arming',()=>{
  const c=harness();select(c,'spiral');assert.equal(c.spiralMode,'radial');assert.equal(c.spiralRules.method,'radial');
  c.togglePlayPauseLife();c.currentGenerationCount=23;
- for(const mode of ['down','triangle_gravity','square_flow','triangle_weave','radial']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
+ for(const mode of ['down','triangle_gravity','triangle_gravity_mirror','radial']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
  const legacy=harness();legacy.isExecutingMacroCommand=true;legacy.armSimulation('spiral');assert.equal(legacy.spiralMode,'b');assert.equal(legacy.spiralRules.method,'b');
 });

@@ -1,8 +1,8 @@
 import { runDiagonalGravity } from './diagonal-gravity.js';
 
-const LOCAL_POLYGON_MODES = ['triangle_flow', 'square_flow'];
+const DIAGONAL_MODES = ['triangle_gravity', 'triangle_gravity_mirror'];
 const DIAGONAL_PHASE_LIMIT = 65536;
-export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'square_orbit', ...LOCAL_POLYGON_MODES, 'triangle_gravity']);
+export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'triangle_flow', ...DIAGONAL_MODES]);
 export const POLYGON_FLOW_PERIOD = 240;
 const GROWTH_GENERATIONS = 180;
 const LOCAL_PERIOD = 480;
@@ -12,13 +12,12 @@ const fields = new Map();
 
 export function currentPolygonFlowMode(method) {
     if (method === 'triangle' || method === 'triangle_orbit' || method === 'triangle_flow') return 'triangle_gravity';
-    if (method === 'square' || method === 'square_orbit') return 'square_flow';
     return method;
 }
 
 export function normalizePolygonFlowPhase(value, method) {
-    const limit = method === 'triangle_gravity' ? DIAGONAL_PHASE_LIMIT
-        : LOCAL_POLYGON_MODES.includes(method) ? GROWTH_GENERATIONS + LOCAL_PERIOD : POLYGON_FLOW_PERIOD;
+    const limit = DIAGONAL_MODES.includes(method) ? DIAGONAL_PHASE_LIMIT
+        : method === 'triangle_flow' ? GROWTH_GENERATIONS + LOCAL_PERIOD : POLYGON_FLOW_PERIOD;
     return Number.isInteger(value) && value >= 0 && value < limit ? value : 0;
 }
 
@@ -28,11 +27,10 @@ export function restorePolygonFlowPhase(rules, phase) {
 }
 
 function buildField(n, method) {
-    const local = LOCAL_POLYGON_MODES.includes(method);
-    const square = method === 'square_orbit' || method === 'square_flow';
+    const local = method === 'triangle_flow';
     const centerX = (n - 1) / 2;
-    const centerY = square ? centerX : (n - 1) * .58;
-    const ringLimit = square ? centerX : Math.min(centerY / 2, centerX / Math.sqrt(3), n - 1 - centerY);
+    const centerY = (n - 1) * .58;
+    const ringLimit = Math.min(centerY / 2, centerX / Math.sqrt(3), n - 1 - centerY);
     const count = n * n;
     const distance = new Float32Array(count);
     const angle = local ? null : new Float32Array(count);
@@ -44,12 +42,12 @@ function buildField(n, method) {
     for (let i = 0; i < count; i++) {
         const x = i % n - centerX;
         const y = Math.floor(i / n) - centerY;
-        const level = square ? Math.max(Math.abs(x), Math.abs(y)) : Math.max(y, Math.sqrt(3) / 2 * Math.abs(x) - .5 * y);
+        const level = Math.max(y, Math.sqrt(3) / 2 * Math.abs(x) - .5 * y);
         distance[i] = level;
         const azimuth = Math.fround(Math.atan2(y, x));
         if (angle) angle[i] = azimuth;
-        const twist = (square ? 4 : 3) * azimuth - level / n * (square ? 28 : 30);
-        const amplitude = Math.min(level * .48, n * (square ? .062 : .072));
+        const twist = 3 * azimuth - level / n * 30;
+        const amplitude = Math.min(level * .48, n * .072);
         crest[i] = Math.cos(twist) * amplitude;
         trough[i] = Math.sin(twist) * amplitude;
         // The triangle's outer contours are clipped by the board. Do not wrap
@@ -64,7 +62,7 @@ function buildField(n, method) {
     const order = Array.from({ length: count }, (_, i) => i);
     const rings = Array.from(contours, ([level, path]) => ({
         path: path.sort((a, b) => angle[a] - angle[b] || distance[a] - distance[b]),
-        stride: 1 + Math.floor(level / Math.max(4, n * (square ? .13 : .19)))
+        stride: 1 + Math.floor(level / Math.max(4, n * .19))
     }));
     order.sort((a, b) => distance[a] - distance[b] || angle[a] - angle[b]);
     const gap = Math.max(2, Math.floor(n * .42));
@@ -115,11 +113,11 @@ function growThroughNeighbors(n, board, ranks, phase, growth) {
 }
 
 export function runPolygonCirculation(n, board, rules) {
-    const local = LOCAL_POLYGON_MODES.includes(rules.method);
+    const local = rules.method === 'triangle_flow';
     const phase = normalizePolygonFlowPhase(rules.polygonFlowPhase, rules.method);
-    if (rules.method === 'triangle_gravity') {
+    if (DIAGONAL_MODES.includes(rules.method)) {
         rules.polygonFlowPhase = (phase + 1) % DIAGONAL_PHASE_LIMIT;
-        return runDiagonalGravity(n, board, phase);
+        return runDiagonalGravity(n, board, phase, rules.method === 'triangle_gravity_mirror');
     }
     let field = fields.get(rules.method);
     if (field?.n !== n) {
