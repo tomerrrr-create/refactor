@@ -18,8 +18,9 @@ function makeBoard(n) {
 
 function evolve(n, tiles, method, generations) {
     const currentBoardState = tiles.slice();
+    const spiralRules = { method };
     for (let i = 0; i < generations; i++) {
-        runSpiralGeneration({ n, currentBoardState, spiralRules: { method } });
+        runSpiralGeneration({ n, currentBoardState, spiralRules });
     }
     return currentBoardState;
 }
@@ -38,10 +39,12 @@ test('Geometric Flow restores cycle membership in toolbar order and skips exclud
     const enabled = loadGeometricFlowCycle(storage);
     assert.deepEqual(enabled, ['down', 'square_flow']);
     assert.equal(nextGeometricFlowMode('off', enabled, false), 'down');
-    assert.equal(nextGeometricFlowMode('triangle_flow', enabled, false), 'square_flow');
+    assert.equal(nextGeometricFlowMode('triangle_gravity', enabled, false), 'square_flow');
     assert.equal(nextGeometricFlowMode('square_flow', enabled, false), 'off');
     assert.equal(nextGeometricFlowMode('square_flow', enabled, true), 'down');
     assert.equal(nextGeometricFlowMode('square_flow', ['square_flow'], true), 'square_flow');
+    stored = JSON.stringify(['triangle_flow', 'square_flow']);
+    assert.deepEqual(loadGeometricFlowCycle(storage), ['triangle_gravity', 'square_flow']);
     stored = '[]';
     assert.deepEqual(loadGeometricFlowCycle(storage), GEOMETRIC_FLOW_MODES);
 });
@@ -81,7 +84,7 @@ test('new Geometric Flow modes round-trip through settings files and profiles', 
 test('Triangle and Square keep visibly rearranging pigments after hundreds of generations', () => {
     const n = 81;
     const initial = makeBoard(n);
-    for (const method of POLYGON_CIRCULATION_MODES) {
+    for (const method of ['triangle_orbit', 'square_orbit', 'triangle_flow', 'square_flow']) {
         const board = initial.slice();
         const rules = { method };
         const step = (currentBoardState, spiralRules) => runSpiralGeneration({ n, currentBoardState, spiralRules });
@@ -103,6 +106,62 @@ test('Triangle and Square keep visibly rearranging pigments after hundreds of ge
             if (tile.isGold) assert.strictEqual(board[index], tile);
         });
     }
+});
+
+test('Triangle draws lower palette ranks toward the diagonal from either side', () => {
+    const n = 81;
+    const initial = makeBoard(n);
+    const board = evolve(n, initial, 'triangle_gravity', 270);
+    assert.deepEqual(counts(board), counts(initial));
+    initial.forEach((tile, index) => {
+        if (tile.isGold) assert.strictEqual(board[index], tile);
+    });
+    for (const side of [-1, 1]) {
+        const bands = [[], []];
+        board.forEach((tile, index) => {
+            const offset = side * (Math.floor(index / n) - index % n);
+            if (offset > 0 && offset <= 8) bands[0].push(tile.k);
+            if (offset >= 30) bands[1].push(tile.k);
+        });
+        const [near, far] = bands.map(ranks => ranks.reduce((sum, rank) => sum + rank, 0) / ranks.length);
+        assert(far - near > 8, `Diagonal side ${side}: near ${near}, far ${far}`);
+    }
+});
+
+test('Triangle swaps roughly 60% of eligible neighboring pairs', () => {
+    const n = 102;
+    let eligible = 0;
+    // Gold separators isolate eligible pairs from the rest of the sweep.
+    const initial = Array.from({ length: n * n }, (_, index) => {
+        const row = Math.floor(index / n);
+        const column = index % n;
+        const offset = column % 3;
+        if (offset === 2) return { k: 0, v: 0, isGold: true };
+        const otherColumn = column + (offset === 0 ? 1 : -1);
+        const k = Number(Math.abs(row - column) < Math.abs(row - otherColumn));
+        if (k === 0) eligible++;
+        return { k, v: k, isGold: false };
+    });
+    const board = evolve(n, initial, 'triangle_gravity', 1);
+    const fraction = board.filter((tile, index) => tile !== initial[index]).length / (eligible * 2);
+    assert(Math.abs(fraction - .6) < .03, `Swapped fraction ${fraction}`);
+});
+
+test('Triangle can move colors multiple cells in one generation and resumes from a saved phase', () => {
+    const n = 81;
+    const initial = makeBoard(n);
+    const positions = new Map(initial.map((tile, index) => [tile, index]));
+    const distance = index => Math.abs(Math.floor(index / n) - index % n);
+    const first = evolve(n, initial, 'triangle_gravity', 1);
+    assert(first.some((tile, index) => distance(positions.get(tile)) - distance(index) >= 2));
+
+    const checkpoint = evolve(n, initial, 'triangle_gravity', 31);
+    const resumed = checkpoint.slice();
+    const rules = { method: 'triangle_gravity' };
+    restorePolygonFlowPhase(rules, 31);
+    for (let i = 0; i < 19; i++) runSpiralGeneration({ n, currentBoardState: resumed, spiralRules: rules });
+    const uninterrupted = evolve(n, initial, 'triangle_gravity', 50);
+    assert(resumed.every((tile, index) => tile === uninterrupted[index]));
 });
 
 test('gradual Triangle and Square develop through sparse, one-cell exchanges', () => {

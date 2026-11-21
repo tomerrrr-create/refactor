@@ -1,5 +1,8 @@
+import { runDiagonalGravity } from './diagonal-gravity.js';
+
 const LOCAL_POLYGON_MODES = ['triangle_flow', 'square_flow'];
-export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'square_orbit', ...LOCAL_POLYGON_MODES]);
+const DIAGONAL_PHASE_LIMIT = 65536;
+export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'square_orbit', ...LOCAL_POLYGON_MODES, 'triangle_gravity']);
 export const POLYGON_FLOW_PERIOD = 240;
 const GROWTH_GENERATIONS = 180;
 const LOCAL_PERIOD = 480;
@@ -8,13 +11,14 @@ const TAU = 2 * Math.PI;
 const fields = new Map();
 
 export function currentPolygonFlowMode(method) {
-    if (method === 'triangle' || method === 'triangle_orbit') return 'triangle_flow';
+    if (method === 'triangle' || method === 'triangle_orbit' || method === 'triangle_flow') return 'triangle_gravity';
     if (method === 'square' || method === 'square_orbit') return 'square_flow';
     return method;
 }
 
 export function normalizePolygonFlowPhase(value, method) {
-    const limit = LOCAL_POLYGON_MODES.includes(method) ? GROWTH_GENERATIONS + LOCAL_PERIOD : POLYGON_FLOW_PERIOD;
+    const limit = method === 'triangle_gravity' ? DIAGONAL_PHASE_LIMIT
+        : LOCAL_POLYGON_MODES.includes(method) ? GROWTH_GENERATIONS + LOCAL_PERIOD : POLYGON_FLOW_PERIOD;
     return Number.isInteger(value) && value >= 0 && value < limit ? value : 0;
 }
 
@@ -113,6 +117,10 @@ function growThroughNeighbors(n, board, ranks, phase, growth) {
 export function runPolygonCirculation(n, board, rules) {
     const local = LOCAL_POLYGON_MODES.includes(rules.method);
     const phase = normalizePolygonFlowPhase(rules.polygonFlowPhase, rules.method);
+    if (rules.method === 'triangle_gravity') {
+        rules.polygonFlowPhase = (phase + 1) % DIAGONAL_PHASE_LIMIT;
+        return runDiagonalGravity(n, board, phase);
+    }
     let field = fields.get(rules.method);
     if (field?.n !== n) {
         field = buildField(n, rules.method);

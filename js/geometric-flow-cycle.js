@@ -1,6 +1,7 @@
 import { loadToolbarCycle, orderToolbarCycle, persistToolbarCycle } from './toolbar-cycle-storage.js';
+import { currentPolygonFlowMode } from './simulations/polygon-circulation.js';
 
-export const GEOMETRIC_FLOW_MODES = Object.freeze(['radial', 'down', 'triangle_flow', 'square_flow', 'triangle_weave']);
+export const GEOMETRIC_FLOW_MODES = Object.freeze(['radial', 'down', 'triangle_gravity', 'square_flow', 'triangle_weave']);
 
 const STORAGE_KEY = 'colorGridGeometricFlowCycleV1';
 const cycle = ['off', ...GEOMETRIC_FLOW_MODES];
@@ -10,7 +11,7 @@ export function orderGeometricFlowModes(modes) {
 }
 
 export function loadGeometricFlowCycle(storage) {
-    return loadToolbarCycle(STORAGE_KEY, GEOMETRIC_FLOW_MODES, GEOMETRIC_FLOW_MODES, storage);
+    return loadToolbarCycle(STORAGE_KEY, GEOMETRIC_FLOW_MODES, GEOMETRIC_FLOW_MODES, storage, currentPolygonFlowMode);
 }
 
 export function persistGeometricFlowCycle(modes, storage) {
