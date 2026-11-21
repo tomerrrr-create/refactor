@@ -2,7 +2,7 @@ import { loadToolbarCycle, orderToolbarCycle, persistToolbarCycle } from './tool
 import { currentPolygonFlowMode } from './simulations/polygon-circulation.js';
 
 export const GEOMETRIC_FLOW_MODES = Object.freeze(['radial', 'down', 'triangle_gravity', 'triangle_gravity_mirror']);
-const DEFAULT_GEOMETRIC_FLOW_CYCLE = ['triangle_gravity', 'triangle_gravity_mirror'];
+export const DEFAULT_GEOMETRIC_FLOW_CYCLE = Object.freeze(['triangle_gravity', 'triangle_gravity_mirror']);
 
 const STORAGE_KEY = 'colorGridGeometricFlowCycleV1';
 const cycle = ['off', ...GEOMETRIC_FLOW_MODES];

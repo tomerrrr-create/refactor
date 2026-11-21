@@ -1,6 +1,7 @@
 import {isCombinedMagnetMode} from './magnet-modes.js';
 import { magnetAnchorIndex } from './magnet-anchor.js';
 import { currentPolygonFlowMode } from './simulations/polygon-circulation.js';
+import { DEFAULT_GEOMETRIC_FLOW_CYCLE } from './geometric-flow-cycle.js';
 import { initializeMacroOverlaySettings } from './macro-overlay-settings.js';
 import { createCompactColorPicker } from './compact-color-picker.js';
 import { focusSettingsHeading } from './dialog-focus.js';
@@ -188,6 +189,11 @@ function updateGeometricFlowCycleAvailability() {
     for (const input of inputs) input.disabled = selected.length === 1 && selected[0] === input;
 }
 
+function showGeometricFlowCycle(enabled) {
+    for (const input of app.dom.geometricFlowCycleInputs) input.checked = enabled.includes(input.value);
+    updateGeometricFlowCycleAvailability();
+}
+
 function showSpiralMethod(method) {
     for (const button of app.dom.spiralMethodButtons) {
         const selected = button.dataset.method === method;
@@ -205,9 +211,7 @@ function closeSpiralSettingsModal() {
 
 function openSpiralSettingsModal() {
     spiralDraftMethod = null;
-    const enabled = app.getGeometricFlowCycle();
-    for (const input of app.dom.geometricFlowCycleInputs) input.checked = enabled.includes(input.value);
-    updateGeometricFlowCycleAvailability();
+    showGeometricFlowCycle(app.getGeometricFlowCycle());
     app.dom.spiralSettingsModal.style.display = 'flex';
     // השהייה קטנטנה כדי לאפשר לאנימציה לעבוד כמו שצריך
     setTimeout(() => {
@@ -2095,6 +2099,7 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
 
 // --- START: Added for Spiral Settings ---
     app.dom.btnSpiralSettingsCancel.addEventListener('click', closeSpiralSettingsModal);
+    app.dom.btnSpiralSettingsReset.addEventListener('click', () => showGeometricFlowCycle(DEFAULT_GEOMETRIC_FLOW_CYCLE));
     app.dom.geometricFlowCycleOptions.addEventListener('change', updateGeometricFlowCycleAvailability);
     app.dom.btnSpiralSettingsSave.addEventListener('click', () => {
         const enabled = app.dom.geometricFlowCycleInputs.filter(input => input.checked).map(input => input.value);

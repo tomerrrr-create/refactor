@@ -222,6 +222,7 @@ turingFeedSlider: document.getElementById('turingFeedSlider'),
   geometricFlowCycleOptions: document.getElementById('geometricFlowCycleOptions'),
   geometricFlowCycleInputs: [...document.querySelectorAll('#geometricFlowCycleOptions input')],
   btnSpiralSettingsCancel: document.getElementById('btnSpiralSettingsCancel'),
+  btnSpiralSettingsReset: document.getElementById('btnSpiralSettingsReset'),
   btnSpiralSettingsSave: document.getElementById('btnSpiralSettingsSave'),
   // --- END: Spiral Settings Modal Elements ---
 
