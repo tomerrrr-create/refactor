@@ -2509,6 +2509,11 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnCymatics { display:none; }
 #cymaticsSettingsDialog .resonance-map-grid { grid-template-columns:repeat(3,minmax(44px,1fr)); width:min(100%,272px); }
 #cymaticsSettingsDialog .resonance-map-grid [hidden] { display:none; }
+#cymaticsSettingsDialog [data-cymatics-map] { flex-direction:column; gap:5px; padding:6px; }
+#cymaticsSettingsDialog [data-cymatics-map] > svg { width:32px; height:32px; flex-shrink:0; }
+#cymaticsSettingsDialog .resonance-map-name {
+  color:#dedbd1; font-size:11px; line-height:1.15; text-align:center; overflow-wrap:anywhere;
+}
 #cymaticsSettingsDialog #cymaticsMapLabel { margin:0 0 10px; color:#c8c5bb; font-size:13px; font-weight:500; }
 #cymaticsSettingsDialog .cymatics-phase label { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; text-align:start; }
 #cymaticsSettingsDialog .cymatics-phase input { order:1; width:18px; height:18px; margin:0; flex-shrink:0; accent-color:var(--gold); }

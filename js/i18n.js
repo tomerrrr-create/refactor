@@ -47,7 +47,7 @@ export const translations = {
   branches_baby: {en:"Baby mode",he:"מצב תינוק",ru:"Детская",nl:"Babymodus"},
   branches_main: {en:"Main",he:"ראשי",ru:"Основная",nl:"Hoofdversie"},
   tooltip_cymatics: {"en":"Resonance","he":"תהודה","ru":"Резонанс","nl":"Resonantie"},
-  help_cymatics: {en:"Resonance\nTap to cycle Interference, Diagonal and Crosshatch. Swipe up for settings, including Clouds.",he:"רזוננס\nלחצו למעבר בין הפרעות, אלכסונים ושתי וערב. החליקו למעלה להגדרות, כולל עננים.",ru:"Резонанс\nНажимайте для смены интерференции, диагоналей и сетки. Смахните вверх, чтобы открыть настройки, включая облака.",nl:"Resonantie\nTik voor Interferentie, Diagonalen en Raster. Veeg omhoog voor de instellingen, inclusief Wolken."},
+  help_cymatics: {en:"Resonance\nTap to cycle Interference, Crosshatch and Clouds by default. Swipe up to choose which maps are included.",he:"רזוננס\nכברירת מחדל, לחיצה מעבירה בין הפרעות, שתי וערב ועננים. החליקו למעלה כדי לבחור אילו מפות ייכללו בסייקל.",ru:"Резонанс\nПо умолчанию нажатие переключает интерференцию, сетку и облака. Смахните вверх, чтобы настроить цикл.",nl:"Resonantie\nTik voor Interferentie, Raster en Wolken. Veeg omhoog om de cyclus aan te passen."},
   cymatics_map_clouds: {"en":"Clouds","he":"עננים","ru":"Облака","nl":"Wolken"},
   cymatics_map_cosmic: {"en":"Cosmological empathy","he":"אמפתיה קוסמולוגית","ru":"Космологическая эмпатия","nl":"Kosmologische empathie"},
   cymatics_map_interference: {"en": "Interference", "he": "הפרעות", "ru": "Интерференция", "nl": "Interferentie"},
