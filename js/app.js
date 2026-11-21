@@ -9,6 +9,7 @@ import {DEFAULT_INK_PREFERENCES,validateInkRules,createInkState,restoreInkState,
 import {createInkSettingsDialog} from './ink-settings-dialog.js';
 import { createMacroEnding } from './macro-ending.js';
 import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
+import { GRAVITY_DIRECTIONS, loadGravityCycle, nextGravityMode, saveGravityCycle } from './gravity-cycle.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
 import {VORTICES_MODES,VORTICES_SETTINGS_ENTRY_MODES,VORTICES_RESONANCE_MAPS,RESONANCE_MAPS,vorticesModeFor,loadVorticesCycle,persistVorticesCycle,nextVorticesMode} from './vortices-modes.js';
 import {createVorticesCycleDialog} from './vortices-cycle-dialog.js';
@@ -82,6 +83,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let inkState=null,inkRules={...DEFAULT_INK_PREFERENCES},replayInkRules=null,inkSettingsUI=null;
       let vorticesEnabledModes=loadVorticesCycle();
       let geometricFlowCycle=loadGeometricFlowCycle();
+      let gravityCycle=loadGravityCycle();
       let resonanceCycle=loadResonanceCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
@@ -1953,6 +1955,7 @@ function restoreCycleMode(simulation, mode) {
 function resetEvolutionCycle(simulation, {refresh=true} = {}) {
     if(isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
     const mode=simulation==='ink'?vorticesEnabledModes[0]:simulation==='spiral'?geometricFlowCycle[0]:
+        simulation==='gravitationalSort'?gravityCycle[0]:
         simulation==='cymatics'?resonanceCycle[0]:defaultEvolutionCycleMode(simulation);
     if(mode===undefined)return false;
     const selected=matchesEvolutionControl(simulation);
@@ -1986,13 +1989,15 @@ function resetAllEvolutionCycles() {
 
 function cycleMemoryTap(simulation, onTap) {
     rememberCurrentCycle();
-    const remembered=cycleMemory.entry(simulation, simulation==='cymatics'?resonanceCycle[0]:undefined);
+    const firstMode=simulation==='gravitationalSort'?gravityCycle[0]:simulation==='cymatics'?resonanceCycle[0]:undefined;
+    const remembered=cycleMemory.entry(simulation, firstMode);
     return ()=>{
         selectingCycleMode=true;
         try {
             const selected=matchesEvolutionControl(simulation);
             if(!selected&&remembered!==undefined&&(simulation!=='ink'||vorticesEnabledModes.includes(remembered))&&
                 (simulation!=='spiral'||geometricFlowCycle.includes(remembered))&&
+                (simulation!=='gravitationalSort'||gravityCycle.includes(remembered))&&
                 (simulation!=='cymatics'||resonanceCycle.includes(remembered))){
                 if (simulation === 'ink') selectVorticesMode(remembered);
                 else {
@@ -4254,8 +4259,9 @@ function restoreGravityRules(rules) {
 
 function updateGravitationalSortButtonUI() {
     const active = activeEvolutionControl() === 'gravitationalSort';
-    const mode = active ? gsMode : (typeof cycleMemory!=='undefined' ? cycleMemory.entry('gravitationalSort') : undefined) ?? 'off';
-    dom.btnGravitationalSort.classList.remove('mode-up', 'mode-right', 'mode-down', 'mode-left', 'mode-center_x', 'mode-pinwheel', 'mode-radial', 'mode-vortex', 'simulation-active');
+    const remembered = typeof cycleMemory !== 'undefined' ? cycleMemory.entry('gravitationalSort', gravityCycle[0]) : undefined;
+    const mode = active ? gsMode : gravityCycle.includes(remembered) ? remembered : gravityCycle[0];
+    dom.btnGravitationalSort.classList.remove(...GRAVITY_DIRECTIONS.map(direction => 'mode-' + direction), 'simulation-active');
     if (mode !== 'off') dom.btnGravitationalSort.classList.add('mode-' + mode);
     if (active) dom.btnGravitationalSort.classList.add('simulation-active');
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
@@ -4263,12 +4269,13 @@ function updateGravitationalSortButtonUI() {
 
 function cycleGravitationalSortMode() {
     const current = armedSimulation === 'gravitationalSort' && !['turbine2','black_hole'].includes(gsMode) ? gsMode : 'off';
-    const next = nextEvolutionMode(current, ['off', 'up', 'right', 'center_x', 'pinwheel']);
+    const next = nextGravityMode(current, gravityCycle, isLifePlaying);
+    if (next === current) return;
     window.logArtEvent('Gravitational Sort Mode', next);
     if (next === 'off') {
         if (armedSimulation === 'gravitationalSort') armSimulation(null);
     } else {
-        if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort');
+        if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:next});
         gsMode = gravitationalSortRules.direction = next;
     }
     gsMode = next;
@@ -4629,7 +4636,7 @@ function getHistorySettings(state) {
 }
 
 function validateGravitySnapshot(rules) {
-    if (!rules || !['up', 'right', 'down', 'left', 'center_x', 'radial', 'vortex', 'turbine2', 'black_hole', 'pinwheel'].includes(rules.direction) ||
+    if (!rules || !GRAVITY_DIRECTIONS.includes(rules.direction) ||
         !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1) throw new Error('Invalid gravity rules');
 }
 
@@ -6178,15 +6185,22 @@ else if (action.eventName === 'Invert Colors') {
                 else delete gameOfLifeRules.deadColor;
                 setGameOfLifeCycle(slots, index, sources, yoursRules);
             },
-            getGravitationalSortRules: () => gravitationalSortRules, setGravitationalSortRules: (r) => { gravitationalSortRules = r; recordLiveSimulationRules('gravitationalSort'); },
-syncGsModeFromModal: (direction) => {
-                if (armedSimulation !== 'gravitationalSort') {
-                    armSimulation('gravitationalSort'); // קודם מחמשים כדי לאפס מצבים אחרים בלוח
+            getGravitationalSortRules: () => gravitationalSortRules,
+            getGravityCycle: () => gravityCycle,
+            saveGravitySettings: (rules, modes) => {
+                if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand) return false;
+                const enabled = saveGravityCycle(modes);
+                if (!enabled.length) return false;
+                gravityCycle = enabled;
+                const {direction, strength} = rules;
+                if (activeEvolutionControl() !== 'gravitationalSort' || gsMode !== direction || gravitationalSortRules.strength !== strength) {
+                    if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:direction});
+                    gsMode = direction;
+                    gravitationalSortRules = rules;
+                    recordLiveSimulationRules('gravitationalSort');
                 }
-                // מעדכנים למצב שנבחר במודל ומרעננים את האייקון
-                gsMode = direction;
-                gravitationalSortRules.direction = direction;
                 updateGravitationalSortButtonUI();
+                return true;
             },
 
             getErosionRules: () => ({ ...erosionRules }),
@@ -6627,7 +6641,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) && (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
+                canOpen: () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) && (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral', 'gravitationalSort'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });

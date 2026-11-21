@@ -132,7 +132,9 @@ btnCycleSort: document.getElementById('btnCycleSort'),
 
   // Gravitational Sort Settings Modal Elements
   gsSettingsTitle: document.getElementById('gsSettingsTitle'),
-  gsDirectionButtons: document.querySelectorAll('.gs-direction-btn'),
+  gsDirectionButtons: document.querySelectorAll('#gravityCycleOptions [data-direction]'),
+  gravityCycleOptions: document.getElementById('gravityCycleOptions'),
+  gravityCycleInputs: [...document.querySelectorAll('#gravityCycleOptions input')],
   gsStrengthSlider: document.getElementById('gsStrength'),
   gsStrengthValue: document.getElementById('gsStrengthValue'),
   btnGsSettingsSave: document.getElementById('btnGsSettingsSave'),

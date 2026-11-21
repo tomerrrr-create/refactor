@@ -1115,6 +1115,11 @@ body {
 #btnGravitationalSort.mode-right #iconGsRight { display: block !important; }
 #btnGravitationalSort.mode-right svg:not(#iconGsRight) { display: none !important; }
 
+#btnGravitationalSort.mode-reverse_up #iconGsReverseUp,
+#btnGravitationalSort.mode-reverse_right #iconGsReverseRight { display: block !important; }
+#btnGravitationalSort.mode-reverse_up svg:not(#iconGsReverseUp),
+#btnGravitationalSort.mode-reverse_right svg:not(#iconGsReverseRight) { display: none !important; }
+
 #btnGravitationalSort.mode-center_x #iconGsCenterX { display: block !important; }
 #btnGravitationalSort.mode-center_x svg:not(#iconGsCenterX) { display: none !important; }
 
@@ -1127,8 +1132,8 @@ body {
 
 
 
-#gravitationalSortSettingsModal .gravity-directions { gap:12px; flex-wrap:wrap; }
-#gravitationalSortSettingsModal .gravity-directions .gs-direction-btn { flex-shrink:0; }
+#gravitationalSortSettingsModal .gravity-directions { display:grid; grid-template-columns:repeat(3, minmax(44px, 1fr)); width:min(100%,240px); margin-inline:auto; }
+.gravity-direction { display:grid; justify-items:center; min-width:0; }
 [data-gravity-strength].gravity-strength-inactive { opacity:.35; }
 #gsStrength:disabled { cursor:not-allowed; }
 
@@ -2779,7 +2784,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .vortices-cycle-options input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .vortices-cycle-options label:has(input:disabled) { cursor: default; }
-#geometricFlowCycleHint { color:#b3b8af; font-size:13px; text-align:center; }
+#geometricFlowCycleHint, .cycle-membership-hint { color:#b3b8af; font-size:13px; text-align:center; }
 #geometricFlowCycleOptions { row-gap:2px; }
 .geometric-shape { min-width:0; display:grid; grid-template-rows:1fr 44px; }
 .toolbar-cycle-toggle {

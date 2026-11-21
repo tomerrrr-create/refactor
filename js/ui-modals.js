@@ -1246,15 +1246,30 @@ function refreshGravitationalStrength(direction) {
     app.dom.gravitationalSortSettingsModal.querySelector('[data-gravity-strength]').classList.toggle('gravity-strength-inactive', fixedStrength);
 }
 
+function showGravityDirection(direction) {
+    for (const button of app.dom.gsDirectionButtons) {
+        const selected = button.dataset.direction === direction;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+    }
+    refreshGravitationalStrength(direction);
+}
+
+function updateGravityCycleAvailability() {
+    const inputs = app.dom.gravityCycleInputs;
+    const enabled = inputs.filter(input => input.checked);
+    for (const input of inputs) input.disabled = enabled.length === 1 && enabled[0] === input;
+}
+
 function openGravitationalSortSettingsModal() {
     if (app.isBreathing()) return;
     const rules = app.getGravitationalSortRules();
-    app.dom.gsDirectionButtons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.direction === rules.direction);
-    });
+    const enabled = app.getGravityCycle();
+    for (const input of app.dom.gravityCycleInputs) input.checked = enabled.includes(input.value);
+    updateGravityCycleAvailability();
+    showGravityDirection(rules.direction);
     app.dom.gsStrengthSlider.value = rules.strength * 100;
     app.dom.gsStrengthValue.textContent = `${Math.round(rules.strength * 100)}%`;
-    refreshGravitationalStrength(rules.direction);
     app.dom.gravitationalSortSettingsModal.style.display = 'flex';
     setTimeout(() => app.dom.gravitationalSortSettingsModal.classList.add('modal-visible'), 10);
 }
@@ -1266,14 +1281,8 @@ function saveGravitationalSortSettings() {
         newRules.direction = activeBtn.dataset.direction;
     }
     if (!app.dom.gsStrengthSlider.disabled) newRules.strength = parseInt(app.dom.gsStrengthSlider.value, 10) / 100;
-    app.setGravitationalSortRules(newRules);
-    
-    // עדכון: סנכרון האייקון בלוח הבקרה למצב החדש שנבחר
-    if (typeof app.syncGsModeFromModal === 'function') {
-        app.syncGsModeFromModal(newRules.direction);
-    }
-    
-    closeGravitationalSortSettingsModal();
+    const enabled = app.dom.gravityCycleInputs.filter(input => input.checked).map(input => input.value);
+    if (app.saveGravitySettings(newRules, enabled)) closeGravitationalSortSettingsModal();
 }
 // --- START: Added for Contour Settings ---
 function openContourSettingsModal() {
@@ -1987,12 +1996,9 @@ for (const [buttonId, rules] of Object.entries(PRESET_RULES)) {
 
 
     // Gravitational Sort Settings Modal
+    app.dom.gravityCycleOptions.addEventListener('change', updateGravityCycleAvailability);
     app.dom.gsDirectionButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            app.dom.gsDirectionButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            if (btn.dataset.direction) refreshGravitationalStrength(btn.dataset.direction);
-        });
+        btn.addEventListener('click', () => showGravityDirection(btn.dataset.direction));
     });
     app.dom.gsStrengthSlider.addEventListener('input', () => {
         app.dom.gsStrengthValue.textContent = `${app.dom.gsStrengthSlider.value}%`;

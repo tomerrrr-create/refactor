@@ -144,7 +144,7 @@ try {
         await tap(nav);
         await tap('#btnGravitationalSort');await swipeUp('#btnGravitationalSort');
         await page.locator("#gravitationalSortSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),['up','right','center_x','pinwheel']);
+        assert.deepEqual(await page.locator('.gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),['up','right','center_x','reverse_up','reverse_right','pinwheel']);
         await dialogAction('.gs-direction-btn[data-direction=pinwheel]');
         assert(await page.locator('#gsStrength').isDisabled());
         await dialogAction('#btnGsSettingsSave');
@@ -234,6 +234,55 @@ try {
         await tap(hub);assert.equal((await state()).mode,'turbine2');
         await swipeUp(hub);await cycleMenu.waitFor({state:'visible'});
         assert.deepEqual(await checkedModes(),defaultOrder,'saved defaults survive reload');
+        await dialogAction(cycleDialog+' [data-cancel]');
+
+        const gravity='#btnGravitationalSort', gravityMenu=page.locator('#gravitationalSortSettingsModal');
+        const gravityChecks=()=>gravityMenu.locator('input[type=checkbox]:checked').evaluateAll(nodes=>nodes.map(input=>input.value));
+        const readDirection=async()=>(await state()).project.gravityRules.direction;
+        const openGravity=async()=>{await swipeUp(gravity);await gravityMenu.waitFor({state:'visible'});};
+        if (!(await page.locator(gravity).isVisible())) await tap(nav);
+        await tap(gravity);await openGravity();
+        assert.deepEqual(await gravityChecks(),['up','right','center_x','pinwheel']);
+        await dialogAction('#gravityDirection-reverse_up');
+        await dialogAction('#btnGsSettingsSave');
+        await gravityMenu.waitFor({state:'hidden'});
+        assert.equal(await readDirection(),'reverse_up','unchecked directions can still be selected from the modal');
+        assert(await page.locator('#iconGsReverseUp').isVisible());
+        await tap('#btnStepForward');
+        await openGravity();
+        await dialogAction('#gravityDirection-reverse_right');
+        await dialogAction('#btnGsSettingsSave');
+        await gravityMenu.waitFor({state:'hidden'});
+        assert.equal(await readDirection(),'reverse_right');
+        assert(await page.locator('#iconGsReverseRight').isVisible());
+        await tap('#btnStepForward');
+        const reverseSteps=await state();
+        await page.locator('#projectFileInput').setInputFiles({name:'gravity.txt',mimeType:'text/plain',buffer:Buffer.from(reverseSteps.logs.join('\n'))});
+        await page.waitForFunction(()=>circularTest.state().loaded);
+        await tap('#btnMacroPlay');
+        await page.waitForFunction(()=>!circularTest.state().loaded&&!circularTest.state().animated,null,{timeout:30000});
+        assert.deepEqual((await state()).project.tiles,reverseSteps.project.tiles,'both reversed directions replay while excluded from the cycle');
+
+        await tap(gravity);await openGravity();
+        const gravityDot=mode=>gravityMenu.locator(`input[value="${mode}"]`);
+        await gravityDot('reverse_up').check();await gravityDot('reverse_right').check();
+        for(const mode of ['up','right','center_x','pinwheel'])await gravityDot(mode).uncheck();
+        await dialogAction('#btnGsSettingsCancel');await gravityMenu.waitFor({state:'hidden'});
+        await openGravity();assert.deepEqual(await gravityChecks(),['up','right','center_x','pinwheel']);
+        await gravityDot('reverse_up').check();await gravityDot('reverse_right').check();
+        for(const mode of ['up','right','center_x','pinwheel'])await gravityDot(mode).uncheck();
+        const beforeMembership=await state();
+        await dialogAction('#btnGsSettingsSave');await gravityMenu.waitFor({state:'hidden'});
+        assert.equal(await readDirection(),beforeMembership.project.gravityRules.direction);
+        await page.reload();await page.waitForFunction(()=>window.circularTest?.ready);
+        await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());circularTest.enter();});
+        if (!(await page.locator(gravity).isVisible())) await tap(nav);
+        assert(await page.locator('#iconGsReverseUp').isVisible(),'inactive preview shows the first enabled direction');
+        await tap(gravity);assert.equal(await readDirection(),'reverse_up');
+        await openGravity();assert.deepEqual(await gravityChecks(),['reverse_up','reverse_right']);
+        await dialogAction('#btnGsSettingsCancel');await gravityMenu.waitFor({state:'hidden'});
+        await tap(gravity);assert.equal(await readDirection(),'reverse_right');
+        await tap(gravity);assert.equal((await state()).control,null);
         assert.deepEqual(errors,[]);console.log('PASS circular mode cycle',lang);await context.close();
     }
 }finally{await browser.close();server.close();}
