@@ -102,19 +102,18 @@ test('old settings and profiles retain other choices while retired appearances n
 });
 
 
-test('Gold playback hierarchy defaults on and preserves an explicit Off choice across openings', () => {
+test('Gold playback hierarchy defaults off and preserves explicit choices across openings', () => {
     const h = harness();
     h.run('initializeSimulationTheme()');
-    assert.equal(h.hierarchy.checked, true);
-    assert.equal(h.root.hasAttribute('data-gold-playback-hierarchy'), true);
-    h.hierarchy.checked = false;
-    h.hierarchy.handlers.change();
+    assert.equal(h.hierarchy.checked, false);
     assert.equal(h.root.hasAttribute('data-gold-playback-hierarchy'), false);
-    const reload = harness(Object.fromEntries(h.storage));
-    reload.run('initializeSimulationTheme()');
-    assert.equal(reload.hierarchy.checked, false);
-    assert.equal(reload.root.hasAttribute('data-gold-playback-hierarchy'), false);
-    reload.hierarchy.checked = true;
-    reload.hierarchy.handlers.change();
-    assert.equal(reload.root.hasAttribute('data-gold-playback-hierarchy'), true);
+    for (const enabled of [true, false]) {
+        h.hierarchy.checked = enabled;
+        h.hierarchy.handlers.change();
+        assert.equal(h.root.hasAttribute('data-gold-playback-hierarchy'), enabled);
+        const reload = harness(Object.fromEntries(h.storage));
+        reload.run('initializeSimulationTheme()');
+        assert.equal(reload.hierarchy.checked, enabled);
+        assert.equal(reload.root.hasAttribute('data-gold-playback-hierarchy'), enabled);
+    }
 });

@@ -55,8 +55,8 @@ export function applySimulationPlaybackTheme(value) {
 
 function initializeGoldPlaybackHierarchy() {
   const toggle = document.getElementById('goldPlaybackHierarchyToggle');
-  let enabled = true;
-  try { enabled = localStorage.getItem(GOLD_HIERARCHY_STORAGE_KEY) !== 'false'; } catch {}
+  let enabled = false;
+  try { enabled = localStorage.getItem(GOLD_HIERARCHY_STORAGE_KEY) === 'true'; } catch {}
   toggle.checked = enabled;
   document.documentElement.toggleAttribute('data-gold-playback-hierarchy', enabled);
   toggle.addEventListener('change', () => {
