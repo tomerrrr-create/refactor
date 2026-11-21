@@ -44,7 +44,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  }
  const slot=i=>dialog.locator(`[data-drawer-slot="${i}"]`);
  async function move(from,to){await tap(slot(from));await tap(slot(to));}
- async function save(){await tap(dialog.locator('[type=submit]'));}
+ async function save(){
+  await dialog.evaluate(element=>{
+   element.dataset.testClosed='false';
+   element.addEventListener('close',()=>{element.dataset.testClosed='true';},{once:true});
+  });
+  await tap(dialog.locator('[type=submit]'));
+  await page.waitForFunction(()=>document.getElementById('evolutionDrawerDialog').dataset.testClosed==='true');
+ }
  async function reload(){await page.waitForTimeout(300);await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});}
  let initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
  const physicalRows=()=>page.locator('#controlsContainer [data-evolution-slot],#btnEvolutionDrawerInternal').evaluateAll(es=>[2,3].map(row=>es.filter(e=>e.getBoundingClientRect().width&&getComputedStyle(e).gridRowStart===String(row)).sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId||'navigation')));
