@@ -1,5 +1,5 @@
 // One registry owns the opt-in exposure of these removable experiments.
-// Preferences are device-local, never profile, artwork or replay settings.
+// Browser storage preserves the legacy preference and defaults for older profiles.
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
     {id:'spiral',button:'btnSpiral',key:'tooltip_spiral'}
 ].map(Object.freeze));
@@ -35,4 +35,5 @@ export function initializeExperimentalSimulationControls({flags,getText,onLangua
     function refresh(){for(const {entry,label,input}of labels){label.textContent=getText(entry.key);input.checked=flags.visible(entry.id);input.disabled=!canChange();}}
     document.getElementById('technicianDialog').addEventListener('toggle',refresh);
     onLanguageChange(refresh);refresh();
+    return refresh;
 }

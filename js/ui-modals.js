@@ -2205,7 +2205,6 @@ function renderMagnetMethodButtons() {
 
         btn.addEventListener('click', () => {
             tempMagnetRules.method = m.method;
-            if(m.method==='magnet'||m.method==='cosmic_magnet')tempMagnetAnchorLimit=600;
             renderMagnetLimitButtons();
             renderMagnetMethodButtons();
             container.querySelector(`[data-method="${m.method}"]`).focus({ preventScroll: true });
@@ -2406,6 +2405,7 @@ return {
         refreshLocalizedModalText,
         refreshTechnicianSettings: () => {
             app.refreshLuminanceAnchor();
+            rememberModesToggle.checked = app.getRememberEvolutionModes();
             refreshSmoothControl();
             fillInitForm(app.getSimulationInit());
             fillStartupForm(app.getStartupSettings());

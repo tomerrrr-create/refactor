@@ -18,11 +18,11 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
 const cases=[
  ['gravitationalSort','btnGravitationalSort','up','right','.mode-right'],
- ['spiral','btnSpiral','radial','down','.mode-down'],['magnet','btnMagnetModes','field_magnet','field_cosmic_magnet','.mode-field_cosmic_magnet'],
+ ['spiral','btnSpiral','triangle_gravity','triangle_gravity_mirror','.mode-triangle_gravity_mirror'],['magnet','btnMagnetModes','field_magnet','field_cosmic_magnet','.mode-field_cosmic_magnet'],
  ['brightnessEvo','btnBrightnessEvo','brightness','contrast','.mode-contrast'],['dla','btnDla','genetics','no-genetics','.mode-no-genetics'],
  ['breathe','btnShowBreatheMenu','solo','group','.mode-group'],['erosion','btnErosion','channels','channels-solid','svg#iconErosionSolid'],
  ['islands','btnIslands','classic','oil','.mode-oil'],['contour','btnContour','all','dead','[data-cracks-area="dead"]'],
- ['cymatics','btnCymatics',resonanceMap.interference,resonanceMap.diagonal,'[data-cymatics-map="diagonal"]'],['nudgeBrighter','btnNudgeBrighter','nudgeBrighter','nudgeDarker','[data-nudge-mode="darker"]'],
+ ['cymatics','btnCymatics',resonanceMap.grid,resonanceMap.interference,'[data-cymatics-map="interference"]'],['nudgeBrighter','btnNudgeBrighter','nudgeBrighter','nudgeDarker','[data-nudge-mode="darker"]'],
  ['gameOfLife','btnGameOfLife','personal','shuffle','stars'],['sandpile','btnSandpile','personal','ripples','stars']
 ];
 await mkdir('/tmp/evolution-mode-memory',{recursive:true});
@@ -70,12 +70,12 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await setup();await tap('btnNudgeBrighter');await tap('btnNudgeBrighter');await tap('btnGravitationalSort');await tap('btnGravitationalSort');await tap('btnPlayPauseLife');await page.waitForFunction(()=>memoryTest.state().generation>=3);await tap('btnNudgeBrighter');assert.equal((await state()).armed,'nudgeDarker');assert((await state()).playing);await page.evaluate(()=>memoryTest.pause());
  // A newly recorded recall uses existing context commands, and replays independently of the toggle.
  await setup();await tap('btnCymatics');await tap('btnCymatics');await tap('btnTuring');await tap('btnCymatics');await tap('btnPlayPauseLife');await page.waitForFunction(()=>memoryTest.state().generation>=15);await tap('btnPlayPauseLife');const expected=await state(),recipe=await page.evaluate(()=>memoryTest.recipe());assert(recipe.includes('SIMULATION_RULES'));
- await tap('btnCymatics');await tap('btnTuring');const manualMode=await page.evaluate(()=>memoryTest.remembered('cymatics'));assert.equal(manualMode,resonanceMap.grid);
+ await tap('btnCymatics');await tap('btnTuring');const manualMode=await page.evaluate(()=>memoryTest.remembered('cymatics'));assert.equal(manualMode,resonanceMap.diagonal);
  async function replay(){await page.locator('#projectFileInput').setInputFiles({name:'remembered-cycle.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});await page.waitForFunction(()=>memoryTest.state().loaded);await tap('btnMacroPlay');await page.waitForFunction(()=>!memoryTest.state().loaded);const replayed=await state();assert.deepEqual(replayed.board,expected.board);assert.deepEqual(replayed.runtime,expected.runtime);}
- await replay();assert.equal(await page.evaluate(()=>memoryTest.remembered('cymatics')),manualMode,'macro cannot replace memory');await tap('btnTuring');assert.equal(await page.locator('#btnCymatics').getAttribute('data-cymatics-map'),'grid');await tap('btnCymatics');assert.equal((await state()).mode,manualMode);
+ await replay();assert.equal(await page.evaluate(()=>memoryTest.remembered('cymatics')),manualMode,'macro cannot replace memory');await tap('btnTuring');assert.equal(await page.locator('#btnCymatics').getAttribute('data-cymatics-map'),'diagonal');await tap('btnCymatics');assert.equal((await state()).mode,manualMode);
  await toggle(false);await replay();await toggle(true);
  // Legacy Resonance rules omit the map/phase markers; their Diagonal fallback must win.
- await setup();for(let i=0;i<3;i++)await tap('btnCymatics');assert.equal((await state()).mode,resonanceMap.grid);await tap('btnTuring');
+ await setup();await tap('btnCymatics');assert.equal((await state()).mode,resonanceMap.grid);await tap('btnTuring');
  const legacyRules=await page.evaluate(()=>memoryTest.legacy());
  const legacy='[00:00:00.000] INIT_STATE -> {"recipeVersion":2,"n":9,"pal":0,"sort":"luminance","sep":0,"board":"81x0"}\n[00:00:00.010] PLAY -> Armed: cymatics | Rules: '+JSON.stringify(legacyRules)+'\n[00:00:01.010] [GEN:60] PAUSE -> ---';
  async function oldReplay(){await page.locator('#projectFileInput').setInputFiles({name:'legacy.txt',mimeType:'text/plain',buffer:Buffer.from(legacy)});await page.waitForFunction(()=>memoryTest.state().loaded);await tap('btnMacroPlay');await page.waitForFunction(mode=>memoryTest.state().playing&&memoryTest.state().mode===mode,resonanceMap.diagonal);await page.waitForFunction(()=>!memoryTest.state().loaded);return state();}
@@ -88,6 +88,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const dialog=page.locator('#cymaticsSettingsDialog');await dialog.waitFor({state:'visible'});await dialog.locator('[data-cymatics-map=interference]').click();await dialog.locator('[type=submit]').click();await tap('btnTuring');assert.equal(await page.evaluate(()=>memoryTest.remembered('cymatics')),resonanceMap.interference,'manual settings after replay replace memory');
 await toggle(false);const oldOff=await oldReplay();assert.deepEqual(oldOn.board,oldOff.board);assert.deepEqual(oldOn.runtime,oldOff.runtime);await toggle(true);
  await page.evaluate(()=>memoryTest.reset());assert.equal(await page.evaluate(()=>memoryTest.remembered('cymatics')),undefined,'reset clears session modes');
+ await page.evaluate(()=>memoryTest.tech());assert(!(await page.locator('#rememberEvolutionModesToggle').isChecked()));await toggle(true);
  await page.reload();await page.waitForFunction(()=>window.memoryTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));assert(await page.locator('#rememberEvolutionModesToggle').isChecked());assert.equal(await page.evaluate(()=>memoryTest.remembered('gravitationalSort')),undefined,'refresh starts empty');
  await page.evaluate(()=>memoryTest.tech());await page.screenshot({path:'/tmp/evolution-mode-memory/'+config.lang+'-menu.png'});assert.deepEqual(errors,[]);console.log(JSON.stringify({config,defaultOff:true,inactiveIcons:13,recall:true,off:true,wind:true,liveHandoff:true,recordedReplay:true,legacyReplay:true,profileReset:true,reload:true}));await context.close();
 }}finally{await browser.close();server.close();}

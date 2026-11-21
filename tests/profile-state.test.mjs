@@ -556,3 +556,21 @@ test('profile Cracks defaults migrate once without overriding explicit custom or
  assert.deepEqual(reopened.draft(1).settings.rules.contour.growth,custom);
  for(const i of [0,1,2])assert.deepEqual(factoryProfileSnapshot(i).settings.rules.contour.growth,INITIAL_CRACKS_GROWTH);
 });
+
+test('older profiles adopt browser simulation preferences once and keep later profile choices independent', () => {
+    const browser = storage();
+    const legacy = createProfileState(initial(), browser);
+    legacy.persist();
+    const first = change(initial(), settings => {
+        settings.simulationPreferences = { geometricFlowVisible: true, gravityCycle: ['reverse_right'], magnetAnchorLimit: 600 };
+    });
+    const migrated = createProfileState(first, browser);
+    assert.deepEqual(migrated.draft(1).settings.simulationPreferences, first.settings.simulationPreferences);
+    const custom = change(migrated.draft(), settings => {
+        settings.simulationPreferences = { geometricFlowVisible: false, gravityCycle: ['up'], magnetAnchorLimit: 1000 };
+    });
+    migrated.replace(custom);
+    const reopened = createProfileState(first, browser);
+    assert.deepEqual(reopened.draft().settings.simulationPreferences, custom.settings.simulationPreferences);
+    assert.deepEqual(reopened.draft(1).settings.simulationPreferences, first.settings.simulationPreferences);
+});
