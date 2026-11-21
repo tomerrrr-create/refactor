@@ -136,7 +136,7 @@ try {
         }
         await tap(hub);assert.equal((await state()).control,null);
         await tap(nav);
-        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'radial');
+        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'triangle_gravity');
         await swipeUp('#btnSpiral');
         await page.locator("#spiralSettingsModal").waitFor({state:"visible"});
         assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['radial','down','triangle_gravity','triangle_gravity_mirror']);

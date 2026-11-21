@@ -33,7 +33,12 @@ function counts(tiles) {
 test('Geometric Flow restores cycle membership in toolbar order and skips excluded modes', () => {
     let stored;
     const storage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
-    assert.deepEqual(loadGeometricFlowCycle(storage), GEOMETRIC_FLOW_MODES);
+    const defaults = ['triangle_gravity', 'triangle_gravity_mirror'];
+    assert.deepEqual(loadGeometricFlowCycle(storage), defaults);
+    assert.equal(nextGeometricFlowMode('off', defaults, false), 'triangle_gravity');
+    assert.equal(nextGeometricFlowMode('triangle_gravity', defaults, false), 'triangle_gravity_mirror');
+    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', defaults, false), 'off');
+    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', defaults, true), 'triangle_gravity');
     persistGeometricFlowCycle(['triangle_gravity_mirror', 'down', 'down', 'retired'], storage);
     const enabled = loadGeometricFlowCycle(storage);
     assert.deepEqual(enabled, ['down', 'triangle_gravity_mirror']);
@@ -45,6 +50,8 @@ test('Geometric Flow restores cycle membership in toolbar order and skips exclud
     stored = JSON.stringify(['triangle_flow', 'square_flow', 'triangle_weave']);
     assert.deepEqual(loadGeometricFlowCycle(storage), ['triangle_gravity']);
     stored = '[]';
+    assert.deepEqual(loadGeometricFlowCycle(storage), defaults);
+    persistGeometricFlowCycle(GEOMETRIC_FLOW_MODES, storage);
     assert.deepEqual(loadGeometricFlowCycle(storage), GEOMETRIC_FLOW_MODES);
 });
 
