@@ -41,11 +41,22 @@ try{
   const modes=['radial','down','triangle_gravity','triangle_gravity_mirror'];
   const icons=['iconSpiralRadial','iconSpiralDown','iconSpiralDiagonal','iconSpiralDiagonalMirror'];
   const before=(await state()).tiles;
-  for(const [i,mode] of [...modes,'off'].entries()){await tap('#btnSpiral');assert.equal((await state()).mode,mode);assert.deepEqual((await state()).tiles,before);assert.deepEqual(await page.locator('#btnSpiral svg').evaluateAll(ns=>ns.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id)),[icons[i]||'iconSpiralRadial']);}
   const tornado=async()=>{for(let i=0;i<9&&(await state()).mode!=='tornado';i++)await tap('#btnInk');assert.equal((await state()).mode,'tornado');assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'tornado');assert(await page.locator('#btnInk .vortices-tornado-badge').isVisible());};
   const open=async()=>{await page.evaluate(()=>spiralTest.open());await page.waitForTimeout(350);};
   const choose=async(method,save=true)=>{await open();await tap('.spiral-method-btn[data-method="'+method+'"]');await tap(save?'#btnSpiralSettingsSave':'#btnSpiralSettingsCancel');await page.waitForTimeout(350);};
-  await tap('#btnSpiral');await open();assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),modes);assert.equal(await page.locator('.spiral-method-btn[data-method="vortex"]').count(),0);await page.screenshot({path:path.join(artifacts,config.lang+'-settings.png')});await tap('#btnSpiralSettingsCancel');await page.waitForTimeout(350);
+  const enabled=page.locator('#geometricFlowCycleOptions input');
+  const checked=()=>enabled.evaluateAll(nodes=>nodes.filter(node=>node.checked).map(node=>node.value));
+  assert(await page.locator('#iconSpiralDiagonal').isVisible(),'the inactive preview uses the first default');
+  for(const mode of [...modes.slice(2),'off']){await tap('#btnSpiral');assert.equal((await state()).mode,mode);}
+  await tap('#btnSpiral');await open();
+  assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),modes);
+  assert.deepEqual(await checked(),modes.slice(2));
+  await page.screenshot({path:path.join(artifacts,config.lang+'-settings.png')});
+  for(const mode of modes.slice(0,2))await page.locator(`#geometricFlowCycleOptions input[value="${mode}"]`).check();
+  await tap('#btnSpiralSettingsSave');await page.waitForTimeout(350);
+  await page.evaluate(()=>spiralTest.setup());
+  for(const [i,mode] of [...modes,'off'].entries()){await tap('#btnSpiral');assert.equal((await state()).mode,mode);assert.deepEqual((await state()).tiles,before);assert.deepEqual(await page.locator('#btnSpiral svg').evaluateAll(ns=>ns.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id)),[icons[i]||'iconSpiralRadial']);}
+  await tap('#btnSpiral');
   await choose('triangle_gravity',false);assert.equal((await state()).mode,'radial');
   for(const mode of modes.slice(2)){
    await choose(mode);assert.equal((await state()).mode,mode);
@@ -97,8 +108,6 @@ try{
   // Cycle membership affects only manual cycling, including the inactive preview.
   await page.evaluate(()=>{spiralTest.memory(false);spiralTest.setup();});
   await tap('#btnSpiral');await choose('triangle_gravity');
-  const enabled=page.locator('#geometricFlowCycleOptions input');
-  const checked=()=>enabled.evaluateAll(nodes=>nodes.filter(node=>node.checked).map(node=>node.value));
   const onlyMirroredDiagonal=async()=>{
    for(const mode of modes.filter(mode=>mode!=='triangle_gravity_mirror')){
     await page.locator('#geometricFlowCycleOptions input[value="'+mode+'"]').uncheck();
