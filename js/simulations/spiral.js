@@ -25,16 +25,13 @@ let strength = 0.9; // עוצמת ברירת המחדל המקורית של הס
 
     switch (method) {
         case 'triangle_gravity':
+        case 'triangle_gravity_mirror':
         case 'triangle_flow':
-        case 'square_flow':
         case 'triangle_orbit':
-        case 'square_orbit':
             return runPolygonCirculation(n, nextBoardState, spiralRules);
 
         case 'triangle':
-        case 'square':
-        case 'triangle_weave':
-            return runPolygonFlowGeneration(n, nextBoardState, method);
+            return runPolygonFlowGeneration(n, nextBoardState);
 
         case 'tornado':
             if (spiralRules.tornadoVersion === 1) return runLegacyTornadoGeneration(n, nextBoardState);

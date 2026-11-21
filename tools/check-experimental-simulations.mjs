@@ -70,7 +70,7 @@ try{for(const touch of [false,true]){
  assert.equal(await geometric.getAttribute('aria-label'),touch?'זרימה גאומטרית':'Geometric Flow');
  await geometric.click();assert.equal((await state()).armed,'spiral');assert(await page.locator('#iconSpiralRadial').isVisible());
  await geometric.click();assert(await page.locator('#iconSpiralDown').isVisible());
- for(const icon of ['Diagonal','Square','TriangleWeave']){
+ for(const icon of ['Diagonal','DiagonalMirror']){
   await geometric.click();assert(await page.locator('#iconSpiral'+icon).isVisible());
  }
  await geometric.click();assert.equal((await state()).armed,null);
