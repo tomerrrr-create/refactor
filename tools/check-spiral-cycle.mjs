@@ -38,8 +38,8 @@ try{
   await page.goto(base);await page.waitForFunction(()=>window.spiralTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   await page.evaluate(()=>spiralTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
-  const modes=['radial','down','triangle_gravity','square_flow','triangle_weave','fibonacci'];
-  const icons=['iconSpiralRadial','iconSpiralDown','iconSpiralTriangle','iconSpiralSquare','iconSpiralTriangleWeave','iconSpiralFibonacci'];
+  const modes=['radial','down','triangle_gravity','square_flow','triangle_weave'];
+  const icons=['iconSpiralRadial','iconSpiralDown','iconSpiralDiagonal','iconSpiralSquare','iconSpiralTriangleWeave'];
   const before=(await state()).tiles;
   for(const [i,mode] of [...modes,'off'].entries()){await tap('#btnSpiral');assert.equal((await state()).mode,mode);assert.deepEqual((await state()).tiles,before);assert.deepEqual(await page.locator('#btnSpiral svg').evaluateAll(ns=>ns.filter(n=>getComputedStyle(n).display!=='none').map(n=>n.id)),[icons[i]||'iconSpiralRadial']);}
   const tornado=async()=>{for(let i=0;i<9&&(await state()).mode!=='tornado';i++)await tap('#btnInk');assert.equal((await state()).mode,'tornado');assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'tornado');assert(await page.locator('#btnInk .vortices-tornado-badge').isVisible());};
@@ -60,7 +60,7 @@ try{
   const after=(await state()).tiles,recipe=(await state()).logs.join('\n');assert.notDeepEqual(after,before);
   for(const method of modes){assert(recipe.includes('Spiral Mode Changed -> '+method));assert(recipe.includes('"method":"'+method+'"'));}
   assert.deepEqual(await replay(page,recipe),after,'new logger-to-player steps retain all Geometric Flow modes');
-  for(const method of ['triangle_gravity','square_flow','fibonacci']){
+  for(const method of ['triangle_gravity','square_flow']){
    await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await choose(method);
    await tap('#btnStepForward');await tap('#btnStepForward');
    const checkpoint=await page.evaluate(()=>spiralTest.project());

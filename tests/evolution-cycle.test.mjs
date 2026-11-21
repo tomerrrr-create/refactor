@@ -14,7 +14,7 @@ const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
     { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x', 'pinwheel'], get: c => c.gsMode },
     { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: MAGNET_CYCLE.slice(1), get: c => c.magnetMode },
-    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['radial', 'down', 'triangle_gravity', 'square_flow', 'triangle_weave', 'fibonacci'], get: c => c.spiralMode },
+    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['radial', 'down', 'triangle_gravity', 'square_flow', 'triangle_weave'], get: c => c.spiralMode },
     { sim: 'brightnessEvo', fn: 'cycleBrightnessEvoMode', event: 'Brightness Evo Mode Changed', modes: ['brightness', 'contrast'], get: c => c.brightnessEvoMode },
     { sim: 'dla', fn: 'cycleDlaMode', event: 'DLA Mode Changed', modes: ['genetics', 'no-genetics'], get: c => c.dlaMode }
 ];

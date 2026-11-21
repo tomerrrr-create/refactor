@@ -129,41 +129,39 @@ test('Triangle draws lower palette ranks toward the diagonal from either side', 
 });
 
 test('Triangle swaps roughly 60% of eligible neighboring pairs', () => {
-    const n = 100;
-    // In the first pass every horizontal pair starts in the wrong rank order.
+    const n = 102;
+    let eligible = 0;
+    // Gold separators isolate eligible pairs from the rest of the sweep.
     const initial = Array.from({ length: n * n }, (_, index) => {
         const row = Math.floor(index / n);
         const column = index % n;
-        const otherColumn = column ^ 1;
+        const offset = column % 3;
+        if (offset === 2) return { k: 0, v: 0, isGold: true };
+        const otherColumn = column + (offset === 0 ? 1 : -1);
         const k = Number(Math.abs(row - column) < Math.abs(row - otherColumn));
+        if (k === 0) eligible++;
         return { k, v: k, isGold: false };
     });
     const board = evolve(n, initial, 'triangle_gravity', 1);
-    const fraction = board.filter((tile, index) => tile !== initial[index]).length / board.length;
+    const fraction = board.filter((tile, index) => tile !== initial[index]).length / (eligible * 2);
     assert(Math.abs(fraction - .6) < .03, `Swapped fraction ${fraction}`);
 });
 
-test('Fibonacci starts near the center and resumes the outward flow from a saved phase', () => {
+test('Triangle can move colors multiple cells in one generation and resumes from a saved phase', () => {
     const n = 81;
-    const center = (n - 1) / 2;
-    const radius = index => Math.hypot(index % n - center, Math.floor(index / n) - center);
     const initial = makeBoard(n);
-    const early = evolve(n, initial, 'fibonacci', 8);
-    assert(early.some((tile, index) => tile.k !== initial[index].k));
-    assert(early.every((tile, index) => radius(index) <= 8.5 || tile === initial[index]));
+    const positions = new Map(initial.map((tile, index) => [tile, index]));
+    const distance = index => Math.abs(Math.floor(index / n) - index % n);
+    const first = evolve(n, initial, 'triangle_gravity', 1);
+    assert(first.some((tile, index) => distance(positions.get(tile)) - distance(index) >= 2));
 
-    const checkpoint = evolve(n, initial, 'fibonacci', 32);
+    const checkpoint = evolve(n, initial, 'triangle_gravity', 31);
     const resumed = checkpoint.slice();
-    const rules = { method: 'fibonacci' };
-    restorePolygonFlowPhase(rules, 32);
-    for (let i = 0; i < 118; i++) runSpiralGeneration({ n, currentBoardState: resumed, spiralRules: rules });
-    const uninterrupted = evolve(n, initial, 'fibonacci', 150);
+    const rules = { method: 'triangle_gravity' };
+    restorePolygonFlowPhase(rules, 31);
+    for (let i = 0; i < 19; i++) runSpiralGeneration({ n, currentBoardState: resumed, spiralRules: rules });
+    const uninterrupted = evolve(n, initial, 'triangle_gravity', 50);
     assert(resumed.every((tile, index) => tile === uninterrupted[index]));
-    assert(resumed.some((tile, index) => radius(index) > 30 && tile.k !== checkpoint[index].k));
-    assert.deepEqual(counts(resumed), counts(initial));
-    initial.forEach((tile, index) => {
-        if (tile.isGold) assert.strictEqual(resumed[index], tile);
-    });
 });
 
 test('gradual Triangle and Square develop through sparse, one-cell exchanges', () => {

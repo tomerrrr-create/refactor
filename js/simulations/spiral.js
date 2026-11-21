@@ -25,7 +25,6 @@ let strength = 0.9; // עוצמת ברירת המחדל המקורית של הס
 
     switch (method) {
         case 'triangle_gravity':
-        case 'fibonacci':
         case 'triangle_flow':
         case 'square_flow':
         case 'triangle_orbit':

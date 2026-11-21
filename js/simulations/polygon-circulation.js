@@ -1,9 +1,8 @@
-import { runGeometricSorting } from './geometric-sorting.js';
+import { runDiagonalGravity } from './diagonal-gravity.js';
 
 const LOCAL_POLYGON_MODES = ['triangle_flow', 'square_flow'];
-const SORTING_MODES = ['triangle_gravity', 'fibonacci'];
-const SORTING_PHASE_LIMIT = 65536;
-export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'square_orbit', ...LOCAL_POLYGON_MODES, ...SORTING_MODES]);
+const DIAGONAL_PHASE_LIMIT = 65536;
+export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'square_orbit', ...LOCAL_POLYGON_MODES, 'triangle_gravity']);
 export const POLYGON_FLOW_PERIOD = 240;
 const GROWTH_GENERATIONS = 180;
 const LOCAL_PERIOD = 480;
@@ -18,7 +17,7 @@ export function currentPolygonFlowMode(method) {
 }
 
 export function normalizePolygonFlowPhase(value, method) {
-    const limit = SORTING_MODES.includes(method) ? SORTING_PHASE_LIMIT
+    const limit = method === 'triangle_gravity' ? DIAGONAL_PHASE_LIMIT
         : LOCAL_POLYGON_MODES.includes(method) ? GROWTH_GENERATIONS + LOCAL_PERIOD : POLYGON_FLOW_PERIOD;
     return Number.isInteger(value) && value >= 0 && value < limit ? value : 0;
 }
@@ -118,9 +117,9 @@ function growThroughNeighbors(n, board, ranks, phase, growth) {
 export function runPolygonCirculation(n, board, rules) {
     const local = LOCAL_POLYGON_MODES.includes(rules.method);
     const phase = normalizePolygonFlowPhase(rules.polygonFlowPhase, rules.method);
-    if (SORTING_MODES.includes(rules.method)) {
-        rules.polygonFlowPhase = phase + 1 < SORTING_PHASE_LIMIT ? phase + 1 : 1024;
-        return runGeometricSorting(n, board, rules.method, phase);
+    if (rules.method === 'triangle_gravity') {
+        rules.polygonFlowPhase = (phase + 1) % DIAGONAL_PHASE_LIMIT;
+        return runDiagonalGravity(n, board, phase);
     }
     let field = fields.get(rules.method);
     if (field?.n !== n) {
