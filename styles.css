@@ -2878,3 +2878,37 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnIslands:not(.mode-oil) .islands-oil-icon { display:none !important; }
 #btnIslands.mode-oil > svg:not(.islands-oil-icon) { display:none !important; }
 #btnIslands.mode-oil .islands-oil-icon { display:block !important; }
+
+
+/* The optional third gold shade is scoped to non-simulation toolbar controls. */
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker),
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  .evolution-drawer-internal {
+  --playback-control-ink: #695938;
+  --gold: var(--playback-control-ink);
+  color: var(--playback-control-ink);
+}
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker) :is([stroke="#fff"], [stroke="#424242"]) {
+  stroke: var(--playback-control-ink);
+}
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker) [fill="#fff"],
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  #btnBrushMode.brush-continuous svg path {
+  fill: var(--playback-control-ink);
+}
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active #gapValue {
+  color: var(--playback-control-ink);
+}
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  .ctrl > .glyph-random { background: linear-gradient(90deg, #000 50%, var(--playback-control-ink) 50%); }
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  .ctrl > .glyph-invert { background: linear-gradient(90deg, var(--playback-control-ink) 50%, #000 50%); }
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  .ctrl > :is(.glyph-dark, .glyph-save, .glyph-reset)::after,
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+  .evolution-drawer-internal :is(.drawer-page-dot, .drawer-active-mark) {
+  background: var(--playback-control-ink);
+}

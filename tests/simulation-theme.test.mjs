@@ -10,17 +10,19 @@ function harness(saved = {}, blocked = false) {
     const storage = new Map(Object.entries(saved)), attributes = new Set();
     const buttons = () => ['blue', 'gold', 'teal'].map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
         setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(k, fn) { this.handlers[k] = fn; } }));
-    const rest = buttons(), playback = buttons();
+    const rest = buttons(), playback = buttons(), hierarchy = {
+        checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; }
+    };
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
         toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); } };
     const select = selector => selector.includes('Playback') ? playback : rest;
     const context = vm.createContext({ document: { documentElement: root,
-        getElementById: id => ({ querySelectorAll: () => select(id) }), querySelectorAll: select },
+        getElementById: id => id === 'goldPlaybackHierarchyToggle' ? hierarchy : { querySelectorAll: () => select(id) }, querySelectorAll: select },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
         getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
-    return { context, root, storage, rest, playback, run: code => vm.runInContext(code, context) };
+    return { context, root, storage, rest, playback, hierarchy, run: code => vm.runInContext(code, context) };
 }
 test('all resting/playback color pairs restore the resting selection and never persist running state', () => {
     for (const rest of ['blue', 'gold', 'teal']) for (const playback of ['blue', 'gold', 'teal']) {
@@ -97,4 +99,22 @@ test('old settings and profiles retain other choices while retired appearances n
         }
     }
     assert.throws(()=>serializeWorkspaceSettings({...defaultWorkspaceSettings(),simulationTheme:'red'}));
+});
+
+
+test('Gold playback hierarchy defaults on and preserves an explicit Off choice across openings', () => {
+    const h = harness();
+    h.run('initializeSimulationTheme()');
+    assert.equal(h.hierarchy.checked, true);
+    assert.equal(h.root.hasAttribute('data-gold-playback-hierarchy'), true);
+    h.hierarchy.checked = false;
+    h.hierarchy.handlers.change();
+    assert.equal(h.root.hasAttribute('data-gold-playback-hierarchy'), false);
+    const reload = harness(Object.fromEntries(h.storage));
+    reload.run('initializeSimulationTheme()');
+    assert.equal(reload.hierarchy.checked, false);
+    assert.equal(reload.root.hasAttribute('data-gold-playback-hierarchy'), false);
+    reload.hierarchy.checked = true;
+    reload.hierarchy.handlers.change();
+    assert.equal(reload.root.hasAttribute('data-gold-playback-hierarchy'), true);
 });

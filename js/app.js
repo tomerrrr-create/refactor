@@ -924,7 +924,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           dom.btnGap.setAttribute('aria-label', label);
           const isOff = isRelativeSeparatorMode ? level === 0 : separatorPx === 0;
           dom.btnGap.querySelector('svg').setAttribute('stroke', isOff ? '#424242' : '#fff');
-          dom.gapValue.style.color = isOff ? '#424242' : '';
+          dom.gapValue.style.color = isOff ? 'var(--playback-control-ink, #424242)' : '';
           dom.gapValue.hidden = isRelativeSeparatorMode && level === 0;
           dom.gapValue.textContent = isRelativeSeparatorMode
               ? ({ 5: 'L', 3: 'M', 1: 'S', 0: '' }[level])
@@ -3603,7 +3603,7 @@ function getTilesInRadius(centerIndex, size) {
               left: dom.btnSymmetry.querySelector('.part.left'), right: dom.btnSymmetry.querySelector('.part.right'),
               centerDot: dom.btnSymmetry.querySelector('.part.center-dot'),
           };
-          const activeColor = C.GOLD, inactiveColor = 'transparent';
+          const activeColor = `var(--playback-control-ink, ${C.GOLD})`, inactiveColor = 'transparent';
           parts.top.style.stroke = inactiveColor; parts.bottom.style.stroke = inactiveColor;
           parts.left.style.stroke = inactiveColor; parts.right.style.stroke = inactiveColor;
           parts.centerDot.style.fill = inactiveColor;
