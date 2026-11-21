@@ -6,7 +6,7 @@ import { DEFAULT_SEPARATOR_CYCLE } from './separator-cycle.js';
 import { resolveSavedBloom } from './soft-bloom.js';
 import { loadStartupProfile } from './startup-profile.js';
 import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
-import { validateWorkspaceSettings, deserializeWorkspaceSettings, defaultWorkspaceSettings, migrateEvolutionSelections } from './workspace-settings.js';
+import { validateWorkspaceSettings, readWorkspaceSettingsFile, serializeWorkspaceSettings, defaultWorkspaceSettings, defaultSimulationPreferences, migrateEvolutionSelections } from './workspace-settings.js';
 import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS, defaultGameOfLifeRules } from './constants.js';
 import { normalizeCycleSources, inferCycleSources } from './evolution-cycle-settings.js';
 
@@ -139,6 +139,7 @@ export function factoryProfileSnapshot(index) {
     settings.rules.contour.growth = clone(INITIAL_CRACKS_GROWTH);
     Object.assign(settings.smoothing, { display: DEFAULT_SMOOTH_RENDERING,
         bloom: DEFAULT_SOFT_BLOOM, bloomIntensity: DEFAULT_BLOOM_INTENSITY });
+    settings.simulationPreferences = defaultSimulationPreferences();
     const identity = {};
     for (const [name, presets] of [['gameOfLife', GAME_OF_LIFE_PRESETS], ['chiFlow', CHI_FLOW_PRESETS]]) {
         identity[name] = { index: 0, sources: inferCycleSources(settings.cycles[name], presets),
@@ -176,6 +177,7 @@ function defaultComparable(value, factory) {
     settings.separatorCycle ??= [...DEFAULT_SEPARATOR_CYCLE];
     const bloom = resolveSavedBloom(settings.smoothing);
     Object.assign(settings.smoothing, { bloom: bloom.enabled, bloomIntensity: bloom.intensity });
+    settings.simulationPreferences = { ...defaultSimulationPreferences(), ...settings.simulationPreferences };
     const identity = Object.fromEntries(['gameOfLife', 'chiFlow'].map(name => [name, {
         index: snapshot.identity?.[name].index ?? 0,
         yoursRules: snapshot.identity?.[name].yoursRules ?? factory.identity[name].yoursRules
@@ -190,6 +192,9 @@ function withSavedSessionPreferences(draft, saved) {
     for (const key of ['rules', 'cycles', 'nudgeIntervalMs', 'evolutionTuning', 'gameOfLifeGenetics', 'gameOfLifeDeadColor', 'contourAction']) {
         if (Object.hasOwn(saved.settings, key)) result.settings[key] = clone(saved.settings[key]);
         else delete result.settings[key];
+    }
+    if (result.settings.simulationPreferences && saved.settings.simulationPreferences?.magnetAnchorLimit !== undefined) {
+        result.settings.simulationPreferences.magnetAnchorLimit = saved.settings.simulationPreferences.magnetAnchorLimit;
     }
     if (Object.hasOwn(saved.settings.brush, 'shape')) result.settings.brush.shape = saved.settings.brush.shape;
     else delete result.settings.brush.shape;
@@ -409,6 +414,15 @@ export function createProfileState(initial, storage) {
             restored = true;
         }
     } catch { storageError = true; }
+    // Older profiles shared these preferences via browser storage. Start them
+    // with the current device values, then let each profile retain its own.
+    if (initial.settings.simulationPreferences) {
+        for (const profile of state.profiles) for (const snapshot of [profile.saved, profile.draft]) {
+            snapshot.settings.simulationPreferences = {
+                ...initial.settings.simulationPreferences, ...snapshot.settings.simulationPreferences
+            };
+        }
+    }
     function persist() {
         try {
             const stored = { ...state, profiles: state.profiles.map(profile => ({
@@ -467,7 +481,15 @@ export function createProfileState(initial, storage) {
 }
 
 export function readProfileFile(text) {
-    return { settings: deserializeWorkspaceSettings(text) };
+    const snapshot = readWorkspaceSettingsFile(text);
+    if (!Object.hasOwn(snapshot, 'identity')) return snapshot;
+    if (!object(snapshot.identity)) throw new Error('Invalid profile identity');
+    return validateProfileSnapshot(snapshot);
+}
+
+export function serializeProfileFile(snapshot) {
+    const { settings, identity } = validateProfileSnapshot(snapshot);
+    return serializeWorkspaceSettings(settings, identity);
 }
 
 // Resolve the configured opening profile before drawing the first frame, including migrations.

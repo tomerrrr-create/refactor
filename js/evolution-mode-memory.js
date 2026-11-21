@@ -1,4 +1,4 @@
-// Device preference; remembered selections are deliberately session-only.
+// Remembered selections are deliberately session-only.
 export const EVOLUTION_MODE_MEMORY_KEY = 'colorGridRememberEvolutionModes';
 export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].includes(simulation) ? 'nudge' : simulation;
 // First human-cycle choices. Turing and one-shot utilities have no cycle.

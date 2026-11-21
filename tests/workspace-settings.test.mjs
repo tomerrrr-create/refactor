@@ -67,3 +67,21 @@ test('retired swipe selections remain readable and migrate into ordinary cycle s
  for(const bad of [null,[],{unknown:{}},{gameOfLife:{survival:[9],birth:[]}},{chiFlow:{awakening:[0],flow:[],reach:0}}])assert.throws(()=>serializeWorkspaceSettings({...original,evolutionSelections:bad}));
  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(migrated)),migrated);
 });
+
+test('portable simulation preferences preserve explicit defaults and reject unusable cycles', () => {
+    const settings = { ...defaultWorkspaceSettings(), simulationPreferences: {
+        gravityCycle: ['reverse_up'],
+        geometricFlowCycle: ['horizontal_gravity'],
+        resonanceCycle: [5],
+        circularCycle: ['tornado'],
+        magnetAnchorLimit: 600,
+        geometricFlowVisible: false,
+        rememberSimulationModes: false,
+        wind: { mode: 'ripple', strength: 5, speed: 2, range: .6, colorSpan: 2, trail: false }
+    } };
+    assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
+    for (const invalid of [{ gravityCycle: [] }, { resonanceCycle: [5, 5] }, { circularCycle: ['flow'] },
+        { geometricFlowCycle: ['unknown'] }, { magnetAnchorLimit: 1500 }, { rememberSimulationModes: 'false' }]) {
+        assert.throws(() => serializeWorkspaceSettings({ ...settings, simulationPreferences: invalid }));
+    }
+});

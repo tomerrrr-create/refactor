@@ -1,8 +1,10 @@
-import { runDiagonalGravity } from './diagonal-gravity.js';
+import { runCenterLineGravity, runDiagonalGravity } from './line-gravity.js';
 
 const DIAGONAL_MODES = ['triangle_gravity', 'triangle_gravity_mirror'];
-const DIAGONAL_PHASE_LIMIT = 65536;
-export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'triangle_flow', ...DIAGONAL_MODES]);
+const CENTER_LINE_MODES = ['horizontal_gravity', 'vertical_gravity'];
+const LINE_GRAVITY_MODES = [...DIAGONAL_MODES, ...CENTER_LINE_MODES];
+const LINE_GRAVITY_PHASE_LIMIT = 65536;
+export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'triangle_flow', ...LINE_GRAVITY_MODES]);
 export const POLYGON_FLOW_PERIOD = 240;
 const GROWTH_GENERATIONS = 180;
 const LOCAL_PERIOD = 480;
@@ -16,7 +18,7 @@ export function currentPolygonFlowMode(method) {
 }
 
 export function normalizePolygonFlowPhase(value, method) {
-    const limit = DIAGONAL_MODES.includes(method) ? DIAGONAL_PHASE_LIMIT
+    const limit = LINE_GRAVITY_MODES.includes(method) ? LINE_GRAVITY_PHASE_LIMIT
         : method === 'triangle_flow' ? GROWTH_GENERATIONS + LOCAL_PERIOD : POLYGON_FLOW_PERIOD;
     return Number.isInteger(value) && value >= 0 && value < limit ? value : 0;
 }
@@ -115,9 +117,11 @@ function growThroughNeighbors(n, board, ranks, phase, growth) {
 export function runPolygonCirculation(n, board, rules) {
     const local = rules.method === 'triangle_flow';
     const phase = normalizePolygonFlowPhase(rules.polygonFlowPhase, rules.method);
-    if (DIAGONAL_MODES.includes(rules.method)) {
-        rules.polygonFlowPhase = (phase + 1) % DIAGONAL_PHASE_LIMIT;
-        return runDiagonalGravity(n, board, phase, rules.method === 'triangle_gravity_mirror');
+    if (LINE_GRAVITY_MODES.includes(rules.method)) {
+        rules.polygonFlowPhase = (phase + 1) % LINE_GRAVITY_PHASE_LIMIT;
+        return CENTER_LINE_MODES.includes(rules.method)
+            ? runCenterLineGravity(n, board, phase, rules.method === 'horizontal_gravity')
+            : runDiagonalGravity(n, board, phase, rules.method === 'triangle_gravity_mirror');
     }
     let field = fields.get(rules.method);
     if (field?.n !== n) {

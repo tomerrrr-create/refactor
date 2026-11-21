@@ -8,7 +8,7 @@ import {createOilSettingsDialog} from './oil-settings-dialog.js';
 import {DEFAULT_INK_PREFERENCES,validateInkRules,createInkState,restoreInkState,validateInkSnapshot,runInkGeneration} from './simulations/ink.js';
 import {createInkSettingsDialog} from './ink-settings-dialog.js';
 import { createMacroEnding } from './macro-ending.js';
-import { DEFAULT_MAGNET_ANCHOR_LIMIT, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
+import { DEFAULT_MAGNET_ANCHOR_LIMIT, DEFAULT_MAGNET_ANCHOR_PREFERENCE, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
 import { GRAVITY_DIRECTIONS, loadGravityCycle, nextGravityMode, saveGravityCycle } from './gravity-cycle.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
 import {VORTICES_MODES,VORTICES_SETTINGS_ENTRY_MODES,VORTICES_RESONANCE_MAPS,RESONANCE_MAPS,vorticesModeFor,loadVorticesCycle,persistVorticesCycle,nextVorticesMode} from './vortices-modes.js';
@@ -45,13 +45,13 @@ import { DEFAULT_SEPARATOR_CYCLE, normalizeSeparatorCycle, nextSeparatorWidth, a
 import { createSoftBloom, compositeSoftBloom, DEFAULT_SOFT_BLOOM, DEFAULT_BLOOM_INTENSITY, normalizeBloomIntensity, resolveSavedBloom } from './soft-bloom.js';
 import { restoreErosionRules, recordErosionRules } from './erosion-settings.js';
 import { initializeProfileControls } from './profile-controls.js';
-import { loadProfileStartup } from './profile-state.js';
+import { loadProfileStartup, readProfileFile, serializeProfileFile } from './profile-state.js';
 import { loadBrushMotionRecording, persistBrushMotionRecording } from './brush-recording-settings.js';
 import { DEFAULT_SMOOTH_RENDERING, loadSmoothRendering, persistSmoothRendering, isSmoothDisplayAvailable } from './smooth-rendering-settings.js';
 import { getPaletteDisplayName } from './palette-display-names.js';
 import { showSettingsImportTransition } from './settings-import-transition.js';
 import { updateRainbowFrame } from './rainbow-frame.js';
-import { serializeWorkspaceSettings, deserializeWorkspaceSettings, isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings, migrateEvolutionSelections } from './workspace-settings.js';
+import { isWorkspaceSettingsText, loadWorkspaceSettings, persistWorkspaceSettings, migrateEvolutionSelections } from './workspace-settings.js';
 import { resolveChiReach } from './chi-reach.js';
 // js/app.js
 
@@ -341,7 +341,7 @@ personalGameOfLifeRules = cloneGameOfLifeRules(gameOfLifeIdentity.yoursRules);
 let spiralRules = { ...C.defaultSpiralRules };
 const vorticesSpiralRules = { method: 'tornado', tornadoVersion: 3, tornadoFrame: 0 };
 let magnetRules = { ...C.defaultMagnetRules };
-let magnetAnchorLimit = 600;
+let magnetAnchorLimit = DEFAULT_MAGNET_ANCHOR_PREFERENCE;
 let replayMagnetAnchorLimit = null;
 let replayMagnetCombinedField = null;
 function effectiveMagnetCombinedField() { return replayMagnetCombinedField ?? isCombinedMagnetMode(magnetRules.method); }
@@ -423,7 +423,7 @@ let magnetMode = 'off';
 
       const originalColorPickerIconHTML = dom.btnColorPicker.innerHTML;
       
-      let evolutionDrawer;
+      let evolutionDrawer, refreshExperimentalSimulationControls;
       const experimentalSimulations=createExperimentalSimulationFlags();
       let evolutionSlots = [...DEFAULT_EVOLUTION_LAYOUT];
       let modals;
@@ -2383,6 +2383,13 @@ if (simulationName === 'magnet') {
       function getWorkspaceSettings() {
         const { polygonFlowPhase, ...spiralPreferences } = spiralRules;
         return {
+            simulationPreferences: {
+                gravityCycle: [...gravityCycle], geometricFlowCycle: [...geometricFlowCycle],
+                resonanceCycle: [...resonanceCycle], circularCycle: [...vorticesEnabledModes],
+                magnetAnchorLimit, wind: structuredClone(windSettings),
+                geometricFlowVisible: experimentalSimulations.visible('spiral'),
+                rememberSimulationModes: cycleMemory.enabled()
+            },
             ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
             ...(Object.values(cymaticsStrengths).every(value=>value===INITIAL_CYMATICS_RULES.strength)?{}:{cymaticsStrengths:{...cymaticsStrengths}}),
             ...(evolutionSlots.join() === DEFAULT_EVOLUTION_LAYOUT.join() ? {} : {evolutionSlots:[...evolutionSlots]}),
@@ -2408,8 +2415,28 @@ if (simulationName === 'magnet') {
         };
       }
 
+      function applySimulationPreferences(preferences) {
+        if (preferences.gravityCycle) gravityCycle = [...preferences.gravityCycle];
+        if (preferences.geometricFlowCycle) geometricFlowCycle = [...preferences.geometricFlowCycle];
+        if (preferences.resonanceCycle) resonanceCycle = [...preferences.resonanceCycle];
+        if (preferences.circularCycle) vorticesEnabledModes = [...preferences.circularCycle];
+        if (preferences.magnetAnchorLimit !== undefined) magnetAnchorLimit = preferences.magnetAnchorLimit;
+        if (preferences.wind) {
+            windPainter?.stop();
+            windSettings = structuredClone(preferences.wind);
+        }
+        if (preferences.rememberSimulationModes !== undefined) cycleMemory.setEnabled(preferences.rememberSimulationModes);
+        if (preferences.geometricFlowVisible !== undefined) {
+            experimentalSimulations.set('spiral', preferences.geometricFlowVisible);
+            if (!preferences.geometricFlowVisible && activeEvolutionControl() === 'spiral') armSimulation(null);
+            refreshExperimentalSimulationControls?.();
+        }
+        updateWindButtonUI();
+      }
+
       // Applies preferences only. No board, palette, sort, history or macro state is restored.
       function applyWorkspacePreferences(settings, { startup = false } = {}) {
+        if (settings.simulationPreferences) applySimulationPreferences(settings.simulationPreferences);
         evolutionSlots = validateEvolutionSlots(settings.evolutionSlots);
         evolutionDrawer?.applyLayout();
         if (settings.gameOfLifeGenetics === 'palette-order') gameOfLifeRules.genetics = 'palette-order';
@@ -2492,7 +2519,7 @@ if (simulationName === 'magnet') {
       function importWorkspaceSettings(settings, identity = null, options = {}) {
         // The file has been fully validated before any state or preferences change.
         if (isMacroPlaying) throw new Error('Cannot import settings during macro playback');
-        if(typeof cycleMemory!=='undefined'){cycleMemory.clear();cycleMemoryAfterReplay=false;}
+        cycleMemoryAfterReplay = false;
         settings = migrateEvolutionSelections(settings, {
             gameOfLife: identity?.gameOfLife.index ?? ['personal','shuffle','coral'].indexOf(gameOfLifeMode),
             chiFlow: identity?.chiFlow.index ?? ['personal','ripples','nova'].indexOf(chiFlowMode)
@@ -2517,6 +2544,8 @@ if (simulationName === 'magnet') {
             identity?.chiFlow.sources ?? sources(settings.cycles.chiFlow, C.CHI_FLOW_PRESETS),
             identity?.chiFlow.yoursRules ?? settings.cycles.chiFlow[0]);
         applyWorkspacePreferences(settings, options);
+        cycleMemory.clear();
+        refreshCycleIcons();
         const storedStartup = persistStartup(startupSettings);
         const storedInit = persistSimInit(simulationInitSettings);
         const storedSort = persistSortCycle(sortCycleMethods);
@@ -2532,7 +2561,7 @@ if (simulationName === 'magnet') {
         const button = document.getElementById('btnSaveSettings');
         button.disabled = true;
         try {
-            const file = new File([serializeWorkspaceSettings(getWorkspaceSettings())],
+            const file = new File([serializeProfileFile(captureProfileSettings())],
                 getSanitizedFileName('txt').replace(/\.txt$/, '_settings.txt'), { type: 'text/plain' });
             const shareData = { files: [file], title: getText('saveModal_settings') };
             if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
@@ -2598,7 +2627,8 @@ function updateMacroPaletteButtonUI(paletteIndex) {
             const text = e.target.result;
             if (isWorkspaceSettingsText(text)) {
                 try {
-                    const stored = importWorkspaceSettings(deserializeWorkspaceSettings(text));
+                    const { settings, identity } = readProfileFile(text);
+                    const stored = importWorkspaceSettings(settings, identity);
                     modals.closeModalSlowly(() => showSettingsImportTransition(dom.board,
                         getText('settings_aligned'), stored ? '' : getText('settings_session_only')));
                 } catch (error) {
@@ -4430,7 +4460,6 @@ function updateMagnetButtonUI() {
 
 function selectMagnetMode(method) {
     magnetMode=method;magnetRules.method=method;
-    if(method==='magnet'||method==='cosmic_magnet')magnetAnchorLimit=600;
 }
 
 function cycleMagnetMode() {
@@ -6330,14 +6359,18 @@ updateBrightnessEvoButtonUI();
         updateLayout();
         updateAllUIText();
         const importedPreferences = loadWorkspaceSettings();
-        if (importedPreferences) applyWorkspacePreferences(importedPreferences, { startup: true });
+        if (importedPreferences) {
+            // The selected profile or existing device settings own these preferences on opening.
+            const { simulationPreferences, ...workspacePreferences } = importedPreferences;
+            applyWorkspacePreferences(workspacePreferences, { startup: true });
+        }
         isSmoothRendering = loadSmoothRendering(importedPreferences?.smoothing.display ?? DEFAULT_SMOOTH_RENDERING);
         document.getElementById('smoothRenderingToggle').checked = isSmoothRendering;
         renderToScreen(null);
         settingsProfiles = initializeProfileControls({
             capture: captureProfileSettings,
-            exportSettings: (settings, index) => saveArtRecipeFile(new File(
-                [serializeWorkspaceSettings(settings)], `FYI_Profile_${index + 1}_settings.txt`, { type: 'text/plain' })),
+            exportSettings: (snapshot, index) => saveArtRecipeFile(new File(
+                [serializeProfileFile(snapshot)], `FYI_Profile_${index + 1}_settings.txt`, { type: 'text/plain' })),
             apply: (snapshot, options) => importWorkspaceSettings(snapshot.settings, snapshot.identity, options),
             canUse: () => !isMacroLoaded && !isMacroPlaying && !isExecutingMacroCommand,
             getText
@@ -6386,7 +6419,7 @@ updateBrightnessEvoButtonUI();
             getMaps:()=>activeVorticesMode() ? VORTICES_RESONANCE_MAPS : RESONANCE_MAPS,
             getTrigger:()=>activeVorticesMode() ? dom.btnInk : dom.btnCymatics,
             getText,getLang:getCurrentLang,onLanguageChange});
-        initializeExperimentalSimulationControls({flags:experimentalSimulations,getText,onLanguageChange,
+        refreshExperimentalSimulationControls = initializeExperimentalSimulationControls({flags:experimentalSimulations,getText,onLanguageChange,
             canChange:()=>!isMacroLoaded&&!isMacroPlaying&&!isExecutingMacroCommand,
             onChange:(id,enabled)=>{
                 if(!enabled&&activeEvolutionControl()===id){if(isLifePlaying)pauseLife();armSimulation(null);}

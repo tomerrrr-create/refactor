@@ -1,4 +1,4 @@
-import { GRAVITY_DIRECTIONS } from './gravity-cycle.js';
+import { GRAVITY_DIRECTIONS, GRAVITY_MODES, DEFAULT_GRAVITY_CYCLE } from './gravity-cycle.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules} from './simulations/network.js';
 import {INITIAL_OIL_RULES,validateOilRules} from './simulations/oil.js';
 import {DEFAULT_INK_PREFERENCES,validateInkRules} from './simulations/ink.js';
@@ -16,6 +16,54 @@ import { DEFAULT_SIM_INIT, validateSimInit } from './sim-init-settings.js';
 import { DEFAULT_SORT_CYCLE, normalizeSortCycle } from './sort-cycle-settings.js';
 import { CHI_REACH_PERCENTAGES } from './chi-reach.js';
 import { POLYGON_CIRCULATION_MODES } from './simulations/polygon-circulation.js';
+
+import { GEOMETRIC_FLOW_MODES, DEFAULT_GEOMETRIC_FLOW_CYCLE } from './geometric-flow-cycle.js';
+import { RESONANCE_CYCLE_VERSIONS, DEFAULT_RESONANCE_CYCLE } from './resonance-cycle.js';
+import { DEFAULT_VORTICES_CYCLE, VORTICES_MODES, VORTICES_SETTINGS_ENTRY_MODES } from './vortices-modes.js';
+import { orderToolbarCycle } from './toolbar-cycle-storage.js';
+import { MAGNET_ANCHOR_LIMITS, DEFAULT_MAGNET_ANCHOR_PREFERENCE } from './magnet-anchor-limit.js';
+import { normalizeWindSettings } from './wind-settings.js';
+
+export function defaultSimulationPreferences() {
+    return {
+        gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
+        resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
+        magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
+        geometricFlowVisible: false, rememberSimulationModes: false
+    };
+}
+
+function validateSimulationPreferences(value) {
+    if (!object(value)) throw new Error('Invalid simulation preferences');
+    const result = {};
+    for (const [key, modes] of Object.entries({
+        gravityCycle: GRAVITY_MODES, geometricFlowCycle: GEOMETRIC_FLOW_MODES,
+        resonanceCycle: RESONANCE_CYCLE_VERSIONS, circularCycle: Object.keys(VORTICES_MODES)
+    })) {
+        if (!Object.hasOwn(value, key)) continue;
+        const ordered = orderToolbarCycle(value[key], modes);
+        if (!ordered.length || ordered.length !== value[key].length ||
+            key === 'circularCycle' && !ordered.some(mode => VORTICES_SETTINGS_ENTRY_MODES.includes(mode))) {
+            throw new Error('Invalid simulation cycle: ' + key);
+        }
+        result[key] = ordered;
+    }
+    if (Object.hasOwn(value, 'magnetAnchorLimit')) {
+        if (!MAGNET_ANCHOR_LIMITS.includes(value.magnetAnchorLimit)) throw new Error('Invalid Magnet anchor limit');
+        result.magnetAnchorLimit = value.magnetAnchorLimit;
+    }
+    if (Object.hasOwn(value, 'wind')) {
+        if (!object(value.wind)) throw new Error('Invalid Wind settings');
+        result.wind = normalizeWindSettings(value.wind);
+    }
+    for (const key of ['geometricFlowVisible', 'rememberSimulationModes']) {
+        if (!Object.hasOwn(value, key)) continue;
+        if (typeof value[key] !== 'boolean') throw new Error('Invalid simulation preference: ' + key);
+        result[key] = value[key];
+    }
+    if (Object.keys(result).length !== Object.keys(value).length) throw new Error('Unknown simulation preference');
+    return result;
+}
 
 export const SETTINGS_HEADER = 'FYI_SETTINGS_V1';
 export const WORKSPACE_STORAGE_KEY = 'colorGridWorkspaceSettings';
@@ -40,6 +88,7 @@ function mergeKnown(defaults, overrides, path = '') {
     if (!object(overrides)) throw new Error('Invalid settings object');
     const result = clone(defaults);
     for (const [key, value] of Object.entries(overrides)) {
+        if (path === '' && key === 'simulationPreferences') { result[key] = validateSimulationPreferences(value); continue; }
         if (path === '' && key === 'contourAction') { result[key] = validateContourActionRules(value); continue; }
         if (path === '' && key === 'cymaticsStrengths') { result[key]=validateCymaticsStrengths(value); continue; }
         if (path === '' && key === 'cymaticsFrequencies') { result[key]=validateCymaticsFrequencies(value); continue; }
@@ -156,25 +205,30 @@ function differences(value, defaults) {
     return result;
 }
 
-export function serializeWorkspaceSettings(value) {
+export function serializeWorkspaceSettings(value, identity) {
     const settings = validateWorkspaceSettings(value);
     return SETTINGS_HEADER + '\n' + JSON.stringify({ version: 1,
-        settings: differences(settings, defaultWorkspaceSettings()) }, null, 2) + '\n';
+        settings: differences(settings, defaultWorkspaceSettings()), ...(identity ? { identity } : {}) }, null, 2) + '\n';
 }
 
 export function isWorkspaceSettingsText(text) {
     return /^FYI_SETTINGS_/u.test(text.replace(/^\uFEFF/u, '').trimStart());
 }
 
-export function deserializeWorkspaceSettings(text) {
+export function readWorkspaceSettingsFile(text) {
     if (text.length > 1024 * 1024) throw new Error('Settings file is too large');
     const clean = text.replace(/^\uFEFF/u, '').trimStart();
     const split = clean.indexOf('\n');
     if (split < 0 || clean.slice(0, split).trim() !== SETTINGS_HEADER) throw new Error('Unsupported settings version');
     const payload = JSON.parse(clean.slice(split + 1));
     if (!object(payload) || payload.version !== 1 || !object(payload.settings) ||
-        Object.keys(payload).some(key => !['version', 'settings'].includes(key))) throw new Error('Invalid settings file');
-    return validateWorkspaceSettings(payload.settings);
+        Object.keys(payload).some(key => !['version', 'settings', 'identity'].includes(key))) throw new Error('Invalid settings file');
+    return { settings: validateWorkspaceSettings(payload.settings),
+        ...(Object.hasOwn(payload, 'identity') ? { identity: payload.identity } : {}) };
+}
+
+export function deserializeWorkspaceSettings(text) {
+    return readWorkspaceSettingsFile(text).settings;
 }
 
 export function loadWorkspaceSettings(storage = localStorage) {

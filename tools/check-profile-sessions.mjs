@@ -19,7 +19,15 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
- source=source.replace('      initializeApp();',`window.profileTest={snapshot:captureProfileSettings,tech:()=>modals.openTechnicianMenu(),gol:()=>modals.openGolSettingsModal(),brush:()=>modals.openColorPickerModal(),reset:()=>settingsProfiles.resetToDefaults(),replay:()=>settingsProfiles.beginReplay(),endReplay:()=>settingsProfiles.endReplay(),edit:()=>{const s=captureProfileSettings();s.settings.rules.erosion.erosionStages.channels=5;s.settings.rules.gravity.strength=.25;s.settings.evolutionTuning={...structuredClone(DEFAULT_EVOLUTION_TUNING),breathe:{speed:2,depth:1}};importWorkspaceSettings(s.settings,s.identity);settingsProfiles.refresh();}};initializeApp().then(()=>profileTest.ready=true);`);
+ source=source.replace('      initializeApp();',`window.profileTest={snapshot:captureProfileSettings,tech:()=>modals.openTechnicianMenu(),gol:()=>modals.openGolSettingsModal(),brush:()=>modals.openColorPickerModal(),reset:()=>settingsProfiles.resetToDefaults(),replay:()=>settingsProfiles.beginReplay(),endReplay:()=>settingsProfiles.endReplay(),edit:()=>{const s=captureProfileSettings();s.settings.rules.erosion.erosionStages.channels=5;s.settings.rules.gravity.strength=.25;s.settings.evolutionTuning={...structuredClone(DEFAULT_EVOLUTION_TUNING),breathe:{speed:2,depth:1}};importWorkspaceSettings(s.settings,s.identity);settingsProfiles.refresh();},portable:()=>{
+ const s=captureProfileSettings();
+ s.settings.simulationPreferences={gravityCycle:['reverse_right'],geometricFlowCycle:['vertical_gravity'],resonanceCycle:[5],circularCycle:['a','tornado'],
+ magnetAnchorLimit:1000,wind:selectWindMode({mode:'ripple',strength:7,speed:2,range:.6,colorSpan:2,trail:false},'paint'),
+ geometricFlowVisible:true,rememberSimulationModes:true};
+ s.identity.gameOfLife.index=2;s.identity.gameOfLife.yoursRules={survival:[1],birth:[6]};
+ s.identity.chiFlow.index=1;s.identity.chiFlow.yoursRules={awakening:[2],flow:[5],reach:0};
+ importWorkspaceSettings(s.settings,s.identity);settingsProfiles.refresh();},board:()=>boardState.map(t=>[t.k,t.v,Boolean(t.isGold)]),save:()=>dom.btnSave.click()
+ };initializeApp().then(()=>profileTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  const boot=async(reload=false)=>{if(reload)await page.reload();else await page.goto(base);await page.waitForFunction(()=>window.profileTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));};
@@ -65,6 +73,31 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await page.locator('#profileSettingsFile').setInputFiles({name:'settings.txt',mimeType:'text/plain',buffer:Buffer.from(exported)});await page.locator('#btnProfileTransferCancel').click();assert.deepEqual((await snap()).settings.rules,baseline.settings.rules);
  await page.locator('#profileSettingsFile').setInputFiles({name:'settings.txt',mimeType:'text/plain',buffer:Buffer.from(exported)});await page.locator('#btnProfileTransferConfirm').click();
  await boot(true);assert.deepEqual((await snap()).settings.rules,custom.settings.rules);
+ // Verify both TXT exporters and both loaders with every portable setting.
+ await page.evaluate(()=>profileTest.portable());const portable=await snap();
+ const checkPortable=async()=>{const loaded=await snap();assert.deepEqual(loaded.settings.simulationPreferences,portable.settings.simulationPreferences);assert.deepEqual(loaded.identity,portable.identity);};
+ const downloadText=async button=>{const pending=page.waitForEvent('download');await page.locator(button).click();return readFile(await (await pending).path(),'utf8');};
+ await page.evaluate(()=>profileTest.save());
+ const workspaceFile=await downloadText('#btnSaveSettings');
+ await tech();await actions();const profileFile=await downloadText('#btnProfileExport');
+ const asFile=text=>({name:'settings.txt',mimeType:'text/plain',buffer:Buffer.from(text)});
+ await page.evaluate(()=>profileTest.reset());
+ const board=await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());profileTest.save();return profileTest.board();});
+ await page.locator('#projectFileInput').setInputFiles(asFile(workspaceFile));
+ await page.waitForFunction(()=>profileTest.snapshot().settings.simulationPreferences.magnetAnchorLimit===1000);
+ await checkPortable();assert.deepEqual(await page.evaluate(()=>profileTest.board()),board);
+ // A V1 file without the new fields keeps the current simulation preferences.
+ const legacyPayload=JSON.parse(workspaceFile.slice(workspaceFile.indexOf('\n')+1));
+ delete legacyPayload.identity;delete legacyPayload.settings.simulationPreferences;legacyPayload.settings.nudgeIntervalMs=39;
+ await page.locator('#projectFileInput').setInputFiles(asFile('FYI_SETTINGS_V1\n'+JSON.stringify(legacyPayload)));
+ await page.waitForFunction(()=>profileTest.snapshot().settings.nudgeIntervalMs===39);
+ assert.deepEqual((await snap()).settings.simulationPreferences,portable.settings.simulationPreferences);
+ await boot(true);
+ await tech();await actions();await page.locator('#profileSettingsFile').setInputFiles(asFile(profileFile));
+ await page.locator('#btnProfileTransferCancel').click();
+ assert.notEqual((await snap()).settings.simulationPreferences.magnetAnchorLimit,1000);
+ await page.locator('#profileSettingsFile').setInputFiles(asFile(profileFile));await page.locator('#btnProfileTransferConfirm').click();
+ await checkPortable();await boot(true);await checkPortable();
  // Actual reset UI removes both saved overrides and the default star.
  await tech();await page.locator('#btnResetWorkspace').click();await page.locator('#btnConfirmWorkspaceReset').click();
  assert(await page.locator('[data-profile-choice="0"] .profile-dirty').evaluate(e=>e.hidden));

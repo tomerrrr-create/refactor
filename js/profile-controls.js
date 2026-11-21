@@ -101,7 +101,7 @@ export function initializeProfileControls({ capture, apply, exportSettings, canU
         const snapshot = state.draft(), index = state.selected;
         busy = true; refresh();
         try {
-            if (await exportSettings(snapshot.settings, index)) message('profile_exported', true);
+            if (await exportSettings(snapshot, index)) message('profile_exported', true);
         } catch { message('settings_save_error'); }
         finally { busy = false; closeActions(); refresh(); dots[state.selected].focus(); }
     });

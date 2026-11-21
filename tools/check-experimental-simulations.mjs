@@ -60,15 +60,16 @@ try{for(const touch of [false,true]){
  assert(await page.locator('#displaySettings #interfaceZoom').isVisible());
  await page.locator('#btnConfigureFeatures').click();
  assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
- // A different profile must not change device opt-ins.
+ // A different profile keeps its own Geometric Flow visibility.
  await toggle('spiral',true);
- await page.locator('[data-profile-choice="1"]').click();assert(await page.locator('#spiralExperimentToggle').isChecked());
+ await page.locator('[data-profile-choice="1"]').click();assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
+ await page.locator('[data-profile-choice="0"]').click();assert(await page.locator('#spiralExperimentToggle').isChecked());
  await close();
  assert(await geometric.isVisible());
  assert.equal(await page.locator('#btnNetwork').getAttribute('data-evolution-slot'),'10');
  assert.equal(await geometric.getAttribute('data-evolution-slot'),'19');
  assert.equal(await geometric.getAttribute('aria-label'),touch?'זרימה גאומטרית':'Geometric Flow');
- for(const icon of ['Diagonal','DiagonalMirror']){
+ for(const icon of ['Diagonal','DiagonalMirror','Horizontal','Vertical']){
   await geometric.click();assert.equal((await state()).armed,'spiral');assert(await page.locator('#iconSpiral'+icon).isVisible());
  }
  await geometric.click();assert.equal((await state()).armed,null);

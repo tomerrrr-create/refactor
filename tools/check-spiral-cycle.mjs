@@ -38,8 +38,8 @@ try{
   await page.goto(base);await page.waitForFunction(()=>window.spiralTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   await page.evaluate(()=>spiralTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
-  const modes=['radial','down','triangle_gravity','triangle_gravity_mirror'];
-  const icons=['iconSpiralRadial','iconSpiralDown','iconSpiralDiagonal','iconSpiralDiagonalMirror'];
+  const modes=['radial','down','triangle_gravity','triangle_gravity_mirror','horizontal_gravity','vertical_gravity'];
+  const icons=['iconSpiralRadial','iconSpiralDown','iconSpiralDiagonal','iconSpiralDiagonalMirror','iconSpiralHorizontal','iconSpiralVertical'];
   const before=(await state()).tiles;
   const tornado=async()=>{for(let i=0;i<9&&(await state()).mode!=='tornado';i++)await tap('#btnInk');assert.equal((await state()).mode,'tornado');assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'tornado');assert(await page.locator('#btnInk .vortices-tornado-badge').isVisible());};
   const open=async()=>{await page.evaluate(()=>spiralTest.open());await page.waitForTimeout(350);};
@@ -71,7 +71,7 @@ try{
   const after=(await state()).tiles,recipe=(await state()).logs.join('\n');assert.notDeepEqual(after,before);
   for(const method of modes){assert(recipe.includes('Spiral Mode Changed -> '+method));assert(recipe.includes('"method":"'+method+'"'));}
   assert.deepEqual(await replay(page,recipe),after,'new logger-to-player steps retain all Geometric Flow modes');
-  for(const method of ['triangle_gravity','triangle_gravity_mirror']){
+  for(const method of modes.slice(2)){
    await page.evaluate(()=>spiralTest.setup());await tap('#btnSpiral');await choose(method);
    await tap('#btnStepForward');await tap('#btnStepForward');
    const checkpoint=await page.evaluate(()=>spiralTest.project());

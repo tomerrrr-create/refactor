@@ -1,10 +1,14 @@
 import { loadToolbarCycle, orderToolbarCycle, persistToolbarCycle } from './toolbar-cycle-storage.js';
 import { currentPolygonFlowMode } from './simulations/polygon-circulation.js';
 
-export const GEOMETRIC_FLOW_MODES = Object.freeze(['radial', 'down', 'triangle_gravity', 'triangle_gravity_mirror']);
-export const DEFAULT_GEOMETRIC_FLOW_CYCLE = Object.freeze(['triangle_gravity', 'triangle_gravity_mirror']);
+const diagonalModes = ['triangle_gravity', 'triangle_gravity_mirror'];
+const centerLineModes = ['horizontal_gravity', 'vertical_gravity'];
+const previousModes = ['radial', 'down', ...diagonalModes];
+export const GEOMETRIC_FLOW_MODES = Object.freeze([...previousModes, ...centerLineModes]);
+export const DEFAULT_GEOMETRIC_FLOW_CYCLE = Object.freeze([...diagonalModes, ...centerLineModes]);
 
-const STORAGE_KEY = 'colorGridGeometricFlowCycleV1';
+const STORAGE_KEY = 'colorGridGeometricFlowCycleV2';
+const LEGACY_STORAGE_KEY = 'colorGridGeometricFlowCycleV1';
 const cycle = ['off', ...GEOMETRIC_FLOW_MODES];
 
 export function orderGeometricFlowModes(modes) {
@@ -12,7 +16,10 @@ export function orderGeometricFlowModes(modes) {
 }
 
 export function loadGeometricFlowCycle(storage) {
-    return loadToolbarCycle(STORAGE_KEY, GEOMETRIC_FLOW_MODES, DEFAULT_GEOMETRIC_FLOW_CYCLE, storage, currentPolygonFlowMode);
+    const saved = loadToolbarCycle(STORAGE_KEY, GEOMETRIC_FLOW_MODES, [], storage);
+    if (saved.length) return saved;
+    const previous = loadToolbarCycle(LEGACY_STORAGE_KEY, previousModes, diagonalModes, storage, currentPolygonFlowMode);
+    return [...previous, ...centerLineModes];
 }
 
 export function persistGeometricFlowCycle(modes, storage) {

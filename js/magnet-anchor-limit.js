@@ -1,5 +1,6 @@
 import {isCombinedMagnetMode} from './magnet-modes.js';
-// Session-only Magnet setting; it is never part of profile settings.
+// A live preference and a separate fallback for older recordings.
+export const DEFAULT_MAGNET_ANCHOR_PREFERENCE = 600;
 export const DEFAULT_MAGNET_ANCHOR_LIMIT = 300;
 export const MAGNET_ANCHOR_LIMITS = Object.freeze([300, 600, 1000]);
 
