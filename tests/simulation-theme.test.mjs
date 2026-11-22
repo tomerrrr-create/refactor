@@ -13,17 +13,34 @@ function harness(saved = {}, blocked = false) {
     const rest = buttons(), playback = buttons(), hierarchy = {
         checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; }
     };
+    const pulse = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
+    const pulseValue = {};
+    const styles = new Map();
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
-        toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); } };
+        toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); },
+        style: { setProperty: (name, value) => styles.set(name, value) } };
     const select = selector => selector.includes('Playback') ? playback : rest;
+    const controls = { goldPlaybackHierarchyToggle: hierarchy, glowPulse: pulse, glowPulseValue: pulseValue };
     const context = vm.createContext({ document: { documentElement: root,
-        getElementById: id => id === 'goldPlaybackHierarchyToggle' ? hierarchy : { querySelectorAll: () => select(id) }, querySelectorAll: select },
+        getElementById: id => controls[id] ?? { querySelectorAll: () => select(id) }, querySelectorAll: select },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
         getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
-    return { context, root, storage, rest, playback, hierarchy, run: code => vm.runInContext(code, context) };
+    return { context, root, storage, rest, playback, hierarchy, pulse, styles, run: code => vm.runInContext(code, context) };
 }
+
+test('Glow Pulse defaults to 4.8 seconds and saves the selected duration', () => {
+    const h = harness();
+    h.run('initializeSimulationTheme()');
+    assert.equal(h.styles.get('--simulation-halo-duration'), '4.8s');
+    h.pulse.value = '0';
+    h.pulse.handlers.input();
+    assert.equal(h.styles.get('--simulation-halo-duration'), '0.6s');
+    const reload = harness(Object.fromEntries(h.storage));
+    reload.run('initializeSimulationTheme()');
+    assert.equal(reload.styles.get('--simulation-halo-duration'), '0.6s');
+});
 test('all resting/playback color pairs restore the resting selection and never persist running state', () => {
     for (const rest of ['blue', 'gold', 'teal']) for (const playback of ['blue', 'gold', 'teal']) {
         const h = harness(); h.run('initializeSimulationTheme()');
