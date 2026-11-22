@@ -5,7 +5,8 @@ import {createCloudField} from './cymatics-organic.js';
 import {moveCymaticsField} from './cymatics-motion.js';
 import {createInterferenceField} from './cymatics-interference.js';
 import {createCircularResonanceField} from './cymatics-circular.js';
-import {validateCymaticsRules} from '../cymatics-settings.js';
+import {createHeartField} from './cymatics-heart.js';
+import {CYMATICS_RESONANCE_MAPS,validateCymaticsRules} from '../cymatics-settings.js';
 // Chladni-inspired square plate, not an acoustic solver. Only a derived field is
 // cached; serializable PRNG state and steps determine every particle exchange.
 let fieldSize=0,fieldPattern='',field=null;
@@ -21,6 +22,7 @@ export function getCymaticsField(n,frequency,resonanceVersion,phaseStep=0,cosmic
     return frequency!==undefined&&phaseStep!==0?moveCymaticsField(base,n,resonanceVersion??1,phaseStep):base;
 }
 function getStaticCymaticsField(n,frequency,resonanceVersion){
+    if(resonanceVersion===CYMATICS_RESONANCE_MAPS.heart)return createHeartField(n,frequency);
     if(resonanceVersion===3){
         const key='resonance-v3:'+frequency;
         if(field&&fieldSize===n&&fieldPattern===key)return field;

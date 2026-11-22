@@ -24,7 +24,7 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
         const card=document.createElement('div');card.className='resonance-map-option';
         const b=document.createElement('button');b.type='button';b.dataset.cymaticsMap=name;
         const icon=document.querySelector(`#btnCymatics > [data-cymatics-map-icon="${name}"], #btnInk > [data-vortices-icon="${name}"]`);
-        const accents={diagonal:'#CD853F',grid:'#C2A14A',circular:'#6B8E23',interference:'#607D8B',clouds:'#91A0A6',cosmic:'#FF7F50'};
+        const accents={heart:'#D97794',diagonal:'#CD853F',grid:'#C2A14A',circular:'#6B8E23',interference:'#607D8B',clouds:'#91A0A6',cosmic:'#FF7F50'};
         b.style.setProperty('--preset-ink',accents[name]);
         const label=document.createElement('span');label.className='resonance-map-name';
         b.append(label,icon.cloneNode(true));
@@ -56,7 +56,7 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
             b.setAttribute('aria-pressed',String(draft.resonanceVersion===version));
             input.setAttribute('aria-label',getText('geometric_flow_cycle_title')+' · '+text);
             input.checked=cycleDraft?.has(version)??false;
-            input.disabled=input.checked&&cycleDraft.size===1;
+            input.disabled=name==='heart';
         }
         dialog.querySelector('label[for=cymaticsFrequency]').textContent=getText('cymatics_frequency');
         {frequency.value=Math.round(1000*Math.log(draft.frequency/20)/Math.log(1000));frequency.setAttribute('aria-valuetext',draft.frequency+' Hz');frequency.style.setProperty('--range-fill',Number(frequency.value)/10+'%');dialog.querySelector('output[for=cymaticsFrequency]').value=draft.frequency+' Hz';}
@@ -76,7 +76,7 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
             draftFrequencies[name]=frequencies[name];
             draftStrengths[name]=strengths[name];
         }
-        const version=allowedMaps.includes('interference') ? CYMATICS_RESONANCE_MAPS.interference : draft.resonanceVersion;
+        const version=allowedMaps.includes('heart') ? CYMATICS_RESONANCE_MAPS.heart : draft.resonanceVersion;
         const reset=selectCymaticsMap({...INITIAL_CYMATICS_RULES,resonanceVersion:version,
             frequency:frequencies[allowedMaps.find(name=>CYMATICS_RESONANCE_MAPS[name]===version)],
             strength:INITIAL_CYMATICS_RULES.strength},version,draftFrequencies,draftStrengths);

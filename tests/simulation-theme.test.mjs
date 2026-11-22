@@ -30,10 +30,13 @@ function harness(saved = {}, blocked = false) {
     return { context, root, storage, rest, playback, hierarchy, pulse, styles, run: code => vm.runInContext(code, context) };
 }
 
-test('Glow Pulse defaults to 4.8 seconds and saves the selected duration', () => {
+test('Glow Pulse defaults to 3.2 seconds and saves the selected duration', () => {
     const h = harness();
     h.run('initializeSimulationTheme()');
-    assert.equal(h.styles.get('--simulation-halo-duration'), '4.8s');
+    assert.equal(h.styles.get('--simulation-halo-duration'), '3.2s');
+    const savedMaximum = harness({ colorGridGlowPulseSeconds: '4.8' });
+    savedMaximum.run('initializeSimulationTheme()');
+    assert.equal(savedMaximum.styles.get('--simulation-halo-duration'), '4.8s');
     h.pulse.value = '0';
     h.pulse.handlers.input();
     assert.equal(h.styles.get('--simulation-halo-duration'), '0.6s');

@@ -1964,7 +1964,7 @@ button, .ctrl {
   background: radial-gradient(circle, #ffdf8c5c 0%, #f5bb4744 26%, #e6972422 45%, #e6972400 70%);
   opacity: 0;
   transition: opacity 420ms ease-in-out;
-  animation: simulation-halo-breathe var(--simulation-halo-duration, 4.8s) ease-in-out infinite paused;
+  animation: simulation-halo-breathe var(--simulation-halo-duration, 3.2s) ease-in-out infinite paused;
 }
 :root[data-simulation-running] .sim-mode-active .ctrl[data-evolution-id].simulation-active::before {
   opacity: 1;
@@ -2539,6 +2539,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cymaticsSettingsDialog .cymatics-phase input { order:1; width:18px; height:18px; margin:0; flex-shrink:0; accent-color:var(--gold); }
 
 #btnCymatics > [data-cymatics-map-icon] { display:none; }
+#btnCymatics[data-cymatics-map="heart"] > [data-cymatics-map-icon="heart"],
 #btnCymatics[data-cymatics-map="interference"] > [data-cymatics-map-icon="interference"],
 #btnCymatics[data-cymatics-map="diagonal"] > [data-cymatics-map-icon="diagonal"],
 #btnCymatics[data-cymatics-map="grid"] > [data-cymatics-map-icon="grid"],

@@ -1,8 +1,8 @@
 export const CURRENT_RESONANCE_VERSION=2;
-export const CYMATICS_RESONANCE_MAPS=Object.freeze({diagonal:1,grid:2,circular:3,interference:4,clouds:5,cosmic:6});
+export const CYMATICS_RESONANCE_MAPS=Object.freeze({heart:7,diagonal:1,grid:2,circular:3,interference:4,clouds:5,cosmic:6});
 // New application/reset defaults are separate from legacy recording fallbacks.
-export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({diagonal:11831,grid:20000,circular:20000,interference:20000,clouds:20000,cosmic:800});
-export const INITIAL_CYMATICS_RULES = Object.freeze({strength:35,mode:'resonance',frequency:INITIAL_CYMATICS_FREQUENCIES.interference,resonanceVersion:4,phaseMotion:true});
+export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({heart:123,diagonal:11831,grid:20000,circular:20000,interference:20000,clouds:20000,cosmic:800});
+export const INITIAL_CYMATICS_RULES = Object.freeze({strength:35,mode:'resonance',frequency:INITIAL_CYMATICS_FREQUENCIES.heart,resonanceVersion:CYMATICS_RESONANCE_MAPS.heart,phaseMotion:true});
 export const DEFAULT_CYMATICS_RULES=INITIAL_CYMATICS_RULES;
 const isEmpathyMap = version => version === CYMATICS_RESONANCE_MAPS.circular || version === CYMATICS_RESONANCE_MAPS.cosmic;
 
@@ -62,7 +62,12 @@ export function createCymaticsFrequencies(rules,saved={}){
     const values=validateCymaticsFrequencies(saved);
     if(rules===undefined)return {...INITIAL_CYMATICS_FREQUENCIES,...values};
     rules=validateCymaticsRules(rules);
-    return Object.fromEntries(Object.keys(CYMATICS_RESONANCE_MAPS).map(name=>[name,values[name]??(rules.mode==='resonance'?rules.frequency:INITIAL_CYMATICS_FREQUENCIES[name])]));
+    const usesHeart=rules.resonanceVersion===CYMATICS_RESONANCE_MAPS.heart;
+    // Add Heart at its own frequency when reopening a legacy shared-frequency profile.
+    return Object.fromEntries(Object.keys(CYMATICS_RESONANCE_MAPS).map(name=>[
+        name,values[name]??(name==='heart' ? (usesHeart?rules.frequency:INITIAL_CYMATICS_FREQUENCIES.heart)
+            : (usesHeart?INITIAL_CYMATICS_FREQUENCIES[name]:rules.frequency))
+    ]));
 }
 export function rememberCymaticsFrequency(frequencies,rules){
     const result=createCymaticsFrequencies(rules,frequencies);
