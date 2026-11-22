@@ -6,6 +6,9 @@ export const RESONANCE_CYCLE_VERSIONS = RESONANCE_MAPS.map(name => CYMATICS_RESO
 export const DEFAULT_RESONANCE_CYCLE = Object.freeze(RESONANCE_CYCLE_VERSIONS.filter(version => version !== CYMATICS_RESONANCE_MAPS.clouds));
 const STORAGE_KEY = 'colorGridResonanceCycleV1';
 
-export const loadResonanceCycle = storage => loadToolbarCycle(STORAGE_KEY, RESONANCE_CYCLE_VERSIONS, DEFAULT_RESONANCE_CYCLE, storage);
-export const orderResonanceCycle = modes => orderToolbarCycle(modes, RESONANCE_CYCLE_VERSIONS);
+export const orderResonanceCycle = modes => [
+    CYMATICS_RESONANCE_MAPS.heart,
+    ...orderToolbarCycle(modes, RESONANCE_CYCLE_VERSIONS).filter(version => version !== CYMATICS_RESONANCE_MAPS.heart)
+];
+export const loadResonanceCycle = storage => orderResonanceCycle(loadToolbarCycle(STORAGE_KEY, RESONANCE_CYCLE_VERSIONS, DEFAULT_RESONANCE_CYCLE, storage));
 export const persistResonanceCycle = (modes, storage) => persistToolbarCycle(STORAGE_KEY, modes, storage);

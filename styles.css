@@ -2539,6 +2539,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #cymaticsSettingsDialog .cymatics-phase input { order:1; width:18px; height:18px; margin:0; flex-shrink:0; accent-color:var(--gold); }
 
 #btnCymatics > [data-cymatics-map-icon] { display:none; }
+#btnCymatics[data-cymatics-map="heart"] > [data-cymatics-map-icon="heart"],
 #btnCymatics[data-cymatics-map="interference"] > [data-cymatics-map-icon="interference"],
 #btnCymatics[data-cymatics-map="diagonal"] > [data-cymatics-map-icon="diagonal"],
 #btnCymatics[data-cymatics-map="grid"] > [data-cymatics-map-icon="grid"],

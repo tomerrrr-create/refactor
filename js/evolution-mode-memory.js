@@ -1,3 +1,5 @@
+import { CYMATICS_RESONANCE_MAPS } from './cymatics-settings.js';
+
 // Remembered selections are deliberately session-only.
 export const EVOLUTION_MODE_MEMORY_KEY = 'colorGridRememberEvolutionModes';
 export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].includes(simulation) ? 'nudge' : simulation;
@@ -5,7 +7,7 @@ export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].in
 export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
     gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:'radial',
     magnet:'field_magnet',brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
-    ink:'turbine2',network:'spatial',erosion:'channels',islands:'classic',contour:'all',cymatics:4,nudge:'nudgeBrighter',wind:'ripple'
+    ink:'turbine2',network:'spatial',erosion:'channels',islands:'classic',contour:'all',cymatics:CYMATICS_RESONANCE_MAPS.heart,nudge:'nudgeBrighter',wind:'ripple'
 });
 export const defaultEvolutionCycleMode = simulation => DEFAULT_EVOLUTION_CYCLE_MODES[evolutionModeKey(simulation)];
 export function createEvolutionModeMemory({storage, blocked = () => false} = {}) {

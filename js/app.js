@@ -2417,7 +2417,7 @@ if (simulationName === 'magnet') {
       function applySimulationPreferences(preferences) {
         if (preferences.gravityCycle) gravityCycle = [...preferences.gravityCycle];
         if (preferences.geometricFlowCycle) geometricFlowCycle = [...preferences.geometricFlowCycle];
-        if (preferences.resonanceCycle) resonanceCycle = [...preferences.resonanceCycle];
+        if (preferences.resonanceCycle) resonanceCycle = orderResonanceCycle(preferences.resonanceCycle);
         if (preferences.circularCycle) vorticesEnabledModes = [...preferences.circularCycle];
         if (preferences.magnetAnchorLimit !== undefined) magnetAnchorLimit = preferences.magnetAnchorLimit;
         if (preferences.wind) {
@@ -2468,11 +2468,11 @@ if (simulationName === 'magnet') {
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
         if(settings.rules.cymatics===undefined){
             cymaticsFrequencies=createCymaticsFrequencies(undefined,settings.cymaticsFrequencies);
-            cymaticsRules={...cymaticsRules,frequency:cymaticsFrequencies.interference};
+            cymaticsRules={...cymaticsRules,frequency:cymaticsFrequencies.heart};
         }else cymaticsFrequencies=rememberCymaticsFrequency(settings.cymaticsFrequencies,cymaticsRules);
         if(settings.rules.cymatics===undefined){
             cymaticsStrengths=createCymaticsStrengths(undefined,settings.cymaticsStrengths);
-            cymaticsRules={...cymaticsRules,strength:cymaticsStrengths.interference};
+            cymaticsRules={...cymaticsRules,strength:cymaticsStrengths.heart};
         }else cymaticsStrengths=rememberCymaticsStrength(settings.cymaticsStrengths,cymaticsRules);
         if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
@@ -3953,7 +3953,7 @@ function updateCymaticsButtonUI(){
     if(typeof dom==='undefined'||!dom.btnCymatics)return;
     const button=dom.btnCymatics, active=activeEvolutionControl()==='cymatics';
     const remembered=cycleMemory.entry('cymatics', resonanceCycle[0]);
-    const version=active ? getCymaticsRules().resonanceVersion : resonanceCycle.includes(remembered)?remembered:resonanceCycle[0];
+    const version=active ? getCymaticsRules().resonanceVersion??CYMATICS_RESONANCE_MAPS.diagonal : resonanceCycle.includes(remembered)?remembered:resonanceCycle[0];
     const map=RESONANCE_MAPS.find(name=>CYMATICS_RESONANCE_MAPS[name]===version) ?? RESONANCE_MAPS[0];
     button.dataset.cymaticsMap=map;button.classList.toggle('simulation-active',active);
     const title=getText('tooltip_cymatics')+' — '+getText('cymatics_map_'+map);
@@ -6408,7 +6408,6 @@ updateBrightnessEvoButtonUI();
             saveCycle:modes=>{
                 if(activeEvolutionControl()!=='cymatics'||isMacroLoaded||isMacroPlaying||isExecutingMacroCommand)return false;
                 const ordered=orderResonanceCycle(modes);
-                if(!ordered.length)return false;
                 resonanceCycle=ordered;
                 persistResonanceCycle(ordered);
                 updateCymaticsButtonUI();

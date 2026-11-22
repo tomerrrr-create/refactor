@@ -14,7 +14,7 @@ export const VORTICES_RESONANCE_MAPS = Object.freeze(['cosmic', 'circular']);
 export const VORTICES_SETTINGS_ENTRY_MODES = Object.freeze(
     Object.keys(VORTICES_MODES).filter(mode => mode !== 'flow' && !VORTICES_RESONANCE_MAPS.includes(mode))
 );
-export const RESONANCE_MAPS = Object.freeze(['grid', 'interference', 'diagonal', 'clouds']);
+export const RESONANCE_MAPS = Object.freeze(['heart', 'grid', 'interference', 'diagonal', 'clouds']);
 
 const cycleStorageKey = 'colorGridVorticesCycleV1';
 export const DEFAULT_VORTICES_CYCLE = Object.freeze(Object.keys(VORTICES_MODES).filter(mode => mode !== 'a' && mode !== 'tornado'));
