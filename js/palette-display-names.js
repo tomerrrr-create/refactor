@@ -43,6 +43,7 @@ const displayNames = {
     "Zionism 64": {"en": "Zion Light", "he": "אור ציון", "ru": "Свет Сиона", "nl": "Licht van Zion"},
     "Zionism 264": {"en": "Zion Spirit", "he": "רוח ציון", "ru": "Дух Сиона", "nl": "Geest van Zion"},
     "Focus 264": {"en": "Deep Focus", "he": "מיקוד עמוק", "ru": "Глубокий фокус", "nl": "Diepe focus"},
+    "Eternal Gems": {"en": "Eternal Gems", "he": "אבני חן נצחיות", "ru": "Вечные самоцветы", "nl": "Eeuwige edelstenen"},
     "Gems": {"en": "Gems", "he": "אבני חן", "ru": "Самоцветы", "nl": "Edelstenen"},
     "Plasma Overload": {"en": "Plasma Overload", "he": "עומס פלזמה", "ru": "Перегрузка плазмы", "nl": "Plasma-overbelasting"},
     "Healing Aura": {"en": "Healing Aura", "he": "הילה מרפאת", "ru": "Исцеляющая аура", "nl": "Helende aura"},

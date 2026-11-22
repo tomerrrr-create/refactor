@@ -6,12 +6,27 @@ import { getPaletteDisplayName } from '../js/palette-display-names.js';
 // missing-key warnings only while importing the data for this test.
 const warn = console.warn;
 let PALETTES;
+let PALETTE_GROUPS;
 try {
     console.warn = () => {};
-    ({ PALETTES } = await import('../js/data/palettes.js'));
+    ({ PALETTES, PALETTE_GROUPS } = await import('../js/constants.js'));
 } finally {
     console.warn = warn;
 }
+
+test('Eternal Gems extends Gems with 264 unique colors at a stable palette index', () => {
+    const gems = PALETTES.find(palette => palette.originalName === 'Gems');
+    const eternalGemsIndex = 79;
+    const eternalGems = PALETTES[eternalGemsIndex];
+    assert.equal(eternalGems.originalName, 'Eternal Gems');
+    assert.equal(eternalGems.colors.length, 264);
+    assert.ok(eternalGems.colors.every(color => /^#[\da-f]{6}$/i.test(color)));
+
+    const colors = new Set(eternalGems.colors.map(color => color.toUpperCase()));
+    assert.equal(colors.size, 264);
+    assert.ok(gems.colors.every(color => colors.has(color.toUpperCase())));
+    assert.ok(PALETTE_GROUPS.find(group => group.id === 'continuous').indexes.includes(eternalGemsIndex));
+});
 
 test('all active and archived palette labels are localized without changing recording identities', () => {
     const before = JSON.stringify(PALETTES);
