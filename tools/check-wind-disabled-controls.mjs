@@ -1,4 +1,4 @@
-// Wind temporarily disables brush-color and Symmetry controls without changing choices.
+// Wind exits through Color/brush and temporarily disables Symmetry.
 import {readFile} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {fileURLToPath} from 'node:url';
@@ -28,7 +28,7 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  if(touch){const cdp=await ctx.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y+dy*i/5}]});await page.waitForTimeout(25);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}
  else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:5});await page.mouse.up();}await page.waitForTimeout(80);}
 
- const blocked=['#btnColorPicker','#btnSymmetry'],initial=await state();
+ const blocked=['#btnSymmetry'],initial=await state();
  const boxes=await Promise.all(blocked.map(id=>page.locator(id).boundingBox()));
  await tap('#btnWind');await page.waitForTimeout(450);
  for(let i=0;i<blocked.length;i++){
@@ -42,10 +42,25 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
   assert.deepEqual((await state()).brush,initial.brush);assert.deepEqual((await state()).board,initial.board);assert.equal((await state()).history,initial.history);assert.deepEqual((await state()).logs,initial.logs);
   assert(!await page.locator('#colorPickerModal').isVisible());
  }
- for(const id of ['#btnWind','#btnPalette','#btnCycleSort','#btnGap','#btnContoursAction'])assert(await page.locator(id).isEnabled());
+ for(const id of ['#btnWind','#btnColorPicker','#btnPalette','#btnCycleSort','#btnGap','#btnContoursAction'])assert(await page.locator(id).isEnabled());
  await page.evaluate(()=>windTest.openColors());await page.locator('#colorPickerModal').waitFor({state:'visible'});
  const mirror=page.locator('#btnColorPickerSymmetry');assert(await mirror.isDisabled());assert.equal(await mirror.evaluate(e=>getComputedStyle(e).opacity),'0.18');await mirror.evaluate(e=>{e.click();e.dispatchEvent(new MouseEvent('click',{bubbles:true}));});assert.deepEqual((await state()).brush,initial.brush);
  await page.evaluate(()=>document.getElementById('btnColorPickerCloseTop').click());await page.locator('#colorPickerModal').waitFor({state:'hidden'});
+ const color=page.locator('#btnColorPicker'), picker=page.locator('#colorPickerModal');
+ // The first tap switches tools. The next tap has its usual color action.
+ await tap('#btnColorPicker');assert(!(await state()).wind);assert.deepEqual((await state()).brush,initial.brush);
+ assert(!(await picker.isVisible()));assert.deepEqual((await state()).board,initial.board);
+ await tap('#btnWind');await color.focus();await page.keyboard.press('Enter');
+ assert(!(await state()).wind);assert.deepEqual((await state()).brush,initial.brush);
+ await page.evaluate(()=>windTest.live());await tap('#btnWind');
+ const beforeSwipe=await state();
+ await swipe('#btnColorPicker',-35);await picker.waitFor({state:'visible'});
+ const afterSwipe=await state();
+ assert(!afterSwipe.wind);assert(afterSwipe.playing);assert.equal(afterSwipe.armed,beforeSwipe.armed);
+ assert.deepEqual(afterSwipe.brush,beforeSwipe.brush);assert(await mirror.isEnabled());
+ await page.locator('#btnColorPickerCloseTop').click();await picker.waitFor({state:'hidden'});
+ await page.evaluate(()=>windTest.pause());
+ await tap('#btnWind');
  // Availability stays consistent through all three Wind effects and its Off slot.
  for(let i=0;i<3;i++){await tap('#btnWind');const on=(await state()).wind;for(const id of blocked)assert.equal(await page.locator(id).isDisabled(),on);assert.deepEqual((await state()).brush,initial.brush);}
  assert(!(await state()).wind);for(const id of blocked)assert(await page.locator(id).isEnabled());

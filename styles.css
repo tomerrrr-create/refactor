@@ -2027,7 +2027,7 @@ button, .ctrl {
 
 /* Wind never dims or locks the control panel. */
 body.wind-mode #board { cursor: crosshair; }
-body.wind-mode :is(#btnColorPicker, #btnSymmetry, #btnColorPickerSymmetry):disabled {
+body.wind-mode :is(#btnSymmetry, #btnColorPickerSymmetry):disabled {
   opacity: .18 !important;
   pointer-events: none;
   cursor: not-allowed;

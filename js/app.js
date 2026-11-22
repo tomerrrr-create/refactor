@@ -3152,7 +3152,6 @@ function setWindMode(enabled) {
     }
     if(!enabled&&windMode&&typeof cycleMemory!=='undefined')cycleMemory.remember('wind',windSettings.mode);
     windMode = enabled;
-    dom.btnColorPicker.disabled = enabled;
     dom.btnSymmetry.disabled = enabled;
     document.body.classList.toggle('wind-mode', enabled);
     updateColorPickerButtonUI();
@@ -6562,9 +6561,13 @@ initializeBrushPickerNavigation({
 });
 bindPickerGestures(dom.btnColorPicker, {
     onTap: () => {
+        if (windMode) { setWindMode(false); return; }
         if (!(isLifePlaying && armedSimulation === 'breathe')) handleColorPickerClick();
     },
-    onOpen: () => modals.openColorPickerModal(),
+    onOpen: () => {
+        if (windMode) setWindMode(false);
+        modals.openColorPickerModal();
+    },
     canSwipeSide: () => !windMode,
     onSwipeSide: direction => cyclePaletteBrushSize(direction, dom.btnColorPicker),
     onSwipeDown: () => {
@@ -6572,7 +6575,7 @@ bindPickerGestures(dom.btnColorPicker, {
         resetSelectedColor();
         dom.btnColorPicker.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 250 });
     },
-    canOpen: () => !windMode && !(isLifePlaying && armedSimulation === 'breathe'),
+    canOpen: () => !(isLifePlaying && armedSimulation === 'breathe'),
     onHold: () => {
         if (windMode || (isLifePlaying && armedSimulation === 'breathe')) return;
         selectedColorIndex = 0;
@@ -6587,7 +6590,7 @@ bindPickerGestures(dom.btnColorPicker, {
         isRainbowModeActive = true;
         updateGlowEffect(); updateColorPickerButtonUI();
     },
-    canInteract: () => !windMode && !isBreathing, beforeStart: hideLongPressDisplay,
+    canInteract: () => !isBreathing, beforeStart: hideLongPressDisplay,
     holdMs: C.LONG_PRESS_SHOW_MS
 });
 bindPickerGestures(dom.btnWind, {
