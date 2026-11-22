@@ -1633,5 +1633,60 @@ colors: (function() {
     "#FCE9F8", "#FFEBEF", "#FFEDEE", "#FFF0ED", "#FFF3DB", "#FFF1F8", "#FFF2F9", "#FFF3F7"
   ]
 },
+  {
+    originalName: "Eternal Gems",
+    iconHTML: `<svg viewBox="0 0 24 24" style="width: var(--icon-size); height: var(--icon-size);" aria-hidden="true">
+      <path d="m3 9 4-5h10l4 5-9 12Z" fill="#1E406C" stroke="#9BDADC" stroke-width=".8" stroke-linejoin="round"/>
+      <path d="M7 4h10l-5 5Z" fill="#E7F5FA"/>
+      <path d="m3 9 4-5 5 5Z" fill="#D4AF7A"/>
+      <path d="m12 9 5-5 4 5Z" fill="#56CFE1"/>
+      <path d="m3 9 9 12-4-12Z" fill="#5A3E85"/>
+      <path d="m16 9-4 12 9-12Z" fill="#23845D"/>
+      <path d="m8 9 4 12 4-12Z" fill="#B393E3"/>
+    </svg>`,
+    // All 64 Gems colors, with extra shades and highlights in the same five families.
+    colors: [
+      // Obsidian and diamond
+      "#060608", "#0A0A0C", "#0F0F0F", "#111318", "#141721", "#181A1F", "#1C1C1C", "#1F1F1F",
+      "#232323", "#262626", "#2A2A2A", "#2D2D2D", "#313131", "#31343B", "#303744", "#34383F",
+      "#383838", "#3F3F3F", "#464646", "#4D4D4D", "#545454", "#5B5B5B", "#626262", "#636970",
+      "#646D76", "#64707D", "#6A7076", "#707070", "#777777", "#7E7E7E", "#858585", "#8C8C8C",
+      "#939393", "#9A9A9A", "#A1A1A1", "#A8A8A8", "#A2AAB6", "#ACB0B6", "#B6B6B6", "#BDBDBD",
+      "#C4C4C4", "#CBCBCB", "#D2D2D2", "#D9D9D9", "#E0E0E0", "#DBE1EA", "#E7E6E6", "#EEEDED",
+      "#F1F2F4", "#F3F7FC", "#F9F9F9", "#FFFDFB",
+      // Amber and citrine
+      "#32150D", "#3B190F", "#441E10", "#4D2212", "#572713", "#5C2B14", "#612E16", "#663217",
+      "#6B3519", "#70381A", "#753C1C", "#7A401D", "#80441F", "#894D22", "#925524", "#965A25",
+      "#9B5E27", "#9F6328", "#A46729", "#A77136", "#AA7A41", "#AD844C", "#B08D57", "#B78B4B",
+      "#C38731", "#BE8E4B", "#B99560", "#C29D69", "#CBA671", "#D4AF7A", "#DCAE66", "#E4AD4D",
+      "#E5B25F", "#E5B76F", "#E6BC7D", "#E6C18B", "#EFCA93", "#F1CB86", "#F5CC71", "#F6D087",
+      "#F8D39C", "#FCDEA4", "#FDE4A9", "#FFEAAD", "#FFEFC3", "#FFF4D9",
+      // Jade and emerald
+      "#081D15", "#0A231A", "#0D2A1F", "#0F3124", "#12382A", "#1A3E2C", "#21452F", "#284B31",
+      "#2F5233", "#28593C", "#255D40", "#1E6145", "#2E624B", "#3A6351", "#41694E", "#476F4A",
+      "#4B7446", "#4F7942", "#3E7F50", "#23845D", "#36865E", "#46885F", "#538A60", "#5E8C61",
+      "#619065", "#659468", "#68996C", "#6C9D70", "#38A675", "#57A273", "#4DA877", "#5EAA7A",
+      "#6DAC7C", "#7BAE7F", "#7EB384", "#82B889", "#86BD8E", "#8AC293", "#7EC694", "#70C995",
+      "#7BCC99", "#85D09D", "#8FD3A2", "#99D6A6", "#A2DAAB", "#ABDFB0", "#B3E3B6", "#BCE8BB",
+      "#C7ECC3", "#D2F1CB", "#DDF5D4", "#E8F9DC",
+      // Sapphire and aquamarine
+      "#081533", "#091839", "#0B1B3E", "#0C1E44", "#0E214A", "#0F2450", "#112856", "#122B5C",
+      "#142E62", "#153168", "#17356F", "#183975", "#1A3C7C", "#1B4082", "#1D4489", "#204B96",
+      "#1D5091", "#19558C", "#165A87", "#135E82", "#166291", "#176399", "#1965A1", "#1D68B0",
+      "#216BC0", "#1F6FB7", "#1D73AD", "#1C77A5", "#1C7A9B", "#1F82A2", "#228AAA", "#2491B1",
+      "#2799B9", "#3196C7", "#3994D3", "#3799D0", "#359DCC", "#33A2C9", "#31A6C5", "#36ACCA",
+      "#3AB3D0", "#42B7D4", "#49BCD8", "#48C1D9", "#4FC8DD", "#56CFE1", "#5DD7E0", "#64DFDF",
+      "#6BE7DE", "#72EFDD", "#86EEE6", "#98ECEE", "#A5EFF0", "#B2F2F2", "#BFF4F4", "#CBF7F6",
+      "#DBFAFA", "#EBFCFF",
+      // Amethyst
+      "#160C28", "#1C0F33", "#23113E", "#291449", "#301655", "#36185E", "#3C1B67", "#421D70",
+      "#482079", "#4C287C", "#51307F", "#563782", "#5A3E85", "#613D94", "#653C9C", "#693BA4",
+      "#6A41A1", "#6A469D", "#6C4F96", "#70539A", "#75589F", "#795CA3", "#8359B2", "#8655B8",
+      "#7E60A7", "#8951BE", "#815DAD", "#8B5ABD", "#8E63BB", "#906BBA", "#9273B8", "#9778BC",
+      "#9C7DC1", "#A279C8", "#A975D0", "#A87ECC", "#A687C9", "#AD88CF", "#B588D5", "#BC89DB",
+      "#C489E2", "#BF92DE", "#BA9BDA", "#BFA0DE", "#C5A6E3", "#CAABE7", "#D0B0EB", "#D5B5EF",
+      "#DBBBF4", "#E0C0F8", "#E6C6FC", "#EBD1FE", "#F0DBFF", "#F6DFFF", "#F9E9FF", "#FBF2FF",
+    ]
+  },
 
 ].map(p => ({ ...p, name: getText(Object.keys(translations).find(k => translations[k]?.en === p.originalName) || '') || p.originalName }));

@@ -340,6 +340,8 @@ You do not need to manually assign a palette to a UI group (Origin, Expansion, R
 
 Keep `originalName` when adding a palette. Palette icons use `iconHTML` for SVG or an emoji fallback. Display names can be translated while `originalName` preserves identity. Some older JSON/macro data uses array indices, so reordering palette data can affect compatibility; there is no separate persistent palette ID.
 
+Eternal Gems is in Resonance. It extends the original Gems with 200 additional shades across the same five color families. New palettes belong at the end of the source array to keep recorded indices stable.
+
 ## 4. UI, localization and modals
 
 ### Internationalization (`js/i18n.js`)
