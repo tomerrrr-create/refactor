@@ -4,6 +4,8 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 const STORAGE_KEY = 'colorGridSimulationTheme';
 const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
+const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
+const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
 const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
   en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise'},
@@ -65,8 +67,33 @@ function initializeGoldPlaybackHierarchy() {
   });
 }
 
+function initializeGlowPulse() {
+  const slider = document.getElementById('glowPulse');
+  const value = document.getElementById('glowPulseValue');
+  let savedIndex = -1;
+  try { savedIndex = GLOW_PULSE_SECONDS.indexOf(Number(localStorage.getItem(GLOW_PULSE_STORAGE_KEY))); } catch {}
+  slider.max = GLOW_PULSE_SECONDS.length - 1;
+  slider.value = savedIndex < 0 ? slider.max : savedIndex;
+
+  function render() {
+    const duration = GLOW_PULSE_SECONDS[slider.value];
+    const units = { style: 'unit', unit: 'second', minimumFractionDigits: 1, maximumFractionDigits: 1 };
+    value.value = new Intl.NumberFormat(getCurrentLang(), { ...units, unitDisplay: 'narrow' }).format(duration);
+    slider.setAttribute('aria-valuetext', new Intl.NumberFormat(getCurrentLang(), { ...units, unitDisplay: 'long' }).format(duration));
+    document.documentElement.style.setProperty('--simulation-halo-duration', `${duration}s`);
+  }
+
+  slider.addEventListener('input', () => {
+    render();
+    try { localStorage.setItem(GLOW_PULSE_STORAGE_KEY, String(GLOW_PULSE_SECONDS[slider.value])); } catch {}
+  });
+  onLanguageChange(render);
+  render();
+}
+
 export function initializeSimulationTheme() {
   initializeGoldPlaybackHierarchy();
+  initializeGlowPulse();
   const section = document.getElementById('simulationThemeSettings');
   const playbackSection = document.getElementById('simulationPlaybackThemeSettings');
   const previews = section.querySelectorAll('[data-theme]');
