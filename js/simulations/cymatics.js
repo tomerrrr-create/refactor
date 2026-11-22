@@ -5,7 +5,7 @@ import {createCloudField} from './cymatics-organic.js';
 import {moveCymaticsField} from './cymatics-motion.js';
 import {createInterferenceField} from './cymatics-interference.js';
 import {createCircularResonanceField} from './cymatics-circular.js';
-import {createHeartField} from './cymatics-heart.js';
+import {createHeartConstellationField,createHeartField} from './cymatics-heart.js';
 import {CYMATICS_RESONANCE_MAPS,validateCymaticsRules} from '../cymatics-settings.js';
 // Chladni-inspired square plate, not an acoustic solver. Only a derived field is
 // cached; serializable PRNG state and steps determine every particle exchange.
@@ -14,7 +14,8 @@ let fieldSize=0,fieldPattern='',field=null;
 // 40 Hz is a chosen plate calibration, not a universal frequency-to-shape law.
 const resonanceModes=[];
 for(let m=1;m<=20;m++)for(let k=m+1;k<=20;k++)if(40*(m*m+k*k)<=24000)resonanceModes.push([m,k,40*(m*m+k*k)]);
-export function getCymaticsField(n,frequency,resonanceVersion,phaseStep=0,cosmicFieldVersion=3){
+export function getCymaticsField(n,frequency,resonanceVersion,phaseStep=0,cosmicFieldVersion=3,heartFieldVersion=1){
+    if(resonanceVersion===CYMATICS_RESONANCE_MAPS.heart&&heartFieldVersion===2)return createHeartConstellationField(n,frequency,phaseStep);
     if(resonanceVersion===5)return createCloudField(n,frequency,phaseStep);
     if(resonanceVersion===6)return cosmicFieldVersion===1?createRoundedCosmicField(n,frequency,phaseStep):cosmicFieldVersion===2?createRadialCosmicField(n,frequency,phaseStep):createCosmicCircleField(n,frequency,phaseStep);
     if(resonanceVersion===4)return createInterferenceField(n,frequency,phaseStep);
@@ -90,7 +91,7 @@ export function validateCymaticsSnapshot(value){
 }
 const dx=[-1,0,1,-1,1,-1,0,1],dy=[-1,-1,-1,0,0,1,1,1];
 export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,cymaticsRules},previous){
-    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.frequency,rules.resonanceVersion,rules.phaseMotion?state.steps:0,rules.cosmicFieldVersion??1);
+    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.frequency,rules.resonanceVersion,rules.phaseMotion?state.steps:0,rules.cosmicFieldVersion??1,rules.heartFieldVersion);
     const random=()=>{let x=state.random;x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/4294967296;};
     const length=currentPalette.length,rank=k=>((k%length)+length)%length;
     // Older recordings omit the flag and retain the original exchange direction.
