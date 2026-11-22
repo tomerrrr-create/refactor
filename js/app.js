@@ -2212,12 +2212,11 @@ if (simulationName === 'magnet') {
       }
 
       function openSaveModalWithPreview() {
+        if (isLifePlaying) return;
         dom.btnSave.disabled = true;
         canvas.toBlob((blob) => {
-            if (!blob) { 
-                dom.btnSave.disabled = false; 
-                return; 
-            }
+            dom.btnSave.disabled = false;
+            if (!blob || isLifePlaying) return;
             modals.clearSaveStatus();
             dom.imagePreview.src = URL.createObjectURL(blob);
             dom.fileNameInput.value = C.PALETTES[activePaletteIndex]?.name || getText('saveModal_defaultFilename');
@@ -2225,7 +2224,6 @@ if (simulationName === 'magnet') {
             dom.saveGlowImage.checked = isSoftBloom;
             document.getElementById('saveImageOptions').open = false;
             dom.saveModal.classList.add('modal-visible');
-            dom.btnSave.disabled = false;
         }, 'image/png');
       }
 
