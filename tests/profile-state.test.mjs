@@ -208,6 +208,7 @@ test('factory reset restores the selected profile independently of personal save
         assert.deepEqual(createProfileState(initial(), disk).draft(), factoryProfileSnapshot(index));
     }
     assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.simulationTheme), ['gold', 'gold', 'teal']);
+    assert.ok([0, 1, 2].every(i => factoryProfileSnapshot(i).settings.simulationPreferences.geometricFlowVisible));
     assert.equal(factoryProfileSnapshot(1).settings.startup.paletteName, 'Golden Midnight Extended');
     assert.equal(factoryProfileSnapshot(2).settings.startup.paletteName, 'Ancient 264');
     assert.throws(() => factoryProfileSnapshot(3));
