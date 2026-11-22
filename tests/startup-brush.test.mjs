@@ -76,7 +76,7 @@ test('map strengths survive profile loading, including omitted flat defaults and
  assert.equal(h.cymaticsRules.strength,35);assert(Object.values(h.cymaticsStrengths).every(value=>value===35));
  settings.cymaticsStrengths={interference:65,circular:25};h.applyWorkspacePreferences(settings);
  assert.equal(h.cymaticsRules.strength,35);assert.equal(h.cymaticsStrengths.interference,65);assert.equal(h.cymaticsStrengths.circular,25);
- settings.rules.cymatics={strength:80,mode:'resonance',frequency:20000,resonanceVersion:3,phaseMotion:true};h.applyWorkspacePreferences(settings);
+ settings.rules.cymatics={...INITIAL_CYMATICS_RULES,strength:80,resonanceVersion:3};h.applyWorkspacePreferences(settings);
  assert.equal(h.cymaticsStrengths.circular,80);assert.equal(h.cymaticsStrengths.interference,65);
  delete settings.cymaticsStrengths;h.applyWorkspacePreferences(settings);
  assert(Object.values(h.cymaticsStrengths).every(value=>value===80));
