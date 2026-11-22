@@ -11,6 +11,7 @@ source=source.replace('      initializeApp();',`window.windTest={
  state:()=>({wind:windMode,mode:windSettings.mode,settings:windSettings,board:boardState.map(t=>({k:t.k,isGold:t.isGold})),history:history.length,playing:isLifePlaying,gen:currentGenerationCount,armed:armedSimulation,macro:isMacroPlaying,logs:[...artRecipeLog]}),
  recipe:async()=>await createArtRecipeFile().text(),
  replay:text=>{pauseLife();setWindMode(false);macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
+ playbackThemes:()=>{applySimulationTheme('blue');applySimulationPlaybackTheme('gold');},
  live:()=>{armSimulation('nudgeBrighter');togglePlayPauseLife();},pause:pauseLife
  };initializeApp().then(()=>windTest.ready=true);`);
 for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -46,9 +47,23 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  assert(!(await state()).wind);assert(await page.locator('#btnColorPicker').isEnabled());await tap('#btnUndo');assert.deepEqual((await state()).board,before);await tap('#btnRedo');assert.deepEqual((await state()).board,after.board);
  const recipe=await page.evaluate(()=>windTest.recipe()),settings=await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1'));
  await page.evaluate(text=>windTest.replay(text),recipe);await page.waitForFunction(()=>!windTest.state().macro,{},{timeout:20000});assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1')),settings);assert.equal(await page.locator('#btnWind').getAttribute('aria-pressed'),'false');
- // Running evolution retains its identity and generation timeline across the cycle.
- await page.evaluate(()=>windTest.setup());await page.evaluate(()=>windTest.live());await page.waitForTimeout(150);const gen=(await state()).gen;
- for(let i=0;i<4;i++)await tap('#btnWind');const live=await state();assert(live.playing);assert.equal(live.armed,'nudgeBrighter');assert(live.gen>=gen);await page.evaluate(()=>windTest.pause());
+ // Wind keeps its state colors while the playback hierarchy tints other controls.
+ await page.evaluate(()=>{
+  windTest.setup();windTest.playbackThemes();
+  const toggle=document.getElementById('goldPlaybackHierarchyToggle');
+  toggle.checked=true;toggle.dispatchEvent(new Event('change'));
+  windTest.live();
+ });
+ assert.equal(await page.locator('#btnCycleSort').evaluate(e=>getComputedStyle(e).color),'rgb(63, 81, 181)');
+ const windStroke=()=>page.locator('#btnWind svg').evaluate(e=>getComputedStyle(e).stroke);
+ assert.equal(await windStroke(),'rgb(66, 66, 66)');
+ const gen=(await state()).gen;
+ for(const mode of ['ripple','paint','displace','off']){
+  await tap('#btnWind');
+  assert.equal(await page.locator('#btnWind').getAttribute('data-wind-mode'),mode);
+  assert.equal(await windStroke(),mode==='off'?'rgb(66, 66, 66)':'rgb(255, 215, 0)');
+ }
+ const live=await state();assert(live.playing);assert.equal(live.armed,'nudgeBrighter');assert(live.gen>=gen);await page.evaluate(()=>windTest.pause());
  await tap('#btnWind');await tap('#btnToggleSimMode');await page.waitForTimeout(650);assert(!(await state()).wind);assert.equal(await page.locator('#btnWind').isVisible(),false);
  assert.deepEqual(errors,[]);console.log(JSON.stringify({lang,touch,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}
