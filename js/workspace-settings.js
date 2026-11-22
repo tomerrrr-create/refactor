@@ -23,13 +23,14 @@ import { DEFAULT_VORTICES_CYCLE, VORTICES_MODES, VORTICES_SETTINGS_ENTRY_MODES }
 import { orderToolbarCycle } from './toolbar-cycle-storage.js';
 import { MAGNET_ANCHOR_LIMITS, DEFAULT_MAGNET_ANCHOR_PREFERENCE } from './magnet-anchor-limit.js';
 import { normalizeWindSettings } from './wind-settings.js';
+import { DEFAULT_GEOMETRIC_FLOW_VISIBLE } from './experimental-simulations.js';
 
 export function defaultSimulationPreferences() {
     return {
         gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
         resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
-        geometricFlowVisible: false, breatheVisible: false, rememberSimulationModes: false
+        geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, rememberSimulationModes: false
     };
 }
 

@@ -95,7 +95,7 @@ Holding a simulation button resets only its cycle choice at **600 ms**, using th
 
 Resonance uses a source dot and two thin semicircular ripples with a small map badge at the physical upper-right, including in RTL, the drawer editor and hold explanation. The default toolbar cycle is **Crosshatch → Interference → Diagonals → Off** while paused, skipping Off while running. The check beneath each map in Resonance settings controls cycle membership. Clouds is available for direct selection and joins the cycle when checked. Keep at least one map checked. The choice persists in this browser, and the first enabled map is used on entry and long-press reset. The circular Resonance maps belong to the circular modes button. All six maps, numeric IDs, field calculations and recording schemas remain unchanged.
 
-**Gold Playback Hierarchy** in Technicians → Features is off by default and remembers the browser's choice. When enabled during Gold playback, the running simulation keeps its bright gold and pulse, the other simulations keep their muted gold, and the remaining toolbar controls use the same icon color as the selected paused drawer theme. The palette, color picker, Symmetry and Wind keep their colors. Wind is gray when off and gold when active. Turning the switch off restores the original Gold playback appearance. Paused controls and the other playback themes use their normal colors.
+**Gold Playback Hierarchy** in Technicians → Features is off by default and remembers the browser's choice. When enabled during Gold playback, the running simulation keeps its bright gold and pulse, the other simulations keep their muted gold, and the remaining toolbar controls use the same icon color as the selected paused drawer theme. The palette, color picker, Symmetry, Wind, Go Dark and Play/Pause keep their colors. Wind is gray when off and gold when active. Turning the switch off restores the original Gold playback appearance. Paused controls and the other playback themes use their normal colors.
 
 ### Evolution map
 
@@ -426,9 +426,9 @@ Execution is controlled by the `armedSimulation` variable. When active, `toggleP
 
 ### Experimental simulation visibility
 
-Technicians has independent Geometric Flow and Breathe switches, both off by default. Enabling one reveals its assigned toolbar place and map entry. Living network is always available, including in browsers with an old Off preference. The circular modes button is always available. Hidden simulation places remain reserved in the map. Turning off either simulation while it is selected pauses and deselects it without changing the artwork. The switches are unavailable while a recipe is loaded or playing. Existing projects, history and recipes retain engine support.
+Technicians has independent Geometric Flow and Breathe switches. Geometric Flow starts on, and Breathe starts off. Enabling one reveals its assigned toolbar place and map entry. Living network is always available, including in browsers with an old Off preference. The circular modes button is always available. Hidden simulation places remain reserved in the map. Turning off either simulation while it is selected pauses and deselects it without changing the artwork. The switches are unavailable while a recipe is loaded or playing. Existing projects, history and recipes retain engine support.
 
-Geometric Flow and Breathe visibility are profile preferences included in settings TXT. Existing browser choices migrate from `colorGridExperimentalSimulationsV1`; profile Reset restores Off. Storage failures retain session choices. `js/experimental-simulations.js` owns the exposure registry, default-off flags and technician controls; the drawer consumes one visibility predicate. Removing an exposure entry/control is centralized here; removing an engine still requires its explicit app and compatibility integration to be considered.
+Geometric Flow and Breathe visibility are profile preferences included in settings TXT. Existing browser choices migrate from `colorGridExperimentalSimulationsV1`; profile Reset restores Geometric Flow on and Breathe off. Storage failures retain session choices. `js/experimental-simulations.js` owns the exposure registry, visibility defaults and technician controls; the drawer consumes one visibility predicate. Removing an exposure entry/control is centralized here; removing an engine still requires its explicit app and compatibility integration to be considered.
 
 ### Living network
 
@@ -878,7 +878,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Natural fullscreen ending: frozen final frame, hold/fade timing, no-black artwork, reduced motion, native/CSS fullscreen, Stop/Escape and replacement playback cancellation | `tools/check-macro-ending.mjs` |
 | Fullscreen macro activity: opt-in, desktop/mobile geometry, action filtering, space limits, Stop and replay equivalence | `tools/check-macro-activity.mjs` |
 | Macro activity mode icons, frozen outgoing snapshots, gradients, crossfade opacity, rapid bursts and reduced motion | `tools/check-macro-activity-icons.mjs` |
-| Geometric Flow opt-in and always-visible Living network: persistence, profiles, map visibility and recipe replay | `tools/check-experimental-simulations.mjs` |
+| Geometric Flow, Breathe and always-visible Living network: persistence, profiles, map visibility and recipe replay | `tools/check-experimental-simulations.mjs` |
 | Profiles and settings sessions | `tools/check-profile-sessions.mjs` |
 | Save and panel switch hidden during playback, stable layout, blocked gestures, pending transitions and macro completion | `tools/check-mode-switch-playback.mjs` |
 | Two-stage simulation hold: 600ms reset, 1200ms help, inactive/active choices, preserved controls, release suppression and recorded replay | `tools/check-evolution-hold-reset.mjs` |

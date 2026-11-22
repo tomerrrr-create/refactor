@@ -42,14 +42,14 @@ try{for(const touch of [false,true]){
  await boot(false);
  await page.locator('#btnEvolutionDrawerInternal').click();await page.waitForTimeout(300);
  const original=(await state()).slots;
- assert(!(await geometric.isVisible()),'Geometric Flow defaults hidden');
+ assert(await geometric.isVisible(),'Geometric Flow defaults visible');
  assert(!(await breathe.isVisible()),'Breathe defaults hidden');
  assert.equal(await breathe.getAttribute('data-evolution-slot'),'12');
  assert(await network.isVisible(),'Living Network is always available');
  await page.evaluate(()=>flagsTest.map());
- assert.equal(await page.locator('[data-drawer-evolution="spiral"]').count(),0);
+ assert.equal(await page.locator('[data-drawer-evolution="spiral"]').count(),1);
  assert.equal(await page.locator('[data-drawer-evolution="network"]').count(),1);
- assert.equal(await page.locator('.drawer-feature-hidden').count(),2);
+ assert.equal(await page.locator('.drawer-feature-hidden').count(),1);
  assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
  assert.equal(await page.locator('#btnInk').getAttribute('data-evolution-feature-hidden'),null);
  await tech();assert.equal(await page.locator('#inkExperimentToggle, #oilExperimentToggle, #networkExperimentToggle, #btnOil').count(),0);
@@ -62,8 +62,9 @@ try{for(const touch of [false,true]){
  assert(!(await page.locator('#macroSettings').isVisible()));
  assert(await page.locator('#displaySettings #interfaceZoom').isVisible());
  await page.locator('#btnConfigureFeatures').click();
- assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
+ assert(await page.locator('#spiralExperimentToggle').isChecked());
  assert(!(await page.locator('#breatheExperimentToggle').isChecked()));
+ await toggle('spiral',false);
  await toggle('breathe',true);await close();
  assert(await breathe.isVisible());
  assert(!(await geometric.isVisible()));
@@ -80,9 +81,9 @@ try{for(const touch of [false,true]){
  assert.equal((await state()).armed,null);
  await tech();
  // A different profile keeps its own Geometric Flow visibility.
+ await page.locator('[data-profile-choice="1"]').click();assert(await page.locator('#spiralExperimentToggle').isChecked());
+ await page.locator('[data-profile-choice="0"]').click();assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
  await toggle('spiral',true);
- await page.locator('[data-profile-choice="1"]').click();assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
- await page.locator('[data-profile-choice="0"]').click();assert(await page.locator('#spiralExperimentToggle').isChecked());
  await close();
  assert(await geometric.isVisible());
  assert.equal(await page.locator('#btnNetwork').getAttribute('data-evolution-slot'),'10');
@@ -101,8 +102,8 @@ try{for(const touch of [false,true]){
  assert(await network.isVisible());
  // Loaded recipes cannot change the device flags underneath replay.
  await page.evaluate(()=>flagsTest.loaded(true));await tech();assert(await page.locator('#spiralExperimentToggle').isDisabled());await close();await page.evaluate(()=>flagsTest.loaded(false));
- await tech();await toggle('spiral',true);await toggle('breathe',true);await close();await boot(true);await tech();
- assert(await page.locator('#spiralExperimentToggle').isChecked());
+ await tech();await toggle('breathe',true);await close();await boot(true);await tech();
+ assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
  assert(await page.locator('#breatheExperimentToggle').isChecked());
  assert.equal(await page.locator('#networkExperimentToggle').count(),0);
  assert.deepEqual(errors,[]);console.log('PASS experimental visibility',JSON.stringify({touch,persistence:true,profiles:true,layout:true,replay:true}));await context.close();
