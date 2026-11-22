@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 
 test('every opening resets PNG Glow to the display preference without changing it',()=>{
- const h=vm.createContext({isSoftBloom:true,isSmoothRendering:false,n:249,separatorPx:0,
+ const h=vm.createContext({isLifePlaying:false,isSoftBloom:true,isSmoothRendering:false,n:249,separatorPx:0,
   isSmoothDisplayAvailable:()=>true,canvas:{toBlob:cb=>cb({})},URL:{createObjectURL:()=> 'blob:preview'},
   C:{PALETTES:[{name:'Palette'}]},activePaletteIndex:0,getText:()=>'',
   dom:{btnSave:{},imagePreview:{},fileNameInput:{},saveSmoothImage:{},saveGlowImage:{checked:false},saveModal:{classList:{add(){}}}},

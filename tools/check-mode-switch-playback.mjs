@@ -1,4 +1,4 @@
-// Verify the panel switch follows actual playback state without moving controls.
+// Verify Save and the panel switch follow playback without moving controls.
 import {readFile,mkdir} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {fileURLToPath} from 'node:url';
@@ -24,8 +24,19 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(base);await page.waitForFunction(()=>window.modeTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const button=page.locator('#btnToggleSimMode'),state=()=>page.evaluate(()=>modeTest.state());
  const rects=()=>page.evaluate(()=>['btnToggleSimMode','btnSave','btnInvert','btnRandom','btnCycleSort','btnUndo','btnRedo','btnPlayPauseLife'].map(id=>{const e=document.getElementById(id);return [id,e.offsetLeft,e.offsetTop,e.offsetWidth,e.offsetHeight];}));
- const creationStroke=await button.locator('svg').evaluate(e=>getComputedStyle(e).stroke);
- const visibleWhite=async()=>{assert(await button.isVisible());assert.deepEqual(await button.evaluate(e=>({visibility:getComputedStyle(e).visibility,opacity:getComputedStyle(e).opacity,stroke:getComputedStyle(e.querySelector('svg')).stroke})),{visibility:'visible',opacity:'1',stroke:creationStroke});};
+ const save=page.locator('#btnSave'), saveModal=page.locator('#saveModal'), playbackControls=[button,save];
+ const restoredControls=async()=>{for(const control of playbackControls)await control.waitFor({state:'visible'});};
+ const hiddenControls=async()=>{
+  for(const control of playbackControls){
+   assert(!(await control.isVisible()));
+   assert(await control.evaluate(element=>{
+    const bounds=element.getBoundingClientRect();
+    const hit=document.elementFromPoint(bounds.x+bounds.width/2,bounds.y+bounds.height/2);
+    element.focus();
+    return !element.contains(hit)&&document.activeElement!==element;
+   }));
+  }
+ };
  // The playing halo follows the active button, independent of the playback theme.
  const life='#btnGameOfLife', gravity='#btnGravitationalSort', breathe='#btnShowBreatheMenu';
  const drawer=page.locator('#btnEvolutionDrawerInternal');
@@ -94,22 +105,37 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  await drawer.click();
  await page.evaluate(()=>modeTest.playbackTheme('gold'));
  for(const sim of ['nudgeBrighter','nudgeDarker','gameOfLife','brightnessEvo','gravitationalSort','erosion','dla','contour','cymatics','islands','turing','magnet','spiral','sandpile','breathe']){
-  await page.evaluate(sim=>modeTest.setup(sim),sim);assert(await button.isVisible());const before=await rects();await page.evaluate(()=>modeTest.start());await visibleWhite();assert.deepEqual(await rects(),before,'grid geometry remains fixed during '+sim);
+  await page.evaluate(sim=>modeTest.setup(sim),sim);await restoredControls();const before=await rects();await page.evaluate(()=>modeTest.start());await hiddenControls();assert.deepEqual(await rects(),before,'grid geometry remains fixed during '+sim);
   const running=await state();await button.evaluate(e=>{e.click();e.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));e.dispatchEvent(new PointerEvent('pointerdown',{pointerId:77,button:0,bubbles:true,clientX:10,clientY:10}));e.dispatchEvent(new PointerEvent('pointerup',{pointerId:77,button:0,bubbles:true,clientX:10,clientY:50}));});await page.evaluate(()=>modeTest.toggle());
-  assert.equal((await state()).playing,true);assert.equal((await state()).mode,running.mode);assert.equal((await state()).n,running.n);assert.equal(await page.locator('#technicianDialog[open]').count(),0);await page.evaluate(()=>modeTest.pause());assert(await button.isVisible(),JSON.stringify({sim,css:await button.evaluate(e=>({classes:e.className,visibility:getComputedStyle(e).visibility,opacity:getComputedStyle(e).opacity,root:document.documentElement.hasAttribute('data-simulation-running')})),state:await state()}));assert.deepEqual(await rects(),before,'grid geometry remains fixed after '+sim);
+  assert.equal((await state()).playing,true);assert.equal((await state()).mode,running.mode);assert.equal((await state()).n,running.n);assert.equal(await page.locator('#technicianDialog[open]').count(),0);await save.evaluate(e=>e.click());assert(!(await saveModal.isVisible()));await page.evaluate(()=>modeTest.pause());await restoredControls();assert.deepEqual(await rects(),before,'grid geometry remains fixed after '+sim);
  }
- await page.evaluate(()=>{modeTest.setup('nudgeBrighter');modeTest.wind(true);});assert(await button.isVisible());await page.evaluate(()=>modeTest.wind(false));
+ await page.evaluate(()=>{modeTest.setup('nudgeBrighter');modeTest.wind(true);});await restoredControls();await page.evaluate(()=>modeTest.wind(false));
  // A normal single step keeps the control available.
- await page.evaluate(()=>{modeTest.setup('nudgeBrighter');modeTest.step();});assert(await button.isVisible());assert.equal((await state()).playing,false);
+ await page.evaluate(()=>{modeTest.setup('nudgeBrighter');modeTest.step();});await restoredControls();assert.equal((await state()).playing,false);
  // Playback beginning during a pending gesture cancels the hold/reset path.
- const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.evaluate(()=>modeTest.start());await page.waitForTimeout(700);await page.mouse.up();assert.equal((await state()).n,13);assert.equal((await state()).playing,true);await visibleWhite();await page.evaluate(()=>modeTest.pause());assert(await button.isVisible());
+ const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.evaluate(()=>modeTest.start());await page.waitForTimeout(700);await page.mouse.up();assert.equal((await state()).n,13);assert.equal((await state()).playing,true);await hiddenControls();await page.evaluate(()=>modeTest.pause());await restoredControls();
  // A delayed panel transition must not cancel playback that started meanwhile.
- await page.evaluate(()=>{modeTest.toggle();modeTest.start();});await page.waitForTimeout(600);assert.equal((await state()).playing,true);assert.equal((await state()).mode,true);assert.equal(await page.locator('#controlsContainer').evaluate(e=>e.style.opacity),'1');await visibleWhite();await page.evaluate(()=>modeTest.pause());
- // The control also remains visible if playback starts on the creation panel.
- await page.evaluate(()=>{modeTest.setup('nudgeBrighter',true);modeTest.start();});await visibleWhite();await page.evaluate(()=>modeTest.pause());assert(await button.isVisible());
- // The switch stays visible during macro playback and after completion.
+ await page.evaluate(()=>{modeTest.toggle();modeTest.start();});await page.waitForTimeout(600);assert.equal((await state()).playing,true);assert.equal((await state()).mode,true);assert.equal(await page.locator('#controlsContainer').evaluate(e=>e.style.opacity),'1');await hiddenControls();await page.evaluate(()=>modeTest.pause());
+ // The controls also hide if playback starts on the creation panel.
+ await page.evaluate(()=>{modeTest.setup('nudgeBrighter',true);modeTest.start();});await hiddenControls();await page.evaluate(()=>modeTest.pause());await restoredControls();
+ // The controls hide during a recorded simulation and return after completion.
  await page.evaluate(()=>{modeTest.setup('nudgeBrighter');modeTest.macro('[00:00:00.000] INIT_STATE -> {"recipeVersion":2,"n":13,"pal":0,"sort":"luminance","sep":0,"board":"169x1"}\n[00:00:00.100] PLAY -> Armed: nudgeBrighter | Sort: luminance | Rules: {"nudgeTimingVersion":1,"intervalMs":100}\n[00:00:00.500] [GEN:3] PAUSE -> ---');});
- await page.waitForFunction(()=>modeTest.state().playing);await visibleWhite();await page.waitForFunction(()=>!modeTest.state().loaded);assert(await button.isVisible());
+ await page.waitForFunction(()=>modeTest.state().playing);await hiddenControls();await page.waitForFunction(()=>!modeTest.state().loaded);await restoredControls();
+ // A capture requested while paused must not reopen Save once Play starts.
+ await page.evaluate(()=>{
+  modeTest.setup('nudgeBrighter');
+  const canvas=document.querySelector('#boardCanvas');
+  const original=canvas.toBlob;
+  canvas.toBlob=callback=>{window.finishSavePreview=()=>callback(new Blob());};
+  document.querySelector('#btnSave').click();
+  canvas.toBlob=original;
+  modeTest.start();
+  window.finishSavePreview();
+ });
+ await hiddenControls();assert(!(await saveModal.isVisible()));
+ await page.evaluate(()=>modeTest.pause());await restoredControls();
+ await save.click();await saveModal.waitFor({state:'visible'});
+ await page.locator('#btnModalClose').click();await saveModal.waitFor({state:'hidden'});
  // The restored control still opens Technicians by the existing upward swipe.
  const restored=await button.boundingBox();await page.mouse.move(restored.x+restored.width/2,restored.y+restored.height/2);await page.mouse.down();await page.mouse.move(restored.x+restored.width/2,restored.y+restored.height/2-40,{steps:5});await page.mouse.up();await page.locator('#technicianDialog').waitFor({state:'visible'});await page.evaluate(()=>document.getElementById('technicianDialog').close());
  await mkdir('/tmp/mode-switch-playback',{recursive:true});await page.screenshot({path:`/tmp/mode-switch-playback/${cfg.lang}-paused.png`});assert.deepEqual(errors,[]);console.log(JSON.stringify({...cfg,passed:true}));await context.close();
