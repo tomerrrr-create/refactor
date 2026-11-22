@@ -6,6 +6,7 @@ const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
 const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
 const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
+const DEFAULT_GLOW_PULSE_SECONDS = 3.2;
 const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
   en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise'},
@@ -73,7 +74,7 @@ function initializeGlowPulse() {
   let savedIndex = -1;
   try { savedIndex = GLOW_PULSE_SECONDS.indexOf(Number(localStorage.getItem(GLOW_PULSE_STORAGE_KEY))); } catch {}
   slider.max = GLOW_PULSE_SECONDS.length - 1;
-  slider.value = savedIndex < 0 ? slider.max : savedIndex;
+  slider.value = savedIndex < 0 ? GLOW_PULSE_SECONDS.indexOf(DEFAULT_GLOW_PULSE_SECONDS) : savedIndex;
 
   function render() {
     const duration = GLOW_PULSE_SECONDS[slider.value];

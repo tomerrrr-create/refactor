@@ -1964,7 +1964,7 @@ button, .ctrl {
   background: radial-gradient(circle, #ffdf8c5c 0%, #f5bb4744 26%, #e6972422 45%, #e6972400 70%);
   opacity: 0;
   transition: opacity 420ms ease-in-out;
-  animation: simulation-halo-breathe var(--simulation-halo-duration, 4.8s) ease-in-out infinite paused;
+  animation: simulation-halo-breathe var(--simulation-halo-duration, 3.2s) ease-in-out infinite paused;
 }
 :root[data-simulation-running] .sim-mode-active .ctrl[data-evolution-id].simulation-active::before {
   opacity: 1;

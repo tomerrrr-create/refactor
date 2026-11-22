@@ -772,8 +772,16 @@
       </label>
       <div class="technician-option glow-pulse-option">
         <label for="glowPulse" class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9" opacity=".45"/></svg></span><span data-debug-text="glow_pulse">Glow Pulse</span></label>
-        <div class="bloom-intensity-row"><input id="glowPulse" type="range" min="0" max="6" step="1" value="6"><output id="glowPulseValue" for="glowPulse">4.8s</output></div>
+        <div class="bloom-intensity-row"><input id="glowPulse" type="range" min="0" max="6" step="1" value="4"><output id="glowPulseValue" for="glowPulse">3.2s</output></div>
       </div>
+      <label class="technician-option technician-switch-option">
+        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span data-debug-text="compact_colors_experiment">Brush Modal: One Page Colors</span></span>
+        <input id="compactColorsToggle" class="technician-switch" type="checkbox" role="switch">
+      </label>
+      <label class="technician-option technician-switch-option">
+        <span data-debug-text="gold_playback_hierarchy">Gold Playback Hierarchy</span>
+        <input id="goldPlaybackHierarchyToggle" class="technician-switch" type="checkbox" role="switch">
+      </label>
       </div>
       </section>
       <section class="technician-start-settings technician-settings-card" aria-labelledby="technicianMacroTitle">
@@ -796,10 +804,6 @@
         <span class="technician-option-heading"><bdi><span id="technicianFeaturesTitle" data-debug-text="technician_group_features">Features</span> /</bdi><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M9 4v4m6 2v4m-5 2v4"/></svg></span></span>
       </button>
       <div id="featureSettings" class="technician-display-settings" hidden>
-      <label class="technician-option technician-switch-option">
-        <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span data-debug-text="compact_colors_experiment">Brush Modal: One Page Colors</span></span>
-        <input id="compactColorsToggle" class="technician-switch" type="checkbox" role="switch">
-      </label>
       <label class="technician-option technician-switch-option remember-modes-option">
         <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 1 7M3 4v6h6M12 7v5l3 2"/></svg></span><span data-debug-text="remember_evolution_modes">Remember Simulation Modes</span></span>
         <input id="rememberEvolutionModesToggle" class="technician-switch" type="checkbox" role="switch">
@@ -811,10 +815,6 @@
       <label class="technician-option technician-switch-option">
         <span class="technician-effect-heading"><span class="technician-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M6 13l10-10 5 5-10 10-6 1zM3 22c2-3 5 1 8-2"/></svg></span><span><span id="brushMotionRecordingLabel" dir="auto" data-debug-text="brush_motion_recording">Draw</span><span id="brushMotionRecordingNote" dir="auto" data-debug-text="brush_motion_recording_note">Record brush movement while paused so it can be replayed in a macro.</span></span></span>
         <input id="brushMotionRecordingToggle" class="technician-switch" type="checkbox" role="switch" checked aria-labelledby="brushMotionRecordingLabel" aria-describedby="brushMotionRecordingNote">
-      </label>
-      <label class="technician-option technician-switch-option">
-        <span data-debug-text="gold_playback_hierarchy">Gold Playback Hierarchy</span>
-        <input id="goldPlaybackHierarchyToggle" class="technician-switch" type="checkbox" role="switch">
       </label>
       <div id="experimentalSimulationControls"></div>
       </div>
