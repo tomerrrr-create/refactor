@@ -77,10 +77,9 @@ export function createCymaticsSettingsDialog({getRules,getFrequencies=()=>({}),g
             draftStrengths[name]=strengths[name];
         }
         const version=allowedMaps.includes('heart') ? CYMATICS_RESONANCE_MAPS.heart : draft.resonanceVersion;
-        const reset=selectCymaticsMap({strength:INITIAL_CYMATICS_RULES.strength,mode:INITIAL_CYMATICS_RULES.mode,
-            phaseMotion:INITIAL_CYMATICS_RULES.phaseMotion,resonanceVersion:version,
+        const reset=selectCymaticsMap({...INITIAL_CYMATICS_RULES,resonanceVersion:version,
             frequency:frequencies[allowedMaps.find(name=>CYMATICS_RESONANCE_MAPS[name]===version)],
-        },version,draftFrequencies,draftStrengths);
+            strength:INITIAL_CYMATICS_RULES.strength},version,draftFrequencies,draftStrengths);
         draft=reset.rules;draftFrequencies=reset.frequencies;draftStrengths=reset.strengths;render();
     });
     dialog.querySelector('form').addEventListener('submit',e=>{

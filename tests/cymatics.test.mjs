@@ -6,7 +6,6 @@ import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspace
 import {validateProfileSnapshot} from '../js/profile-state.js';
 import {sortColorsArray} from '../js/colors.js';
 import {DEFAULT_RESONANCE_CYCLE,loadResonanceCycle,persistResonanceCycle} from '../js/resonance-cycle.js';
-const {heartFieldVersion:unusedHeartVersion,...existingMapDefaults}=INITIAL_CYMATICS_RULES;
 const fixture=(n=21)=>({n,currentPalette:Array(23).fill('#ffffff'),currentBoardState:Array.from({length:n*n},(_,i)=>({k:(i*17+3)%23,v:(i*17+3)%23,isGold:i===Math.floor(n*n/2)}))});
 const histogram=board=>board.reduce((m,t)=>(m[t.k]=(m[t.k]??0)+1,m),{});
 function advance(ctx,state,count){for(let i=0;i<count;i++){const r=runCymaticsGeneration(ctx,state);ctx.currentBoardState=r.nextBoardState;state=r.nextCymaticsState;}return {ctx,state};}
@@ -20,42 +19,26 @@ test('runtime is immutable, deterministic and resumes exactly from a JSON projec
  const ctx={...fixture(),cymaticsRules:{mode:'resonance',frequency:800,resonanceVersion:4,strength:75}},initial=createCymaticsState(21),saved=structuredClone(initial),first=advance(ctx,initial,35);assert.deepEqual(initial,saved);
  const copy=structuredClone(first),uninterrupted=advance(first.ctx,first.state,70),resumed=advance(copy.ctx,restoreCymaticsState(JSON.parse(JSON.stringify(copy.state))),70);assert.deepEqual(resumed,uninterrupted);
 });
-test('the original Heart field retains its mirrored single contour',()=>{
+test('the Heart contour emerges and fades between crossing waves deterministically',()=>{
  const n=81,version=CYMATICS_RESONANCE_MAPS.heart;
- const field=getCymaticsField(n,123,version),energy=(x,y)=>field[y*n+x];
- for(let y=0;y<n;y++)for(let x=0;x<n;x++)assert.equal(energy(x,y),energy(n-1-x,y));
- // The top lobes, notch, widest sides and tip all fall near the same low-energy contour.
- for(const [x,y] of [[32,13],[48,13],[40,24],[8,32],[72,32],[40,69]])assert(energy(x,y)<24000);
- assert(energy(40,45)>40000);
- assert.notDeepEqual(field,getCymaticsField(n,123,version,300));
+ const field=getCymaticsField(n,123,version),faded=getCymaticsField(n,123,version,600);
+ const contrastAtTip=energy=>(energy[60*n+36]+energy[60*n+44])/2-energy[60*n+40];
+ assert(contrastAtTip(field)>6000);
+ assert(Math.abs(contrastAtTip(faded))<contrastAtTip(field)/4);
+ assert.notDeepEqual(field,faded);
  assert.notDeepEqual(field,getCymaticsField(n,800,version));
  assert.deepEqual(field,getCymaticsField(n,123,version,1200));
+ const first=advance({...fixture(41),cymaticsRules:INITIAL_CYMATICS_RULES},createCymaticsState(41),30);
+ const copy=structuredClone(first);
+ assert.deepEqual(advance(first.ctx,first.state,70),advance(copy.ctx,restoreCymaticsState(copy.state),70));
 });
-test('Heart harmonics change the nodal layout with frequency and replay each phase exactly',()=>{
- const n=101,version=CYMATICS_RESONANCE_MAPS.heart;
- const fieldAt=(frequency,step=0)=>getCymaticsField(n,frequency,version,step,3,2);
- const fields=[20,123,800,4000,20000].map(frequency=>fieldAt(frequency));
- for(let index=1;index<fields.length;index++){
-  const before=fields[index-1],after=fields[index];let union=0,intersection=0;
-  for(let i=0;i<before.length;i++){
-   const a=before[i]<29000,b=after[i]<29000;
-   union+=Number(a||b);intersection+=Number(a&&b);
-  }
-  assert(union>500 && intersection/union<.25,'frequencies create distinct nodal layouts');
- }
- assert.notDeepEqual(fieldAt(123,300),fields[1]);
- assert.deepEqual(fieldAt(123,1200),fields[1]);
- const ctx={...fixture(41),cymaticsRules:INITIAL_CYMATICS_RULES};
- const colors=histogram(ctx.currentBoardState),gold=structuredClone(ctx.currentBoardState[840]);
- const first=advance(ctx,createCymaticsState(41),30),copy=structuredClone(first);
- const evolved=advance(first.ctx,first.state,70);
- assert.deepEqual(advance(copy.ctx,restoreCymaticsState(copy.state),70),evolved);
- assert.deepEqual(histogram(evolved.ctx.currentBoardState),colors);
- assert.deepEqual(evolved.ctx.currentBoardState[840],gold);
- const {heartFieldVersion,...original}=INITIAL_CYMATICS_RULES;
- assert.deepEqual(validateCymaticsSnapshot({cymaticsVersion:1,rules:original,state:copy.state}).rules,original);
- assert.deepEqual(migrateCymaticsPreferences(original),INITIAL_CYMATICS_RULES);
- assert.throws(()=>validateCymaticsRules({...original,resonanceVersion:4,heartFieldVersion}));
+test('settings keep the Heart frequency and strength from the retired experiment',()=>{
+ const settings=defaultWorkspaceSettings();
+ const rules={...INITIAL_CYMATICS_RULES,frequency:440,strength:60};
+ const old={...rules,heartFieldVersion:2};
+ settings.rules.cymatics=old;
+ assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
+ assert.throws(()=>validateCymaticsRules(old));
 });
 test('strength controls work, tiny/uniform/gold boards are safe and resized boards get a fresh runtime',()=>{
  const a={...fixture(),cymaticsRules:{mode:'resonance',frequency:800,resonanceVersion:4,strength:10}},b={...fixture(),cymaticsRules:{mode:'resonance',frequency:800,resonanceVersion:4,strength:100}};assert.notDeepEqual(advance(a,createCymaticsState(21),1),advance(b,createCymaticsState(21),1));
@@ -193,7 +176,7 @@ test('fixed resonance maps retain their pre-motion byte signatures',async()=>{
 });
 
 test('Resonance defaults to 35 percent and retired preferences migrate without accepting retired recordings',()=>{
- assert.deepEqual(INITIAL_CYMATICS_RULES,{strength:35,mode:'resonance',frequency:123,resonanceVersion:7,phaseMotion:true,heartFieldVersion:2});
+ assert.deepEqual(INITIAL_CYMATICS_RULES,{strength:35,mode:'resonance',frequency:123,resonanceVersion:7,phaseMotion:true});
  assert.deepEqual(validateCymaticsRules(),INITIAL_CYMATICS_RULES);
  const defaults=defaultWorkspaceSettings();defaults.rules.cymatics={...INITIAL_CYMATICS_RULES};
  assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(defaults)).rules.cymatics,undefined);
@@ -232,7 +215,7 @@ test('Resonance cycles Heart, Crosshatch, Interference and Diagonals by default 
  for(const map of [2,4,1,7]){c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation,'cymatics');assert.equal(c.cymaticsState,state);assert.equal(c.isLifePlaying,true);assert.equal(button.dataset.cymaticsMap,Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===map));}
  assert.equal(button['aria-pressed'],'true');assert(classes.has('simulation-active'));
  c.isLifePlaying=false;assert.throws(()=>c.saveCymaticsSettings({pattern:'retired',strength:75}),/no longer supported/);assert.equal(c.cymaticsState,state);
- c.saveCymaticsSettings({...existingMapDefaults,resonanceVersion:5,phaseMotion:false});
+ c.saveCymaticsSettings({...INITIAL_CYMATICS_RULES,resonanceVersion:5,phaseMotion:false});
  assert.equal(button.dataset.cymaticsMap,'clouds');
  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,7);
  assert.equal(c.getCymaticsRules().phaseMotion,false);
@@ -264,7 +247,7 @@ test('per-map frequencies migrate legacy shared values and keep strength/phase s
  for(const value of [null,[],{circle:440},{circular:19},{grid:20001},{diagonal:20.5},{interference:'440'}])assert.throws(()=>validateCymaticsFrequencies(value));
 });
 test('saving draft frequencies and restoring history/projects/macros do not discard other map preferences',()=>{
- const base={...existingMapDefaults,resonanceVersion:4,frequency:20000};const c=vm.createContext({vorticesModeFor,RESONANCE_MAPS,INITIAL_CYMATICS_RULES,CYMATICS_RESONANCE_MAPS,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,validateCymaticsStrengths,selectCymaticsMap,
+ const base={...INITIAL_CYMATICS_RULES,resonanceVersion:4,frequency:20000};const c=vm.createContext({vorticesModeFor,RESONANCE_MAPS,INITIAL_CYMATICS_RULES,CYMATICS_RESONANCE_MAPS,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,validateCymaticsStrengths,selectCymaticsMap,
   validateCymaticsRules,validateCymaticsSnapshot,createCymaticsState,restoreCymaticsState,n:21,cymaticsRules:base,cymaticsFrequencies:createCymaticsFrequencies(base),cymaticsStrengths:createCymaticsStrengths(base),replayCymaticsRules:null,cymaticsState:createCymaticsState(21),armedSimulation:'cymatics',isBreathing:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
   recordLiveSimulationRules(){},persistWorkspaceSettings(){},getWorkspaceSettings:()=>({}),settingsProfiles:{scheduleCapture(){}}});c.armSimulation=sim=>c.armedSimulation=sim;
  vm.runInContext(source.slice(source.indexOf('function updateCymaticsButtonUI('),source.indexOf('function getCracksBrush(')),c);
@@ -295,7 +278,7 @@ test('Clouds and Cosmological empathy have distinct, frequency-sensitive, closed
   assert.notDeepEqual(field,getCymaticsField(41,3200,resonanceVersion,0));
   assert.notDeepEqual(field,getCymaticsField(41,800,resonanceVersion,300));
   for(const phaseMotion of [false,true]){
-   const rules={...existingMapDefaults,resonanceVersion,phaseMotion};
+   const rules={...INITIAL_CYMATICS_RULES,resonanceVersion,phaseMotion};
    const context={...fixture(41),cymaticsRules:rules},before=structuredClone(context.currentBoardState);
    const run=advance(context,{...createCymaticsState(41),steps:250},75),saved=JSON.parse(JSON.stringify(run));
    assert.deepEqual(histogram(run.ctx.currentBoardState),histogram(before));assert.deepEqual(run.ctx.currentBoardState[840],before[840]);
@@ -329,7 +312,7 @@ test('per-map strengths preserve legacy shared values and migrate without changi
 });
 
 test('strength drafts save atomically; history/macros preserve preferences and projects change only the active map',()=>{
- const base={...existingMapDefaults,resonanceVersion:4,frequency:20000};
+ const base={...INITIAL_CYMATICS_RULES,resonanceVersion:4,frequency:20000};
  const c=vm.createContext({vorticesModeFor,RESONANCE_MAPS,INITIAL_CYMATICS_RULES,CYMATICS_RESONANCE_MAPS,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,selectCymaticsMap,
   validateCymaticsRules,validateCymaticsSnapshot,createCymaticsState,restoreCymaticsState,n:21,cymaticsRules:base,cymaticsFrequencies:createCymaticsFrequencies(),cymaticsStrengths:createCymaticsStrengths(),replayCymaticsRules:null,cymaticsState:createCymaticsState(21),armedSimulation:'cymatics',isBreathing:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
   recordLiveSimulationRules(){},persistWorkspaceSettings(){},getWorkspaceSettings:()=>({}),settingsProfiles:{scheduleCapture(){}}});c.armSimulation=sim=>c.armedSimulation=sim;
@@ -348,7 +331,7 @@ test('strength drafts save atomically; history/macros preserve preferences and p
 });
 
 test('cosmic preferences discard retired version metadata while preserving all effective settings',()=>{
- const rules={...existingMapDefaults,resonanceVersion:6,strength:60};
+ const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,strength:60};
  const expected={...rules,cosmicFieldVersion:3,reversePaletteOrder:true};
  for(const cosmicVersion of [1,2]){
   assert.deepEqual(migrateCymaticsPreferences({...rules,cosmicVersion}),expected);
@@ -400,7 +383,7 @@ test('radial cosmic phase closes, frequencies vary, and live checkpoints resume 
  assert.notDeepEqual(getCymaticsField(41,800,6,0),getCymaticsField(41,3000,6,0));
  assert.notDeepEqual(getCymaticsField(41,800,6,0),getCymaticsField(41,800,6,300));
  for(const phaseMotion of [false,true]){
-  const rules={...existingMapDefaults,resonanceVersion:6,cosmicFieldVersion:3,phaseMotion,strength:75};
+  const rules={...INITIAL_CYMATICS_RULES,resonanceVersion:6,cosmicFieldVersion:3,phaseMotion,strength:75};
   const ctx={...fixture(41),cymaticsRules:rules},before=structuredClone(ctx.currentBoardState);
   const first=advance(ctx,createCymaticsState(41),100),checkpoint=JSON.parse(JSON.stringify(first));
   assert.deepEqual(histogram(first.ctx.currentBoardState),histogram(before));assert.deepEqual(first.ctx.currentBoardState[840],before[840]);assert.notDeepEqual(first.ctx.currentBoardState,before);
@@ -423,7 +406,7 @@ test('cosmic radial field is centered, reflection-symmetric and monotone with no
  assert(broad[c*n+n-1]<broad[n-1],'field keeps changing outside the inscribed circle');
 });
 test('new cosmic selection records its radial version; missing metadata retains the previous field',()=>{
- const base={...existingMapDefaults,resonanceVersion:6};
+ const base={...INITIAL_CYMATICS_RULES,resonanceVersion:6};
  const current=selectCymaticsMap(base,6,createCymaticsFrequencies(),createCymaticsStrengths()).rules;
  assert.equal(current.cosmicFieldVersion,3);assert.equal(selectCymaticsMap(current,5,createCymaticsFrequencies(),createCymaticsStrengths()).rules.cosmicFieldVersion,undefined);
  const old={...fixture(21),cymaticsRules:base},explicit={...structuredClone(old),cymaticsRules:{...base,cosmicFieldVersion:1}};
@@ -438,7 +421,7 @@ test('cosmic circle sorts an actual binary board into a round disk and moves ext
  let seed=4567;const random=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296;};
  const colors=Array.from({length:n*n},(_,i)=>i<count?1:0);
  for(let i=colors.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[colors[i],colors[j]]=[colors[j],colors[i]];}
- const ctx={n,currentPalette:['#000000','#ffffff'],currentBoardState:colors.map(k=>({k,v:k,isGold:false})),cymaticsRules:{...existingMapDefaults,resonanceVersion:6,cosmicFieldVersion:3,phaseMotion:false,strength:100}};
+ const ctx={n,currentPalette:['#000000','#ffffff'],currentBoardState:colors.map(k=>({k,v:k,isGold:false})),cymaticsRules:{...INITIAL_CYMATICS_RULES,resonanceVersion:6,cosmicFieldVersion:3,phaseMotion:false,strength:100}};
  const result=advance(ctx,createCymaticsState(n),600).ctx.currentBoardState;
  let intersection=0,union=0,outsideChanges=0;
  for(let i=0;i<result.length;i++){

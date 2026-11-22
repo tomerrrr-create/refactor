@@ -18,7 +18,7 @@ source=source.replace('      initializeApp();',`window.iconTest={
   if(sim==='breathe'){breatheEvoMode=mode;updateBreatheEvoButtonUI();}
   if(sim==='brightnessEvo'){brightnessEvoMode=mode;updateBrightnessEvoButtonUI();}
   if(sim==='dla'){dlaMode=mode;updateDlaButtonUI();}
-  if(sim==='cymatics'){replayCymaticsRules=selectCymaticsMap(INITIAL_CYMATICS_RULES,CYMATICS_RESONANCE_MAPS[mode]).rules;updateCymaticsButtonUI();}
+  if(sim==='cymatics'){replayCymaticsRules={...INITIAL_CYMATICS_RULES,resonanceVersion:CYMATICS_RESONANCE_MAPS[mode]};updateCymaticsButtonUI();}
   if(sim==='islands'){islandsSession={...createIslandsSession(1),mode};updateIslandsButtonUI();}
   if(sim==='contour'){contourMode='cracks';replayCracksGrowth={...DEFAULT_CRACKS_GROWTH,area:mode};updateContourButtonUI();}
   if(sim==='gameOfLife'){gameOfLifeMode=mode;updateGameOfLifeButtonUI();}
