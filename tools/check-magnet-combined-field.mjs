@@ -20,7 +20,7 @@ try{for(const touch of [false,true]){
  const open=async()=>{await page.evaluate(()=>fieldTest.open());await page.locator('#magnetSettingsModal').waitFor({state:'visible'});await page.waitForTimeout(250);};
  const save=()=>tap('#btnMagnetSettingsSave'),cancel=()=>tap('#btnMagnetSettingsCancel');
  const choose=method=>tap('[data-method="'+method+'"]');
- const cycle=['field_cosmic_magnet','magnet','cosmic_magnet','field_magnet'];
+ const cycle=['field_cosmic_magnet','cosmic_magnet','magnet','field_magnet'];
  assert.equal(await page.locator('#btnMagnetModes svg:visible').getAttribute('id'),'iconModeFieldCosmicMagnet');
  for(const method of [...cycle,'off']){
   await tap('#btnMagnetModes');assert.equal((await state()).mode,method);
@@ -32,11 +32,11 @@ try{for(const touch of [false,true]){
  }
  await tap('#btnMagnetModes');await open();assert.equal(await page.locator('#magnetCombinedField').count(),0);assert.deepEqual(await page.locator('#magnetAnchorLimit button').evaluateAll(buttons=>buttons.map(b=>Number(b.dataset.limit))),[300,600,1000]);
  assert.equal(await page.locator('#magnetMethodContainer button').count(),6);
- const names=touch?['קוסמי משולב','רגיל','קוסמי','רגיל משולב','מגנט זמן','התרחבות']:
-  ['Combined Cosmic','Regular','Cosmic','Combined Regular','Time Magnet','Expand'];
+ const names=touch?['קוסמי משולב','קוסמי','רגיל','רגיל משולב','מגנט זמן','התרחבות']:
+  ['Combined Cosmic','Cosmic','Regular','Combined Regular','Time Magnet','Expand'];
  assert.deepEqual(await page.locator('#magnetMethodContainer .magnet-method-label').allTextContents(),names);
  assert.equal(await page.locator('#magnetMethodContainer').getByRole('button',{name:names[0],exact:true}).getAttribute('aria-pressed'),'true');
- const toolbarIcons=['iconModeFieldCosmicMagnet','iconModeMagnet','iconModeCosmicMagnet','iconModeFieldMagnet','iconModeTimeMagnet','iconModeExpand'];
+ const toolbarIcons=['iconModeFieldCosmicMagnet','iconModeCosmicMagnet','iconModeMagnet','iconModeFieldMagnet','iconModeTimeMagnet','iconModeExpand'];
  for(const [index,method] of [...cycle,'time_magnet','expand'].entries()){
   assert.equal(await page.locator('#magnetMethodContainer [data-method="'+method+'"] svg').innerHTML(),
    await page.locator('#'+toolbarIcons[index]).innerHTML());
@@ -49,7 +49,7 @@ try{for(const touch of [false,true]){
  // Settings-only Time wraps to the first shortcut.
  await open();await choose('time_magnet');await save();await tap('#btnMagnetModes');assert.equal((await state()).mode,'field_cosmic_magnet');
  await tap('#btnPlayPauseLife');await page.waitForFunction(()=>fieldTest.state().gen>=3);
- const generation=(await state()).gen;await tap('#btnMagnetModes');assert((await state()).playing);assert((await state()).gen>=generation);assert.equal((await state()).mode,'magnet');
+ const generation=(await state()).gen;await tap('#btnMagnetModes');assert((await state()).playing);assert((await state()).gen>=generation);assert.equal((await state()).mode,'cosmic_magnet');
  await tap('#btnMagnetModes');assert.equal((await state()).limit,600);await tap('#btnPlayPauseLife');
  const live=await state();await tap('#btnUndo');await tap('#btnRedo');assert.deepEqual((await state()).tiles,live.tiles);
  await page.evaluate(text=>fieldTest.replay(text),live.logs.join('\n'));await page.waitForFunction(()=>fieldTest.done(),null,{timeout:30000});assert.deepEqual((await state()).tiles,live.tiles);

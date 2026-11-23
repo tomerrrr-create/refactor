@@ -6,7 +6,7 @@ import {runMagnetGeneration,resetMagnetCaches} from '../js/simulations/magnet.js
 import {recordedMagnetAnchorLimit,recordedMagnetCombinedField,magnetRecordingRules} from '../js/magnet-anchor-limit.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 test('four toolbar choices and six settings types preserve the old method IDs',()=>{
- assert.deepEqual(MAGNET_CYCLE,['off','field_cosmic_magnet','magnet','cosmic_magnet','field_magnet']);
+ assert.deepEqual(MAGNET_CYCLE,['off','field_cosmic_magnet','cosmic_magnet','magnet','field_magnet']);
  assert.equal(defaultEvolutionCycleMode('magnet'),'field_cosmic_magnet');
  assert.deepEqual(MAGNET_METHODS.slice(4),['time_magnet','expand']);
  for(const method of MAGNET_METHODS){
