@@ -1,4 +1,5 @@
 import { CYMATICS_RESONANCE_MAPS } from './cymatics-settings.js';
+import { MAGNET_CYCLE } from './magnet-modes.js';
 
 // Remembered selections are deliberately session-only.
 export const EVOLUTION_MODE_MEMORY_KEY = 'colorGridRememberEvolutionModes';
@@ -6,7 +7,7 @@ export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].in
 // First human-cycle choices. Turing and one-shot utilities have no cycle.
 export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
     gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:'radial',
-    magnet:'field_magnet',brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
+    magnet:MAGNET_CYCLE[1],brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
     ink:'turbine2',network:'spatial',erosion:'channels',islands:'classic',contour:'all',cymatics:CYMATICS_RESONANCE_MAPS.heart,nudge:'nudgeBrighter',wind:'ripple'
 });
 export const defaultEvolutionCycleMode = simulation => DEFAULT_EVOLUTION_CYCLE_MODES[evolutionModeKey(simulation)];
