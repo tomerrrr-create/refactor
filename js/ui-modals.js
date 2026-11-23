@@ -1,4 +1,4 @@
-import {isCombinedMagnetMode} from './magnet-modes.js';
+import {MAGNET_METHODS,isCombinedMagnetMode} from './magnet-modes.js';
 import { magnetAnchorIndex } from './magnet-anchor.js';
 import { LUMINANCE_SORT_ICON } from './colors.js';
 import { DEFAULT_CONTOUR_ACTION_RULES } from './contour-action-settings.js';
@@ -2159,7 +2159,14 @@ app.dom.btnChiPresetElectric.addEventListener('click', (e) => applyChiPreset('El
 // ====================== MAGNET SETTINGS MODAL ======================
 let tempMagnetRules = { method: 'magnet', anchorColorIndex: -1 };
 let tempMagnetAnchorLimit = 300;
-const magnetAutumnAccents = ['#CD853F', '#607D8B', '#C2A14A', '#FF7F50'];
+const magnetMethodStyles = {
+    field_magnet: {iconId: 'iconModeFieldMagnet', accent: '#CD853F'},
+    field_cosmic_magnet: {iconId: 'iconModeFieldCosmicMagnet', accent: '#607D8B'},
+    magnet: {iconId: 'iconModeMagnet', accent: '#C2A14A'},
+    cosmic_magnet: {iconId: 'iconModeCosmicMagnet', accent: '#FF7F50'},
+    time_magnet: {iconId: 'iconModeTimeMagnet', accent: '#CD853F'},
+    expand: {iconId: 'iconModeExpand', accent: '#607D8B'}
+};
 
 function closeMagnetSettingsModal() {
     app.dom.magnetSettingsModal.style.display = 'none';
@@ -2170,24 +2177,16 @@ function renderMagnetMethodButtons() {
     const container = app.dom.magnetMethodContainer;
     container.innerHTML = '';
 
-    const modes = [
-        { method:'field_magnet',iconId:'iconModeFieldMagnet' },
-        { method:'field_cosmic_magnet',iconId:'iconModeFieldCosmicMagnet' },
-        { method: 'magnet',        iconId: 'iconModeMagnet' },
-        { method: 'cosmic_magnet', iconId: 'iconModeCosmicMagnet' },
-        { method: 'time_magnet',   iconId: 'iconModeTimeMagnet' },
-        { method: 'expand',        iconId: 'iconModeExpand' }
-    ];
-
-    modes.forEach((m, index) => {
+    MAGNET_METHODS.forEach(method => {
+        const {iconId, accent} = magnetMethodStyles[method];
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'magnet-method-button';
-        btn.style.setProperty('--magnet-accent', magnetAutumnAccents[index%magnetAutumnAccents.length]);
-        btn.setAttribute('aria-pressed', String(tempMagnetRules.method === m.method));
-        btn.dataset.method = m.method;
+        btn.style.setProperty('--magnet-accent', accent);
+        btn.setAttribute('aria-pressed', String(tempMagnetRules.method === method));
+        btn.dataset.method = method;
 
-        const originalIcon = document.getElementById(m.iconId);
+        const originalIcon = document.getElementById(iconId);
         if (originalIcon) {
             const iconClone = originalIcon.cloneNode(true);
             iconClone.style.display = 'block';
@@ -2200,14 +2199,14 @@ function renderMagnetMethodButtons() {
 
         const label = document.createElement('bdi');
         label.className = 'magnet-method-label';
-        label.textContent = app.getText('magnet_method_' + m.method);
+        label.textContent = app.getText('magnet_method_' + method);
         btn.append(label);
 
         btn.addEventListener('click', () => {
-            tempMagnetRules.method = m.method;
+            tempMagnetRules.method = method;
             renderMagnetLimitButtons();
             renderMagnetMethodButtons();
-            container.querySelector(`[data-method="${m.method}"]`).focus({ preventScroll: true });
+            container.querySelector(`[data-method="${method}"]`).focus({ preventScroll: true });
         });
 
         container.appendChild(btn);

@@ -1,5 +1,5 @@
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
-import {MAGNET_CYCLE,isCombinedMagnetMode,magnetEngineMethod} from './magnet-modes.js';
+import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
@@ -2148,7 +2148,7 @@ if (simulationName === 'spiral') {
 
 
 if (simulationName === 'magnet') {
-    selectMagnetMode('field_magnet');
+    selectMagnetMode(MAGNET_CYCLE[1]);
 }
 
 
@@ -4440,13 +4440,12 @@ function cycleSpiralMode() {
 
 function updateMagnetButtonUI() {
     const selectedMode=(typeof cycleMemory!=='undefined'&&armedSimulation!=='magnet'?cycleMemory.entry('magnet'):undefined)??magnetMode;
-    const displayMode=selectedMode==='off'?'field_magnet':selectedMode;
+    const displayMode=selectedMode==='off'?MAGNET_CYCLE[1]:selectedMode;
     if (!dom.btnMagnetModes) return;
     // הוספנו לניקוי את time_magnet ואת expand!
     dom.btnMagnetModes.classList.remove('mode-magnet', 'mode-cosmic_magnet', 'mode-time_magnet', 'mode-expand', 'mode-field_magnet', 'mode-field_cosmic_magnet', 'simulation-active');
     
-    const modeLabel=magnetEngineMethod(displayMode==='off'?'field_magnet':displayMode);
-    dom.btnMagnetModes.title=getText('magnet_method_'+(isCombinedMagnetMode(displayMode)?displayMode:modeLabel));
+    dom.btnMagnetModes.title=getText('magnet_method_'+displayMode);
     dom.btnMagnetModes.setAttribute('aria-label',dom.btnMagnetModes.title);
     if (displayMode !== 'off') {
         dom.btnMagnetModes.classList.add('mode-' + displayMode);
@@ -4464,7 +4463,7 @@ function selectMagnetMode(method) {
 function cycleMagnetMode() {
     const oldMode = magnetMode;
     const sequence = MAGNET_CYCLE;
-    magnetMode = sequence.includes(magnetMode)?nextEvolutionMode(magnetMode, sequence):'field_magnet';
+    magnetMode = sequence.includes(magnetMode)?nextEvolutionMode(magnetMode, sequence):sequence[1];
 
     if (magnetMode !== 'off') {
         selectMagnetMode(magnetMode);
