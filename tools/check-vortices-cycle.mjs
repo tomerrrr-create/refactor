@@ -3,6 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
+import { CYMATICS_RESONANCE_MAPS } from '../js/cymatics-settings.js';
 
 const {chromium} = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
@@ -136,10 +137,10 @@ try {
         }
         await tap(hub);assert.equal((await state()).control,null);
         await tap(nav);
-        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'triangle_gravity');
+        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'horizontal_gravity');
         await swipeUp('#btnSpiral');
         await page.locator("#spiralSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['radial','down','triangle_gravity','triangle_gravity_mirror','horizontal_gravity','vertical_gravity']);
+        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['horizontal_gravity','vertical_gravity','triangle_gravity','triangle_gravity_mirror','radial','down']);
         await dialogAction('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
         await tap(nav);
         await tap('#btnGravitationalSort');await swipeUp('#btnGravitationalSort');
@@ -157,10 +158,10 @@ try {
         }
         await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
         await tap(nav);await tap('#btnCymatics');
-        assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,2);
+        assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,CYMATICS_RESONANCE_MAPS.heart);
         await swipeUp('#btnCymatics');await menu.waitFor({state:'visible'});
         await page.waitForTimeout(350);
-        assert.deepEqual(await visibleMaps(),['clouds','diagonal','grid','interference']);
+        assert.deepEqual(await visibleMaps(),['clouds','diagonal','grid','heart','interference']);
         await dialogAction('#cymaticsSettingsDialog [data-reset]');await dialogAction('#cymaticsSettingsDialog [type=submit]');await menu.waitFor({state:'hidden'});
         assert.equal((await state()).settings.cymaticsStrengths.cosmic,65,'Reset only resets the maps in the open dialog');
         // Handoff to the source button must not disarm the same shared engine.

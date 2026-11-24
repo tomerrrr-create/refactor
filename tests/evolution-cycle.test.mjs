@@ -16,7 +16,7 @@ const cases = [
     { sim: 'erosion', fn: 'cycleErosionMode', event: 'Erosion Mode Changed', modes: ['channels', 'channels-solid', 'legacy'], get: c => c.armedSimulation === 'erosion' ? c.erosionRules.mode : 'off' },
     { sim: 'gravitationalSort', fn: 'cycleGravitationalSortMode', event: 'Gravitational Sort Mode', modes: ['up', 'right', 'center_x', 'pinwheel'], get: c => c.gsMode },
     { sim: 'magnet', fn: 'cycleMagnetMode', event: 'Magnet Mode Changed', modes: MAGNET_CYCLE.slice(1), get: c => c.magnetMode },
-    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['radial', 'down', 'triangle_gravity', 'triangle_gravity_mirror', 'horizontal_gravity', 'vertical_gravity'], get: c => c.spiralMode },
+    { sim: 'spiral', fn: 'cycleSpiralMode', event: 'Spiral Mode Changed', modes: ['horizontal_gravity', 'vertical_gravity', 'triangle_gravity', 'triangle_gravity_mirror', 'radial', 'down'], get: c => c.spiralMode },
     { sim: 'brightnessEvo', fn: 'cycleBrightnessEvoMode', event: 'Brightness Evo Mode Changed', modes: ['brightness', 'contrast'], get: c => c.brightnessEvoMode },
     { sim: 'dla', fn: 'cycleDlaMode', event: 'DLA Mode Changed', modes: ['genetics', 'no-genetics'], get: c => c.dlaMode }
 ];
@@ -170,8 +170,8 @@ test('Spiral cycling repairs stale mode/arming combinations without toggling off
     unarmed.spiralMode = 'left';
     unarmed.cycleSpiralMode();
     assert.equal(unarmed.armedSimulation, 'spiral');
-    assert.equal(unarmed.spiralMode, 'radial');
-    assert.equal(unarmed.spiralRules.method, 'radial');
+    assert.equal(unarmed.spiralMode, 'horizontal_gravity');
+    assert.equal(unarmed.spiralRules.method, 'horizontal_gravity');
     assert.equal(unarmed.armCalls, 1);
 
     const selected = harness();
@@ -179,16 +179,16 @@ test('Spiral cycling repairs stale mode/arming combinations without toggling off
     selected.spiralMode = 'off';
     selected.cycleSpiralMode();
     assert.equal(selected.armedSimulation, 'spiral');
-    assert.equal(selected.spiralMode, 'radial');
-    assert.equal(selected.spiralRules.method, 'radial');
+    assert.equal(selected.spiralMode, 'horizontal_gravity');
+    assert.equal(selected.spiralRules.method, 'horizontal_gravity');
     assert.equal(selected.armCalls, 0);
 });
 
 
-test('Spiral starts at Diamond when Tornado was selected on the other button', () => {
+test('Spiral starts at Horizontal Gravity when Tornado was selected on the other button', () => {
  for (const running of [false,true]) {
   const c=harness();c.armedSimulation='spiral';c.spiralMode='tornado';c.spiralRules.method='tornado';c.isLifePlaying=running;
-  c.cycleSpiralMode();assert.equal(c.spiralMode,'radial');
+  c.cycleSpiralMode();assert.equal(c.spiralMode,'horizontal_gravity');
  }
 });
 
