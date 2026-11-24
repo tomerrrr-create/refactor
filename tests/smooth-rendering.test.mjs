@@ -4,13 +4,12 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { isSmoothDisplayAvailable } from '../js/smooth-rendering-settings.js';
 import { hexToRgb, lerp } from '../js/colors.js';
-import { getSequenceFadeOverlay } from '../js/simulations/fibonacci-sequences.js';
 import { prepareDisplayCanvas } from '../js/display-canvas.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function harness(size = 149) {
     const screen = { drawImage() {}, fillRect() {}, setTransform() {} };
-    const h = vm.createContext({ prepareDisplayCanvas, window: { devicePixelRatio: 1 }, isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, softBloomIntensity: 32, isLifePlaying: false, armedSimulation: null,
+    const h = vm.createContext({ prepareDisplayCanvas, window: { devicePixelRatio: 1 }, isSmoothDisplayAvailable, n: size, separatorPx: 0, isSmoothRendering: false, softBloom: null, softBloomIntensity: 32, isLifePlaying: false,
         boardState: Array.from({ length: size * size }, (_, i) => i % 2).map(k => ({ k, v: k, isGold: false, prevK: null })),
         palette: () => ['#000000', '#ffffff'], norm: k => k % 2,
         hexToRgb, lerp, performance: { now: () => 0 }, C: {}, ctx: screen,
@@ -105,28 +104,4 @@ for (const size of [9, 21]) for (const gap of [6, 5, 3, 2]) test(`PNG export ${s
     assert(Math.abs(exportedGap - gap * 4014 / 720) < 1e-9);
     assert.equal(h.separatorPx, gap);
     assert.equal(JSON.stringify(h.boardState), board);
-});
-
-test('the Fibonacci trail blends onto the currently painted pigment in both canvas paths', () => {
-    const h = harness(2);
-    h.armedSimulation = 'fibonacci';
-    h.fibonacciState = { n: 2, mode: 'sequence', sequenceFade: [0, 1, 12] };
-    h.getSequenceFadeOverlay = getSequenceFadeOverlay;
-    h.getPaletteColor = k => h.palette()[h.norm(k)];
-    h.renderToScreen(null);
-    const data = vm.runInContext('cachedImgData.data', h);
-    assert.deepEqual([...data.slice(0, 4)], [40, 40, 40, 255]);
-
-    h.boardState[0].k = 1;
-    h.renderToScreen(null);
-    assert.deepEqual([...data.slice(0, 4)], [215, 215, 215, 255]);
-
-    const colors = [];
-    const exported = { fillRect() { colors.push(this.fillStyle); } };
-    h.renderBoard(exported, 64, 64, null, false, 1);
-    assert.equal(colors[1], 'rgb(215,215,215)');
-
-    h.armedSimulation = null;
-    h.renderToScreen(null);
-    assert.deepEqual([...data.slice(0, 4)], [255, 255, 255, 255]);
 });

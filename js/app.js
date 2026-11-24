@@ -1,4 +1,4 @@
-import { isSequenceMode, isSequenceInterval, setSequenceInterval, getSequenceFadeOverlay, snapshotFibonacciState } from './simulations/fibonacci-sequences.js';
+import { isSequenceMode, isSequenceInterval, setSequenceInterval } from './simulations/fibonacci-sequences.js';
 import { FRACTAL_MODES, createFractalState, validateFractalState, runFractalGeneration, steerJulia } from './simulations/fractals.js';
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
@@ -481,7 +481,7 @@ currentSortMethod,
             ...(armedSimulation === 'oil' ? {oilState:getOilSnapshot()} : {}),
             ...(armedSimulation === 'network' ? {networkState:getNetworkSnapshot()} : {}),
             ...(armedSimulation === 'fractals' ? { fractalState: { ...getFractalState() } } : {}),
-            ...(armedSimulation === 'fibonacci' ? {fibonacciState:snapshotFibonacciState(getFibonacciState())} : {}),
+            ...(armedSimulation === 'fibonacci' ? {fibonacciState:{ ...getFibonacciState() }} : {}),
             ...(armedSimulation === 'islands' && islandsSession ? { islandsState: restoreIslandsSession(islandsSession) } : {}),
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
@@ -769,13 +769,6 @@ let offscreenRenderCanvas = null;
 let offscreenRenderCtx = null;
 let cachedImgData = null; // משתנה למניעת דליפת זיכרון!
 
-function fibonacciDisplayColor(tile, index, fade, paletteAsRgb) {
-    const base = paletteAsRgb[norm(tile.k)];
-    const color = paletteAsRgb[norm(tile.k + fade.steps[index])];
-    const alpha = fade.opacity[fade.ages[index]];
-    return alpha === 1 ? color : color.map((value, channel) => Math.round(lerp(base[channel], value, alpha)));
-}
-
 function renderBoard(targetCtx, width, height, timestamp = performance.now(), smooth = false, renderSeparatorPx = getRenderedSeparatorWidth()) {
     if (isLifePlaying && armedSimulation === 'breathe' && randomBreatheSession) {
         randomBreatheSession.update(Math.max(0, (timestamp ?? performance.now()) - breatheStartTime));
@@ -785,7 +778,6 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
 
     const currentPalette = palette();
     const paletteAsRgb = currentPalette.map(hexToRgb);
-    const sequenceFade = armedSimulation === 'fibonacci' && fibonacciState?.n === n ? getSequenceFadeOverlay(fibonacciState) : null;
 
     // ---------------------------------------------------------
     // נתיב אולטרה-מהיר: מצב סימולציה (בלי מרווחים - separatorPx === 0)
@@ -828,8 +820,6 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
             
          else if (tileData.isGold) {
                 rgb = goldRgb;
-            } else if (sequenceFade?.steps[i]) {
-                rgb = fibonacciDisplayColor(tileData, i, sequenceFade, paletteAsRgb);
             } else if (tileData.prevK !== null && timestamp) {
                 const elapsed = timestamp - tileData.animStart;
                 const progress = Math.min(elapsed / ANIMATION_DURATION, 1.0);
@@ -886,9 +876,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
             finalColor = adjustBrightness(originalColor, brightnessFactor);
         }
         else if (tileData.isGold) {
-            finalColor = C.GOLD || '#FFD700';
-        } else if (sequenceFade?.steps[i]) {
-            finalColor = `rgb(${fibonacciDisplayColor(tileData, i, sequenceFade, paletteAsRgb).join(',')})`;
+            finalColor = C.GOLD || '#FFD700'; 
         } else if (tileData.prevK !== null && timestamp) {
             const elapsed = timestamp - tileData.animStart;
             const progress = Math.min(elapsed / ANIMATION_DURATION, 1.0);
@@ -1606,7 +1594,7 @@ break;
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
         else if (armedSimulation === 'network') simDetails=JSON.stringify(getNetworkSnapshot());
         else if (armedSimulation === 'fractals') simDetails = JSON.stringify(getFractalState());
-        else if (armedSimulation === 'fibonacci') simDetails = JSON.stringify(snapshotFibonacciState(getFibonacciState()));
+        else if (armedSimulation === 'fibonacci') simDetails = JSON.stringify(getFibonacciState());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
@@ -1846,7 +1834,7 @@ function getSimulationRecordingDetails() {
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
         else if (armedSimulation === 'network') simDetails=JSON.stringify(getNetworkSnapshot());
         else if (armedSimulation === 'fractals') simDetails = JSON.stringify(getFractalState());
-        else if (armedSimulation === 'fibonacci') simDetails = JSON.stringify(snapshotFibonacciState(getFibonacciState()));
+        else if (armedSimulation === 'fibonacci') simDetails = JSON.stringify(getFibonacciState());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
@@ -2123,7 +2111,6 @@ function armSimulation(simulationName, { recordIslandsStart = true, spiralEntry 
 
     if(typeof cycleMemory!=='undefined'&&cycleMemory.active())rememberCurrentCycle();
     const currentlyArmed = armedSimulation;
-    const hadSequenceFade = currentlyArmed === 'fibonacci' && fibonacciState?.sequenceFade !== undefined;
     const isTogglingOff = currentlyArmed === simulationName;
 
     // --- RESET ALL STATES ---
@@ -2279,7 +2266,6 @@ if (simulationName === 'magnet') {
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
     if (typeof updateFractalsButtonUI === 'function') updateFractalsButtonUI();
-    if (hadSequenceFade) renderToScreen(null);
 }
 
       
@@ -3058,7 +3044,6 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
       }
       
       function resetArmedState() {
-        const hadSequenceFade = armedSimulation === 'fibonacci' && fibonacciState?.sequenceFade !== undefined;
         if(typeof cycleMemory!=='undefined'&&cycleMemory.active())rememberCurrentCycle();
         armedSimulation = null;
         updateNudgeButtonUI();
@@ -3093,7 +3078,6 @@ gsMode = 'off';
     if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
     if (typeof updateFractalsButtonUI === 'function') updateFractalsButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.active())refreshCycleIcons();
-    if (hadSequenceFade) renderToScreen(null);
 
       }
 
@@ -4019,11 +4003,9 @@ function updateFibonacciButtonUI() {
 
 function selectFibonacciMode(mode) {
     const state = getFibonacciState();
-    const hadSequenceFade = state.mode !== mode && state.sequenceFade !== undefined;
     setFibonacciMode(state, mode, fibonacciSequenceInterval);
     fibonacciMode = mode;
     updateFibonacciButtonUI();
-    if (hadSequenceFade) renderToScreen(null);
 }
 
 function saveFibonacciSettings({ colorAdvance, sequenceInterval }) {

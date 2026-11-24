@@ -13,57 +13,6 @@ const trailDuration = 16;
 const revealFrames = n => Math.min(n, 24);
 const intervalFor = state => state.sequenceInterval || state.n;
 let cachedPlan;
-const fadeRuns = new WeakMap();
-const fadeOpacity = {
-    sequence: Array.from({ length: trailDuration }, (_, age) => {
-        const t = age / trailDuration;
-        return 1 - t * t * (3 - 2 * t);
-    }),
-    primes: Array.from({ length: trailDuration }, (_, age) => (1 - age / trailDuration) ** 2)
-};
-
-export function getSequenceFadeOverlay(state) {
-    if (!state || state.sequenceFade === undefined || !isSequenceMode(state.mode)) return null;
-    let fade = fadeRuns.get(state);
-    if (fade) return fade;
-    const steps = new Uint32Array(state.n ** 2);
-    const ages = new Uint8Array(steps.length);
-    const indices = [];
-    for (let i = 0; i < state.sequenceFade.length; i += 3) {
-        const [index, step, age] = state.sequenceFade.slice(i, i + 3);
-        steps[index] = step;
-        ages[index] = age;
-        indices.push(index);
-    }
-    fade = { steps, ages, indices, nextIndices: [], opacity: fadeOpacity[state.mode] };
-    fadeRuns.set(state, fade);
-    return fade;
-}
-
-export function snapshotFibonacciState(state) {
-    const fade = getSequenceFadeOverlay(state);
-    if (!fade) return { ...state };
-    const { steps, ages, indices } = fade;
-    const sequenceFade = [];
-    for (const index of indices) sequenceFade.push(index, steps[index], ages[index]);
-    return { ...state, sequenceFade };
-}
-
-function validateSequenceFade(data, size) {
-    if (!Array.isArray(data) || data.length % 3 || data.length > size * 3) {
-        throw new Error('Invalid Fibonacci fade');
-    }
-    const seen = new Set();
-    for (let i = 0; i < data.length; i += 3) {
-        const index = data[i], step = data[i + 1], age = data[i + 2];
-        if (!Number.isInteger(index) || index < 0 || index >= size || seen.has(index) ||
-            step !== (step >>> 0) || step === 0 || !Number.isInteger(age) || age < 0 || age >= trailDuration) {
-            throw new Error('Invalid Fibonacci fade cell');
-        }
-        seen.add(index);
-    }
-    return [...data];
-}
 
 function getSequencePlan(n) {
     if (cachedPlan?.n === n) return cachedPlan;
@@ -98,9 +47,7 @@ function getSequencePlan(n) {
 }
 
 export function resetSequenceCursor(state, interval) {
-    fadeRuns.delete(state);
-    delete state.sequenceTrailFrames;
-    Object.assign(state, { sequenceInterval: interval, sequenceOffset: 0, sequenceElapsed: 0, sequenceAge: 0, sequenceShifted: false, sequenceFade: [] });
+    Object.assign(state, { sequenceInterval: interval, sequenceOffset: 0, sequenceElapsed: 0, sequenceAge: 0, sequenceShifted: false, sequenceTrailFrames: [] });
 }
 
 export function clearSequenceCursor(state) {
@@ -110,8 +57,6 @@ export function clearSequenceCursor(state) {
     delete state.sequenceAge;
     delete state.sequenceShifted;
     delete state.sequenceTrailFrames;
-    delete state.sequenceFade;
-    fadeRuns.delete(state);
 }
 
 export function setSequenceInterval(state, interval) {
@@ -128,10 +73,6 @@ export function validateSequenceCursor(state) {
         throw new Error('Invalid Fibonacci sequence cursor');
     }
     const cursor = { sequenceInterval, sequenceOffset, sequenceElapsed, sequenceAge, sequenceShifted };
-    if (state.sequenceFade !== undefined) {
-        cursor.sequenceFade = validateSequenceFade(state.sequenceFade, n ** 2);
-        return cursor;
-    }
     // Missing history marks a recording from before the trails were introduced.
     if (state.sequenceTrailFrames === undefined) return cursor;
     const maxCount = getSequencePlan(n)[state.mode].length;
@@ -159,7 +100,6 @@ export function runNumberSequence(board, colorCount, state) {
     const footprint = [sequenceOffset,
         transitioning ? Math.ceil(visible * (overlap - sequenceElapsed) / overlap) : 0,
         transitioning ? Math.ceil(visible * (sequenceElapsed + 1) / overlap) : visible];
-    const fade = getSequenceFadeOverlay(state);
     const visit = (offset, count, advancesColor) => {
         for (let rank = 0; rank < count; rank++) {
             const index = cells[(numbers[rank] + offset) % cells.length];
@@ -168,12 +108,7 @@ export function runNumberSequence(board, colorCount, state) {
             // when its trail age does not call for a color change.
             visited[index] = 1;
             const cell = board[index];
-            if (cell.isGold) continue;
-            if (fade) {
-                fade.steps[index] = ((fade.steps[index] + 1) >>> 0) || 1;
-                fade.ages[index] = 0;
-                fade.nextIndices.push(index);
-            } else if (advancesColor) cell.k = cell.v = (cell.k + 1) % colorCount;
+            if (advancesColor && !cell.isGold) cell.k = cell.v = (cell.k + 1) % colorCount;
         }
     };
     const visitFootprint = ([offset, outgoing, incoming], advancesColor) => {
@@ -183,26 +118,7 @@ export function runNumberSequence(board, colorCount, state) {
     visited.fill(0);
     visitFootprint(footprint, true);
 
-    if (fade) {
-        const { steps, ages, indices, nextIndices } = fade;
-        for (const index of indices) {
-            if (board[index].isGold) {
-                steps[index] = 0;
-                continue;
-            }
-            if (visited[index]) continue;
-            const age = ++ages[index];
-            if (age >= trailDuration) {
-                steps[index] = 0;
-                continue;
-            }
-            if (age % (age <= slowTrailAfter ? 2 : 4) === 0) steps[index] = ((steps[index] + 1) >>> 0) || 1;
-            nextIndices.push(index);
-        }
-        fade.indices = nextIndices;
-        fade.nextIndices = indices;
-        indices.length = 0;
-    } else if (state.sequenceTrailFrames) {
+    if (state.sequenceTrailFrames) {
         const frames = state.sequenceTrailFrames;
         let newest = footprint;
         for (let i = frames.length - 1; i >= 0; i--) {
