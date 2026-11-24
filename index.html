@@ -51,6 +51,12 @@
         <div id="longPressOverlay" class="absolute inset-0 pointer-events-none"></div>
         <div id="longPressDisplay" class="absolute inset-0 flex flex-col items-center justify-center gap-8 sm:gap-12 pointer-events-none">
         </div>
+        <button id="livingReliefOpen" type="button" aria-haspopup="dialog" aria-controls="livingRelief" hidden>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 14l5-6 4 4 3-7 6 9-9 5zM3 17l9 5 9-5"/>
+          </svg>
+          <span data-relief-text="relief_title">Living Relief</span>
+        </button>
       </div>
 
       <div id="controlsContainer" class="mt-11" aria-label="Control buttons">
@@ -667,6 +673,45 @@
     </div>
     <nav class="quick-start-dots" data-guide-dots aria-label="Steps"></nav>
     <footer class="quick-start-footer"><button type="button" data-guide-back></button><button type="button" data-guide-next></button></footer>
+    </div>
+  </dialog>
+
+  <dialog id="livingRelief" aria-labelledby="livingReliefTitle">
+    <header class="relief-header">
+      <div>
+        <h2 id="livingReliefTitle" data-relief-text="relief_title" tabindex="-1">Living Relief</h2>
+        <p data-relief-text="relief_intro">Sculpt a copy of your board and watch color flow through it.</p>
+      </div>
+      <button type="button" data-relief-close aria-label="Close">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </header>
+    <div class="relief-workspace">
+      <canvas id="reliefCanvas" role="img" aria-labelledby="livingReliefTitle"></canvas>
+      <div class="relief-controls">
+        <div class="relief-playback">
+          <button type="button" class="relief-play" data-relief-play data-relief-text="relief_play">Play</button>
+          <button type="button" data-relief-step data-relief-text="relief_step">One generation</button>
+        </div>
+        <div class="relief-tools">
+          <button type="button" data-relief-tool="raise" data-relief-text="relief_raise" aria-pressed="true">Raise</button>
+          <button type="button" data-relief-tool="lower" data-relief-text="relief_lower" aria-pressed="false">Lower</button>
+          <button type="button" data-relief-tool="color" data-relief-text="relief_color" aria-pressed="false">Color</button>
+        </div>
+        <div class="relief-brush-options">
+          <label><span data-relief-text="relief_size">Brush size</span><select data-relief-size></select></label>
+          <label><span data-relief-text="relief_pigment">Pigment</span>
+            <span class="relief-pigment"><span data-relief-swatch aria-hidden="true"></span><select data-relief-pigment></select></span>
+          </label>
+        </div>
+        <p class="relief-hint" data-relief-text="relief_hint">Draw a ridge across the board, then lower a gap. Press Play and see where colors reach the middle first.</p>
+        <div class="relief-utilities">
+          <button type="button" data-relief-top data-relief-text="relief_top" aria-pressed="false">Top view</button>
+          <button type="button" data-relief-reset data-relief-text="relief_reset">Reset study</button>
+        </div>
+      </div>
     </div>
   </dialog>
 

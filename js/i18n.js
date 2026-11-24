@@ -9,6 +9,19 @@ export function onLanguageChange(callback) {
 }
 
 export const translations = {
+  relief_title: {en:'Living Relief',he:'תבליט חי',ru:'Живой рельеф',nl:'Levend reliëf'},
+  relief_intro: {en:'Sculpt a copy of your board and watch color flow through it.',he:'פסלו בעותק של הלוח וצפו בצבעים זורמים בו.',ru:'Лепите на копии своего холста и наблюдайте, как по ней перетекает цвет.',nl:'Vorm een kopie van je bord en kijk hoe de kleuren erover stromen.'},
+  relief_play: {en:'Play',he:'נגן',ru:'Пуск',nl:'Afspelen'},
+  relief_pause: {en:'Pause',he:'השהה',ru:'Пауза',nl:'Pauzeren'},
+  relief_step: {en:'One generation',he:'דור אחד',ru:'Одно поколение',nl:'Eén generatie'},
+  relief_raise: {en:'Raise',he:'להגביה',ru:'Поднять',nl:'Verhogen'},
+  relief_lower: {en:'Lower',he:'להנמיך',ru:'Опустить',nl:'Verlagen'},
+  relief_color: {en:'Color',he:'לצבוע',ru:'Красить',nl:'Kleuren'},
+  relief_size: {en:'Brush size',he:'גודל מברשת',ru:'Размер кисти',nl:'Penseelgrootte'},
+  relief_pigment: {en:'Pigment',he:'צבע',ru:'Цвет',nl:'Verfkleur'},
+  relief_hint: {en:'Draw a ridge across the board, then lower a gap. Press Play and see where colors reach the middle first.',he:'הגביהו רכס לרוחב הלוח והנמיכו בו פתח. לחצו על נגן וראו איפה הצבעים מגיעים ראשונים למרכז.',ru:'Поднимите гребень поперёк холста и проделайте в нём проход. Нажмите «Пуск» и посмотрите, где цвета первыми достигнут центра.',nl:'Maak een richel over het bord en verlaag een stukje tot een doorgang. Druk op Afspelen en kijk waar de kleuren het midden het eerst bereiken.'},
+  relief_top: {en:'Top view',he:'מבט מלמעלה',ru:'Вид сверху',nl:'Bovenaanzicht'},
+  relief_reset: {en:'Reset study',he:'איפוס הניסוי',ru:'Сбросить этюд',nl:'Studie herstellen'},
   luminance_anchor:{en:'Luminance Anchor (Magnet, GOL, Contour)',he:'עוגן לפי בהירות (מגנט, GOL, קווי מתאר)',ru:'Якорь по яркости (Магнит, GOL, Контуры)',nl:'Luminantie-anker (Magneet, GOL, Contouren)'},
   luminance_anchor_note:{en:'Use the first Luminance color for Magnet, Game of Life and Contours. Individual settings remain editable.',he:'הצבע הראשון לפי Luminance למגנט, למשחק החיים ולקווי המתאר. אפשר לשנות כל הגדרה בנפרד.',ru:'Первый цвет по яркости для магнита, игры «Жизнь» и контуров. Настройки можно менять отдельно.',nl:'Gebruik de eerste luminantiekleur voor Magneet, Game of Life en Contouren. Elke instelling blijft aanpasbaar.'},
   magnet_method_field_magnet:{en:'Combined Regular',he:'רגיל משולב',ru:'Обычный с общим полем',nl:'Gewoon gecombineerd'},

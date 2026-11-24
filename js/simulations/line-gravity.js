@@ -2,7 +2,7 @@ import { defaultGravitationalSortRules } from '../constants.js';
 
 const swapThreshold = defaultGravitationalSortRules.strength * 2 ** 32;
 
-function pullTowardLine(board, from, target, stride, salt, key, keyStride) {
+function pullTowardLine(board, from, target, stride, salt, key, keyStride, heights) {
     for (; from !== target; from += stride, key += keyStride) {
         const next = from + stride;
         const farther = board[from], nearer = board[next];
@@ -11,7 +11,9 @@ function pullTowardLine(board, from, target, stride, salt, key, keyStride) {
         // Use the unreflected index so mirrored boards make identical choices.
         let bits = Math.imul(key ^ salt, 0x85ebca6b);
         bits = Math.imul(bits ^ (bits >>> 16), 0xc2b2ae35);
-        if (((bits ^ (bits >>> 13)) >>> 0) >= swapThreshold) continue;
+        const climb = heights ? Math.max(0, heights[next] - heights[from]) : 0;
+        const threshold = climb ? swapThreshold / (1 + (climb * .32) ** 2) : swapThreshold;
+        if (((bits ^ (bits >>> 13)) >>> 0) >= threshold) continue;
         board[from] = nearer;
         board[next] = farther;
     }
@@ -36,7 +38,7 @@ export function runDiagonalGravity(n, board, phase, mirrored) {
     return board;
 }
 
-export function runCenterLineGravity(n, board, phase, towardHorizontalLine) {
+export function runCenterLineGravity(n, board, phase, towardHorizontalLine, heights) {
     const salt = Math.imul(phase + 1, 0x9e3779b9);
     const stride = towardHorizontalLine ? n : 1;
     const laneStride = towardHorizontalLine ? 1 : n;
@@ -48,8 +50,8 @@ export function runCenterLineGravity(n, board, phase, towardHorizontalLine) {
         const last = first + (n - 1) * stride;
         // Both axes use the same random decisions when transposing the board.
         const keyFirst = lane * n;
-        pullTowardLine(board, first, first + nearFromStart * stride, stride, salt, keyFirst, 1);
-        pullTowardLine(board, last, first + nearFromEnd * stride, -stride, salt, keyFirst + n - 1, -1);
+        pullTowardLine(board, first, first + nearFromStart * stride, stride, salt, keyFirst, 1, heights);
+        pullTowardLine(board, last, first + nearFromEnd * stride, -stride, salt, keyFirst + n - 1, -1, heights);
     }
     return board;
 }

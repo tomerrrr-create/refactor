@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '8cc8217d20e90e9f13f9';
+const VERSION = '15ada0517470dcb37b6b';
 const ASSETS = [
     "./",
     "./index.html",
@@ -42,6 +42,8 @@ const ASSETS = [
     "./js/i18n.js",
     "./js/ink-settings-dialog.js",
     "./js/interface-zoom.js",
+    "./js/living-relief-dialog.js",
+    "./js/living-relief.js",
     "./js/luminance-anchor-preference.js",
     "./js/macro-activity.js",
     "./js/macro-ending.js",

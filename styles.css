@@ -69,6 +69,59 @@ body {
   height: 100%;
   border-radius: 4px; /* Slightly smaller radius to fit inside the container's border */
 }
+#livingReliefOpen {
+  position:absolute; inset-inline-end:0; top:100%; min-height:44px;
+  display:flex; align-items:center; gap:6px; padding:0 10px;
+  border:0; background:transparent; color:#aeac9e; font:inherit; font-size:12px;
+  cursor:pointer;
+}
+#livingReliefOpen[hidden], .macro-fullscreen #livingReliefOpen { display:none; }
+#livingReliefOpen svg { width:18px; height:18px; color:#bea76b; }
+#livingReliefOpen:hover, #livingReliefOpen:focus-visible { color:#f2ddb0; }
+
+#livingRelief {
+  width:min(800px, calc(100% - 24px)); max-width:none;
+  max-height:calc(100dvh - 24px); overflow:auto; overscroll-behavior:contain;
+  padding:clamp(12px, 2.5vw, 24px); border:1px solid #554831; border-radius:18px;
+  background:#151915; color:#ece7da; box-shadow:0 16px 70px #000a;
+  touch-action:pan-y;
+}
+#livingRelief::backdrop { background:#030604df; }
+.relief-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:14px; }
+.relief-header h2 { margin:0; font-size:clamp(20px, 4vw, 27px); font-weight:550; color:#f3dfad; }
+.relief-header p { margin:3px 0 0; color:#bcb9ad; font-size:13px; line-height:1.4; }
+.relief-header button svg { width:20px; height:20px; }
+.relief-workspace { display:grid; grid-template-columns:minmax(0, 1fr) minmax(210px, .48fr); gap:clamp(12px, 2.5vw, 22px); align-items:center; }
+#reliefCanvas {
+  display:block; width:100%; aspect-ratio:1; border-radius:10px; background:#0d1111;
+  image-rendering:pixelated; touch-action:none; cursor:crosshair;
+}
+.relief-controls { display:grid; gap:12px; min-width:0; }
+.relief-tools, .relief-playback, .relief-utilities, .relief-brush-options { display:grid; gap:6px; }
+.relief-tools { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.relief-playback, .relief-utilities, .relief-brush-options { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#livingRelief button, #livingRelief select {
+  min-height:44px; border:1px solid #414337; border-radius:8px; padding:4px 7px;
+  background:#1e241e; color:#eee8da; font:inherit; font-size:13px;
+}
+#livingRelief button { cursor:pointer; }
+#livingRelief button[data-relief-close] { display:grid; place-items:center; width:44px; flex-shrink:0; background:transparent; }
+#livingRelief button[aria-pressed="true"], #livingRelief .relief-play {
+  border-color:#aa9257; background:#302a1d; color:#f5dda4;
+}
+#livingRelief button:disabled { opacity:.42; cursor:default; }
+#livingRelief :is(button, select):focus-visible, #livingReliefOpen:focus-visible { outline:2px solid #d8bd77; outline-offset:2px; }
+.relief-brush-options label { display:grid; gap:3px; min-width:0; color:#bbb8aa; font-size:12px; }
+.relief-brush-options select { width:100%; }
+.relief-pigment { display:flex; align-items:center; gap:6px; }
+.relief-pigment [data-relief-swatch] { width:16px; height:16px; flex-shrink:0; border:1px solid #a5a596; border-radius:50%; }
+.relief-hint { margin:0; color:#bcb9ad; font-size:12px; line-height:1.5; }
+@media (max-width:580px) {
+  .relief-workspace { grid-template-columns:1fr; }
+  #reliefCanvas { width:min(100%, 43dvh); justify-self:center; }
+  .relief-controls { gap:6px; }
+  #livingRelief select { font-size:16px; }
+}
 /* END: --- Structural Change for Canvas --- */
 
 
