@@ -7,6 +7,7 @@ function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, s
     const currentPalette = Array(4096).fill('#000');
     const state = createFibonacciState(n, orientation, mode, colorAdvance, seed);
     if (mode === 'sequence' || mode === 'primes') {
+        if (useTail !== true) delete state.sequenceColorWave;
         if (!useTail) {
             delete state.sequenceLineShifts;
             delete state.sequenceLinePhase;
@@ -454,24 +455,26 @@ test('tail color travels from the nearest predecessor outward without painting d
     }
 });
 
-test('Fibonacci Sequence forms the original lines before a pulse changes existing pigments', () => {
-    const n = 21;
+test('Fibonacci Sequence retains its reveal and sends a bright crest through formed lines', () => {
+    const n = 149;
     const current = simulate(n, 0, 'sequence', 100, 7, true);
     current.state.sequenceInterval = 8;
     const original = simulate(n, 0, 'sequence');
     original.state.sequenceInterval = 8;
     delete original.state.sequenceTrailFrames;
-    const colorCount = 23;
+    const colorCount = 264;
     current.currentPalette.length = original.currentPalette.length = colorCount;
     for (let i = 0; i < 48; i++) {
         current.step();
         original.step();
-        assert.deepEqual(current.currentBoardState, original.currentBoardState);
+        assert(current.currentBoardState.every((cell, index) => cell.k === original.currentBoardState[index].k),
+            `The original reveal changed at generation ${i + 1}`);
     }
 
     const snapshot = validateFibonacciState(JSON.parse(JSON.stringify(current.state)));
     const replayed = structuredClone(current.currentBoardState);
-    let pulseCells = 0;
+    const brightCells = new Set();
+    const waveColors = new Set();
     for (let i = 0; i < 180; i++) {
         const before = current.currentBoardState.map(cell => cell.k);
         const beforeOriginal = original.currentBoardState.map(cell => cell.k);
@@ -482,13 +485,14 @@ test('Fibonacci Sequence forms the original lines before a pulse changes existin
             const head = original.currentBoardState[index].k !== beforeOriginal[index];
             if (head) assert.equal(cell.k, (before[index] + 1) % colorCount);
             else if (cell.k !== before[index]) {
-                assert(before[index] > 0 && before[index] < colorCount - 1);
-                assert.equal(cell.k, before[index] + 1);
-                pulseCells++;
+                assert(before[index] > 0 && cell.k > 0);
+                waveColors.add(cell.k);
+                if (cell.k === colorCount - 1) brightCells.add(index);
             }
         }
     }
-    assert(pulseCells > 0);
+    assert(brightCells.size >= 8);
+    assert(waveColors.has(Math.round((colorCount - 1) * 0.72)));
     assert.deepEqual(snapshot, current.state);
     assert.deepEqual(replayed, current.currentBoardState);
 });

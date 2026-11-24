@@ -18,6 +18,8 @@ const linePulseStart = 4;
 const linePulseLength = 11;
 const linePulseStep = 3;
 const linePulsePeriod = 32;
+const lineWaveShades = [0.45, 0.72, 1, 0.72, 0.45];
+const lineWaveStep = 2;
 const revealFrames = n => Math.min(n, 24);
 const intervalFor = state => state.sequenceInterval || state.n;
 let cachedPlan;
@@ -66,7 +68,7 @@ export function resetSequenceCursor(state, interval) {
     clearSequenceCursor(state);
     Object.assign(state, { sequenceInterval: interval, sequenceOffset: 0, sequenceElapsed: 0, sequenceAge: 0,
         sequenceShifted: false });
-    if (state.mode === 'sequence') Object.assign(state, { sequenceLineShifts: 0, sequenceLinePhase: 0 });
+    if (state.mode === 'sequence') Object.assign(state, { sequenceLineShifts: 0, sequenceLinePhase: 0, sequenceColorWave: true });
     else Object.assign(state, { sequenceTailLength: 0, sequenceTailPhase: 0 });
 }
 
@@ -81,6 +83,7 @@ export function clearSequenceCursor(state) {
     delete state.sequenceTailPhase;
     delete state.sequenceLineShifts;
     delete state.sequenceLinePhase;
+    delete state.sequenceColorWave;
 }
 
 export function setSequenceInterval(state, interval) {
@@ -97,12 +100,14 @@ export function validateSequenceCursor(state) {
         throw new Error('Invalid Fibonacci sequence cursor');
     }
     const cursor = { sequenceInterval, sequenceOffset, sequenceElapsed, sequenceAge, sequenceShifted };
-    if (state.sequenceLineShifts !== undefined || state.sequenceLinePhase !== undefined) {
-        const { sequenceLineShifts, sequenceLinePhase } = state;
+    if (state.sequenceLineShifts !== undefined || state.sequenceLinePhase !== undefined || state.sequenceColorWave !== undefined) {
+        const { sequenceLineShifts, sequenceLinePhase, sequenceColorWave } = state;
         if (state.mode !== 'sequence' || !Number.isInteger(sequenceLineShifts) || sequenceLineShifts < 0 || sequenceLineShifts > linePulseLength ||
-            !Number.isInteger(sequenceLinePhase) || sequenceLinePhase < 0 || sequenceLinePhase >= linePulsePeriod) {
+            !Number.isInteger(sequenceLinePhase) || sequenceLinePhase < 0 || sequenceLinePhase >= linePulsePeriod ||
+            (sequenceColorWave !== undefined && sequenceColorWave !== true)) {
             throw new Error('Invalid Fibonacci line pulse');
         }
+        if (sequenceColorWave) return { ...cursor, sequenceLineShifts, sequenceLinePhase, sequenceColorWave };
         return { ...cursor, sequenceLineShifts, sequenceLinePhase };
     }
     if (state.sequenceTailLength !== undefined || state.sequenceTailPhase !== undefined) {
@@ -131,9 +136,33 @@ export function validateSequenceCursor(state) {
     return cursor;
 }
 
+function colorSequenceLines(board, colorCount, state, plan, count) {
+    if (state.sequenceLineShifts < linePulseStart || colorCount < 2) return;
+    const { cells, contiguous, sequence, visited } = plan;
+    for (let rank = 0; rank < count; rank++) {
+        const head = (sequence[rank] + state.sequenceOffset) % cells.length;
+        const limit = Math.min(contiguous[head], state.sequenceLineShifts);
+        const phase = (state.sequenceLinePhase + (rank % 3) * 4) % linePulsePeriod;
+        const crest = linePulseStart + Math.floor(phase / lineWaveStep);
+        for (let shade = 0; shade < lineWaveShades.length; shade++) {
+            const distance = crest + shade - 2;
+            if (distance < linePulseStart || distance > limit) continue;
+            const index = cells[head - distance];
+            if (visited[index]) continue;
+            visited[index] = 1;
+            const cell = board[index];
+            if (cell.isGold || cell.k === 0) continue;
+            // Spread the crest over the palette even when each head has had
+            // only a few generations to lay down a mark.
+            cell.k = cell.v = Math.max(1, Math.round((colorCount - 1) * lineWaveShades[shade]));
+        }
+    }
+}
+
 export function runNumberSequence(board, colorCount, state) {
     const { n, mode, sequenceOffset, sequenceElapsed } = state;
-    const { cells, visited, contiguous, [mode]: numbers } = getSequencePlan(n);
+    const plan = getSequencePlan(n);
+    const { cells, visited, contiguous, [mode]: numbers } = plan;
     const visible = Math.ceil(numbers.length * Math.min(1, (state.sequenceAge + 1) / revealFrames(n)));
     const interval = intervalFor(state);
     const overlap = Math.min(interval, overlapFrames);
@@ -159,7 +188,10 @@ export function runNumberSequence(board, colorCount, state) {
     visited.fill(0);
     visitFootprint(footprint, true);
 
-    if (state.sequenceLinePhase !== undefined) {
+    if (state.sequenceColorWave) {
+        colorSequenceLines(board, colorCount, state, plan, footprint[2]);
+        state.sequenceLinePhase = (state.sequenceLinePhase + 1) % linePulsePeriod;
+    } else if (state.sequenceLinePhase !== undefined) {
         const phase = state.sequenceLinePhase;
         const distance = linePulseStart + phase / linePulseStep;
         if (phase % linePulseStep === 0 && distance <= state.sequenceLineShifts) {
