@@ -8,7 +8,6 @@ import {createOilSettingsDialog} from './oil-settings-dialog.js';
 import {DEFAULT_INK_PREFERENCES,validateInkRules,createInkState,restoreInkState,validateInkSnapshot,runInkGeneration} from './simulations/ink.js';
 import {createInkSettingsDialog} from './ink-settings-dialog.js';
 import { createMacroEnding } from './macro-ending.js';
-import { initializeLivingRelief } from './living-relief-dialog.js';
 import { DEFAULT_MAGNET_ANCHOR_LIMIT, DEFAULT_MAGNET_ANCHOR_PREFERENCE, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
 import { GRAVITY_DIRECTIONS, loadGravityCycle, nextGravityMode, saveGravityCycle } from './gravity-cycle.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
@@ -6448,17 +6447,6 @@ updateBrightnessEvoButtonUI();
         boardCanvas.addEventListener('pointercancel', onPointerUp);
         boardCanvas.addEventListener('lostpointercapture', e => {
             onPointerUp(e);
-        });
-        initializeLivingRelief({
-            getText, getLang: getCurrentLang, onLanguageChange,
-            readBoard: () => {
-                if (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || isAnimating) return null;
-                finishBrushGesture();
-                windPainter?.stop();
-                if (isLifePlaying) pauseLife();
-                return { n, tiles: boardState.map(({ k, isGold }) => ({ k, isGold })),
-                    palette: [...palette()], brushSize, brushShape, selectedColor: selectedColorIndex };
-            }
         });
         
         dom.btnRandom.addEventListener('click', (e) => handleCtrlClick(e, randomizeAll));
