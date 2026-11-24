@@ -15,6 +15,7 @@ export const translations = {
   magnet_method_field_cosmic_magnet:{en:'Combined Cosmic',he:'קוסמי משולב',ru:'Космический с общим полем',nl:'Kosmisch gecombineerd'},
   technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},
   glow_pulse: {en:"Glow Pulse",he:"פעימת ההילה",ru:"Пульсация ореола",nl:"Gloedpuls"},
+  gold_transition_duration: {en:"Transition duration",he:"משך המעבר",ru:"Длительность перехода",nl:"Duur van de overgang"},
   technician_group_macro: {en:"Macro",he:"מאקרו",ru:"Макрос",nl:"Macro"},
   gold_playback_hierarchy: {en:"Gold Playback Hierarchy",he:"שלוש דרגות זהב בניגון",ru:"Три оттенка золота при воспроизведении",nl:"Drie goudtinten tijdens afspelen"},
   technician_group_features: {en:"Features",he:"אפשרויות הפעלה",ru:"Возможности",nl:"Functies"},

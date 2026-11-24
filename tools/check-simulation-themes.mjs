@@ -74,60 +74,87 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.locator('#projectFileInput').setInputFiles({name:'old-appearance-settings.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{simulationTheme:'pink',simulationPlaybackTheme:'ice',brush:{size:5},startup:{boardSize:35}}}))});
  await page.waitForFunction(()=>themeTest.state().settings.brush.size===5);current=await state();assert.equal(current.settings.startup.boardSize,35);assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');
 
- // Freeze each brightness animation at its first frame to test the exact handoff.
+ // Verify the shared progress and native hit targets while the controls are in motion.
  await page.evaluate(()=>{
   const toggle=document.getElementById('goldPlaybackHierarchyToggle');
   toggle.checked=true;toggle.dispatchEvent(new Event('change'));
-  const animate=Element.prototype.animate;
-  window.goldFades=[];
-  Element.prototype.animate=function(frames,options){
-   const animation=animate.call(this,frames,options);
-   if(frames.some(frame=>frame.filter==='brightness(0)')){
-    goldFades.push({id:this.id,from:frames[0].filter,delay:options.delay??0,duration:options.duration,animation});
-    animation.pause();animation.currentTime=0;
-   }
-   return animation;
-  };
   themeTest.setup();
  });
- const fadeOut=()=>page.locator('html').getAttribute('data-gold-playback-fade-out');
- const thirdTierColor=()=>page.locator('#btnResizeUp').evaluate(e=>getComputedStyle(e).color);
- const fades=()=>page.evaluate(()=>goldFades.map(({id,from,delay,duration})=>({id,from,delay,duration})));
- const finishPhase=from=>page.evaluate(from=>goldFades.filter(fade=>fade.from===from).forEach(({animation})=>animation.finish()),from);
- const pausedColor=await thirdTierColor();
+ const toolbar=page.locator('#controlsContainer');
+ const visual=()=>page.evaluate(()=>{
+  const bar=document.getElementById('controlsContainer');
+  const read=id=>{const button=document.getElementById(id),style=getComputedStyle(button);return {
+   opacity:+style.opacity,color:style.color,visibility:style.visibility,inert:button.inert
+  };};
+  const save=read('btnSave'),toggle=read('btnToggleSimMode');
+  return {progress:+bar.style.getPropertyValue('--gold-playback-progress'),window:read('simModeBackground').opacity,
+   halo:+getComputedStyle(document.getElementById('btnNudgeBrighter'),'::before').opacity,
+   tools:read('btnResizeUp'),save,toggle,moving:bar.hasAttribute('data-gold-playback-moving'),
+   frameTheme:document.documentElement.dataset.simulationBackdropTheme};
+ });
+ const waitForProgress=(min,max)=>page.waitForFunction(([min,max])=>{
+  const bar=document.getElementById('controlsContainer');
+  const progress=+bar.style.getPropertyValue('--gold-playback-progress');
+  return progress>=min&&progress<=max&&(min!==max||!bar.hasAttribute('data-gold-playback-moving'));
+ },[min,max]);
+ const paused=await visual();
+ assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'2');
  await tap('#btnPlayPauseLife');
- const darkening=await fades();
- assert(darkening.some(({id})=>id==='btnResizeUp')&&darkening.some(({id})=>id==='btnEvolutionDrawerInternal'));
- assert(darkening.every(({from,delay,duration})=>from==='brightness(1)'&&delay===0&&duration===400));
- assert(!darkening.some(({id})=>['btnGameOfLife','btnNudgeBrighter','btnPalette','btnColorPicker','btnSymmetry','btnWind','btnDark','btnPlayPauseLife','btnSave','btnToggleSimMode'].includes(id)));
- assert.equal(await fadeOut(),'');
- assert.equal(await thirdTierColor(),pausedColor,'original ink is used on the way to black');
- await finishPhase('brightness(1)');
- await page.waitForFunction(()=>goldFades.some(fade=>fade.from==='brightness(0)'));
- await page.evaluate(()=>goldFades.filter(fade=>fade.from==='brightness(0)').forEach(({animation})=>{animation.currentTime=50;}));
- assert.equal(await thirdTierColor(),colors.blue,'at black, switch to the resting theme ink');
- assert.equal(await page.locator('#btnEvolutionDrawerInternal').evaluate(e=>getComputedStyle(e).filter),'brightness(0)');
- const previousDrawer=await page.locator('#controlsContainer').getAttribute('data-evolution-page');
+ await waitForProgress(.14,.28);
+ const leaving=await visual();
+ assert(leaving.progress>0&&leaving.progress<.5);
+ assert(Math.abs(leaving.window+leaving.halo-1)<.015,'frame and halo share their progress');
+ assert(Math.abs(leaving.window+leaving.progress-1)<.01);
+ assert.equal(leaving.frameTheme,'blue');
+ assert.notEqual(leaving.tools.color,paused.tools.color);
+ for(const name of ['save','toggle']){
+  assert(leaving[name].inert&&leaving[name].opacity>0&&leaving[name].opacity<1);
+ }
+ const oldDrawer=await toolbar.getAttribute('data-evolution-page');
  await tap('#btnEvolutionDrawerInternal');
- assert.notEqual(await page.locator('#controlsContainer').getAttribute('data-evolution-page'),previousDrawer,'the black drawer switch still works');
+ assert.notEqual(await toolbar.getAttribute('data-evolution-page'),oldDrawer);
  await tap('#btnEvolutionDrawerInternal');
+ await waitForProgress(.57,.83);
+ const reached=await visual();
+ assert(reached.save.inert&&reached.save.visibility==='hidden');
+ await tap('#btnPlayPauseLife');
+ const reversed=await visual();
+ assert(reversed.progress>.4&&reversed.progress<1,'Pause reverses an in-flight transition from its current position');
+ await waitForProgress(.16,.37);
+ const returning=await visual();
+ assert(returning.save.opacity>0&&returning.save.opacity<1&&!returning.save.inert);
+ assert(Math.abs(returning.window+returning.halo-1)<.015);
+ assert.equal(returning.frameTheme,'blue');
+ await waitForProgress(0,0);
+ assert.deepEqual(await visual(),paused,'Pause settles back to the original visual state');
+ await tech();
+ const displaySettings=page.locator('#btnConfigureDisplay');
+ if(await displaySettings.getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
+ const durationSlider=page.locator('#goldTransitionDuration');
+ assert(await durationSlider.isVisible());
+ const hierarchyBox=await page.locator('#goldPlaybackHierarchyToggle').boundingBox();
+ const durationBox=await durationSlider.boundingBox();
+ assert(durationBox.y>=hierarchyBox.y+hierarchyBox.height);
+ await durationSlider.press('Home');
+ assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridGoldTransitionSeconds')),'0.8');
+ await tap('#btnTechnicianCloseTop');
+ await tap('#btnPlayPauseLife');
+ await waitForProgress(1,1);
+ const playing=await visual();
+ assert.equal(playing.tools.color,colors.blue);
+ assert.equal(playing.save.visibility,'hidden');
+ assert.equal(playing.toggle.opacity,0);
+ assert.equal(playing.window,0);
+ assert.equal(playing.halo,1);
  await tap('#btnMagnetModes');
- const revealed=await fades();
- assert.equal(revealed.length,darkening.length*2,'a live handoff does not repeat the fade');
- assert(revealed.slice(darkening.length).every(({from,delay,duration})=>from==='brightness(0)'&&delay===100&&duration===600));
- await finishPhase('brightness(0)');
- assert.equal(await page.locator('#btnEvolutionDrawerInternal').evaluate(e=>getComputedStyle(e).filter),'none');
+ assert.equal((await visual()).progress,1,'live handoff does not restart the transition');
  await tap('#btnPlayPauseLife');
- await tap('#btnPlayPauseLife');
- assert.equal(await fadeOut(),'','a fresh Play starts a new fade');
- await tap('#btnPlayPauseLife');
- assert.equal(await fadeOut(),null,'Pause cancels an unfinished fade');
- assert.equal(await page.locator('#btnEvolutionDrawerInternal').evaluate(e=>getComputedStyle(e).filter),'none');
- const beforeReducedMotion=(await fades()).length;
+ await waitForProgress(0,0);
  await page.emulateMedia({reducedMotion:'reduce'});
  await tap('#btnPlayPauseLife');
- assert.equal((await fades()).length,beforeReducedMotion);
- assert.equal(await thirdTierColor(),colors.blue);
+ assert.equal(await toolbar.getAttribute('data-gold-playback-motion'),null);
+ assert.equal((await visual()).tools.color,colors.blue);
+ assert.equal((await visual()).save.visibility,'hidden');
  await tap('#btnPlayPauseLife');
  await page.emulateMedia({reducedMotion:'no-preference'});
  await page.evaluate(()=>{
@@ -135,9 +162,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   toggle.checked=false;toggle.dispatchEvent(new Event('change'));
  });
  await tap('#btnPlayPauseLife');
- assert.equal((await fades()).length,beforeReducedMotion,'turning the hierarchy off disables the fade');
- assert.equal(await thirdTierColor(),pausedColor,'turning the hierarchy off disables the third-tier tint');
- assert.equal(await fadeOut(),null);
+ assert.equal(await toolbar.getAttribute('data-gold-playback-motion'),null);
+ assert.equal((await visual()).tools.color,paused.tools.color);
+ assert.equal((await visual()).save.visibility,'hidden');
  await tap('#btnPlayPauseLife');
+ await boot(true);
+ assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'0','transition duration survives reload');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}

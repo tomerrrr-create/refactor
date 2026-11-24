@@ -16,19 +16,22 @@ function harness(saved = {}, blocked = false) {
     };
     const pulse = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
     const pulseValue = {};
+    const transition = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
+    const transitionValue = {};
     const styles = new Map();
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
         toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); },
         style: { setProperty: (name, value) => styles.set(name, value) } };
     const select = selector => selector.includes('Playback') ? playback : rest;
-    const controls = { goldPlaybackHierarchyToggle: hierarchy, glowPulse: pulse, glowPulseValue: pulseValue };
+    const controls = { goldPlaybackHierarchyToggle: hierarchy, glowPulse: pulse, glowPulseValue: pulseValue,
+        goldTransitionDuration: transition, goldTransitionDurationValue: transitionValue };
     const context = vm.createContext({ document: { documentElement: root,
         getElementById: id => controls[id] ?? { querySelectorAll: () => select(id) }, querySelectorAll: select },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
         getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
-    return { context, root, storage, rest, playback, hierarchy, pulse, styles, run: code => vm.runInContext(code, context) };
+    return { context, root, storage, rest, playback, hierarchy, pulse, transition, styles, run: code => vm.runInContext(code, context) };
 }
 
 test('Glow Pulse defaults to 3.2 seconds and saves the selected duration', () => {
@@ -61,6 +64,20 @@ test('all resting/playback color pairs restore the resting selection and never p
         assert.equal(reload.root.dataset.simulationPlaybackTheme, playback);
         assert.equal(reload.root.dataset.simulationEffectiveTheme, rest);
     }
+});
+
+test('Gold transition duration defaults to 1.6 seconds and persists independently of the pulse', () => {
+    const h = harness();
+    h.run('initializeSimulationTheme()');
+    assert.equal(h.run('goldTransitionMs'), 1600);
+    assert.equal(h.transition.max, 4);
+    h.transition.value = '4';
+    h.transition.handlers.input();
+    assert.equal(h.run('goldTransitionMs'), 3200);
+    const reload = harness(Object.fromEntries(h.storage));
+    reload.run('initializeSimulationTheme()');
+    assert.equal(reload.run('goldTransitionMs'), 3200);
+    assert.equal(reload.styles.get('--simulation-halo-duration'), '3.2s');
 });
 test('fresh/blocked storage defaults to gold at rest and while running; independent controls work', () => {
     for (const blocked of [false, true]) {
