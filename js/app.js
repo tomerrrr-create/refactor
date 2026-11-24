@@ -6319,7 +6319,7 @@ applySortMethod,
         };
         modals = initializeModals(contextForModals);
         initializeQuickStart();
-        initializeSimulationTheme();
+        initializeSimulationTheme(dom.controlsContainer);
         
         activePaletteIndex = resolveStartupPaletteIndex(startupSettings.paletteName);
         n = startupSettings.boardSize;

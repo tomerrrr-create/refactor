@@ -73,5 +73,100 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  // Import an actual old settings TXT without losing unrelated settings.
  await page.locator('#projectFileInput').setInputFiles({name:'old-appearance-settings.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{simulationTheme:'pink',simulationPlaybackTheme:'ice',brush:{size:5},startup:{boardSize:35}}}))});
  await page.waitForFunction(()=>themeTest.state().settings.brush.size===5);current=await state();assert.equal(current.settings.startup.boardSize,35);assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');
+
+ // Verify the shared progress and native hit targets while the controls are in motion.
+ await page.evaluate(()=>{
+  const toggle=document.getElementById('goldPlaybackHierarchyToggle');
+  toggle.checked=true;toggle.dispatchEvent(new Event('change'));
+  themeTest.setup();
+ });
+ const toolbar=page.locator('#controlsContainer');
+ const visual=()=>page.evaluate(()=>{
+  const bar=document.getElementById('controlsContainer');
+  const read=id=>{const button=document.getElementById(id),style=getComputedStyle(button);return {
+   opacity:+style.opacity,color:style.color,visibility:style.visibility,inert:button.inert
+  };};
+  const save=read('btnSave'),toggle=read('btnToggleSimMode');
+  return {progress:+bar.style.getPropertyValue('--gold-playback-progress'),window:read('simModeBackground').opacity,
+   halo:+getComputedStyle(document.getElementById('btnNudgeBrighter'),'::before').opacity,
+   tools:read('btnResizeUp'),save,toggle,moving:bar.hasAttribute('data-gold-playback-moving'),
+   frameTheme:document.documentElement.dataset.simulationBackdropTheme};
+ });
+ const waitForProgress=(min,max)=>page.waitForFunction(([min,max])=>{
+  const bar=document.getElementById('controlsContainer');
+  const progress=+bar.style.getPropertyValue('--gold-playback-progress');
+  return progress>=min&&progress<=max&&(min!==max||!bar.hasAttribute('data-gold-playback-moving'));
+ },[min,max]);
+ const paused=await visual();
+ assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'2');
+ await tap('#btnPlayPauseLife');
+ await waitForProgress(.14,.28);
+ const leaving=await visual();
+ assert(leaving.progress>0&&leaving.progress<.5);
+ assert(Math.abs(leaving.window+leaving.halo-1)<.015,'frame and halo share their progress');
+ assert(Math.abs(leaving.window+leaving.progress-1)<.01);
+ assert.equal(leaving.frameTheme,'blue');
+ assert.notEqual(leaving.tools.color,paused.tools.color);
+ for(const name of ['save','toggle']){
+  assert(leaving[name].inert&&leaving[name].opacity>0&&leaving[name].opacity<1);
+ }
+ const oldDrawer=await toolbar.getAttribute('data-evolution-page');
+ await tap('#btnEvolutionDrawerInternal');
+ assert.notEqual(await toolbar.getAttribute('data-evolution-page'),oldDrawer);
+ await tap('#btnEvolutionDrawerInternal');
+ await waitForProgress(.57,.83);
+ const reached=await visual();
+ assert(reached.save.inert&&reached.save.visibility==='hidden');
+ await tap('#btnPlayPauseLife');
+ const reversed=await visual();
+ assert(reversed.progress>.4&&reversed.progress<1,'Pause reverses an in-flight transition from its current position');
+ await waitForProgress(.16,.37);
+ const returning=await visual();
+ assert(returning.save.opacity>0&&returning.save.opacity<1&&!returning.save.inert);
+ assert(Math.abs(returning.window+returning.halo-1)<.015);
+ assert.equal(returning.frameTheme,'blue');
+ await waitForProgress(0,0);
+ assert.deepEqual(await visual(),paused,'Pause settles back to the original visual state');
+ await tech();
+ const displaySettings=page.locator('#btnConfigureDisplay');
+ if(await displaySettings.getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
+ const durationSlider=page.locator('#goldTransitionDuration');
+ assert(await durationSlider.isVisible());
+ const hierarchyBox=await page.locator('#goldPlaybackHierarchyToggle').boundingBox();
+ const durationBox=await durationSlider.boundingBox();
+ assert(durationBox.y>=hierarchyBox.y+hierarchyBox.height);
+ await durationSlider.press('Home');
+ assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridGoldTransitionSeconds')),'0.8');
+ await tap('#btnTechnicianCloseTop');
+ await tap('#btnPlayPauseLife');
+ await waitForProgress(1,1);
+ const playing=await visual();
+ assert.equal(playing.tools.color,colors.blue);
+ assert.equal(playing.save.visibility,'hidden');
+ assert.equal(playing.toggle.opacity,0);
+ assert.equal(playing.window,0);
+ assert.equal(playing.halo,1);
+ await tap('#btnMagnetModes');
+ assert.equal((await visual()).progress,1,'live handoff does not restart the transition');
+ await tap('#btnPlayPauseLife');
+ await waitForProgress(0,0);
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await tap('#btnPlayPauseLife');
+ assert.equal(await toolbar.getAttribute('data-gold-playback-motion'),null);
+ assert.equal((await visual()).tools.color,colors.blue);
+ assert.equal((await visual()).save.visibility,'hidden');
+ await tap('#btnPlayPauseLife');
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await page.evaluate(()=>{
+  const toggle=document.getElementById('goldPlaybackHierarchyToggle');
+  toggle.checked=false;toggle.dispatchEvent(new Event('change'));
+ });
+ await tap('#btnPlayPauseLife');
+ assert.equal(await toolbar.getAttribute('data-gold-playback-motion'),null);
+ assert.equal((await visual()).tools.color,paused.tools.color);
+ assert.equal((await visual()).save.visibility,'hidden');
+ await tap('#btnPlayPauseLife');
+ await boot(true);
+ assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'0','transition duration survives reload');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}

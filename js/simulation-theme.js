@@ -7,6 +7,11 @@ const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
 const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
 const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
 const DEFAULT_GLOW_PULSE_SECONDS = 3.2;
+const GOLD_TRANSITION_STORAGE_KEY = 'colorGridGoldTransitionSeconds';
+const GOLD_TRANSITION_SECONDS = [0.8, 1.2, 1.6, 2.2, 3.2];
+const DEFAULT_GOLD_TRANSITION_SECONDS = 1.6;
+let goldTransitionMs = DEFAULT_GOLD_TRANSITION_SECONDS * 1000;
+let goldPlaybackTransition;
 const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
   en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', 'moon-silver': 'Moon Silver', ivory: 'Ivory', 'dark-gray': 'Dark Gray'},
@@ -29,14 +34,79 @@ export function getSimulationPlaybackTheme() {
 
 function updateEffectiveTheme() {
   const root = document.documentElement;
-  root.dataset.simulationEffectiveTheme = root.hasAttribute('data-simulation-running')
-    ? getSimulationPlaybackTheme() : getSimulationTheme();
+  const running = root.hasAttribute('data-simulation-running');
+  const theme = running ? getSimulationPlaybackTheme() : getSimulationTheme();
+  root.dataset.simulationEffectiveTheme = theme;
+  root.dataset.simulationBackdropTheme = goldPlaybackTransition?.sync(running) ? getSimulationTheme() : theme;
 }
 
 // Running state is transient; only the two chosen colors are saved.
 export function setSimulationRunning(running) {
   document.documentElement.toggleAttribute('data-simulation-running', Boolean(running));
   updateEffectiveTheme();
+}
+
+function createGoldPlaybackTransition(toolbar) {
+  const root = document.documentElement;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const utilities = toolbar.querySelectorAll('#btnSave, #btnToggleSimMode');
+  let enabled = false, running = false, position = 0, frame = null, previousTime = 0;
+
+  function syncUtilities() {
+    const hidden = position >= .5;
+    toolbar.toggleAttribute('data-gold-playback-utilities-hidden', hidden);
+    for (const button of utilities) {
+      button.toggleAttribute('inert', running || hidden);
+    }
+  }
+
+  function render() {
+    const progress = position * position * (3 - 2 * position);
+    toolbar.style.setProperty('--gold-playback-progress', progress.toFixed(4));
+    syncUtilities();
+  }
+
+  function advance(now) {
+    const delta = Math.max(0, now - previousTime) / goldTransitionMs;
+    position = running ? Math.min(1, position + delta) : Math.max(0, position - delta);
+    previousTime = now;
+    render();
+    const settled = position === Number(running);
+    if (settled) toolbar.removeAttribute('data-gold-playback-moving');
+    frame = settled ? null : requestAnimationFrame(advance);
+  }
+
+  reducedMotion.addEventListener('change', updateEffectiveTheme);
+  return {
+    sync(nextRunning) {
+      const nextEnabled = root.hasAttribute('data-gold-playback-hierarchy') &&
+        getSimulationPlaybackTheme() === 'gold' && !reducedMotion.matches;
+      if (enabled !== nextEnabled) {
+        if (frame !== null) cancelAnimationFrame(frame);
+        frame = null;
+        enabled = nextEnabled;
+        running = nextRunning;
+        position = Number(running);
+        toolbar.toggleAttribute('data-gold-playback-motion', enabled);
+        if (enabled) render();
+        else {
+          toolbar.style.removeProperty('--gold-playback-progress');
+          toolbar.removeAttribute('data-gold-playback-utilities-hidden');
+          toolbar.removeAttribute('data-gold-playback-moving');
+          for (const button of utilities) button.removeAttribute('inert');
+        }
+      } else if (enabled && running !== nextRunning) {
+        running = nextRunning;
+        syncUtilities();
+        if (frame === null && position !== Number(running)) {
+          toolbar.setAttribute('data-gold-playback-moving', '');
+          previousTime = performance.now();
+          frame = requestAnimationFrame(advance);
+        }
+      }
+      return enabled;
+    }
+  };
 }
 
 export function applySimulationTheme(value) {
@@ -69,37 +139,42 @@ function initializeGoldPlaybackHierarchy() {
   document.documentElement.toggleAttribute('data-gold-playback-hierarchy', enabled);
   toggle.addEventListener('change', () => {
     document.documentElement.toggleAttribute('data-gold-playback-hierarchy', toggle.checked);
+    updateEffectiveTheme();
     try { localStorage.setItem(GOLD_HIERARCHY_STORAGE_KEY, String(toggle.checked)); } catch {}
   });
 }
 
-function initializeGlowPulse() {
-  const slider = document.getElementById('glowPulse');
-  const value = document.getElementById('glowPulseValue');
+function initializeDurationSlider(sliderId, storageKey, durations, defaultDuration, apply) {
+  const slider = document.getElementById(sliderId);
+  const value = document.getElementById(sliderId + 'Value');
   let savedIndex = -1;
-  try { savedIndex = GLOW_PULSE_SECONDS.indexOf(Number(localStorage.getItem(GLOW_PULSE_STORAGE_KEY))); } catch {}
-  slider.max = GLOW_PULSE_SECONDS.length - 1;
-  slider.value = savedIndex < 0 ? GLOW_PULSE_SECONDS.indexOf(DEFAULT_GLOW_PULSE_SECONDS) : savedIndex;
+  try { savedIndex = durations.indexOf(Number(localStorage.getItem(storageKey))); } catch {}
+  slider.max = durations.length - 1;
+  slider.value = savedIndex < 0 ? durations.indexOf(defaultDuration) : savedIndex;
 
   function render() {
-    const duration = GLOW_PULSE_SECONDS[slider.value];
-    const units = { style: 'unit', unit: 'second', minimumFractionDigits: 1, maximumFractionDigits: 1 };
-    value.value = new Intl.NumberFormat(getCurrentLang(), { ...units, unitDisplay: 'narrow' }).format(duration);
-    slider.setAttribute('aria-valuetext', new Intl.NumberFormat(getCurrentLang(), { ...units, unitDisplay: 'long' }).format(duration));
-    document.documentElement.style.setProperty('--simulation-halo-duration', `${duration}s`);
+    const duration = durations[slider.value];
+    const units = { style: 'unit', unit: 'second', maximumFractionDigits: 1 };
+    value.value = new Intl.NumberFormat(getCurrentLang(), { ...units, minimumFractionDigits: 1, unitDisplay: 'narrow' }).format(duration);
+    slider.setAttribute('aria-valuetext', new Intl.NumberFormat(getCurrentLang(), { ...units, minimumFractionDigits: 1, unitDisplay: 'long' }).format(duration));
+    apply(duration);
   }
 
   slider.addEventListener('input', () => {
     render();
-    try { localStorage.setItem(GLOW_PULSE_STORAGE_KEY, String(GLOW_PULSE_SECONDS[slider.value])); } catch {}
+    try { localStorage.setItem(storageKey, String(durations[slider.value])); } catch {}
   });
   onLanguageChange(render);
   render();
 }
 
-export function initializeSimulationTheme() {
+export function initializeSimulationTheme(toolbar) {
+  if (toolbar) goldPlaybackTransition = createGoldPlaybackTransition(toolbar);
   initializeGoldPlaybackHierarchy();
-  initializeGlowPulse();
+  initializeDurationSlider('glowPulse', GLOW_PULSE_STORAGE_KEY, GLOW_PULSE_SECONDS, DEFAULT_GLOW_PULSE_SECONDS,
+    duration => document.documentElement.style.setProperty('--simulation-halo-duration', `${duration}s`));
+  initializeDurationSlider('goldTransitionDuration', GOLD_TRANSITION_STORAGE_KEY, GOLD_TRANSITION_SECONDS, DEFAULT_GOLD_TRANSITION_SECONDS,
+    duration => { goldTransitionMs = duration * 1000; });
   const section = document.getElementById('simulationThemeSettings');
   const playbackSection = document.getElementById('simulationPlaybackThemeSettings');
   const previews = section.querySelectorAll('[data-theme]');

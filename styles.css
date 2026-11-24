@@ -891,7 +891,7 @@ body {
     visibility: hidden;
 }
 
-:root[data-simulation-running] #controlsContainer > :is(#btnSave, #btnToggleSimMode) {
+:root[data-simulation-running] #controlsContainer:not(.sim-mode-active[data-gold-playback-motion]) > :is(#btnSave, #btnToggleSimMode) {
     visibility: hidden;
     pointer-events: none;
     transition: none;
@@ -1796,8 +1796,8 @@ button, .ctrl {
 .bloom-intensity-control { margin: 0 0 20px; padding: 4px 8px 0; text-align: start; }
 .bloom-intensity-control label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .bloom-intensity-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
-#softBloomIntensity, #interfaceZoom, #macroControlDimming, #glowPulse { flex: 1; min-width: 0; accent-color: #e3c677; direction: ltr; }
-#softBloomIntensityValue, #interfaceZoomValue, #macroControlDimmingValue, #glowPulseValue { min-width: 42px; color: #e3c677; font-size: 13px; }
+#softBloomIntensity, #interfaceZoom, #macroControlDimming, #glowPulse, #goldTransitionDuration { flex: 1; min-width: 0; accent-color: #e3c677; direction: ltr; }
+#softBloomIntensityValue, #interfaceZoomValue, #macroControlDimmingValue, #glowPulseValue, #goldTransitionDurationValue { min-width: 42px; color: #e3c677; font-size: 13px; }
 .bloom-intensity-control:has(input:disabled) { opacity: .4; }
 
 /* Display effects share one card while keeping independent controls. */
@@ -1952,32 +1952,32 @@ button, .ctrl {
 :root[data-simulation-effective-theme="gold"] { --sim-color: var(--sim-theme-gold); }
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: var(--sim-gold-muted); }
 :root[data-simulation-effective-theme="teal"] { --sim-color: var(--sim-theme-teal); }
-:root[data-simulation-effective-theme="moon-silver"] {
-  --sim-color: var(--sim-theme-moon-silver);
+:root[data-simulation-effective-theme="moon-silver"] { --sim-color: var(--sim-theme-moon-silver); }
+:root[data-simulation-backdrop-theme="moon-silver"] {
   --sim-neutral-frame: #8395ae63;
   --sim-neutral-backdrop: linear-gradient(135deg, #242c39, #10141d);
 }
-:root[data-simulation-effective-theme="ivory"] {
-  --sim-color: var(--sim-theme-ivory);
+:root[data-simulation-effective-theme="ivory"] { --sim-color: var(--sim-theme-ivory); }
+:root[data-simulation-backdrop-theme="ivory"] {
   --sim-neutral-frame: #c9b8935e;
   --sim-neutral-backdrop: linear-gradient(135deg, #312c23, #14120e);
 }
-:root[data-simulation-effective-theme="dark-gray"] {
-  --sim-color: var(--sim-theme-dark-gray);
+:root[data-simulation-effective-theme="dark-gray"] { --sim-color: var(--sim-theme-dark-gray); }
+:root[data-simulation-backdrop-theme="dark-gray"] {
   --sim-neutral-frame: #686d7559;
   --sim-neutral-backdrop: linear-gradient(135deg, #1a1b1e, #08090a);
 }
-:root:is([data-simulation-effective-theme="moon-silver"], [data-simulation-effective-theme="ivory"], [data-simulation-effective-theme="dark-gray"]) .sim-mode-active #simModeBackground {
+:root:is([data-simulation-backdrop-theme="moon-silver"], [data-simulation-backdrop-theme="ivory"], [data-simulation-backdrop-theme="dark-gray"]) .sim-mode-active #simModeBackground {
   border-color: var(--sim-neutral-frame);
 }
-:root:is([data-simulation-effective-theme="moon-silver"], [data-simulation-effective-theme="ivory"], [data-simulation-effective-theme="dark-gray"]) .sim-mode-active #simModeBackground::before {
+:root:is([data-simulation-backdrop-theme="moon-silver"], [data-simulation-backdrop-theme="ivory"], [data-simulation-backdrop-theme="dark-gray"]) .sim-mode-active #simModeBackground::before {
   background: var(--sim-neutral-backdrop);
   opacity: 1;
 }
-:root[data-simulation-effective-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
-:root[data-simulation-effective-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
-:root[data-simulation-effective-theme="gold"] #simModeBackground::before,
-:root[data-simulation-effective-theme="teal"] #simModeBackground::after { opacity: 1; }
+:root[data-simulation-backdrop-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
+:root[data-simulation-backdrop-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
+:root[data-simulation-backdrop-theme="gold"] #simModeBackground::before,
+:root[data-simulation-backdrop-theme="teal"] #simModeBackground::after { opacity: 1; }
 /* Fade only the decorative frame; simulation controls remain independent. */
 :root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
 
@@ -2136,8 +2136,8 @@ body.wind-mode :is(#btnSymmetry, #btnColorPickerSymmetry):disabled {
 .technician-display-settings .bloom-intensity-row { gap: 6px; direction: ltr; }
 #technicianSettingsScroll .technician-display-settings :is(.macro-dimming-option, .glow-pulse-option) .technician-effect-heading { min-width: 0; flex-shrink: 1; white-space: normal; }
 .technician-display-settings :is(.macro-dimming-option, .glow-pulse-option) .bloom-intensity-row { min-width: 84px; }
-.technician-display-settings :is(#interfaceZoom, #softBloomIntensity, #macroControlDimming, #glowPulse) { width: 0; height: 44px; margin: 0; cursor: pointer; }
-.technician-display-settings :is(#interfaceZoomValue, #softBloomIntensityValue, #macroControlDimmingValue, #glowPulseValue) { min-width: 34px; font-size: 12px; text-align: end; font-variant-numeric: tabular-nums; }
+.technician-display-settings :is(#interfaceZoom, #softBloomIntensity, #macroControlDimming, #glowPulse, #goldTransitionDuration) { width: 0; height: 44px; margin: 0; cursor: pointer; }
+.technician-display-settings :is(#interfaceZoomValue, #softBloomIntensityValue, #macroControlDimmingValue, #glowPulseValue, #goldTransitionDurationValue) { min-width: 34px; font-size: 12px; text-align: end; font-variant-numeric: tabular-nums; }
 @media (max-width: 360px) {
     .technician-settings-card { padding-inline: 12px; }
     .technician-settings-card .technician-display-settings .technician-option { gap: 6px; }
@@ -2922,35 +2922,94 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnIslands.mode-oil .islands-oil-icon { display:block !important; }
 
 
-/* Give the third tier the resting theme's ink during Gold playback. */
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife),
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .evolution-drawer-internal {
-  --playback-control-ink: var(--sim-rest-color);
-  --gold: var(--playback-control-ink);
-  color: var(--playback-control-ink);
+/* One progress value drives the Gold hierarchy across Play and Pause. */
+@property --gold-halo-weight {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
 }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife) :is([stroke="#fff"], [stroke="#424242"]) {
-  stroke: var(--playback-control-ink);
+
+#controlsContainer.sim-mode-active[data-gold-playback-motion] {
+  --gold-playback-tint: calc(100% * var(--gold-playback-progress));
+  --sim-color: color-mix(in srgb, var(--sim-rest-color), var(--sim-gold-muted) var(--gold-playback-tint));
 }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife) [fill="#fff"],
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  #btnBrushMode.brush-continuous svg path {
-  fill: var(--playback-control-ink);
+#controlsContainer.sim-mode-active[data-gold-playback-motion] #simModeBackground,
+#controlsContainer.sim-mode-active[data-gold-playback-motion] .drawer-internal-symbol::before {
+  opacity: calc(1 - var(--gold-playback-progress));
+  transition: none;
 }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active #gapValue {
-  color: var(--playback-control-ink);
+#controlsContainer.sim-mode-active[data-gold-playback-motion] .ctrl[data-evolution-id]::before {
+  opacity: calc(var(--gold-playback-progress) * var(--gold-halo-weight));
+  transition: --gold-halo-weight 240ms ease-in-out;
 }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl > .glyph-random { background: linear-gradient(90deg, #000 50%, var(--playback-control-ink) 50%); }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl > .glyph-invert { background: linear-gradient(90deg, var(--playback-control-ink) 50%, #000 50%); }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .ctrl > :is(.glyph-save, .glyph-reset)::after,
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
-  .evolution-drawer-internal :is(.drawer-page-dot, .drawer-active-mark) {
-  background: var(--playback-control-ink);
+#controlsContainer.sim-mode-active[data-gold-playback-motion] .ctrl[data-evolution-id].simulation-active::before {
+  --gold-halo-weight: 1;
+}
+#controlsContainer.sim-mode-active[data-gold-playback-motion] > :is(#btnSave, #btnToggleSimMode) {
+  opacity: clamp(0, 1 - 2 * var(--gold-playback-progress), 1);
+  transition: none;
+}
+#controlsContainer.sim-mode-active[data-gold-playback-motion] > :is(#btnSave, #btnToggleSimMode)[inert] {
+  pointer-events: none;
+}
+#controlsContainer.sim-mode-active[data-gold-playback-utilities-hidden] > :is(#btnSave, #btnToggleSimMode) {
+  visibility: hidden;
+}
+
+/* Other resting themes keep their chosen hue. Gold tools settle behind the simulations. */
+:root[data-simulation-theme="gold"] #controlsContainer {
+  --gold-tools-color: #6b5a38;
+}
+
+/* A single tint ramp carries each existing glyph color to its playback color. */
+:is(
+  :root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer,
+  #controlsContainer[data-gold-playback-moving]
+).sim-mode-active {
+  --tier-white: var(--gold-tools-color, var(--sim-rest-color));
+  --tier-gray: var(--gold-tools-color, var(--sim-rest-color));
+  --tier-dot: var(--gold-tools-color, var(--sim-rest-color));
+
+  &[data-gold-playback-moving] {
+    --tier-white: color-mix(in srgb, #fff, var(--gold-tools-color, var(--sim-rest-color)) var(--gold-playback-tint));
+    --tier-gray: color-mix(in srgb, #424242, var(--gold-tools-color, var(--sim-rest-color)) var(--gold-playback-tint));
+    --tier-dot: color-mix(in srgb, #bbc0c6, var(--gold-tools-color, var(--sim-rest-color)) var(--gold-playback-tint));
+
+    & > :is(
+      .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife, #btnSave, #btnToggleSimMode),
+      .evolution-drawer-internal
+    ) {
+      --playback-control-ink: color-mix(in srgb, var(--tier-idle-ink, #eaeaea), var(--gold-tools-color, var(--sim-rest-color)) var(--gold-playback-tint));
+    }
+    & > #btnStepForward {
+      --tier-idle-ink: #ffd700;
+      opacity: calc(1 - .7 * var(--gold-playback-progress)) !important;
+      transition: none;
+    }
+    &:has(#btnShowBreatheMenu.simulation-active) > #btnStepForward {
+      --tier-idle-ink: #666;
+      opacity: .3 !important;
+    }
+    & > #btnGap:has(> svg[stroke="#424242"]) { --tier-idle-ink: #424242; }
+  }
+
+  & > :is(
+    .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife, #btnSave, #btnToggleSimMode),
+    .evolution-drawer-internal
+  ) {
+    --playback-control-ink: var(--gold-tools-color, var(--sim-rest-color));
+    --gold: var(--tier-white);
+    color: var(--playback-control-ink);
+
+    & [stroke="#fff"] { stroke: var(--tier-white); }
+    & [stroke="#424242"] { stroke: var(--tier-gray); }
+    & [fill="#fff"] { fill: var(--tier-white); }
+    & > .glyph-random { background: linear-gradient(90deg, #000 50%, var(--tier-white) 50%); }
+    & > .glyph-invert { background: linear-gradient(90deg, var(--tier-white) 50%, #000 50%); }
+    & > .glyph-reset::after { background: var(--tier-white); }
+    & .drawer-page-dot { background: var(--tier-dot); }
+    & .drawer-active-mark { background: var(--gold-tools-color, var(--sim-rest-color)); }
+  }
+  & > #btnBrushMode.brush-continuous svg path { fill: var(--tier-white); }
+  & #gapValue { color: var(--tier-white); }
 }

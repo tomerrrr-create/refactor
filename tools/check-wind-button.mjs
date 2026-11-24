@@ -54,7 +54,7 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
   toggle.checked=true;toggle.dispatchEvent(new Event('change'));
   windTest.live();
  });
- assert.equal(await page.locator('#btnCycleSort').evaluate(e=>getComputedStyle(e).color),'rgb(63, 81, 181)');
+ await page.waitForFunction(()=>getComputedStyle(document.getElementById('btnCycleSort')).color==='rgb(63, 81, 181)');
  const windStroke=()=>page.locator('#btnWind svg').evaluate(e=>getComputedStyle(e).stroke);
  assert.equal(await windStroke(),'rgb(66, 66, 66)');
  const gen=(await state()).gen;
@@ -64,6 +64,7 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
   assert.equal(await windStroke(),mode==='off'?'rgb(66, 66, 66)':'rgb(255, 215, 0)');
  }
  const live=await state();assert(live.playing);assert.equal(live.armed,'nudgeBrighter');assert(live.gen>=gen);await page.evaluate(()=>windTest.pause());
+ await page.waitForFunction(()=>!document.getElementById('btnToggleSimMode').inert);
  await tap('#btnWind');await tap('#btnToggleSimMode');await page.waitForTimeout(650);assert(!(await state()).wind);assert.equal(await page.locator('#btnWind').isVisible(),false);
  assert.deepEqual(errors,[]);console.log(JSON.stringify({lang,touch,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}
