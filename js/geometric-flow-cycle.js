@@ -5,7 +5,7 @@ const diagonalModes = ['triangle_gravity', 'triangle_gravity_mirror'];
 const centerLineModes = ['horizontal_gravity', 'vertical_gravity'];
 const polygonModes = ['radial', 'down'];
 const previousModes = [...polygonModes, ...diagonalModes];
-export const DEFAULT_GEOMETRIC_FLOW_CYCLE = Object.freeze([...centerLineModes, ...diagonalModes]);
+export const DEFAULT_GEOMETRIC_FLOW_CYCLE = Object.freeze([centerLineModes[0], diagonalModes[0], centerLineModes[1], diagonalModes[1]]);
 export const GEOMETRIC_FLOW_MODES = Object.freeze([...DEFAULT_GEOMETRIC_FLOW_CYCLE, ...polygonModes]);
 
 const STORAGE_KEY = 'colorGridGeometricFlowCycleV2';

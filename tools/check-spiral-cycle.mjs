@@ -38,9 +38,9 @@ try{
   await page.goto(base);await page.waitForFunction(()=>window.spiralTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.spiral.method,'b');
   await page.evaluate(()=>spiralTest.setup());await tap('#btnEvolutionDrawerInternal');await page.waitForTimeout(300);
-  const defaults=['horizontal_gravity','vertical_gravity','triangle_gravity','triangle_gravity_mirror'];
+  const defaults=['horizontal_gravity','triangle_gravity','vertical_gravity','triangle_gravity_mirror'];
   const polygons=['radial','down'],modes=[...defaults,...polygons];
-  const icons=['iconSpiralHorizontal','iconSpiralVertical','iconSpiralDiagonal','iconSpiralDiagonalMirror','iconSpiralRadial','iconSpiralDown'];
+  const icons=['iconSpiralHorizontal','iconSpiralDiagonal','iconSpiralVertical','iconSpiralDiagonalMirror','iconSpiralRadial','iconSpiralDown'];
   const before=(await state()).tiles;
   const tornado=async()=>{for(let i=0;i<9&&(await state()).mode!=='tornado';i++)await tap('#btnInk');assert.equal((await state()).mode,'tornado');assert.equal(await page.locator('#btnInk').getAttribute('data-mode'),'tornado');assert(await page.locator('#btnInk .vortices-tornado-badge').isVisible());};
   const open=async()=>{await page.evaluate(()=>spiralTest.open());await page.waitForTimeout(350);};
