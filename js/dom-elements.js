@@ -41,6 +41,7 @@ export const dom = {
   btnToggleSimMode: document.getElementById('btnToggleSimMode'),
   btnShowBreatheMenu: document.getElementById('btnShowBreatheMenu'),
   btnCymatics: document.getElementById('btnCymatics'),
+  btnFibonacci: document.getElementById('btnFibonacci'),
   btnNetwork: document.getElementById('btnNetwork'),
   btnInk: document.getElementById('btnInk'),
   btnIslands: document.getElementById('btnIslands'),

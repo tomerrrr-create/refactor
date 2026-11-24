@@ -2,6 +2,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
+    fibonacci: [
+        ['Fibonacci', 'Grow a square spiral or open layers of petals. Each new square side or petal count adds the previous two.'],
+        ['פיבונאצ׳י', 'הצמיחו ספירלת ריבועים או שכבות של עלי כותרת. כל אורך צלע או מספר עלים מתקבל מחיבור שני הקודמים.'],
+        ['Фибоначчи', 'Выращивайте спираль квадратов или раскрывайте слои лепестков. Каждый размер или число лепестков равно сумме двух предыдущих.'],
+        ['Fibonacci', 'Laat een vierkantenspiraal groeien of open lagen bloembladen. Elke zijlengte of hoeveelheid telt de vorige twee op.']
+    ],
     network: [
         ['Living network','Threads grow from your patches, branch, strengthen and fade. Cycle palette-guided or spatial growth.'],
         ['רשת חיה','חוטים צומחים מהכתמים, מסתעפים, מתחזקים ודועכים. אפשר לעבור בין צמיחה לפי הפלטה לצמיחה מרחבית.'],
