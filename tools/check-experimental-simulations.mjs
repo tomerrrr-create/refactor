@@ -49,7 +49,7 @@ try{for(const touch of [false,true]){
  await page.evaluate(()=>flagsTest.map());
  assert.equal(await page.locator('[data-drawer-evolution="spiral"]').count(),1);
  assert.equal(await page.locator('[data-drawer-evolution="network"]').count(),1);
- assert.equal(await page.locator('.drawer-feature-hidden').count(),1);
+ assert.equal(await page.locator('.drawer-feature-hidden').count(),2);
  assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
  assert.equal(await page.locator('#btnInk').getAttribute('data-evolution-feature-hidden'),null);
  await tech();assert.equal(await page.locator('#inkExperimentToggle, #oilExperimentToggle, #networkExperimentToggle, #btnOil').count(),0);
@@ -89,7 +89,7 @@ try{for(const touch of [false,true]){
  assert.equal(await page.locator('#btnNetwork').getAttribute('data-evolution-slot'),'13');
  assert.equal(await geometric.getAttribute('data-evolution-slot'),'16');
  assert.equal(await geometric.getAttribute('aria-label'),touch?'זרימה גאומטרית':'Geometric Flow');
- for(const icon of ['Diagonal','DiagonalMirror','Horizontal','Vertical']){
+ for(const icon of ['Radial','Down']){
   await geometric.click();assert.equal((await state()).armed,'spiral');assert(await page.locator('#iconSpiral'+icon).isVisible());
  }
  await geometric.click();assert.equal((await state()).armed,null);

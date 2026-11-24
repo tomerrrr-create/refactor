@@ -3,7 +3,8 @@
 export const DEFAULT_GEOMETRIC_FLOW_VISIBLE=true;
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
     {id:'spiral',button:'btnSpiral',key:'tooltip_spiral',defaultVisible:DEFAULT_GEOMETRIC_FLOW_VISIBLE},
-    {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe',defaultVisible:false}
+    {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe',defaultVisible:false},
+    {id:'fibonacci',button:'btnFibonacci',key:'help_fibonacci',defaultVisible:false}
 ].map(Object.freeze));
 export const EXPERIMENTAL_SIMULATIONS_KEY='colorGridExperimentalSimulationsV1';
 export function createExperimentalSimulationFlags({storage}={}) {

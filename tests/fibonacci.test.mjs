@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createFibonacciState, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
 
-function simulate(n, orientation = 0, mode = 'continuous') {
+function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
     const currentPalette = Array(4096).fill('#000');
-    const state = createFibonacciState(n, orientation, mode);
+    const state = createFibonacciState(n, orientation, mode, colorAdvance, seed);
     const step = () => runFibonacciGeneration({ currentBoardState, currentPalette }, state);
     const occupied = () => currentBoardState.flatMap(({ k }, index) => k > 0 ? [index] : []);
     return { currentBoardState, currentPalette, state, step, occupied };
@@ -90,7 +90,7 @@ test('restart and continuous modes have the same growth and diverge after fillin
 });
 
 test('restart checkpoints replay across handoffs and palette wraps', () => {
-    const sim = simulate(21, 2, 'restart');
+    const sim = simulate(21, 2, 'restart', 90, 27);
     sim.currentPalette.length = 23;
     sim.currentBoardState[220].isGold = true;
     while (!sim.state.outgoing) sim.step();
@@ -121,5 +121,40 @@ test('one-cell boards cycle within the palette in both modes', () => {
         assert.equal(sim.currentBoardState[0].k, 0);
         assert.equal(sim.state.frame, 1);
         assert.throws(() => validateFibonacciState({ ...sim.state, frame: 2 }));
+    }
+});
+
+test('Color Advance defaults to 90% and nearby recruited cells advance together', () => {
+    assert.equal(createFibonacciState(8).colorAdvance, 90);
+    const sim = simulate(8, 0, 'continuous', 90, 27);
+    const compare = simulate(8, 0, 'continuous', 60, 27);
+    for (let i = 0; i < 100; i++) {
+        sim.step();
+        compare.step();
+    }
+    let advanced = 0;
+    let advancedAtSixty = 0;
+    let held = 0;
+    const completedFrame = sim.state.frame;
+    for (let i = 0; i < 50; i++) {
+        const before = sim.currentBoardState.map(cell => cell.k);
+        const beforeAtSixty = compare.currentBoardState.map(cell => cell.k);
+        sim.step();
+        compare.step();
+        for (let index = 0; index < 64; index++) {
+            const delta = sim.currentBoardState[index].k - before[index];
+            const groupOrigin = index - (index % 2) - (Math.floor(index / 8) % 2) * 8;
+            assert.equal(delta, sim.currentBoardState[groupOrigin].k - before[groupOrigin]);
+            assert(delta === 0 || delta === 1);
+            advanced += delta;
+            held += 1 - delta;
+            advancedAtSixty += compare.currentBoardState[index].k - beforeAtSixty[index];
+        }
+    }
+    assert.equal(sim.state.frame, completedFrame);
+    assert.equal(sim.state.generation, 150);
+    assert(held > 0 && advanced > advancedAtSixty && advancedAtSixty > 0);
+    for (const invalid of [0, 91, 105, '90']) {
+        assert.throws(() => validateFibonacciState({ ...sim.state, colorAdvance: invalid }));
     }
 });

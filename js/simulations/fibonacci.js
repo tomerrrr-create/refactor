@@ -1,12 +1,21 @@
 export const FIBONACCI_MODES = Object.freeze(['restart', 'continuous']);
+export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 90;
+export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([60, 100, 5]);
+
+export function isFibonacciColorAdvance(value) {
+    const [min, max, step] = FIBONACCI_COLOR_ADVANCE_RANGE;
+    return Number.isInteger(value) && value >= min && value <= max && (value - min) % step === 0;
+}
 const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 const HANDOFF_HOLD = 3;
 // A handoff needs the two most recent growth plans.
 const plans = [];
+let colorGroups;
 
-export function createFibonacciState(n, orientation = 0, mode = FIBONACCI_MODES[0]) {
+export function createFibonacciState(n, orientation = 0, mode = FIBONACCI_MODES[0],
+    colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0) {
     const center = Math.floor((n - 1) / 2);
-    return { version: 6, n, orientation, mode, frame: 0, origin: center * n + center };
+    return { version: 7, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0 };
 }
 
 const wrap = (coordinate, n) => (coordinate % n + n) % n;
@@ -78,14 +87,16 @@ function validateOrigin(n, { origin, orientation }) {
 }
 
 export function validateFibonacciState(state) {
-    if (state?.version !== 6 || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
+    if (state?.version !== 7 || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
         !FIBONACCI_MODES.includes(state.mode) || !Number.isSafeInteger(state.frame) ||
-        state.frame < 0 || state.frame > 4 * state.n ** 2) {
+        state.frame < 0 || state.frame > 4 * state.n ** 2 ||
+        !isFibonacciColorAdvance(state.colorAdvance) ||
+        state.seed !== (state.seed >>> 0) || state.generation !== (state.generation >>> 0)) {
         throw new Error('Invalid Fibonacci checkpoint');
     }
-    const { n, mode, frame } = state;
+    const { n, mode, frame, colorAdvance, seed, generation } = state;
     const { origin, orientation } = validateOrigin(n, state);
-    const copy = { version: 6, n, orientation, mode, frame, origin };
+    const copy = { version: 7, n, orientation, mode, frame, origin, colorAdvance, seed, generation };
     if (!frame && state.outgoing === undefined) return copy;
     const plan = getPlan(n, copy);
     if (frame >= plan.frameEnds.length) throw new Error('Invalid Fibonacci growth frame');
@@ -101,8 +112,36 @@ export function validateFibonacciState(state) {
     return copy;
 }
 
-function advanceColor(cell, colorCount) {
-    if (!cell.isGold) cell.k = cell.v = (cell.k + 1) % colorCount;
+function getColorAdvanceGroups({ n, colorAdvance, seed, generation }) {
+    if (colorAdvance === 100) return null;
+    if (colorGroups?.n !== n) {
+        // Each 2×2 patch shares one decision. Partial patches at the edges
+        // use the same rule on odd-sized boards.
+        const width = Math.ceil(n / 2);
+        const cellGroups = new Uint16Array(n * n);
+        for (let row = 0; row < n; row++) {
+            for (let col = 0; col < n; col++) {
+                cellGroups[row * n + col] = (row >> 1) * width + (col >> 1);
+            }
+        }
+        colorGroups = { n, cellGroups, advances: new Uint8Array(width * width) };
+    }
+    const { advances } = colorGroups;
+    const salt = Math.imul(generation, 0x9e3779b9) ^ seed;
+    const threshold = colorAdvance / 100 * 2 ** 32;
+    for (let group = 0; group < advances.length; group++) {
+        let bits = Math.imul(group ^ salt, 0x85ebca6b);
+        bits = Math.imul(bits ^ (bits >>> 16), 0xc2b2ae35);
+        advances[group] = ((bits ^ (bits >>> 13)) >>> 0) < threshold ? 1 : 0;
+    }
+    return colorGroups;
+}
+
+function advanceColor(board, index, colorCount, groups) {
+    const cell = board[index];
+    if (!cell.isGold && (!groups || groups.advances[groups.cellGroups[index]])) {
+        cell.k = cell.v = (cell.k + 1) % colorCount;
+    }
 }
 
 export function runFibonacciGeneration({ currentBoardState, currentPalette }, state) {
@@ -116,6 +155,8 @@ export function runFibonacciGeneration({ currentBoardState, currentPalette }, st
     state.frame = Math.min(state.frame + 1, plan.frameEnds.length - 1);
     const count = plan.frameEnds[state.frame];
     const colorCount = currentPalette.length;
+    const groups = getColorAdvanceGroups(state);
+    state.generation = (state.generation + 1) >>> 0;
     if (state.outgoing) {
         if (state.frame >= plan.handoffEnd) {
             delete state.outgoing;
@@ -127,10 +168,10 @@ export function runFibonacciGeneration({ currentBoardState, currentPalette }, st
             const remaining = previous.stripEnds[stripCount - retired];
             for (let i = 0; i < remaining; i++) {
                 const cell = previous.cells[i];
-                if (plan.rank[cell] > count) advanceColor(currentBoardState[cell], colorCount);
+                if (plan.rank[cell] > count) advanceColor(currentBoardState, cell, colorCount, groups);
             }
         }
     }
-    for (let i = 0; i < count; i++) advanceColor(currentBoardState[plan.cells[i]], colorCount);
+    for (let i = 0; i < count; i++) advanceColor(currentBoardState, plan.cells[i], colorCount, groups);
     return currentBoardState;
 }

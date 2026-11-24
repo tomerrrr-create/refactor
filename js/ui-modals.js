@@ -989,7 +989,7 @@ function populateHelpModal() {
 
         category.buttons.forEach(btnId => {
             const btn = document.getElementById(btnId);
-            if (!btn || !helpData[btnId]) return;
+            if (!btn || !helpData[btnId] || (btnId === 'btnFibonacci' && btn.hasAttribute('data-evolution-feature-hidden'))) return;
             const helpItem = document.createElement('div');
             helpItem.className = 'flex items-center gap-4';
             helpItem.dataset.helpFor = btnId;
