@@ -9,10 +9,10 @@ export const evolutionExplanations = {
         ['Fractalen', 'Julia zoomt in op een vorm die verandert als je tekent. Teken punten in 2D-XOR en kijk hoe patronen elkaar ontmoeten en uitdoven.']
     ],
     fibonacci: [
-        ['Fibonacci', 'Grow a square spiral across the whole board. Start one new spiral, or let it branch into two.'],
-        ['פיבונאצ׳י', 'ספירלת ריבועים צומחת על כל הלוח. אפשר להתחיל ספירלה חדשה או להסתעף לשתיים.'],
-        ['Фибоначчи', 'Спираль из квадратов заполняет поле. Можно начать новую спираль или дать ей разделиться на две.'],
-        ['Fibonacci', 'Laat een vierkantenspiraal over het hele bord groeien. Start een nieuwe spiraal of laat die zich in twee vertakken.']
+        ['Fibonacci', 'Grow square spirals or watch Fibonacci and prime-number positions change color along a spiral.'],
+        ['פיבונאצ׳י', 'הצמיחו ספירלות או ראו איך מספרי פיבונאצ׳י ומספרים ראשוניים משנים צבע לאורך הספירלה.'],
+        ['Фибоначчи', 'Выращивайте спирали или меняйте цвета по простым числам и числам Фибоначчи вдоль спирали.'],
+        ['Fibonacci', 'Laat spiralen groeien of zie kleuren veranderen langs de spiraal bij Fibonacci- en priemgetallen.']
     ],
     network: [
         ['Living network','Threads grow from your patches, branch, strengthen and fade. Cycle palette-guided or spatial growth.'],

@@ -1,4 +1,6 @@
-export const FIBONACCI_MODES = Object.freeze(['restart', 'branching']);
+import { FIBONACCI_SEQUENCE_MODES, isSequenceMode, resetSequenceCursor, clearSequenceCursor, validateSequenceCursor, runNumberSequence } from './fibonacci-sequences.js';
+
+export const FIBONACCI_MODES = Object.freeze(['restart', 'branching', ...FIBONACCI_SEQUENCE_MODES]);
 export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
 export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([90, 100, 1]);
 
@@ -28,9 +30,11 @@ let colorGroups;
 let branchingCells;
 
 export function createFibonacciState(n, orientation = 0, mode = FIBONACCI_MODES[0],
-    colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0, version = FIBONACCI_VERSION) {
+    colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0, version = FIBONACCI_VERSION, interval = 0) {
     const center = Math.floor((n - 1) / 2);
-    return { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0 };
+    const state = { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0 };
+    if (isSequenceMode(mode)) resetSequenceCursor(state, interval);
+    return state;
 }
 
 const wrap = (coordinate, n) => (coordinate % n + n) % n;
@@ -133,7 +137,8 @@ function validateBranch(n, primary, branch) {
     return copy;
 }
 
-export function setFibonacciMode(state, mode) {
+export function setFibonacciMode(state, mode, interval = 0) {
+    if (state.mode === mode) return;
     if (state.mode === 'branching' && mode !== 'branching') {
         const plan = getPlan(state.n, state);
         state.frame = Math.min(state.frame, plan.frameEnds.length - 1);
@@ -141,6 +146,8 @@ export function setFibonacciMode(state, mode) {
         if (state.frame >= handoffTiming(state.version, plan).handoffEnd) delete state.outgoing;
         else if (state.outgoing?.branch) state.outgoing = validateOrigin(state.n, state.outgoing);
     }
+    if (isSequenceMode(mode)) resetSequenceCursor(state, interval);
+    else if (isSequenceMode(state.mode)) clearSequenceCursor(state);
     state.mode = mode;
 }
 
@@ -155,6 +162,7 @@ export function validateFibonacciState(state) {
     const { version, n, mode, frame, colorAdvance, seed, generation } = state;
     const { origin, orientation } = validateOrigin(n, state);
     const copy = { version, n, orientation, mode, frame, origin, colorAdvance, seed, generation };
+    if (isSequenceMode(mode)) Object.assign(copy, validateSequenceCursor(state));
     if (!frame && state.outgoing === undefined && state.branch === undefined) return copy;
     const plan = getPlan(n, copy);
     let secondary;
@@ -271,8 +279,11 @@ function runBranchingGeneration(board, colorCount, groups, state, primary) {
 }
 
 export function runFibonacciGeneration({ currentBoardState, currentPalette }, state) {
-    let plan = getPlan(state.n, state);
     const colorCount = currentPalette.length;
+    if (isSequenceMode(state.mode)) {
+        return runNumberSequence(currentBoardState, colorCount, state);
+    }
+    let plan = getPlan(state.n, state);
     const groups = getColorAdvanceGroups(state);
     state.generation = (state.generation + 1) >>> 0;
     if (state.mode === 'branching' && state.n > 1) {

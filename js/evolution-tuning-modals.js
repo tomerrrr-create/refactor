@@ -1,3 +1,4 @@
+import { FIBONACCI_SEQUENCE_INTERVAL_RANGE, isSequenceMode } from './simulations/fibonacci-sequences.js';
 import { focusSettingsHeading } from './dialog-focus.js';
 import { INITIAL_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
@@ -8,8 +9,10 @@ const definitions = {
         modes: ['brightness', 'contrast'], fields: ['smoothing', 'contrast'] },
     breathe: { title: 'tuning_breathe_title', button: 'btnShowBreatheMenu',
         modes: ['solo', 'group', 'random-cell', 'random-color'], fields: ['speed', 'depth'] },
-    fibonacci: { title: 'tuning_fibonacci_title', button: 'btnFibonacci', fields: ['colorAdvance'],
-        defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE }, limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE } },
+    fibonacci: { title: 'tuning_fibonacci_title', button: 'btnFibonacci', fields: ['colorAdvance', 'sequenceInterval'],
+        defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, sequenceInterval: 0 },
+        limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE, sequenceInterval: FIBONACCI_SEQUENCE_INTERVAL_RANGE },
+        showField: (field, mode) => (field === 'sequenceInterval') === isSequenceMode(mode) },
     islands: { title: 'tuning_islands_title', button: 'btnIslands', fields: ['activity'] },
     dla: { title: 'dla_modal_title', button: 'btnDla', modes: ['genetics', 'no-genetics'], fields: ['batchSize'] }
 };
@@ -52,12 +55,15 @@ export function initializeEvolutionTuningModals(app) {
                 } else button.textContent = label;
                 button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
             }
-            for (const [field, { label, note, input, output }] of fields) {
+            for (const [field, { row, label, note, input, output }] of fields) {
+                row.hidden = definition.showField?.(field, mode) === false;
                 label.textContent = app.getText('tuning_' + field);
                 note.textContent = app.getText('tuning_' + field + '_note');
                 if (!draft) continue;
                 input.value = draft[field];
-                output.value = format(field, draft[field]);
+                output.value = field === 'sequenceInterval'
+                    ? (draft[field] === 0 ? app.getText('tuning_sequenceInterval_auto') : String(draft[field]))
+                    : format(field, draft[field]);
                 input.setAttribute('aria-valuetext', output.value);
             }
         }
@@ -83,7 +89,7 @@ export function initializeEvolutionTuningModals(app) {
             const input = row.querySelector('input');
             Object.assign(input, { min, max, step });
             input.setAttribute('aria-describedby', `${id}Note`);
-            const nodes = { input, label: row.querySelector('label'), output: row.querySelector('output'), note: row.querySelector('p') };
+            const nodes = { row, input, label: row.querySelector('label'), output: row.querySelector('output'), note: row.querySelector('p') };
             fields.set(field, nodes);
             input.addEventListener('input', () => { if (draft) { draft[field] = Number(input.value); render(); } });
             dialog.querySelector('.tuning-fields').append(row);
@@ -92,7 +98,11 @@ export function initializeEvolutionTuningModals(app) {
         dialog.querySelector('[data-close]').addEventListener('click', close);
         dialog.querySelector('[data-cancel]').addEventListener('click', close);
         dialog.querySelector('[data-reset]').addEventListener('click', () => {
-            draft = { ...(definition.defaults ?? INITIAL_EVOLUTION_TUNING[simulation]) }; render();
+            const defaults = definition.defaults ?? INITIAL_EVOLUTION_TUNING[simulation];
+            for (const [field, { row }] of fields) {
+                if (!row.hidden) draft[field] = defaults[field];
+            }
+            render();
         });
         dialog.querySelector('form').addEventListener('submit', event => {
             event.preventDefault();

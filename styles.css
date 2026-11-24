@@ -2898,8 +2898,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnFractals:not([data-mode="julia"]) [data-fractal-icon="julia"],
 #btnFractals:not([data-mode="xor"]) [data-fractal-icon="xor"] { display:none; }
 
+#btnFibonacci svg[data-fibonacci-icon="sequence"] { fill:var(--sim-color); stroke:none; }
+#btnFibonacci.simulation-active svg[data-fibonacci-icon="sequence"] { fill:var(--gold); }
+
 #btnFibonacci:not([data-mode="restart"]) [data-fibonacci-icon="restart"],
 #btnFibonacci:not([data-mode="branching"]) [data-fibonacci-icon="branching"],
+#btnFibonacci:not([data-mode="sequence"]) [data-fibonacci-icon="sequence"],
+#btnFibonacci:not([data-mode="primes"]) [data-fibonacci-icon="primes"],
 #btnFibonacci:not([data-mode="continuous"]) [data-fibonacci-icon="continuous"] { display:none; }
 
 #btnNetwork { display:none; touch-action:none !important; }

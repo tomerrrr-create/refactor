@@ -261,3 +261,55 @@ test('both current modes keep the whole outgoing spiral moving until each incomi
         assert.deepEqual(validateFibonacciState(sim.state), sim.state);
     }
 });
+
+test('sequence modes reveal the Fibonacci and prime positions in the same square spiral', () => {
+    for (const [mode, expected] of [['sequence', [1, 4, 5, 6, 8]], ['primes', [0, 5, 6, 8]]]) {
+        const sim = simulate(3, 0, mode);
+        sim.state.sequenceInterval = 10;
+        sim.step();
+        assert(sim.occupied().length > 0 && sim.occupied().length < expected.length);
+        sim.step();
+        sim.step();
+        assert.deepEqual(sim.occupied(), expected);
+    }
+    const even = simulate(4, 0, 'sequence');
+    even.step();
+    assert.deepEqual(even.occupied(), [5, 6]);
+});
+
+test('number patterns shift after the board width, overlap without double advances and keep gold', () => {
+    const sim = simulate(3, 0, 'primes');
+    sim.currentBoardState[0].isGold = true;
+    for (let i = 0; i < 3; i++) sim.step();
+    assert.equal(sim.state.sequenceOffset, 1);
+    assert.equal(sim.state.sequenceElapsed, 0);
+    const previous = sim.currentBoardState.map(cell => cell.k);
+    sim.step();
+    const advanced = sim.currentBoardState.flatMap((cell, i) => cell.k === previous[i] + 1 ? [i] : []);
+    assert.deepEqual(advanced, [5, 6, 7, 8]);
+    assert.equal(sim.currentBoardState[0].k, 0);
+    assert(sim.currentBoardState.every((cell, i) => cell.k <= previous[i] + 1));
+});
+
+test('number sequence checkpoints reproduce progressive reveal, offsets and wraps', () => {
+    const sim = simulate(4, 0, 'branching');
+    sim.step();
+    setFibonacciMode(sim.state, 'sequence', 2);
+    for (let i = 0; i < 31; i++) sim.step();
+    assert.equal(sim.state.sequenceOffset, 15);
+    const restored = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    assert.throws(() => validateFibonacciState({ ...restored, sequenceElapsed: 2 }));
+    const replayed = structuredClone(sim.currentBoardState);
+    for (let i = 0; i < 40; i++) {
+        sim.step();
+        runFibonacciGeneration({ currentBoardState: replayed, currentPalette: sim.currentPalette }, restored);
+        assert.deepEqual(replayed, sim.currentBoardState);
+        assert.deepEqual(restored, sim.state);
+    }
+    setFibonacciMode(sim.state, 'primes', 2);
+    assert.equal(sim.state.sequenceOffset, 0);
+    setFibonacciMode(sim.state, 'restart');
+    assert.equal(sim.state.sequenceOffset, undefined);
+    assert.equal(sim.state.frame, 1);
+    assert.deepEqual(validateFibonacciState(sim.state), sim.state);
+});
