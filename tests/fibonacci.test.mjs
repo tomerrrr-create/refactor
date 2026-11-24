@@ -83,3 +83,63 @@ test('small boards stop expanding and continue cycling ranks without overflow', 
         assert.throws(() => validateFibonacciState({ ...sim.state, frame: 2 }));
     }
 });
+
+test('wrapped square strips cross both edges and recruit each cell only once per generation', () => {
+    const sim = simulate(5, 'squares');
+    sim.state.origin = 24;
+    sim.step();
+    assert.deepEqual(sim.occupied(), [24]);
+    sim.step();
+    assert.deepEqual(sim.occupied(), [20, 24]);
+    while (sim.state.frame < 10) sim.step();
+    assert.deepEqual(sim.occupied(), [0, 4, 5, 9, 20, 24]);
+    const gold = sim.currentBoardState[9];
+    gold.k = gold.v = 12;
+    gold.isGold = true;
+    for (let i = 0; i < 125; i++) {
+        const previous = sim.currentBoardState.map(cell => cell.k);
+        sim.step();
+        const deltas = sim.currentBoardState.map((cell, index) => cell.k - previous[index]);
+        assert(deltas.every(delta => delta === 0 || delta === 1));
+        assert(deltas.includes(0) && deltas.includes(1));
+        assert.equal(gold.k, 12);
+    }
+});
+
+test('each new round starts at the previous endpoint and leaves the earlier colors on the board', () => {
+    const sim = simulate(21, 'squares');
+    const origin = sim.state.origin;
+    let restarts = 0;
+    for (let i = 0; i < 550; i++) {
+        const previous = sim.currentBoardState.map(cell => cell.k);
+        const previousFrame = sim.state.frame;
+        sim.step();
+        if (sim.state.frame < previousFrame) {
+            const changed = sim.currentBoardState.flatMap((cell, index) => cell.k !== previous[index] ? [index] : []);
+            assert.equal(sim.state.frame, 1);
+            assert.deepEqual(changed, [sim.state.origin]);
+            restarts++;
+        }
+    }
+    assert(restarts >= 3);
+    assert.notEqual(sim.state.origin, origin);
+    const checkpoint = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    const restored = structuredClone(sim.currentBoardState);
+    for (let i = 0; i < 350; i++) {
+        sim.step();
+        runFibonacciGeneration({ currentBoardState: restored, currentPalette: sim.currentPalette }, checkpoint);
+    }
+    assert.deepEqual(restored, sim.currentBoardState);
+    assert.deepEqual(checkpoint, sim.state);
+    assert.throws(() => validateFibonacciState({ ...checkpoint, origin: 21 ** 2 }));
+});
+
+test('legacy square recordings retain their original finite footprint', () => {
+    const sim = simulate(21, 'squares');
+    const old = validateFibonacciState({ version: 1, n: 21, mode: 'squares', orientation: 0, frame: 0 });
+    for (let i = 0; i < 200; i++) {
+        runFibonacciGeneration({ currentBoardState: sim.currentBoardState, currentPalette: sim.currentPalette }, old);
+    }
+    assert.equal(old.frame, 74);
+    assert.equal(sim.occupied().length, 104);
+});

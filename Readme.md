@@ -479,10 +479,10 @@ Engine contracts differ. Game of Life, Chi Flow, erosion, contours and brightnes
 
 Fibonacci starts at the board center and advances every recruited cell by one position in the active palette each generation. Each cell starts from its own current color, wraps from the last palette color to the first, and remains editable during playback. Protected gold cells retain their color.
 
-- **Square Spiral** starts with one cell, then adds one of its four neighbors at random. Successive squares have sides of 2, 3, 5, 8 and so on, attaching clockwise one strip at a time. Growth stops when the next complete square cannot fit.
+- **Square Spiral** starts with one cell, then adds one of its four neighbors at random. Successive squares have sides of 2, 3, 5, 8 and so on, attaching clockwise one strip at a time. Strips cross board edges and continue on the opposite side. Before the next square spans the board, the final newly recruited cell seeds a new spiral. The next spiral continues clockwise on the colors left by the previous one.
 - **Flower** opens layers with 1, 1, 2, 3, 5, 8 and 13 petals as space permits. Each layer opens outward in the two groups that make up its petal count. Larger boards have room for more layers.
 
-The grown region continues cycling colors after it stops expanding. Changing mode starts growth again from the center and keeps the current artwork. Artwork, Undo/Redo and recipes preserve the version, board size, mode, orientation and growth cursor. Replay reconstructs the same geometry from that compact state.
+The flower continues cycling colors once it finishes expanding. Changing mode starts growth again from the center and keeps the current artwork. Artwork, Undo/Redo and recipes preserve the version, board size, mode, orientation and growth cursor. Wrapped square spirals also record their current origin. Version 1 square spirals retain their original boundary behavior on replay and restore.
 
 ### 1. Breathe (Animation Engine)
 

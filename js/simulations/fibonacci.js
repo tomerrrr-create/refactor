@@ -1,28 +1,42 @@
-// Geometry is reconstructed from the initial orientation. Only the growth
-// cursor is saved, so a checkpoint stays small even on a large board.
+// Reconstruct geometry from the current origin, orientation and growth cursor.
 export const FIBONACCI_MODES = Object.freeze(['squares', 'flower']);
 const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 const turn = Math.PI * 2;
 let cachedPlan;
 
 export function createFibonacciState(n, mode = FIBONACCI_MODES[0], orientation = 0) {
-    return { version: 1, n, mode, orientation, frame: 0 };
+    const state = { version: 1, n, mode, orientation, frame: 0 };
+    if (mode === 'squares') {
+        const center = Math.floor((n - 1) / 2);
+        state.version = 2;
+        state.origin = center * n + center;
+    }
+    return state;
 }
 
-function addSquares(n, center, orientation, addBatch) {
-    let top = center, bottom = center, left = center, right = center;
+const wrap = (coordinate, n) => (coordinate % n + n) % n;
+
+function addSquares(n, origin, orientation, wraps, addBatch) {
+    let top = Math.floor(origin / n), bottom = top, left = origin % n, right = left;
+    let lastCell = origin;
     for (let direction = orientation; ; direction = (direction + 1) % directions.length) {
         const [dr, dc] = directions[direction];
         const side = dr ? right - left + 1 : bottom - top + 1;
         const edge = dr > 0 ? bottom : dr < 0 ? top : dc > 0 ? right : left;
         const end = edge + (dr || dc) * side;
-        if (end < 0 || end >= n) return;
-        for (let strip = 1; strip <= side; strip++) {
+        if (!wraps && (end < 0 || end >= n)) return;
+        if (wraps && side >= n) return { origin: lastCell, orientation: direction };
+        // The region is a rectangle in unwrapped space. Once its width or
+        // height spans the board, further strips would revisit existing cells.
+        const depth = dr ? bottom - top + 1 : right - left + 1;
+        const strips = wraps ? Math.min(side, n - depth) : side;
+        for (let strip = 1; strip <= strips; strip++) {
             const batch = [];
             for (let along = 0; along < side; along++) {
                 const row = dr ? edge + dr * strip : top + along;
                 const column = dc ? edge + dc * strip : left + along;
-                batch.push(row * n + column);
+                lastCell = wraps ? wrap(row, n) * n + wrap(column, n) : row * n + column;
+                batch.push(lastCell);
             }
             addBatch(batch);
         }
@@ -71,10 +85,12 @@ function addPetals(n, center, orientation, addBatch) {
     }
 }
 
-function getPlan({ n, mode, orientation }) {
-    if (cachedPlan?.n === n && cachedPlan.mode === mode && cachedPlan.orientation === orientation) return cachedPlan;
+function getPlan({ version, n, mode, orientation, origin }) {
+    if (cachedPlan?.n === n && cachedPlan.mode === mode && cachedPlan.orientation === orientation &&
+        cachedPlan.version === version && cachedPlan.origin === origin) return cachedPlan;
     const center = Math.floor((n - 1) / 2);
-    const cells = [center * n + center];
+    const start = origin ?? center * n + center;
+    const cells = [start];
     const ends = [0, 1];
     const addBatch = batch => {
         if (batch.length) {
@@ -83,27 +99,39 @@ function getPlan({ n, mode, orientation }) {
             ends.push(cells.length);
         }
     };
-    if (mode === 'squares') addSquares(n, center, orientation, addBatch);
+    let nextRound;
+    if (mode === 'squares') nextRound = addSquares(n, start, orientation, version === 2, addBatch);
     else addPetals(n, center, orientation, addBatch);
-    cachedPlan = { n, mode, orientation, cells, ends };
+    cachedPlan = { version, n, mode, orientation, origin, cells, ends, nextRound };
     return cachedPlan;
 }
 
 export function validateFibonacciState(state) {
-    if (state?.version !== 1 || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
+    if ((state?.version !== 1 && state?.version !== 2) || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
         !FIBONACCI_MODES.includes(state.mode) || !Number.isInteger(state.orientation) ||
         state.orientation < 0 || state.orientation >= directions.length ||
         !Number.isSafeInteger(state.frame) || state.frame < 0 || state.frame > 4 * state.n ** 2) {
         throw new Error('Invalid Fibonacci checkpoint');
     }
-    const copy = createFibonacciState(state.n, state.mode, state.orientation);
-    if (state.frame && state.frame >= getPlan(copy).ends.length) throw new Error('Invalid Fibonacci growth frame');
-    copy.frame = state.frame;
+    const { version, n, mode, orientation, frame } = state;
+    const copy = { version, n, mode, orientation, frame };
+    if (version === 2) {
+        if (mode !== 'squares' || !Number.isInteger(state.origin) || state.origin < 0 || state.origin >= n ** 2) {
+            throw new Error('Invalid Fibonacci origin');
+        }
+        copy.origin = state.origin;
+    }
+    if (frame && frame >= getPlan(copy).ends.length) throw new Error('Invalid Fibonacci growth frame');
     return copy;
 }
 
 export function runFibonacciGeneration({ currentBoardState, currentPalette }, state) {
-    const { cells, ends } = getPlan(state);
+    let plan = getPlan(state);
+    if (state.n > 1 && plan.nextRound && state.frame === plan.ends.length - 1) {
+        Object.assign(state, plan.nextRound, { frame: 0 });
+        plan = getPlan(state);
+    }
+    const { cells, ends } = plan;
     state.frame = Math.min(state.frame + 1, ends.length - 1);
     const colorCount = currentPalette.length;
     for (let i = 0; i < ends[state.frame]; i++) {
