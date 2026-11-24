@@ -9,6 +9,7 @@ import { CONTOUR_LINE_COLORS, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, D
 import { BRUSH_SIZES, BRUSH_SHAPES, normalizeBrushSize } from './brush-footprint.js';
 import { validateEvolutionTuning } from './evolution-tuning.js';
 import { normalizeSeparatorCycle } from './separator-cycle.js';
+import { isSimulationTheme } from './simulation-theme.js';
 import * as C from './constants.js';
 import { EROSION_MODES, validErosionStages } from './erosion-settings.js';
 import { DEFAULT_STARTUP, normalizeStartup } from './startup-settings.js';
@@ -158,8 +159,8 @@ export function validateWorkspaceSettings(value) {
         (!Object.hasOwn(settings, 'gameOfLifeGenetics') || ['rgb', 'palette-order'].includes(settings.gameOfLifeGenetics)) &&
         (!Object.hasOwn(settings, 'gameOfLifeDeadColor') || ['current','luminance'].includes(settings.gameOfLifeDeadColor)) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&
-        (!Object.hasOwn(settings, 'simulationTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationTheme)) &&
-        (!Object.hasOwn(settings, 'simulationPlaybackTheme') || ['blue', 'gold', 'teal'].includes(settings.simulationPlaybackTheme)) &&
+        (!Object.hasOwn(settings, 'simulationTheme') || isSimulationTheme(settings.simulationTheme)) &&
+        (!Object.hasOwn(settings, 'simulationPlaybackTheme') || isSimulationTheme(settings.simulationPlaybackTheme)) &&
         typeof settings.smoothing.display === 'boolean' && typeof settings.smoothing.export === 'boolean' &&
         (!Object.hasOwn(settings.smoothing, 'bloom') || typeof settings.smoothing.bloom === 'boolean') &&
         (!Object.hasOwn(settings.smoothing, 'bloomIntensity') || integer(settings.smoothing.bloomIntensity, 0, 100)) &&
