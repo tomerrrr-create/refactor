@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { SORT_MODES, normalizeSortMethod, sortColorsArray } from '../js/colors.js';
 import { nextSortMethod } from '../js/sort-cycle-settings.js';
-import { createFibonacciState } from '../js/simulations/fibonacci.js';
+import { createFibonacciState, runFibonacciGeneration } from '../js/simulations/fibonacci.js';
 import { createFractalState } from '../js/simulations/fractals.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
@@ -102,11 +102,13 @@ test('restoring a board-only snapshot keeps the selected experimental cycle mode
     for (const mode of ['sequence', 'primes']) {
         const h = harness();
         h.armedSimulation = 'fibonacci';
-        h.fibonacciState = createFibonacciState(1, 2, mode);
+        h.fibonacciState = createFibonacciState(1, 2, mode, 95, 0, undefined, 46);
+        h.fibonacciMode = mode;
         h.fibonacciColorAdvance = 95;
         h.fibonacciSequenceInterval = 46;
         h.createFibonacciState = createFibonacciState;
-        h.restoreFibonacciState = state => { h.fibonacciState = state; };
+        h.updateFibonacciButtonUI = () => {};
+        vm.runInContext(excerpt('function resetFibonacciRuntime(', 'function restoreFibonacciState('), h);
         h.applyState(boardOnly);
         assert.equal(h.fibonacciState.mode, mode);
         assert.equal(h.fibonacciState.sequenceInterval, 46);
@@ -120,6 +122,41 @@ test('restoring a board-only snapshot keeps the selected experimental cycle mode
     h.applyState(boardOnly);
     assert.equal(h.fractalState.mode, 'xor');
     assert.equal(h.fractalState.frame, 0);
+});
+
+test('Go Dark resets growth in the selected Fibonacci mode and keeps the recorded interval', () => {
+    for (const mode of ['branching', 'sequence', 'primes']) {
+        const h = harness();
+        h.n = 3;
+        h.armedSimulation = 'fibonacci';
+        h.fibonacciMode = mode;
+        h.fibonacciColorAdvance = 95;
+        h.fibonacciSequenceInterval = 46;
+        h.fibonacciState = createFibonacciState(3, 2, mode, 95, 0, undefined, 46);
+        h.FIBONACCI_MODES = ['restart'];
+        h.createFibonacciState = createFibonacciState;
+        h.updateFibonacciButtonUI = () => {};
+        h.startAnimationLoop = () => {};
+        h.performance = { now: () => 1 };
+        h.boardState = Array.from({ length: 9 }, () => ({ k: 2, v: 2 }));
+        const context = { currentBoardState: h.boardState, currentPalette: Array(23) };
+        runFibonacciGeneration(context, h.fibonacciState);
+        vm.runInContext(excerpt('function resetFibonacciRuntime(', 'function restoreFibonacciState('), h);
+        vm.runInContext(excerpt('function goDark(', 'function goDarkAction('), h);
+
+        h.goDark();
+        assert.equal(h.fibonacciState.mode, mode);
+        assert.equal(h.fibonacciState.frame, 0);
+        assert(h.boardState.every(cell => cell.k === 0));
+        if (mode !== 'branching') {
+            assert.equal(h.fibonacciState.sequenceInterval, 46);
+            runFibonacciGeneration(context, h.fibonacciState);
+            assert.equal(h.fibonacciState.sequenceAge, 1);
+            assert.equal(h.fibonacciState.frame, 0);
+        }
+        h.goDark({ keepCycleMode: false });
+        assert.equal(h.fibonacciState.mode, 'restart');
+    }
 });
 
 test('sorting keeps rainbow and unselected brushes independent of palette indices', () => {

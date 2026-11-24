@@ -91,6 +91,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let resonanceCycle=loadResonanceCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
       let fractalState = null;
+      let fibonacciMode = FIBONACCI_MODES[0];
       let fibonacciState = null, fibonacciColorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, fibonacciSequenceInterval = 0;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
@@ -642,11 +643,9 @@ k: tileState.k,
         if(state.oilState)restoreOilSnapshot(state.oilState);
         if(state.networkState)restoreNetworkSnapshot(state.networkState);
         if (fibonacci) restoreFibonacciState(fibonacci);
-        else if (armedSimulation === 'fibonacci' && selectedFibonacci) {
-            // Older board snapshots may omit runtime altogether. Start a fresh
-            // run in the selected mode instead of silently falling back to mode one.
-            restoreFibonacciState(createFibonacciState(n, selectedFibonacci.orientation, selectedFibonacci.mode,
-                fibonacciColorAdvance, selectedFibonacci.seed, undefined, fibonacciSequenceInterval));
+        else if (armedSimulation === 'fibonacci') {
+            resetFibonacciRuntime(selectedFibonacci);
+            updateFibonacciButtonUI();
         }
         if (fractal) restoreFractalState(fractal);
         else if (armedSimulation === 'fractals' && selectedFractal) {
@@ -1079,7 +1078,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           startAnimationLoop();
       }
 
-      function goDark() {
+      function goDark({ keepCycleMode = true } = {}) {
         const darkestIndex = 0;
         const now = performance.now();
         boardState.forEach(tile => {
@@ -1092,15 +1091,25 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           }
         });
 
-dlaState = null; // איפוס לפרקטלים
-        turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null; fractalState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
+        dlaState = null;
+        turingState = null; inkState = null; oilState = null; networkState = null;
+        if (armedSimulation === 'fibonacci') {
+            if (!keepCycleMode) fibonacciMode = FIBONACCI_MODES[0];
+            resetFibonacciRuntime(keepCycleMode ? fibonacciState : null);
+            updateFibonacciButtonUI();
+        } else fibonacciState = null;
+        if (armedSimulation === 'fractals') {
+            fractalState = createFractalState(n, keepCycleMode ? fractalState?.mode : undefined);
+            updateFractalsButtonUI();
+        } else fractalState = null;
         startAnimationLoop();
 
       }
 
       function goDarkAction() {
         animateBoardTransition(() => {
-            window.logArtEvent('GO_DARK', '---');
+            const keepMode = armedSimulation === 'fibonacci' || armedSimulation === 'fractals';
+            window.logArtEvent('GO_DARK', keepMode ? 'keep-cycle-mode' : '---');
             performAction(goDark);
         });
       }
@@ -1950,7 +1959,7 @@ function currentCycleMode(simulation) {
         breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
         ink:activeVorticesMode(),network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
         fractals: typeof fractalState === 'undefined' ? undefined : fractalState?.mode,
-        fibonacci: typeof fibonacciState === 'undefined' ? undefined : fibonacciState?.mode,
+        fibonacci: typeof fibonacciMode === 'undefined' ? undefined : fibonacciMode,
         nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
 }
 function rememberCurrentCycle() {
@@ -2147,7 +2156,8 @@ if (!isTogglingOff && simulationName !== null) {
     if (simulationName === 'fractals') fractalState = createFractalState(n);
     if (simulationName === 'fibonacci') {
         const seed = isExecutingMacroCommand ? 0 : Math.floor(Math.random() * 2 ** 32);
-        fibonacciState = createFibonacciState(n, seed & 3, undefined, fibonacciColorAdvance, seed);
+        fibonacciMode = FIBONACCI_MODES[0];
+        fibonacciState = createFibonacciState(n, seed & 3, fibonacciMode, fibonacciColorAdvance, seed);
     }
     if (simulationName === 'oil')oilState=createOilState(n);
     if (simulationName === 'network'){networkState=createNetworkState(n);if(!isExecutingMacroCommand&&!isMacroPlaying)networkRules=validateNetworkRules({...networkRules,mode:'spatial'});}
@@ -3962,25 +3972,28 @@ function cycleFractalMode() {
     window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
 }
 
+function resetFibonacciRuntime(previous = fibonacciState) {
+    fibonacciState = createFibonacciState(n, previous?.orientation, fibonacciMode,
+        previous?.colorAdvance ?? fibonacciColorAdvance, previous?.seed, previous?.version,
+        previous?.sequenceInterval ?? fibonacciSequenceInterval);
+}
+
 function getFibonacciState() {
-    if (fibonacciState?.n !== n) {
-        fibonacciState = createFibonacciState(n, fibonacciState?.orientation, fibonacciState?.mode,
-            fibonacciState?.colorAdvance ?? fibonacciColorAdvance, fibonacciState?.seed, fibonacciState?.version,
-            fibonacciState?.sequenceInterval ?? fibonacciSequenceInterval);
-    }
+    if (fibonacciState?.n !== n) resetFibonacciRuntime();
     return fibonacciState;
 }
 
 function restoreFibonacciState(state) {
     if (state.n !== n) throw new Error('Fibonacci board size mismatch');
     if (armedSimulation !== 'fibonacci') armSimulation('fibonacci');
+    fibonacciMode = state.mode;
     fibonacciState = state;
     updateFibonacciButtonUI();
 }
 
 function updateFibonacciButtonUI() {
     const active = armedSimulation === 'fibonacci';
-    const mode = active ? getFibonacciState().mode : cycleMemory.entry('fibonacci') ?? FIBONACCI_MODES[0];
+    const mode = active ? fibonacciMode : cycleMemory.entry('fibonacci') ?? FIBONACCI_MODES[0];
     dom.btnFibonacci.dataset.mode = mode;
     dom.btnFibonacci.classList.toggle('simulation-active', active);
     dom.btnFibonacci.setAttribute('aria-pressed', String(active));
@@ -3991,6 +4004,7 @@ function updateFibonacciButtonUI() {
 function selectFibonacciMode(mode) {
     const state = getFibonacciState();
     setFibonacciMode(state, mode, fibonacciSequenceInterval);
+    fibonacciMode = mode;
     updateFibonacciButtonUI();
 }
 
@@ -4015,18 +4029,15 @@ function saveFibonacciSettings({ colorAdvance, sequenceInterval }) {
 }
 
 function cycleFibonacciMode() {
-    if (armedSimulation !== 'fibonacci') armSimulation('fibonacci');
-    else {
-        const mode = getFibonacciState().mode;
-        const next = FIBONACCI_MODES[FIBONACCI_MODES.indexOf(mode) + 1];
-        if (next) selectFibonacciMode(next);
-        else if (isLifePlaying) selectFibonacciMode(FIBONACCI_MODES[0]);
-        else {
-            armSimulation(null);
-            window.logArtEvent('Fibonacci Off', '---');
-            return;
-        }
+    const active = armedSimulation === 'fibonacci';
+    const next = nextEvolutionMode(active ? fibonacciMode : 'off', ['off', ...FIBONACCI_MODES]);
+    if (next === 'off') {
+        armSimulation(null);
+        window.logArtEvent('Fibonacci Off', '---');
+        return;
     }
+    if (active) selectFibonacciMode(next);
+    else armSimulation('fibonacci');
     window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
 }
 
@@ -6005,7 +6016,8 @@ function executeMacroAction(action) {
         randomizeAll();
     } 
     else if (action.eventName === 'GO_DARK') {
-        performAction(goDark);
+        // Older recipes captured the original return to mode one on a board clear.
+        performAction(() => goDark({ keepCycleMode: action.details === 'keep-cycle-mode' }));
     }
     else if (action.eventName === 'ADAPT_COLORS') {
         adaptColors();
@@ -6516,7 +6528,7 @@ else if (action.eventName === 'Invert Colors') {
             },
             getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), fibonacci: { colorAdvance: normalizeFibonacciColorAdvance(fibonacciState?.colorAdvance) ?? fibonacciColorAdvance,
                 sequenceInterval: fibonacciState?.sequenceInterval ?? fibonacciSequenceInterval } }),
-            getEvolutionTuningMode: simulation => simulation === 'fibonacci' ? getFibonacciState().mode
+            getEvolutionTuningMode: simulation => simulation === 'fibonacci' ? fibonacciMode
                 : ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation],
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && experimentalSimulations.visible(simulation) && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning: (simulation, draft, mode) => simulation === 'fibonacci' ? saveFibonacciSettings(draft) : saveEvolutionTuning(simulation, draft, mode),
