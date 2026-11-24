@@ -25,7 +25,7 @@ export function runGravitationalSortGeneration({ n, currentBoardState, currentPa
 
     if (LINE_GRAVITY_MODES.includes(gravitationalSortRules.direction)) {
         const lineRules = { method: gravitationalSortRules.direction, polygonFlowPhase: gravitationalSortRules.polygonFlowPhase };
-        const board = runPolygonCirculation(n, nextBoardState, lineRules);
+        const board = runPolygonCirculation(n, nextBoardState, lineRules, gravitationalSortRules.lineStrength ?? strength);
         gravitationalSortRules.polygonFlowPhase = lineRules.polygonFlowPhase;
         return board;
     }

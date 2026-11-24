@@ -1,4 +1,4 @@
-import { DEFAULT_GRAVITY_CYCLE, loadGravityCycle, nextGravityMode, saveGravityCycle } from '../js/gravity-cycle.js';
+import { DEFAULT_GRAVITY_CYCLE, LINE_GRAVITY_MODES, loadGravityCycle, nextGravityMode, saveGravityCycle } from '../js/gravity-cycle.js';
 import { defaultWorkspaceSettings, deserializeWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import { recordErosionRules, restoreErosionRules } from '../js/erosion-settings.js';
@@ -27,7 +27,7 @@ function functionSource(name) {
 }
 function harness() {
     const board = [{ k: 0 }, { k: 1 }], dlaState = { crystal: new Set([0]) };
-    const c = vm.createContext({MAGNET_CYCLE,isCombinedMagnetMode,currentPolygonFlowMode,restorePolygonFlowPhase, window: {}, artRecipeLog: [], currentGenerationCount: 0,
+    const c = vm.createContext({LINE_GRAVITY_MODES,MAGNET_CYCLE,isCombinedMagnetMode,currentPolygonFlowMode,restorePolygonFlowPhase, window: {}, artRecipeLog: [], currentGenerationCount: 0,
         isExecutingMacroCommand: false, isLifePlaying: false, armedSimulation: null,
         brightnessEvoMode: 'off', dlaMode: 'off', gsMode: 'off', spiralMode: 'off', magnetMode: 'off',
         erosionRules: { mode: 'legacy', erosionStrength: .1 }, gravitationalSortRules: { direction: 'up' },

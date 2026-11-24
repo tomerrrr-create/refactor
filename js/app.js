@@ -36,6 +36,7 @@ import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, ge
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
+import { LEGACY_LINE_GRAVITY_STRENGTH } from './simulations/line-gravity.js';
 import { POLYGON_CIRCULATION_MODES, currentPolygonFlowMode, normalizePolygonFlowPhase, restorePolygonFlowPhase } from './simulations/polygon-circulation.js';
 import { GEOMETRIC_FLOW_MODES, loadGeometricFlowCycle, nextGeometricFlowMode, orderGeometricFlowModes, persistGeometricFlowCycle } from './geometric-flow-cycle.js';
 import { loadResonanceCycle, orderResonanceCycle, persistResonanceCycle } from './resonance-cycle.js';
@@ -466,7 +467,7 @@ currentSortMethod,
             ...(armedSimulation === 'spiral' && POLYGON_CIRCULATION_MODES.includes(spiralMode)
                 ? { polygonFlowPhase: normalizePolygonFlowPhase(spiralRules.polygonFlowPhase, spiralMode) } : {}),
             ...(isTornadoSelected() ? {tornadoVersion: vorticesSpiralRules.tornadoVersion, tornadoFrame: vorticesSpiralRules.tornadoFrame} : {}),
-            ...(armedSimulation === 'gravitationalSort' ? { gravityRules: { ...getActiveGravityRules() } } : {}),
+            ...(armedSimulation === 'gravitationalSort' ? { gravityRules: getGravityRecordingRules() } : {}),
             erosionMode: armedSimulation === 'erosion' ? erosionRules.mode : undefined,
             ...(armedSimulation === 'contour' ? { contourState: getContourSnapshot() } : {}),
             ...(armedSimulation === 'cymatics' ? {cymaticsState:getCymaticsSnapshot()} : {}),
@@ -1548,7 +1549,7 @@ break;
         // --- תוספת: תיעוד מורחב ב-Art Logger כולל מצב וחוקים ---
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
-        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(getActiveGravityRules());
+        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(getGravityRecordingRules());
         else if (armedSimulation === 'cymatics') simDetails=JSON.stringify(getCymaticsSnapshot());
         else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
@@ -1784,7 +1785,7 @@ function pauseLife() {
 function getSimulationRecordingDetails() {
         let simDetails = "No specific rules mapping";
         if (armedSimulation === 'gameOfLife') simDetails = JSON.stringify(getGameOfLifeRecordingRules());
-        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(getActiveGravityRules());
+        else if (armedSimulation === 'gravitationalSort') simDetails = JSON.stringify(getGravityRecordingRules());
         else if (armedSimulation === 'cymatics') simDetails=JSON.stringify(getCymaticsSnapshot());
         else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
@@ -1887,6 +1888,12 @@ function getActiveSpiralRules() {
 function getActiveGravityRules() {
     return vorticesModeFor('gravitationalSort', gsMode) ? vorticesGravityRules : gravitationalSortRules;
 }
+function getGravityRecordingRules() {
+    const rules = getActiveGravityRules();
+    return LINE_GRAVITY_MODES.includes(rules.direction)
+        ? { ...rules, lineStrength: rules.lineStrength ?? rules.strength }
+        : { ...rules };
+}
 function activeVorticesMode() {
     if (armedSimulation === 'gravitationalSort') return vorticesModeFor(armedSimulation, gsMode);
     if (armedSimulation === 'spiral') return vorticesModeFor(armedSimulation, spiralMode);
@@ -1931,7 +1938,10 @@ function refreshCycleIcons() {
 function restoreCycleMode(simulation, mode) {
     switch(simulation){
         case 'gravitationalSort':
-            if (gravitationalSortRules.direction !== mode) delete gravitationalSortRules.polygonFlowPhase;
+            if (gravitationalSortRules.direction !== mode) {
+                delete gravitationalSortRules.polygonFlowPhase;
+                delete gravitationalSortRules.lineStrength;
+            }
             gsMode = gravitationalSortRules.direction = mode;
             break;
         case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;restorePolygonFlowPhase(spiralRules);break;
@@ -2142,6 +2152,7 @@ if (!isTogglingOff && simulationName !== null) {
             if (!vorticesModeFor('gravitationalSort', gravityEntry)) {
                 gravitationalSortRules.direction = gravityEntry;
                 delete gravitationalSortRules.polygonFlowPhase;
+                delete gravitationalSortRules.lineStrength;
             }
         }
 
@@ -2387,7 +2398,7 @@ if (simulationName === 'magnet') {
 
       function getWorkspaceSettings() {
         const { polygonFlowPhase, ...spiralPreferences } = spiralRules;
-        const { polygonFlowPhase: gravityPhase, ...gravityPreferences } = gravitationalSortRules;
+        const { polygonFlowPhase: gravityPhase, lineStrength, ...gravityPreferences } = gravitationalSortRules;
         return {
             simulationPreferences: {
                 gravityCycleVersion: GRAVITY_CYCLE_VERSION, gravityCycle: [...gravityCycle], geometricFlowCycle: [...geometricFlowCycle],
@@ -4300,7 +4311,12 @@ function restoreGravityRules(rules) {
     gsMode = direction;
     const activeRules = getActiveGravityRules();
     delete activeRules.polygonFlowPhase;
+    delete activeRules.lineStrength;
     Object.assign(activeRules, rules);
+    if (LINE_GRAVITY_MODES.includes(direction) && rules.lineStrength === undefined) {
+        // Older Gravity recipes stored the shared slider even though line modes always used 60%.
+        activeRules.lineStrength = LEGACY_LINE_GRAVITY_STRENGTH;
+    }
     updateGravitationalSortButtonUI();
 }
 
@@ -4324,7 +4340,9 @@ function cycleGravitationalSortMode() {
     } else {
         if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:next});
         delete gravitationalSortRules.polygonFlowPhase;
+        delete gravitationalSortRules.lineStrength;
         gsMode = gravitationalSortRules.direction = next;
+        if (LINE_GRAVITY_MODES.includes(next)) recordLiveSimulationRules('gravitationalSort');
     }
     gsMode = next;
     updateGravitationalSortButtonUI();
@@ -4684,6 +4702,10 @@ function getHistorySettings(state) {
 function validateGravitySnapshot(rules) {
     if (!rules || !GRAVITY_DIRECTIONS.includes(rules.direction) ||
         !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1) throw new Error('Invalid gravity rules');
+    if (rules.lineStrength !== undefined && (!LINE_GRAVITY_MODES.includes(rules.direction) ||
+        !Number.isFinite(rules.lineStrength) || rules.lineStrength < 0 || rules.lineStrength > 1)) {
+        throw new Error('Invalid line gravity strength');
+    }
     if (rules.polygonFlowPhase !== undefined && (!LINE_GRAVITY_MODES.includes(rules.direction) ||
         normalizePolygonFlowPhase(rules.polygonFlowPhase, rules.direction) !== rules.polygonFlowPhase)) {
         throw new Error('Invalid line gravity checkpoint');
@@ -5575,6 +5597,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
                 const parsedRules = JSON.parse(rulesStr);
                 if (sim === 'gameOfLife') restoreGameOfLifeRules(parsedRules);
                 else if (sim === 'gravitationalSort') {
+                    if (parsedRules.lineStrength !== undefined) validateGravitySnapshot(parsedRules);
                     restoreGravityRules(parsedRules);
                 }
                 else if (sim === 'erosion') {
@@ -6244,14 +6267,17 @@ else if (action.eventName === 'Invert Colors') {
                 gravityCycle = enabled;
                 const {direction, strength} = rules;
                 const changedDirection = activeEvolutionControl() !== 'gravitationalSort' || gsMode !== direction;
-                if (changedDirection || gravitationalSortRules.strength !== strength) {
+                if (changedDirection || gravitationalSortRules.strength !== strength || rules.lineStrength !== undefined) {
                     if (changedDirection) delete rules.polygonFlowPhase;
+                    delete rules.lineStrength;
                     if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:direction});
                     gsMode = direction;
                     gravitationalSortRules = rules;
                     recordLiveSimulationRules('gravitationalSort');
                 }
                 updateGravitationalSortButtonUI();
+                persistWorkspaceSettings(getWorkspaceSettings());
+                settingsProfiles?.scheduleCapture();
                 return true;
             },
 
