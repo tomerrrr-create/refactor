@@ -63,9 +63,10 @@ test('oversized Fibonacci squares fill the remaining strip in all orientations',
     }
 });
 
-test('restart and continuous modes have the same growth and diverge after filling the board', () => {
+test('version 7 restart and continuous modes diverge after the original three-generation hold', () => {
     const continuous = simulate(21);
     const restart = simulate(21, 0, 'restart');
+    restart.state.version = 7;
     while (continuous.occupied().length < 21 ** 2) {
         continuous.step();
         restart.step();
@@ -224,6 +225,39 @@ test('branching checkpoints keep both outgoing spirals and replay deterministica
         assert.equal(sim.state.branch, undefined);
         assert.equal(sim.state.outgoing?.branch, undefined);
         assert.deepEqual(sim.currentBoardState, before);
+        assert.deepEqual(validateFibonacciState(sim.state), sim.state);
+    }
+});
+
+test('both current modes keep the whole outgoing spiral moving until each incoming spiral covers 5%', () => {
+    for (const mode of ['restart', 'branching']) {
+        const n = 41;
+        const sim = simulate(n, 0, mode);
+        while (!sim.state.outgoing) sim.step();
+
+        const primary = simulate(n, sim.state.orientation);
+        primary.state.origin = sim.state.origin;
+        primary.step();
+        let secondary;
+        if (sim.state.branch) {
+            secondary = simulate(n, sim.state.branch.orientation);
+            secondary.state.origin = sim.state.branch.origin;
+        }
+        const target = Math.ceil(n ** 2 * .05);
+        const covered = () => primary.occupied().length >= target && (!secondary || secondary.occupied().length >= target);
+        while (!covered()) {
+            const before = sim.currentBoardState.map(cell => cell.k);
+            sim.step();
+            primary.step();
+            if (secondary && sim.state.frame > 4) secondary.step();
+            assert(sim.currentBoardState.every((cell, i) => cell.k === before[i] + 1),
+                `${mode} retires too soon at frame ${sim.state.frame}`);
+        }
+        const beforeFade = sim.currentBoardState.map(cell => cell.k);
+        sim.step();
+        const moving = sim.currentBoardState.filter((cell, i) => cell.k === beforeFade[i] + 1).length;
+        assert(moving < n ** 2 && moving >= target, mode);
+        assert(sim.state.outgoing);
         assert.deepEqual(validateFibonacciState(sim.state), sim.state);
     }
 });

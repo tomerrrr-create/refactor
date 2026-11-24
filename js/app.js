@@ -3874,7 +3874,7 @@ function cycleChiFlowMode() {
 function getFibonacciState() {
     if (fibonacciState?.n !== n) {
         fibonacciState = createFibonacciState(n, fibonacciState?.orientation, fibonacciState?.mode,
-            fibonacciState?.colorAdvance ?? fibonacciColorAdvance, fibonacciState?.seed);
+            fibonacciState?.colorAdvance ?? fibonacciColorAdvance, fibonacciState?.seed, fibonacciState?.version);
     }
     return fibonacciState;
 }
