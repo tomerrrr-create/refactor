@@ -1,7 +1,7 @@
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
-import {createFibonacciState,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
+import {FIBONACCI_MODES,createFibonacciState,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
@@ -1925,6 +1925,7 @@ function currentCycleMode(simulation) {
         spiral:spiralMode,magnet:magnetMode,brightnessEvo:brightnessEvoMode,dla:dlaMode,
         breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
         ink:activeVorticesMode(),network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
+        fibonacci: typeof fibonacciState === 'undefined' ? undefined : fibonacciState?.mode,
         nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
 }
 function rememberCurrentCycle() {
@@ -1960,6 +1961,7 @@ function restoreCycleMode(simulation, mode) {
         case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;restorePolygonFlowPhase(spiralRules);break;
         case 'magnet':selectMagnetMode(mode);break;
         case 'network':saveNetworkSettings({...networkRules,mode});break;
+        case 'fibonacci': selectFibonacciMode(mode); break;
         case 'brightnessEvo':brightnessEvoMode=mode;break;
         case 'dla':dlaMode=mode;break;
         case 'breathe':breatheEvoMode=mode;break;
@@ -3862,7 +3864,7 @@ function cycleChiFlowMode() {
 
 function getFibonacciState() {
     if (fibonacciState?.n !== n) {
-        fibonacciState = createFibonacciState(n, fibonacciState?.orientation);
+        fibonacciState = createFibonacciState(n, fibonacciState?.orientation, fibonacciState?.mode);
     }
     return fibonacciState;
 }
@@ -3876,21 +3878,33 @@ function restoreFibonacciState(state) {
 
 function updateFibonacciButtonUI() {
     const active = armedSimulation === 'fibonacci';
+    const mode = active ? getFibonacciState().mode : cycleMemory.entry('fibonacci') ?? FIBONACCI_MODES[0];
+    dom.btnFibonacci.dataset.mode = mode;
     dom.btnFibonacci.classList.toggle('simulation-active', active);
     dom.btnFibonacci.setAttribute('aria-pressed', String(active));
-    dom.btnFibonacci.title = getText('help_fibonacci');
+    dom.btnFibonacci.title = `${getText('help_fibonacci')} · ${getText('fibonacci_' + mode)}`;
     dom.btnFibonacci.setAttribute('aria-label', dom.btnFibonacci.title);
 }
 
-function toggleFibonacci() {
-    if (armedSimulation === 'fibonacci') {
-        if (isLifePlaying) return;
+function selectFibonacciMode(mode) {
+    const state = getFibonacciState();
+    if (state.mode !== mode) {
+        state.mode = mode;
+        state.waveFrame = 0;
+    }
+    updateFibonacciButtonUI();
+}
+
+function cycleFibonacciMode() {
+    if (armedSimulation !== 'fibonacci') armSimulation('fibonacci');
+    else if (getFibonacciState().mode === FIBONACCI_MODES[0]) selectFibonacciMode(FIBONACCI_MODES[1]);
+    else if (isLifePlaying) selectFibonacciMode(FIBONACCI_MODES[0]);
+    else {
         armSimulation(null);
         window.logArtEvent('Fibonacci Off', '---');
-    } else {
-        armSimulation('fibonacci');
-        window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
+        return;
     }
+    window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
 }
 
 function getNetworkRules(){return replayNetworkRules??networkRules;}
@@ -6760,7 +6774,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 else vorticesCycleUI.open();
             }],
             [dom.btnNetwork,'network',cycleNetworkMode,()=>networkSettingsUI.open()],
-            [dom.btnFibonacci, 'fibonacci', toggleFibonacci],
+            [dom.btnFibonacci, 'fibonacci', cycleFibonacciMode],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
             [dom.btnNudgeBrighter, 'nudgeBrighter', cycleNudgeMode, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, modals.openBrightnessSettingsModal],

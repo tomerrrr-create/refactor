@@ -3,10 +3,10 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
     fibonacci: [
-        ['Fibonacci', 'A spiral of squares wraps around the board. As the next spiral grows, the previous one fades strip by strip.'],
-        ['פיבונאצ׳י', 'ספירלת ריבועים חוצה את קצוות הלוח. כשהספירלה הבאה צומחת, תנועת הקודמת דועכת פס אחר פס.'],
-        ['Фибоначчи', 'Спираль из квадратов проходит через края поля. Пока растёт новая спираль, предыдущая затихает полоса за полосой.'],
-        ['Fibonacci', 'Een vierkantenspiraal loopt door over de randen. Terwijl de volgende groeit, vervaagt de vorige strook voor strook.']
+        ['Fibonacci', 'Grow a spiral of squares. Its colors keep changing in unison or as a wave along its strips.'],
+        ['פיבונאצ׳י', 'הצמיחו ספירלת ריבועים. הצבעים ממשיכים להתחלף יחד או בגל שעובר לאורך הפסים.'],
+        ['Фибоначчи', 'Выращивайте спираль из квадратов. Цвета продолжают меняться вместе или волной вдоль полос.'],
+        ['Fibonacci', 'Laat een vierkantenspiraal groeien. De kleuren blijven samen veranderen of golven langs de stroken.']
     ],
     network: [
         ['Living network','Threads grow from your patches, branch, strengthen and fade. Cycle palette-guided or spatial growth.'],

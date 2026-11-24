@@ -55,9 +55,12 @@
 
       <div id="controlsContainer" class="mt-11" aria-label="Control buttons">
  <div id="simModeBackground"></div>
- <button id="btnFibonacci" class="ctrl" type="button" aria-pressed="false" aria-label="Fibonacci">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+ <button id="btnFibonacci" class="ctrl" type="button" data-mode="continuous" aria-pressed="false" aria-label="Fibonacci">
+  <svg data-fibonacci-icon="continuous" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M4 19V5h16v14H4m10-14v14M4 13h10m-6 0v6m0-3h6"/>
+  </svg>
+  <svg data-fibonacci-icon="wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 5h16v14H4zM4 13c3.2 0 3-4 6-4s3 6 6 6c1.8 0 2.8-1.8 4-2"/>
   </svg>
  </button>
  <button data-evolution-feature-hidden id="btnNetwork" class="ctrl" type="button" aria-label="Living network" title="Living network">
