@@ -10,6 +10,10 @@ const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 const overlapFrames = 3;
 const slowTrailAfter = 8;
 const trailDuration = 16;
+const ribbonTiming = {
+    sequence: { length: 6, period: 16, delay: 2 },
+    primes: { length: 3, period: 18, delay: 3 }
+};
 const revealFrames = n => Math.min(n, 24);
 const intervalFor = state => state.sequenceInterval || state.n;
 let cachedPlan;
@@ -42,12 +46,22 @@ function getSequencePlan(n) {
         primes.push(value - 1);
         for (let multiple = value * value; multiple <= size; multiple += value) composite[multiple] = 1;
     }
-    cachedPlan = { n, cells, sequence, primes, visited: new Uint8Array(size) };
+    // Even boards skip over some out-of-bounds cells. Cap any tail at
+    // that gap so the visible line never joins two nonadjacent tiles.
+    const contiguous = new Uint8Array(size);
+    for (let i = 1; i < size; i++) {
+        const a = cells[i - 1], b = cells[i];
+        const distance = Math.abs(a % n - b % n) + Math.abs(Math.floor(a / n) - Math.floor(b / n));
+        if (distance === 1) contiguous[i] = Math.min(contiguous[i - 1] + 1, ribbonTiming.sequence.length);
+    }
+    cachedPlan = { n, cells, sequence, primes, contiguous, visited: new Uint8Array(size) };
     return cachedPlan;
 }
 
 export function resetSequenceCursor(state, interval) {
-    Object.assign(state, { sequenceInterval: interval, sequenceOffset: 0, sequenceElapsed: 0, sequenceAge: 0, sequenceShifted: false, sequenceTrailFrames: [] });
+    delete state.sequenceTrailFrames;
+    Object.assign(state, { sequenceInterval: interval, sequenceOffset: 0, sequenceElapsed: 0, sequenceAge: 0,
+        sequenceShifted: false, sequenceTailLength: 0, sequenceTailPhase: 0 });
 }
 
 export function clearSequenceCursor(state) {
@@ -57,6 +71,8 @@ export function clearSequenceCursor(state) {
     delete state.sequenceAge;
     delete state.sequenceShifted;
     delete state.sequenceTrailFrames;
+    delete state.sequenceTailLength;
+    delete state.sequenceTailPhase;
 }
 
 export function setSequenceInterval(state, interval) {
@@ -73,6 +89,15 @@ export function validateSequenceCursor(state) {
         throw new Error('Invalid Fibonacci sequence cursor');
     }
     const cursor = { sequenceInterval, sequenceOffset, sequenceElapsed, sequenceAge, sequenceShifted };
+    if (state.sequenceTailLength !== undefined || state.sequenceTailPhase !== undefined) {
+        const { length, period } = ribbonTiming[state.mode];
+        const { sequenceTailLength, sequenceTailPhase } = state;
+        if (!Number.isInteger(sequenceTailLength) || sequenceTailLength < 0 || sequenceTailLength > length ||
+            !Number.isInteger(sequenceTailPhase) || sequenceTailPhase < 0 || sequenceTailPhase >= period) {
+            throw new Error('Invalid Fibonacci sequence tail');
+        }
+        return { ...cursor, sequenceTailLength, sequenceTailPhase };
+    }
     // Missing history marks a recording from before the trails were introduced.
     if (state.sequenceTrailFrames === undefined) return cursor;
     const maxCount = getSequencePlan(n)[state.mode].length;
@@ -92,7 +117,7 @@ export function validateSequenceCursor(state) {
 
 export function runNumberSequence(board, colorCount, state) {
     const { n, mode, sequenceOffset, sequenceElapsed } = state;
-    const { cells, visited, [mode]: numbers } = getSequencePlan(n);
+    const { cells, visited, contiguous, [mode]: numbers } = getSequencePlan(n);
     const visible = Math.ceil(numbers.length * Math.min(1, (state.sequenceAge + 1) / revealFrames(n)));
     const interval = intervalFor(state);
     const overlap = Math.min(interval, overlapFrames);
@@ -118,7 +143,24 @@ export function runNumberSequence(board, colorCount, state) {
     visited.fill(0);
     visitFootprint(footprint, true);
 
-    if (state.sequenceTrailFrames) {
+    if (state.sequenceTailLength !== undefined) {
+        const { period, delay } = ribbonTiming[mode];
+        // A wave starts beside the head and travels one cell at a time.
+        // The nearest head owns shared tail cells, while active heads always win.
+        for (let distance = 1; distance <= state.sequenceTailLength; distance++) {
+            const due = state.sequenceTailPhase === (distance - 1) * delay;
+            for (let rank = 0; rank < footprint[2]; rank++) {
+                const head = (numbers[rank] + sequenceOffset) % cells.length;
+                if (distance > contiguous[head]) continue;
+                const index = cells[head - distance];
+                if (visited[index]) continue;
+                visited[index] = 1;
+                const cell = board[index];
+                if (due && !cell.isGold) cell.k = cell.v = (cell.k + 1) % colorCount;
+            }
+        }
+        state.sequenceTailPhase = (state.sequenceTailPhase + 1) % period;
+    } else if (state.sequenceTrailFrames) {
         const frames = state.sequenceTrailFrames;
         let newest = footprint;
         for (let i = frames.length - 1; i >= 0; i--) {
@@ -139,6 +181,9 @@ export function runNumberSequence(board, colorCount, state) {
         state.sequenceElapsed = 0;
         state.sequenceOffset = (sequenceOffset + 1) % cells.length;
         state.sequenceShifted = true;
+        if (state.sequenceTailLength !== undefined) {
+            state.sequenceTailLength = Math.min(state.sequenceTailLength + 1, ribbonTiming[mode].length);
+        }
     }
     return board;
 }

@@ -2,10 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
 
-function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
+function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0, useTail = false) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
     const currentPalette = Array(4096).fill('#000');
     const state = createFibonacciState(n, orientation, mode, colorAdvance, seed);
+    if (!useTail && state.sequenceTailLength !== undefined) {
+        delete state.sequenceTailLength;
+        delete state.sequenceTailPhase;
+        state.sequenceTrailFrames = [];
+    }
     const step = () => runFibonacciGeneration({ currentBoardState, currentPalette }, state);
     const occupied = () => currentBoardState.flatMap(({ k }, index) => k > 0 ? [index] : []);
     return { currentBoardState, currentPalette, state, step, occupied };
@@ -386,5 +391,57 @@ test('a cell rejoining a number pattern changes once that generation, even durin
             }
         }
         assert(observedRejoin);
+    }
+});
+
+test('connected tails grow one cell per shift and retain the wave phase on restore', () => {
+    for (const [mode, maxLength] of [['sequence', 6], ['primes', 3]]) {
+        const sim = simulate(21, 0, mode, 100, 0, true);
+        sim.state.sequenceInterval = 8;
+        for (let shift = 1; shift <= 8; shift++) {
+            for (let i = 0; i < 8; i++) sim.step();
+            assert.equal(sim.state.sequenceTailLength, Math.min(shift, maxLength));
+        }
+        const restored = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+        const board = structuredClone(sim.currentBoardState);
+        for (let i = 0; i < 34; i++) {
+            sim.step();
+            runFibonacciGeneration({ currentBoardState: board, currentPalette: sim.currentPalette }, restored);
+        }
+        assert.deepEqual(board, sim.currentBoardState);
+        assert.deepEqual(restored, sim.state);
+        assert.throws(() => validateFibonacciState({ ...restored, sequenceTailLength: maxLength + 1 }));
+    }
+});
+
+test('tail color travels from the nearest predecessor outward without painting distant cells', () => {
+    for (const [mode, delay] of [['sequence', 2], ['primes', 3]]) {
+        const n = 11;
+        const offset = 4;
+        const headsAt = shift => {
+            const control = simulate(n, 0, mode);
+            delete control.state.sequenceTrailFrames;
+            Object.assign(control.state, { sequenceInterval: 327, sequenceOffset: shift, sequenceAge: n });
+            control.step();
+            return new Set(control.occupied());
+        };
+        const heads = headsAt(offset);
+        const first = headsAt(offset - 1);
+        const second = headsAt(offset - 2);
+        const sim = simulate(n, 0, mode, 100, 0, true);
+        Object.assign(sim.state, { sequenceInterval: 327, sequenceOffset: offset, sequenceAge: n, sequenceTailLength: 2 });
+        for (let phase = 0; phase <= delay; phase++) {
+            const candidates = phase === 0 ? [...first] : phase === delay ? [...second].filter(index => !first.has(index)) : [];
+            const trail = candidates.filter(index => !heads.has(index)).sort((a, b) => a - b);
+            if (phase === 0 || phase === delay) assert(trail.length > 0);
+            const before = sim.currentBoardState.map(cell => cell.k);
+            sim.step();
+            const changed = sim.currentBoardState.flatMap((cell, i) => {
+                const delta = cell.k - before[i];
+                assert(delta === 0 || delta === 1);
+                return delta && !heads.has(i) ? [i] : [];
+            });
+            assert.deepEqual(changed, trail);
+        }
     }
 });
