@@ -65,7 +65,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
     await button.hover();await page.waitForTimeout(1250);
     assert.equal(await button.getAttribute('title'),null,'native tooltip stays suppressed under resting pointer');
     await page.mouse.move(0,0);
-    assert.equal(await button.getAttribute('title'),await button.getAttribute('aria-label'),'latest accessible label restores on pointer leave');
+    const accessible=await button.getAttribute('aria-label');
+    const expectedTitle=sim==='gameOfLife'?accessible.split(': ')[0]:accessible;
+    if(sim==='gameOfLife') assert.notEqual(expectedTitle,accessible,'accessible label includes the chosen preset');
+    assert.equal(await button.getAttribute('title'),expectedTitle,'native tooltip restores on pointer leave');
     await swipe(button,-35);await swipe(button,35);
    }
    if(index===0&&direction===1)await page.screenshot({path:path.join(artifacts,config.lang+'-'+sim+'-feedback.png'),animations:'disabled'});
