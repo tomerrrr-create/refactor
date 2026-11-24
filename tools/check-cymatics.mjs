@@ -51,6 +51,41 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await button.locator('svg:visible').evaluate(e=>getComputedStyle(e).strokeWidth),'2.5px');
  if(process.env.CYMATICS_THEME_ONLY){console.log(JSON.stringify({config,themePassed:true}));await context.close();continue;}
 const initial=await state();assert.equal(await button.getAttribute('aria-pressed'),'true');
+ if(process.env.CYMATICS_HEART_ONLY){
+  await page.evaluate(()=>cymaticsTest.setupCircle());
+  await reveal(button);await tap(button);
+  const start=await state();
+  assert.equal(start.rules.heartFieldVersion,3);
+  assert.equal(start.runtime.steps,0);
+  await tap(page.locator('#btnPlayPauseLife'));
+  await page.waitForFunction(()=>cymaticsTest.state().runtime.steps>=50);
+  const forming=await state();
+  await canvas.screenshot({path:path.join(artifacts,config.lang+'-heart-forming.png')});
+  await page.waitForFunction(()=>cymaticsTest.state().runtime.steps>=200);
+  const formed=await state();
+  assert.notDeepEqual(formed.board,forming.board);
+  assert.deepEqual(histogram(formed.board),histogram(start.board));
+  await canvas.screenshot({path:path.join(artifacts,config.lang+'-heart-formed.png')});
+  for(const map of [2,4,1,7]){
+   await tap(button);assert.equal((await state()).rules.resonanceVersion,map);
+  }
+  const reentered=await state();
+  assert(reentered.playing&&reentered.gen>=formed.gen);
+  assert(reentered.runtime.heartStartStep>=formed.runtime.steps);
+  assert(reentered.runtime.steps-reentered.runtime.heartStartStep<60);
+  await page.waitForFunction(()=>{const r=cymaticsTest.state().runtime;return r.steps-r.heartStartStep>=45;});
+  await tap(page.locator('#btnPlayPauseLife'));
+  const final=await state(),recipe=await page.evaluate(()=>cymaticsTest.recipe());
+  assert(recipe.includes('"heartFieldVersion":3')&&recipe.includes('"heartStartStep":'));
+  await page.locator('#projectFileInput').setInputFiles({name:'heart.txt',mimeType:'text/plain',buffer:Buffer.from(recipe)});
+  await page.waitForFunction(()=>cymaticsTest.state().loaded);
+  await page.evaluate(()=>cymaticsTest.macro());
+  await page.waitForFunction(()=>!cymaticsTest.state().loaded&&!cymaticsTest.state().macro,null,{timeout:30000});
+  assert.deepEqual((await state()).board,final.board);
+  assert.deepEqual((await state()).runtime,final.runtime);
+  assert.deepEqual(errors,[]);
+  console.log(JSON.stringify({config,centeredHeart:true,replay:true}));await context.close();continue;
+ }
  if(process.env.CYMATICS_MEMBERSHIP_ONLY){
   const mark=name=>dialog.locator('[data-resonance-cycle="'+name+'"]');
   const checks=()=>dialog.locator('[data-resonance-cycle]:visible').evaluateAll(nodes=>nodes.filter(n=>n.checked).map(n=>n.dataset.resonanceCycle).sort());

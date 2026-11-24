@@ -1,5 +1,6 @@
 // A soft heart contour is sampled where two diagonal waves cross.
 const STEPS_PER_CYCLE = 1200;
+const FORMATION_STEPS = 150;
 const SAMPLES = 64;
 const points = Array.from({length: SAMPLES}, (_, i) => {
     const angle = 2 * Math.PI * i / SAMPLES;
@@ -52,12 +53,17 @@ function sampleContour(contour, n, x, y) {
         + (contour[i + n] * (1 - rx) + contour[i + n + 1] * rx) * ry;
 }
 
-export function createHeartField(n, frequency, phaseStep = 0) {
+function getGeometry(n, frequency, phaseStep) {
     if (!Number.isInteger(n) || n < 1 || n > 327 || !Number.isInteger(frequency) ||
         frequency < 20 || frequency > 20000 || !Number.isSafeInteger(phaseStep) || phaseStep < 0) {
         throw new Error('Invalid Heart resonance field');
     }
     if (geometry?.n !== n || geometry.frequency !== frequency) geometry = buildGeometry(n, frequency);
+    return geometry;
+}
+
+export function createHeartField(n, frequency, phaseStep = 0) {
+    getGeometry(n, frequency, phaseStep);
     const step = phaseStep % STEPS_PER_CYCLE;
     if (geometry.step === step) return geometry.field;
 
@@ -80,5 +86,36 @@ export function createHeartField(n, frequency, phaseStep = 0) {
     }
     geometry.step = step;
     geometry.field = field;
+    return field;
+}
+
+export function createCenteredHeartField(n, frequency, phaseStep, formationStep) {
+    const geometry = getGeometry(n, frequency, phaseStep);
+    const step = phaseStep % STEPS_PER_CYCLE;
+    const formation = Math.min(1, formationStep / FORMATION_STEPS);
+    if (geometry.centered?.step === step && geometry.centered.formation === formation) return geometry.centered.field;
+
+    const phase = 2 * Math.PI * step / STEPS_PER_CYCLE;
+    const {contour, shade, phaseOffsets} = geometry;
+    const forward = phaseOffsets.map(offset => Math.cos(offset - phase));
+    const backward = phaseOffsets.map(offset => Math.cos(offset + phase * 2 + .55));
+    const field = new Uint16Array(n * n);
+    const center = (n - 1) / 2;
+    const inverseWidth = 1 / (1 + .03 * Math.sin(phase));
+    const inverseHeight = 1 / (1 + .022 * Math.sin(phase - .35));
+    const growth = formation * formation * (3 - 2 * formation);
+    const breath = .90 + .10 * Math.cos(phase - .6);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        const i = y * n + x;
+        const a = forward[x + y], b = backward[x - y + n - 1];
+        // Breathe around the center. Keep both lobes on the same axis while
+        // the two waves move independently through the surrounding pigments.
+        const heart = sampleContour(contour, n,
+            center + (x - center) * inverseWidth, center + (y - center) * inverseHeight);
+        const waves = (.12 * a + .11 * b) * (1 - .86 * growth * Math.sqrt(heart));
+        const valley = .36 * growth * breath * heart;
+        field[i] = Math.round(65535 * Math.max(0, shade[i] + waves - valley));
+    }
+    geometry.centered = {step, formation, field};
     return field;
 }

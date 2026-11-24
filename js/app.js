@@ -4011,6 +4011,10 @@ function saveCymaticsSettings(rules,frequencies,strengths){
     const normalized=validateCymaticsRules(rules),outgoing=frequencies===undefined?rememberCymaticsFrequency(cymaticsFrequencies,cymaticsRules):frequencies;
     const remembered=rememberCymaticsFrequency(outgoing,normalized);
     const outgoingStrengths=strengths===undefined?rememberCymaticsStrength(cymaticsStrengths,cymaticsRules):strengths,rememberedStrengths=rememberCymaticsStrength(outgoingStrengths,normalized);
+    if (cymaticsState?.steps && normalized.heartFieldVersion && normalized.heartFieldVersion !== cymaticsRules.heartFieldVersion) {
+        // Restart the formation, while retaining the phase and random stream.
+        cymaticsState = { ...cymaticsState, heartStartStep: cymaticsState.steps };
+    }
     cymaticsRules=normalized;cymaticsFrequencies=remembered;cymaticsStrengths=rememberedStrengths;replayCymaticsRules=null;
     updateCymaticsButtonUI();recordLiveSimulationRules('cymatics');persistWorkspaceSettings(getWorkspaceSettings());settingsProfiles?.scheduleCapture();return true;
 }
