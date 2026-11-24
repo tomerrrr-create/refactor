@@ -37,12 +37,9 @@ test('optional Oil preferences and both generations of old layouts migrate witho
  settings.rules.oil={tension:90,drift:0,mobility:50};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.oil,settings.rules.oil);
  for(const slot of [12,18]){
   const expected=[...DEFAULT_EVOLUTION_LAYOUT];
-  expected[19]=null;
   [expected[slot],expected[19]]=[expected[19],expected[slot]];
   const old=[...expected];old[slot]='oil';
-  const migrated=validateEvolutionSlots(old);
-  expected[slot]='fractals';
-  assert.deepEqual(migrated,expected);
+  assert.deepEqual(validateEvolutionSlots(old),expected);
  }
  const configured={...settings,evolutionSlots:DEFAULT_EVOLUTION_LAYOUT.map((id,index)=>index===19?'oil':id)};
  assert.deepEqual(deserializeWorkspaceSettings('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:configured})).evolutionSlots,DEFAULT_EVOLUTION_LAYOUT);

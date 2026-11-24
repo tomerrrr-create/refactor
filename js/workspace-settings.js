@@ -1,4 +1,3 @@
-import { isSequenceInterval } from './simulations/fibonacci-sequences.js';
 import { GRAVITY_DIRECTIONS, GRAVITY_MODES, DEFAULT_GRAVITY_CYCLE, LINE_GRAVITY_MODES, GRAVITY_CYCLE_VERSION, migrateGravityCycle } from './gravity-cycle.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules} from './simulations/network.js';
 import {INITIAL_OIL_RULES,validateOilRules} from './simulations/oil.js';
@@ -33,8 +32,8 @@ export function defaultSimulationPreferences() {
         gravityCycleVersion: GRAVITY_CYCLE_VERSION, gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
         resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
-        geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, fibonacciVisible: false, fractalsVisible: false,
-        fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, fibonacciSequenceInterval: 0, rememberSimulationModes: false
+        geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, fibonacciVisible: false,
+        fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, rememberSimulationModes: false
     };
 }
 
@@ -71,11 +70,7 @@ function validateSimulationPreferences(value) {
         if (colorAdvance === undefined) throw new Error('Invalid Fibonacci color advance');
         result.fibonacciColorAdvance = colorAdvance;
     }
-    if (Object.hasOwn(value, 'fibonacciSequenceInterval')) {
-        if (!isSequenceInterval(value.fibonacciSequenceInterval)) throw new Error('Invalid Fibonacci sequence interval');
-        result.fibonacciSequenceInterval = value.fibonacciSequenceInterval;
-    }
-    for (const key of ['geometricFlowVisible', 'breatheVisible', 'fibonacciVisible', 'fractalsVisible', 'rememberSimulationModes']) {
+    for (const key of ['geometricFlowVisible', 'breatheVisible', 'fibonacciVisible', 'rememberSimulationModes']) {
         if (!Object.hasOwn(value, key)) continue;
         if (typeof value[key] !== 'boolean') throw new Error('Invalid simulation preference: ' + key);
         result[key] = value[key];

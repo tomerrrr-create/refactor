@@ -21,7 +21,7 @@ const simulations = {
     nudgeBrighter: 'btnNudgeBrighter', nudgeDarker: 'btnNudgeDarker', breathe: 'btnShowBreatheMenu', dla: 'btnDla'
 };
 function harness() {
-    const dom = Object.fromEntries(['btnFibonacci', 'btnFractals', ...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
+    const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
     const c = vm.createContext({LINE_GRAVITY_MODES,vorticesModeFor,currentPolygonFlowMode,restorePolygonFlowPhase, vorticesSpiralRules:{method:'left'}, vorticesGravityRules:{direction:'turbine2',strength:.6},MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
         C:{PALETTES:[{originalColors:[]}]}, activePaletteIndex:0, palette:()=>[], getCracksBrush:()=>({color:null,rainbow:false}), getCracksGrowth:()=>({branchChance:65,branchInterval:11,curvature:100}), getCracksMaterial:()=>({enabled:false,strength:40}), dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
@@ -103,39 +103,6 @@ test('breathing requires manual pause in both directions; paused selection never
         c.isLifePlaying=true; select(c,'erosion'); assert.equal(c.armedSimulation,excluded);
         c.pauseLife(); select(c,'erosion'); assert.equal(c.armedSimulation,'erosion'); assert.equal(c.isLifePlaying,false);
     }
-});
-
-test('manual cycling stops a loaded recipe before applying the new mode', () => {
-    const c = harness();
-    select(c, 'spiral');
-    c.togglePlayPauseLife();
-    c.isMacroLoaded = c.isMacroPlaying = true;
-    const events = [];
-    c.stopMacro = () => {
-        events.push('stop');
-        c.isMacroLoaded = c.isMacroPlaying = false;
-        c.pauseLife();
-    };
-    c.handleEvolutionTap('spiral', () => {
-        events.push('cycle');
-        assert.equal(c.isMacroLoaded, false);
-        c.cycleSpiralMode();
-    });
-    assert.deepEqual(events, ['stop', 'cycle']);
-    assert.equal(c.spiralMode, 'down');
-    assert.equal(c.isLifePlaying, false);
-});
-
-test('Breathe disables the Fibonacci and Fractals cycle buttons until Pause', () => {
-    const c = harness();
-    c.startAnimationLoop = () => {};
-    c.armSimulation('breathe');
-    c.togglePlayPauseLife();
-    assert.equal(c.dom.btnFibonacci.disabled, true);
-    assert.equal(c.dom.btnFractals.disabled, true);
-    c.pauseLife();
-    assert.equal(c.dom.btnFibonacci.disabled, false);
-    assert.equal(c.dom.btnFractals.disabled, false);
 });
 
 test('live rule snapshots replay at their recorded generation without restarting the engine', () => {

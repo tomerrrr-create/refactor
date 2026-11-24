@@ -2,17 +2,11 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
-    fractals: [
-        ['Fractals', 'Julia zooms into a shape that changes as you draw. In 2D XOR, draw seeds and watch their fractals meet and cancel.'],
-        ['פרקטלים', 'ג׳וליה מתקרבת לצורה שמשתנה כשמציירים. ב־XOR דו־ממדי מציירים נקודות ורואים את הפרקטלים נפגשים ומבטלים זה את זה.'],
-        ['Фракталы', 'Рисуйте, чтобы менять приближающийся фрактал Жюлиа. В двумерном XOR рисуйте точки и наблюдайте, как узоры встречаются и гасят друг друга.'],
-        ['Fractalen', 'Julia zoomt in op een vorm die verandert als je tekent. Teken punten in 2D-XOR en kijk hoe patronen elkaar ontmoeten en uitdoven.']
-    ],
     fibonacci: [
-        ['Fibonacci', 'Grow square spirals or watch Fibonacci and prime-number positions change color along a spiral.'],
-        ['פיבונאצ׳י', 'הצמיחו ספירלות או ראו איך מספרי פיבונאצ׳י ומספרים ראשוניים משנים צבע לאורך הספירלה.'],
-        ['Фибоначчи', 'Выращивайте спирали или меняйте цвета по простым числам и числам Фибоначчи вдоль спирали.'],
-        ['Fibonacci', 'Laat spiralen groeien of zie kleuren veranderen langs de spiraal bij Fibonacci- en priemgetallen.']
+        ['Fibonacci', 'Grow a square spiral across the whole board. Start one new spiral, or let it branch into two.'],
+        ['פיבונאצ׳י', 'ספירלת ריבועים צומחת על כל הלוח. אפשר להתחיל ספירלה חדשה או להסתעף לשתיים.'],
+        ['Фибоначчи', 'Спираль из квадратов заполняет поле. Можно начать новую спираль или дать ей разделиться на две.'],
+        ['Fibonacci', 'Laat een vierkantenspiraal over het hele bord groeien. Start een nieuwe spiraal of laat die zich in twee vertakken.']
     ],
     network: [
         ['Living network','Threads grow from your patches, branch, strengthen and fade. Cycle palette-guided or spatial growth.'],

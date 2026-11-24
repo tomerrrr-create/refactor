@@ -102,10 +102,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
             heading.id=`drawerPageTitle${drawer}`;heading.textContent=pageLabel(drawer);section.append(heading);
             grid.className='drawer-slots';grid.setAttribute('role','group');grid.setAttribute('aria-labelledby',heading.id);
             for(let local=0;local<EVOLUTION_PAGE_SIZE;local++){
-                const index=drawer*EVOLUTION_PAGE_SIZE+local,assigned=draft[index],button=document.createElement('button');
-                // This experiment occupies the last previously empty place. Keep it
-                // available as a destination while its button is hidden.
-                const id = assigned === 'fractals' && !isVisible(assigned) ? null : assigned;
+                const index=drawer*EVOLUTION_PAGE_SIZE+local,id=draft[index],button=document.createElement('button');
                 button.type='button';button.dataset.drawerSlot=String(index);
                 if(INTERNAL_NAV_SLOTS.includes(index)){
                     button.className='drawer-reserved-slot';button.disabled=true;button.dataset.page=String(drawer);button.append(symbol.cloneNode(true));button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
