@@ -1,8 +1,8 @@
+import { LINE_GRAVITY_MODES } from './gravity-cycle.js';
 import {MAGNET_METHODS,isCombinedMagnetMode} from './magnet-modes.js';
 import { magnetAnchorIndex } from './magnet-anchor.js';
 import { LUMINANCE_SORT_ICON } from './colors.js';
 import { DEFAULT_CONTOUR_ACTION_RULES } from './contour-action-settings.js';
-import { currentPolygonFlowMode } from './simulations/polygon-circulation.js';
 import { DEFAULT_GEOMETRIC_FLOW_CYCLE } from './geometric-flow-cycle.js';
 import { initializeMacroOverlaySettings } from './macro-overlay-settings.js';
 import { createCompactColorPicker } from './compact-color-picker.js';
@@ -223,10 +223,9 @@ function openSpiralSettingsModal() {
         }
     }, 10);
     
-    // סימון הכפתור הנכון לפי מה ששמור בהגדרות
-
-    const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method ?? 'radial';
-    showSpiralMethod(currentPolygonFlowMode(currentMethod));
+    const currentMethod = (app.getSpiralRules?.() ?? app.spiralRules)?.method;
+    const hasCurrentShape = [...app.dom.spiralMethodButtons].some(button => button.dataset.method === currentMethod);
+    showSpiralMethod(hasCurrentShape ? currentMethod : app.getGeometricFlowCycle()[0]);
 }
 // --- END: Spiral Settings Helper Functions ---
 
@@ -1241,7 +1240,7 @@ function resetGolSettings() {
 }
 
 function refreshGravitationalStrength(direction) {
-    const fixedStrength = direction === 'black_hole' || direction === 'pinwheel';
+    const fixedStrength = direction === 'black_hole' || direction === 'pinwheel' || LINE_GRAVITY_MODES.includes(direction);
     app.dom.gsStrengthSlider.disabled = fixedStrength;
     app.dom.gravitationalSortSettingsModal.querySelector('[data-gravity-strength]').classList.toggle('gravity-strength-inactive', fixedStrength);
 }

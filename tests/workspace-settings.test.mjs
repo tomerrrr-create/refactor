@@ -70,8 +70,9 @@ test('retired swipe selections remain readable and migrate into ordinary cycle s
 
 test('portable simulation preferences preserve explicit defaults and reject unusable cycles', () => {
     const settings = { ...defaultWorkspaceSettings(), simulationPreferences: {
+        gravityCycleVersion: 2,
         gravityCycle: ['reverse_up'],
-        geometricFlowCycle: ['horizontal_gravity'],
+        geometricFlowCycle: ['radial'],
         resonanceCycle: [5],
         circularCycle: ['tornado'],
         magnetAnchorLimit: 600,

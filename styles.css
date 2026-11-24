@@ -1133,6 +1133,15 @@ body {
 #btnGravitationalSort.mode-reverse_up svg:not(#iconGsReverseUp),
 #btnGravitationalSort.mode-reverse_right svg:not(#iconGsReverseRight) { display: none !important; }
 
+#btnGravitationalSort.mode-horizontal_gravity #iconGsHorizontal,
+#btnGravitationalSort.mode-vertical_gravity #iconGsVertical,
+#btnGravitationalSort.mode-triangle_gravity #iconGsDiagonal,
+#btnGravitationalSort.mode-triangle_gravity_mirror #iconGsDiagonalMirror { display: block !important; }
+#btnGravitationalSort.mode-horizontal_gravity svg:not(#iconGsHorizontal),
+#btnGravitationalSort.mode-vertical_gravity svg:not(#iconGsVertical),
+#btnGravitationalSort.mode-triangle_gravity svg:not(#iconGsDiagonal),
+#btnGravitationalSort.mode-triangle_gravity_mirror svg:not(#iconGsDiagonalMirror) { display: none !important; }
+
 #btnGravitationalSort.mode-center_x #iconGsCenterX { display: block !important; }
 #btnGravitationalSort.mode-center_x svg:not(#iconGsCenterX) { display: none !important; }
 

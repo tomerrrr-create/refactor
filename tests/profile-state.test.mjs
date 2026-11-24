@@ -563,12 +563,12 @@ test('older profiles adopt browser simulation preferences once and keep later pr
     const legacy = createProfileState(initial(), browser);
     legacy.persist();
     const first = change(initial(), settings => {
-        settings.simulationPreferences = { geometricFlowVisible: true, gravityCycle: ['reverse_right'], magnetAnchorLimit: 600 };
+        settings.simulationPreferences = { geometricFlowVisible: true, gravityCycleVersion: 2, gravityCycle: ['reverse_right'], magnetAnchorLimit: 600 };
     });
     const migrated = createProfileState(first, browser);
     assert.deepEqual(migrated.draft(1).settings.simulationPreferences, first.settings.simulationPreferences);
     const custom = change(migrated.draft(), settings => {
-        settings.simulationPreferences = { geometricFlowVisible: false, gravityCycle: ['up'], magnetAnchorLimit: 1000 };
+        settings.simulationPreferences = { geometricFlowVisible: false, gravityCycleVersion: 2, gravityCycle: ['up'], magnetAnchorLimit: 1000 };
     });
     migrated.replace(custom);
     const reopened = createProfileState(first, browser);

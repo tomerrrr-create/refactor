@@ -1,6 +1,8 @@
 import { runBlackHoleGeneration } from './circle.js';
 import { runTurbine2Generation } from './spiral-turbine2.js';
 import { runSpiralGeneration } from './spiral.js';
+import { LINE_GRAVITY_MODES } from '../gravity-cycle.js';
+import { runPolygonCirculation } from './polygon-circulation.js';
 
 const PINWHEEL_RULES = Object.freeze({method:'b'});
 
@@ -20,6 +22,13 @@ export function runGravitationalSortGeneration({ n, currentBoardState, currentPa
     if (gravitationalSortRules.direction === 'black_hole') return runBlackHoleGeneration(n, nextBoardState);
     if (gravitationalSortRules.direction === 'turbine2') return runTurbine2Generation(n, nextBoardState, strength);
     if (gravitationalSortRules.direction === 'pinwheel') return runSpiralGeneration({n, currentBoardState, currentPalette, spiralRules:PINWHEEL_RULES});
+
+    if (LINE_GRAVITY_MODES.includes(gravitationalSortRules.direction)) {
+        const lineRules = { method: gravitationalSortRules.direction, polygonFlowPhase: gravitationalSortRules.polygonFlowPhase };
+        const board = runPolygonCirculation(n, nextBoardState, lineRules);
+        gravitationalSortRules.polygonFlowPhase = lineRules.polygonFlowPhase;
+        return board;
+    }
 
     switch (gravitationalSortRules.direction) {
 
