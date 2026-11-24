@@ -1,12 +1,13 @@
 import { CYMATICS_RESONANCE_MAPS } from './cymatics-settings.js';
 import { MAGNET_CYCLE } from './magnet-modes.js';
+import { DEFAULT_GEOMETRIC_FLOW_CYCLE } from './geometric-flow-cycle.js';
 
 // Remembered selections are deliberately session-only.
 export const EVOLUTION_MODE_MEMORY_KEY = 'colorGridRememberEvolutionModes';
 export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].includes(simulation) ? 'nudge' : simulation;
 // First human-cycle choices. Turing and one-shot utilities have no cycle.
 export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
-    gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:'radial',
+    gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:DEFAULT_GEOMETRIC_FLOW_CYCLE[0],
     magnet:MAGNET_CYCLE[1],brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
     ink:'turbine2',network:'spatial',erosion:'channels',islands:'classic',contour:'all',cymatics:CYMATICS_RESONANCE_MAPS.heart,nudge:'nudgeBrighter',wind:'ripple'
 });

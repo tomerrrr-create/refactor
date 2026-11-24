@@ -1989,7 +1989,8 @@ function resetAllEvolutionCycles() {
 
 function cycleMemoryTap(simulation, onTap) {
     rememberCurrentCycle();
-    const firstMode=simulation==='gravitationalSort'?gravityCycle[0]:simulation==='cymatics'?resonanceCycle[0]:undefined;
+    const firstMode=simulation==='gravitationalSort'?gravityCycle[0]:simulation==='cymatics'?resonanceCycle[0]:
+        simulation==='spiral'?geometricFlowCycle[0]:undefined;
     const remembered=cycleMemory.entry(simulation, firstMode);
     return ()=>{
         selectingCycleMode=true;
@@ -4390,7 +4391,7 @@ function cycleBreatheEvoMode() {
 // --- NEW: Spiral UI and Cycling ---
 function updateSpiralButtonUI() {
     const active = activeEvolutionControl() === 'spiral';
-    const saved = typeof cycleMemory !== 'undefined' ? cycleMemory.entry('spiral') : undefined;
+    const saved = typeof cycleMemory !== 'undefined' ? cycleMemory.entry('spiral', geometricFlowCycle[0]) : undefined;
     const displayMode = active ? spiralMode : geometricFlowCycle.includes(saved) ? saved : geometricFlowCycle[0];
     for (const name of dom.btnSpiral.classList) {
         if (name.startsWith('mode-')) {

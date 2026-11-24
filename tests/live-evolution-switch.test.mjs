@@ -170,9 +170,9 @@ test('Nudge arms and cycles without paint; live cycling keeps the same generatio
  assert.match(c.artRecipeLog.at(-1),/\[GEN:19\] Nudge Mode Changed -> nudgeDarker/);
 });
 
-test('Spiral button starts at Diamond, follows the requested order live, and preserves legacy arming',()=>{
- const c=harness();select(c,'spiral');assert.equal(c.spiralMode,'radial');assert.equal(c.spiralRules.method,'radial');
+test('Spiral button starts at Horizontal Gravity, follows the requested order live, and preserves legacy arming',()=>{
+ const c=harness();select(c,'spiral');assert.equal(c.spiralMode,'horizontal_gravity');assert.equal(c.spiralRules.method,'horizontal_gravity');
  c.togglePlayPauseLife();c.currentGenerationCount=23;
- for(const mode of ['down','triangle_gravity','triangle_gravity_mirror','horizontal_gravity','vertical_gravity','radial']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
+ for(const mode of ['vertical_gravity','triangle_gravity','triangle_gravity_mirror','radial','down','horizontal_gravity']){select(c,'spiral');assert.equal(c.spiralMode,mode);assert.equal(c.spiralRules.method,mode);assert.equal(c.isLifePlaying,true);assert.equal(c.currentGenerationCount,23);}
  const legacy=harness();legacy.isExecutingMacroCommand=true;legacy.armSimulation('spiral');assert.equal(legacy.spiralMode,'b');assert.equal(legacy.spiralRules.method,'b');
 });

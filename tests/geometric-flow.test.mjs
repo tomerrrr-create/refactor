@@ -4,7 +4,7 @@ import { POLYGON_CIRCULATION_MODES, POLYGON_FLOW_PERIOD, restorePolygonFlowPhase
 import { runSpiralGeneration } from '../js/simulations/spiral.js';
 import { defaultWorkspaceSettings, deserializeWorkspaceSettings, serializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { validateProfileSnapshot } from '../js/profile-state.js';
-import { GEOMETRIC_FLOW_MODES, loadGeometricFlowCycle, nextGeometricFlowMode, persistGeometricFlowCycle } from '../js/geometric-flow-cycle.js';
+import { DEFAULT_GEOMETRIC_FLOW_CYCLE, GEOMETRIC_FLOW_MODES, loadGeometricFlowCycle, nextGeometricFlowMode, persistGeometricFlowCycle } from '../js/geometric-flow-cycle.js';
 
 function makeBoard(n) {
     let seed = 84;
@@ -34,23 +34,24 @@ test('Geometric Flow restores cycle membership in toolbar order and skips exclud
     const stored = new Map();
     const storage = { getItem: key => stored.get(key), setItem: (key, value) => stored.set(key, value) };
     const axes = ['horizontal_gravity', 'vertical_gravity'];
-    const defaults = ['triangle_gravity', 'triangle_gravity_mirror', ...axes];
+    const defaults = [...axes, 'triangle_gravity', 'triangle_gravity_mirror'];
     assert.deepEqual(loadGeometricFlowCycle(storage), defaults);
-    assert.equal(nextGeometricFlowMode('off', defaults, false), 'triangle_gravity');
-    assert.equal(nextGeometricFlowMode('triangle_gravity', defaults, false), 'triangle_gravity_mirror');
-    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', defaults, false), 'horizontal_gravity');
-    assert.equal(nextGeometricFlowMode('horizontal_gravity', defaults, false), 'vertical_gravity');
-    assert.equal(nextGeometricFlowMode('vertical_gravity', defaults, false), 'off');
-    assert.equal(nextGeometricFlowMode('vertical_gravity', defaults, true), 'triangle_gravity');
+    assert.deepEqual(DEFAULT_GEOMETRIC_FLOW_CYCLE, defaults);
+    const paused = ['off', ...defaults, 'off'];
+    for (const [index, mode] of paused.slice(0, -1).entries()) {
+        assert.equal(nextGeometricFlowMode(mode, defaults, false), paused[index + 1]);
+    }
+    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', defaults, true), 'horizontal_gravity');
     stored.set('colorGridGeometricFlowCycleV1', JSON.stringify(['triangle_flow', 'square_flow', 'triangle_weave']));
-    assert.deepEqual(loadGeometricFlowCycle(storage), ['triangle_gravity', ...axes]);
-    persistGeometricFlowCycle(['triangle_gravity_mirror', 'down', 'down', 'retired'], storage);
+    assert.deepEqual(loadGeometricFlowCycle(storage), [...axes, 'triangle_gravity']);
+    persistGeometricFlowCycle(['down', 'triangle_gravity_mirror', 'down', 'retired'], storage);
     const enabled = loadGeometricFlowCycle(storage);
-    assert.deepEqual(enabled, ['down', 'triangle_gravity_mirror']);
-    assert.equal(nextGeometricFlowMode('off', enabled, false), 'down');
+    assert.deepEqual(enabled, ['triangle_gravity_mirror', 'down']);
+    assert.equal(nextGeometricFlowMode('off', enabled, false), 'triangle_gravity_mirror');
     assert.equal(nextGeometricFlowMode('triangle_gravity', enabled, false), 'triangle_gravity_mirror');
-    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', enabled, false), 'off');
-    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', enabled, true), 'down');
+    assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', enabled, false), 'down');
+    assert.equal(nextGeometricFlowMode('down', enabled, false), 'off');
+    assert.equal(nextGeometricFlowMode('down', enabled, true), 'triangle_gravity_mirror');
     assert.equal(nextGeometricFlowMode('triangle_gravity_mirror', ['triangle_gravity_mirror'], true), 'triangle_gravity_mirror');
     stored.clear();
     assert.deepEqual(loadGeometricFlowCycle(storage), defaults);
@@ -59,7 +60,7 @@ test('Geometric Flow restores cycle membership in toolbar order and skips exclud
 });
 
 test('Triangle and line gravity preserve colors and anchored gold across board-size changes', () => {
-    for (const method of ['triangle', ...GEOMETRIC_FLOW_MODES.slice(2)]) {
+    for (const method of ['triangle', ...DEFAULT_GEOMETRIC_FLOW_CYCLE]) {
         for (const n of [1, 16, 249, 16]) {
             const tiles = makeBoard(n);
             const after = evolve(n, tiles, method, 10);
@@ -102,6 +103,12 @@ test('new Geometric Flow modes round-trip through settings files and profiles', 
         assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.spiral.method, method);
         assert.equal(validateProfileSnapshot({ settings }).settings.rules.spiral.method, method);
     }
+    const settings = defaultWorkspaceSettings();
+    settings.simulationPreferences = { geometricFlowCycle: ['radial', 'triangle_gravity_mirror', 'vertical_gravity'] };
+    const snapshot = 'FYI_SETTINGS_V1\n' + JSON.stringify({ version: 1, settings });
+    const expected = ['vertical_gravity', 'triangle_gravity_mirror', 'radial'];
+    assert.deepEqual(deserializeWorkspaceSettings(snapshot).simulationPreferences.geometricFlowCycle, expected);
+    assert.deepEqual(validateProfileSnapshot({ settings }).settings.simulationPreferences.geometricFlowCycle, expected);
 });
 
 test('Historical Triangle modes keep visibly rearranging pigments after hundreds of generations', () => {

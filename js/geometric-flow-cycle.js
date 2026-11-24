@@ -3,9 +3,10 @@ import { currentPolygonFlowMode } from './simulations/polygon-circulation.js';
 
 const diagonalModes = ['triangle_gravity', 'triangle_gravity_mirror'];
 const centerLineModes = ['horizontal_gravity', 'vertical_gravity'];
-const previousModes = ['radial', 'down', ...diagonalModes];
-export const GEOMETRIC_FLOW_MODES = Object.freeze([...previousModes, ...centerLineModes]);
-export const DEFAULT_GEOMETRIC_FLOW_CYCLE = Object.freeze([...diagonalModes, ...centerLineModes]);
+const polygonModes = ['radial', 'down'];
+const previousModes = [...polygonModes, ...diagonalModes];
+export const DEFAULT_GEOMETRIC_FLOW_CYCLE = Object.freeze([...centerLineModes, ...diagonalModes]);
+export const GEOMETRIC_FLOW_MODES = Object.freeze([...DEFAULT_GEOMETRIC_FLOW_CYCLE, ...polygonModes]);
 
 const STORAGE_KEY = 'colorGridGeometricFlowCycleV2';
 const LEGACY_STORAGE_KEY = 'colorGridGeometricFlowCycleV1';
@@ -19,7 +20,7 @@ export function loadGeometricFlowCycle(storage) {
     const saved = loadToolbarCycle(STORAGE_KEY, GEOMETRIC_FLOW_MODES, [], storage);
     if (saved.length) return saved;
     const previous = loadToolbarCycle(LEGACY_STORAGE_KEY, previousModes, diagonalModes, storage, currentPolygonFlowMode);
-    return [...previous, ...centerLineModes];
+    return orderGeometricFlowModes([...previous, ...centerLineModes]);
 }
 
 export function persistGeometricFlowCycle(modes, storage) {
