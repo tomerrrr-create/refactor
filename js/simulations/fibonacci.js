@@ -1,4 +1,4 @@
-export const FIBONACCI_MODES = Object.freeze(['restart', 'continuous']);
+export const FIBONACCI_MODES = Object.freeze(['restart', 'branching']);
 export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
 export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([90, 100, 1]);
 
@@ -16,15 +16,21 @@ export function normalizeFibonacciColorAdvance(value) {
 }
 
 const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+const FIBONACCI_VERSION = 8;
 const HANDOFF_HOLD = 3;
-// A handoff needs the two most recent growth plans.
+const HANDOFF_COVERAGE = .05;
+const HANDOFF_FADE = 24;
+const BRANCH_DELAY = 4;
+const GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2;
+// Two incoming and two outgoing spirals can overlap during a handoff.
 const plans = [];
 let colorGroups;
+let branchingCells;
 
 export function createFibonacciState(n, orientation = 0, mode = FIBONACCI_MODES[0],
-    colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0) {
+    colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0, version = FIBONACCI_VERSION) {
     const center = Math.floor((n - 1) / 2);
-    return { version: 7, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0 };
+    return { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0 };
 }
 
 const wrap = (coordinate, n) => (coordinate % n + n) % n;
@@ -80,9 +86,9 @@ function getPlan(n, { orientation, origin }) {
     const rank = new Int32Array(n * n);
     cells.forEach((cell, index) => { rank[cell] = index + 1; });
     const visibleFrame = frameEnds.findIndex(count => count >= cells.length * .01);
-    const handoffEnd = Math.min(frameEnds.length - 1, HANDOFF_HOLD + Math.max(24, visibleFrame));
-    const plan = { n, orientation, origin, cells, frameEnds, stripEnds, rank, nextRound, handoffEnd };
-    if (plans.length === 2) plans.shift();
+    const establishedFrame = frameEnds.findIndex(count => count >= cells.length * HANDOFF_COVERAGE);
+    const plan = { n, orientation, origin, cells, frameEnds, stripEnds, rank, nextRound, visibleFrame, establishedFrame };
+    if (plans.length === 4) plans.shift();
     plans.push(plan);
     return plan;
 }
@@ -95,26 +101,87 @@ function validateOrigin(n, { origin, orientation }) {
     return { origin, orientation };
 }
 
+function secondSpiral(plan) {
+    return {
+        origin: plan.cells[Math.floor((plan.cells.length - 1) / GOLDEN_RATIO)],
+        orientation: (plan.nextRound.orientation + 2) % directions.length
+    };
+}
+
+function handoffTiming(version, primary, secondary) {
+    const primaryEnd = primary.frameEnds.length - 1;
+    const lastFrame = secondary ? Math.max(primaryEnd, BRANCH_DELAY + secondary.frameEnds.length - 1) : primaryEnd;
+    if (version === 7) {
+        if (!secondary) {
+            return { lastFrame, hold: HANDOFF_HOLD,
+                handoffEnd: Math.min(lastFrame, HANDOFF_HOLD + Math.max(HANDOFF_FADE, primary.visibleFrame)) };
+        }
+        const hold = Math.min(lastFrame - 1, BRANCH_DELAY + Math.max(HANDOFF_HOLD, secondary.visibleFrame));
+        return { lastFrame, hold, handoffEnd: Math.min(lastFrame, hold + HANDOFF_FADE) };
+    }
+    const visible = secondary ? Math.max(primary.establishedFrame, BRANCH_DELAY + secondary.establishedFrame)
+        : primary.establishedFrame;
+    const hold = Math.min(lastFrame - 1, Math.max(HANDOFF_HOLD, visible));
+    return { lastFrame, hold, handoffEnd: Math.min(lastFrame, hold + HANDOFF_FADE) };
+}
+
+function validateBranch(n, primary, branch) {
+    const copy = validateOrigin(n, branch ?? {});
+    if (copy.origin === primary.origin || copy.orientation !== (primary.orientation + 2) % directions.length) {
+        throw new Error('Invalid Fibonacci branch');
+    }
+    return copy;
+}
+
+export function setFibonacciMode(state, mode) {
+    if (state.mode === 'branching' && mode !== 'branching') {
+        const plan = getPlan(state.n, state);
+        state.frame = Math.min(state.frame, plan.frameEnds.length - 1);
+        delete state.branch;
+        if (state.frame >= handoffTiming(state.version, plan).handoffEnd) delete state.outgoing;
+        else if (state.outgoing?.branch) state.outgoing = validateOrigin(state.n, state.outgoing);
+    }
+    state.mode = mode;
+}
+
 export function validateFibonacciState(state) {
-    if (state?.version !== 7 || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
-        !FIBONACCI_MODES.includes(state.mode) || !Number.isSafeInteger(state.frame) ||
-        state.frame < 0 || state.frame > 4 * state.n ** 2 ||
+    if ((state?.version !== 7 && state?.version !== FIBONACCI_VERSION) || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
+        (!FIBONACCI_MODES.includes(state.mode) && state.mode !== 'continuous') ||
+        !Number.isSafeInteger(state.frame) || state.frame < 0 || state.frame > 4 * state.n ** 2 ||
         normalizeFibonacciColorAdvance(state.colorAdvance) === undefined ||
         state.seed !== (state.seed >>> 0) || state.generation !== (state.generation >>> 0)) {
         throw new Error('Invalid Fibonacci checkpoint');
     }
-    const { n, mode, frame, colorAdvance, seed, generation } = state;
+    const { version, n, mode, frame, colorAdvance, seed, generation } = state;
     const { origin, orientation } = validateOrigin(n, state);
-    const copy = { version: 7, n, orientation, mode, frame, origin, colorAdvance, seed, generation };
-    if (!frame && state.outgoing === undefined) return copy;
+    const copy = { version, n, orientation, mode, frame, origin, colorAdvance, seed, generation };
+    if (!frame && state.outgoing === undefined && state.branch === undefined) return copy;
     const plan = getPlan(n, copy);
-    if (frame >= plan.frameEnds.length) throw new Error('Invalid Fibonacci growth frame');
+    let secondary;
+    if (state.branch !== undefined) {
+        if (mode !== 'branching' || n === 1 || !frame) throw new Error('Invalid Fibonacci branch');
+        copy.branch = validateBranch(n, copy, state.branch);
+        secondary = getPlan(n, copy.branch);
+    }
+    const { lastFrame, handoffEnd } = handoffTiming(version, plan, secondary);
+    if (frame > lastFrame) throw new Error('Invalid Fibonacci growth frame');
     if (state.outgoing !== undefined) {
-        if (!state.outgoing || frame < 1 || frame >= plan.handoffEnd) throw new Error('Invalid Fibonacci handoff');
+        if (!state.outgoing || frame < 1 || frame >= handoffEnd) throw new Error('Invalid Fibonacci handoff');
         const outgoing = validateOrigin(n, state.outgoing);
-        const { nextRound } = getPlan(n, outgoing);
+        const previous = getPlan(n, outgoing);
+        const { nextRound } = previous;
         if (nextRound.origin !== copy.origin || nextRound.orientation !== copy.orientation) {
             throw new Error('Invalid Fibonacci handoff origin');
+        }
+        if (copy.branch) {
+            const expected = secondSpiral(previous);
+            if (copy.branch.origin !== expected.origin || copy.branch.orientation !== expected.orientation) {
+                throw new Error('Invalid Fibonacci branch origin');
+            }
+        }
+        if (state.outgoing.branch !== undefined) {
+            if (!copy.branch) throw new Error('Invalid outgoing Fibonacci branch');
+            outgoing.branch = validateBranch(n, outgoing, state.outgoing.branch);
         }
         copy.outgoing = outgoing;
     }
@@ -153,8 +220,64 @@ function advanceColor(board, index, colorCount, groups) {
     }
 }
 
+function runBranchingGeneration(board, colorCount, groups, state, primary) {
+    let secondary = state.branch && getPlan(state.n, state.branch);
+    let timing = handoffTiming(state.version, primary, secondary);
+    if (state.frame === timing.lastFrame) {
+        state.outgoing = { origin: state.origin, orientation: state.orientation,
+            ...(state.branch ? { branch: state.branch } : {}) };
+        state.branch = secondSpiral(primary);
+        Object.assign(state, primary.nextRound, { frame: 0 });
+        primary = getPlan(state.n, state);
+        secondary = getPlan(state.n, state.branch);
+        timing = handoffTiming(state.version, primary, secondary);
+    }
+    state.frame++;
+
+    if (branchingCells?.length !== board.length) branchingCells = new Uint8Array(board.length);
+    else branchingCells.fill(0);
+    const advanceSpiral = (plan, count) => {
+        for (let i = 0; i < count; i++) {
+            const cell = plan.cells[i];
+            if (branchingCells[cell]) continue;
+            branchingCells[cell] = 1;
+            advanceColor(board, cell, colorCount, groups);
+        }
+    };
+
+    if (state.outgoing) {
+        const { hold, handoffEnd } = timing;
+        if (state.frame >= handoffEnd) {
+            delete state.outgoing;
+        } else {
+            const advanceOutgoing = origin => {
+                const plan = getPlan(state.n, origin);
+                const strips = plan.stripEnds.length - 1;
+                const elapsed = Math.max(0, state.frame - hold);
+                const retired = elapsed ? Math.ceil(strips * elapsed / (handoffEnd - hold)) : 0;
+                advanceSpiral(plan, plan.stripEnds[strips - retired]);
+            };
+            advanceOutgoing(state.outgoing);
+            if (state.outgoing.branch) advanceOutgoing(state.outgoing.branch);
+        }
+    }
+
+    advanceSpiral(primary, primary.frameEnds[Math.min(state.frame, primary.frameEnds.length - 1)]);
+    if (secondary) {
+        const frame = Math.max(0, Math.min(state.frame - BRANCH_DELAY, secondary.frameEnds.length - 1));
+        advanceSpiral(secondary, secondary.frameEnds[frame]);
+    }
+    return board;
+}
+
 export function runFibonacciGeneration({ currentBoardState, currentPalette }, state) {
     let plan = getPlan(state.n, state);
+    const colorCount = currentPalette.length;
+    const groups = getColorAdvanceGroups(state);
+    state.generation = (state.generation + 1) >>> 0;
+    if (state.mode === 'branching' && state.n > 1) {
+        return runBranchingGeneration(currentBoardState, colorCount, groups, state, plan);
+    }
     if (state.mode === 'restart' && state.n > 1 && state.frame === plan.frameEnds.length - 1) {
         state.outgoing = { origin: state.origin, orientation: state.orientation };
         Object.assign(state, plan.nextRound, { frame: 0 });
@@ -163,17 +286,15 @@ export function runFibonacciGeneration({ currentBoardState, currentPalette }, st
 
     state.frame = Math.min(state.frame + 1, plan.frameEnds.length - 1);
     const count = plan.frameEnds[state.frame];
-    const colorCount = currentPalette.length;
-    const groups = getColorAdvanceGroups(state);
-    state.generation = (state.generation + 1) >>> 0;
     if (state.outgoing) {
-        if (state.frame >= plan.handoffEnd) {
+        const { hold, handoffEnd } = handoffTiming(state.version, plan);
+        if (state.frame >= handoffEnd) {
             delete state.outgoing;
         } else {
             const previous = getPlan(state.n, state.outgoing);
             const stripCount = previous.stripEnds.length - 1;
-            const elapsed = Math.max(0, state.frame - HANDOFF_HOLD);
-            const retired = elapsed ? Math.ceil(stripCount * elapsed / (plan.handoffEnd - HANDOFF_HOLD)) : 0;
+            const elapsed = Math.max(0, state.frame - hold);
+            const retired = elapsed ? Math.ceil(stripCount * elapsed / (handoffEnd - hold)) : 0;
             const remaining = previous.stripEnds[stripCount - retired];
             for (let i = 0; i < remaining; i++) {
                 const cell = previous.cells[i];

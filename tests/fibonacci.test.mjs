@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFibonacciState, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
+import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
 
 function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
@@ -63,9 +63,10 @@ test('oversized Fibonacci squares fill the remaining strip in all orientations',
     }
 });
 
-test('restart and continuous modes have the same growth and diverge after filling the board', () => {
+test('version 7 restart and continuous modes diverge after the original three-generation hold', () => {
     const continuous = simulate(21);
     const restart = simulate(21, 0, 'restart');
+    restart.state.version = 7;
     while (continuous.occupied().length < 21 ** 2) {
         continuous.step();
         restart.step();
@@ -113,7 +114,7 @@ test('restart checkpoints replay across handoffs and palette wraps', () => {
 });
 
 test('one-cell boards cycle within the palette in both modes', () => {
-    for (const mode of ['restart', 'continuous']) {
+    for (const mode of ['restart', 'branching', 'continuous']) {
         const sim = simulate(1, 0, mode);
         sim.currentPalette.length = 2;
         sim.step();
@@ -157,5 +158,106 @@ test('Color Advance defaults to 95% and nearby recruited cells advance together'
     assert(held > 0 && advanced > advancedAtNinetyOne && advancedAtNinetyOne > 0);
     for (const invalid of [0, 89, 91.5, 101, '90']) {
         assert.throws(() => validateFibonacciState({ ...sim.state, colorAdvance: invalid }));
+    }
+});
+
+test('branching starts the two spirals from the previous path and keeps the old spiral moving', () => {
+    const sim = simulate(21, 0, 'branching');
+    const original = simulate(21, 0, 'restart');
+    while (original.occupied().length < 21 ** 2) {
+        sim.step();
+        original.step();
+        assert.deepEqual(sim.currentBoardState, original.currentBoardState);
+        assert.equal(sim.state.branch, undefined);
+    }
+    const oldOrigin = sim.state.origin;
+    for (let frame = 1; frame <= 7; frame++) {
+        const before = sim.currentBoardState.map(cell => cell.k);
+        sim.step();
+        assert.equal(sim.state.frame, frame);
+        assert.equal(sim.state.outgoing.origin, oldOrigin);
+        assert.equal(sim.state.origin, 104);
+        assert.deepEqual(sim.state.branch, { origin: 102, orientation: 1 });
+        assert.equal(sim.state.orientation, 3);
+        assert(sim.currentBoardState.every((cell, index) => cell.k === before[index] + 1));
+    }
+    while (sim.state.outgoing) sim.step();
+
+    const primary = simulate(21, sim.state.orientation);
+    const secondary = simulate(21, sim.state.branch.orientation);
+    primary.state.origin = sim.state.origin;
+    secondary.state.origin = sim.state.branch.origin;
+    const nextFrame = sim.state.frame + 1;
+    for (let frame = 1; frame <= nextFrame; frame++) {
+        primary.step();
+        if (frame > 4) secondary.step();
+    }
+    const before = sim.currentBoardState.map(cell => cell.k);
+    sim.step();
+    assert(secondary.occupied().some(index => !primary.currentBoardState[index].k));
+    assert(sim.currentBoardState.every((cell, index) => {
+        const covered = primary.currentBoardState[index].k > 0 || secondary.currentBoardState[index].k > 0;
+        return cell.k === before[index] + Number(covered);
+    }));
+});
+
+test('branching checkpoints keep both outgoing spirals and replay deterministically', () => {
+    for (const n of [2, 21]) {
+        const sim = simulate(n, 0, 'branching', 95, 27);
+        sim.currentPalette.length = 23;
+        sim.currentBoardState[0].isGold = true;
+        for (let i = 0; i < 500 && !sim.state.outgoing?.branch; i++) sim.step();
+        assert(sim.state.outgoing?.branch);
+        const checkpoint = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+        assert.throws(() => validateFibonacciState({ ...checkpoint, branch: { ...checkpoint.branch, origin: checkpoint.origin } }));
+        const replayed = structuredClone(sim.currentBoardState);
+        for (let i = 0; i < 500; i++) {
+            sim.step();
+            runFibonacciGeneration({ currentBoardState: replayed, currentPalette: sim.currentPalette }, checkpoint);
+        }
+        assert.deepEqual(checkpoint, sim.state);
+        assert.deepEqual(replayed, sim.currentBoardState);
+        assert.equal(replayed[0].k, 0);
+        const before = structuredClone(sim.currentBoardState);
+        const origin = sim.state.origin;
+        setFibonacciMode(sim.state, 'restart');
+        assert.equal(sim.state.origin, origin);
+        assert.equal(sim.state.branch, undefined);
+        assert.equal(sim.state.outgoing?.branch, undefined);
+        assert.deepEqual(sim.currentBoardState, before);
+        assert.deepEqual(validateFibonacciState(sim.state), sim.state);
+    }
+});
+
+test('both current modes keep the whole outgoing spiral moving until each incoming spiral covers 5%', () => {
+    for (const mode of ['restart', 'branching']) {
+        const n = 41;
+        const sim = simulate(n, 0, mode);
+        while (!sim.state.outgoing) sim.step();
+
+        const primary = simulate(n, sim.state.orientation);
+        primary.state.origin = sim.state.origin;
+        primary.step();
+        let secondary;
+        if (sim.state.branch) {
+            secondary = simulate(n, sim.state.branch.orientation);
+            secondary.state.origin = sim.state.branch.origin;
+        }
+        const target = Math.ceil(n ** 2 * .05);
+        const covered = () => primary.occupied().length >= target && (!secondary || secondary.occupied().length >= target);
+        while (!covered()) {
+            const before = sim.currentBoardState.map(cell => cell.k);
+            sim.step();
+            primary.step();
+            if (secondary && sim.state.frame > 4) secondary.step();
+            assert(sim.currentBoardState.every((cell, i) => cell.k === before[i] + 1),
+                `${mode} retires too soon at frame ${sim.state.frame}`);
+        }
+        const beforeFade = sim.currentBoardState.map(cell => cell.k);
+        sim.step();
+        const moving = sim.currentBoardState.filter((cell, i) => cell.k === beforeFade[i] + 1).length;
+        assert(moving < n ** 2 && moving >= target, mode);
+        assert(sim.state.outgoing);
+        assert.deepEqual(validateFibonacciState(sim.state), sim.state);
     }
 });

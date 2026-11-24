@@ -128,6 +128,7 @@ export const translations = {
   network_mode_spatial:{en:'Network · spatial',he:'רשת · מרחבית',ru:'Сеть · пространственная',nl:'Netwerk · ruimtelijk'},
   network_spatial_description:{en:'Patches connect by distance, size and existing traffic. Sorting leaves growth unchanged. The background is calculated or darkest by luminance.',he:'הכתמים מתחברים לפי מרחק, גודל ותנועה קיימת. המיון אינו משנה את הצמיחה. הרקע מחושב או הכהה ביותר לפי לומיננס.',ru:'Связи зависят от расстояния, размера и нагрузки. Сортировка не меняет рост. Фон вычисляется или выбирается по яркости.',nl:'Verbindingen volgen afstand, grootte en bestaand verkeer. Sorteren verandert de groei niet. De achtergrond is berekend of het donkerst op luminantie.'},
   help_fibonacci: {en:'Fibonacci',he:'פיבונאצ׳י',ru:'Фибоначчи',nl:'Fibonacci'},
+  fibonacci_branching: {en:'Branching Spirals',he:'ספירלות מסתעפות',ru:'Ветвящиеся спирали',nl:'Vertakkende spiralen'},
   fibonacci_continuous: {en:'Continuous',he:'רציף',ru:'Непрерывно',nl:'Doorlopend'},
   fibonacci_restart: {en:'New Spiral',he:'ספירלה חדשה',ru:'Новая спираль',nl:'Nieuwe spiraal'},
   tuning_fibonacci_title: {en:'Fibonacci Settings',he:'הגדרות פיבונאצ׳י',ru:'Настройки Фибоначчи',nl:'Fibonacci-instellingen'},
