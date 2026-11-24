@@ -78,6 +78,7 @@ test('portable simulation preferences preserve explicit defaults and reject unus
         magnetAnchorLimit: 600,
         geometricFlowVisible: false,
         fibonacciVisible: true,
+        fractalsVisible: true,
         fibonacciColorAdvance: 91,
         rememberSimulationModes: false,
         wind: { mode: 'ripple', strength: 5, speed: 2, range: .6, colorSpan: 2, trail: false }

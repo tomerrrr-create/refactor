@@ -84,7 +84,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);await page.waitForTimeout(300);
  assert((await dot.boundingBox()).x>firstDot.x,'the same dot moves to the other page');
  assert.equal(await dotColor(),'rgb(187, 192, 198)');
- assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['spiral','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&!['breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['spiral','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&!['breathe','fibonacci','fractals'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#breatheExperimentToggle').check();

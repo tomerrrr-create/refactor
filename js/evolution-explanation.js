@@ -2,6 +2,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
+    fractals: [
+        ['Fractals', 'Julia zooms into a shape that changes as you draw. In 2D XOR, draw seeds and watch their fractals meet and cancel.'],
+        ['פרקטלים', 'ג׳וליה מתקרבת לצורה שמשתנה כשמציירים. ב־XOR דו־ממדי מציירים נקודות ורואים את הפרקטלים נפגשים ומבטלים זה את זה.'],
+        ['Фракталы', 'Рисуйте, чтобы менять приближающийся фрактал Жюлиа. В двумерном XOR рисуйте точки и наблюдайте, как узоры встречаются и гасят друг друга.'],
+        ['Fractalen', 'Julia zoomt in op een vorm die verandert als je tekent. Teken punten in 2D-XOR en kijk hoe patronen elkaar ontmoeten en uitdoven.']
+    ],
     fibonacci: [
         ['Fibonacci', 'Grow a square spiral across the whole board. Start one new spiral, or let it branch into two.'],
         ['פיבונאצ׳י', 'ספירלת ריבועים צומחת על כל הלוח. אפשר להתחיל ספירלה חדשה או להסתעף לשתיים.'],

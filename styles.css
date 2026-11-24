@@ -2891,9 +2891,12 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 .ink-settings-dialog .fluid-preset-card:last-child { grid-column:1 / -1; }
 
-#btnFibonacci { display:none; touch-action:none !important; }
-#btnFibonacci svg { stroke:var(--sim-color); }
-#btnFibonacci.simulation-active svg { stroke:var(--gold); }
+#btnFibonacci, #btnFractals { display:none; touch-action:none !important; }
+#btnFibonacci svg, #btnFractals svg { stroke:var(--sim-color); }
+#btnFibonacci.simulation-active svg, #btnFractals.simulation-active svg { stroke:var(--gold); }
+
+#btnFractals:not([data-mode="julia"]) [data-fractal-icon="julia"],
+#btnFractals:not([data-mode="xor"]) [data-fractal-icon="xor"] { display:none; }
 
 #btnFibonacci:not([data-mode="restart"]) [data-fibonacci-icon="restart"],
 #btnFibonacci:not([data-mode="branching"]) [data-fibonacci-icon="branching"],

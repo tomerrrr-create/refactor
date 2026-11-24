@@ -1,3 +1,4 @@
+import { FRACTAL_MODES, createFractalState, validateFractalState, runFractalGeneration, steerJulia } from './simulations/fractals.js';
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
@@ -88,6 +89,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let gravityCycle=loadGravityCycle();
       let resonanceCycle=loadResonanceCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
+      let fractalState = null;
       let fibonacciState = null, fibonacciColorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
@@ -476,6 +478,7 @@ currentSortMethod,
             ...(armedSimulation === 'ink' ? {inkState:getInkSnapshot()} : {}),
             ...(armedSimulation === 'oil' ? {oilState:getOilSnapshot()} : {}),
             ...(armedSimulation === 'network' ? {networkState:getNetworkSnapshot()} : {}),
+            ...(armedSimulation === 'fractals' ? { fractalState: { ...getFractalState() } } : {}),
             ...(armedSimulation === 'fibonacci' ? {fibonacciState:{ ...getFibonacciState() }} : {}),
             ...(armedSimulation === 'islands' && islandsSession ? { islandsState: restoreIslandsSession(islandsSession) } : {}),
             tiles: boardState.map(tile => ({ 
@@ -516,6 +519,7 @@ currentSortMethod,
         if(JSON.stringify(stateA.islandsState?.oilState)!==JSON.stringify(stateB.islandsState?.oilState) ||
            JSON.stringify(stateA.islandsState?.oilRules)!==JSON.stringify(stateB.islandsState?.oilRules))return false;
         if(JSON.stringify(stateA.networkState)!==JSON.stringify(stateB.networkState))return false;
+        if (JSON.stringify(stateA.fractalState) !== JSON.stringify(stateB.fractalState)) return false;
         if (JSON.stringify(stateA.fibonacciState) !== JSON.stringify(stateB.fibonacciState)) return false;
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
         if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
@@ -540,6 +544,9 @@ currentSortMethod,
         if(state.inkState){const ink=validateInkSnapshot(state.inkState);if(ink.state.n!==state.n)throw new Error('Ink board size mismatch');}
         if(state.oilState){const oil=validateOilSnapshot(state.oilState);if(oil.state.n!==state.n)throw new Error('Oil board size mismatch');}
         if(state.networkState){const network=validateNetworkSnapshot(state.networkState);if(network.state.n!==state.n)throw new Error('Network board size mismatch');}
+        const fractal = state.fractalState ? validateFractalState(state.fractalState) : null;
+        if (fractal && fractal.n !== state.n) throw new Error('Fractals board size mismatch');
+        if (!fractal) fractalState = null;
         const fibonacci = state.fibonacciState ? validateFibonacciState(state.fibonacciState) : null;
         if (fibonacci && fibonacci.n !== state.n) throw new Error('Fibonacci board size mismatch');
         if (!fibonacci) fibonacciState = null;
@@ -632,6 +639,7 @@ k: tileState.k,
         if(state.oilState)restoreOilSnapshot(state.oilState);
         if(state.networkState)restoreNetworkSnapshot(state.networkState);
         if (fibonacci) restoreFibonacciState(fibonacci);
+        if (fractal) restoreFractalState(fractal);
         applySeparator();
       }
 
@@ -1073,7 +1081,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         });
 
 dlaState = null; // איפוס לפרקטלים
-        turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
+        turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null; fractalState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
         startAnimationLoop();
 
       }
@@ -1460,6 +1468,7 @@ case 'brightnessEvo':
                 case 'ink': boardState=runInkEvolution(context); break;
                 case 'oil': boardState=runOilEvolution(context); break;
                 case 'network': boardState=runNetworkEvolution(context); break;
+                case 'fractals': boardState = runFractalGeneration(context, getFractalState()); break;
                 case 'fibonacci': boardState = runFibonacciGeneration(context, getFibonacciState()); break;
             case 'islands': boardState = runIslandsGeneration(context, islandsSession); break;
             case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration({...context, gravitationalSortRules:getActiveGravityRules()}); boardState = nextState; break;
@@ -1563,6 +1572,7 @@ break;
         else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
         else if (armedSimulation === 'network') simDetails=JSON.stringify(getNetworkSnapshot());
+        else if (armedSimulation === 'fractals') simDetails = JSON.stringify(getFractalState());
         else if (armedSimulation === 'fibonacci') simDetails = JSON.stringify(getFibonacciState());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
@@ -1602,6 +1612,7 @@ case 'brightnessEvo':
                 case 'ink': boardState=runInkEvolution(context); break;
                 case 'oil': boardState=runOilEvolution(context); break;
                 case 'network': boardState=runNetworkEvolution(context); break;
+                case 'fractals': boardState = runFractalGeneration(context, getFractalState()); break;
                 case 'fibonacci': boardState = runFibonacciGeneration(context, getFibonacciState()); break;
                 case 'islands':
                     boardState = runIslandsGeneration(context, islandsSession);
@@ -1686,7 +1697,7 @@ function pauseLife() {
           
           // מחזירים לפעולה את כל כפתורי הסימולציה
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1719,7 +1730,7 @@ function pauseLife() {
 
        
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1785,7 +1796,7 @@ function pauseLife() {
           });
 
           // Install queued generation-one commands before the macro's first frame.
-          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
+          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci' || armedSimulation === 'fractals' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
               animationFrameId = requestAnimationFrame(gameLoop);
           } else {
               gameLoop();
@@ -1801,6 +1812,7 @@ function getSimulationRecordingDetails() {
         else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
         else if (armedSimulation === 'network') simDetails=JSON.stringify(getNetworkSnapshot());
+        else if (armedSimulation === 'fractals') simDetails = JSON.stringify(getFractalState());
         else if (armedSimulation === 'fibonacci') simDetails = JSON.stringify(getFibonacciState());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
@@ -1925,6 +1937,7 @@ function currentCycleMode(simulation) {
         spiral:spiralMode,magnet:magnetMode,brightnessEvo:brightnessEvoMode,dla:dlaMode,
         breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
         ink:activeVorticesMode(),network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
+        fractals: typeof fractalState === 'undefined' ? undefined : fractalState?.mode,
         fibonacci: typeof fibonacciState === 'undefined' ? undefined : fibonacciState?.mode,
         nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
 }
@@ -1948,6 +1961,7 @@ function refreshCycleIcons() {
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
+    if (typeof updateFractalsButtonUI === 'function') updateFractalsButtonUI();
 }
 function restoreCycleMode(simulation, mode) {
     switch(simulation){
@@ -1961,6 +1975,7 @@ function restoreCycleMode(simulation, mode) {
         case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;restorePolygonFlowPhase(spiralRules);break;
         case 'magnet':selectMagnetMode(mode);break;
         case 'network':saveNetworkSettings({...networkRules,mode});break;
+        case 'fractals': selectFractalMode(mode); break;
         case 'fibonacci': selectFibonacciMode(mode); break;
         case 'brightnessEvo':brightnessEvoMode=mode;break;
         case 'dla':dlaMode=mode;break;
@@ -2081,13 +2096,13 @@ function armSimulation(simulationName, { recordIslandsStart = true, spiralEntry 
     brightnessEvoMode = 'off';
     dlaMode = 'off';
     breatheEvoMode = 'off';
-    turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null;
+    turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null; fractalState = null;
     gsMode = 'off'; // איפוס הגרביטציה
     spiralMode = 'off'; // איפוס הספירלה (התיקון לבאג)
 magnetMode = 'off';
 if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFibonacci, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals, dom.btnFibonacci, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     
@@ -2100,6 +2115,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
+    if (typeof updateFractalsButtonUI === 'function') updateFractalsButtonUI();
     updateBreatheEvoButtonUI();
     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -2114,6 +2130,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
 if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
     if (simulationName === 'ink')inkState=createInkState(n);
+    if (simulationName === 'fractals') fractalState = createFractalState(n);
     if (simulationName === 'fibonacci') {
         const seed = isExecutingMacroCommand ? 0 : Math.floor(Math.random() * 2 ** 32);
         fibonacciState = createFibonacciState(n, seed & 3, undefined, fibonacciColorAdvance, seed);
@@ -2224,6 +2241,7 @@ if (simulationName === 'magnet') {
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
+    if (typeof updateFractalsButtonUI === 'function') updateFractalsButtonUI();
 }
 
       
@@ -2428,6 +2446,7 @@ if (simulationName === 'magnet') {
                 geometricFlowVisible: experimentalSimulations.visible('spiral'),
                 breatheVisible: experimentalSimulations.visible('breathe'),
                 fibonacciVisible: experimentalSimulations.visible('fibonacci'),
+                fractalsVisible: experimentalSimulations.visible('fractals'),
                 fibonacciColorAdvance,
                 rememberSimulationModes: cycleMemory.enabled()
             },
@@ -2471,7 +2490,7 @@ if (simulationName === 'magnet') {
             fibonacciColorAdvance = preferences.fibonacciColorAdvance;
             if (fibonacciState) fibonacciState.colorAdvance = fibonacciColorAdvance;
         }
-        for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible], ['fibonacci', preferences.fibonacciVisible]]) {
+        for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible], ['fibonacci', preferences.fibonacciVisible], ['fractals', preferences.fractalsVisible]]) {
             if (visible === undefined) continue;
             experimentalSimulations.set(id, visible);
             if (!visible && activeEvolutionControl() === id) armSimulation(null);
@@ -2524,6 +2543,7 @@ if (simulationName === 'magnet') {
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
+    if (typeof updateFractalsButtonUI === 'function') updateFractalsButtonUI();
         if (activeEvolutionControl() === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (activeEvolutionControl() === 'spiral') spiralMode = spiralRules.method;
         if (armedSimulation === 'magnet') magnetMode = magnetRules.method;
@@ -2906,6 +2926,7 @@ dom.btnTuring.title = getText('tooltip_turing');
 updateInkButtonUI();
 if(dom.btnNetwork){dom.btnNetwork.title=getText('help_network');dom.btnNetwork.setAttribute('aria-label',dom.btnNetwork.title);}
 updateFibonacciButtonUI();
+updateFractalsButtonUI();
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         dom.btnBrushMode.title = getBrushModeTitle();
 
@@ -2998,9 +3019,9 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
         armedSimulation = null;
         updateNudgeButtonUI();
         dlaState = null;
-turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null;
+turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null; fractalState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFibonacci, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals, dom.btnFibonacci, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
@@ -3026,6 +3047,7 @@ gsMode = 'off';
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
+    if (typeof updateFractalsButtonUI === 'function') updateFractalsButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.active())refreshCycleIcons();
 
       }
@@ -3283,7 +3305,7 @@ function resumeBrushCheckpoint(record) {
     dom.iconPlay.style.display = 'none';
     dom.iconPause.style.display = 'block';
     dom.btnStepForward.disabled = true;
-    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork,
+    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals,
         dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile,
         dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker]
         .filter(Boolean).forEach(button => { button.disabled = armedSimulation === 'breathe'
@@ -3310,7 +3332,9 @@ function flushLiveBrushChanges() {
         window.logArtEvent('BRUSH_START', '{"version":1}');
         pointerState.motionStarted = true;
     }
-    window.logArtEvent('DRAW_STROKE', JSON.stringify([...pointerState.changes.values()]));
+    const sample = [...pointerState.changes.values()];
+    if (armedSimulation === 'fractals') steerJulia(getFractalState(), sample.at(-1).i);
+    window.logArtEvent('DRAW_STROKE', JSON.stringify(sample));
     pointerState.changes.clear();
     if (armedSimulation === 'dla' && dlaState) syncDlaCrystalState();
 }
@@ -3438,6 +3462,10 @@ function onPointerUp(e) {
         }
     }
     flushLiveBrushChanges();
+    if (armedSimulation === 'fractals' && !pointerState.liveRecording && pointerState.changes.size) {
+        const sample = [...pointerState.changes.values()];
+        steerJulia(getFractalState(), sample.at(-1).i);
+    }
     // A running segment starts at the latest brush checkpoint; Pause commits it.
     // A standalone brush stroke still creates exactly one Undo entry.
     if (pointerState.beforeState) {
@@ -3869,6 +3897,50 @@ function cycleChiFlowMode() {
     }
     updateChiFlowButtonUI();
     window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
+}
+
+function getFractalState() {
+    if (!fractalState) fractalState = createFractalState(n);
+    else if (fractalState.n !== n) fractalState.n = n;
+    return fractalState;
+}
+
+function restoreFractalState(state) {
+    if (state.n !== n) throw new Error('Fractals board size mismatch');
+    if (armedSimulation !== 'fractals') armSimulation('fractals');
+    fractalState = state;
+    updateFractalsButtonUI();
+}
+
+function updateFractalsButtonUI() {
+    const active = armedSimulation === 'fractals';
+    const mode = active ? getFractalState().mode : cycleMemory.entry('fractals') ?? FRACTAL_MODES[0];
+    dom.btnFractals.dataset.mode = mode;
+    dom.btnFractals.classList.toggle('simulation-active', active);
+    dom.btnFractals.setAttribute('aria-pressed', String(active));
+    dom.btnFractals.title = `${getText('help_fractals')} · ${getText('fractals_' + mode)}`;
+    dom.btnFractals.setAttribute('aria-label', dom.btnFractals.title);
+}
+
+function selectFractalMode(mode) {
+    const state = getFractalState();
+    if (state.mode !== mode) {
+        state.mode = mode;
+        state.frame = 0;
+    }
+    updateFractalsButtonUI();
+}
+
+function cycleFractalMode() {
+    if (armedSimulation !== 'fractals') armSimulation('fractals');
+    else if (getFractalState().mode === FRACTAL_MODES[0]) selectFractalMode(FRACTAL_MODES[1]);
+    else if (isLifePlaying) selectFractalMode(FRACTAL_MODES[0]);
+    else {
+        armSimulation(null);
+        window.logArtEvent('Fractals Off', '---');
+        return;
+    }
+    window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
 }
 
 function getFibonacciState() {
@@ -4684,7 +4756,7 @@ function createArtRecipeFile(prefix = '') {
         exportedLog.push(`[${timestamp}] WIND_END -> ${JSON.stringify({ windVersion: 1,
             batch: windBatch.id, elapsed: Math.max(0, performance.now() - windBatch.time), reason: 'stop' })}`);
     }
-    if ((armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
+    if ((armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci' || armedSimulation === 'fractals' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
         const now = new Date();
         const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
         exportedLog.push(`[${timestamp}] [GEN:${currentGenerationCount}] PAUSE -> ---`);
@@ -4722,7 +4794,7 @@ function createArtRecipeFile(prefix = '') {
 // Capture live simulation progress without pausing or changing the original log.
 function createStudioRecipeFile() {
     const file = createArtRecipeFile();
-    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci') return file;
+    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci' || armedSimulation === 'fractals') return file;
     const now = new Date();
     const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
     const generation = armedSimulation === 'breathe' ? '' : ` [GEN:${currentGenerationCount}]`;
@@ -4780,6 +4852,7 @@ function getHistorySettings(state) {
         ...(state.oilState ? {oilState:state.oilState} : {}),
         ...(state.networkState ? {networkState:state.networkState} : {}),
         ...(state.fibonacciState ? {fibonacciState:state.fibonacciState} : {}),
+        ...(state.fractalState ? { fractalState: state.fractalState } : {}),
         ...(state.gravityRules ? { gravityRules: { ...state.gravityRules } } : {}),
         ...(state.contourState ? { contourState: state.contourState } : {}) };
 }
@@ -4811,6 +4884,9 @@ function validateHistorySettings(settings) {
     if(settings?.inkState){const ink=validateInkSnapshot(settings.inkState);if(ink.state.n!==settings.n)throw new Error('Ink board size mismatch');}
     if(settings?.oilState){const oil=validateOilSnapshot(settings.oilState);if(oil.state.n!==settings.n)throw new Error('Oil board size mismatch');}
     if(settings?.networkState){const network=validateNetworkSnapshot(settings.networkState);if(network.state.n!==settings.n)throw new Error('Network board size mismatch');}
+    if (settings?.fractalState && validateFractalState(settings.fractalState).n !== settings.n) {
+        throw new Error('Fractals board size mismatch');
+    }
     if (settings?.fibonacciState && validateFibonacciState(settings.fibonacciState).n !== settings.n) {
         throw new Error('Fibonacci board size mismatch');
     }
@@ -4864,6 +4940,7 @@ function applyHistorySettings(settings) {
     if(settings.oilState)restoreOilSnapshot(settings.oilState);
     if(settings.networkState)restoreNetworkSnapshot(settings.networkState);
     if (settings.fibonacciState) restoreFibonacciState(validateFibonacciState(settings.fibonacciState));
+    if (settings.fractalState) restoreFractalState(validateFractalState(settings.fractalState));
     if (settings.contourState) restoreContourSnapshot(settings.contourState);
     let changed = false;
     if (currentSortMethod !== settings.currentSortMethod) {
@@ -5127,6 +5204,9 @@ function parseMacroText(text) {
         if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: ink |'))validateInkSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
         if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: oil |'))validateOilSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
         if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: network |'))validateNetworkSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
+        if (['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName) && action.details.startsWith('Armed: fractals |')) {
+            validateFractalState(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
+        }
         if (['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName) && action.details.startsWith('Armed: fibonacci |')) {
             validateFibonacciState(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
         }
@@ -5511,6 +5591,7 @@ function stopMacro({ preserveFullscreen = false, preserveActivity = false } = {}
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
     if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
+    if (typeof updateFractalsButtonUI === 'function') updateFractalsButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     if(typeof updateContourButtonUI==='function')updateContourButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.enabled()){
@@ -5628,6 +5709,7 @@ function applyMacroRules(details) {
     const restoredInk=sim==='ink'?validateInkSnapshot(JSON.parse(rulesStr)):null;
     const restoredOil=sim==='oil'?validateOilSnapshot(JSON.parse(rulesStr)):null;
     const restoredNetwork=sim==='network'?validateNetworkSnapshot(JSON.parse(rulesStr)):null;
+    const restoredFractal = sim === 'fractals' ? validateFractalState(JSON.parse(rulesStr)) : null;
     const restoredFibonacci = sim === 'fibonacci' ? validateFibonacciState(JSON.parse(rulesStr)) : null;
     const restoredCymatics=sim==='cymatics'?validateCymaticsSnapshot(JSON.parse(rulesStr)):null;
     const restoredIslands = sim === 'islands' ? restoreIslandsSession(JSON.parse(rulesStr)) : null;
@@ -5649,6 +5731,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
     if(sim==='oil'){restoreOilSnapshot(restoredOil);return sim;}
     if(sim==='network'){restoreNetworkSnapshot(restoredNetwork);return sim;}
     if (restoredFibonacci) { restoreFibonacciState(restoredFibonacci); return sim; }
+    if (restoredFractal) { restoreFractalState(restoredFractal); return sim; }
     if(sim==='cymatics'){restoreCymaticsSnapshot(restoredCymatics);return sim;}
     if (sim === 'islands') {
         islandsSession = restoredIslands;
@@ -5932,6 +6015,9 @@ function executeMacroAction(action) {
         if(armedSimulation==='cymatics'){if(isLifePlaying)pauseLife();armSimulation(null);}
         replayCymaticsRules=snapshot.rules;cymaticsState=snapshot.state;updateCymaticsButtonUI();
     }
+    else if (action.eventName === 'Fractals Off') {
+        if (armedSimulation === 'fractals' && !isLifePlaying) armSimulation(null);
+    }
     else if (action.eventName === 'Fibonacci Off') {
         if (armedSimulation === 'fibonacci' && !isLifePlaying) armSimulation(null);
     }
@@ -6140,6 +6226,9 @@ else if (action.eventName === 'Invert Colors') {
                     }
                 });
                 
+                if (action.eventName === 'DRAW_STROKE' && armedSimulation === 'fractals') {
+                    steerJulia(getFractalState(), diff.at(-1)?.i);
+                }
                 if (action.eventName === 'DRAW_STROKE' && armedSimulation === 'contour' && contourMode === 'cracks') {
                     cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, cracksBrush:getCracksBrush(), contourRules: { ...contourRules, lineColor:'brush', material: getCracksMaterial(), growth:getCracksGrowth() } }, cracksState, diff);
                 }
@@ -6571,7 +6660,7 @@ updateBrightnessEvoButtonUI();
                 if(!enabled&&activeEvolutionControl()===id){if(isLifePlaying)pauseLife();armSimulation(null);}
                 updateInkButtonUI();
                 evolutionDrawer?.applyLayout();
-                if (id === 'fibonacci') settingsProfiles?.scheduleCapture();
+                if (id === 'fibonacci' || id === 'fractals') settingsProfiles?.scheduleCapture();
             }
         });
         evolutionDrawer = createEvolutionDrawer({
@@ -6793,6 +6882,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 else vorticesCycleUI.open();
             }],
             [dom.btnNetwork,'network',cycleNetworkMode,()=>networkSettingsUI.open()],
+            [dom.btnFractals, 'fractals', cycleFractalMode],
             [dom.btnFibonacci, 'fibonacci', cycleFibonacciMode, modals.openFibonacciSettingsModal],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
             [dom.btnNudgeBrighter, 'nudgeBrighter', cycleNudgeMode, modals.openNudgeSettingsModal],
@@ -6825,7 +6915,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 onSwipeFallback: evolutionDrawer.swipePage,
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
-                canInteract: () => !isBreathing && (simulation !== 'fibonacci' || experimentalSimulations.visible('fibonacci')),
+                canInteract: () => !isBreathing && (!['fibonacci', 'fractals'].includes(simulation) || experimentalSimulations.visible(simulation)),
                 canOpen: () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) && (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral', 'gravitationalSort', 'fibonacci'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
