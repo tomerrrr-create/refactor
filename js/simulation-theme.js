@@ -66,7 +66,7 @@ export function fadeGoldPlaybackControls(toolbar) {
   const darken = [{ filter: 'brightness(1)' }, { filter: 'brightness(0)' }];
   const reveal = [...darken].reverse();
   root.setAttribute('data-gold-playback-fade-out', '');
-  const fadingOut = controls.map(button => button.animate(darken, { duration: 120, easing: 'ease-in', fill: 'forwards' }));
+  const fadingOut = controls.map(button => button.animate(darken, { duration: 400, easing: 'ease-in', fill: 'forwards' }));
   let animations = fadingOut;
   function cancel() {
     if (cancelGoldPlaybackFade !== cancel) return;
@@ -79,7 +79,9 @@ export function fadeGoldPlaybackControls(toolbar) {
   Promise.all(fadingOut.map(animation => animation.finished)).then(() => {
     if (cancelGoldPlaybackFade !== cancel) return;
     root.removeAttribute('data-gold-playback-fade-out');
-    animations = controls.map(button => button.animate(reveal, { duration: 220, easing: 'ease-out', fill: 'backwards' }));
+    animations = controls.map(button => button.animate(reveal, {
+      delay: 100, duration: 600, easing: 'ease-out', fill: 'backwards'
+    }));
     fadingOut.forEach(animation => animation.cancel());
     return Promise.all(animations.map(animation => animation.finished));
   }).then(cancel, cancel);

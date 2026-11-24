@@ -83,7 +83,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   Element.prototype.animate=function(frames,options){
    const animation=animate.call(this,frames,options);
    if(frames.some(frame=>frame.filter==='brightness(0)')){
-    goldFades.push({id:this.id,from:frames[0].filter,duration:options.duration,animation});
+    goldFades.push({id:this.id,from:frames[0].filter,delay:options.delay??0,duration:options.duration,animation});
     animation.pause();animation.currentTime=0;
    }
    return animation;
@@ -92,18 +92,19 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  });
  const fadeOut=()=>page.locator('html').getAttribute('data-gold-playback-fade-out');
  const thirdTierColor=()=>page.locator('#btnResizeUp').evaluate(e=>getComputedStyle(e).color);
- const fades=()=>page.evaluate(()=>goldFades.map(({id,from,duration})=>({id,from,duration})));
+ const fades=()=>page.evaluate(()=>goldFades.map(({id,from,delay,duration})=>({id,from,delay,duration})));
  const finishPhase=from=>page.evaluate(from=>goldFades.filter(fade=>fade.from===from).forEach(({animation})=>animation.finish()),from);
  const pausedColor=await thirdTierColor();
  await tap('#btnPlayPauseLife');
  const darkening=await fades();
  assert(darkening.some(({id})=>id==='btnResizeUp')&&darkening.some(({id})=>id==='btnEvolutionDrawerInternal'));
- assert(darkening.every(({from,duration})=>from==='brightness(1)'&&duration===120));
+ assert(darkening.every(({from,delay,duration})=>from==='brightness(1)'&&delay===0&&duration===400));
  assert(!darkening.some(({id})=>['btnGameOfLife','btnNudgeBrighter','btnPalette','btnColorPicker','btnSymmetry','btnWind','btnDark','btnPlayPauseLife','btnSave','btnToggleSimMode'].includes(id)));
  assert.equal(await fadeOut(),'');
  assert.equal(await thirdTierColor(),pausedColor,'original ink is used on the way to black');
  await finishPhase('brightness(1)');
  await page.waitForFunction(()=>goldFades.some(fade=>fade.from==='brightness(0)'));
+ await page.evaluate(()=>goldFades.filter(fade=>fade.from==='brightness(0)').forEach(({animation})=>{animation.currentTime=50;}));
  assert.equal(await thirdTierColor(),colors.blue,'at black, switch to the resting theme ink');
  assert.equal(await page.locator('#btnEvolutionDrawerInternal').evaluate(e=>getComputedStyle(e).filter),'brightness(0)');
  const previousDrawer=await page.locator('#controlsContainer').getAttribute('data-evolution-page');
@@ -113,7 +114,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap('#btnMagnetModes');
  const revealed=await fades();
  assert.equal(revealed.length,darkening.length*2,'a live handoff does not repeat the fade');
- assert(revealed.slice(darkening.length).every(({from,duration})=>from==='brightness(0)'&&duration===220));
+ assert(revealed.slice(darkening.length).every(({from,delay,duration})=>from==='brightness(0)'&&delay===100&&duration===600));
  await finishPhase('brightness(0)');
  assert.equal(await page.locator('#btnEvolutionDrawerInternal').evaluate(e=>getComputedStyle(e).filter),'none');
  await tap('#btnPlayPauseLife');
@@ -127,6 +128,16 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap('#btnPlayPauseLife');
  assert.equal((await fades()).length,beforeReducedMotion);
  assert.equal(await thirdTierColor(),colors.blue);
+ await tap('#btnPlayPauseLife');
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await page.evaluate(()=>{
+  const toggle=document.getElementById('goldPlaybackHierarchyToggle');
+  toggle.checked=false;toggle.dispatchEvent(new Event('change'));
+ });
+ await tap('#btnPlayPauseLife');
+ assert.equal((await fades()).length,beforeReducedMotion,'turning the hierarchy off disables the fade');
+ assert.equal(await thirdTierColor(),pausedColor,'turning the hierarchy off disables the third-tier tint');
+ assert.equal(await fadeOut(),null);
  await tap('#btnPlayPauseLife');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}
