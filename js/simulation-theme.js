@@ -4,6 +4,7 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 const STORAGE_KEY = 'colorGridSimulationTheme';
 const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
+const GOLD_SORT_EXEMPTION_STORAGE_KEY = 'colorGridGoldExcludeSort';
 const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
 const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
 const DEFAULT_GLOW_PULSE_SECONDS = 3.2;
@@ -144,6 +145,19 @@ function initializeGoldPlaybackHierarchy() {
   });
 }
 
+function initializeGoldSortExemption() {
+  const toggle = document.getElementById('goldExcludeSortToggle');
+  const sort = document.getElementById('btnCycleSort');
+  let excluded = true;
+  try { excluded = localStorage.getItem(GOLD_SORT_EXEMPTION_STORAGE_KEY) !== 'false'; } catch {}
+  toggle.checked = excluded;
+  sort.toggleAttribute('data-gold-hierarchy-exempt', excluded);
+  toggle.addEventListener('change', () => {
+    sort.toggleAttribute('data-gold-hierarchy-exempt', toggle.checked);
+    try { localStorage.setItem(GOLD_SORT_EXEMPTION_STORAGE_KEY, String(toggle.checked)); } catch {}
+  });
+}
+
 function initializeDurationSlider(sliderId, storageKey, durations, defaultDuration, apply) {
   const slider = document.getElementById(sliderId);
   const value = document.getElementById(sliderId + 'Value');
@@ -171,6 +185,7 @@ function initializeDurationSlider(sliderId, storageKey, durations, defaultDurati
 export function initializeSimulationTheme(toolbar) {
   if (toolbar) goldPlaybackTransition = createGoldPlaybackTransition(toolbar);
   initializeGoldPlaybackHierarchy();
+  initializeGoldSortExemption();
   initializeDurationSlider('glowPulse', GLOW_PULSE_STORAGE_KEY, GLOW_PULSE_SECONDS, DEFAULT_GLOW_PULSE_SECONDS,
     duration => document.documentElement.style.setProperty('--simulation-halo-duration', `${duration}s`));
   initializeDurationSlider('goldTransitionDuration', GOLD_TRANSITION_STORAGE_KEY, GOLD_TRANSITION_SECONDS, DEFAULT_GOLD_TRANSITION_SECONDS,
