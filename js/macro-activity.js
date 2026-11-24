@@ -16,6 +16,7 @@ const simulations = {
     magnet: ['help_magnet', 'btnMagnetModes'], spiral: ['help_spiral', 'btnSpiral'],
     erosion: ['help_erosion', 'btnErosion'], dla: ['help_dla', 'btnDla'],
     turing: ['help_turing', 'btnTuring'], breathe: ['help_breathe', 'btnShowBreatheMenu'],
+    fibonacci: ['help_fibonacci','btnFibonacci'],
     network: ['help_network','btnNetwork'],
     oil: ['help_oil','iconIslandsOil'],
     ink: ['help_ink','btnInk'],

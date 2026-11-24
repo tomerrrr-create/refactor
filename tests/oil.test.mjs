@@ -37,11 +37,11 @@ test('optional Oil preferences and both generations of old layouts migrate witho
  settings.rules.oil={tension:90,drift:0,mobility:50};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.oil,settings.rules.oil);
  for(const slot of [12,18]){
   const expected=[...DEFAULT_EVOLUTION_LAYOUT];
-  if(slot===12)[expected[12],expected[18]]=[expected[18],expected[12]];
+  [expected[slot],expected[19]]=[expected[19],expected[slot]];
   const old=[...expected];old[slot]='oil';
   assert.deepEqual(validateEvolutionSlots(old),expected);
  }
- const configured={...settings,evolutionSlots:DEFAULT_EVOLUTION_LAYOUT.map((id,index)=>index===18?'oil':id)};
+ const configured={...settings,evolutionSlots:DEFAULT_EVOLUTION_LAYOUT.map((id,index)=>index===19?'oil':id)};
  assert.deepEqual(deserializeWorkspaceSettings('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:configured})).evolutionSlots,DEFAULT_EVOLUTION_LAYOUT);
 });
 test('optimized neighborhood updates never increase surface energy when buoyancy is zero',()=>{

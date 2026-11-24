@@ -77,12 +77,16 @@ test('portable simulation preferences preserve explicit defaults and reject unus
         circularCycle: ['tornado'],
         magnetAnchorLimit: 600,
         geometricFlowVisible: false,
+        fibonacciVisible: true,
+        fibonacciColorAdvance: 91,
         rememberSimulationModes: false,
         wind: { mode: 'ripple', strength: 5, speed: 2, range: .6, colorSpan: 2, trail: false }
     } };
     assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
+    const legacy = { ...settings, simulationPreferences: { ...settings.simulationPreferences, fibonacciColorAdvance: 85 } };
+    assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(legacy)).simulationPreferences.fibonacciColorAdvance, 90);
     for (const invalid of [{ gravityCycle: [] }, { resonanceCycle: [5, 5] }, { circularCycle: ['flow'] },
-        { geometricFlowCycle: ['unknown'] }, { magnetAnchorLimit: 1500 }, { rememberSimulationModes: 'false' }]) {
+        { geometricFlowCycle: ['unknown'] }, { magnetAnchorLimit: 1500 }, { rememberSimulationModes: 'false' }, { fibonacciVisible: 1 }, { fibonacciColorAdvance: 89 }, { fibonacciColorAdvance: 101 }]) {
         assert.throws(() => serializeWorkspaceSettings({ ...settings, simulationPreferences: invalid }));
     }
 });

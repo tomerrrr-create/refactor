@@ -8,7 +8,7 @@ const complete=slots=>{assert.deepEqual(ids(slots),EVOLUTION_CATALOG.map(e=>e.id
 test('permanent drawers reserve bottom center and retain the approved default order',()=>{
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,20);
  assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort',null,'ink','erosion']);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),['network','cymatics','breathe','turing','spiral','contour','dla',null,null,null]);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10),['contour','dla','cymatics','network','turing','fibonacci','spiral',null,'breathe',null]);
  complete(DEFAULT_EVOLUTION_LAYOUT);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
  for(const lang of ['en','he','ru','nl'])assert(translations.drawer_navigation_slot[lang]);
@@ -21,11 +21,11 @@ test('legacy ten-place layouts migrate without losing controls or mutating the i
 });
 test('arranging occupied and empty places preserves every simulation and protects navigation',()=>{
  const original=[...DEFAULT_EVOLUTION_LAYOUT],swap=moveEvolutionSlot(original,5,13);
- assert.equal(swap[5],'turing');assert.equal(swap[13],'nudgeBrighter');
- const moved=moveEvolutionSlot(swap,13,18);assert.equal(moved[13],null);assert.equal(moved[18],'nudgeBrighter');complete(moved);
- assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,18,18),moved);
+ assert.equal(swap[5],'network');assert.equal(swap[13],'nudgeBrighter');
+ const moved=moveEvolutionSlot(swap,13,19);assert.equal(moved[13],null);assert.equal(moved[19],'nudgeBrighter');complete(moved);
+ assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,19,19),moved);
  assert.deepEqual(assignEvolutionSlot(original,19,'nudgeBrighter'),moveEvolutionSlot(original,5,19));
- for(const [from,to] of [[-1,0],[0,20],[.5,0],[18,0],[0,7],[0,17],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
+ for(const [from,to] of [[-1,0],[0,20],[.5,0],[19,0],[0,7],[0,17],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
  for(const reserved of INTERNAL_NAV_SLOTS)assert.throws(()=>assignEvolutionSlot(original,reserved,'dla'));
 });
 test('new arrangements round-trip exactly through settings; legacy rules stay unchanged',()=>{
@@ -45,7 +45,9 @@ test('stored arrangements from before the new default retain their physical slot
   'network','spiral','breathe','dla',null,'ink','turing',null,'contour',null
  ];
  const settings={...defaultWorkspaceSettings(),evolutionSlots:previous};
- assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).evolutionSlots,previous);
+ const migrated=deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).evolutionSlots;
+ assert.equal(migrated[14],'fibonacci');
+ for(const [slot,id] of previous.entries())if(id!==null)assert.equal(migrated[slot],id);
 });
 test('historical Nudge directions normalize once and keep the first unified assignment',()=>{
  const old=[...DEFAULT_EVOLUTION_SLOTS];old[3]='nudgeDarker';old[5]='nudgeBrighter';

@@ -25,13 +25,15 @@ import { orderToolbarCycle } from './toolbar-cycle-storage.js';
 import { MAGNET_ANCHOR_LIMITS, DEFAULT_MAGNET_ANCHOR_PREFERENCE } from './magnet-anchor-limit.js';
 import { normalizeWindSettings } from './wind-settings.js';
 import { DEFAULT_GEOMETRIC_FLOW_VISIBLE } from './experimental-simulations.js';
+import { DEFAULT_FIBONACCI_COLOR_ADVANCE, normalizeFibonacciColorAdvance } from './simulations/fibonacci.js';
 
 export function defaultSimulationPreferences() {
     return {
         gravityCycleVersion: GRAVITY_CYCLE_VERSION, gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
         resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
-        geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, rememberSimulationModes: false
+        geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, fibonacciVisible: false,
+        fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, rememberSimulationModes: false
     };
 }
 
@@ -63,7 +65,12 @@ function validateSimulationPreferences(value) {
         if (!object(value.wind)) throw new Error('Invalid Wind settings');
         result.wind = normalizeWindSettings(value.wind);
     }
-    for (const key of ['geometricFlowVisible', 'breatheVisible', 'rememberSimulationModes']) {
+    if (Object.hasOwn(value, 'fibonacciColorAdvance')) {
+        const colorAdvance = normalizeFibonacciColorAdvance(value.fibonacciColorAdvance);
+        if (colorAdvance === undefined) throw new Error('Invalid Fibonacci color advance');
+        result.fibonacciColorAdvance = colorAdvance;
+    }
+    for (const key of ['geometricFlowVisible', 'breatheVisible', 'fibonacciVisible', 'rememberSimulationModes']) {
         if (!Object.hasOwn(value, key)) continue;
         if (typeof value[key] !== 'boolean') throw new Error('Invalid simulation preference: ' + key);
         result[key] = value[key];

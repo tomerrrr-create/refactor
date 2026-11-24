@@ -1,6 +1,7 @@
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
+import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,isFibonacciColorAdvance,normalizeFibonacciColorAdvance,createFibonacciState,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
@@ -87,6 +88,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let gravityCycle=loadGravityCycle();
       let resonanceCycle=loadResonanceCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
+      let fibonacciState = null, fibonacciColorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE;
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
       let evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
@@ -474,6 +476,7 @@ currentSortMethod,
             ...(armedSimulation === 'ink' ? {inkState:getInkSnapshot()} : {}),
             ...(armedSimulation === 'oil' ? {oilState:getOilSnapshot()} : {}),
             ...(armedSimulation === 'network' ? {networkState:getNetworkSnapshot()} : {}),
+            ...(armedSimulation === 'fibonacci' ? {fibonacciState:{ ...getFibonacciState() }} : {}),
             ...(armedSimulation === 'islands' && islandsSession ? { islandsState: restoreIslandsSession(islandsSession) } : {}),
             tiles: boardState.map(tile => ({ 
                 k: tile.k, 
@@ -513,6 +516,7 @@ currentSortMethod,
         if(JSON.stringify(stateA.islandsState?.oilState)!==JSON.stringify(stateB.islandsState?.oilState) ||
            JSON.stringify(stateA.islandsState?.oilRules)!==JSON.stringify(stateB.islandsState?.oilRules))return false;
         if(JSON.stringify(stateA.networkState)!==JSON.stringify(stateB.networkState))return false;
+        if (JSON.stringify(stateA.fibonacciState) !== JSON.stringify(stateB.fibonacciState)) return false;
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
         if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
         if (JSON.stringify(stateA.contourState?.cracksState?.rainbowTrail) !== JSON.stringify(stateB.contourState?.cracksState?.rainbowTrail)) return false;
@@ -536,6 +540,9 @@ currentSortMethod,
         if(state.inkState){const ink=validateInkSnapshot(state.inkState);if(ink.state.n!==state.n)throw new Error('Ink board size mismatch');}
         if(state.oilState){const oil=validateOilSnapshot(state.oilState);if(oil.state.n!==state.n)throw new Error('Oil board size mismatch');}
         if(state.networkState){const network=validateNetworkSnapshot(state.networkState);if(network.state.n!==state.n)throw new Error('Network board size mismatch');}
+        const fibonacci = state.fibonacciState ? validateFibonacciState(state.fibonacciState) : null;
+        if (fibonacci && fibonacci.n !== state.n) throw new Error('Fibonacci board size mismatch');
+        if (!fibonacci) fibonacciState = null;
         if(!state.inkState)inkState=null;
         if(!state.oilState)oilState=null;
         if(!state.networkState)networkState=null;
@@ -624,6 +631,7 @@ k: tileState.k,
         if(state.inkState)restoreInkSnapshot(state.inkState);
         if(state.oilState)restoreOilSnapshot(state.oilState);
         if(state.networkState)restoreNetworkSnapshot(state.networkState);
+        if (fibonacci) restoreFibonacciState(fibonacci);
         applySeparator();
       }
 
@@ -1065,7 +1073,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         });
 
 dlaState = null; // איפוס לפרקטלים
-        turingState = null; inkState = null; oilState = null; networkState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
+        turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null; // <--- הוסף את השורה הזו כאן! (איפוס לטיורינג)
         startAnimationLoop();
 
       }
@@ -1452,6 +1460,7 @@ case 'brightnessEvo':
                 case 'ink': boardState=runInkEvolution(context); break;
                 case 'oil': boardState=runOilEvolution(context); break;
                 case 'network': boardState=runNetworkEvolution(context); break;
+                case 'fibonacci': boardState = runFibonacciGeneration(context, getFibonacciState()); break;
             case 'islands': boardState = runIslandsGeneration(context, islandsSession); break;
             case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration({...context, gravitationalSortRules:getActiveGravityRules()}); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
@@ -1554,6 +1563,7 @@ break;
         else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
         else if (armedSimulation === 'network') simDetails=JSON.stringify(getNetworkSnapshot());
+        else if (armedSimulation === 'fibonacci') simDetails = JSON.stringify(getFibonacciState());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
@@ -1592,6 +1602,7 @@ case 'brightnessEvo':
                 case 'ink': boardState=runInkEvolution(context); break;
                 case 'oil': boardState=runOilEvolution(context); break;
                 case 'network': boardState=runNetworkEvolution(context); break;
+                case 'fibonacci': boardState = runFibonacciGeneration(context, getFibonacciState()); break;
                 case 'islands':
                     boardState = runIslandsGeneration(context, islandsSession);
                     break;
@@ -1774,7 +1785,7 @@ function pauseLife() {
           });
 
           // Install queued generation-one commands before the macro's first frame.
-          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
+          if (isExecutingMacroCommand && (deferFirstGeneration || armedSimulation === 'gameOfLife' || armedSimulation === 'sandpile' || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci' || (armedSimulation === 'contour' && typeof contourMode !== 'undefined' && contourMode === 'cracks'))) {
               animationFrameId = requestAnimationFrame(gameLoop);
           } else {
               gameLoop();
@@ -1790,6 +1801,7 @@ function getSimulationRecordingDetails() {
         else if (armedSimulation === 'ink') simDetails=JSON.stringify(getInkSnapshot());
         else if (armedSimulation === 'oil') simDetails=JSON.stringify(getOilSnapshot());
         else if (armedSimulation === 'network') simDetails=JSON.stringify(getNetworkSnapshot());
+        else if (armedSimulation === 'fibonacci') simDetails = JSON.stringify(getFibonacciState());
         else if (armedSimulation === 'islands') simDetails = JSON.stringify(islandsSession);
         else if (armedSimulation === 'erosion') simDetails = JSON.stringify(getErosionRecordingRules());
         else if (armedSimulation === 'dla') simDetails = JSON.stringify({ ...dlaRules, mode: dlaMode, tuning: evolutionTuning.dla });
@@ -1913,6 +1925,7 @@ function currentCycleMode(simulation) {
         spiral:spiralMode,magnet:magnetMode,brightnessEvo:brightnessEvoMode,dla:dlaMode,
         breathe:breatheEvoMode,erosion:erosionRules.mode,islands:islandsSession?.mode??'classic',
         ink:activeVorticesMode(),network:getNetworkRules().mode??'palette',contour:getCracksGrowth().area??'all',cymatics:getCymaticsRules().resonanceVersion??1,
+        fibonacci: typeof fibonacciState === 'undefined' ? undefined : fibonacciState?.mode,
         nudgeBrighter:armedSimulation,nudgeDarker:armedSimulation})[simulation];
 }
 function rememberCurrentCycle() {
@@ -1934,6 +1947,7 @@ function refreshCycleIcons() {
     updateContourButtonUI();updateBreatheEvoButtonUI();updateNudgeButtonUI();updateWindButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
+    if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
 }
 function restoreCycleMode(simulation, mode) {
     switch(simulation){
@@ -1947,6 +1961,7 @@ function restoreCycleMode(simulation, mode) {
         case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;restorePolygonFlowPhase(spiralRules);break;
         case 'magnet':selectMagnetMode(mode);break;
         case 'network':saveNetworkSettings({...networkRules,mode});break;
+        case 'fibonacci': selectFibonacciMode(mode); break;
         case 'brightnessEvo':brightnessEvoMode=mode;break;
         case 'dla':dlaMode=mode;break;
         case 'breathe':breatheEvoMode=mode;break;
@@ -2066,13 +2081,13 @@ function armSimulation(simulationName, { recordIslandsStart = true, spiralEntry 
     brightnessEvoMode = 'off';
     dlaMode = 'off';
     breatheEvoMode = 'off';
-    turingState = null; inkState = null; oilState = null; networkState = null;
+    turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null;
     gsMode = 'off'; // איפוס הגרביטציה
     spiralMode = 'off'; // איפוס הספירלה (התיקון לבאג)
 magnetMode = 'off';
 if (typeof updateMagnetButtonUI === 'function') updateMagnetButtonUI();
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFibonacci, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
     simButtons.forEach(btn => btn.classList.remove('simulation-active'));
     
@@ -2084,6 +2099,7 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
+    if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
     updateBreatheEvoButtonUI();
     if (typeof updateGravitationalSortButtonUI === 'function') updateGravitationalSortButtonUI();
     if (typeof updateSpiralButtonUI === 'function') updateSpiralButtonUI();
@@ -2098,6 +2114,10 @@ const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheM
 if (!isTogglingOff && simulationName !== null) {
     armedSimulation = simulationName;
     if (simulationName === 'ink')inkState=createInkState(n);
+    if (simulationName === 'fibonacci') {
+        const seed = isExecutingMacroCommand ? 0 : Math.floor(Math.random() * 2 ** 32);
+        fibonacciState = createFibonacciState(n, seed & 3, undefined, fibonacciColorAdvance, seed);
+    }
     if (simulationName === 'oil')oilState=createOilState(n);
     if (simulationName === 'network'){networkState=createNetworkState(n);if(!isExecutingMacroCommand&&!isMacroPlaying)networkRules=validateNetworkRules({...networkRules,mode:'spatial'});}
     if (simulationName === 'cymatics')cymaticsState=createCymaticsState(n);
@@ -2203,6 +2223,7 @@ if (simulationName === 'magnet') {
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
+    if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
 }
 
       
@@ -2406,6 +2427,8 @@ if (simulationName === 'magnet') {
                 magnetAnchorLimit, wind: structuredClone(windSettings),
                 geometricFlowVisible: experimentalSimulations.visible('spiral'),
                 breatheVisible: experimentalSimulations.visible('breathe'),
+                fibonacciVisible: experimentalSimulations.visible('fibonacci'),
+                fibonacciColorAdvance,
                 rememberSimulationModes: cycleMemory.enabled()
             },
             ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
@@ -2444,7 +2467,11 @@ if (simulationName === 'magnet') {
             windSettings = structuredClone(preferences.wind);
         }
         if (preferences.rememberSimulationModes !== undefined) cycleMemory.setEnabled(preferences.rememberSimulationModes);
-        for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible]]) {
+        if (preferences.fibonacciColorAdvance !== undefined) {
+            fibonacciColorAdvance = preferences.fibonacciColorAdvance;
+            if (fibonacciState) fibonacciState.colorAdvance = fibonacciColorAdvance;
+        }
+        for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible], ['fibonacci', preferences.fibonacciVisible]]) {
             if (visible === undefined) continue;
             experimentalSimulations.set(id, visible);
             if (!visible && activeEvolutionControl() === id) armSimulation(null);
@@ -2496,6 +2523,7 @@ if (simulationName === 'magnet') {
         if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
+    if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
         if (activeEvolutionControl() === 'gravitationalSort') gsMode = gravitationalSortRules.direction;
         if (activeEvolutionControl() === 'spiral') spiralMode = spiralRules.method;
         if (armedSimulation === 'magnet') magnetMode = magnetRules.method;
@@ -2877,6 +2905,7 @@ dom.btnSpiral.title = getText('tooltip_spiral');
 dom.btnTuring.title = getText('tooltip_turing');
 updateInkButtonUI();
 if(dom.btnNetwork){dom.btnNetwork.title=getText('help_network');dom.btnNetwork.setAttribute('aria-label',dom.btnNetwork.title);}
+updateFibonacciButtonUI();
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         dom.btnBrushMode.title = getBrushModeTitle();
 
@@ -2969,9 +2998,9 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
         armedSimulation = null;
         updateNudgeButtonUI();
         dlaState = null;
-turingState = null; inkState = null; oilState = null; networkState = null;
+turingState = null; inkState = null; oilState = null; networkState = null; fibonacciState = null;
 
-const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
+const simButtons = [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFibonacci, dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile, dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker].filter(Boolean);
 
 
         simButtons.forEach(btn => btn.classList.remove('simulation-active'));
@@ -2996,6 +3025,7 @@ gsMode = 'off';
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
+    if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.active())refreshCycleIcons();
 
       }
@@ -3841,6 +3871,60 @@ function cycleChiFlowMode() {
     window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
 }
 
+function getFibonacciState() {
+    if (fibonacciState?.n !== n) {
+        fibonacciState = createFibonacciState(n, fibonacciState?.orientation, fibonacciState?.mode,
+            fibonacciState?.colorAdvance ?? fibonacciColorAdvance, fibonacciState?.seed);
+    }
+    return fibonacciState;
+}
+
+function restoreFibonacciState(state) {
+    if (state.n !== n) throw new Error('Fibonacci board size mismatch');
+    if (armedSimulation !== 'fibonacci') armSimulation('fibonacci');
+    fibonacciState = state;
+    updateFibonacciButtonUI();
+}
+
+function updateFibonacciButtonUI() {
+    const active = armedSimulation === 'fibonacci';
+    const mode = active ? getFibonacciState().mode : cycleMemory.entry('fibonacci') ?? FIBONACCI_MODES[0];
+    dom.btnFibonacci.dataset.mode = mode;
+    dom.btnFibonacci.classList.toggle('simulation-active', active);
+    dom.btnFibonacci.setAttribute('aria-pressed', String(active));
+    dom.btnFibonacci.title = `${getText('help_fibonacci')} · ${getText('fibonacci_' + mode)}`;
+    dom.btnFibonacci.setAttribute('aria-label', dom.btnFibonacci.title);
+}
+
+function selectFibonacciMode(mode) {
+    const state = getFibonacciState();
+    state.mode = mode;
+    updateFibonacciButtonUI();
+}
+
+function saveFibonacciSettings({ colorAdvance }) {
+    if (armedSimulation !== 'fibonacci' || !experimentalSimulations.visible('fibonacci') ||
+        isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || !isFibonacciColorAdvance(colorAdvance)) return false;
+    fibonacciColorAdvance = colorAdvance;
+    getFibonacciState().colorAdvance = colorAdvance;
+    recordLiveSimulationRules('fibonacci');
+    persistWorkspaceSettings(getWorkspaceSettings());
+    settingsProfiles?.scheduleCapture();
+    return true;
+}
+
+function cycleFibonacciMode() {
+    if (armedSimulation !== 'fibonacci') armSimulation('fibonacci');
+    else if (getFibonacciState().mode === FIBONACCI_MODES[0]) selectFibonacciMode(FIBONACCI_MODES[1]);
+    else if (isLifePlaying) selectFibonacciMode(FIBONACCI_MODES[0]);
+    else {
+        armSimulation(null);
+        window.logArtEvent('Fibonacci Off', '---');
+        return;
+    }
+    window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
+}
+
 function getNetworkRules(){return replayNetworkRules??networkRules;}
 function getNetworkSnapshot(){return {networkVersion:1,rules:{...getNetworkRules()},state:restoreNetworkState(networkState?.n===n?networkState:createNetworkState(n))};}
 function restoreNetworkSnapshot(value,{preservePreferences=false}={}){
@@ -4600,7 +4684,7 @@ function createArtRecipeFile(prefix = '') {
         exportedLog.push(`[${timestamp}] WIND_END -> ${JSON.stringify({ windVersion: 1,
             batch: windBatch.id, elapsed: Math.max(0, performance.now() - windBatch.time), reason: 'stop' })}`);
     }
-    if ((armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
+    if ((armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci' || (armedSimulation === 'contour' && contourMode === 'cracks')) && isLifePlaying) {
         const now = new Date();
         const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
         exportedLog.push(`[${timestamp}] [GEN:${currentGenerationCount}] PAUSE -> ---`);
@@ -4638,7 +4722,7 @@ function createArtRecipeFile(prefix = '') {
 // Capture live simulation progress without pausing or changing the original log.
 function createStudioRecipeFile() {
     const file = createArtRecipeFile();
-    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network') return file;
+    if (!isLifePlaying || !armedSimulation || armedSimulation === 'islands' || armedSimulation === 'cymatics' || armedSimulation === 'ink' || armedSimulation === 'oil' || armedSimulation === 'network' || armedSimulation === 'fibonacci') return file;
     const now = new Date();
     const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
     const generation = armedSimulation === 'breathe' ? '' : ` [GEN:${currentGenerationCount}]`;
@@ -4695,6 +4779,7 @@ function getHistorySettings(state) {
         ...(state.inkState ? {inkState:state.inkState} : {}),
         ...(state.oilState ? {oilState:state.oilState} : {}),
         ...(state.networkState ? {networkState:state.networkState} : {}),
+        ...(state.fibonacciState ? {fibonacciState:state.fibonacciState} : {}),
         ...(state.gravityRules ? { gravityRules: { ...state.gravityRules } } : {}),
         ...(state.contourState ? { contourState: state.contourState } : {}) };
 }
@@ -4726,6 +4811,9 @@ function validateHistorySettings(settings) {
     if(settings?.inkState){const ink=validateInkSnapshot(settings.inkState);if(ink.state.n!==settings.n)throw new Error('Ink board size mismatch');}
     if(settings?.oilState){const oil=validateOilSnapshot(settings.oilState);if(oil.state.n!==settings.n)throw new Error('Oil board size mismatch');}
     if(settings?.networkState){const network=validateNetworkSnapshot(settings.networkState);if(network.state.n!==settings.n)throw new Error('Network board size mismatch');}
+    if (settings?.fibonacciState && validateFibonacciState(settings.fibonacciState).n !== settings.n) {
+        throw new Error('Fibonacci board size mismatch');
+    }
     if (settings?.contourState) validateContourSnapshot(settings.contourState);
     if (!settings || !Number.isInteger(settings.n) || settings.n < 1 || settings.n > 327 ||
         !Number.isInteger(settings.activePaletteIndex) || settings.activePaletteIndex < 0 ||
@@ -4775,6 +4863,7 @@ function applyHistorySettings(settings) {
     if(settings.inkState)restoreInkSnapshot(settings.inkState);
     if(settings.oilState)restoreOilSnapshot(settings.oilState);
     if(settings.networkState)restoreNetworkSnapshot(settings.networkState);
+    if (settings.fibonacciState) restoreFibonacciState(validateFibonacciState(settings.fibonacciState));
     if (settings.contourState) restoreContourSnapshot(settings.contourState);
     let changed = false;
     if (currentSortMethod !== settings.currentSortMethod) {
@@ -5038,6 +5127,9 @@ function parseMacroText(text) {
         if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: ink |'))validateInkSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
         if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: oil |'))validateOilSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
         if(['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName)&&action.details.startsWith('Armed: network |'))validateNetworkSnapshot(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
+        if (['PLAY','STEP FORWARD','SIMULATION_RULES'].includes(action.eventName) && action.details.startsWith('Armed: fibonacci |')) {
+            validateFibonacciState(JSON.parse(action.details.match(/\|\s+Rules:\s+(.*)$/)[1]));
+        }
     }
     let brushOpen = false;
     for (const action of actions) {
@@ -5418,6 +5510,7 @@ function stopMacro({ preserveFullscreen = false, preserveActivity = false } = {}
     if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
     if(typeof updateNetworkButtonUI==='function')updateNetworkButtonUI();
+    if (typeof updateFibonacciButtonUI === 'function') updateFibonacciButtonUI();
     replayCracksMaterial = null; replayCracksGrowth = null; replayCracksBrush = null;
     if(typeof updateContourButtonUI==='function')updateContourButtonUI();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.enabled()){
@@ -5535,6 +5628,7 @@ function applyMacroRules(details) {
     const restoredInk=sim==='ink'?validateInkSnapshot(JSON.parse(rulesStr)):null;
     const restoredOil=sim==='oil'?validateOilSnapshot(JSON.parse(rulesStr)):null;
     const restoredNetwork=sim==='network'?validateNetworkSnapshot(JSON.parse(rulesStr)):null;
+    const restoredFibonacci = sim === 'fibonacci' ? validateFibonacciState(JSON.parse(rulesStr)) : null;
     const restoredCymatics=sim==='cymatics'?validateCymaticsSnapshot(JSON.parse(rulesStr)):null;
     const restoredIslands = sim === 'islands' ? restoreIslandsSession(JSON.parse(rulesStr)) : null;
 
@@ -5554,6 +5648,7 @@ if (sortMethod && currentSortMethod !== sortMethod) {
     if(sim==='ink'){restoreInkSnapshot(restoredInk);return sim;}
     if(sim==='oil'){restoreOilSnapshot(restoredOil);return sim;}
     if(sim==='network'){restoreNetworkSnapshot(restoredNetwork);return sim;}
+    if (restoredFibonacci) { restoreFibonacciState(restoredFibonacci); return sim; }
     if(sim==='cymatics'){restoreCymaticsSnapshot(restoredCymatics);return sim;}
     if (sim === 'islands') {
         islandsSession = restoredIslands;
@@ -5836,6 +5931,9 @@ function executeMacroAction(action) {
         const snapshot=validateCymaticsSnapshot(JSON.parse(action.details));
         if(armedSimulation==='cymatics'){if(isLifePlaying)pauseLife();armSimulation(null);}
         replayCymaticsRules=snapshot.rules;cymaticsState=snapshot.state;updateCymaticsButtonUI();
+    }
+    else if (action.eventName === 'Fibonacci Off') {
+        if (armedSimulation === 'fibonacci' && !isLifePlaying) armSimulation(null);
     }
     else if (action.eventName === 'SIMULATION_RULES') {
         applyMacroRules(action.details);
@@ -6294,10 +6392,10 @@ else if (action.eventName === 'Invert Colors') {
                 settingsProfiles?.scheduleCapture();
                 return true;
             },
-            getEvolutionTuning: () => structuredClone(evolutionTuning),
+            getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), fibonacci: { colorAdvance: normalizeFibonacciColorAdvance(fibonacciState?.colorAdvance) ?? fibonacciColorAdvance } }),
             getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation],
-            canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && !isBreathing && !isMacroLoaded && !isMacroPlaying,
-            saveEvolutionTuning,
+            canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && experimentalSimulations.visible(simulation) && !isBreathing && !isMacroLoaded && !isMacroPlaying,
+            saveEvolutionTuning: (simulation, draft, mode) => simulation === 'fibonacci' ? saveFibonacciSettings(draft) : saveEvolutionTuning(simulation, draft, mode),
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
             canEditCracksSettings: () => armedSimulation === 'contour' && contourMode === 'cracks' && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             getCracksSettings: () => ({ ...getCracksMaterial(), ...(cracksState && cracksState.version<3 ? DEFAULT_CRACKS_GROWTH : getCracksGrowth()), ...(cracksState && cracksState.version<3 ? {enabled:false} : {}) }),
@@ -6473,6 +6571,7 @@ updateBrightnessEvoButtonUI();
                 if(!enabled&&activeEvolutionControl()===id){if(isLifePlaying)pauseLife();armSimulation(null);}
                 updateInkButtonUI();
                 evolutionDrawer?.applyLayout();
+                if (id === 'fibonacci') settingsProfiles?.scheduleCapture();
             }
         });
         evolutionDrawer = createEvolutionDrawer({
@@ -6694,6 +6793,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 else vorticesCycleUI.open();
             }],
             [dom.btnNetwork,'network',cycleNetworkMode,()=>networkSettingsUI.open()],
+            [dom.btnFibonacci, 'fibonacci', cycleFibonacciMode, modals.openFibonacciSettingsModal],
             [dom.btnTuring, 'turing', () => armSimulation('turing'), modals.openTuringSettingsModal],
             [dom.btnNudgeBrighter, 'nudgeBrighter', cycleNudgeMode, modals.openNudgeSettingsModal],
             [dom.btnBrightnessEvo, 'brightnessEvo', cycleBrightnessEvoMode, modals.openBrightnessSettingsModal],
@@ -6725,8 +6825,8 @@ dom.btnWind.addEventListener('keydown', event => {
                 onSwipeFallback: evolutionDrawer.swipePage,
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
-                canInteract: () => !isBreathing,
-                canOpen: () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) && (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral', 'gravitationalSort'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
+                canInteract: () => !isBreathing && (simulation !== 'fibonacci' || experimentalSimulations.visible('fibonacci')),
+                canOpen: () => Boolean(onOpen) && (simulation!=='islands'||islandsSession?.mode!=='oil'||canEditIslandsOil()) && (!['brightnessEvo', 'breathe', 'islands', 'dla', 'spiral', 'gravitationalSort', 'fibonacci'].includes(simulation) || !isMacroLoaded) && !evolutionExplanation.isOpen() && matchesEvolutionControl(simulation) && (simulation!=='ink'||['ink','cymatics'].includes(armedSimulation)||canEditVorticesCycle()),
                 beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
             });
         });

@@ -2891,6 +2891,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 .ink-settings-dialog .fluid-preset-card:last-child { grid-column:1 / -1; }
 
+#btnFibonacci { display:none; touch-action:none !important; }
+#btnFibonacci svg { stroke:var(--sim-color); }
+#btnFibonacci.simulation-active svg { stroke:var(--gold); }
+
+#btnFibonacci[data-mode="restart"] [data-fibonacci-icon="continuous"],
+#btnFibonacci[data-mode="continuous"] [data-fibonacci-icon="restart"] { display:none; }
+
 #btnNetwork { display:none; touch-action:none !important; }
 #btnNetwork svg { stroke:var(--sim-color); }
 #btnNetwork.simulation-active svg { stroke:var(--gold); stroke-width:2; }

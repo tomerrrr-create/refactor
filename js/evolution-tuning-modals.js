@@ -1,18 +1,21 @@
 import { focusSettingsHeading } from './dialog-focus.js';
 import { INITIAL_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
+import { DEFAULT_FIBONACCI_COLOR_ADVANCE, FIBONACCI_COLOR_ADVANCE_RANGE } from './simulations/fibonacci.js';
 
 const definitions = {
     brightnessEvo: { title: 'tuning_brightness_title', button: 'btnBrightnessEvo',
         modes: ['brightness', 'contrast'], fields: ['smoothing', 'contrast'] },
     breathe: { title: 'tuning_breathe_title', button: 'btnShowBreatheMenu',
         modes: ['solo', 'group', 'random-cell', 'random-color'], fields: ['speed', 'depth'] },
+    fibonacci: { title: 'tuning_fibonacci_title', button: 'btnFibonacci', fields: ['colorAdvance'],
+        defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE }, limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE } },
     islands: { title: 'tuning_islands_title', button: 'btnIslands', fields: ['activity'] },
     dla: { title: 'dla_modal_title', button: 'btnDla', modes: ['genetics', 'no-genetics'], fields: ['batchSize'] }
 };
 const breatheModeIcons = { solo: 'iconBreatheSolo', group: 'iconBreatheGroup', 'random-cell': 'iconBreatheRandomCell', 'random-color': 'iconBreatheRandomColor' };
 const percentage = value => `${Math.round(value * 100)}%`;
-const format = (field, value) => field === 'batchSize' ? String(value) : percentage(value);
+const format = (field, value) => field === 'batchSize' ? String(value) : field === 'colorAdvance' ? `${value}%` : percentage(value);
 
 export function initializeEvolutionTuningModals(app) {
     const openers = {};
@@ -76,7 +79,7 @@ export function initializeEvolutionTuningModals(app) {
             const row = document.createElement('div'); row.className = 'tuning-field';
             const id = `${simulation}Tuning_${field}`;
             row.innerHTML = `<label for="${id}"></label><output for="${id}"></output><input id="${id}" type="range"/><p id="${id}Note"></p>`;
-            const [min, max, step] = EVOLUTION_TUNING_LIMITS[simulation][field];
+            const [min, max, step] = (definition.limits ?? EVOLUTION_TUNING_LIMITS[simulation])[field];
             const input = row.querySelector('input');
             Object.assign(input, { min, max, step });
             input.setAttribute('aria-describedby', `${id}Note`);
@@ -89,7 +92,7 @@ export function initializeEvolutionTuningModals(app) {
         dialog.querySelector('[data-close]').addEventListener('click', close);
         dialog.querySelector('[data-cancel]').addEventListener('click', close);
         dialog.querySelector('[data-reset]').addEventListener('click', () => {
-            draft = { ...INITIAL_EVOLUTION_TUNING[simulation] }; render();
+            draft = { ...(definition.defaults ?? INITIAL_EVOLUTION_TUNING[simulation]) }; render();
         });
         dialog.querySelector('form').addEventListener('submit', event => {
             event.preventDefault();
@@ -111,7 +114,8 @@ export function initializeEvolutionTuningModals(app) {
             if (!app.canEditEvolutionTuning(simulation) || dialog.open) return;
             draft = { ...app.getEvolutionTuning()[simulation] };
             mode = app.getEvolutionTuningMode(simulation);
-            const icon = document.getElementById(definition.button)?.querySelector('svg')?.cloneNode(true);
+            const icons = [...document.getElementById(definition.button).querySelectorAll(':scope > svg')];
+            const icon = (icons.find(svg => getComputedStyle(svg).display !== 'none') ?? icons[0])?.cloneNode(true);
             // Strip IDs to avoid duplicate SVG references in the document.
             if (icon) {
                 icon.removeAttribute('id');
@@ -125,6 +129,7 @@ export function initializeEvolutionTuningModals(app) {
     }
     return {
         openBrightnessSettingsModal: openers.brightnessEvo,
+        openFibonacciSettingsModal: openers.fibonacci,
         openBreatheSettingsModal: openers.breathe,
         openIslandsSettingsModal: openers.islands,
         openDlaSettingsModal: openers.dla
