@@ -128,8 +128,6 @@ export const translations = {
   network_mode_spatial:{en:'Network · spatial',he:'רשת · מרחבית',ru:'Сеть · пространственная',nl:'Netwerk · ruimtelijk'},
   network_spatial_description:{en:'Patches connect by distance, size and existing traffic. Sorting leaves growth unchanged. The background is calculated or darkest by luminance.',he:'הכתמים מתחברים לפי מרחק, גודל ותנועה קיימת. המיון אינו משנה את הצמיחה. הרקע מחושב או הכהה ביותר לפי לומיננס.',ru:'Связи зависят от расстояния, размера и нагрузки. Сортировка не меняет рост. Фон вычисляется или выбирается по яркости.',nl:'Verbindingen volgen afstand, grootte en bestaand verkeer. Sorteren verandert de groei niet. De achtergrond is berekend of het donkerst op luminantie.'},
   help_fibonacci: {en:'Fibonacci',he:'פיבונאצ׳י',ru:'Фибоначчи',nl:'Fibonacci'},
-  fibonacci_squares: {en:'Square Spiral',he:'ספירלת ריבועים',ru:'Спираль квадратов',nl:'Vierkantenspiraal'},
-  fibonacci_flower: {en:'Flower',he:'פרח',ru:'Цветок',nl:'Bloem'},
   help_network: {en:'Living network',he:'רשת חיה',ru:'Живая сеть',nl:'Levend netwerk'},
   network_description: {en:'Paint a few separated patches. Threads grow in their source colors; sorting changes attraction and avoidance.',he:'צייר כמה כתמים נפרדים. החוטים צומחים בצבע המקור; המיון משנה משיכה והימנעות.',ru:'Нарисуйте отдельные пятна. Нити растут в их цветах; сортировка меняет притяжение и отталкивание.',nl:'Teken losse vlekken. Draden groeien in de bronkleuren; sortering verandert aantrekking en vermijding.'},
   network_background: {en:'Background color',he:'צבע הרקע',ru:'Цвет фона',nl:'Achtergrondkleur'},

@@ -2894,8 +2894,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnFibonacci { display:none; touch-action:none !important; }
 #btnFibonacci svg { stroke:var(--sim-color); }
 #btnFibonacci.simulation-active svg { stroke:var(--gold); }
-#btnFibonacci[data-mode="squares"] [data-fibonacci-icon="flower"],
-#btnFibonacci[data-mode="flower"] [data-fibonacci-icon="squares"] { display:none; }
 
 #btnNetwork { display:none; touch-action:none !important; }
 #btnNetwork svg { stroke:var(--sim-color); }
