@@ -1,6 +1,7 @@
 import {vorticesModeFor,RESONANCE_MAPS} from '../js/vortices-modes.js';
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
-import {CYMATICS_RESONANCE_MAPS,DEFAULT_CYMATICS_RULES,INITIAL_CYMATICS_RULES,INITIAL_CYMATICS_FREQUENCIES,validateCymaticsRules,migrateCymaticsPreferences,validateCymaticsFrequencies,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,validateCymaticsStrengths,selectCymaticsMap} from '../js/cymatics-settings.js';
+import {CENTERED_HEART_FIELD_VERSION,CYMATICS_RESONANCE_MAPS,DEFAULT_CYMATICS_RULES,INITIAL_CYMATICS_RULES,INITIAL_CYMATICS_FREQUENCIES,validateCymaticsRules,migrateCymaticsPreferences,validateCymaticsFrequencies,createCymaticsFrequencies,rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength,validateCymaticsStrengths,selectCymaticsMap} from '../js/cymatics-settings.js';
+import {createCenteredHeartField} from '../js/simulations/cymatics-heart.js';
 import {getCymaticsField,createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCymaticsGeneration} from '../js/simulations/cymatics.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 import {validateProfileSnapshot} from '../js/profile-state.js';
@@ -39,6 +40,38 @@ test('settings keep the Heart frequency and strength from the retired experiment
  settings.rules.cymatics=old;
  assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.cymatics,rules);
  assert.throws(()=>validateCymaticsRules(old));
+});
+test('centered Heart builds gradually and keeps the tip readable through the entire wave cycle', () => {
+ const n=81, tip=field=>(field[60*n+36]+field[60*n+44])/2-field[60*n+40];
+ const [early, forming, formed]=[0,75,150].map(step=>createCenteredHeartField(n,123,0,step));
+ assert(tip(early)<tip(forming)&&tip(forming)<tip(formed));
+ for(const step of [150,300,600,900,1200]){
+  const field=createCenteredHeartField(n,123,step,step);
+  assert(tip(field)>6500,'the waves do not erase the contour');
+  const tipLine=Array.from(field.slice(60*n+35,60*n+46));
+  assert(Math.abs(tipLine.indexOf(Math.min(...tipLine))-5)<=1,'the tip stays on the center axis');
+ }
+ assert.notEqual(createCenteredHeartField(n,123,0,150)[0],createCenteredHeartField(n,123,300,150)[0]);
+ assert.notDeepEqual(formed,createCenteredHeartField(n,900,0,150));
+ assert.deepEqual(formed,createCenteredHeartField(n,123,1200,1350));
+});
+test('new Heart selections record a version and resume formation exactly with or without phase motion', () => {
+ const {heart,grid}=CYMATICS_RESONANCE_MAPS;
+ const rules=selectCymaticsMap(INITIAL_CYMATICS_RULES,heart).rules;
+ assert.equal(rules.heartFieldVersion,CENTERED_HEART_FIELD_VERSION);
+ assert.equal(selectCymaticsMap(rules,grid).rules.heartFieldVersion,undefined);
+ assert.throws(()=>validateCymaticsRules({...rules,resonanceVersion:grid}));
+ assert.throws(()=>restoreCymaticsState({...createCymaticsState(41),heartStartStep:1}));
+ for(const phaseMotion of [true,false]){
+  const ctx={...fixture(41),cymaticsRules:{...rules,phaseMotion}};
+  const old=structuredClone(ctx.currentBoardState);
+  const first=advance(ctx,{...createCymaticsState(41),steps:224,heartStartStep:224},64);
+  const checkpoint=validateCymaticsSnapshot(JSON.parse(JSON.stringify({cymaticsVersion:1,rules:ctx.cymaticsRules,state:first.state})));
+  const copy=structuredClone(first.ctx);
+  assert.deepEqual(advance(first.ctx,first.state,135),advance(copy,checkpoint.state,135));
+  assert.deepEqual(histogram(ctx.currentBoardState),histogram(old));
+  assert.deepEqual(ctx.currentBoardState[840],old[840]);
+ }
 });
 test('strength controls work, tiny/uniform/gold boards are safe and resized boards get a fresh runtime',()=>{
  const a={...fixture(),cymaticsRules:{mode:'resonance',frequency:800,resonanceVersion:4,strength:10}},b={...fixture(),cymaticsRules:{mode:'resonance',frequency:800,resonanceVersion:4,strength:100}};assert.notDeepEqual(advance(a,createCymaticsState(21),1),advance(b,createCymaticsState(21),1));
@@ -212,9 +245,16 @@ test('Resonance cycles Heart, Crosshatch, Interference and Diagonals by default 
  }
  assert(events.some(e=>e.name==='Cymatics Mode Changed'&&JSON.parse(e.details).mode==='off'));
  c.isLifePlaying=true;c.cymaticsState={...createCymaticsState(21),steps:250,random:123456};const state=c.cymaticsState;
- for(const map of [2,4,1,7]){c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation,'cymatics');assert.equal(c.cymaticsState,state);assert.equal(c.isLifePlaying,true);assert.equal(button.dataset.cymaticsMap,Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===map));}
+ for(const map of [2,4,1,7]){
+  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,map);assert.equal(c.armedSimulation,'cymatics');assert.equal(c.isLifePlaying,true);assert.equal(button.dataset.cymaticsMap,Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===map));
+  if(map===7){
+   assert.deepEqual({...c.cymaticsState},{...state,heartStartStep:250});
+   c.saveCymaticsSettings({...c.getCymaticsRules(),frequency:450});
+   assert.equal(c.cymaticsState.heartStartStep,250,'changing settings does not restart formation');
+  }else assert.equal(c.cymaticsState,state);
+ }
  assert.equal(button['aria-pressed'],'true');assert(classes.has('simulation-active'));
- c.isLifePlaying=false;assert.throws(()=>c.saveCymaticsSettings({pattern:'retired',strength:75}),/no longer supported/);assert.equal(c.cymaticsState,state);
+ c.isLifePlaying=false;const heartState=c.cymaticsState;assert.throws(()=>c.saveCymaticsSettings({pattern:'retired',strength:75}),/no longer supported/);assert.equal(c.cymaticsState,heartState);
  c.saveCymaticsSettings({...INITIAL_CYMATICS_RULES,resonanceVersion:5,phaseMotion:false});
  assert.equal(button.dataset.cymaticsMap,'clouds');
  c.cycleCymaticsMode();assert.equal(c.getCymaticsRules().resonanceVersion,7);

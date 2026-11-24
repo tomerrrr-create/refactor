@@ -5,8 +5,8 @@ import {createCloudField} from './cymatics-organic.js';
 import {moveCymaticsField} from './cymatics-motion.js';
 import {createInterferenceField} from './cymatics-interference.js';
 import {createCircularResonanceField} from './cymatics-circular.js';
-import {createHeartField} from './cymatics-heart.js';
-import {CYMATICS_RESONANCE_MAPS,validateCymaticsRules} from '../cymatics-settings.js';
+import {createCenteredHeartField,createHeartField} from './cymatics-heart.js';
+import {CENTERED_HEART_FIELD_VERSION,CYMATICS_RESONANCE_MAPS,validateCymaticsRules} from '../cymatics-settings.js';
 // Chladni-inspired square plate, not an acoustic solver. Only a derived field is
 // cached; serializable PRNG state and steps determine every particle exchange.
 let fieldSize=0,fieldPattern='',field=null;
@@ -82,7 +82,12 @@ export function createCymaticsState(n,seed=0x43ad19){
 export function restoreCymaticsState(value){
     if(!value||value.version!==1||!Number.isInteger(value.n)||value.n<1||value.n>327||
        !Number.isInteger(value.random)||value.random<1||value.random>0xffffffff||!Number.isSafeInteger(value.steps)||value.steps<0)throw new Error('Invalid Cymatics state');
-    return {version:1,n:value.n,random:value.random,steps:value.steps};
+    const {heartStartStep} = value;
+    if (heartStartStep !== undefined && (!Number.isSafeInteger(heartStartStep) || heartStartStep < 0 || heartStartStep > value.steps)) {
+        throw new Error('Invalid Heart formation start');
+    }
+    return {version:1,n:value.n,random:value.random,steps:value.steps,
+        ...(heartStartStep === undefined ? {} : {heartStartStep})};
 }
 export function validateCymaticsSnapshot(value){
     if(!value||value.cymaticsVersion!==1)throw new Error('Invalid Cymatics recording');
@@ -90,7 +95,12 @@ export function validateCymaticsSnapshot(value){
 }
 const dx=[-1,0,1,-1,1,-1,0,1],dy=[-1,-1,-1,0,0,1,1,1];
 export function runCymaticsGeneration({n,currentBoardState:board,currentPalette,cymaticsRules},previous){
-    const rules=validateCymaticsRules(cymaticsRules),state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n),energy=getCymaticsField(n,rules.frequency,rules.resonanceVersion,rules.phaseMotion?state.steps:0,rules.cosmicFieldVersion??1);
+    const rules=validateCymaticsRules(cymaticsRules);
+    const state=previous?.n===n?restoreCymaticsState(previous):createCymaticsState(n);
+    const phase=rules.phaseMotion?state.steps:0;
+    const energy=rules.heartFieldVersion===CENTERED_HEART_FIELD_VERSION
+        ?createCenteredHeartField(n,rules.frequency,phase,state.steps-(state.heartStartStep??0))
+        :getCymaticsField(n,rules.frequency,rules.resonanceVersion,phase,rules.cosmicFieldVersion??1);
     const random=()=>{let x=state.random;x^=x<<13;x^=x>>>17;x^=x<<5;state.random=x>>>0;return state.random/4294967296;};
     const length=currentPalette.length,rank=k=>((k%length)+length)%length;
     // Older recordings omit the flag and retain the original exchange direction.

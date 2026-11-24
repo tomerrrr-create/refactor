@@ -1,5 +1,6 @@
 export const CURRENT_RESONANCE_VERSION=2;
 export const CYMATICS_RESONANCE_MAPS=Object.freeze({heart:7,diagonal:1,grid:2,circular:3,interference:4,clouds:5,cosmic:6});
+export const CENTERED_HEART_FIELD_VERSION = 3;
 // New application/reset defaults are separate from legacy recording fallbacks.
 export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({heart:123,diagonal:11831,grid:20000,circular:20000,interference:20000,clouds:20000,cosmic:800});
 export const INITIAL_CYMATICS_RULES = Object.freeze({strength:35,mode:'resonance',frequency:INITIAL_CYMATICS_FREQUENCIES.heart,resonanceVersion:CYMATICS_RESONANCE_MAPS.heart,phaseMotion:true});
@@ -7,7 +8,7 @@ export const DEFAULT_CYMATICS_RULES=INITIAL_CYMATICS_RULES;
 const isEmpathyMap = version => version === CYMATICS_RESONANCE_MAPS.circular || version === CYMATICS_RESONANCE_MAPS.cosmic;
 
 export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
-    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['pattern','strength','mode','frequency','resonanceVersion','phaseMotion','cosmicFieldVersion','reversePaletteOrder'].includes(k))||
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['pattern','strength','mode','frequency','resonanceVersion','phaseMotion','cosmicFieldVersion','heartFieldVersion','reversePaletteOrder'].includes(k))||
        !Number.isInteger(value.strength)||value.strength<10||value.strength>100||
        (value.pattern!==undefined&&(typeof value.pattern!=='string'||!value.pattern.length||value.pattern.length>64)))throw new Error('Invalid Resonance settings');
     if(value.mode!=='resonance')throw new Error('The experimental Patterns mode is no longer supported');
@@ -26,6 +27,12 @@ export function validateCymaticsRules(value=DEFAULT_CYMATICS_RULES){
     if(value.cosmicFieldVersion!==undefined){
         if(![1,2,3].includes(value.cosmicFieldVersion))throw new Error('Invalid cosmic field version');
         result.cosmicFieldVersion=value.cosmicFieldVersion;
+    }
+    if (value.heartFieldVersion !== undefined) {
+        if (result.resonanceVersion !== CYMATICS_RESONANCE_MAPS.heart || value.heartFieldVersion !== CENTERED_HEART_FIELD_VERSION) {
+            throw new Error('Invalid Heart field version');
+        }
+        result.heartFieldVersion = value.heartFieldVersion;
     }
     if(value.reversePaletteOrder!==undefined){
         if(value.reversePaletteOrder!==true||!isEmpathyMap(result.resonanceVersion))throw new Error('Invalid Resonance palette order');
@@ -101,7 +108,7 @@ export function selectCymaticsMap(rules,version,frequencies,strengths){
     const name=Object.keys(CYMATICS_RESONANCE_MAPS).find(name=>CYMATICS_RESONANCE_MAPS[name]===version);
     if(!name)throw new Error('Invalid Cymatics map');
     const remembered=rememberCymaticsFrequency(frequencies,rules),rememberedStrengths=rememberCymaticsStrength(strengths,rules);
-    const {cosmicFieldVersion,reversePaletteOrder,...otherRules}=rules;
-    return {rules:validateCymaticsRules({...otherRules,...(version===6?{cosmicFieldVersion:3}:{}),...(isEmpathyMap(version)?{reversePaletteOrder:true}:{}),mode:'resonance',resonanceVersion:version,frequency:remembered[name],strength:rememberedStrengths[name],
+    const {cosmicFieldVersion,heartFieldVersion,reversePaletteOrder,...otherRules}=rules;
+    return {rules:validateCymaticsRules({...otherRules,...(version===6?{cosmicFieldVersion:3}:{}),...(version===CYMATICS_RESONANCE_MAPS.heart?{heartFieldVersion:CENTERED_HEART_FIELD_VERSION}:{}),...(isEmpathyMap(version)?{reversePaletteOrder:true}:{}),mode:'resonance',resonanceVersion:version,frequency:remembered[name],strength:rememberedStrengths[name],
         phaseMotion:rules.mode==='resonance'?Boolean(rules.phaseMotion):INITIAL_CYMATICS_RULES.phaseMotion}),frequencies:remembered,strengths:rememberedStrengths};
 }
