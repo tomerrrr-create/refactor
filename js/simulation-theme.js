@@ -9,11 +9,16 @@ const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
 const DEFAULT_GLOW_PULSE_SECONDS = 3.2;
 const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
-  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise'},
-  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן'},
-  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза'},
-  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois'}
+  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', 'moon-silver': 'Moon Silver', ivory: 'Ivory', 'dark-gray': 'Dark Gray'},
+  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', 'moon-silver': 'כסף ירחי', ivory: 'שנהב', 'dark-gray': 'אפור כהה'},
+  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', 'moon-silver': 'Лунное серебро', ivory: 'Слоновая кость', 'dark-gray': 'Тёмно-серый'},
+  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', 'moon-silver': 'Maanzilver', ivory: 'Ivoor', 'dark-gray': 'Donkergrijs'}
 };
+
+export function isSimulationTheme(value) {
+  return typeof value === 'string' && Object.hasOwn(LABELS.en, value);
+}
+
 export function getSimulationTheme() {
   return document.documentElement.dataset.simulationTheme || 'gold';
 }
@@ -35,7 +40,7 @@ export function setSimulationRunning(running) {
 }
 
 export function applySimulationTheme(value) {
-  const theme = RETIRED_DARK_THEMES.includes(value) ? 'blue' : Object.hasOwn(LABELS.en, value) ? value : 'gold';
+  const theme = RETIRED_DARK_THEMES.includes(value) ? 'blue' : isSimulationTheme(value) ? value : 'gold';
   document.documentElement.dataset.simulationTheme = theme;
   for (const preview of document.querySelectorAll('#simulationThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
@@ -46,7 +51,7 @@ export function applySimulationTheme(value) {
 }
 
 export function applySimulationPlaybackTheme(value) {
-  const theme = ['blue', 'gold', 'teal'].includes(value) ? value : 'gold';
+  const theme = isSimulationTheme(value) ? value : 'gold';
   document.documentElement.dataset.simulationPlaybackTheme = theme;
   for (const preview of document.querySelectorAll('#simulationPlaybackThemeSettings [data-theme]')) {
     preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));

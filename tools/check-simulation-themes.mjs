@@ -6,6 +6,11 @@ import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
 const artifacts='/tmp/evolution-theme-check';await mkdir(artifacts,{recursive:true});
+const colors={
+ blue:'rgb(63, 81, 181)', gold:'rgb(165, 139, 84)', teal:'rgb(104, 189, 181)',
+ 'moon-silver':'rgb(182, 195, 212)', ivory:'rgb(231, 216, 181)', 'dark-gray':'rgb(123, 126, 130)'
+};
+const addedFrames={ 'moon-silver':'#242c39', ivory:'#312c23', 'dark-gray':'#1a1b1e' };
 let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.themeTest={
  setup:()=>{pauseLife();isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();armSimulation('nudgeBrighter');},
@@ -39,24 +44,29 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.locator('.drawer-appearance').scrollIntoViewIfNeeded();await page.screenshot({path:artifacts+'/'+config.lang+'-themes-in-map.png'});
 
  for(const group of ['#simulationThemeSettings','#simulationPlaybackThemeSettings']){
-  assert.deepEqual(await page.locator(group+' [data-theme]').evaluateAll(es=>es.map(e=>e.dataset.theme)),['blue','gold','teal']);
+  assert.deepEqual(await page.locator(group+' [data-theme]').evaluateAll(es=>es.map(e=>e.dataset.theme)),Object.keys(colors));
   assert((await page.locator(group+' [data-theme]').evaluateAll(es=>es.map(e=>e.getAttribute('aria-label')))).every(Boolean));
  }
  assert.equal(await page.locator('#simModeBackground .sim-theme-layer').count(),0);
- for(const [rest,playback]of [['blue','gold'],['gold','teal'],['teal','blue']]){
+ for(const [rest,playback] of [['blue','gold'],['gold','teal'],['teal','blue'],['moon-silver','dark-gray'],['dark-gray','ivory'],['ivory','moon-silver']]){
   const before=await state();await tap('#simulationThemeSettings [data-theme='+rest+']');await tap('#simulationPlaybackThemeSettings [data-theme='+playback+']');
   const selected=await state();assert.deepEqual(selected.board,before.board);assert.equal(selected.history,before.history);assert.equal(selected.settings.simulationTheme,rest);assert.equal(selected.settings.simulationPlaybackTheme,playback);
   await tap('#evolutionDrawerDialog [data-close]');const frame=await backdrop.boundingBox(),buttonBounds=await page.locator('#btnNudgeBrighter').boundingBox();assert.equal(await opacity(),'1');assert((await backdrop.evaluate(e=>getComputedStyle(e).transitionProperty)).includes('opacity'));await page.screenshot({path:artifacts+'/'+config.lang+'-'+rest+'-paused.png'});await tap('#btnPlayPauseLife');assert((await state()).playing);assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),playback);await page.waitForTimeout(450);
-  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(118, 103, 65)',teal:'rgb(104, 189, 181)'})[playback]);assert.equal(await opacity(),'0');assert.deepEqual(await backdrop.boundingBox(),frame);assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);await page.screenshot({path:artifacts+'/'+config.lang+'-'+playback+'-running.png'});
+  assert.equal(await ink(),playback==='gold'?'rgb(118, 103, 65)':colors[playback]);assert.equal(await opacity(),'0');assert.deepEqual(await backdrop.boundingBox(),frame);assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);await page.screenshot({path:artifacts+'/'+config.lang+'-'+playback+'-running.png'});
   await tap('#btnPlayPauseLife');assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);await page.waitForTimeout(450);
-  assert.equal(await ink(),({blue:'rgb(63, 81, 181)',gold:'rgb(165, 139, 84)',teal:'rgb(104, 189, 181)'})[rest]);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);await map();
+  assert.equal(await ink(),colors[rest]);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);
+  if(addedFrames[rest]){
+   const rgb=addedFrames[rest].slice(1).match(/../g).map(channel=>parseInt(channel,16)).join(', ');
+   assert((await backdrop.evaluate(e=>getComputedStyle(e,'::before').backgroundImage)).includes('rgb('+rgb+')'));
+  }
+  await map();
  }
  // Reduced motion retains the same visibility states without transitions.
  await tap('#evolutionDrawerDialog [data-close]');await page.emulateMedia({reducedMotion:'reduce'});
  assert.equal(await opacity(),'1');assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
  await tap('#btnPlayPauseLife');assert.equal(await opacity(),'0');await tap('#btnPlayPauseLife');assert.equal(await opacity(),'1');
  await page.emulateMedia({reducedMotion:'no-preference'});
- await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,'teal');assert.equal(current.settings.simulationPlaybackTheme,'blue');
+ await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,'ivory');assert.equal(current.settings.simulationPlaybackTheme,'moon-silver');
  // Saved legacy profiles normalize only the retired appearance fields.
  await page.evaluate(()=>{const key='colorGridProfileDraftsV1',saved=JSON.parse(localStorage.getItem(key));for(const p of saved.profiles)for(const kind of ['saved','draft']){p[kind].settings.simulationTheme='deep-blue';p[kind].settings.simulationPlaybackTheme='deep-blue';p[kind].settings.brush.size=7;p[kind].settings.startup.boardSize=27;p[kind].settings.startup.brushSize=7;}localStorage.setItem(key,JSON.stringify(saved));localStorage.setItem('colorGridSimulationTheme','deep-blue');localStorage.setItem('colorGridSimulationPlaybackTheme','deep-blue');});
  await boot(true);current=await state();assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');assert.equal(current.settings.brush.size,7);assert.equal(current.settings.startup.boardSize,27);

@@ -6,9 +6,10 @@ import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorksp
 import { validateProfileSnapshot } from '../js/profile-state.js';
 const source = readFileSync(new URL('../js/simulation-theme.js', import.meta.url), 'utf8')
     .replace(/^import .*;\n/, '').replaceAll('export function ', 'function ');
+const themes = ['blue', 'gold', 'teal', 'moon-silver', 'ivory', 'dark-gray'];
 function harness(saved = {}, blocked = false) {
     const storage = new Map(Object.entries(saved)), attributes = new Set();
-    const buttons = () => ['blue', 'gold', 'teal'].map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
+    const buttons = () => themes.map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
         setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(k, fn) { this.handlers[k] = fn; } }));
     const rest = buttons(), playback = buttons(), hierarchy = {
         checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; }
@@ -45,7 +46,7 @@ test('Glow Pulse defaults to 3.2 seconds and saves the selected duration', () =>
     assert.equal(reload.styles.get('--simulation-halo-duration'), '0.6s');
 });
 test('all resting/playback color pairs restore the resting selection and never persist running state', () => {
-    for (const rest of ['blue', 'gold', 'teal']) for (const playback of ['blue', 'gold', 'teal']) {
+    for (const rest of themes) for (const playback of themes) {
         const h = harness(); h.run('initializeSimulationTheme()');
         h.run(`applySimulationTheme('${rest}'); applySimulationPlaybackTheme('${playback}')`);
         assert.equal(h.root.dataset.simulationEffectiveTheme, rest);
@@ -77,14 +78,18 @@ test('fresh/blocked storage defaults to gold at rest and while running; independ
         assert.equal(h.root.dataset.simulationEffectiveTheme, 'gold');
     }
 });
-test('playback color round-trips through settings and profiles; legacy profiles use gold', () => {
-    for (const simulationPlaybackTheme of ['blue', 'gold', 'teal']) {
-        const settings = { ...defaultWorkspaceSettings(), simulationPlaybackTheme };
+test('both colors round-trip through settings and profiles; legacy playback uses gold', () => {
+    for (const [index, simulationTheme] of themes.entries()) {
+        const simulationPlaybackTheme = themes[(index + 1) % themes.length];
+        const settings = { ...defaultWorkspaceSettings(), simulationTheme, simulationPlaybackTheme };
         assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)), settings);
-        assert.equal(validateProfileSnapshot({ settings }).settings.simulationPlaybackTheme, simulationPlaybackTheme);
+        const profile = validateProfileSnapshot({ settings });
+        assert.equal(profile.settings.simulationTheme, simulationTheme);
+        assert.equal(profile.settings.simulationPlaybackTheme, simulationPlaybackTheme);
     }
     assert.equal(validateProfileSnapshot({ settings: defaultWorkspaceSettings() }).settings.simulationPlaybackTheme, 'gold');
     assert.throws(() => serializeWorkspaceSettings({ ...defaultWorkspaceSettings(), simulationPlaybackTheme: 'red' }));
+    assert.throws(() => serializeWorkspaceSettings({ ...defaultWorkspaceSettings(), simulationTheme: ['gold'] }));
 });
 
 test('retired device choices fall back independently and replace only appearance preferences', () => {
