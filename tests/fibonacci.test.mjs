@@ -44,81 +44,75 @@ test('protected gold and individual colors survive continuous playback', () => {
     assert(sim.occupied().length > 20);
 });
 
-test('continuous Fibonacci keeps the completed footprint moving without restarting', () => {
-    const sim = simulate(21);
-    for (let i = 0; i < 126; i++) sim.step();
-    const footprint = sim.occupied();
-    assert.equal(footprint.length, 273);
-    const rows = new Set(footprint.map(i => Math.floor(i / 21)));
-    const columns = new Set(footprint.map(i => i % 21));
-    assert((rows.has(0) && rows.has(20)) || (columns.has(0) && columns.has(20)));
-    for (let i = 0; i < 500; i++) {
-        const before = sim.currentBoardState.map(cell => cell.k);
-        sim.step();
-        assert.deepEqual(sim.occupied(), footprint);
-        assert.equal(sim.state.frame, 126);
-        assert.equal(sim.state.waveFrame, 0);
-        assert.equal(sim.currentBoardState.filter((cell, index) => cell.k === before[index] + 1).length, footprint.length);
-    }
-});
-
-test('Color Wave grows the same shape, then moves the cadence along its strips', () => {
-    const continuous = simulate(21);
-    const wave = simulate(21, 0, 'wave');
-    const strips = [];
-    for (let frame = 0; frame < 126; frame++) {
-        const previous = new Set(wave.occupied());
-        wave.step();
-        continuous.step();
-        const recruited = wave.occupied().filter(index => !previous.has(index));
-        if (recruited.length) strips.push(recruited);
-        assert.deepEqual(wave.currentBoardState, continuous.currentBoardState);
-    }
-
-    for (let frame = 0; frame < 24; frame++) wave.step();
-    const footprint = wave.occupied();
-    const lead = strips[0][0], middle = strips[Math.floor(strips.length / 2)][0];
-    let leadMovesMore = false, middleMovesMore = false;
-    for (let window = 0; window < 8; window++) {
-        const leadStart = wave.currentBoardState[lead].k, middleStart = wave.currentBoardState[middle].k;
-        for (let frame = 0; frame < 12; frame++) {
-            const before = wave.currentBoardState.map(cell => cell.k);
-            wave.step();
-            assert.deepEqual(wave.occupied(), footprint);
-            for (const strip of strips) {
-                const moves = wave.currentBoardState[strip[0]].k - before[strip[0]];
-                assert(moves === 0 || moves === 1);
-                assert(strip.every(index => wave.currentBoardState[index].k - before[index] === moves));
-            }
+test('oversized Fibonacci squares fill the remaining strip in all orientations', () => {
+    for (const n of [2, 3, 5, 21, 149, 249]) {
+        for (let orientation = 0; orientation < 4; orientation++) {
+            if (n > 21 && orientation > 0) break;
+            const sim = simulate(n, orientation);
+            let previousFrame;
+            do {
+                previousFrame = sim.state.frame;
+                sim.step();
+            } while (sim.state.frame !== previousFrame);
+            assert.equal(sim.occupied().length, n * n, `${n}/${orientation}`);
+            const before = sim.currentBoardState.map(cell => cell.k);
+            sim.step();
+            assert(sim.currentBoardState.every((cell, index) => cell.k === before[index] + 1));
+            assert.equal(sim.state.frame, previousFrame);
         }
-        const leadMoves = wave.currentBoardState[lead].k - leadStart;
-        const middleMoves = wave.currentBoardState[middle].k - middleStart;
-        leadMovesMore ||= leadMoves > middleMoves;
-        middleMovesMore ||= middleMoves > leadMoves;
     }
-    assert(leadMovesMore && middleMovesMore);
 });
 
-test('wave checkpoints preserve the completed footprint and phase across palette wraps', () => {
-    const sim = simulate(21, 2, 'wave');
+test('restart and continuous modes have the same growth and diverge after filling the board', () => {
+    const continuous = simulate(21);
+    const restart = simulate(21, 0, 'restart');
+    while (continuous.occupied().length < 21 ** 2) {
+        continuous.step();
+        restart.step();
+        assert.deepEqual(restart.currentBoardState, continuous.currentBoardState);
+        assert.equal(restart.state.outgoing, undefined);
+    }
+    const originalOrigin = restart.state.origin;
+    for (let frame = 1; frame <= 3; frame++) {
+        continuous.step();
+        restart.step();
+        assert.equal(restart.state.outgoing.origin, originalOrigin);
+        assert.notEqual(restart.state.origin, originalOrigin);
+        assert.equal(restart.state.frame, frame);
+        assert.deepEqual(restart.currentBoardState, continuous.currentBoardState);
+    }
+    continuous.step();
+    restart.step();
+    assert.equal(restart.state.frame, 4);
+    assert(restart.currentBoardState.some((cell, index) => cell.k < continuous.currentBoardState[index].k));
+    assert(restart.currentBoardState.every((cell, index) => cell.k <= continuous.currentBoardState[index].k));
+    assert(restart.occupied().length === 21 ** 2, 'outgoing strips retain their last color');
+});
+
+test('restart checkpoints replay across handoffs and palette wraps', () => {
+    const sim = simulate(21, 2, 'restart');
     sim.currentPalette.length = 23;
     sim.currentBoardState[220].isGold = true;
-    for (let i = 0; i < 175; i++) sim.step();
+    while (!sim.state.outgoing) sim.step();
+    for (let i = 0; i < 4; i++) sim.step();
     const checkpoint = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
     const restored = structuredClone(sim.currentBoardState);
-    for (let i = 0; i < 500; i++) {
+    let restarts = 0;
+    for (let i = 0; i < 550; i++) {
+        const previousFrame = sim.state.frame;
         sim.step();
+        if (sim.state.frame < previousFrame) restarts++;
         runFibonacciGeneration({ currentBoardState: restored, currentPalette: sim.currentPalette }, checkpoint);
     }
+    assert(restarts >= 3);
     assert.deepEqual(restored, sim.currentBoardState);
     assert.deepEqual(checkpoint, sim.state);
     assert.equal(restored[220].k, 0);
-    assert.throws(() => validateFibonacciState({ ...checkpoint, waveFrame: 505 }));
-    assert.throws(() => validateFibonacciState({ ...checkpoint, mode: 'continuous' }));
+    assert.throws(() => validateFibonacciState({ ...checkpoint, origin: 21 ** 2 }));
 });
 
 test('one-cell boards cycle within the palette in both modes', () => {
-    for (const mode of ['continuous', 'wave']) {
+    for (const mode of ['restart', 'continuous']) {
         const sim = simulate(1, 0, mode);
         sim.currentPalette.length = 2;
         sim.step();

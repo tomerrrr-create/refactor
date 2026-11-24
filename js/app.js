@@ -3888,10 +3888,7 @@ function updateFibonacciButtonUI() {
 
 function selectFibonacciMode(mode) {
     const state = getFibonacciState();
-    if (state.mode !== mode) {
-        state.mode = mode;
-        state.waveFrame = 0;
-    }
+    state.mode = mode;
     updateFibonacciButtonUI();
 }
 
