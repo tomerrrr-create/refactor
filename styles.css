@@ -2923,34 +2923,34 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 
 /* Give the third tier the resting theme's ink during Gold playback. */
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife),
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   .evolution-drawer-internal {
   --playback-control-ink: var(--sim-rest-color);
   --gold: var(--playback-control-ink);
   color: var(--playback-control-ink);
 }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife) :is([stroke="#fff"], [stroke="#424242"]) {
   stroke: var(--playback-control-ink);
 }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife) [fill="#fff"],
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   #btnBrushMode.brush-continuous svg path {
   fill: var(--playback-control-ink);
 }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active #gapValue {
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active #gapValue {
   color: var(--playback-control-ink);
 }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   .ctrl > .glyph-random { background: linear-gradient(90deg, #000 50%, var(--playback-control-ink) 50%); }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   .ctrl > .glyph-invert { background: linear-gradient(90deg, var(--playback-control-ink) 50%, #000 50%); }
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   .ctrl > :is(.glyph-save, .glyph-reset)::after,
-:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"] #controlsContainer.sim-mode-active >
+:root[data-gold-playback-hierarchy][data-simulation-running][data-simulation-effective-theme="gold"]:not([data-gold-playback-fade-out]) #controlsContainer.sim-mode-active >
   .evolution-drawer-internal :is(.drawer-page-dot, .drawer-active-mark) {
   background: var(--playback-control-ink);
 }

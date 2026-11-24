@@ -7,6 +7,7 @@ const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
 const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
 const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
 const DEFAULT_GLOW_PULSE_SECONDS = 3.2;
+let cancelGoldPlaybackFade;
 const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
   en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', 'moon-silver': 'Moon Silver', ivory: 'Ivory', 'dark-gray': 'Dark Gray'},
@@ -35,8 +36,53 @@ function updateEffectiveTheme() {
 
 // Running state is transient; only the two chosen colors are saved.
 export function setSimulationRunning(running) {
-  document.documentElement.toggleAttribute('data-simulation-running', Boolean(running));
+  const root = document.documentElement;
+  root.toggleAttribute('data-simulation-running', Boolean(running));
   updateEffectiveTheme();
+  if (!running && cancelGoldPlaybackFade) {
+    const cancel = cancelGoldPlaybackFade;
+    // A live handoff pauses and resumes in the same turn.
+    queueMicrotask(() => {
+      if (!root.hasAttribute('data-simulation-running')) cancel();
+    });
+  }
+}
+
+export function fadeGoldPlaybackControls(toolbar) {
+  const root = document.documentElement;
+  if (!root.hasAttribute('data-gold-playback-hierarchy') ||
+      root.dataset.simulationEffectiveTheme !== 'gold' ||
+      !toolbar.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  cancelGoldPlaybackFade?.();
+  // The existing color rules designate the third tier, including its drawer switch.
+  const controls = [...toolbar.children].filter(button => {
+    const style = getComputedStyle(button);
+    return style.visibility === 'visible' && style.display !== 'none' &&
+      style.getPropertyValue('--playback-control-ink').trim();
+  });
+  if (!controls.length) return;
+
+  const darken = [{ filter: 'brightness(1)' }, { filter: 'brightness(0)' }];
+  const reveal = [...darken].reverse();
+  root.setAttribute('data-gold-playback-fade-out', '');
+  const fadingOut = controls.map(button => button.animate(darken, { duration: 120, easing: 'ease-in', fill: 'forwards' }));
+  let animations = fadingOut;
+  function cancel() {
+    if (cancelGoldPlaybackFade !== cancel) return;
+    cancelGoldPlaybackFade = null;
+    root.removeAttribute('data-gold-playback-fade-out');
+    animations.forEach(animation => animation.cancel());
+  }
+  cancelGoldPlaybackFade = cancel;
+
+  Promise.all(fadingOut.map(animation => animation.finished)).then(() => {
+    if (cancelGoldPlaybackFade !== cancel) return;
+    root.removeAttribute('data-gold-playback-fade-out');
+    animations = controls.map(button => button.animate(reveal, { duration: 220, easing: 'ease-out', fill: 'backwards' }));
+    fadingOut.forEach(animation => animation.cancel());
+    return Promise.all(animations.map(animation => animation.finished));
+  }).then(cancel, cancel);
 }
 
 export function applySimulationTheme(value) {
@@ -69,6 +115,7 @@ function initializeGoldPlaybackHierarchy() {
   document.documentElement.toggleAttribute('data-gold-playback-hierarchy', enabled);
   toggle.addEventListener('change', () => {
     document.documentElement.toggleAttribute('data-gold-playback-hierarchy', toggle.checked);
+    if (!toggle.checked) cancelGoldPlaybackFade?.();
     try { localStorage.setItem(GOLD_HIERARCHY_STORAGE_KEY, String(toggle.checked)); } catch {}
   });
 }

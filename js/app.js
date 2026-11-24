@@ -32,7 +32,7 @@ import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWin
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
-import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, getSimulationPlaybackTheme, applySimulationPlaybackTheme, setSimulationRunning } from './simulation-theme.js';
+import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, getSimulationPlaybackTheme, applySimulationPlaybackTheme, setSimulationRunning, fadeGoldPlaybackControls } from './simulation-theme.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
@@ -6686,7 +6686,11 @@ dom.btnWind.addEventListener('keydown', event => {
         });
 
 
-        dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, togglePlayPauseLife));
+        dom.btnPlayPauseLife.addEventListener('click', (e) => handleCtrlClick(e, () => {
+            const wasPlaying = isLifePlaying;
+            togglePlayPauseLife();
+            if (!wasPlaying && isLifePlaying) fadeGoldPlaybackControls(dom.controlsContainer);
+        }));
         dom.btnStepForward.addEventListener('click', (e) => handleCtrlClick(e, stepForward));
 
         dom.btnLangToggle.addEventListener('click', toggleLanguage);

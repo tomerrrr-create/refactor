@@ -73,5 +73,60 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  // Import an actual old settings TXT without losing unrelated settings.
  await page.locator('#projectFileInput').setInputFiles({name:'old-appearance-settings.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{simulationTheme:'pink',simulationPlaybackTheme:'ice',brush:{size:5},startup:{boardSize:35}}}))});
  await page.waitForFunction(()=>themeTest.state().settings.brush.size===5);current=await state();assert.equal(current.settings.startup.boardSize,35);assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');
+
+ // Freeze each brightness animation at its first frame to test the exact handoff.
+ await page.evaluate(()=>{
+  const toggle=document.getElementById('goldPlaybackHierarchyToggle');
+  toggle.checked=true;toggle.dispatchEvent(new Event('change'));
+  const animate=Element.prototype.animate;
+  window.goldFades=[];
+  Element.prototype.animate=function(frames,options){
+   const animation=animate.call(this,frames,options);
+   if(frames.some(frame=>frame.filter==='brightness(0)')){
+    goldFades.push({id:this.id,from:frames[0].filter,duration:options.duration,animation});
+    animation.pause();animation.currentTime=0;
+   }
+   return animation;
+  };
+  themeTest.setup();
+ });
+ const fadeOut=()=>page.locator('html').getAttribute('data-gold-playback-fade-out');
+ const thirdTierColor=()=>page.locator('#btnResizeUp').evaluate(e=>getComputedStyle(e).color);
+ const fades=()=>page.evaluate(()=>goldFades.map(({id,from,duration})=>({id,from,duration})));
+ const finishPhase=from=>page.evaluate(from=>goldFades.filter(fade=>fade.from===from).forEach(({animation})=>animation.finish()),from);
+ const pausedColor=await thirdTierColor();
+ await tap('#btnPlayPauseLife');
+ const darkening=await fades();
+ assert(darkening.some(({id})=>id==='btnResizeUp')&&darkening.some(({id})=>id==='btnEvolutionDrawerInternal'));
+ assert(darkening.every(({from,duration})=>from==='brightness(1)'&&duration===120));
+ assert(!darkening.some(({id})=>['btnGameOfLife','btnNudgeBrighter','btnPalette','btnColorPicker','btnSymmetry','btnWind','btnDark','btnPlayPauseLife','btnSave','btnToggleSimMode'].includes(id)));
+ assert.equal(await fadeOut(),'');
+ assert.equal(await thirdTierColor(),pausedColor,'original ink is used on the way to black');
+ await finishPhase('brightness(1)');
+ await page.waitForFunction(()=>goldFades.some(fade=>fade.from==='brightness(0)'));
+ assert.equal(await thirdTierColor(),colors.blue,'at black, switch to the resting theme ink');
+ assert.equal(await page.locator('#btnEvolutionDrawerInternal').evaluate(e=>getComputedStyle(e).filter),'brightness(0)');
+ const previousDrawer=await page.locator('#controlsContainer').getAttribute('data-evolution-page');
+ await tap('#btnEvolutionDrawerInternal');
+ assert.notEqual(await page.locator('#controlsContainer').getAttribute('data-evolution-page'),previousDrawer,'the black drawer switch still works');
+ await tap('#btnEvolutionDrawerInternal');
+ await tap('#btnMagnetModes');
+ const revealed=await fades();
+ assert.equal(revealed.length,darkening.length*2,'a live handoff does not repeat the fade');
+ assert(revealed.slice(darkening.length).every(({from,duration})=>from==='brightness(0)'&&duration===220));
+ await finishPhase('brightness(0)');
+ assert.equal(await page.locator('#btnEvolutionDrawerInternal').evaluate(e=>getComputedStyle(e).filter),'none');
+ await tap('#btnPlayPauseLife');
+ await tap('#btnPlayPauseLife');
+ assert.equal(await fadeOut(),'','a fresh Play starts a new fade');
+ await tap('#btnPlayPauseLife');
+ assert.equal(await fadeOut(),null,'Pause cancels an unfinished fade');
+ assert.equal(await page.locator('#btnEvolutionDrawerInternal').evaluate(e=>getComputedStyle(e).filter),'none');
+ const beforeReducedMotion=(await fades()).length;
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await tap('#btnPlayPauseLife');
+ assert.equal((await fades()).length,beforeReducedMotion);
+ assert.equal(await thirdTierColor(),colors.blue);
+ await tap('#btnPlayPauseLife');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}
