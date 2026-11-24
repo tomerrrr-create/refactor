@@ -96,8 +96,15 @@ test('the new spiral starts at the previous endpoint and outgoing strips retire 
     assert.equal(sim.state.outgoing.origin, oldOrigin);
     assert.equal(sim.state.origin, 103);
     assert(changed.includes(sim.state.origin));
-    assert(changed.length > 1 && changed.length < oldFootprint.length);
-    assert(oldFootprint.includes(102) && !changed.includes(102), 'the last strip gives way near the new origin');
+    for (let frame = 1; frame <= 3; frame++) {
+        const active = new Set(changed);
+        assert.equal(sim.state.frame, frame);
+        assert(oldFootprint.every(index => active.has(index)), 'every old strip keeps moving');
+        changed = changingCells();
+    }
+    assert.equal(sim.state.frame, 4);
+    assert(oldFootprint.includes(101) && !changed.includes(101), 'the last strip gives way near the new origin');
+    assert(changed.includes(sim.state.origin));
 
     const previousCells = new Set(changed);
     let retiredLater = 0;
@@ -128,4 +135,17 @@ test('a handoff snapshot restores both spirals and replays across multiple later
     assert.deepEqual(restored, sim.currentBoardState);
     assert.deepEqual(checkpoint, sim.state);
     assert.throws(() => validateFibonacciState({ ...checkpoint, origin: 21 ** 2 }));
+});
+
+test('version 3 recordings retain their original first-generation retirement', () => {
+    const sim = simulate(21);
+    sim.state.version = 3;
+    let preceding;
+    do {
+        preceding = sim.currentBoardState[102].k;
+        sim.step();
+    } while (!sim.state.outgoing);
+    assert.equal(sim.state.frame, 1);
+    assert.equal(sim.currentBoardState[102].k, preceding);
+    assert.deepEqual(validateFibonacciState(sim.state), sim.state);
 });

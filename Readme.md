@@ -479,7 +479,7 @@ Engine contracts differ. Game of Life, Chi Flow, erosion, contours and brightnes
 
 Fibonacci starts at the board center and advances each recruited cell one position in the current palette per generation. Every cell advances from its own current color, wraps at the end of the palette and remains editable during playback. Protected gold cells keep their color.
 
-The spiral adds one adjacent cell at random, then attaches squares with sides of 2, 3, 5, 8 and so on, one strip at a time. Strips wrap across board edges. Before the next square spans the board, the final newly recruited cell seeds the next spiral. The previous spiral continues moving colors while the next one grows. Its latest strips stop changing first, and the rest stop as the new spiral reaches its growth threshold. Cells shared by both rounds advance once per generation.
+The spiral adds one adjacent cell at random, then attaches squares with sides of 2, 3, 5, 8 and so on, one strip at a time. Strips wrap across board edges. Before the next square spans the board, the final newly recruited cell seeds the next spiral. The previous spiral continues moving colors while the next one grows. All previously recruited cells remain active for the first three generations of the handoff. Starting on the fourth, the latest strips stop changing first, and the rest stop as the new spiral reaches its growth threshold. Cells shared by both rounds advance once per generation.
 
 Artwork, Undo/Redo and recipes retain the current origin, orientation and growth cursor, along with the outgoing round during a handoff.
 

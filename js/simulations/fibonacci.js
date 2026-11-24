@@ -1,3 +1,4 @@
+const HANDOFF_HOLD = 3;
 const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 // Both rounds can be active at once. Reconstruct their geometry only when an
 // origin changes or a checkpoint is restored.
@@ -5,7 +6,7 @@ const plans = [];
 
 export function createFibonacciState(n, orientation = 0) {
     const center = Math.floor((n - 1) / 2);
-    return { version: 3, n, orientation, frame: 0, origin: center * n + center };
+    return { version: 4, n, orientation, frame: 0, origin: center * n + center };
 }
 
 const wrap = (coordinate, n) => (coordinate % n + n) % n;
@@ -68,6 +69,10 @@ function getPlan(n, { orientation, origin }) {
     return plan;
 }
 
+function handoffEnd(plan, hold) {
+    return Math.min(plan.frameEnds.length - 1, plan.handoffFrame + hold);
+}
+
 function validateOrigin(n, { origin, orientation }) {
     if (!Number.isInteger(origin) || origin < 0 || origin >= n ** 2 ||
         !Number.isInteger(orientation) || orientation < 0 || orientation >= directions.length) {
@@ -77,18 +82,19 @@ function validateOrigin(n, { origin, orientation }) {
 }
 
 export function validateFibonacciState(state) {
-    if (state?.version !== 3 || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
+    if ((state?.version !== 3 && state?.version !== 4) || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
         !Number.isSafeInteger(state.frame) || state.frame < 0 || state.frame > 4 * state.n ** 2) {
         throw new Error('Invalid Fibonacci checkpoint');
     }
-    const { n, frame } = state;
-    const copy = { version: 3, n, orientation: state.orientation, frame, origin: state.origin };
+    const { version, n, frame } = state;
+    const copy = { version, n, orientation: state.orientation, frame, origin: state.origin };
     validateOrigin(n, copy);
     if (!frame && state.outgoing === undefined) return copy;
     const plan = getPlan(n, copy);
     if (frame >= plan.frameEnds.length) throw new Error('Invalid Fibonacci growth frame');
     if (state.outgoing !== undefined) {
-        if (!state.outgoing || frame < 1 || frame >= plan.handoffFrame) throw new Error('Invalid Fibonacci handoff');
+        const hold = version === 4 ? HANDOFF_HOLD : 0;
+        if (!state.outgoing || frame < 1 || frame >= handoffEnd(plan, hold)) throw new Error('Invalid Fibonacci handoff');
         const outgoing = validateOrigin(n, state.outgoing);
         const { nextRound } = getPlan(n, outgoing);
         if (nextRound.origin !== copy.origin || nextRound.orientation !== copy.orientation) {
@@ -115,13 +121,16 @@ export function runFibonacciGeneration({ currentBoardState, currentPalette }, st
     const count = plan.frameEnds[state.frame];
     const colorCount = currentPalette.length;
     if (state.outgoing) {
-        if (state.frame >= plan.handoffFrame) {
+        const hold = state.version === 4 ? HANDOFF_HOLD : 0;
+        const end = handoffEnd(plan, hold);
+        if (state.frame >= end) {
             delete state.outgoing;
         } else {
             const previous = getPlan(state.n, state.outgoing);
             const stripCount = previous.stripEnds.length - 1;
             // Retire the latest strips first, starting beside the new origin.
-            const retired = Math.ceil(stripCount * state.frame / plan.handoffFrame);
+            const elapsed = Math.max(0, state.frame - hold);
+            const retired = elapsed ? Math.ceil(stripCount * elapsed / (end - hold)) : 0;
             const remaining = previous.stripEnds[stripCount - retired];
             for (let i = 0; i < remaining; i++) {
                 const cell = previous.cells[i];
