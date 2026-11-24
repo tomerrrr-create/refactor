@@ -37,6 +37,8 @@ Technicians → Display includes **Brush Modal: One Page Colors**, on by default
 
 ### Controls and gestures
 
+Desktop tooltips for the drawer switch, Wind, Color/brush, Symmetry, Game of Life, Sort and Cracks describe the primary click action. Play/Pause, Single Step and the Creation/Evolution switch also have hover labels. See the gesture table and in-app Help for other actions.
+
 | Control | Tap/click | Swipe/drag up | Swipe/drag down | Hold or horizontal swipe |
 | --- | --- | --- | --- | --- |
 | Palette | Next palette in current group | Brush/color picker | Palette catalogue | 600 ms: next palette group with color adaptation; horizontal: brush size |

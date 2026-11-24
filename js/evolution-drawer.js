@@ -67,8 +67,8 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const text=getText('drawer_navigation').replace('{n}',page+1);
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);trigger.dataset.page=String(page);
-        trigger.title=[text,activeText,getText('drawer_open_hint'),getText('drawer_reset_modes_hold')].filter(Boolean).join(' — ');
-        trigger.setAttribute('aria-label',trigger.title);
+        trigger.title=getText('drawer_switch_tooltip');
+        trigger.setAttribute('aria-label',[text,activeText,getText('drawer_open_hint'),getText('drawer_reset_modes_hold')].filter(Boolean).join(' — '));
         if(dialog.open&&!canEdit())dialog.close();
     }
     function nextPage(){

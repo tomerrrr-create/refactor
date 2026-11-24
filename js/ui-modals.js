@@ -56,7 +56,7 @@ function restorePresetTooltip(force = false) {
     if (!button || (!force && ((!presetFeedback?.hidden) || button.matches(':hover')))) return;
     button.removeEventListener('pointerleave', onPresetPointerLeave);
     button.removeAttribute('data-preset-tooltip-suppressed');
-    button.title = button.getAttribute('aria-label') || '';
+    button.title = button === app.dom.btnGameOfLife ? app.getText('tooltip_gameOfLife') : button.getAttribute('aria-label') || '';
     presetTooltipButton = null;
 }
 
@@ -966,7 +966,7 @@ function populateHelpModal() {
     };
 
     const helpData = {
-        btnWind: app.getText('tooltip_wind_cycle'),
+        btnWind: app.getText('help_wind'),
         btnCycleSort: app.getText('help_sort'), btnSpiral: app.getText('help_spiral'), btnMagnetModes: app.getText('help_magnet'),
         btnContour: app.getText('help_contour'), btnContoursAction: app.getText('help_contour_action'), btnSandpile: app.getText('help_sandpile'), btnTuring: app.getText('help_turing'),
         btnNudgeBrighter: app.getText('help_nudge'), btnNudgeDarker: app.getText('help_nudge_backward'),

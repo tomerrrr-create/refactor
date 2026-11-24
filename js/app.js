@@ -2832,6 +2832,9 @@ function handlePointerDownCtrl(e) {
         dom.btnRandom.title = getText('tooltip_random');
         updateColorPickerButtonUI();
         dom.btnCycleSort.title = getText('tooltip_sort_cycle');
+        dom.btnPlayPauseLife.title = getText('tooltip_play_pause');
+        dom.btnStepForward.title = getText('tooltip_single_step');
+        dom.btnToggleSimMode.title = getText('tooltip_switch_sim_mode');
         updateSymmetryUI();
         dom.btnRedo.title = getText('tooltip_redo'); 
         dom.btnUndo.title = getText('tooltip_undo');
@@ -2858,7 +2861,7 @@ if(dom.btnNetwork){dom.btnNetwork.title=getText('help_network');dom.btnNetwork.s
 dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
         dom.btnBrushMode.title = getBrushModeTitle();
 
-        document.querySelectorAll('.ctrl').forEach(btn => { 
+        document.querySelectorAll('.ctrl:not(#btnWind, #btnGameOfLife, #btnContour)').forEach(btn => {
             if (btn.title) btn.setAttribute('aria-label', btn.title);
         });
 
@@ -3523,8 +3526,9 @@ function updateWindButtonUI() {
         dom.btnWind.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp');
         dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : (typeof cycleMemory!=='undefined'?cycleMemory.entry('wind'):undefined)??'ripple'));
         dom.btnWind.dataset.windMode = windMode ? windSettings.mode : 'off';
-        dom.btnWind.title = `${getText(windMode ? 'wind_mode_' + windSettings.mode : 'erosion_off')} — ${getText('tooltip_wind_cycle')}`;
-        dom.btnWind.setAttribute('aria-label', dom.btnWind.title);
+        const title = getText('tooltip_wind_cycle');
+        dom.btnWind.title = title;
+        dom.btnWind.setAttribute('aria-label', `${title} — ${getText(windMode ? 'wind_mode_' + windSettings.mode : 'erosion_off')}`);
 }
 
     function updateColorPickerButtonUI() {
@@ -3669,9 +3673,9 @@ function updateGameOfLifeButtonUI() {
     });
     const preset = Object.entries(C.GAME_OF_LIFE_PRESETS).find(([, rules]) => JSON.stringify(rules) === JSON.stringify(cloneGameOfLifeRules(gameOfLifeRules)))?.[0];
     const name = preset ? document.getElementById(preset)?.textContent.trim() : getText('cycle_custom');
-    const label = getText('tooltip_gameOfLife') + (active ? ': ' + name : '');
-    dom.btnGameOfLife.setAttribute('aria-label', label);
-    if (!dom.btnGameOfLife.hasAttribute('data-preset-tooltip-suppressed')) dom.btnGameOfLife.title = label;
+    const title = getText('tooltip_gameOfLife');
+    dom.btnGameOfLife.setAttribute('aria-label', title + (active ? ': ' + name : ''));
+    if (!dom.btnGameOfLife.hasAttribute('data-preset-tooltip-suppressed')) dom.btnGameOfLife.title = title;
 }
 
 function setPersonalGameOfLifeRules(rules) {
@@ -4115,9 +4119,9 @@ function updateContourButtonUI() {
     const area = active ? (getCracksGrowth().area ?? 'all') : (typeof cycleMemory!=='undefined'?cycleMemory.entry('contour'):undefined)??'all';
     dom.btnContour.dataset.cracksArea = area;
     dom.btnContour.querySelector('.cracks-area-mark')?.setAttribute('opacity', area==='dead' ? '1' : '0');
-    const title = getText('tooltip_cracks') + (active ? ' · ' + getText('cracks_area_' + area) : '');
+    const title = getText('tooltip_cracks');
     dom.btnContour.title = title;
-    dom.btnContour.setAttribute('aria-label', title);
+    dom.btnContour.setAttribute('aria-label', title + (active ? ' · ' + getText('cracks_area_' + area) : ''));
     dom.btnContour.setAttribute('aria-pressed', String(active));
     if (dom.btnContoursAction) { dom.btnContoursAction.title = getText('tooltip_contour'); dom.btnContoursAction.setAttribute('aria-label', getText('tooltip_contour')); }
 }
