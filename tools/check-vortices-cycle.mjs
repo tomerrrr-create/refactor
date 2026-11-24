@@ -3,6 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
+import { DEFAULT_GRAVITY_CYCLE, GRAVITY_MODES } from '../js/gravity-cycle.js';
 import { CYMATICS_RESONANCE_MAPS } from '../js/cymatics-settings.js';
 
 const {chromium} = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -137,15 +138,15 @@ try {
         }
         await tap(hub);assert.equal((await state()).control,null);
         await tap(nav);
-        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'horizontal_gravity');
+        await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'radial');
         await swipeUp('#btnSpiral');
         await page.locator("#spiralSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['horizontal_gravity','triangle_gravity','vertical_gravity','triangle_gravity_mirror','radial','down']);
+        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['radial','down']);
         await dialogAction('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
         await tap(nav);
         await tap('#btnGravitationalSort');await swipeUp('#btnGravitationalSort');
         await page.locator("#gravitationalSortSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),['up','right','center_x','reverse_up','reverse_right','pinwheel']);
+        assert.deepEqual(await page.locator('.gs-direction-btn[data-direction]').evaluateAll(ns=>ns.map(n=>n.dataset.direction)),GRAVITY_MODES);
         await dialogAction('.gs-direction-btn[data-direction=pinwheel]');
         assert(await page.locator('#gsStrength').isDisabled());
         await dialogAction('#btnGsSettingsSave');
@@ -153,7 +154,7 @@ try {
         assert.equal((await state()).project.gravityRules.direction,'pinwheel');
         assert(await page.locator('#iconGsPinwheel').isVisible());
         await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
-        for (const direction of ['up','right','center_x','pinwheel']) {
+        for (const direction of DEFAULT_GRAVITY_CYCLE) {
             await tap('#btnGravitationalSort');assert.equal((await state()).project.gravityRules.direction,direction);
         }
         await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
@@ -174,8 +175,10 @@ try {
         assert.equal((await state()).control,'gravitationalSort');
         await page.evaluate(()=>circularTest.memory(false));
         await page.evaluate(()=>circularTest.enter());
-        for (let i=0;i<4;i++) await tap('#btnGravitationalSort');
-        assert.equal((await state()).project.gravityRules.direction,'pinwheel');
+        for (const mode of DEFAULT_GRAVITY_CYCLE) {
+            await tap('#btnGravitationalSort');
+            assert.equal((await state()).project.gravityRules.direction,mode);
+        }
         await tap('#btnStepForward');
         await tap(hub);await tap(play);
         for (const mode of [...order.slice(1),order[0]]) {
@@ -243,7 +246,7 @@ try {
         const openGravity=async()=>{await swipeUp(gravity);await gravityMenu.waitFor({state:'visible'});};
         if (!(await page.locator(gravity).isVisible())) await tap(nav);
         await tap(gravity);await openGravity();
-        assert.deepEqual(await gravityChecks(),['up','right','center_x','pinwheel']);
+        assert.deepEqual(await gravityChecks(),DEFAULT_GRAVITY_CYCLE);
         await dialogAction('#gravityDirection-reverse_up');
         await dialogAction('#btnGsSettingsSave');
         await gravityMenu.waitFor({state:'hidden'});
@@ -264,14 +267,15 @@ try {
         await page.waitForFunction(()=>!circularTest.state().loaded&&!circularTest.state().animated,null,{timeout:30000});
         assert.deepEqual((await state()).project.tiles,reverseSteps.project.tiles,'both reversed directions replay while excluded from the cycle');
 
-        await tap(gravity);await openGravity();
+        if ((await state()).control !== 'gravitationalSort') await tap(gravity);
+        await openGravity();
         const gravityDot=mode=>gravityMenu.locator(`input[value="${mode}"]`);
         await gravityDot('reverse_up').check();await gravityDot('reverse_right').check();
-        for(const mode of ['up','right','center_x','pinwheel'])await gravityDot(mode).uncheck();
+        for(const mode of DEFAULT_GRAVITY_CYCLE)await gravityDot(mode).uncheck();
         await dialogAction('#btnGsSettingsCancel');await gravityMenu.waitFor({state:'hidden'});
-        await openGravity();assert.deepEqual(await gravityChecks(),['up','right','center_x','pinwheel']);
+        await openGravity();assert.deepEqual(await gravityChecks(),DEFAULT_GRAVITY_CYCLE);
         await gravityDot('reverse_up').check();await gravityDot('reverse_right').check();
-        for(const mode of ['up','right','center_x','pinwheel'])await gravityDot(mode).uncheck();
+        for(const mode of DEFAULT_GRAVITY_CYCLE)await gravityDot(mode).uncheck();
         const beforeMembership=await state();
         await dialogAction('#btnGsSettingsSave');await gravityMenu.waitFor({state:'hidden'});
         assert.equal(await readDirection(),beforeMembership.project.gravityRules.direction);

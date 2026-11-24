@@ -220,6 +220,18 @@
     <svg id="iconGsReverseRight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
         <path d="M16 4v16M11 6v12M6 8v8"></path>
     </svg>
+    <svg id="iconGsHorizontal" aria-hidden="true" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <path d="M5 12h14"/>
+    </svg>
+    <svg id="iconGsVertical" aria-hidden="true" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <path d="M12 5v14"/>
+    </svg>
+    <svg id="iconGsDiagonal" aria-hidden="true" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <path d="M5 5l14 14"/>
+    </svg>
+    <svg id="iconGsDiagonalMirror" aria-hidden="true" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <path d="M19 5l-14 14"/>
+    </svg>
     <svg id="iconGsCenterX" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
         <line x1="4" y1="4" x2="20" y2="20"/>
         <line x1="4" y1="20" x2="20" y2="4"/>
@@ -1179,54 +1191,6 @@
         <div id="geometricFlowCycleOptions" class="grid grid-cols-2 gap-3 mt-2" role="group" aria-labelledby="spiralMethodLabel" aria-describedby="geometricFlowCycleHint">
           
           <div class="geometric-shape">
-            <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="horizontal_gravity" aria-pressed="false">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-                    <path d="M5 12h14"/>
-                </svg>
-                <span class="text-xs" id="geometricShape-horizontal_gravity" data-debug-text="spiral_horizontal">Horizontal Gravity</span>
-            </button>
-            <label class="toolbar-cycle-toggle">
-              <input type="checkbox" value="horizontal_gravity" aria-labelledby="geometricFlowCycleLabel geometricShape-horizontal_gravity" checked>
-            </label>
-          </div>
-
-          <div class="geometric-shape">
-            <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="triangle_gravity" aria-pressed="false">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-                    <path d="M5 5l14 14"/>
-                </svg>
-                <span class="text-xs" id="geometricShape-triangle_gravity" data-debug-text="spiral_diagonal">Diagonal Gravity ↘</span>
-            </button>
-            <label class="toolbar-cycle-toggle">
-              <input type="checkbox" value="triangle_gravity" aria-labelledby="geometricFlowCycleLabel geometricShape-triangle_gravity" checked>
-            </label>
-          </div>
-
-          <div class="geometric-shape">
-            <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="vertical_gravity" aria-pressed="false">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-                    <path d="M12 5v14"/>
-                </svg>
-                <span class="text-xs" id="geometricShape-vertical_gravity" data-debug-text="spiral_vertical">Vertical Gravity</span>
-            </button>
-            <label class="toolbar-cycle-toggle">
-              <input type="checkbox" value="vertical_gravity" aria-labelledby="geometricFlowCycleLabel geometricShape-vertical_gravity" checked>
-            </label>
-          </div>
-
-          <div class="geometric-shape">
-            <button class="spiral-method-btn gol-preset-btn flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="triangle_gravity_mirror" aria-pressed="false">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-                    <path d="M19 5l-14 14"/>
-                </svg>
-                <span class="text-xs" id="geometricShape-triangle_gravity_mirror" data-debug-text="spiral_diagonal_mirror">Diagonal Gravity ↙</span>
-            </button>
-            <label class="toolbar-cycle-toggle">
-              <input type="checkbox" value="triangle_gravity_mirror" aria-labelledby="geometricFlowCycleLabel geometricShape-triangle_gravity_mirror" checked>
-            </label>
-          </div>
-
-          <div class="geometric-shape">
             <button class="spiral-method-btn gol-preset-btn active flex flex-col items-center justify-center gap-1 p-2 h-auto" type="button" data-method="radial" aria-pressed="true">
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="12,3 21,12 12,21 3,12"/>
@@ -1234,7 +1198,7 @@
                 <span class="text-xs" id="geometricShape-radial" data-debug-text="spiral_radial">Diamond</span>
             </button>
             <label class="toolbar-cycle-toggle">
-              <input type="checkbox" value="radial" aria-labelledby="geometricFlowCycleLabel geometricShape-radial">
+              <input type="checkbox" value="radial" aria-labelledby="geometricFlowCycleLabel geometricShape-radial" checked>
             </label>
           </div>
 
@@ -1248,7 +1212,7 @@
                 <span class="text-xs" id="geometricShape-down" data-debug-text="spiral_down">Hexagon</span>
             </button>
             <label class="toolbar-cycle-toggle">
-              <input type="checkbox" value="down" aria-labelledby="geometricFlowCycleLabel geometricShape-down">
+              <input type="checkbox" value="down" aria-labelledby="geometricFlowCycleLabel geometricShape-down" checked>
             </label>
           </div>
 
@@ -1303,6 +1267,46 @@
             </label>
           </div>
           <div class="gravity-direction">
+            <button type="button" id="gravityDirection-horizontal_gravity" class="gs-direction-btn" data-direction="horizontal_gravity" data-i18n-title="spiral_horizontal" title="Horizontal Gravity" aria-pressed="false">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                    <path d="M5 12h14"/>
+                </svg>
+            </button>
+            <label class="toolbar-cycle-toggle">
+              <input type="checkbox" value="horizontal_gravity" aria-labelledby="gravityCycleLabel gravityDirection-horizontal_gravity" checked>
+            </label>
+          </div>
+          <div class="gravity-direction">
+            <button type="button" id="gravityDirection-vertical_gravity" class="gs-direction-btn" data-direction="vertical_gravity" data-i18n-title="spiral_vertical" title="Vertical Gravity" aria-pressed="false">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                    <path d="M12 5v14"/>
+                </svg>
+            </button>
+            <label class="toolbar-cycle-toggle">
+              <input type="checkbox" value="vertical_gravity" aria-labelledby="gravityCycleLabel gravityDirection-vertical_gravity" checked>
+            </label>
+          </div>
+          <div class="gravity-direction">
+            <button type="button" id="gravityDirection-triangle_gravity" class="gs-direction-btn" data-direction="triangle_gravity" data-i18n-title="spiral_diagonal" title="Diagonal Gravity ↘" aria-pressed="false">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                    <path d="M5 5l14 14"/>
+                </svg>
+            </button>
+            <label class="toolbar-cycle-toggle">
+              <input type="checkbox" value="triangle_gravity" aria-labelledby="gravityCycleLabel gravityDirection-triangle_gravity" checked>
+            </label>
+          </div>
+          <div class="gravity-direction">
+            <button type="button" id="gravityDirection-triangle_gravity_mirror" class="gs-direction-btn" data-direction="triangle_gravity_mirror" data-i18n-title="spiral_diagonal_mirror" title="Diagonal Gravity ↙" aria-pressed="false">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                    <path d="M19 5l-14 14"/>
+                </svg>
+            </button>
+            <label class="toolbar-cycle-toggle">
+              <input type="checkbox" value="triangle_gravity_mirror" aria-labelledby="gravityCycleLabel gravityDirection-triangle_gravity_mirror" checked>
+            </label>
+          </div>
+          <div class="gravity-direction">
             <button type="button" id="gravityDirection-center_x" class="gs-direction-btn" data-direction="center_x" data-i18n-title="gs_direction_center_x" title="Center-X" aria-pressed="false">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="4" y1="4" x2="20" y2="20"/>
@@ -1311,6 +1315,17 @@
             </button>
             <label class="toolbar-cycle-toggle">
               <input type="checkbox" value="center_x" aria-labelledby="gravityCycleLabel gravityDirection-center_x" checked>
+            </label>
+          </div>
+          <div class="gravity-direction">
+            <button type="button" id="gravityDirection-pinwheel" class="gs-direction-btn" data-direction="pinwheel" data-i18n-title="spiral_b" title="Pinwheel" aria-pressed="false">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+                <path stroke-width="1.0" d="M 12 10.5 Q 15 7 12 3 M 13.06 10.94 Q 17.5 8.5 18.36 5.64 M 13.5 12 Q 17 15 21 12 M 13.06 13.06 Q 15.5 17.5 18.36 18.36 M 12 13.5 Q 9 17 12 21 M 10.94 13.06 Q 6.5 15.5 5.64 18.36 M 10.5 12 Q 7 9 3 12 M 10.94 10.94 Q 8.5 6.5 5.64 5.64"></path>
+                </svg>
+            </button>
+            <label class="toolbar-cycle-toggle">
+              <input type="checkbox" value="pinwheel" aria-labelledby="gravityCycleLabel gravityDirection-pinwheel" checked>
             </label>
           </div>
           <div class="gravity-direction">
@@ -1331,17 +1346,6 @@
             </button>
             <label class="toolbar-cycle-toggle">
               <input type="checkbox" value="reverse_right" aria-labelledby="gravityCycleLabel gravityDirection-reverse_right">
-            </label>
-          </div>
-          <div class="gravity-direction">
-            <button type="button" id="gravityDirection-pinwheel" class="gs-direction-btn" data-direction="pinwheel" data-i18n-title="spiral_b" title="Pinwheel" aria-pressed="false">
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
-                <path stroke-width="1.0" d="M 12 10.5 Q 15 7 12 3 M 13.06 10.94 Q 17.5 8.5 18.36 5.64 M 13.5 12 Q 17 15 21 12 M 13.06 13.06 Q 15.5 17.5 18.36 18.36 M 12 13.5 Q 9 17 12 21 M 10.94 13.06 Q 6.5 15.5 5.64 18.36 M 10.5 12 Q 7 9 3 12 M 10.94 10.94 Q 8.5 6.5 5.64 5.64"></path>
-                </svg>
-            </button>
-            <label class="toolbar-cycle-toggle">
-              <input type="checkbox" value="pinwheel" aria-labelledby="gravityCycleLabel gravityDirection-pinwheel" checked>
             </label>
           </div>
         </div>

@@ -9,7 +9,7 @@ import {DEFAULT_INK_PREFERENCES,validateInkRules,createInkState,restoreInkState,
 import {createInkSettingsDialog} from './ink-settings-dialog.js';
 import { createMacroEnding } from './macro-ending.js';
 import { DEFAULT_MAGNET_ANCHOR_LIMIT, DEFAULT_MAGNET_ANCHOR_PREFERENCE, MAGNET_ANCHOR_LIMITS, validateMagnetAnchorLimit, recordedMagnetAnchorLimit, recordedMagnetCombinedField, magnetRecordingRules } from './magnet-anchor-limit.js';
-import { GRAVITY_DIRECTIONS, loadGravityCycle, nextGravityMode, saveGravityCycle } from './gravity-cycle.js';
+import { GRAVITY_DIRECTIONS, LINE_GRAVITY_MODES, GRAVITY_CYCLE_VERSION, loadGravityCycle, nextGravityMode, saveGravityCycle } from './gravity-cycle.js';
 import { createMacroPaletteContext } from './macro-palette-context.js';
 import {VORTICES_MODES,VORTICES_SETTINGS_ENTRY_MODES,VORTICES_RESONANCE_MAPS,RESONANCE_MAPS,vorticesModeFor,loadVorticesCycle,persistVorticesCycle,nextVorticesMode} from './vortices-modes.js';
 import {createVorticesCycleDialog} from './vortices-cycle-dialog.js';
@@ -1930,7 +1930,10 @@ function refreshCycleIcons() {
 }
 function restoreCycleMode(simulation, mode) {
     switch(simulation){
-        case 'gravitationalSort':gsMode=mode;gravitationalSortRules.direction=mode;break;
+        case 'gravitationalSort':
+            if (gravitationalSortRules.direction !== mode) delete gravitationalSortRules.polygonFlowPhase;
+            gsMode = gravitationalSortRules.direction = mode;
+            break;
         case 'spiral':spiralMode=mode;spiralRules.method=mode;spiralRules.tornadoVersion=3;spiralRules.tornadoFrame=0;restorePolygonFlowPhase(spiralRules);break;
         case 'magnet':selectMagnetMode(mode);break;
         case 'network':saveNetworkSettings({...networkRules,mode});break;
@@ -2136,7 +2139,10 @@ if (!isTogglingOff && simulationName !== null) {
         }
         if (simulationName === 'gravitationalSort') {
             gsMode = gravityEntry;
-            if (!vorticesModeFor('gravitationalSort', gravityEntry)) gravitationalSortRules.direction = gravityEntry;
+            if (!vorticesModeFor('gravitationalSort', gravityEntry)) {
+                gravitationalSortRules.direction = gravityEntry;
+                delete gravitationalSortRules.polygonFlowPhase;
+            }
         }
 
 if (simulationName === 'spiral') {
@@ -2381,9 +2387,10 @@ if (simulationName === 'magnet') {
 
       function getWorkspaceSettings() {
         const { polygonFlowPhase, ...spiralPreferences } = spiralRules;
+        const { polygonFlowPhase: gravityPhase, ...gravityPreferences } = gravitationalSortRules;
         return {
             simulationPreferences: {
-                gravityCycle: [...gravityCycle], geometricFlowCycle: [...geometricFlowCycle],
+                gravityCycleVersion: GRAVITY_CYCLE_VERSION, gravityCycle: [...gravityCycle], geometricFlowCycle: [...geometricFlowCycle],
                 resonanceCycle: [...resonanceCycle], circularCycle: [...vorticesEnabledModes],
                 magnetAnchorLimit, wind: structuredClone(windSettings),
                 geometricFlowVisible: experimentalSimulations.visible('spiral'),
@@ -2406,7 +2413,7 @@ if (simulationName === 'magnet') {
                 bloom: isSoftBloom, bloomIntensity: softBloomIntensity },
             brush: { size: brushSize, ...(brushShape === 'circle' ? {} : { shape: brushShape }), mode: isContinuousBrushOn ? 'continuous' : isBrushModeOn ? 'paint' : 'copy', symmetry: symmetryMode },
             cycles: { gameOfLife: gameOfLifeCycle.map(cloneGameOfLifeRules), chiFlow: chiFlowCycle.map(cloneChiFlowRules) },
-            rules: { gravity: { ...gravitationalSortRules }, spiral: spiralPreferences, magnet: { ...magnetRules },
+            rules: { gravity: gravityPreferences, spiral: spiralPreferences, magnet: { ...magnetRules },
                 erosion: { ...erosionRules }, dla: { ...dlaRules }, contour: { ...contourRules, lineColor:'brush' }, turing: { ...turingRules },
                 ...(JSON.stringify(inkRules)===JSON.stringify(DEFAULT_INK_PREFERENCES)?{}:{ink:{...inkRules}}),
                 ...(JSON.stringify(oilRules)===JSON.stringify(INITIAL_OIL_RULES)?{}:{oil:{...oilRules}}),
@@ -4291,7 +4298,9 @@ function restoreGravityRules(rules) {
     const direction = rules.direction ?? gsMode;
     if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:direction});
     gsMode = direction;
-    Object.assign(getActiveGravityRules(), rules);
+    const activeRules = getActiveGravityRules();
+    delete activeRules.polygonFlowPhase;
+    Object.assign(activeRules, rules);
     updateGravitationalSortButtonUI();
 }
 
@@ -4314,6 +4323,7 @@ function cycleGravitationalSortMode() {
         if (armedSimulation === 'gravitationalSort') armSimulation(null);
     } else {
         if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:next});
+        delete gravitationalSortRules.polygonFlowPhase;
         gsMode = gravitationalSortRules.direction = next;
     }
     gsMode = next;
@@ -4674,6 +4684,10 @@ function getHistorySettings(state) {
 function validateGravitySnapshot(rules) {
     if (!rules || !GRAVITY_DIRECTIONS.includes(rules.direction) ||
         !Number.isFinite(rules.strength) || rules.strength < 0 || rules.strength > 1) throw new Error('Invalid gravity rules');
+    if (rules.polygonFlowPhase !== undefined && (!LINE_GRAVITY_MODES.includes(rules.direction) ||
+        normalizePolygonFlowPhase(rules.polygonFlowPhase, rules.direction) !== rules.polygonFlowPhase)) {
+        throw new Error('Invalid line gravity checkpoint');
+    }
 }
 
 function validateHistorySettings(settings) {
@@ -6229,7 +6243,9 @@ else if (action.eventName === 'Invert Colors') {
                 if (!enabled.length) return false;
                 gravityCycle = enabled;
                 const {direction, strength} = rules;
-                if (activeEvolutionControl() !== 'gravitationalSort' || gsMode !== direction || gravitationalSortRules.strength !== strength) {
+                const changedDirection = activeEvolutionControl() !== 'gravitationalSort' || gsMode !== direction;
+                if (changedDirection || gravitationalSortRules.strength !== strength) {
+                    if (changedDirection) delete rules.polygonFlowPhase;
                     if (armedSimulation !== 'gravitationalSort') armSimulation('gravitationalSort', {gravityEntry:direction});
                     gsMode = direction;
                     gravitationalSortRules = rules;

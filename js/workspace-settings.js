@@ -1,4 +1,4 @@
-import { GRAVITY_DIRECTIONS, GRAVITY_MODES, DEFAULT_GRAVITY_CYCLE } from './gravity-cycle.js';
+import { GRAVITY_DIRECTIONS, GRAVITY_MODES, DEFAULT_GRAVITY_CYCLE, LINE_GRAVITY_MODES, GRAVITY_CYCLE_VERSION, migrateGravityCycle } from './gravity-cycle.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules} from './simulations/network.js';
 import {INITIAL_OIL_RULES,validateOilRules} from './simulations/oil.js';
 import {DEFAULT_INK_PREFERENCES,validateInkRules} from './simulations/ink.js';
@@ -28,7 +28,7 @@ import { DEFAULT_GEOMETRIC_FLOW_VISIBLE } from './experimental-simulations.js';
 
 export function defaultSimulationPreferences() {
     return {
-        gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
+        gravityCycleVersion: GRAVITY_CYCLE_VERSION, gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
         resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
         geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, rememberSimulationModes: false
@@ -38,8 +38,13 @@ export function defaultSimulationPreferences() {
 function validateSimulationPreferences(value) {
     if (!object(value)) throw new Error('Invalid simulation preferences');
     const result = {};
+    const legacyCycle = !Object.hasOwn(value, 'gravityCycleVersion');
+    if (!legacyCycle) {
+        if (value.gravityCycleVersion !== GRAVITY_CYCLE_VERSION) throw new Error('Invalid gravity cycle version');
+        result.gravityCycleVersion = GRAVITY_CYCLE_VERSION;
+    }
     for (const [key, modes] of Object.entries({
-        gravityCycle: GRAVITY_MODES, geometricFlowCycle: GEOMETRIC_FLOW_MODES,
+        gravityCycle: GRAVITY_MODES, geometricFlowCycle: legacyCycle ? [...GEOMETRIC_FLOW_MODES, ...LINE_GRAVITY_MODES] : GEOMETRIC_FLOW_MODES,
         resonanceCycle: RESONANCE_CYCLE_VERSIONS, circularCycle: Object.keys(VORTICES_MODES)
     })) {
         if (!Object.hasOwn(value, key)) continue;
@@ -64,6 +69,14 @@ function validateSimulationPreferences(value) {
         result[key] = value[key];
     }
     if (Object.keys(result).length !== Object.keys(value).length) throw new Error('Unknown simulation preference');
+    if (legacyCycle && (result.gravityCycle || result.geometricFlowCycle)) {
+        result.gravityCycleVersion = GRAVITY_CYCLE_VERSION;
+        result.gravityCycle = migrateGravityCycle(result.gravityCycle, result.geometricFlowCycle);
+        if (result.geometricFlowCycle) {
+            const remaining = orderToolbarCycle(result.geometricFlowCycle, GEOMETRIC_FLOW_MODES);
+            result.geometricFlowCycle = remaining.length ? remaining : [...DEFAULT_GEOMETRIC_FLOW_CYCLE];
+        }
+    }
     return result;
 }
 

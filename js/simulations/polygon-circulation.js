@@ -1,8 +1,7 @@
 import { runCenterLineGravity, runDiagonalGravity } from './line-gravity.js';
 
-const DIAGONAL_MODES = ['triangle_gravity', 'triangle_gravity_mirror'];
+import { LINE_GRAVITY_MODES } from '../gravity-cycle.js';
 const CENTER_LINE_MODES = ['horizontal_gravity', 'vertical_gravity'];
-const LINE_GRAVITY_MODES = [...DIAGONAL_MODES, ...CENTER_LINE_MODES];
 const LINE_GRAVITY_PHASE_LIMIT = 65536;
 export const POLYGON_CIRCULATION_MODES = Object.freeze(['triangle_orbit', 'triangle_flow', ...LINE_GRAVITY_MODES]);
 export const POLYGON_FLOW_PERIOD = 240;
