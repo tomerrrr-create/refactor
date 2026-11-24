@@ -2976,7 +2976,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
     --tier-dot: color-mix(in srgb, #bbc0c6, var(--gold-tools-color, var(--sim-rest-color)) var(--gold-playback-tint));
 
     & > :is(
-      .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife, #btnSave, #btnToggleSimMode),
+      .ctrl:not([data-evolution-id], [data-gold-hierarchy-exempt], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife, #btnSave, #btnToggleSimMode),
       .evolution-drawer-internal
     ) {
       --playback-control-ink: color-mix(in srgb, var(--tier-idle-ink, #eaeaea), var(--gold-tools-color, var(--sim-rest-color)) var(--gold-playback-tint));
@@ -2994,7 +2994,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   }
 
   & > :is(
-    .ctrl:not([data-evolution-id], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife, #btnSave, #btnToggleSimMode),
+    .ctrl:not([data-evolution-id], [data-gold-hierarchy-exempt], #btnPalette, #btnColorPicker, #btnSymmetry, #btnWind, #btnDark, #btnPlayPauseLife, #btnSave, #btnToggleSimMode),
     .evolution-drawer-internal
   ) {
     --playback-control-ink: var(--gold-tools-color, var(--sim-rest-color));

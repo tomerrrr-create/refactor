@@ -18,20 +18,29 @@ function harness(saved = {}, blocked = false) {
     const pulseValue = {};
     const transition = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
     const transitionValue = {};
+    const sortToggle = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
+    const sortButton = {
+        excluded: false,
+        toggleAttribute(name, value) {
+            assert.equal(name, 'data-gold-hierarchy-exempt');
+            this.excluded = value;
+        }
+    };
     const styles = new Map();
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
         toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); },
         style: { setProperty: (name, value) => styles.set(name, value) } };
     const select = selector => selector.includes('Playback') ? playback : rest;
     const controls = { goldPlaybackHierarchyToggle: hierarchy, glowPulse: pulse, glowPulseValue: pulseValue,
-        goldTransitionDuration: transition, goldTransitionDurationValue: transitionValue };
+        goldTransitionDuration: transition, goldTransitionDurationValue: transitionValue,
+        goldExcludeSortToggle: sortToggle, btnCycleSort: sortButton };
     const context = vm.createContext({ document: { documentElement: root,
         getElementById: id => controls[id] ?? { querySelectorAll: () => select(id) }, querySelectorAll: select },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
         getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
-    return { context, root, storage, rest, playback, hierarchy, pulse, transition, styles, run: code => vm.runInContext(code, context) };
+    return { context, root, storage, rest, playback, hierarchy, pulse, transition, sortToggle, sortButton, styles, run: code => vm.runInContext(code, context) };
 }
 
 test('Glow Pulse defaults to 3.2 seconds and saves the selected duration', () => {
@@ -78,6 +87,21 @@ test('Gold transition duration defaults to 1.6 seconds and persists independentl
     reload.run('initializeSimulationTheme()');
     assert.equal(reload.run('goldTransitionMs'), 3200);
     assert.equal(reload.styles.get('--simulation-halo-duration'), '3.2s');
+});
+
+test('Sort is excluded by default and remembers an explicit choice independently of the hierarchy', () => {
+    const h = harness();
+    h.run('initializeSimulationTheme()');
+    assert.equal(h.hierarchy.checked, false);
+    assert.equal(h.sortToggle.checked, true);
+    assert.equal(h.sortButton.excluded, true);
+    h.sortToggle.checked = false;
+    h.sortToggle.handlers.change();
+    assert.equal(h.sortButton.excluded, false);
+    const reopened = harness(Object.fromEntries(h.storage));
+    reopened.run('initializeSimulationTheme()');
+    assert.equal(reopened.sortToggle.checked, false);
+    assert.equal(reopened.sortButton.excluded, false);
 });
 test('fresh/blocked storage defaults to gold at rest and while running; independent controls work', () => {
     for (const blocked of [false, true]) {

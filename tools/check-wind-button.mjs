@@ -54,7 +54,7 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
   toggle.checked=true;toggle.dispatchEvent(new Event('change'));
   windTest.live();
  });
- await page.waitForFunction(()=>getComputedStyle(document.getElementById('btnCycleSort')).color==='rgb(63, 81, 181)');
+ await page.waitForFunction(()=>getComputedStyle(document.getElementById('btnResizeUp')).color==='rgb(63, 81, 181)');
  const windStroke=()=>page.locator('#btnWind svg').evaluate(e=>getComputedStyle(e).stroke);
  assert.equal(await windStroke(),'rgb(66, 66, 66)');
  const gen=(await state()).gen;

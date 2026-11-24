@@ -89,7 +89,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   const save=read('btnSave'),toggle=read('btnToggleSimMode');
   return {progress:+bar.style.getPropertyValue('--gold-playback-progress'),window:read('simModeBackground').opacity,
    halo:+getComputedStyle(document.getElementById('btnNudgeBrighter'),'::before').opacity,
-   tools:read('btnResizeUp'),save,toggle,moving:bar.hasAttribute('data-gold-playback-moving'),
+   tools:read('btnResizeUp'),sort:read('btnCycleSort'),save,toggle,moving:bar.hasAttribute('data-gold-playback-moving'),
    frameTheme:document.documentElement.dataset.simulationBackdropTheme};
  });
  const waitForProgress=(min,max)=>page.waitForFunction(([min,max])=>{
@@ -98,6 +98,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   return progress>=min&&progress<=max&&(min!==max||!bar.hasAttribute('data-gold-playback-moving'));
  },[min,max]);
  const paused=await visual();
+ assert(await page.locator('#goldExcludeSortToggle').isChecked());
  assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'2');
  await tap('#btnPlayPauseLife');
  await waitForProgress(.14,.28);
@@ -107,6 +108,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert(Math.abs(leaving.window+leaving.progress-1)<.01);
  assert.equal(leaving.frameTheme,'blue');
  assert.notEqual(leaving.tools.color,paused.tools.color);
+ assert.deepEqual(leaving.sort,paused.sort,'Sort is visually exempt by default during the transition');
  for(const name of ['save','toggle']){
   assert(leaving[name].inert&&leaving[name].opacity>0&&leaving[name].opacity<1);
  }
@@ -137,11 +139,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert(durationBox.y>=hierarchyBox.y+hierarchyBox.height);
  await durationSlider.press('Home');
  assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridGoldTransitionSeconds')),'0.8');
+ await tap('#goldExcludeSortToggle');
+ assert(!(await page.locator('#goldExcludeSortToggle').isChecked()));
  await tap('#btnTechnicianCloseTop');
  await tap('#btnPlayPauseLife');
+ await waitForProgress(.15,.4);
+ const intermediate=await visual();
+ assert.notEqual(intermediate.sort.color,paused.sort.color,'Sort joins the tint transition when opted in');
  await waitForProgress(1,1);
  const playing=await visual();
  assert.equal(playing.tools.color,colors.blue);
+ assert.equal(playing.sort.color,colors.blue);
  assert.equal(playing.save.visibility,'hidden');
  assert.equal(playing.toggle.opacity,0);
  assert.equal(playing.window,0);
@@ -164,9 +172,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap('#btnPlayPauseLife');
  assert.equal(await toolbar.getAttribute('data-gold-playback-motion'),null);
  assert.equal((await visual()).tools.color,paused.tools.color);
+ assert.equal((await visual()).sort.color,paused.sort.color);
  assert.equal((await visual()).save.visibility,'hidden');
  await tap('#btnPlayPauseLife');
  await boot(true);
  assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'0','transition duration survives reload');
+ assert(!(await page.locator('#goldExcludeSortToggle').isChecked()),'Sort choice survives reload');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}
