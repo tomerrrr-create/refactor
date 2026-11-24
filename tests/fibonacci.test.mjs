@@ -90,12 +90,13 @@ test('restart and continuous modes have the same growth and diverge after fillin
 });
 
 test('restart checkpoints replay across handoffs and palette wraps', () => {
-    const sim = simulate(21, 2, 'restart', 90, 27);
+    const sim = simulate(21, 2, 'restart', 85, 27);
     sim.currentPalette.length = 23;
     sim.currentBoardState[220].isGold = true;
     while (!sim.state.outgoing) sim.step();
     for (let i = 0; i < 4; i++) sim.step();
     const checkpoint = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    assert.equal(checkpoint.colorAdvance, 85);
     const restored = structuredClone(sim.currentBoardState);
     let restarts = 0;
     for (let i = 0; i < 550; i++) {
@@ -124,21 +125,21 @@ test('one-cell boards cycle within the palette in both modes', () => {
     }
 });
 
-test('Color Advance defaults to 90% and nearby recruited cells advance together', () => {
-    assert.equal(createFibonacciState(8).colorAdvance, 90);
-    const sim = simulate(8, 0, 'continuous', 90, 27);
-    const compare = simulate(8, 0, 'continuous', 60, 27);
+test('Color Advance defaults to 95% and nearby recruited cells advance together', () => {
+    assert.equal(createFibonacciState(8).colorAdvance, 95);
+    const sim = simulate(8, 0, 'continuous', 99, 27);
+    const compare = simulate(8, 0, 'continuous', 91, 27);
     for (let i = 0; i < 100; i++) {
         sim.step();
         compare.step();
     }
     let advanced = 0;
-    let advancedAtSixty = 0;
+    let advancedAtNinetyOne = 0;
     let held = 0;
     const completedFrame = sim.state.frame;
     for (let i = 0; i < 50; i++) {
         const before = sim.currentBoardState.map(cell => cell.k);
-        const beforeAtSixty = compare.currentBoardState.map(cell => cell.k);
+        const beforeAtNinetyOne = compare.currentBoardState.map(cell => cell.k);
         sim.step();
         compare.step();
         for (let index = 0; index < 64; index++) {
@@ -148,13 +149,13 @@ test('Color Advance defaults to 90% and nearby recruited cells advance together'
             assert(delta === 0 || delta === 1);
             advanced += delta;
             held += 1 - delta;
-            advancedAtSixty += compare.currentBoardState[index].k - beforeAtSixty[index];
+            advancedAtNinetyOne += compare.currentBoardState[index].k - beforeAtNinetyOne[index];
         }
     }
     assert.equal(sim.state.frame, completedFrame);
     assert.equal(sim.state.generation, 150);
-    assert(held > 0 && advanced > advancedAtSixty && advancedAtSixty > 0);
-    for (const invalid of [0, 91, 105, '90']) {
+    assert(held > 0 && advanced > advancedAtNinetyOne && advancedAtNinetyOne > 0);
+    for (const invalid of [0, 89, 91.5, 101, '90']) {
         assert.throws(() => validateFibonacciState({ ...sim.state, colorAdvance: invalid }));
     }
 });

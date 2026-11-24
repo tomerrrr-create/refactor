@@ -1,7 +1,7 @@
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
-import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,isFibonacciColorAdvance,createFibonacciState,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
+import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,isFibonacciColorAdvance,normalizeFibonacciColorAdvance,createFibonacciState,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
@@ -6392,7 +6392,7 @@ else if (action.eventName === 'Invert Colors') {
                 settingsProfiles?.scheduleCapture();
                 return true;
             },
-            getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), fibonacci: { colorAdvance: fibonacciState?.colorAdvance ?? fibonacciColorAdvance } }),
+            getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), fibonacci: { colorAdvance: normalizeFibonacciColorAdvance(fibonacciState?.colorAdvance) ?? fibonacciColorAdvance } }),
             getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation],
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && experimentalSimulations.visible(simulation) && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning: (simulation, draft, mode) => simulation === 'fibonacci' ? saveFibonacciSettings(draft) : saveEvolutionTuning(simulation, draft, mode),

@@ -25,7 +25,7 @@ import { orderToolbarCycle } from './toolbar-cycle-storage.js';
 import { MAGNET_ANCHOR_LIMITS, DEFAULT_MAGNET_ANCHOR_PREFERENCE } from './magnet-anchor-limit.js';
 import { normalizeWindSettings } from './wind-settings.js';
 import { DEFAULT_GEOMETRIC_FLOW_VISIBLE } from './experimental-simulations.js';
-import { DEFAULT_FIBONACCI_COLOR_ADVANCE, isFibonacciColorAdvance } from './simulations/fibonacci.js';
+import { DEFAULT_FIBONACCI_COLOR_ADVANCE, normalizeFibonacciColorAdvance } from './simulations/fibonacci.js';
 
 export function defaultSimulationPreferences() {
     return {
@@ -66,8 +66,9 @@ function validateSimulationPreferences(value) {
         result.wind = normalizeWindSettings(value.wind);
     }
     if (Object.hasOwn(value, 'fibonacciColorAdvance')) {
-        if (!isFibonacciColorAdvance(value.fibonacciColorAdvance)) throw new Error('Invalid Fibonacci color advance');
-        result.fibonacciColorAdvance = value.fibonacciColorAdvance;
+        const colorAdvance = normalizeFibonacciColorAdvance(value.fibonacciColorAdvance);
+        if (colorAdvance === undefined) throw new Error('Invalid Fibonacci color advance');
+        result.fibonacciColorAdvance = colorAdvance;
     }
     for (const key of ['geometricFlowVisible', 'breatheVisible', 'fibonacciVisible', 'rememberSimulationModes']) {
         if (!Object.hasOwn(value, key)) continue;

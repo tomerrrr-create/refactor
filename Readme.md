@@ -482,7 +482,7 @@ Fibonacci starts at the board center and lets recruited cells advance one positi
 - **New Spiral** starts again at the final recruited cell once the board is full. The previous spiral remains fully active for three generations, then stops strip by strip while the new one grows. Cells shared by both rounds advance once per generation.
 - **Continuous** keeps colors cycling across the full board indefinitely.
 
-Swipe up on the selected Fibonacci button to open **Color Advance**, shared by both modes. It sets the chance that each group of up to 2×2 neighboring cells advances each generation, from 60% to 100% in steps of 5. At the default 90%, some groups hold their color briefly. At 100%, every recruited cell advances each generation. Saving changes the chance without restarting growth and remembers it in the browser.
+Swipe up on the selected Fibonacci button to open **Color Advance**, shared by both modes. It sets the chance that each group of up to 2×2 neighboring cells advances each generation, from 90% to 100% in steps of 1. At the default 95%, some groups hold their color briefly. At 100%, every recruited cell advances each generation. Saving changes the chance without restarting growth and remembers it in the browser. Saved settings below 90% move up to 90%. Recorded checkpoints keep their original chance for replay.
 
 Switching modes preserves the current growth and colors, including any handoff already in progress. Protected gold cells keep their colors. Artwork, Undo/Redo and new recipes retain the mode, origin, orientation, growth cursor, chance and random state, including an outgoing spiral during a handoff. Checkpoints from earlier experimental Fibonacci versions are unsupported.
 

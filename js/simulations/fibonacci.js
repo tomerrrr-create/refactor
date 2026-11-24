@@ -1,11 +1,20 @@
 export const FIBONACCI_MODES = Object.freeze(['restart', 'continuous']);
-export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 90;
-export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([60, 100, 5]);
+export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
+export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([90, 100, 1]);
 
 export function isFibonacciColorAdvance(value) {
     const [min, max, step] = FIBONACCI_COLOR_ADVANCE_RANGE;
     return Number.isInteger(value) && value >= min && value <= max && (value - min) % step === 0;
 }
+// Earlier settings allowed 60–85 in multiples of five. Keep those values
+// intact when replaying a checkpoint, and clamp them in editable preferences.
+export function normalizeFibonacciColorAdvance(value) {
+    if (isFibonacciColorAdvance(value)) return value;
+    if (Number.isInteger(value) && value >= 60 && value <= 85 && value % 5 === 0) {
+        return FIBONACCI_COLOR_ADVANCE_RANGE[0];
+    }
+}
+
 const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 const HANDOFF_HOLD = 3;
 // A handoff needs the two most recent growth plans.
@@ -90,7 +99,7 @@ export function validateFibonacciState(state) {
     if (state?.version !== 7 || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
         !FIBONACCI_MODES.includes(state.mode) || !Number.isSafeInteger(state.frame) ||
         state.frame < 0 || state.frame > 4 * state.n ** 2 ||
-        !isFibonacciColorAdvance(state.colorAdvance) ||
+        normalizeFibonacciColorAdvance(state.colorAdvance) === undefined ||
         state.seed !== (state.seed >>> 0) || state.generation !== (state.generation >>> 0)) {
         throw new Error('Invalid Fibonacci checkpoint');
     }
