@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { SORT_MODES, normalizeSortMethod, sortColorsArray } from '../js/colors.js';
 import { nextSortMethod } from '../js/sort-cycle-settings.js';
+import { createFibonacciState } from '../js/simulations/fibonacci.js';
+import { createFractalState } from '../js/simulations/fractals.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function excerpt(start, end) {
@@ -17,7 +19,7 @@ function harness() {
             { originalName: 'First', originalColors: colors, colors: sortColorsArray(colors, 'luminance') },
             { originalName: 'Second', originalColors: ['#ff0000', '#ffffff'], colors: ['#ff0000', '#ffffff'] }
         ] }, SORT_MODES, normalizeSortMethod, sortColorsArray,
-        currentSortMethod: 'luminance', activePaletteIndex: 0,
+        currentSortMethod: 'luminance', activePaletteIndex: 0, armedSimulation: null,
         selectedColor: '#000000', selectedColorIndex: 0, isRainbowModeActive: false,
         boardState: [{ k: 0, v: 0, prevK: 1 }], magnetRules: { anchorColorIndex: -1 },
         dom: { sortIconGroup: {}, btnGap: { setAttribute() {} } },
@@ -92,6 +94,32 @@ test('history/project restoration remaps shared colors and clears unavailable co
         assert.equal(h.selectedColor, null);
         assert.equal(h.selectedColorIndex, -1);
     }
+});
+
+test('restoring a board-only snapshot keeps the selected experimental cycle mode', () => {
+    const boardOnly = { n: 1, activePaletteIndex: 0, currentSortMethod: 'luminance',
+        separatorPx: 0, tiles: [{ k: 0, v: 0, isGold: false }] };
+    for (const mode of ['sequence', 'primes']) {
+        const h = harness();
+        h.armedSimulation = 'fibonacci';
+        h.fibonacciState = createFibonacciState(1, 2, mode);
+        h.fibonacciColorAdvance = 95;
+        h.fibonacciSequenceInterval = 46;
+        h.createFibonacciState = createFibonacciState;
+        h.restoreFibonacciState = state => { h.fibonacciState = state; };
+        h.applyState(boardOnly);
+        assert.equal(h.fibonacciState.mode, mode);
+        assert.equal(h.fibonacciState.sequenceInterval, 46);
+        assert.equal(h.fibonacciState.sequenceAge, 0);
+    }
+    const h = harness();
+    h.armedSimulation = 'fractals';
+    h.fractalState = createFractalState(1, 'xor');
+    h.createFractalState = createFractalState;
+    h.restoreFractalState = state => { h.fractalState = state; };
+    h.applyState(boardOnly);
+    assert.equal(h.fractalState.mode, 'xor');
+    assert.equal(h.fractalState.frame, 0);
 });
 
 test('sorting keeps rainbow and unselected brushes independent of palette indices', () => {

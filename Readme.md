@@ -85,7 +85,7 @@ At most six fronts run concurrently; dragging is sampled at 100 ms or longer wit
 
 ### Evolutions, play and cycles
 
-Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Painting and copying remain available during playback. Swipe up on the selected evolution for supported settings; opening does not pause it. Live saves record effective rules at the current generation.
+Select an evolution, then use **Single step** for one generation or **Play/Pause** for continuous generations. Painting and copying remain available during playback. Swipe up on the selected evolution for supported settings; opening does not pause it. Live saves record effective rules at the current generation. Tapping an evolution during recipe playback stops the recipe before applying the manual choice.
 
 Tapping a different ordinary evolution ends the old run and immediately starts the new one on the same board, with its own generation counter and history segment. Cycling the current evolution changes its active mode without restarting and skips Off during playback. When paused, Off remains part of the cycle and disarms it. Switching into or out of **Breathe** requires manual Pause; cycling Breathe itself pauses it. Breathe animates rendering rather than discrete generations, so Single step is unavailable.
 
@@ -487,7 +487,7 @@ Fibonacci starts at the board center and lets recruited cells advance one positi
 
 Swipe up in either growing-spiral mode to open **Color Advance**. It sets the chance that each group of up to 2×2 neighboring cells advances each generation, from 90% to 100% in steps of 1. At the default 95%, some groups hold their color briefly. At 100%, every recruited cell advances each generation. Saving changes the chance without restarting growth and remembers it in the browser. Saved settings below 90% move up to 90%. Recorded checkpoints keep their original chance for replay.
 
-Switching modes keeps the current colors and the primary spiral. Switching back to New Spiral resumes its single-spiral handoff. Protected gold cells keep their colors. Artwork, Undo/Redo and new recipes retain the mode, origin, orientation, growth cursor, chance and random state, including the outgoing spirals during a handoff. Number modes also record the reveal, shift and overlap progress. Version 7 recipes and artwork keep their original handoff timing. Versions older than 7 are unsupported.
+Switching modes keeps the current colors and the primary spiral. Switching back to New Spiral resumes its single-spiral handoff. Protected gold cells keep their colors. Artwork, Undo/Redo and new recipes retain the mode, origin, orientation, growth cursor, chance and random state, including the outgoing spirals during a handoff. Number modes also record the reveal, shift and overlap progress. When Undo/Redo restores a board without a Fibonacci or Fractals checkpoint, it keeps the selected mode and restarts its runtime on that board. Version 7 recipes and artwork keep their original handoff timing. Versions older than 7 are unsupported.
 
 ### Fractals
 

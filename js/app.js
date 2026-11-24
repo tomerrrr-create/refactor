@@ -547,9 +547,11 @@ currentSortMethod,
         if(state.networkState){const network=validateNetworkSnapshot(state.networkState);if(network.state.n!==state.n)throw new Error('Network board size mismatch');}
         const fractal = state.fractalState ? validateFractalState(state.fractalState) : null;
         if (fractal && fractal.n !== state.n) throw new Error('Fractals board size mismatch');
+        const selectedFractal = !fractal && armedSimulation === 'fractals' ? fractalState : null;
         if (!fractal) fractalState = null;
         const fibonacci = state.fibonacciState ? validateFibonacciState(state.fibonacciState) : null;
         if (fibonacci && fibonacci.n !== state.n) throw new Error('Fibonacci board size mismatch');
+        const selectedFibonacci = !fibonacci && armedSimulation === 'fibonacci' ? fibonacciState : null;
         if (!fibonacci) fibonacciState = null;
         if(!state.inkState)inkState=null;
         if(!state.oilState)oilState=null;
@@ -640,7 +642,16 @@ k: tileState.k,
         if(state.oilState)restoreOilSnapshot(state.oilState);
         if(state.networkState)restoreNetworkSnapshot(state.networkState);
         if (fibonacci) restoreFibonacciState(fibonacci);
+        else if (armedSimulation === 'fibonacci' && selectedFibonacci) {
+            // Older board snapshots may omit runtime altogether. Start a fresh
+            // run in the selected mode instead of silently falling back to mode one.
+            restoreFibonacciState(createFibonacciState(n, selectedFibonacci.orientation, selectedFibonacci.mode,
+                fibonacciColorAdvance, selectedFibonacci.seed, undefined, fibonacciSequenceInterval));
+        }
         if (fractal) restoreFractalState(fractal);
+        else if (armedSimulation === 'fractals' && selectedFractal) {
+            restoreFractalState(createFractalState(n, selectedFractal.mode));
+        }
         applySeparator();
       }
 
@@ -1698,7 +1709,7 @@ function pauseLife() {
           
           // מחזירים לפעולה את כל כפתורי הסימולציה
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals, dom.btnFibonacci,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -1731,7 +1742,7 @@ function pauseLife() {
 
        
           const simButtons = [
-              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals,
+              dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals, dom.btnFibonacci,
               dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, 
               dom.btnContour, dom.btnSandpile, dom.btnTuring, 
               dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker
@@ -2065,6 +2076,8 @@ function cycleMemoryTap(simulation, onTap) {
 // Live handoff reuses PAUSE/selection/PLAY so each run keeps its own
 // generations, rules and Undo boundary. Only breathing retains manual Pause.
 function handleEvolutionTap(simulation, onTap) {
+    // A manual mode change takes over before queued recipe rules can overwrite it.
+    if (isMacroLoaded && !isExecutingMacroCommand) stopMacro();
     if(typeof cycleMemory!=='undefined'&&cycleMemory.active())onTap=cycleMemoryTap(simulation,onTap);
     if (!isLifePlaying || matchesEvolutionControl(simulation)) {
         onTap();
@@ -3311,7 +3324,7 @@ function resumeBrushCheckpoint(record) {
     dom.iconPlay.style.display = 'none';
     dom.iconPause.style.display = 'block';
     dom.btnStepForward.disabled = true;
-    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals,
+    [dom.btnGameOfLife, dom.btnBrightnessEvo, dom.btnShowBreatheMenu, dom.btnIslands, dom.btnCymatics, dom.btnInk, dom.btnNetwork, dom.btnFractals, dom.btnFibonacci,
         dom.btnGravitationalSort, dom.btnErosion, dom.btnDla, dom.btnContour, dom.btnSandpile,
         dom.btnTuring, dom.btnSpiral, dom.btnMagnetModes, dom.btnNudgeBrighter, dom.btnNudgeDarker]
         .filter(Boolean).forEach(button => { button.disabled = armedSimulation === 'breathe'
@@ -3994,7 +4007,8 @@ function saveFibonacciSettings({ colorAdvance, sequenceInterval }) {
         fibonacciColorAdvance = colorAdvance;
         state.colorAdvance = colorAdvance;
     }
-    recordLiveSimulationRules('fibonacci');
+    updateFibonacciButtonUI();
+    window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
     persistWorkspaceSettings(getWorkspaceSettings());
     settingsProfiles?.scheduleCapture();
     return true;
@@ -4958,8 +4972,6 @@ function applyHistorySettings(settings) {
     if(settings.inkState)restoreInkSnapshot(settings.inkState);
     if(settings.oilState)restoreOilSnapshot(settings.oilState);
     if(settings.networkState)restoreNetworkSnapshot(settings.networkState);
-    if (settings.fibonacciState) restoreFibonacciState(validateFibonacciState(settings.fibonacciState));
-    if (settings.fractalState) restoreFractalState(validateFractalState(settings.fractalState));
     if (settings.contourState) restoreContourSnapshot(settings.contourState);
     let changed = false;
     if (currentSortMethod !== settings.currentSortMethod) {
@@ -4976,6 +4988,8 @@ function applyHistorySettings(settings) {
         _performResize(settings.n);
         changed = true;
     }
+    if (settings.fibonacciState) restoreFibonacciState(validateFibonacciState(settings.fibonacciState));
+    if (settings.fractalState) restoreFractalState(validateFractalState(settings.fractalState));
     if (separatorPx !== settings.separatorPx) changed = true;
     restoreSeparatorWidth(settings.separatorPx);
     fitCurrentSeparator();
@@ -6502,7 +6516,8 @@ else if (action.eventName === 'Invert Colors') {
             },
             getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), fibonacci: { colorAdvance: normalizeFibonacciColorAdvance(fibonacciState?.colorAdvance) ?? fibonacciColorAdvance,
                 sequenceInterval: fibonacciState?.sequenceInterval ?? fibonacciSequenceInterval } }),
-            getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode, fibonacci: fibonacciState?.mode })[simulation],
+            getEvolutionTuningMode: simulation => simulation === 'fibonacci' ? getFibonacciState().mode
+                : ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode })[simulation],
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && experimentalSimulations.visible(simulation) && !isBreathing && !isMacroLoaded && !isMacroPlaying,
             saveEvolutionTuning: (simulation, draft, mode) => simulation === 'fibonacci' ? saveFibonacciSettings(draft) : saveEvolutionTuning(simulation, draft, mode),
             getDlaRules: () => dlaRules, setDlaRules: (r) => { dlaRules = r; },
