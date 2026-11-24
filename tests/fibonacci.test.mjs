@@ -1,11 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { getSequenceFadeOverlay, snapshotFibonacciState } from '../js/simulations/fibonacci-sequences.js';
 import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
 
-function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
+function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0, faded = false) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
     const currentPalette = Array(4096).fill('#000');
     const state = createFibonacciState(n, orientation, mode, colorAdvance, seed);
+    if (!faded && state.sequenceFade) {
+        delete state.sequenceFade;
+        state.sequenceTrailFrames = [];
+    }
     const step = () => runFibonacciGeneration({ currentBoardState, currentPalette }, state);
     const occupied = () => currentBoardState.flatMap(({ k }, index) => k > 0 ? [index] : []);
     return { currentBoardState, currentPalette, state, step, occupied };
@@ -297,14 +302,14 @@ test('number sequence checkpoints reproduce progressive reveal, offsets and wrap
     setFibonacciMode(sim.state, 'sequence', 2);
     for (let i = 0; i < 31; i++) sim.step();
     assert.equal(sim.state.sequenceOffset, 15);
-    const restored = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    const restored = validateFibonacciState(JSON.parse(JSON.stringify(snapshotFibonacciState(sim.state))));
     assert.throws(() => validateFibonacciState({ ...restored, sequenceElapsed: 2 }));
     const replayed = structuredClone(sim.currentBoardState);
     for (let i = 0; i < 40; i++) {
         sim.step();
         runFibonacciGeneration({ currentBoardState: replayed, currentPalette: sim.currentPalette }, restored);
         assert.deepEqual(replayed, sim.currentBoardState);
-        assert.deepEqual(restored, sim.state);
+        assert.deepEqual(snapshotFibonacciState(restored), snapshotFibonacciState(sim.state));
     }
     setFibonacciMode(sim.state, 'primes', 2);
     assert.equal(sim.state.sequenceOffset, 0);
@@ -387,4 +392,40 @@ test('a cell rejoining a number pattern changes once that generation, even durin
         }
         assert(observedRejoin);
     }
+});
+
+test('fading number modes leave the artwork intact and restore their visible trail exactly', () => {
+    for (const mode of ['sequence', 'primes']) {
+        const sim = simulate(9, 0, mode, 100, 0, true);
+        sim.state.sequenceInterval = 32;
+        sim.currentBoardState[0].isGold = true;
+        for (let i = 0; i < 36; i++) sim.step();
+        const fade = getSequenceFadeOverlay(sim.state);
+        const departed = fade.indices.find(index => fade.ages[index] > 0);
+        assert.notEqual(departed, undefined);
+        assert.equal(fade.steps[0], 0);
+        assert(sim.currentBoardState.every(cell => cell.k === 0));
+
+        sim.currentBoardState[departed].k = 7;
+        const restored = validateFibonacciState(JSON.parse(JSON.stringify(snapshotFibonacciState(sim.state))));
+        const replayed = structuredClone(sim.currentBoardState);
+        const startingAge = fade.ages[departed];
+        let opacity = fade.opacity[startingAge];
+        for (let age = startingAge + 1; age <= 16; age++) {
+            sim.step();
+            runFibonacciGeneration({ currentBoardState: replayed, currentPalette: sim.currentPalette }, restored);
+            assert.deepEqual(snapshotFibonacciState(sim.state), snapshotFibonacciState(restored));
+            assert.equal(sim.currentBoardState[departed].k, 7);
+            if (age < 16) {
+                assert.equal(fade.ages[departed], age);
+                assert(fade.opacity[age] < opacity);
+                opacity = fade.opacity[age];
+            }
+        }
+        assert.equal(fade.steps[departed], 0);
+        assert.deepEqual(replayed, sim.currentBoardState);
+    }
+    const fibonacci = getSequenceFadeOverlay(createFibonacciState(9, 0, 'sequence'));
+    const primes = getSequenceFadeOverlay(createFibonacciState(9, 0, 'primes'));
+    assert(primes.opacity[8] < fibonacci.opacity[8]);
 });
