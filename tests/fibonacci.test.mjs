@@ -313,3 +313,78 @@ test('number sequence checkpoints reproduce progressive reveal, offsets and wrap
     assert.equal(sim.state.frame, 1);
     assert.deepEqual(validateFibonacciState(sim.state), sim.state);
 });
+
+test('both number modes keep departed cells changing at the two trail rates, then freeze', () => {
+    for (const mode of ['sequence', 'primes']) {
+        const current = simulate(9, 0, mode);
+        current.state.sequenceInterval = 32;
+        const legacy = simulate(9, 0, mode);
+        legacy.state.sequenceInterval = 32;
+        delete legacy.state.sequenceTrailFrames;
+        const activeStep = () => {
+            const before = legacy.currentBoardState.map(cell => cell.k);
+            legacy.step();
+            current.step();
+            return new Set(legacy.currentBoardState.flatMap((cell, index) => cell.k !== before[index] ? [index] : []));
+        };
+        let active;
+        for (let gen = 0; gen < 32; gen++) active = activeStep();
+        assert.deepEqual(current.currentBoardState, legacy.currentBoardState);
+
+        let departed;
+        for (let gen = 0; gen < 4 && departed === undefined; gen++) {
+            const previous = active;
+            active = activeStep();
+            departed = [...previous].find(index => !active.has(index));
+        }
+        assert.notEqual(departed, undefined, mode);
+        const start = current.currentBoardState[departed].k;
+        assert.equal(start, legacy.currentBoardState[departed].k, 'age one does not advance');
+
+        const originalSnapshot = JSON.stringify(current.state);
+        const checkpoint = validateFibonacciState(JSON.parse(originalSnapshot));
+        const replayed = structuredClone(current.currentBoardState);
+        const snapshot = { ...current.state };
+        for (let age = 2; age <= 18; age++) {
+            const before = current.currentBoardState[departed].k;
+            assert(!activeStep().has(departed));
+            const advances = age <= 16 && age % (age <= 8 ? 2 : 4) === 0;
+            assert.equal(current.currentBoardState[departed].k - before, Number(advances), mode + ' age ' + age);
+            runFibonacciGeneration({ currentBoardState: replayed, currentPalette: current.currentPalette }, checkpoint);
+        }
+        assert.equal(current.currentBoardState[departed].k, start + 6);
+        assert.deepEqual(replayed, current.currentBoardState);
+        assert.equal(JSON.stringify(snapshot), originalSnapshot);
+        assert.equal(validateFibonacciState(legacy.state).sequenceTrailFrames, undefined);
+        assert.throws(() => validateFibonacciState({ ...checkpoint, sequenceTrailFrames: [[0, 0, 999]] }));
+    }
+});
+
+test('a cell rejoining a number pattern changes once that generation, even during a trail', () => {
+    for (const mode of ['sequence', 'primes']) {
+        const current = simulate(5, 0, mode);
+        current.state.sequenceInterval = 1;
+        const legacy = simulate(5, 0, mode);
+        legacy.state.sequenceInterval = 1;
+        delete legacy.state.sequenceTrailFrames;
+        const lastActive = new Map();
+        let observedRejoin = false;
+        for (let gen = 0; gen < 40; gen++) {
+            const previous = current.currentBoardState.map(cell => cell.k);
+            const previousLegacy = legacy.currentBoardState.map(cell => cell.k);
+            legacy.step();
+            current.step();
+            for (let i = 0; i < previous.length; i++) {
+                const delta = current.currentBoardState[i].k - previous[i];
+                assert(delta === 0 || delta === 1);
+                if (legacy.currentBoardState[i].k !== previousLegacy[i]) {
+                    assert.equal(delta, 1);
+                    const last = lastActive.get(i);
+                    if (last !== undefined && gen - last > 1 && gen - last <= 16) observedRejoin = true;
+                    lastActive.set(i, gen);
+                }
+            }
+        }
+        assert(observedRejoin);
+    }
+});

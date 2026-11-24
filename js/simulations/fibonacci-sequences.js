@@ -8,6 +8,8 @@ export function isSequenceInterval(value) {
 
 const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 const overlapFrames = 3;
+const slowTrailAfter = 8;
+const trailDuration = 16;
 const revealFrames = n => Math.min(n, 24);
 const intervalFor = state => state.sequenceInterval || state.n;
 let cachedPlan;
@@ -45,7 +47,7 @@ function getSequencePlan(n) {
 }
 
 export function resetSequenceCursor(state, interval) {
-    Object.assign(state, { sequenceInterval: interval, sequenceOffset: 0, sequenceElapsed: 0, sequenceAge: 0, sequenceShifted: false });
+    Object.assign(state, { sequenceInterval: interval, sequenceOffset: 0, sequenceElapsed: 0, sequenceAge: 0, sequenceShifted: false, sequenceTrailFrames: [] });
 }
 
 export function clearSequenceCursor(state) {
@@ -54,6 +56,7 @@ export function clearSequenceCursor(state) {
     delete state.sequenceElapsed;
     delete state.sequenceAge;
     delete state.sequenceShifted;
+    delete state.sequenceTrailFrames;
 }
 
 export function setSequenceInterval(state, interval) {
@@ -69,7 +72,22 @@ export function validateSequenceCursor(state) {
         typeof sequenceShifted !== 'boolean') {
         throw new Error('Invalid Fibonacci sequence cursor');
     }
-    return { sequenceInterval, sequenceOffset, sequenceElapsed, sequenceAge, sequenceShifted };
+    const cursor = { sequenceInterval, sequenceOffset, sequenceElapsed, sequenceAge, sequenceShifted };
+    // Missing history marks a recording from before the trails were introduced.
+    if (state.sequenceTrailFrames === undefined) return cursor;
+    const maxCount = getSequencePlan(n)[state.mode].length;
+    if (!Array.isArray(state.sequenceTrailFrames) || state.sequenceTrailFrames.length > trailDuration) {
+        throw new Error('Invalid Fibonacci sequence trail');
+    }
+    cursor.sequenceTrailFrames = state.sequenceTrailFrames.map(frame => {
+        if (!Array.isArray(frame) || frame.length !== 3 ||
+            !Number.isInteger(frame[0]) || frame[0] < 0 || frame[0] >= n ** 2 ||
+            !frame.slice(1).every(count => Number.isInteger(count) && count >= 0 && count <= maxCount)) {
+            throw new Error('Invalid Fibonacci sequence trail frame');
+        }
+        return [...frame];
+    });
+    return cursor;
 }
 
 export function runNumberSequence(board, colorCount, state) {
@@ -79,21 +97,42 @@ export function runNumberSequence(board, colorCount, state) {
     const interval = intervalFor(state);
     const overlap = Math.min(interval, overlapFrames);
     const transitioning = state.sequenceShifted && sequenceElapsed < overlap;
-    const advance = (offset, count) => {
+    const footprint = [sequenceOffset,
+        transitioning ? Math.ceil(visible * (overlap - sequenceElapsed) / overlap) : 0,
+        transitioning ? Math.ceil(visible * (sequenceElapsed + 1) / overlap) : visible];
+    const visit = (offset, count, advancesColor) => {
         for (let rank = 0; rank < count; rank++) {
             const index = cells[(numbers[rank] + offset) % cells.length];
             if (visited[index]) continue;
+            // The newest footprint owns the cell on this generation, even
+            // when its trail age does not call for a color change.
             visited[index] = 1;
             const cell = board[index];
-            if (!cell.isGold) cell.k = cell.v = (cell.k + 1) % colorCount;
+            if (advancesColor && !cell.isGold) cell.k = cell.v = (cell.k + 1) % colorCount;
         }
     };
+    const visitFootprint = ([offset, outgoing, incoming], advancesColor) => {
+        if (outgoing) visit((offset + cells.length - 1) % cells.length, outgoing, advancesColor);
+        visit(offset, incoming, advancesColor);
+    };
     visited.fill(0);
-    if (transitioning) {
-        const previous = (sequenceOffset + cells.length - 1) % cells.length;
-        advance(previous, Math.ceil(visible * (overlap - sequenceElapsed) / overlap));
+    visitFootprint(footprint, true);
+
+    if (state.sequenceTrailFrames) {
+        const frames = state.sequenceTrailFrames;
+        let newest = footprint;
+        for (let i = frames.length - 1; i >= 0; i--) {
+            const frame = frames[i];
+            if (frame[0] === newest[0] && frame[1] === newest[1] && frame[2] === newest[2]) continue;
+            const age = frames.length - i;
+            visitFootprint(frame, age % (age <= slowTrailAfter ? 2 : 4) === 0);
+            newest = frame;
+        }
+
+        // Keep compact footprint descriptors and replace the array, so Undo
+        // and replay checkpoints never share a mutable queue with the engine.
+        state.sequenceTrailFrames = [...frames.slice(1 - trailDuration), footprint];
     }
-    advance(sequenceOffset, transitioning ? Math.ceil(visible * (sequenceElapsed + 1) / overlap) : visible);
     state.sequenceAge = Math.min(state.sequenceAge + 1, revealFrames(n));
     state.sequenceElapsed++;
     if (state.sequenceElapsed === interval) {
