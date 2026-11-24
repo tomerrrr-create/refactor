@@ -113,14 +113,14 @@ function growThroughNeighbors(n, board, ranks, phase, growth) {
     }
 }
 
-export function runPolygonCirculation(n, board, rules) {
+export function runPolygonCirculation(n, board, rules, lineStrength) {
     const local = rules.method === 'triangle_flow';
     const phase = normalizePolygonFlowPhase(rules.polygonFlowPhase, rules.method);
     if (LINE_GRAVITY_MODES.includes(rules.method)) {
         rules.polygonFlowPhase = (phase + 1) % LINE_GRAVITY_PHASE_LIMIT;
         return CENTER_LINE_MODES.includes(rules.method)
-            ? runCenterLineGravity(n, board, phase, rules.method === 'horizontal_gravity')
-            : runDiagonalGravity(n, board, phase, rules.method === 'triangle_gravity_mirror');
+            ? runCenterLineGravity(n, board, phase, rules.method === 'horizontal_gravity', lineStrength)
+            : runDiagonalGravity(n, board, phase, rules.method === 'triangle_gravity_mirror', lineStrength);
     }
     let field = fields.get(rules.method);
     if (field?.n !== n) {

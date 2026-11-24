@@ -1,8 +1,8 @@
-import { defaultGravitationalSortRules } from '../constants.js';
+export const LEGACY_LINE_GRAVITY_STRENGTH = 0.6;
 
-const swapThreshold = defaultGravitationalSortRules.strength * 2 ** 32;
+const UINT32_RANGE = 2 ** 32;
 
-function pullTowardLine(board, from, target, stride, salt, key, keyStride) {
+function pullTowardLine(board, from, target, stride, salt, key, keyStride, swapThreshold) {
     for (; from !== target; from += stride, key += keyStride) {
         const next = from + stride;
         const farther = board[from], nearer = board[next];
@@ -17,7 +17,8 @@ function pullTowardLine(board, from, target, stride, salt, key, keyStride) {
     }
 }
 
-export function runDiagonalGravity(n, board, phase, mirrored) {
+export function runDiagonalGravity(n, board, phase, mirrored, strength = LEGACY_LINE_GRAVITY_STRENGTH) {
+    const swapThreshold = strength * UINT32_RANGE;
     const salt = Math.imul(phase + 1, 0x9e3779b9);
     // Sweep both halves from the edges to the diagonal. Alternate rows and
     // columns so the flow is balanced around the diagonal.
@@ -30,13 +31,14 @@ export function runDiagonalGravity(n, board, phase, mirrored) {
         const first = !mirrored ? keyFirst : horizontal ? keyFirst + n - 1 : n - 1 - lane;
         const target = first + lane * stride;
         const last = first + (n - 1) * stride;
-        pullTowardLine(board, first, target, stride, salt, keyFirst, keyStride);
-        pullTowardLine(board, last, target, -stride, salt, keyFirst + (n - 1) * keyStride, -keyStride);
+        pullTowardLine(board, first, target, stride, salt, keyFirst, keyStride, swapThreshold);
+        pullTowardLine(board, last, target, -stride, salt, keyFirst + (n - 1) * keyStride, -keyStride, swapThreshold);
     }
     return board;
 }
 
-export function runCenterLineGravity(n, board, phase, towardHorizontalLine) {
+export function runCenterLineGravity(n, board, phase, towardHorizontalLine, strength = LEGACY_LINE_GRAVITY_STRENGTH) {
+    const swapThreshold = strength * UINT32_RANGE;
     const salt = Math.imul(phase + 1, 0x9e3779b9);
     const stride = towardHorizontalLine ? n : 1;
     const laneStride = towardHorizontalLine ? 1 : n;
@@ -48,8 +50,8 @@ export function runCenterLineGravity(n, board, phase, towardHorizontalLine) {
         const last = first + (n - 1) * stride;
         // Both axes use the same random decisions when transposing the board.
         const keyFirst = lane * n;
-        pullTowardLine(board, first, first + nearFromStart * stride, stride, salt, keyFirst, 1);
-        pullTowardLine(board, last, first + nearFromEnd * stride, -stride, salt, keyFirst + n - 1, -1);
+        pullTowardLine(board, first, first + nearFromStart * stride, stride, salt, keyFirst, 1, swapThreshold);
+        pullTowardLine(board, last, first + nearFromEnd * stride, -stride, salt, keyFirst + n - 1, -1, swapThreshold);
     }
     return board;
 }

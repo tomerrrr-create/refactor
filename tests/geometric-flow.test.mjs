@@ -62,13 +62,27 @@ test('moved modes produce exactly the same board as Spiral and resume from a Gra
     for (const direction of LINE_GRAVITY_MODES) {
         const initial = makeBoard(n);
         const currentBoardState = initial.slice();
-        let gravitationalSortRules = { direction, strength: 1, polygonFlowPhase: 0 };
+        let gravitationalSortRules = { direction, strength: .6, polygonFlowPhase: 0 };
         for (let generation = 1; generation <= 40; generation++) {
             runGravitationalSortGeneration({ n, currentBoardState, gravitationalSortRules });
             assert.equal(gravitationalSortRules.polygonFlowPhase, generation);
             if (generation === 19) gravitationalSortRules = JSON.parse(JSON.stringify(gravitationalSortRules));
         }
         assert.deepEqual(currentBoardState, evolve(n, initial, direction, 40), direction);
+    }
+});
+
+test('all four Gravity lines respond to the shared slider and preserve legacy overrides', () => {
+    const n = 31;
+    const initial = makeBoard(n);
+    for (const direction of LINE_GRAVITY_MODES) {
+        const step = (strength, lineStrength) => runGravitationalSortGeneration({
+            n, currentBoardState: initial.slice(), gravitationalSortRules: { direction, strength, lineStrength }
+        });
+        assert.deepEqual(step(0), initial);
+        const moved = board => board.filter((tile, i) => tile !== initial[i]).length;
+        assert(moved(step(.8)) > moved(step(.2)), direction);
+        assert.deepEqual(step(.2, .6), evolve(n, initial, direction, 1), direction);
     }
 });
 

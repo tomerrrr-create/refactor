@@ -98,14 +98,21 @@ try{
    await page.evaluate(()=>spiralTest.openGravity());
    await page.locator('#gravitationalSortSettingsModal.modal-visible').waitFor();
    await tap('#gravityDirection-'+direction);
-   assert(await page.locator('#gsStrength').isDisabled());
+   const slider=page.locator('#gsStrength');
+   assert(await slider.isEnabled());
+   const strength=direction.includes('triangle') ? .8 : .2;
+   await slider.fill(String(strength*100));
    await tap('#btnGsSettingsSave');
    await page.locator('#gravitationalSortSettingsModal').waitFor({state:'hidden'});
    assert.equal((await state()).gravity,direction);
    await tap('#btnStepForward');await tap('#btnStepForward');
    const checkpoint=await page.evaluate(()=>spiralTest.project());
    assert.equal(checkpoint.gravityRules.polygonFlowPhase,2);
-   assert.equal((await page.evaluate(()=>spiralTest.settings())).rules.gravity.polygonFlowPhase,undefined);
+   assert.equal(checkpoint.gravityRules.lineStrength,strength);
+   const gravityPreference=(await page.evaluate(()=>spiralTest.settings())).rules.gravity;
+   assert.equal(gravityPreference.strength,strength);
+   assert.equal(gravityPreference.polygonFlowPhase,undefined);
+   assert.equal(gravityPreference.lineStrength,undefined);
    await tap('#btnStepForward');const continued=(await state()).tiles;
    await tap('#btnUndo');assert.equal((await page.evaluate(()=>spiralTest.project())).gravityRules.polygonFlowPhase,2);
    await tap('#btnRedo');assert.equal((await page.evaluate(()=>spiralTest.project())).gravityRules.polygonFlowPhase,3);
@@ -115,7 +122,12 @@ try{
    assert.deepEqual((await state()).tiles,continued,'artwork restores the next phase of line gravity');
   }
   for(const method of lineModes){
-   assert.deepEqual(await replay(page,recipeFor(method)),await replay(page,recipeFor(method).replace('Armed: spiral','Armed: gravitationalSort').replace(JSON.stringify({method}),JSON.stringify({direction:method,strength:1}))),'old and new recipes produce the same line gravity');
+   const legacySpiral=recipeFor(method);
+   const legacyGravity=legacySpiral.replace('Armed: spiral','Armed: gravitationalSort').replace(JSON.stringify({method}),JSON.stringify({direction:method,strength:.2}));
+   const defaultGravity=legacyGravity.replace(JSON.stringify({direction:method,strength:.2}),JSON.stringify({direction:method,strength:.6,lineStrength:.6}));
+   const expected=await replay(page,legacySpiral);
+   assert.deepEqual(await replay(page,legacyGravity),expected,'old Gravity ignores the recorded slider for line modes');
+   assert.deepEqual(await replay(page,defaultGravity),expected,'60% matches the original line motion');
   }
   await tornado();const project=await page.evaluate(()=>spiralTest.project());assert.equal(project.spiralMethod,'tornado');await choose('radial');await page.evaluate(p=>spiralTest.restore(p),project);assert.equal((await state()).mode,'tornado');
   await tornado();const undoBefore=(await state()).tiles;await tap('#btnStepForward');const undoAfter=(await state()).tiles;await tap('#btnUndo');assert.deepEqual((await state()).tiles,undoBefore);await tap('#btnRedo');assert.deepEqual((await state()).tiles,undoAfter);assert.deepEqual(await replay(page,(await state()).logs.join('\n')),undoAfter,'Tornado Undo/Redo checkpoints replay exactly');

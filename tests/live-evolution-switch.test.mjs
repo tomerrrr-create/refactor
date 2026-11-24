@@ -1,4 +1,5 @@
-import { DEFAULT_GRAVITY_CYCLE, nextGravityMode } from '../js/gravity-cycle.js';
+import { DEFAULT_GRAVITY_CYCLE, GRAVITY_DIRECTIONS, LINE_GRAVITY_MODES, nextGravityMode } from '../js/gravity-cycle.js';
+import { LEGACY_LINE_GRAVITY_STRENGTH } from '../js/simulations/line-gravity.js';
 import {vorticesModeFor} from '../js/vortices-modes.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from '../js/magnet-modes.js';
 import {magnetRecordingRules, recordedMagnetAnchorLimit} from '../js/magnet-anchor-limit.js';
@@ -22,7 +23,7 @@ const simulations = {
 function harness() {
     const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
-    const c = vm.createContext({vorticesModeFor,currentPolygonFlowMode,restorePolygonFlowPhase, vorticesSpiralRules:{method:'left'}, vorticesGravityRules:{direction:'turbine2',strength:.6},MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
+    const c = vm.createContext({LINE_GRAVITY_MODES,vorticesModeFor,currentPolygonFlowMode,restorePolygonFlowPhase, vorticesSpiralRules:{method:'left'}, vorticesGravityRules:{direction:'turbine2',strength:.6},MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
         C:{PALETTES:[{originalColors:[]}]}, activePaletteIndex:0, palette:()=>[], getCracksBrush:()=>({color:null,rainbow:false}), getCracksGrowth:()=>({branchChance:65,branchInterval:11,curvature:100}), getCracksMaterial:()=>({enabled:false,strength:40}), dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
         setSimulationRunning(value) { c.runningAppearance = value; }, isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
         boardState: [{k: 1}, {k: 2}], simulationStartState: null, simulationHasBrushInput: false,
@@ -121,6 +122,33 @@ test('live rule snapshots replay at their recorded generation without restarting
     assert.equal(c.vorticesSpiralRules.method,'left'); assert.equal(c.spiralMode,'left');
     assert.equal(c.isLifePlaying,true); assert.equal(c.currentGenerationCount,37);
     assert.equal(c.simulationStartState,start); assert.equal(c.history.length,0);
+});
+
+test('live Gravity cycling records the shared line strength at the exact generation', () => {
+    const c = harness();
+    c.GRAVITY_DIRECTIONS = GRAVITY_DIRECTIONS;
+    c.LEGACY_LINE_GRAVITY_STRENGTH = LEGACY_LINE_GRAVITY_STRENGTH;
+    c.gravitationalSortRules.strength = .8;
+    c.isWindCommand = () => false;
+    vm.runInContext(section('function restoreGravityRules(', 'function updateGravitationalSortButtonUI('), c);
+    vm.runInContext(section('function getHistorySettings(', 'function toggleMacroFullScreen('), c);
+    vm.runInContext(section('function applyMacroRules(', '        async function initializeApp('), c);
+    select(c, 'gravitationalSort');
+    select(c, 'gravitationalSort');
+    c.togglePlayPauseLife();
+    c.currentGenerationCount = 21;
+    select(c, 'gravitationalSort');
+    const actions = c.parseMacroText(c.artRecipeLog.join('\n'));
+    const change = actions.find(action => action.details === 'horizontal_gravity');
+    const context = actions.find(action => action.eventName === 'SIMULATION_RULES');
+    assert.equal(change.targetGen, 21);
+    assert.equal(context.targetGen, 21);
+    c.executeMacroAction(change);
+    assert.equal(c.gravitationalSortRules.lineStrength, .6, 'legacy mode change uses its original chance');
+    c.executeMacroAction(context);
+    assert.equal(c.gravitationalSortRules.lineStrength, .8, 'new context restores the recorded chance');
+    assert.equal(c.isLifePlaying, true);
+    assert.equal(c.currentGenerationCount, 21);
 });
 
 test('saving live tuning keeps one run and random-breathing tuning references', () => {

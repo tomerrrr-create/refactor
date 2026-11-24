@@ -1,4 +1,3 @@
-import { LINE_GRAVITY_MODES } from './gravity-cycle.js';
 import {MAGNET_METHODS,isCombinedMagnetMode} from './magnet-modes.js';
 import { magnetAnchorIndex } from './magnet-anchor.js';
 import { LUMINANCE_SORT_ICON } from './colors.js';
@@ -1240,7 +1239,7 @@ function resetGolSettings() {
 }
 
 function refreshGravitationalStrength(direction) {
-    const fixedStrength = direction === 'black_hole' || direction === 'pinwheel' || LINE_GRAVITY_MODES.includes(direction);
+    const fixedStrength = direction === 'black_hole' || direction === 'pinwheel';
     app.dom.gsStrengthSlider.disabled = fixedStrength;
     app.dom.gravitationalSortSettingsModal.querySelector('[data-gravity-strength]').classList.toggle('gravity-strength-inactive', fixedStrength);
 }
