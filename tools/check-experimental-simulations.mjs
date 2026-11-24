@@ -44,7 +44,7 @@ try{for(const touch of [false,true]){
  const original=(await state()).slots;
  assert(await geometric.isVisible(),'Geometric Flow defaults visible');
  assert(!(await breathe.isVisible()),'Breathe defaults hidden');
- assert.equal(await breathe.getAttribute('data-evolution-slot'),'12');
+ assert.equal(await breathe.getAttribute('data-evolution-slot'),'18');
  assert(await network.isVisible(),'Living Network is always available');
  await page.evaluate(()=>flagsTest.map());
  assert.equal(await page.locator('[data-drawer-evolution="spiral"]').count(),1);
@@ -69,8 +69,8 @@ try{for(const touch of [false,true]){
  assert(await breathe.isVisible());
  assert(!(await geometric.isVisible()));
  const breatheBox=await breathe.boundingBox(), switchBox=await page.locator('#btnEvolutionDrawerInternal').boundingBox();
- assert(Math.abs(breatheBox.x+breatheBox.width/2-switchBox.x-switchBox.width/2)<1);
- assert(breatheBox.y<switchBox.y);
+ assert(breatheBox.x > switchBox.x);
+ assert(Math.abs(breatheBox.y-switchBox.y)<1);
  await breathe.click();
  assert.equal((await state()).armed,'breathe');
  await page.evaluate(()=>flagsTest.startBreathe());
@@ -86,8 +86,8 @@ try{for(const touch of [false,true]){
  await toggle('spiral',true);
  await close();
  assert(await geometric.isVisible());
- assert.equal(await page.locator('#btnNetwork').getAttribute('data-evolution-slot'),'10');
- assert.equal(await geometric.getAttribute('data-evolution-slot'),'14');
+ assert.equal(await page.locator('#btnNetwork').getAttribute('data-evolution-slot'),'13');
+ assert.equal(await geometric.getAttribute('data-evolution-slot'),'16');
  assert.equal(await geometric.getAttribute('aria-label'),touch?'זרימה גאומטרית':'Geometric Flow');
  for(const icon of ['Diagonal','DiagonalMirror','Horizontal','Vertical']){
   await geometric.click();assert.equal((await state()).armed,'spiral');assert(await page.locator('#iconSpiral'+icon).isVisible());

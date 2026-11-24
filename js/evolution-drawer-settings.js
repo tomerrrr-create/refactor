@@ -17,8 +17,8 @@ export const INTERNAL_NAV_SLOTS = Object.freeze([7,17]);
 export const DEFAULT_EVOLUTION_LAYOUT = Object.freeze([
     'sandpile', 'magnet', 'gameOfLife', 'brightnessEvo', 'islands',
     'nudgeBrighter', 'gravitationalSort', null, 'ink', 'erosion',
-    'network', 'cymatics', 'breathe', 'turing', 'spiral',
-    'contour', 'dla', null, 'fibonacci', null
+    'contour', 'dla', 'cymatics', 'network', 'turing',
+    'fibonacci', 'spiral', null, 'breathe', null
 ]);
 // Older ten/twenty-place preferences remain readable. Upgrade once: layouts
 // already reserving the two navigation places keep their exact assignments.
@@ -61,7 +61,8 @@ function addNetwork(slots) {
 }
 function addFibonacci(slots) {
     if (slots.includes('fibonacci')) return slots;
-    const target = slots[18] === null ? 18 : slots.findIndex((id, i) => id === null && !INTERNAL_NAV_SLOTS.includes(i));
+    const preferred = DEFAULT_EVOLUTION_LAYOUT.indexOf('fibonacci');
+    const target = slots[preferred] === null ? preferred : slots.findIndex((id, i) => id === null && !INTERNAL_NAV_SLOTS.includes(i));
     if (target < 0) throw new Error('No space for Fibonacci');
     slots[target] = 'fibonacci';
     return slots;
