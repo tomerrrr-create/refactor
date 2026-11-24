@@ -140,7 +140,7 @@ try {
         await tap('#btnSpiral');assert.equal((await state()).project.spiralMethod,'horizontal_gravity');
         await swipeUp('#btnSpiral');
         await page.locator("#spiralSettingsModal").waitFor({state:"visible"});
-        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['horizontal_gravity','vertical_gravity','triangle_gravity','triangle_gravity_mirror','radial','down']);
+        assert.deepEqual(await page.locator('.spiral-method-btn').evaluateAll(ns=>ns.map(n=>n.dataset.method)),['horizontal_gravity','triangle_gravity','vertical_gravity','triangle_gravity_mirror','radial','down']);
         await dialogAction('#btnSpiralSettingsCancel');await page.locator('#spiralSettingsModal').waitFor({state:'hidden'});
         await tap(nav);
         await tap('#btnGravitationalSort');await swipeUp('#btnGravitationalSort');
