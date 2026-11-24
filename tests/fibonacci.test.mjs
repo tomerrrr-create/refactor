@@ -6,10 +6,18 @@ function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, s
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
     const currentPalette = Array(4096).fill('#000');
     const state = createFibonacciState(n, orientation, mode, colorAdvance, seed);
-    if (!useTail && state.sequenceTailLength !== undefined) {
-        delete state.sequenceTailLength;
-        delete state.sequenceTailPhase;
-        state.sequenceTrailFrames = [];
+    if (mode === 'sequence' || mode === 'primes') {
+        if (!useTail) {
+            delete state.sequenceLineShifts;
+            delete state.sequenceLinePhase;
+            delete state.sequenceTailLength;
+            delete state.sequenceTailPhase;
+            state.sequenceTrailFrames = [];
+        } else if (useTail === 'legacy') {
+            delete state.sequenceLineShifts;
+            delete state.sequenceLinePhase;
+            Object.assign(state, { sequenceTailLength: 0, sequenceTailPhase: 0 });
+        }
     }
     const step = () => runFibonacciGeneration({ currentBoardState, currentPalette }, state);
     const occupied = () => currentBoardState.flatMap(({ k }, index) => k > 0 ? [index] : []);
@@ -396,7 +404,7 @@ test('a cell rejoining a number pattern changes once that generation, even durin
 
 test('connected tails grow one cell per shift and retain the wave phase on restore', () => {
     for (const [mode, maxLength] of [['sequence', 6], ['primes', 3]]) {
-        const sim = simulate(21, 0, mode, 100, 0, true);
+        const sim = simulate(21, 0, mode, 100, 0, 'legacy');
         sim.state.sequenceInterval = 8;
         for (let shift = 1; shift <= 8; shift++) {
             for (let i = 0; i < 8; i++) sim.step();
@@ -428,7 +436,7 @@ test('tail color travels from the nearest predecessor outward without painting d
         const heads = headsAt(offset);
         const first = headsAt(offset - 1);
         const second = headsAt(offset - 2);
-        const sim = simulate(n, 0, mode, 100, 0, true);
+        const sim = simulate(n, 0, mode, 100, 0, 'legacy');
         Object.assign(sim.state, { sequenceInterval: 327, sequenceOffset: offset, sequenceAge: n, sequenceTailLength: 2 });
         for (let phase = 0; phase <= delay; phase++) {
             const candidates = phase === 0 ? [...first] : phase === delay ? [...second].filter(index => !first.has(index)) : [];
@@ -444,4 +452,43 @@ test('tail color travels from the nearest predecessor outward without painting d
             assert.deepEqual(changed, trail);
         }
     }
+});
+
+test('Fibonacci Sequence forms the original lines before a pulse changes existing pigments', () => {
+    const n = 21;
+    const current = simulate(n, 0, 'sequence', 100, 7, true);
+    current.state.sequenceInterval = 8;
+    const original = simulate(n, 0, 'sequence');
+    original.state.sequenceInterval = 8;
+    delete original.state.sequenceTrailFrames;
+    const colorCount = 23;
+    current.currentPalette.length = original.currentPalette.length = colorCount;
+    for (let i = 0; i < 48; i++) {
+        current.step();
+        original.step();
+        assert.deepEqual(current.currentBoardState, original.currentBoardState);
+    }
+
+    const snapshot = validateFibonacciState(JSON.parse(JSON.stringify(current.state)));
+    const replayed = structuredClone(current.currentBoardState);
+    let pulseCells = 0;
+    for (let i = 0; i < 180; i++) {
+        const before = current.currentBoardState.map(cell => cell.k);
+        const beforeOriginal = original.currentBoardState.map(cell => cell.k);
+        current.step();
+        original.step();
+        runFibonacciGeneration({ currentBoardState: replayed, currentPalette: current.currentPalette }, snapshot);
+        for (const [index, cell] of current.currentBoardState.entries()) {
+            const head = original.currentBoardState[index].k !== beforeOriginal[index];
+            if (head) assert.equal(cell.k, (before[index] + 1) % colorCount);
+            else if (cell.k !== before[index]) {
+                assert(before[index] > 0 && before[index] < colorCount - 1);
+                assert.equal(cell.k, before[index] + 1);
+                pulseCells++;
+            }
+        }
+    }
+    assert(pulseCells > 0);
+    assert.deepEqual(snapshot, current.state);
+    assert.deepEqual(replayed, current.currentBoardState);
 });

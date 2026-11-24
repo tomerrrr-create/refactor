@@ -14,6 +14,10 @@ const ribbonTiming = {
     sequence: { length: 6, period: 16, delay: 2 },
     primes: { length: 3, period: 18, delay: 3 }
 };
+const linePulseStart = 4;
+const linePulseLength = 11;
+const linePulseStep = 3;
+const linePulsePeriod = 32;
 const revealFrames = n => Math.min(n, 24);
 const intervalFor = state => state.sequenceInterval || state.n;
 let cachedPlan;
@@ -52,16 +56,18 @@ function getSequencePlan(n) {
     for (let i = 1; i < size; i++) {
         const a = cells[i - 1], b = cells[i];
         const distance = Math.abs(a % n - b % n) + Math.abs(Math.floor(a / n) - Math.floor(b / n));
-        if (distance === 1) contiguous[i] = Math.min(contiguous[i - 1] + 1, ribbonTiming.sequence.length);
+        if (distance === 1) contiguous[i] = Math.min(contiguous[i - 1] + 1, linePulseLength);
     }
     cachedPlan = { n, cells, sequence, primes, contiguous, visited: new Uint8Array(size) };
     return cachedPlan;
 }
 
 export function resetSequenceCursor(state, interval) {
-    delete state.sequenceTrailFrames;
+    clearSequenceCursor(state);
     Object.assign(state, { sequenceInterval: interval, sequenceOffset: 0, sequenceElapsed: 0, sequenceAge: 0,
-        sequenceShifted: false, sequenceTailLength: 0, sequenceTailPhase: 0 });
+        sequenceShifted: false });
+    if (state.mode === 'sequence') Object.assign(state, { sequenceLineShifts: 0, sequenceLinePhase: 0 });
+    else Object.assign(state, { sequenceTailLength: 0, sequenceTailPhase: 0 });
 }
 
 export function clearSequenceCursor(state) {
@@ -73,6 +79,8 @@ export function clearSequenceCursor(state) {
     delete state.sequenceTrailFrames;
     delete state.sequenceTailLength;
     delete state.sequenceTailPhase;
+    delete state.sequenceLineShifts;
+    delete state.sequenceLinePhase;
 }
 
 export function setSequenceInterval(state, interval) {
@@ -89,6 +97,14 @@ export function validateSequenceCursor(state) {
         throw new Error('Invalid Fibonacci sequence cursor');
     }
     const cursor = { sequenceInterval, sequenceOffset, sequenceElapsed, sequenceAge, sequenceShifted };
+    if (state.sequenceLineShifts !== undefined || state.sequenceLinePhase !== undefined) {
+        const { sequenceLineShifts, sequenceLinePhase } = state;
+        if (state.mode !== 'sequence' || !Number.isInteger(sequenceLineShifts) || sequenceLineShifts < 0 || sequenceLineShifts > linePulseLength ||
+            !Number.isInteger(sequenceLinePhase) || sequenceLinePhase < 0 || sequenceLinePhase >= linePulsePeriod) {
+            throw new Error('Invalid Fibonacci line pulse');
+        }
+        return { ...cursor, sequenceLineShifts, sequenceLinePhase };
+    }
     if (state.sequenceTailLength !== undefined || state.sequenceTailPhase !== undefined) {
         const { length, period } = ribbonTiming[state.mode];
         const { sequenceTailLength, sequenceTailPhase } = state;
@@ -143,7 +159,24 @@ export function runNumberSequence(board, colorCount, state) {
     visited.fill(0);
     visitFootprint(footprint, true);
 
-    if (state.sequenceTailLength !== undefined) {
+    if (state.sequenceLinePhase !== undefined) {
+        const phase = state.sequenceLinePhase;
+        const distance = linePulseStart + phase / linePulseStep;
+        if (phase % linePulseStep === 0 && distance <= state.sequenceLineShifts) {
+            for (let rank = 0; rank < footprint[2]; rank++) {
+                const head = (numbers[rank] + sequenceOffset) % cells.length;
+                if (distance > contiguous[head]) continue;
+                const index = cells[head - distance];
+                if (visited[index]) continue;
+                visited[index] = 1;
+                const cell = board[index];
+                // Keep blank cells and the light crest intact. The pulse only
+                // advances pigments in a part of the line that already formed.
+                if (!cell.isGold && cell.k > 0 && cell.k < colorCount - 1) cell.k = cell.v = cell.k + 1;
+            }
+        }
+        state.sequenceLinePhase = (phase + 1) % linePulsePeriod;
+    } else if (state.sequenceTailLength !== undefined) {
         const { period, delay } = ribbonTiming[mode];
         // A wave starts beside the head and travels one cell at a time.
         // The nearest head owns shared tail cells, while active heads always win.
@@ -181,6 +214,9 @@ export function runNumberSequence(board, colorCount, state) {
         state.sequenceElapsed = 0;
         state.sequenceOffset = (sequenceOffset + 1) % cells.length;
         state.sequenceShifted = true;
+        if (state.sequenceLineShifts !== undefined && state.sequenceAge === revealFrames(n)) {
+            state.sequenceLineShifts = Math.min(state.sequenceLineShifts + 1, linePulseLength);
+        }
         if (state.sequenceTailLength !== undefined) {
             state.sequenceTailLength = Math.min(state.sequenceTailLength + 1, ribbonTiming[mode].length);
         }

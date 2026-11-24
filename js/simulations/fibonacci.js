@@ -146,9 +146,10 @@ export function setFibonacciMode(state, mode, interval = 0) {
         if (state.frame >= handoffTiming(state.version, plan).handoffEnd) delete state.outgoing;
         else if (state.outgoing?.branch) state.outgoing = validateOrigin(state.n, state.outgoing);
     }
-    if (isSequenceMode(mode)) resetSequenceCursor(state, interval);
-    else if (isSequenceMode(state.mode)) clearSequenceCursor(state);
+    const wasSequence = isSequenceMode(state.mode);
     state.mode = mode;
+    if (isSequenceMode(mode)) resetSequenceCursor(state, interval);
+    else if (wasSequence) clearSequenceCursor(state);
 }
 
 export function validateFibonacciState(state) {
