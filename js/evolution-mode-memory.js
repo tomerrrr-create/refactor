@@ -4,6 +4,7 @@ import { DEFAULT_GEOMETRIC_FLOW_CYCLE } from './geometric-flow-cycle.js';
 
 // Remembered selections are deliberately session-only.
 export const EVOLUTION_MODE_MEMORY_KEY = 'colorGridRememberEvolutionModes';
+export const DEFAULT_REMEMBER_SIMULATION_MODES = true;
 export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].includes(simulation) ? 'nudge' : simulation;
 // First human-cycle choices. Turing and one-shot utilities have no cycle.
 export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
@@ -13,9 +14,12 @@ export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
 });
 export const defaultEvolutionCycleMode = simulation => DEFAULT_EVOLUTION_CYCLE_MODES[evolutionModeKey(simulation)];
 export function createEvolutionModeMemory({storage, blocked = () => false} = {}) {
-    let enabled = false;
+    let enabled = DEFAULT_REMEMBER_SIMULATION_MODES;
     const modes = new Map(), completedCycles = new Set();
-    try { enabled = (storage ?? globalThis.localStorage)?.getItem(EVOLUTION_MODE_MEMORY_KEY) === 'true'; } catch {}
+    try {
+        const saved = (storage ?? globalThis.localStorage)?.getItem(EVOLUTION_MODE_MEMORY_KEY);
+        if (saved === 'true' || saved === 'false') enabled = saved === 'true';
+    } catch {}
     const active = () => enabled && !blocked();
     return {
         enabled: () => enabled,
