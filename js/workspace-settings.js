@@ -25,6 +25,7 @@ import { orderToolbarCycle } from './toolbar-cycle-storage.js';
 import { MAGNET_ANCHOR_LIMITS, DEFAULT_MAGNET_ANCHOR_PREFERENCE } from './magnet-anchor-limit.js';
 import { normalizeWindSettings } from './wind-settings.js';
 import { DEFAULT_GEOMETRIC_FLOW_VISIBLE } from './experimental-simulations.js';
+import { DEFAULT_REMEMBER_SIMULATION_MODES } from './evolution-mode-memory.js';
 import { DEFAULT_FIBONACCI_COLOR_ADVANCE, normalizeFibonacciColorAdvance } from './simulations/fibonacci.js';
 
 export function defaultSimulationPreferences() {
@@ -33,7 +34,7 @@ export function defaultSimulationPreferences() {
         resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
         geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, fibonacciVisible: false,
-        fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, rememberSimulationModes: false
+        fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, rememberSimulationModes: DEFAULT_REMEMBER_SIMULATION_MODES
     };
 }
 

@@ -1,6 +1,6 @@
 // One registry owns the visibility preferences of these removable experiments.
 // Browser storage preserves the legacy preference and defaults for older profiles.
-export const DEFAULT_GEOMETRIC_FLOW_VISIBLE=true;
+export const DEFAULT_GEOMETRIC_FLOW_VISIBLE=false;
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
     {id:'spiral',button:'btnSpiral',key:'tooltip_spiral',defaultVisible:DEFAULT_GEOMETRIC_FLOW_VISIBLE},
     {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe',defaultVisible:false},
