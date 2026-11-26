@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { magnetAnchorIndex } from '../js/magnet-anchor.js';
 import { runMagnetGeneration } from '../js/simulations/magnet.js';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
+import { getLuminance, sortColorsArray } from '../js/colors.js';
+import { PALETTES } from '../js/data/palettes.js';
 
 test('Root and manual anchors retain their legacy defaults; darkest follows palette across sorts', () => {
  const original=['#ffffff','#000000','#ff0000'];
@@ -13,6 +15,13 @@ test('Root and manual anchors retain their legacy defaults; darkest follows pale
  }
  assert.equal(magnetAnchorIndex(['#ffffff','#333333'],{anchorColor:'luminance'}),1);
  assert.equal(magnetAnchorIndex(['#000000','#000000'],{anchorColor:'luminance'}),0);
+});
+
+test('every built-in palette has one darkest entry for the Luminance anchor', () => {
+ for (const { originalName, colors } of PALETTES) {
+  const luminanceOrder = sortColorsArray(colors, 'luminance');
+  assert(getLuminance(luminanceOrder[0]) < getLuminance(luminanceOrder[1]), originalName);
+ }
 });
 
 test('all four engines match an explicitly selected darkest anchor with identical randomness', () => {
