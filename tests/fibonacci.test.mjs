@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
 import { CLASSIC_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_SETTINGS, growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
 import { FIBONACCI_MAPS, seedFibonacciMap } from '../js/simulations/fibonacci-maps.js';
@@ -370,7 +371,8 @@ test('each Fibonacci map has distinct growth and restores exactly with edited se
             sim.step();
             runFibonacciGeneration({ currentBoardState: board, currentPalette: sim.currentPalette }, replay);
         }
-        assert(sim.currentBoardState.every((cell, i) => i === 0 || cell.k > 0), mode);
+        // The gaps in a circle packing leave the original background visible.
+        if (mode !== 'apollonian') assert(sim.currentBoardState.every((cell, i) => i === 0 || cell.k > 0), mode);
         assert.equal(sim.currentBoardState[0].k, 0);
         assert.deepEqual(replay, sim.state);
         assert.deepEqual(board, sim.currentBoardState);
@@ -379,6 +381,44 @@ test('each Fibonacci map has distinct growth and restores exactly with edited se
         assert.deepEqual(validateFibonacciState(sim.state), sim.state);
     }
     assert.equal(patterns.size, FIBONACCI_MAPS.length);
+});
+
+test('Tangent Circles unfolds from a small cluster and resumes its seeded growth exactly', () => {
+    const size = 89;
+    const sim = simulate(size, 0, 'apollonian', 100, 24);
+    const differentLayout = simulate(size, 0, 'apollonian', 100, 72378818);
+    for (let frame = 0; frame < 36; frame++) { sim.step(); differentLayout.step(); }
+    const opening = sim.occupied();
+    assert(opening.length > 0 && opening.length < size ** 2 * .06);
+    assert.notDeepEqual(opening, differentLayout.occupied());
+
+    const board = structuredClone(sim.currentBoardState);
+    const checkpoint = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    assert.equal(checkpoint.map.layoutSeed, 24);
+    for (let frame = 0; frame < 360; frame++) {
+        sim.step();
+        runFibonacciGeneration({ currentBoardState: board, currentPalette: sim.currentPalette }, checkpoint);
+    }
+    assert.deepEqual(checkpoint, sim.state);
+    assert.deepEqual(board, sim.currentBoardState);
+    const packed = sim.occupied();
+    assert(packed.length > size ** 2 * .75 && packed.length < size ** 2);
+    const before = structuredClone(board);
+    for (let frame = 0; frame < 20; frame++) sim.step();
+    assert(opening.some(index => sim.currentBoardState[index].k > before[index].k));
+    assert.throws(() => validateFibonacciState({ ...checkpoint, map: { ...checkpoint.map, layoutSeed: -1 } }), /layout seed/);
+});
+
+test('Tangent Circles version-one recordings keep the previous packing and timing', () => {
+    const source = createFibonacciState(45, 2, 'apollonian', 95, 87324);
+    const { layoutSeed, ...map } = source.map;
+    const state = validateFibonacciState({ ...source, map: { ...map, version: 1 } });
+    const currentBoardState = Array.from({ length: 45 ** 2 }, () => ({ k: 0, v: 0 }));
+    for (let frame = 0; frame < 120; frame++) {
+        runFibonacciGeneration({ currentBoardState, currentPalette: Array(23) }, state);
+    }
+    const hash = createHash('sha256').update(Buffer.from(currentBoardState.map(({ k }) => k))).digest('hex');
+    assert.equal(hash, '3ca97f226b6f941b07e2f3354a2e21cd330e2a24e994dd55309a4cfecbae0a19');
 });
 
 test('Voronoi drawing adds a bounded, deterministic site and changes the evolving pattern', () => {
