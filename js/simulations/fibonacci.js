@@ -1,6 +1,6 @@
 import { growFibonacciCrystal, validateCrystalSettings } from './fibonacci-crystal.js';
 
-export const FIBONACCI_MODES = Object.freeze(['restart', 'branching', 'crystal']);
+export const FIBONACCI_MODES = Object.freeze(['crystal', 'restart', 'branching']);
 export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
 export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([90, 100, 1]);
 
@@ -29,7 +29,7 @@ const plans = [];
 let colorGroups;
 let branchingCells;
 
-export function createFibonacciState(n, orientation = 0, mode = FIBONACCI_MODES[0],
+export function createFibonacciState(n, orientation = 0, mode = 'restart',
     colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0, version = FIBONACCI_VERSION) {
     const center = Math.floor((n - 1) / 2);
     return { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0,

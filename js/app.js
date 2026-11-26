@@ -1080,7 +1080,8 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         dlaState = null;
         turingState = null; inkState = null; oilState = null; networkState = null;
         if (armedSimulation === 'fibonacci') {
-            resetFibonacciRuntime(keepFibonacciMode ? fibonacciState : null);
+            if (keepFibonacciMode) resetFibonacciRuntime();
+            else resetFibonacciRuntime(null, 'restart');
             updateFibonacciButtonUI();
         }
         startAnimationLoop();
@@ -2126,7 +2127,7 @@ if (!isTogglingOff && simulationName !== null) {
     if (simulationName === 'ink')inkState=createInkState(n);
     if (simulationName === 'fibonacci') {
         const seed = isExecutingMacroCommand ? 0 : Math.floor(Math.random() * 2 ** 32);
-        fibonacciState = createFibonacciState(n, seed & 3, undefined, fibonacciColorAdvance, seed);
+        resetFibonacciRuntime({ orientation: seed & 3, seed, crystalSettings: fibonacciCrystalSettings });
     }
     if (simulationName === 'oil')oilState=createOilState(n);
     if (simulationName === 'network'){networkState=createNetworkState(n);if(!isExecutingMacroCommand&&!isMacroPlaying)networkRules=validateNetworkRules({...networkRules,mode:'spatial'});}
@@ -3886,10 +3887,13 @@ function cycleChiFlowMode() {
     window.logArtEvent('Chi Flow Mode Changed', JSON.stringify({ ...getChiFlowRecordingRules(), mode: next }));
 }
 
-function resetFibonacciRuntime(previous = fibonacciState) {
-    fibonacciState = createFibonacciState(n, previous?.orientation, previous?.mode,
+function resetFibonacciRuntime(previous = fibonacciState, mode = previous?.mode ?? FIBONACCI_MODES[0]) {
+    fibonacciState = createFibonacciState(n, previous?.orientation, mode,
         previous?.colorAdvance ?? fibonacciColorAdvance, previous?.seed, previous?.version);
-    if (previous?.crystalSettings) fibonacciState.crystalSettings = previous.crystalSettings;
+    if (mode === 'crystal') {
+        const settings = previous ? previous.crystalSettings : fibonacciCrystalSettings;
+        if (settings) fibonacciState.crystalSettings = settings;
+    }
 }
 
 function getFibonacciState() {
