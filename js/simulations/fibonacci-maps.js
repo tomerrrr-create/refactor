@@ -32,13 +32,13 @@ export function validateMapSettings(mode, settings) {
 }
 
 export function createFibonacciMap(mode, layoutSeed = 0) {
-    return { version: mode === 'apollonian' ? 2 : 1, frame: 0, front: 0, settings: { ...MAP_DEFAULTS[mode] },
+    return { version: mode === 'apollonian' ? 3 : 1, frame: 0, front: 0, settings: { ...MAP_DEFAULTS[mode] },
         ...(mode === 'voronoi' ? { seeds: [] } : {}), ...(mode === 'apollonian' ? { layoutSeed } : {}) };
 }
 
 export function validateFibonacciMap(mode, n, map) {
     const { version, frame, front, seeds, settings, layoutSeed } = map ?? {};
-    const growingCircles = version === 2 && mode === 'apollonian';
+    const growingCircles = (version === 2 || version === 3) && mode === 'apollonian';
     if ((version !== 1 && !growingCircles) || frame !== (frame >>> 0) || !Number.isSafeInteger(front) ||
         front < frame * 25 || front > frame * 200) throw new Error('Invalid Fibonacci map checkpoint');
     if (growingCircles ? layoutSeed !== (layoutSeed >>> 0) : layoutSeed !== undefined) {
@@ -224,7 +224,57 @@ function drawCircles(n, plan, size) {
 
 const INACTIVE_CIRCLE_CELL = 65535;
 
-function drawGrowingCircles(n, plan, size, seed) {
+function fillBoardCircleGaps(n, centerX, centerY, innerRadius, minimum, packed, schedule) {
+    const edge = n - 1;
+    const farthestX = Math.max(centerX, edge - centerX);
+    const farthestY = Math.max(centerY, edge - centerY);
+    // Give circles centered at a corner room to grow past the canvas edge.
+    const enclosure = Math.hypot(farthestX, farthestY) + n * .085;
+    const step = Math.ceil(n / 95);
+    const positions = Array.from({ length: Math.ceil(edge / step) + 1 }, (_, i) => Math.min(i * step, edge));
+    const candidates = [];
+    const corners = [];
+    for (const cy of positions) {
+        for (const cx of positions) {
+            const distance = Math.hypot(cx - centerX, cy - centerY);
+            const isCorner = (cx === 0 || cx === edge) && (cy === 0 || cy === edge);
+            if (!isCorner && distance < innerRadius - n * .055) continue;
+            const candidate = { cx, cy, radius: enclosure - distance, ready: 0 };
+            candidates.push(candidate);
+            if (isCorner) corners.push(candidate);
+        }
+    }
+    function constrain({ cx, cy, radius, ready }) {
+        for (const candidate of candidates) {
+            if (candidate.radius <= 0) continue;
+            const dx = candidate.cx - cx, dy = candidate.cy - cy, reach = radius + candidate.radius;
+            const distanceSquared = dx * dx + dy * dy;
+            if (distanceSquared >= reach * reach) continue;
+            candidate.radius = Math.sqrt(distanceSquared) - radius;
+            candidate.ready = ready;
+        }
+    }
+    for (const circle of packed) constrain(circle);
+    function add(candidate, order, minimumRadius = minimum) {
+        const { cx, cy, radius, ready } = candidate;
+        if (radius < minimumRadius) return;
+        const birth = Math.max(41 + Math.floor(order / 3), ready + 4) + order % 4;
+        const circle = schedule({ x: cx - centerX, y: cy - centerY }, birth, { cx, cy, radius }, true);
+        constrain({ cx, cy, radius, ready: circle.ready });
+    }
+    // Even on small boards, a clipped corner circle can contribute a pixel.
+    for (const [index, corner] of corners.entries()) add(corner, index, Number.EPSILON);
+    for (let order = corners.length; order < 144; order++) {
+        let best;
+        for (const candidate of candidates) {
+            if (candidate.radius >= minimum && (!best || candidate.radius > best.radius)) best = candidate;
+        }
+        if (!best) break;
+        add(best, order);
+    }
+}
+
+function drawGrowingCircles(n, plan, size, seed, fillBoard) {
     // All circles are constructed at their final size. Only their radius of
     // activation changes over time, so children start in fully formed gaps.
     const center = (n - 1) / 2;
@@ -265,21 +315,25 @@ function drawGrowingCircles(n, plan, size, seed) {
         const scale = power / (dx * dx + dy * dy - unwarpedRadius ** 2);
         return { radius: unwarpedRadius * scale, cx: inversionX + scale * dx + shiftX, cy: inversionY + scale * dy + shiftY };
     }
-    function schedule(circle, birth, { radius, cx, cy } = transform(circle)) {
+    const packed = [];
+    function schedule(circle, birth, { radius, cx, cy } = transform(circle), aroundEdges = false) {
         const duration = Math.round(5 + 21 * Math.sqrt(radius / n));
+        const ready = birth + duration;
+        if (fillBoard && !aroundEdges) packed.push({ cx, cy, radius, ready });
         const offset = phase(circle.x, circle.y);
         for (let row = Math.max(0, Math.ceil(cy - radius)); row <= Math.min(n - 1, Math.floor(cy + radius)); row++) {
             for (let col = Math.max(0, Math.ceil(cx - radius)); col <= Math.min(n - 1, Math.floor(cx + radius)); col++) {
                 const distance = Math.hypot(col - cx, row - cy);
                 if (distance > radius) continue;
                 const index = row * n + col;
+                if (aroundEdges && plan.delay[index] !== INACTIVE_CIRCLE_CELL) continue;
                 plan.edge[index] = radius - distance;
                 plan.delay[index] = birth + Math.round(duration * distance / radius);
                 plan.period[index] = radius < n / 20 ? 4 : 7;
                 plan.offsets[index] = offset;
             }
         }
-        return { ...circle, ready: birth + duration };
+        return { ...circle, ready };
     }
 
     plan.delay.fill(INACTIVE_CIRCLE_CELL);
@@ -341,6 +395,7 @@ function drawGrowingCircles(n, plan, size, seed) {
             fillGaps([...neighbors, inner], 3, 0, seed ^ index);
         }
     }
+    if (fillBoard) fillBoardCircleGaps(n, shiftX, shiftY, outer, minimum, packed, schedule);
 }
 
 function drawVoronoi(state, plan) {
@@ -393,11 +448,11 @@ function getPlan(state) {
     const refinement = mode === 'pinwheel-map' ? Math.min(2, Math.floor(map.front / 2400)) : 0;
     if (cachedPlan?.n === n && cachedPlan.mode === mode && cachedPlan.scale === scale &&
         cachedPlan.orientation === orientation && cachedPlan.seeds === map.seeds && cachedPlan.refinement === refinement &&
-        cachedPlan.layoutSeed === map.layoutSeed) return cachedPlan;
+        cachedPlan.layoutSeed === map.layoutSeed && cachedPlan.version === map.version) return cachedPlan;
     const plan = makePlan(n);
-    const growingCircles = mode === 'apollonian' && map.version === 2;
+    const growingCircles = mode === 'apollonian' && map.version >= 2;
     if (mode === 'voronoi') drawVoronoi(state, plan);
-    else if (growingCircles) drawGrowingCircles(n, plan, scale, map.layoutSeed);
+    else if (growingCircles) drawGrowingCircles(n, plan, scale, map.layoutSeed, map.version === 3);
     else {
         if (mode === 'pinwheel-map') drawPinwheel(n, plan, scale, refinement);
         if (mode === 'octagonal') drawOctagonal(n, plan, scale);
@@ -409,7 +464,7 @@ function getPlan(state) {
             plan.delay[index] += Math.floor(Math.max(0, distance - 1.5) / speed);
         }
     }
-    cachedPlan = { ...plan, n, mode, scale, orientation, seeds: map.seeds, refinement, layoutSeed: map.layoutSeed, growingCircles };
+    cachedPlan = { ...plan, n, mode, scale, orientation, seeds: map.seeds, refinement, layoutSeed: map.layoutSeed, version: map.version, growingCircles };
     return cachedPlan;
 }
 
