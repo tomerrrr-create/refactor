@@ -2535,6 +2535,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog { width:min(640px,calc(100vw - 24px)); padding:18px; }
 #controlsContainer.sim-mode-active [data-evolution-page-hidden] { display:none !important; }
 #evolutionDrawerDialog .drawer-pages { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; direction:ltr; }
+@media(min-width:880px) {
+  #evolutionDrawerDialog[data-patterns] { width:min(920px,calc(100vw - 24px)); }
+  #evolutionDrawerDialog[data-patterns] .drawer-pages { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
 #evolutionDrawerDialog[dir="rtl"] .drawer-pages h3 { text-align:right; direction:rtl; }
 #drawerInstructions { color:#c3b99e; font-size:12px; line-height:1.6; margin:18px 0 0; }
 #evolutionDrawerDialog .drawer-selection { min-height:20px; color:#e3c677; text-align:center; font-size:12px; margin:18px 0 0; }
@@ -2658,6 +2662,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   transform:translateX(-4px); transition:transform 180ms ease-out;
 }
 [data-page="1"] > .drawer-internal-symbol > .drawer-page-dot { transform:translateX(4px); }
+.drawer-page-number { display:none; }
+[data-numbered-drawer] > .drawer-internal-symbol { height:14px; }
+[data-numbered-drawer] .drawer-page-dot { display:none; }
+[data-numbered-drawer] .drawer-page-number {
+  display:block; position:relative; color:#c5cbd2;
+  font:500 10px/1 system-ui,sans-serif; font-variant-numeric:tabular-nums;
+}
 :root[data-simulation-running] .drawer-internal-symbol::before { opacity:0; }
 @media(prefers-reduced-motion:reduce) {
   .drawer-internal-symbol, .drawer-internal-symbol::before, .drawer-page-dot { transition:none; }
@@ -2891,17 +2902,12 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 .ink-settings-dialog .fluid-preset-card:last-child { grid-column:1 / -1; }
 
-#btnFibonacci { display:none; touch-action:none !important; }
-#btnFibonacci svg { stroke:var(--sim-color); }
-#btnFibonacci.simulation-active svg { stroke:var(--gold); }
+#btnFibonacci, .pattern-evolution { display:none; touch-action:none !important; }
+#btnFibonacci svg, .pattern-evolution svg { stroke:var(--sim-color); }
+#btnFibonacci.simulation-active svg, .pattern-evolution.simulation-active svg { stroke:var(--gold); }
 
 #btnFibonacci:not([data-mode="restart"]) [data-fibonacci-icon="restart"],
 #btnFibonacci:not([data-mode="branching"]) [data-fibonacci-icon="branching"],
-#btnFibonacci:not([data-mode="crystal"]) [data-fibonacci-icon="crystal"],
-#btnFibonacci:not([data-mode="pinwheel-map"]) [data-fibonacci-icon="pinwheel-map"],
-#btnFibonacci:not([data-mode="octagonal"]) [data-fibonacci-icon="octagonal"],
-#btnFibonacci:not([data-mode="apollonian"]) [data-fibonacci-icon="apollonian"],
-#btnFibonacci:not([data-mode="voronoi"]) [data-fibonacci-icon="voronoi"],
 #btnFibonacci:not([data-mode="continuous"]) [data-fibonacci-icon="continuous"] { display:none; }
 
 #btnNetwork { display:none; touch-action:none !important; }

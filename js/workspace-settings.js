@@ -35,7 +35,7 @@ export function defaultSimulationPreferences() {
         gravityCycleVersion: GRAVITY_CYCLE_VERSION, gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
         resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
-        geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, fibonacciVisible: false,
+        geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, fibonacciVisible: false, patternsVisible: false,
         fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, fibonacciCrystal: { ...DEFAULT_CRYSTAL_SETTINGS },
         rememberSimulationModes: DEFAULT_REMEMBER_SIMULATION_MODES, fibonacciMaps: structuredClone(MAP_DEFAULTS)
     };
@@ -85,7 +85,7 @@ function validateSimulationPreferences(value) {
             result.fibonacciMaps[mode] = validateMapSettings(mode, settings);
         }
     }
-    for (const key of ['geometricFlowVisible', 'breatheVisible', 'fibonacciVisible', 'rememberSimulationModes']) {
+    for (const key of ['geometricFlowVisible', 'breatheVisible', 'fibonacciVisible', 'patternsVisible', 'rememberSimulationModes']) {
         if (!Object.hasOwn(value, key)) continue;
         if (typeof value[key] !== 'boolean') throw new Error('Invalid simulation preference: ' + key);
         result[key] = value[key];

@@ -3,10 +3,40 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
     fibonacci: [
-        ['Fibonacci', 'Grow tiles, circles or square spirals through your colors. In Voronoi, paint to add the points that shape the cells.'],
-        ['פיבונאצ׳י', 'ריצופים, מעגלים וספירלות ריבועים צומחים בתוך הצבעים שלך. בוורונוי, ציור מוסיף נקודות שקובעות את צורת התאים.'],
-        ['Фибоначчи', 'Выращивайте мозаики, окружности и квадратные спирали. В режиме Вороного рисунок добавляет точки, определяющие форму ячеек.'],
-        ['Fibonacci', 'Laat tegels, cirkels of vierkantenspiralen door je kleuren groeien. Teken in Voronoi om punten toe te voegen die de cellen vormen.']
+        ['Fibonacci', 'Grow a spiral of squares or let it branch into two spirals.'],
+        ['פיבונאצ׳י', 'הצמיחו ספירלת ריבועים אחת, או תנו לה להתפצל לשתי ספירלות.'],
+        ['Фибоначчи', 'Выращивайте спираль из квадратов или позвольте ей разделиться на две.'],
+        ['Fibonacci', 'Laat een spiraal van vierkanten groeien of splits haar in twee spiralen.']
+    ],
+    crystal: [
+        ['Penrose Crystal', 'Grow a fivefold mosaic through the colors on the board.'],
+        ['גביש פנרוז', 'הצמיחו ריצוף בעל סימטריה מחומשת בתוך צבעי הלוח.'],
+        ['Кристалл Пенроуза', 'Выращивайте мозаику с пятерной симметрией из цветов поля.'],
+        ['Penrose-kristal', 'Laat een mozaïek met vijfvoudige symmetrie door de kleuren groeien.']
+    ],
+    'pinwheel-map': [
+        ['Pinwheel Tiles', 'See triangles divide and turn as their colors change.'],
+        ['משולשים מסתובבים', 'ראו איך המשולשים מתחלקים ומסתובבים תוך כדי שינוי הצבעים.'],
+        ['Вращающиеся треугольники', 'Наблюдайте, как треугольники делятся и поворачиваются, меняя цвет.'],
+        ['Draaiende driehoeken', 'Zie driehoeken delen en draaien terwijl hun kleuren veranderen.']
+    ],
+    octagonal: [
+        ['Octagonal Crystal', 'Grow an eightfold mosaic of squares and diamonds.'],
+        ['גביש מתומן', 'הצמיחו ריצוף של ריבועים ומעוינים בסימטריה מתומנת.'],
+        ['Восьмиугольный кристалл', 'Выращивайте мозаику из квадратов и ромбов с восьмерной симметрией.'],
+        ['Achthoekig kristal', 'Laat een mozaïek van vierkanten en ruiten met achtvoudige symmetrie groeien.']
+    ],
+    apollonian: [
+        ['Tangent Circles', 'Circles grow until they touch, then smaller circles fill the gaps.'],
+        ['מעגלים משיקים', 'מעגלים גדלים עד שהם נוגעים זה בזה, ומעגלים קטנים צומחים ברווחים.'],
+        ['Касающиеся окружности', 'Круги растут до соприкосновения, а меньшие круги заполняют промежутки.'],
+        ['Rakende cirkels', 'Cirkels groeien tot ze elkaar raken. Kleinere cirkels vullen de ruimtes.']
+    ],
+    voronoi: [
+        ['Voronoi Cells', 'Paint to add points that reshape the surrounding cells.'],
+        ['תאי ורונוי', 'ציירו כדי להוסיף מוקדים שמשנים את צורת התאים סביבם.'],
+        ['Ячейки Вороного', 'Рисуйте, чтобы добавлять точки, меняющие форму соседних ячеек.'],
+        ['Voronoi-cellen', 'Teken om punten toe te voegen die de omliggende cellen vervormen.']
     ],
     network: [
         ['Living network','Threads grow from your patches, branch, strengthen and fade. Cycle palette-guided or spatial growth.'],

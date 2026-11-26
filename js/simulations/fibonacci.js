@@ -1,7 +1,8 @@
 import { growFibonacciCrystal, validateCrystalSettings } from './fibonacci-crystal.js';
 import { createFibonacciMap, FIBONACCI_MAPS, growFibonacciMap, validateFibonacciMap } from './fibonacci-maps.js';
 
-export const FIBONACCI_MODES = Object.freeze(['crystal', ...FIBONACCI_MAPS, 'restart', 'branching']);
+export const FIBONACCI_MODES = Object.freeze(['restart', 'branching']);
+const recordedModes = new Set([...FIBONACCI_MODES, 'continuous', 'crystal', ...FIBONACCI_MAPS]);
 export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
 export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([90, 100, 1]);
 
@@ -160,7 +161,7 @@ export function setFibonacciMode(state, mode, layoutSeed = state.seed) {
 
 export function validateFibonacciState(state) {
     if ((state?.version !== 7 && state?.version !== FIBONACCI_VERSION) || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
-        (!FIBONACCI_MODES.includes(state.mode) && state.mode !== 'continuous') ||
+        !recordedModes.has(state.mode) ||
         !Number.isSafeInteger(state.frame) || state.frame < 0 || state.frame > 4 * state.n ** 2 ||
         normalizeFibonacciColorAdvance(state.colorAdvance) === undefined ||
         state.seed !== (state.seed >>> 0) || state.generation !== (state.generation >>> 0)) {

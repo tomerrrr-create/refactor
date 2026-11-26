@@ -84,7 +84,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);await page.waitForTimeout(300);
  assert((await dot.boundingBox()).x>firstDot.x,'the same dot moves to the other page');
  assert.equal(await dotColor(),'rgb(187, 192, 198)');
- assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10,20).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#spiralExperimentToggle').check();
@@ -157,5 +157,13 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter'),nudgeTo=nudgeFrom<10?16:1;await open();await move(nudgeFrom,nudgeTo);await save();custom=moveEvolutionSlot(custom,nudgeFrom,nudgeTo);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
  await reload();assert.deepEqual((await state()).slots,custom,'moving Nudge persists alongside all other controls');
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());await tap(trigger);assert((await state()).playing);await page.evaluate(()=>drawerTest.pause());
+ await page.evaluate(()=>drawerTest.tech());await tap(page.locator('#btnConfigureFeatures'));
+ await page.locator('#patternsExperimentToggle').check();await tap(page.locator('#btnTechnicianCloseTop'));
+ for(let i=0;i<3&&await pageIndex()!=='2';i++)await tap(trigger);
+ assert.equal(await pageIndex(),'2');
+ assert.equal(await trigger.locator('.drawer-page-number').textContent(),'3');
+ assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(20).filter(Boolean));
+ await open();assert.equal(await dialog.locator('.drawer-slots').count(),3);assert.equal(await dialog.locator('.drawer-reserved-slot').count(),3);
+ await tap(dialog.locator('[data-cancel]'));await tap(trigger);assert.equal(await pageIndex(),'0');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}

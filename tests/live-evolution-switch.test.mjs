@@ -10,6 +10,7 @@ import vm from 'node:vm';
 import { createCracksState } from '../js/simulations/cracks.js';
 import { validateEvolutionTuning } from '../js/evolution-tuning.js';
 import { currentPolygonFlowMode, restorePolygonFlowPhase } from '../js/simulations/polygon-circulation.js';
+import { isPatternEvolution } from '../js/evolution-drawer-settings.js';
 import { GEOMETRIC_FLOW_MODES, nextGeometricFlowMode } from '../js/geometric-flow-cycle.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
@@ -23,7 +24,7 @@ const simulations = {
 function harness() {
     const dom = Object.fromEntries([...Object.values(simulations), 'btnPlayPauseLife', 'btnStepForward', 'iconPlay', 'iconPause']
         .map(id => [id, { id, style: {}, disabled: false, classList: { add() {}, remove() {} } }]));
-    const c = vm.createContext({LINE_GRAVITY_MODES,vorticesModeFor,currentPolygonFlowMode,restorePolygonFlowPhase, vorticesSpiralRules:{method:'left'}, vorticesGravityRules:{direction:'turbine2',strength:.6},MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
+    const c = vm.createContext({isPatternEvolution,LINE_GRAVITY_MODES,vorticesModeFor,currentPolygonFlowMode,restorePolygonFlowPhase, vorticesSpiralRules:{method:'left'}, vorticesGravityRules:{direction:'turbine2',strength:.6},MAGNET_CYCLE,isCombinedMagnetMode, n:1, createCracksSession:n=>createCracksState(n,42), prepareCracksResume:(_,state)=>state,
         C:{PALETTES:[{originalColors:[]}]}, activePaletteIndex:0, palette:()=>[], getCracksBrush:()=>({color:null,rainbow:false}), getCracksGrowth:()=>({branchChance:65,branchInterval:11,curvature:100}), getCracksMaterial:()=>({enabled:false,strength:40}), dom, window: {}, artRecipeLog: [], isMacroLoaded: false, isExecutingMacroCommand: false,
         setSimulationRunning(value) { c.runningAppearance = value; }, isLifePlaying: false, isBreathing: false, armedSimulation: null, currentGenerationCount: 0, currentSortMethod: 'luminance',
         boardState: [{k: 1}, {k: 2}], simulationStartState: null, simulationHasBrushInput: false,
