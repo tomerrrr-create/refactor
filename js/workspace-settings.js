@@ -28,6 +28,7 @@ import { DEFAULT_GEOMETRIC_FLOW_VISIBLE } from './experimental-simulations.js';
 import { DEFAULT_REMEMBER_SIMULATION_MODES } from './evolution-mode-memory.js';
 import { DEFAULT_FIBONACCI_COLOR_ADVANCE, normalizeFibonacciColorAdvance } from './simulations/fibonacci.js';
 import { DEFAULT_CRYSTAL_SETTINGS, validateCrystalSettings } from './simulations/fibonacci-crystal.js';
+import { FIBONACCI_MAPS, MAP_DEFAULTS, validateMapSettings } from './simulations/fibonacci-maps.js';
 
 export function defaultSimulationPreferences() {
     return {
@@ -36,7 +37,7 @@ export function defaultSimulationPreferences() {
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
         geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, fibonacciVisible: false,
         fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, fibonacciCrystal: { ...DEFAULT_CRYSTAL_SETTINGS },
-        rememberSimulationModes: DEFAULT_REMEMBER_SIMULATION_MODES
+        rememberSimulationModes: DEFAULT_REMEMBER_SIMULATION_MODES, fibonacciMaps: structuredClone(MAP_DEFAULTS)
     };
 }
 
@@ -75,6 +76,14 @@ function validateSimulationPreferences(value) {
     }
     if (Object.hasOwn(value, 'fibonacciCrystal')) {
         result.fibonacciCrystal = validateCrystalSettings(value.fibonacciCrystal);
+    }
+    if (Object.hasOwn(value, 'fibonacciMaps')) {
+        if (!object(value.fibonacciMaps)) throw new Error('Invalid Fibonacci maps');
+        result.fibonacciMaps = {};
+        for (const [mode, settings] of Object.entries(value.fibonacciMaps)) {
+            if (!FIBONACCI_MAPS.includes(mode)) throw new Error('Unknown Fibonacci map');
+            result.fibonacciMaps[mode] = validateMapSettings(mode, settings);
+        }
     }
     for (const key of ['geometricFlowVisible', 'breatheVisible', 'fibonacciVisible', 'rememberSimulationModes']) {
         if (!Object.hasOwn(value, key)) continue;

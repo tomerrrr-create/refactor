@@ -3,6 +3,7 @@ import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,isFibonacciColorAdvance,normalizeFibonacciColorAdvance,createFibonacciState,setFibonacciMode,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
 import {CLASSIC_CRYSTAL_SETTINGS,DEFAULT_CRYSTAL_SETTINGS,validateCrystalSettings} from './simulations/fibonacci-crystal.js';
+import { MAP_DEFAULTS, seedFibonacciMap, validateMapSettings } from './simulations/fibonacci-maps.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
@@ -91,6 +92,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
       let fibonacciState = null, fibonacciColorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE;
       let fibonacciCrystalSettings = DEFAULT_CRYSTAL_SETTINGS;
+      let fibonacciMapSettings = { ...MAP_DEFAULTS };
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
       let evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
@@ -2441,6 +2443,7 @@ if (simulationName === 'magnet') {
                 fibonacciVisible: experimentalSimulations.visible('fibonacci'),
                 fibonacciColorAdvance,
                 fibonacciCrystal: { ...fibonacciCrystalSettings },
+                fibonacciMaps: structuredClone(fibonacciMapSettings),
                 rememberSimulationModes: cycleMemory.enabled()
             },
             ...(Object.entries(INITIAL_CYMATICS_FREQUENCIES).every(([name,value])=>cymaticsFrequencies[name]===value)?{}:{cymaticsFrequencies:{...cymaticsFrequencies}}),
@@ -2486,6 +2489,11 @@ if (simulationName === 'magnet') {
         if (preferences.fibonacciCrystal) {
             fibonacciCrystalSettings = { ...preferences.fibonacciCrystal };
             if (fibonacciState?.mode === 'crystal') fibonacciState.crystalSettings = fibonacciCrystalSettings;
+        }
+        if (preferences.fibonacciMaps) {
+            fibonacciMapSettings = { ...fibonacciMapSettings, ...preferences.fibonacciMaps };
+            const savedMap = preferences.fibonacciMaps[fibonacciState?.mode];
+            if (savedMap) fibonacciState.map = { ...fibonacciState.map, settings: savedMap };
         }
         for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible], ['fibonacci', preferences.fibonacciVisible]]) {
             if (visible === undefined) continue;
@@ -3326,7 +3334,9 @@ function flushLiveBrushChanges() {
         window.logArtEvent('BRUSH_START', '{"version":1}');
         pointerState.motionStarted = true;
     }
-    window.logArtEvent('DRAW_STROKE', JSON.stringify([...pointerState.changes.values()]));
+    const changes = [...pointerState.changes.values()];
+    if (armedSimulation === 'fibonacci') seedFibonacciMap(getFibonacciState(), changes);
+    window.logArtEvent('DRAW_STROKE', JSON.stringify(changes));
     pointerState.changes.clear();
     if (armedSimulation === 'dla' && dlaState) syncDlaCrystalState();
 }
@@ -3457,6 +3467,9 @@ function onPointerUp(e) {
     // A running segment starts at the latest brush checkpoint; Pause commits it.
     // A standalone brush stroke still creates exactly one Undo entry.
     if (pointerState.beforeState) {
+        if (armedSimulation === 'fibonacci' && !pointerState.liveRecording && pointerState.changes.size) {
+            seedFibonacciMap(getFibonacciState(), pointerState.changes.values());
+        }
         const afterState = getCurrentState();
         if (pointerState.motionStarted || pointerState.changes.size || !areStatesEqual(pointerState.beforeState, afterState)) {
             if (!pointerState.liveRecording && pointerState.changes.size) {
@@ -3894,6 +3907,9 @@ function resetFibonacciRuntime(previous = fibonacciState, mode = previous?.mode 
         const settings = previous ? previous.crystalSettings : fibonacciCrystalSettings;
         if (settings) fibonacciState.crystalSettings = settings;
     }
+    if (fibonacciState.map && previous?.map) {
+        fibonacciState.map.settings = previous.map.settings;
+    }
 }
 
 function getFibonacciState() {
@@ -3920,8 +3936,10 @@ function updateFibonacciButtonUI() {
 
 function selectFibonacciMode(mode) {
     const state = getFibonacciState();
+    const changed = state.mode !== mode;
     if (mode === 'crystal' && state.mode !== mode) state.crystalSettings = fibonacciCrystalSettings;
     setFibonacciMode(state, mode);
+    if (changed && state.map) state.map.settings = fibonacciMapSettings[mode];
     updateFibonacciButtonUI();
 }
 
@@ -3935,6 +3953,11 @@ function saveFibonacciSettings(draft) {
         try { crystalSettings = validateCrystalSettings(draft); } catch { return false; }
         fibonacciCrystalSettings = crystalSettings;
         state.crystalSettings = crystalSettings;
+    } else if (state.map) {
+        let settings;
+        try { settings = validateMapSettings(state.mode, draft); } catch { return false; }
+        fibonacciMapSettings = { ...fibonacciMapSettings, [state.mode]: settings };
+        state.map = { ...state.map, settings };
     }
     fibonacciColorAdvance = state.colorAdvance = colorAdvance;
     window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
@@ -6179,6 +6202,7 @@ else if (action.eventName === 'Invert Colors') {
                 if (action.eventName === 'DRAW_STROKE' && armedSimulation === 'contour' && contourMode === 'cracks') {
                     cracksState = queueCracksGrowth({ n, currentBoardState: boardState, currentPalette: palette(), originalPalette:C.PALETTES[activePaletteIndex].originalColors, cracksBrush:getCracksBrush(), contourRules: { ...contourRules, lineColor:'brush', material: getCracksMaterial(), growth:getCracksGrowth() } }, cracksState, diff);
                 }
+                if (action.eventName === 'DRAW_STROKE' && armedSimulation === 'fibonacci') seedFibonacciMap(getFibonacciState(), diff);
                 if (changed) {
                     renderToScreen(now);
                     startAnimationLoop(); 
@@ -6430,7 +6454,8 @@ else if (action.eventName === 'Invert Colors') {
             },
             getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), fibonacci: {
                 colorAdvance: normalizeFibonacciColorAdvance(fibonacciState?.colorAdvance) ?? fibonacciColorAdvance,
-                ...(fibonacciState?.mode === 'crystal' ? fibonacciState.crystalSettings ?? CLASSIC_CRYSTAL_SETTINGS : fibonacciCrystalSettings)
+                ...(fibonacciState?.map?.settings ??
+                    (fibonacciState?.mode === 'crystal' ? fibonacciState.crystalSettings ?? CLASSIC_CRYSTAL_SETTINGS : fibonacciCrystalSettings))
             } }),
             getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode, fibonacci: fibonacciState?.mode })[simulation],
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && experimentalSimulations.visible(simulation) && !isBreathing && !isMacroLoaded && !isMacroPlaying,

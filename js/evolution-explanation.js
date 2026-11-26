@@ -3,10 +3,10 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
     fibonacci: [
-        ['Fibonacci', 'Grow a square spiral, let it branch into two, or watch a fivefold Penrose crystal grow into your drawing.'],
-        ['פיבונאצ׳י', 'אפשר לגדל ספירלת ריבועים, להסתעף לשתי ספירלות או לגדל גביש פנרוז מחומש בתוך הציור.'],
-        ['Фибоначчи', 'Вырастите спираль из квадратов, разделите её надвое или наблюдайте, как кристалл Пенроуза с симметрией пятого порядка прорастает сквозь рисунок.'],
-        ['Fibonacci', 'Laat een vierkantenspiraal groeien of in tweeën splitsen, of zie hoe een vijfvoudig Penrose-kristal door je tekening groeit.']
+        ['Fibonacci', 'Grow tiles, circles or square spirals through your colors. In Voronoi, paint to add the points that shape the cells.'],
+        ['פיבונאצ׳י', 'ריצופים, מעגלים וספירלות ריבועים צומחים בתוך הצבעים שלך. בוורונוי, ציור מוסיף נקודות שקובעות את צורת התאים.'],
+        ['Фибоначчи', 'Выращивайте мозаики, окружности и квадратные спирали. В режиме Вороного рисунок добавляет точки, определяющие форму ячеек.'],
+        ['Fibonacci', 'Laat tegels, cirkels of vierkantenspiralen door je kleuren groeien. Teken in Voronoi om punten toe te voegen die de cellen vormen.']
     ],
     network: [
         ['Living network','Threads grow from your patches, branch, strengthen and fade. Cycle palette-guided or spatial growth.'],

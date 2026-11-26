@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
 import { CLASSIC_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_SETTINGS, growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
+import { FIBONACCI_MAPS, seedFibonacciMap } from '../js/simulations/fibonacci-maps.js';
 
 function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
@@ -344,4 +345,48 @@ test('crystal checkpoints without tuning retain Classic while new settings use F
     }
     assert.deepEqual(legacy.currentBoardState, classic.currentBoardState);
     assert(fine.occupied().length < classic.occupied().length);
+});
+
+test('each Fibonacci map has distinct growth and restores exactly with edited settings', () => {
+    const patterns = new Set();
+    for (const mode of FIBONACCI_MAPS) {
+        const sim = simulate(63, 2, mode, 100);
+        for (let frame = 0; frame < 28; frame++) sim.step();
+        assert(sim.occupied().length > 0 && sim.occupied().length < 63 ** 2, mode);
+        patterns.add(sim.currentBoardState.map(cell => cell.k).join(','));
+        const former = sim.state.map;
+        if (mode === 'voronoi') {
+            seedFibonacciMap(sim.state, [{ i: 18 }]);
+            assert.deepEqual(former.seeds, []);
+            assert.deepEqual(sim.state.map.seeds, [18]);
+            seedFibonacciMap(sim.state, [{ i: 18 }]);
+            assert.deepEqual(sim.state.map.seeds, [18]);
+        }
+        sim.state.map = { ...sim.state.map, settings: { ...sim.state.map.settings, growthSpeed: 200 } };
+        const replay = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+        const board = structuredClone(sim.currentBoardState);
+        sim.currentBoardState[0].isGold = board[0].isGold = true;
+        for (let frame = 0; frame < 140; frame++) {
+            sim.step();
+            runFibonacciGeneration({ currentBoardState: board, currentPalette: sim.currentPalette }, replay);
+        }
+        assert(sim.currentBoardState.every((cell, i) => i === 0 || cell.k > 0), mode);
+        assert.equal(sim.currentBoardState[0].k, 0);
+        assert.deepEqual(replay, sim.state);
+        assert.deepEqual(board, sim.currentBoardState);
+        setFibonacciMode(sim.state, 'restart');
+        assert.equal(sim.state.map, undefined);
+        assert.deepEqual(validateFibonacciState(sim.state), sim.state);
+    }
+    assert.equal(patterns.size, FIBONACCI_MAPS.length);
+});
+
+test('Voronoi drawing adds a bounded, deterministic site and changes the evolving pattern', () => {
+    const seeded = simulate(39, 0, 'voronoi', 100);
+    const original = simulate(39, 0, 'voronoi', 100);
+    seedFibonacciMap(seeded.state, [{ i: 1 }, { i: 120 }, { i: 90 }]);
+    assert.deepEqual(seeded.state.map.seeds, [120]);
+    for (let frame = 0; frame < 40; frame++) { seeded.step(); original.step(); }
+    assert.notDeepEqual(seeded.currentBoardState, original.currentBoardState);
+    assert.throws(() => validateFibonacciState({ ...seeded.state, map: { ...seeded.state.map, seeds: [120, 120] } }));
 });
