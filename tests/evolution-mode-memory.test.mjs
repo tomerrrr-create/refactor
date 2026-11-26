@@ -43,3 +43,11 @@ test('explicit Off restarts the cycle while leaving for another simulation recal
  assert.equal(memory.entry('cymatics',5),5,'Off previews the current first enabled map');
  memory.clear();assert.equal(memory.entry('gravitationalSort'),undefined);
 });
+
+test('Fibonacci recalls a selected spiral and returns to Penrose Crystal after Off',()=>{
+ const memory=createEvolutionModeMemory({storage:storage()});
+ memory.remember('fibonacci','branching');
+ assert.equal(memory.entry('fibonacci'),'branching');
+ memory.finishCycle('fibonacci');
+ assert.equal(memory.entry('fibonacci'),'crystal');
+});

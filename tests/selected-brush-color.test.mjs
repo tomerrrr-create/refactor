@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { SORT_MODES, normalizeSortMethod, sortColorsArray } from '../js/colors.js';
 import { nextSortMethod } from '../js/sort-cycle-settings.js';
+import { createFibonacciState, runFibonacciGeneration } from '../js/simulations/fibonacci.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function excerpt(start, end) {
@@ -24,7 +25,7 @@ function harness() {
         modals: {}, window: { logArtEvent() {} }, n: 1, separatorPx: 0,
         updateGlowEffect() {}, updateColorPickerButtonUI() {}, updatePaletteHeader() {},
         updateSortButtonUI() {}, updateSeparatorButtonUI() {}, updateErosionButtonUI() {}, applySeparator() {}, updateSymmetryUI() {}, renderToScreen() {},
-        getText: key => key, spiralMode: 'off', spiralRules: {}
+        getText: key => key, spiralMode: 'off', spiralRules: {}, fibonacciState: null, armedSimulation: null
     });
     vm.runInContext('function palette() { return C.PALETTES[activePaletteIndex].colors; }', ctx);
     vm.runInContext('function restoreSeparatorWidth(value) { separatorPx = value; } function fitCurrentSeparator() {}', ctx);
@@ -91,6 +92,30 @@ test('history/project restoration remaps shared colors and clears unavailable co
         restore(1, 'reversed');
         assert.equal(h.selectedColor, null);
         assert.equal(h.selectedColorIndex, -1);
+    }
+});
+
+test('Go Dark and board-only restoration restart growth without replacing the selected Fibonacci mode', () => {
+    const h = harness();
+    Object.assign(h, {
+        armedSimulation: 'fibonacci', fibonacciColorAdvance: 95, createFibonacciState,
+        performance: { now: () => 1 }, startAnimationLoop() {}, updateFibonacciButtonUI() {}
+    });
+    vm.runInContext(excerpt('function resetFibonacciRuntime(', 'function restoreFibonacciState('), h);
+    vm.runInContext(excerpt('function goDark(', 'function goDarkAction('), h);
+    const boardOnly = { n: 1, activePaletteIndex: 0, currentSortMethod: 'luminance',
+        separatorPx: 0, tiles: [{ k: 2, v: 2, isGold: false }] };
+    for (const mode of ['restart', 'branching', 'crystal']) {
+        h.fibonacciState = createFibonacciState(1, 2, mode, 98, 2);
+        runFibonacciGeneration({ currentBoardState: h.boardState, currentPalette: h.C.PALETTES[0].colors }, h.fibonacciState);
+        h.goDark();
+        assert.deepEqual(h.fibonacciState, createFibonacciState(1, 2, mode, 98, 2));
+        assert.equal(h.boardState[0].k, 0);
+        h.applyState(boardOnly);
+        assert.deepEqual(h.fibonacciState, createFibonacciState(1, 2, mode, 98, 2));
+        assert.equal(h.boardState[0].k, 2);
+        h.goDark({ keepFibonacciMode: false });
+        assert.deepEqual(h.fibonacciState, createFibonacciState(1));
     }
 });
 

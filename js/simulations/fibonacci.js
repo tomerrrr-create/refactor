@@ -1,4 +1,6 @@
-export const FIBONACCI_MODES = Object.freeze(['restart', 'branching']);
+import { growFibonacciCrystal, validateCrystalSettings } from './fibonacci-crystal.js';
+
+export const FIBONACCI_MODES = Object.freeze(['crystal', 'restart', 'branching']);
 export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
 export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([90, 100, 1]);
 
@@ -27,10 +29,11 @@ const plans = [];
 let colorGroups;
 let branchingCells;
 
-export function createFibonacciState(n, orientation = 0, mode = FIBONACCI_MODES[0],
+export function createFibonacciState(n, orientation = 0, mode = 'restart',
     colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0, version = FIBONACCI_VERSION) {
     const center = Math.floor((n - 1) / 2);
-    return { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0 };
+    return { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0,
+        ...(mode === 'crystal' ? { crystalFrame: 0 } : {}) };
 }
 
 const wrap = (coordinate, n) => (coordinate % n + n) % n;
@@ -134,12 +137,19 @@ function validateBranch(n, primary, branch) {
 }
 
 export function setFibonacciMode(state, mode) {
+    if (state.mode === mode) return;
     if (state.mode === 'branching' && mode !== 'branching') {
         const plan = getPlan(state.n, state);
         state.frame = Math.min(state.frame, plan.frameEnds.length - 1);
         delete state.branch;
         if (state.frame >= handoffTiming(state.version, plan).handoffEnd) delete state.outgoing;
         else if (state.outgoing?.branch) state.outgoing = validateOrigin(state.n, state.outgoing);
+    }
+    if (mode === 'crystal') state.crystalFrame = 0;
+    else {
+        delete state.crystalFrame;
+        delete state.crystalSettings;
+        delete state.crystalFront;
     }
     state.mode = mode;
 }
@@ -155,6 +165,18 @@ export function validateFibonacciState(state) {
     const { version, n, mode, frame, colorAdvance, seed, generation } = state;
     const { origin, orientation } = validateOrigin(n, state);
     const copy = { version, n, orientation, mode, frame, origin, colorAdvance, seed, generation };
+    if (mode === 'crystal') {
+        if (state.crystalFrame !== (state.crystalFrame >>> 0)) throw new Error('Invalid Fibonacci crystal frame');
+        copy.crystalFrame = state.crystalFrame;
+        if (state.crystalSettings !== undefined) copy.crystalSettings = validateCrystalSettings(state.crystalSettings);
+        if (state.crystalFront !== undefined) {
+            if (!copy.crystalSettings || !Number.isSafeInteger(state.crystalFront) || state.crystalFront < state.crystalFrame * 25 ||
+                state.crystalFront > state.crystalFrame * 200) throw new Error('Invalid Penrose Crystal front');
+            copy.crystalFront = state.crystalFront;
+        }
+    } else if (state.crystalFrame !== undefined || state.crystalSettings !== undefined || state.crystalFront !== undefined) {
+        throw new Error('Unexpected Fibonacci crystal state');
+    }
     if (!frame && state.outgoing === undefined && state.branch === undefined) return copy;
     const plan = getPlan(n, copy);
     let secondary;
@@ -271,10 +293,14 @@ function runBranchingGeneration(board, colorCount, groups, state, primary) {
 }
 
 export function runFibonacciGeneration({ currentBoardState, currentPalette }, state) {
-    let plan = getPlan(state.n, state);
     const colorCount = currentPalette.length;
     const groups = getColorAdvanceGroups(state);
     state.generation = (state.generation + 1) >>> 0;
+    if (state.mode === 'crystal') {
+        growFibonacciCrystal(state, index => advanceColor(currentBoardState, index, colorCount, groups));
+        return currentBoardState;
+    }
+    let plan = getPlan(state.n, state);
     if (state.mode === 'branching' && state.n > 1) {
         return runBranchingGeneration(currentBoardState, colorCount, groups, state, plan);
     }

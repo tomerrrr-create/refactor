@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings,
+import { defaultSimulationPreferences, defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings,
     isWorkspaceSettingsText, persistWorkspaceSettings, loadWorkspaceSettings, migrateEvolutionSelections } from '../js/workspace-settings.js';
 
 test('settings-only format omits defaults and restores complete preferences in a new browser', () => {
@@ -69,6 +69,7 @@ test('retired swipe selections remain readable and migrate into ordinary cycle s
 });
 
 test('portable simulation preferences preserve explicit defaults and reject unusable cycles', () => {
+    assert.deepEqual(defaultSimulationPreferences().fibonacciCrystal, { growthSpeed: 25, tileSize: 1, crystalEdges: 0 });
     const settings = { ...defaultWorkspaceSettings(), simulationPreferences: {
         gravityCycleVersion: 2,
         gravityCycle: ['reverse_up'],
@@ -79,6 +80,7 @@ test('portable simulation preferences preserve explicit defaults and reject unus
         geometricFlowVisible: false,
         fibonacciVisible: true,
         fibonacciColorAdvance: 91,
+        fibonacciCrystal: { growthSpeed: 50, tileSize: 3, crystalEdges: 175 },
         rememberSimulationModes: false,
         wind: { mode: 'ripple', strength: 5, speed: 2, range: .6, colorSpan: 2, trail: false }
     } };
@@ -86,7 +88,8 @@ test('portable simulation preferences preserve explicit defaults and reject unus
     const legacy = { ...settings, simulationPreferences: { ...settings.simulationPreferences, fibonacciColorAdvance: 85 } };
     assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(legacy)).simulationPreferences.fibonacciColorAdvance, 90);
     for (const invalid of [{ gravityCycle: [] }, { resonanceCycle: [5, 5] }, { circularCycle: ['flow'] },
-        { geometricFlowCycle: ['unknown'] }, { magnetAnchorLimit: 1500 }, { rememberSimulationModes: 'false' }, { fibonacciVisible: 1 }, { fibonacciColorAdvance: 89 }, { fibonacciColorAdvance: 101 }]) {
+        { geometricFlowCycle: ['unknown'] }, { magnetAnchorLimit: 1500 }, { rememberSimulationModes: 'false' }, { fibonacciVisible: 1 }, { fibonacciColorAdvance: 89 }, { fibonacciColorAdvance: 101 },
+        { fibonacciCrystal: { growthSpeed: 26, tileSize: 3, crystalEdges: 175 } }]) {
         assert.throws(() => serializeWorkspaceSettings({ ...settings, simulationPreferences: invalid }));
     }
 });

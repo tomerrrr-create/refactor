@@ -2,20 +2,35 @@ import { focusSettingsHeading } from './dialog-focus.js';
 import { INITIAL_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
 import { DEFAULT_FIBONACCI_COLOR_ADVANCE, FIBONACCI_COLOR_ADVANCE_RANGE } from './simulations/fibonacci.js';
+import { CLASSIC_CRYSTAL_SETTINGS, CRYSTAL_LIMITS, DEFAULT_CRYSTAL_SETTINGS } from './simulations/fibonacci-crystal.js';
 
 const definitions = {
     brightnessEvo: { title: 'tuning_brightness_title', button: 'btnBrightnessEvo',
         modes: ['brightness', 'contrast'], fields: ['smoothing', 'contrast'] },
     breathe: { title: 'tuning_breathe_title', button: 'btnShowBreatheMenu',
         modes: ['solo', 'group', 'random-cell', 'random-color'], fields: ['speed', 'depth'] },
-    fibonacci: { title: 'tuning_fibonacci_title', button: 'btnFibonacci', fields: ['colorAdvance'],
-        defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE }, limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE } },
+    fibonacci: { title: 'tuning_fibonacci_title', button: 'btnFibonacci',
+        fields: ['colorAdvance', 'growthSpeed', 'tileSize', 'crystalEdges'],
+        crystalFields: Object.keys(CRYSTAL_LIMITS),
+        defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, ...DEFAULT_CRYSTAL_SETTINGS },
+        limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE, ...CRYSTAL_LIMITS } },
     islands: { title: 'tuning_islands_title', button: 'btnIslands', fields: ['activity'] },
     dla: { title: 'dla_modal_title', button: 'btnDla', modes: ['genetics', 'no-genetics'], fields: ['batchSize'] }
 };
 const breatheModeIcons = { solo: 'iconBreatheSolo', group: 'iconBreatheGroup', 'random-cell': 'iconBreatheRandomCell', 'random-color': 'iconBreatheRandomColor' };
+const crystalPresets = {
+    classic: CLASSIC_CRYSTAL_SETTINGS,
+    fine: DEFAULT_CRYSTAL_SETTINGS,
+    bold: { growthSpeed: 25, tileSize: 3, crystalEdges: 200 },
+    soft: { growthSpeed: 25, tileSize: 3, crystalEdges: 50 }
+};
 const percentage = value => `${Math.round(value * 100)}%`;
-const format = (field, value) => field === 'batchSize' ? String(value) : field === 'colorAdvance' ? `${value}%` : percentage(value);
+function format(field, value, getText) {
+    if (field === 'batchSize') return String(value);
+    if (field === 'tileSize') return getText('tuning_tileSize_' + value);
+    if (['colorAdvance', 'growthSpeed', 'crystalEdges'].includes(field)) return `${value}%`;
+    return percentage(value);
+}
 
 export function initializeEvolutionTuningModals(app) {
     const openers = {};
@@ -36,10 +51,30 @@ export function initializeEvolutionTuningModals(app) {
         document.body.append(dialog);
         let draft = null, mode;
         const modeGroup = dialog.querySelector('.tuning-modes');
+        const presetButtons = new Map();
+        const presetGroup = definition.crystalFields ? document.createElement('div') : null;
+        if (presetGroup) {
+            presetGroup.className = 'tuning-modes';
+            presetGroup.setAttribute('role', 'group');
+            presetGroup.hidden = true;
+            for (const [name, settings] of Object.entries(crystalPresets)) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.crystalPreset = name;
+                button.addEventListener('click', () => {
+                    if (!draft) return;
+                    Object.assign(draft, settings);
+                    render();
+                });
+                presetButtons.set(button, settings);
+                presetGroup.append(button);
+            }
+            modeGroup.after(presetGroup);
+        }
         const fields = new Map();
         function render() {
             dialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
-            dialog.querySelector('h2').textContent = app.getText(definition.title);
+            dialog.querySelector('h2').textContent = app.getText(mode === 'crystal' ? 'tuning_crystal_title' : definition.title);
             dialog.querySelector('[data-close]').setAttribute('aria-label', app.getText('saveModal_close'));
             dialog.querySelector('[data-reset]').textContent = app.getText('evolution_reset_default');
             dialog.querySelector('[data-cancel]').textContent = app.getText('gs_modal_cancel');
@@ -52,12 +87,22 @@ export function initializeEvolutionTuningModals(app) {
                 } else button.textContent = label;
                 button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
             }
-            for (const [field, { label, note, input, output }] of fields) {
+            if (presetGroup) {
+                presetGroup.hidden = mode !== 'crystal';
+                presetGroup.setAttribute('aria-label', app.getText('evolution_presets'));
+                for (const [button, settings] of presetButtons) {
+                    button.textContent = app.getText('tuning_crystal_preset_' + button.dataset.crystalPreset);
+                    const selected = draft && Object.entries(settings).every(([key, value]) => draft[key] === value);
+                    button.setAttribute('aria-pressed', String(Boolean(selected)));
+                }
+            }
+            for (const [field, { row, label, note, input, output }] of fields) {
+                row.hidden = Boolean(definition.crystalFields?.includes(field) && mode !== 'crystal');
                 label.textContent = app.getText('tuning_' + field);
                 note.textContent = app.getText('tuning_' + field + '_note');
                 if (!draft) continue;
                 input.value = draft[field];
-                output.value = format(field, draft[field]);
+                output.value = format(field, draft[field], app.getText);
                 input.setAttribute('aria-valuetext', output.value);
             }
         }
@@ -83,7 +128,7 @@ export function initializeEvolutionTuningModals(app) {
             const input = row.querySelector('input');
             Object.assign(input, { min, max, step });
             input.setAttribute('aria-describedby', `${id}Note`);
-            const nodes = { input, label: row.querySelector('label'), output: row.querySelector('output'), note: row.querySelector('p') };
+            const nodes = { row, input, label: row.querySelector('label'), output: row.querySelector('output'), note: row.querySelector('p') };
             fields.set(field, nodes);
             input.addEventListener('input', () => { if (draft) { draft[field] = Number(input.value); render(); } });
             dialog.querySelector('.tuning-fields').append(row);
