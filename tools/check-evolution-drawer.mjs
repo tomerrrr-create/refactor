@@ -84,7 +84,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);await page.waitForTimeout(300);
  assert((await dot.boundingBox()).x>firstDot.x,'the same dot moves to the other page');
  assert.equal(await dotColor(),'rgb(187, 192, 198)');
- assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10,20).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#spiralExperimentToggle').check();
@@ -157,5 +157,46 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter'),nudgeTo=nudgeFrom<10?16:1;await open();await move(nudgeFrom,nudgeTo);await save();custom=moveEvolutionSlot(custom,nudgeFrom,nudgeTo);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
  await reload();assert.deepEqual((await state()).slots,custom,'moving Nudge persists alongside all other controls');
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());await tap(trigger);assert((await state()).playing);await page.evaluate(()=>drawerTest.pause());
+ await page.evaluate(()=>drawerTest.tech());await tap(page.locator('#btnConfigureFeatures'));
+ await page.locator('#patternsExperimentToggle').check();await tap(page.locator('#btnTechnicianCloseTop'));
+ for(let i=0;i<3&&await pageIndex()!=='2';i++)await tap(trigger);
+ assert.equal(await pageIndex(),'2');
+ const backdrop=page.locator('#simModeBackground');
+ const readBackdrop=()=>backdrop.evaluate(element=>({
+  image:getComputedStyle(element).backgroundImage,
+  layers:['::before','::after'].map(pseudo=>getComputedStyle(element,pseudo).visibility)
+ }));
+ const patternsBackdrop=await readBackdrop();
+ assert.match(patternsBackdrop.image,/rgb\(44, 20, 29\)/);
+ assert.equal(patternsBackdrop.image.match(/repeating-linear-gradient/g).length,2);
+ assert.deepEqual(patternsBackdrop.layers,['hidden','hidden']);
+ for(const theme of ['blue','gold','teal']){
+  await page.evaluate(theme=>drawerTest.theme(theme),theme);
+  assert.deepEqual(await readBackdrop(),patternsBackdrop,'the Patterns backdrop has a fixed palette');
+ }
+ await page.screenshot({path:path.join(artifacts,config.lang+'-patterns-burgundy.png'),animations:'disabled'});
+ assert.equal(await trigger.locator('.drawer-page-number').textContent(),'3');
+ assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(20).filter(Boolean));
+ for(const drawer of ['2','0','1']){
+  assert.equal(await pageIndex(),drawer);
+  await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});
+  assert.equal(await pageIndex(),drawer,'short upward swipe opens the map without navigating');
+  assert.equal(await dialog.locator('.drawer-slots').count(),3);assert.equal(await dialog.locator('.drawer-reserved-slot').count(),3);
+  await tap(dialog.locator('[data-cancel]'));await tap(trigger);
+  if(drawer==='2')assert.notEqual((await readBackdrop()).image,patternsBackdrop.image,'ordinary drawers use the selected theme');
+ }
+ assert.equal(await pageIndex(),'2');
+ await tap(page.locator('#btnPenroseCrystal'));await tap(page.locator('#btnPlayPauseLife'));
+ const playback=await state();assert(playback.playing);
+ await page.waitForFunction(()=>Number(getComputedStyle(document.getElementById('simModeBackground')).opacity)<.01);
+ await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});
+ assert.equal(await pageIndex(),'2');assert(await dialog.locator('[data-drawer-slot="20"]').isDisabled());
+ assert(!(await dialog.locator('[type=submit]').isVisible()));
+ await page.waitForFunction(gen=>drawerTest.state().gen>gen,playback.gen);
+ await tap(dialog.locator('[data-close]'));await tap(page.locator('#btnPlayPauseLife'));
+ await page.waitForFunction(()=>Number(getComputedStyle(document.getElementById('simModeBackground')).opacity)>.99);
+ assert.deepEqual(await readBackdrop(),patternsBackdrop);
+ await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});assert(await dialog.locator('[data-drawer-slot="20"]').isEnabled());
+ await tap(dialog.locator('[data-cancel]'));
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}

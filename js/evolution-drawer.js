@@ -1,14 +1,14 @@
 import { focusSettingsHeading } from './dialog-focus.js';
 import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
-import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId } from './evolution-drawer-settings.js';
+import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId, evolutionSlotOrder } from './evolution-drawer-settings.js';
 
-export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
+export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,showPatterns=()=>false,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
     trigger.setAttribute('aria-keyshortcuts','Alt+ArrowUp');
-    trigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><span class="drawer-page-dot"></span><span class="drawer-active-mark"></span></span>';
+    trigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><span class="drawer-page-dot"></span><span class="drawer-page-number"></span><span class="drawer-active-mark"></span></span>';
     const symbol=trigger.firstElementChild;
     controls.append(trigger);
     const dialog=document.createElement('dialog');
@@ -26,10 +26,13 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const darkInk='#141914',lightInk='#FFF9ED',darkLuminance=luminance(darkInk),lightLuminance=luminance(lightInk);
     let draft=null,selected=null,page=0,pageAnimations=[];
     const slotsNow=()=>validateEvolutionSlots(getSlots());
+    const pageCount=()=>showPatterns()?3:2;
+    const displaySlots=()=>{const slots=slotsNow();return evolutionSlotOrder(slots,showPatterns()).map(i=>slots[i]);};
     const entry=id=>EVOLUTION_CATALOG.find(e=>e.id===evolutionControlId(id));
     const label=id=>getText(entry(id).key).split('\n')[0];
-    const pageLabel=index=>getText('drawer_page').replace('{n}',index+1);
+    const pageLabel=index=>index===2?getText('drawer_patterns'):getText('drawer_page').replace('{n}',index+1);
     const navigateAllowed=()=>canNavigate();
+    const canOpenMap=()=>navigateAllowed()&&(canEdit()||(showPatterns()&&isRunning()));
     function icon(id){
         const source=document.getElementById(entry(id).button),holder=document.createElement('span');
         holder.className='drawer-icon';holder.setAttribute('aria-hidden','true');
@@ -46,7 +49,8 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         return holder;
     }
     function applyLayout(){
-        const slots=slotsNow();
+        if(page>=pageCount())page=0;
+        const slots=displaySlots();
         for(const e of EVOLUTION_CATALOG){
             const button=document.getElementById(e.button),at=slots.indexOf(e.id),local=at%EVOLUTION_PAGE_SIZE;
             button.dataset.evolutionId=e.id;
@@ -61,31 +65,38 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         refresh();
     }
     function refresh(){
-        const active=getActive(),slots=slotsNow();
+        const active=getActive(),slots=displaySlots();
         const at=active?slots.indexOf(evolutionControlId(active)):-1;
         const otherPage=at>=0&&isVisible(evolutionControlId(active))&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
-        const text=getText('drawer_navigation').replace('{n}',page+1);
+        const text=getText('drawer_navigation').replace('{n}',page+1).replace('{total}',pageCount());
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);trigger.dataset.page=String(page);
+        trigger.toggleAttribute('data-numbered-drawer',showPatterns());
+        symbol.querySelector('.drawer-page-number').textContent=String(page+1);
         trigger.title=getText('drawer_switch_tooltip');
         trigger.setAttribute('aria-label',[text,activeText,getText('drawer_open_hint'),getText('drawer_reset_modes_hold')].filter(Boolean).join(' — '));
-        if(dialog.open&&!canEdit())dialog.close();
+        if(dialog.open){
+            if(!canOpenMap())dialog.close();
+            else if(dialog.hasAttribute('data-view-only')===canEdit())render();
+        }
     }
     function nextPage(){
         if(!navigateAllowed())return;
-        page=1-page;applyLayout();
+        page=(page+1)%pageCount();applyLayout();
         pageAnimations.forEach(animation=>animation.cancel());pageAnimations=[];
         if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
-            for(const button of controls.querySelectorAll('[data-evolution-slot]:not([data-evolution-page-hidden])')){
+            for(const button of controls.querySelectorAll('[data-evolution-slot]:not([data-evolution-page-hidden],[data-evolution-feature-hidden])')){
                 const ink=[...button.children].find(child=>getComputedStyle(child).display!=='none');
                 if(ink)pageAnimations.push(ink.animate([{opacity:0},{opacity:1}],{duration:260,easing:'ease-in-out'}));
             }
         }
     }
     function render(){
+        const editable=canEdit();
+        dialog.toggleAttribute('data-view-only',!editable);
         dialog.dir=['he','ar'].includes(getLang())?'rtl':'ltr';
         dialog.querySelector('h2').textContent=getText('drawer_title');
-        dialog.querySelector('#drawerInstructions').textContent=getText('drawer_instructions');
+        dialog.querySelector('#drawerInstructions').textContent=getText(editable?'drawer_instructions':'drawer_pause_to_edit');
         dialog.querySelector('[data-close]').setAttribute('aria-label',getText('saveModal_close'));
         dialog.querySelector('[data-reset]').textContent=getText('evolution_reset_default');
         dialog.querySelector('[data-reset-cycles-label]').textContent=getText('drawer_reset_modes');
@@ -94,23 +105,30 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         dialog.querySelector('[data-cancel]').textContent=getText('gs_modal_cancel');
         dialog.querySelector('[type=submit]').textContent=getText('gs_modal_save_close');
         const pages=dialog.querySelector('.drawer-pages');pages.replaceChildren();
+        dialog.toggleAttribute('data-patterns',showPatterns());
         if(!draft)return;
-        dialog.querySelector('.drawer-selection').textContent=selected===null?'':getText('drawer_destination').replace('{name}',label(draft[selected]));
+        const order=evolutionSlotOrder(draft,showPatterns());
+        dialog.querySelector('.drawer-selection').textContent=selected===null?'':getText('drawer_destination').replace('{name}',label(draft[order[selected]]));
         const colors=tilePalette.originalColors??tilePalette.colors;
-        for(let drawer=0;drawer<2;drawer++){
+        for(let drawer=0;drawer<pageCount();drawer++){
             const section=document.createElement('section'),heading=document.createElement('h3'),grid=document.createElement('div');
             heading.id=`drawerPageTitle${drawer}`;heading.textContent=pageLabel(drawer);section.append(heading);
             grid.className='drawer-slots';grid.setAttribute('role','group');grid.setAttribute('aria-labelledby',heading.id);
             for(let local=0;local<EVOLUTION_PAGE_SIZE;local++){
-                const index=drawer*EVOLUTION_PAGE_SIZE+local,id=draft[index],button=document.createElement('button');
+                const index=drawer*EVOLUTION_PAGE_SIZE+local,id=draft[order[index]],button=document.createElement('button');
                 button.type='button';button.dataset.drawerSlot=String(index);
                 if(INTERNAL_NAV_SLOTS.includes(index)){
-                    button.className='drawer-reserved-slot';button.disabled=true;button.dataset.page=String(drawer);button.append(symbol.cloneNode(true));button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
+                    button.className='drawer-reserved-slot';button.disabled=true;button.dataset.page=String(drawer);
+                    button.toggleAttribute('data-numbered-drawer',showPatterns());
+                    const preview=symbol.cloneNode(true);
+                    preview.querySelector('.drawer-page-number').textContent=String(drawer+1);
+                    button.append(preview);button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
                 }
                 if(id&&!isVisible(id)){
                     button.className='drawer-feature-hidden';button.disabled=true;button.setAttribute('aria-hidden','true');grid.append(button);continue;
                 }
                 button.setAttribute('aria-pressed',String(index===selected));
+                button.disabled=!editable;
                 button.setAttribute('aria-label',`${pageLabel(drawer)}, ${getText('drawer_slot').replace('{n}',local+1)}: ${id?label(id):getText('drawer_empty')}`);
                 button.title=button.getAttribute('aria-label');
                 if(id){
@@ -124,7 +142,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
                 button.addEventListener('click',()=>{
                     if(selected===null){if(id===null)return;selected=index;}
                     else if(selected===index)selected=null;
-                    else{draft=moveEvolutionSlot(draft,selected,index);selected=null;}
+                    else{draft=moveEvolutionSlot(draft,order[selected],order[index]);selected=null;}
                     render();dialog.querySelector(`[data-drawer-slot="${index}"]`).focus();
                 });
                 grid.append(button);
@@ -133,7 +151,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         }
     }
     function open(){
-        if(dialog.open||!canEdit())return;
+        if(dialog.open||!canOpenMap())return;
         draft=slotsNow();selected=null;dialog.querySelector('[data-reset-cycles-status]').textContent='';render();dialog.showModal();focusSettingsHeading(dialog);
     }
     function resetCycles(){
@@ -148,7 +166,8 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         'dialog[open], .modal-visible, .evolution-explanation.is-visible'
     );
     const swipePage = () => { if (canSwipePage()) nextPage(); };
-    bindPickerGestures(trigger,{onTap:nextPage,onOpen:open,onHold:resetCycles,canInteract:navigateAllowed,canOpen:canEdit,onSwipeFallback:swipePage});
+    bindPickerGestures(trigger,{onTap:nextPage,onOpen:open,onHold:resetCycles,canInteract:navigateAllowed,canOpen:canOpenMap,
+        upwardSwipeDistance:()=>showPatterns()?14:undefined,onSwipeFallback:swipePage});
 
     // Empty slots and gutters may hit the backdrop or the grid itself.
     const backdrop = controls.querySelector('#simModeBackground');
@@ -164,7 +183,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     });
     dialog.querySelector('[data-reset-cycles]').addEventListener('click',resetCycles);
     trigger.addEventListener('keydown',event=>{
-        if(event.altKey&&event.key==='ArrowUp'&&canEdit()){event.preventDefault();open();}
+        if(event.altKey&&event.key==='ArrowUp'&&canOpenMap()){event.preventDefault();open();}
     });
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
     dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft=[...DEFAULT_EVOLUTION_LAYOUT];selected=null;render();});

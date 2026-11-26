@@ -162,14 +162,15 @@ export function initializeEvolutionTuningModals(app) {
             if (!app.canEditEvolutionTuning(simulation) || dialog.open) return;
             draft = { ...app.getEvolutionTuning()[simulation] };
             mode = app.getEvolutionTuningMode(simulation);
-            const icons = [...document.getElementById(definition.button).querySelectorAll(':scope > svg')];
+            const trigger = document.getElementById(app.getEvolutionTuningTrigger?.(simulation) ?? definition.button);
+            const icons = [...trigger.querySelectorAll(':scope > svg')];
             const icon = (icons.find(svg => getComputedStyle(svg).display !== 'none') ?? icons[0])?.cloneNode(true);
             // Strip IDs to avoid duplicate SVG references in the document.
             if (icon) {
                 icon.removeAttribute('id');
                 icon.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
             }
-            dialog.querySelector('.tuning-heading-icon').dataset.islandsMode = document.getElementById(definition.button).classList.contains('mode-proximity') ? 'proximity' : 'classic';
+            dialog.querySelector('.tuning-heading-icon').dataset.islandsMode = trigger.classList.contains('mode-proximity') ? 'proximity' : 'classic';
             dialog.querySelector('.tuning-heading-icon').replaceChildren(...(icon ? [icon] : []));
             render(); dialog.showModal();
             focusSettingsHeading(dialog);

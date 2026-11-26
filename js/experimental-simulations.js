@@ -1,10 +1,13 @@
 // One registry owns the visibility preferences of these removable experiments.
+import { isPatternEvolution } from './evolution-drawer-settings.js';
+
 // Browser storage preserves the legacy preference and defaults for older profiles.
 export const DEFAULT_GEOMETRIC_FLOW_VISIBLE=false;
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
     {id:'spiral',button:'btnSpiral',key:'tooltip_spiral',defaultVisible:DEFAULT_GEOMETRIC_FLOW_VISIBLE},
     {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe',defaultVisible:false},
-    {id:'fibonacci',button:'btnFibonacci',key:'help_fibonacci',defaultVisible:false}
+    {id:'fibonacci',button:'btnFibonacci',key:'help_fibonacci',defaultVisible:false},
+    {id:'patterns',key:'drawer_patterns',defaultVisible:false}
 ].map(Object.freeze));
 export const EXPERIMENTAL_SIMULATIONS_KEY='colorGridExperimentalSimulationsV1';
 export function createExperimentalSimulationFlags({storage}={}) {
@@ -17,7 +20,7 @@ export function createExperimentalSimulationFlags({storage}={}) {
     const known=id=>EXPERIMENTAL_SIMULATIONS.some(item=>item.id===id);
     return {
         visible(id){
-            const entry=EXPERIMENTAL_SIMULATIONS.find(item=>item.id===id);
+            const entry=EXPERIMENTAL_SIMULATIONS.find(item=>item.id===(isPatternEvolution(id)?'patterns':id));
             return entry?visible(entry):true;
         },
         set(id,value){
