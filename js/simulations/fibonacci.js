@@ -1,6 +1,7 @@
 import { growFibonacciCrystal, validateCrystalSettings } from './fibonacci-crystal.js';
+import { createFibonacciMap, FIBONACCI_MAPS, growFibonacciMap, validateFibonacciMap } from './fibonacci-maps.js';
 
-export const FIBONACCI_MODES = Object.freeze(['crystal', 'restart', 'branching']);
+export const FIBONACCI_MODES = Object.freeze(['crystal', ...FIBONACCI_MAPS, 'restart', 'branching']);
 export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
 export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([90, 100, 1]);
 
@@ -33,7 +34,8 @@ export function createFibonacciState(n, orientation = 0, mode = 'restart',
     colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0, version = FIBONACCI_VERSION) {
     const center = Math.floor((n - 1) / 2);
     return { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0,
-        ...(mode === 'crystal' ? { crystalFrame: 0 } : {}) };
+        ...(mode === 'crystal' ? { crystalFrame: 0 } : {}),
+        ...(FIBONACCI_MAPS.includes(mode) ? { map: createFibonacciMap(mode) } : {}) };
 }
 
 const wrap = (coordinate, n) => (coordinate % n + n) % n;
@@ -151,6 +153,8 @@ export function setFibonacciMode(state, mode) {
         delete state.crystalSettings;
         delete state.crystalFront;
     }
+    if (FIBONACCI_MAPS.includes(mode)) state.map = createFibonacciMap(mode);
+    else delete state.map;
     state.mode = mode;
 }
 
@@ -177,6 +181,8 @@ export function validateFibonacciState(state) {
     } else if (state.crystalFrame !== undefined || state.crystalSettings !== undefined || state.crystalFront !== undefined) {
         throw new Error('Unexpected Fibonacci crystal state');
     }
+    if (FIBONACCI_MAPS.includes(mode)) copy.map = validateFibonacciMap(mode, n, state.map);
+    else if (state.map !== undefined) throw new Error('Unexpected Fibonacci map state');
     if (!frame && state.outgoing === undefined && state.branch === undefined) return copy;
     const plan = getPlan(n, copy);
     let secondary;
@@ -298,6 +304,10 @@ export function runFibonacciGeneration({ currentBoardState, currentPalette }, st
     state.generation = (state.generation + 1) >>> 0;
     if (state.mode === 'crystal') {
         growFibonacciCrystal(state, index => advanceColor(currentBoardState, index, colorCount, groups));
+        return currentBoardState;
+    }
+    if (state.map) {
+        growFibonacciMap(state, index => advanceColor(currentBoardState, index, colorCount, groups));
         return currentBoardState;
     }
     let plan = getPlan(state.n, state);

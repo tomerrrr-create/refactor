@@ -3,6 +3,7 @@ import { INITIAL_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-t
 import { onLanguageChange } from './i18n.js';
 import { DEFAULT_FIBONACCI_COLOR_ADVANCE, FIBONACCI_COLOR_ADVANCE_RANGE } from './simulations/fibonacci.js';
 import { CLASSIC_CRYSTAL_SETTINGS, CRYSTAL_LIMITS, DEFAULT_CRYSTAL_SETTINGS } from './simulations/fibonacci-crystal.js';
+import { MAP_DEFAULTS, MAP_LIMITS } from './simulations/fibonacci-maps.js';
 
 const definitions = {
     brightnessEvo: { title: 'tuning_brightness_title', button: 'btnBrightnessEvo',
@@ -10,10 +11,10 @@ const definitions = {
     breathe: { title: 'tuning_breathe_title', button: 'btnShowBreatheMenu',
         modes: ['solo', 'group', 'random-cell', 'random-color'], fields: ['speed', 'depth'] },
     fibonacci: { title: 'tuning_fibonacci_title', button: 'btnFibonacci',
-        fields: ['colorAdvance', 'growthSpeed', 'tileSize', 'crystalEdges'],
-        crystalFields: Object.keys(CRYSTAL_LIMITS),
-        defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, ...DEFAULT_CRYSTAL_SETTINGS },
-        limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE, ...CRYSTAL_LIMITS } },
+        fields: ['colorAdvance', 'growthSpeed', 'tileSize', 'circleMinimum', 'seedDensity', 'crystalEdges'],
+        modeDefaults: { crystal: DEFAULT_CRYSTAL_SETTINGS, ...MAP_DEFAULTS },
+        defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE },
+        limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE, ...CRYSTAL_LIMITS, ...MAP_LIMITS } },
     islands: { title: 'tuning_islands_title', button: 'btnIslands', fields: ['activity'] },
     dla: { title: 'dla_modal_title', button: 'btnDla', modes: ['genetics', 'no-genetics'], fields: ['batchSize'] }
 };
@@ -27,7 +28,8 @@ const crystalPresets = {
 const percentage = value => `${Math.round(value * 100)}%`;
 function format(field, value, getText) {
     if (field === 'batchSize') return String(value);
-    if (field === 'tileSize') return getText('tuning_tileSize_' + value);
+    if (field === 'tileSize' || field === 'circleMinimum') return getText('tuning_tileSize_' + value);
+    if (field === 'seedDensity') return getText('tuning_seedDensity_' + value);
     if (['colorAdvance', 'growthSpeed', 'crystalEdges'].includes(field)) return `${value}%`;
     return percentage(value);
 }
@@ -52,7 +54,7 @@ export function initializeEvolutionTuningModals(app) {
         let draft = null, mode;
         const modeGroup = dialog.querySelector('.tuning-modes');
         const presetButtons = new Map();
-        const presetGroup = definition.crystalFields ? document.createElement('div') : null;
+        const presetGroup = definition.modeDefaults ? document.createElement('div') : null;
         if (presetGroup) {
             presetGroup.className = 'tuning-modes';
             presetGroup.setAttribute('role', 'group');
@@ -74,7 +76,8 @@ export function initializeEvolutionTuningModals(app) {
         const fields = new Map();
         function render() {
             dialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
-            dialog.querySelector('h2').textContent = app.getText(mode === 'crystal' ? 'tuning_crystal_title' : definition.title);
+            const modeDefaults = definition.modeDefaults?.[mode];
+            dialog.querySelector('h2').textContent = app.getText(modeDefaults ? 'tuning_' + mode + '_title' : definition.title);
             dialog.querySelector('[data-close]').setAttribute('aria-label', app.getText('saveModal_close'));
             dialog.querySelector('[data-reset]').textContent = app.getText('evolution_reset_default');
             dialog.querySelector('[data-cancel]').textContent = app.getText('gs_modal_cancel');
@@ -97,10 +100,10 @@ export function initializeEvolutionTuningModals(app) {
                 }
             }
             for (const [field, { row, label, note, input, output }] of fields) {
-                row.hidden = Boolean(definition.crystalFields?.includes(field) && mode !== 'crystal');
+                row.hidden = Boolean(definition.modeDefaults && field !== 'colorAdvance' && !Object.hasOwn(modeDefaults ?? {}, field));
                 label.textContent = app.getText('tuning_' + field);
                 note.textContent = app.getText('tuning_' + field + '_note');
-                if (!draft) continue;
+                if (!draft || row.hidden) continue;
                 input.value = draft[field];
                 output.value = format(field, draft[field], app.getText);
                 input.setAttribute('aria-valuetext', output.value);
@@ -137,7 +140,7 @@ export function initializeEvolutionTuningModals(app) {
         dialog.querySelector('[data-close]').addEventListener('click', close);
         dialog.querySelector('[data-cancel]').addEventListener('click', close);
         dialog.querySelector('[data-reset]').addEventListener('click', () => {
-            draft = { ...(definition.defaults ?? INITIAL_EVOLUTION_TUNING[simulation]) }; render();
+            draft = { ...(definition.defaults ?? INITIAL_EVOLUTION_TUNING[simulation]), ...definition.modeDefaults?.[mode] }; render();
         });
         dialog.querySelector('form').addEventListener('submit', event => {
             event.preventDefault();

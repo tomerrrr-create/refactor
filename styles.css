@@ -2898,6 +2898,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnFibonacci:not([data-mode="restart"]) [data-fibonacci-icon="restart"],
 #btnFibonacci:not([data-mode="branching"]) [data-fibonacci-icon="branching"],
 #btnFibonacci:not([data-mode="crystal"]) [data-fibonacci-icon="crystal"],
+#btnFibonacci:not([data-mode="pinwheel-map"]) [data-fibonacci-icon="pinwheel-map"],
+#btnFibonacci:not([data-mode="octagonal"]) [data-fibonacci-icon="octagonal"],
+#btnFibonacci:not([data-mode="apollonian"]) [data-fibonacci-icon="apollonian"],
+#btnFibonacci:not([data-mode="voronoi"]) [data-fibonacci-icon="voronoi"],
 #btnFibonacci:not([data-mode="continuous"]) [data-fibonacci-icon="continuous"] { display:none; }
 
 #btnNetwork { display:none; touch-action:none !important; }
