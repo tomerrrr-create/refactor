@@ -9,10 +9,10 @@ export const MAP_LIMITS = {
     crystalEdges: [0, 200, 25]
 };
 export const MAP_DEFAULTS = {
-    'pinwheel-map': { growthSpeed: 50, tileSize: 2, crystalEdges: 75 },
-    octagonal: { growthSpeed: 50, tileSize: 2, crystalEdges: 50 },
+    'pinwheel-map': { growthSpeed: 25, tileSize: 2, crystalEdges: 75 },
+    octagonal: { growthSpeed: 25, tileSize: 3, crystalEdges: 50 },
     apollonian: { growthSpeed: 50, circleMinimum: 2, crystalEdges: 100 },
-    voronoi: { growthSpeed: 75, seedDensity: 2, crystalEdges: 75 }
+    voronoi: { growthSpeed: 25, seedDensity: 1, crystalEdges: 75 }
 };
 const MAX_SEEDS = 32;
 const FRAME_MAX = 0xffffffff;
