@@ -2,7 +2,7 @@ import { focusSettingsHeading } from './dialog-focus.js';
 import { INITIAL_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
 import { DEFAULT_FIBONACCI_COLOR_ADVANCE, FIBONACCI_COLOR_ADVANCE_RANGE } from './simulations/fibonacci.js';
-import { CRYSTAL_LIMITS, DEFAULT_CRYSTAL_SETTINGS } from './simulations/fibonacci-crystal.js';
+import { CLASSIC_CRYSTAL_SETTINGS, CRYSTAL_LIMITS, DEFAULT_CRYSTAL_SETTINGS } from './simulations/fibonacci-crystal.js';
 
 const definitions = {
     brightnessEvo: { title: 'tuning_brightness_title', button: 'btnBrightnessEvo',
@@ -19,9 +19,10 @@ const definitions = {
 };
 const breatheModeIcons = { solo: 'iconBreatheSolo', group: 'iconBreatheGroup', 'random-cell': 'iconBreatheRandomCell', 'random-color': 'iconBreatheRandomColor' };
 const crystalPresets = {
-    classic: DEFAULT_CRYSTAL_SETTINGS,
-    fine: { growthSpeed: 25, tileSize: 1, crystalEdges: 0 },
-    bold: { growthSpeed: 25, tileSize: 3, crystalEdges: 200 }
+    classic: CLASSIC_CRYSTAL_SETTINGS,
+    fine: DEFAULT_CRYSTAL_SETTINGS,
+    bold: { growthSpeed: 25, tileSize: 3, crystalEdges: 200 },
+    soft: { growthSpeed: 25, tileSize: 3, crystalEdges: 50 }
 };
 const percentage = value => `${Math.round(value * 100)}%`;
 function format(field, value, getText) {

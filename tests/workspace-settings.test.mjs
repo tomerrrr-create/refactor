@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings,
+import { defaultSimulationPreferences, defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings,
     isWorkspaceSettingsText, persistWorkspaceSettings, loadWorkspaceSettings, migrateEvolutionSelections } from '../js/workspace-settings.js';
 
 test('settings-only format omits defaults and restores complete preferences in a new browser', () => {
@@ -69,6 +69,7 @@ test('retired swipe selections remain readable and migrate into ordinary cycle s
 });
 
 test('portable simulation preferences preserve explicit defaults and reject unusable cycles', () => {
+    assert.deepEqual(defaultSimulationPreferences().fibonacciCrystal, { growthSpeed: 25, tileSize: 1, crystalEdges: 0 });
     const settings = { ...defaultWorkspaceSettings(), simulationPreferences: {
         gravityCycleVersion: 2,
         gravityCycle: ['reverse_up'],

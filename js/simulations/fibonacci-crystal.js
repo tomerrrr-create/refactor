@@ -1,6 +1,7 @@
 const PHI = (1 + Math.sqrt(5)) / 2;
 const mix = ([ax, ay], [bx, by]) => [ax + (bx - ax) / PHI, ay + (by - ay) / PHI];
-export const DEFAULT_CRYSTAL_SETTINGS = Object.freeze({ growthSpeed: 100, tileSize: 2, crystalEdges: 100 });
+export const CLASSIC_CRYSTAL_SETTINGS = Object.freeze({ growthSpeed: 100, tileSize: 2, crystalEdges: 100 });
+export const DEFAULT_CRYSTAL_SETTINGS = Object.freeze({ growthSpeed: 25, tileSize: 1, crystalEdges: 0 });
 export const CRYSTAL_LIMITS = Object.freeze({ growthSpeed: [25, 200, 25], tileSize: [1, 3, 1], crystalEdges: [0, 200, 25] });
 
 export function validateCrystalSettings(settings) {
@@ -106,7 +107,8 @@ function getCrystalPlan(n, orientation, tileSize) {
 }
 
 export function growFibonacciCrystal(state, advance) {
-    const { growthSpeed, tileSize, crystalEdges } = state.crystalSettings ?? DEFAULT_CRYSTAL_SETTINGS;
+    // Checkpoints recorded before the controls existed used the Classic settings.
+    const { growthSpeed, tileSize, crystalEdges } = state.crystalSettings ?? CLASSIC_CRYSTAL_SETTINGS;
     const { arrival, cadence, phase, distanceToEdge } = getCrystalPlan(state.n, state.orientation, tileSize);
     // Track distance independently from the color clock, so changing
     // speed changes the next increment without moving the front backward.

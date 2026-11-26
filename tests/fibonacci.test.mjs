@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
-import { growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
+import { CLASSIC_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_SETTINGS, growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
 
 function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
@@ -329,4 +329,19 @@ test('crystal tuning changes growth without jumping the front and records the ex
     assert.deepEqual(restored, current.currentBoardState);
     assert.throws(() => validateFibonacciState({ ...checkpoint, crystalFront: -1 }));
     assert.throws(() => validateFibonacciState({ ...checkpoint, crystalSettings: { ...checkpoint.crystalSettings, crystalEdges: 201 } }));
+});
+
+test('crystal checkpoints without tuning retain Classic while new settings use Fine Grain', () => {
+    const legacy = simulate(63, 1, 'crystal');
+    const classic = simulate(63, 1, 'crystal');
+    const fine = simulate(63, 1, 'crystal');
+    classic.state.crystalSettings = CLASSIC_CRYSTAL_SETTINGS;
+    fine.state.crystalSettings = DEFAULT_CRYSTAL_SETTINGS;
+    for (let frame = 0; frame < 24; frame++) {
+        legacy.step();
+        classic.step();
+        fine.step();
+    }
+    assert.deepEqual(legacy.currentBoardState, classic.currentBoardState);
+    assert(fine.occupied().length < classic.occupied().length);
 });

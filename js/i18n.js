@@ -137,6 +137,7 @@ export const translations = {
   tuning_crystal_preset_classic: {en:'Classic',he:'קלאסי',ru:'Классика',nl:'Klassiek'},
   tuning_crystal_preset_fine: {en:'Fine Grain',he:'מרקם עדין',ru:'Мелкое зерно',nl:'Fijne korrel'},
   tuning_crystal_preset_bold: {en:'Bold Edges',he:'קווים מודגשים',ru:'Чёткие контуры',nl:'Duidelijke randen'},
+  tuning_crystal_preset_soft: {en:'Soft Facets',he:'פאות רכות',ru:'Мягкие грани',nl:'Zachte facetten'},
   tuning_growthSpeed: {en:'Growth Speed',he:'קצב צמיחה',ru:'Скорость роста',nl:'Groeisnelheid'},
   tuning_growthSpeed_note: {en:'How quickly the crystal grows from the center.',he:'כמה מהר חזית הגביש מתקדמת מהמרכז.',ru:'Скорость роста кристалла от центра.',nl:'Hoe snel het kristal vanuit het midden groeit.'},
   tuning_tileSize: {en:'Tile Size',he:'גודל המעוינים',ru:'Размер ромбов',nl:'Grootte van de ruiten'},

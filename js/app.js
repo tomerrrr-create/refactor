@@ -2,7 +2,7 @@ import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js'
 import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,isFibonacciColorAdvance,normalizeFibonacciColorAdvance,createFibonacciState,setFibonacciMode,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
-import {DEFAULT_CRYSTAL_SETTINGS,validateCrystalSettings} from './simulations/fibonacci-crystal.js';
+import {CLASSIC_CRYSTAL_SETTINGS,DEFAULT_CRYSTAL_SETTINGS,validateCrystalSettings} from './simulations/fibonacci-crystal.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
@@ -6430,7 +6430,7 @@ else if (action.eventName === 'Invert Colors') {
             },
             getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), fibonacci: {
                 colorAdvance: normalizeFibonacciColorAdvance(fibonacciState?.colorAdvance) ?? fibonacciColorAdvance,
-                ...(fibonacciState?.mode === 'crystal' ? fibonacciState.crystalSettings ?? DEFAULT_CRYSTAL_SETTINGS : fibonacciCrystalSettings)
+                ...(fibonacciState?.mode === 'crystal' ? fibonacciState.crystalSettings ?? CLASSIC_CRYSTAL_SETTINGS : fibonacciCrystalSettings)
             } }),
             getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode, fibonacci: fibonacciState?.mode })[simulation],
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && experimentalSimulations.visible(simulation) && !isBreathing && !isMacroLoaded && !isMacroPlaying,
