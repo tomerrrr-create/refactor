@@ -18,6 +18,11 @@ const definitions = {
     dla: { title: 'dla_modal_title', button: 'btnDla', modes: ['genetics', 'no-genetics'], fields: ['batchSize'] }
 };
 const breatheModeIcons = { solo: 'iconBreatheSolo', group: 'iconBreatheGroup', 'random-cell': 'iconBreatheRandomCell', 'random-color': 'iconBreatheRandomColor' };
+const crystalPresets = {
+    classic: DEFAULT_CRYSTAL_SETTINGS,
+    fine: { growthSpeed: 25, tileSize: 1, crystalEdges: 0 },
+    bold: { growthSpeed: 25, tileSize: 3, crystalEdges: 200 }
+};
 const percentage = value => `${Math.round(value * 100)}%`;
 function format(field, value, getText) {
     if (field === 'batchSize') return String(value);
@@ -45,6 +50,26 @@ export function initializeEvolutionTuningModals(app) {
         document.body.append(dialog);
         let draft = null, mode;
         const modeGroup = dialog.querySelector('.tuning-modes');
+        const presetButtons = new Map();
+        const presetGroup = definition.crystalFields ? document.createElement('div') : null;
+        if (presetGroup) {
+            presetGroup.className = 'tuning-modes';
+            presetGroup.setAttribute('role', 'group');
+            presetGroup.hidden = true;
+            for (const [name, settings] of Object.entries(crystalPresets)) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.crystalPreset = name;
+                button.addEventListener('click', () => {
+                    if (!draft) return;
+                    Object.assign(draft, settings);
+                    render();
+                });
+                presetButtons.set(button, settings);
+                presetGroup.append(button);
+            }
+            modeGroup.after(presetGroup);
+        }
         const fields = new Map();
         function render() {
             dialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
@@ -60,6 +85,15 @@ export function initializeEvolutionTuningModals(app) {
                     button.title = label; button.setAttribute('aria-label', label);
                 } else button.textContent = label;
                 button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
+            }
+            if (presetGroup) {
+                presetGroup.hidden = mode !== 'crystal';
+                presetGroup.setAttribute('aria-label', app.getText('evolution_presets'));
+                for (const [button, settings] of presetButtons) {
+                    button.textContent = app.getText('tuning_crystal_preset_' + button.dataset.crystalPreset);
+                    const selected = draft && Object.entries(settings).every(([key, value]) => draft[key] === value);
+                    button.setAttribute('aria-pressed', String(Boolean(selected)));
+                }
             }
             for (const [field, { row, label, note, input, output }] of fields) {
                 row.hidden = Boolean(definition.crystalFields?.includes(field) && mode !== 'crystal');
