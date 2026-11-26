@@ -2,7 +2,7 @@
 // swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
     onTap, onOpen, onSwipeDown, onSwipeSide, onHold, onExtendedHold, canInteract, canOpen = () => true, canSwipeSide = () => true, canSwipeDown = () => true,
-    onSwipeFallback, canStart = () => true,
+    onSwipeFallback, canStart = () => true, upwardSwipeDistance,
     beforeStart = () => {}, onEnd = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
 }) {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
@@ -14,10 +14,13 @@ export function bindPickerGestures(button, {
     }
 
     function clearGlow() { button.classList.remove('picker-swipe-glow'); }
-    function swipeReady(state, direction = -1) {
+    function swipeReady(state, direction = -1, minimum = SWIPE_DISTANCE) {
         const distance = (state.currentY - state.y) * direction;
-        return !state.held && distance >= SWIPE_DISTANCE &&
+        return !state.held && distance >= minimum &&
             distance >= Math.abs(state.currentX - state.x) * VERTICAL_RATIO;
+    }
+    function canOpenOnSwipe(state) {
+        return onOpen && swipeReady(state, -1, upwardSwipeDistance?.()) && canOpen();
     }
     function sidewaysReady(state) {
         const dx = Math.abs(state.currentX - state.x), dy = Math.abs(state.currentY - state.y);
@@ -40,7 +43,7 @@ export function bindPickerGestures(button, {
             state.moved = true; clearHoldTimers();
         }
         button.classList.toggle('picker-swipe-glow', !button.disabled && canInteract() &&
-            ((onOpen && swipeReady(state) && canOpen()) || (onSwipeDown && canSwipeDown() && swipeReady(state, 1)) ||
+            (canOpenOnSwipe(state) || (onSwipeDown && canSwipeDown() && swipeReady(state, 1)) ||
                 (onSwipeSide && canSwipeSide() && sidewaysReady(state))));
     }
     button.addEventListener('pointerdown', event => {
@@ -77,7 +80,7 @@ export function bindPickerGestures(button, {
         if (!active || active.id !== event.pointerId) return;
         updatePosition(event);
         const state = active, up = swipeReady(state), horizontal = sidewaysReady(state);
-        const open = onOpen && up && canOpen();
+        const open = canOpenOnSwipe(state);
         const down = onSwipeDown && canSwipeDown() && swipeReady(state, 1);
         const side = onSwipeSide && horizontal && canSwipeSide();
         // CSS zoom geometry differs in older desktop browsers. Ask the browser's

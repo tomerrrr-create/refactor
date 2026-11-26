@@ -2535,6 +2535,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog { width:min(640px,calc(100vw - 24px)); padding:18px; }
 #controlsContainer.sim-mode-active [data-evolution-page-hidden] { display:none !important; }
 #evolutionDrawerDialog .drawer-pages { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; direction:ltr; }
+#evolutionDrawerDialog[data-view-only] :is(.drawer-actions,.drawer-appearance,.drawer-cycle-actions,.drawer-selection) { display:none; }
 @media(min-width:880px) {
   #evolutionDrawerDialog[data-patterns] { width:min(920px,calc(100vw - 24px)); }
   #evolutionDrawerDialog[data-patterns] .drawer-pages { grid-template-columns:repeat(3,minmax(0,1fr)); }

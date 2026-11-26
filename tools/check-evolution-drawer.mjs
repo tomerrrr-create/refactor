@@ -163,7 +163,22 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await pageIndex(),'2');
  assert.equal(await trigger.locator('.drawer-page-number').textContent(),'3');
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(20).filter(Boolean));
- await open();assert.equal(await dialog.locator('.drawer-slots').count(),3);assert.equal(await dialog.locator('.drawer-reserved-slot').count(),3);
- await tap(dialog.locator('[data-cancel]'));await tap(trigger);assert.equal(await pageIndex(),'0');
+ for(const drawer of ['2','0','1']){
+  assert.equal(await pageIndex(),drawer);
+  await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});
+  assert.equal(await pageIndex(),drawer,'short upward swipe opens the map without navigating');
+  assert.equal(await dialog.locator('.drawer-slots').count(),3);assert.equal(await dialog.locator('.drawer-reserved-slot').count(),3);
+  await tap(dialog.locator('[data-cancel]'));await tap(trigger);
+ }
+ assert.equal(await pageIndex(),'2');
+ await tap(page.locator('#btnPenroseCrystal'));await tap(page.locator('#btnPlayPauseLife'));
+ const playback=await state();assert(playback.playing);
+ await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});
+ assert.equal(await pageIndex(),'2');assert(await dialog.locator('[data-drawer-slot="20"]').isDisabled());
+ assert(!(await dialog.locator('[type=submit]').isVisible()));
+ await page.waitForFunction(gen=>drawerTest.state().gen>gen,playback.gen);
+ await tap(dialog.locator('[data-close]'));await tap(page.locator('#btnPlayPauseLife'));
+ await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});assert(await dialog.locator('[data-drawer-slot="20"]').isEnabled());
+ await tap(dialog.locator('[data-cancel]'));
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}
