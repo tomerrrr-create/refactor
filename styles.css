@@ -2897,6 +2897,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 #btnFibonacci:not([data-mode="restart"]) [data-fibonacci-icon="restart"],
 #btnFibonacci:not([data-mode="branching"]) [data-fibonacci-icon="branching"],
+#btnFibonacci:not([data-mode="crystal"]) [data-fibonacci-icon="crystal"],
 #btnFibonacci:not([data-mode="continuous"]) [data-fibonacci-icon="continuous"] { display:none; }
 
 #btnNetwork { display:none; touch-action:none !important; }

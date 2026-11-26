@@ -3,10 +3,10 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 // Display copy only. Simulation names, rules and recorded events stay untouched.
 export const evolutionExplanations = {
     fibonacci: [
-        ['Fibonacci', 'Grow a square spiral across the whole board. Start one new spiral, or let it branch into two.'],
-        ['פיבונאצ׳י', 'ספירלת ריבועים צומחת על כל הלוח. אפשר להתחיל ספירלה חדשה או להסתעף לשתיים.'],
-        ['Фибоначчи', 'Спираль из квадратов заполняет поле. Можно начать новую спираль или дать ей разделиться на две.'],
-        ['Fibonacci', 'Laat een vierkantenspiraal over het hele bord groeien. Start een nieuwe spiraal of laat die zich in twee vertakken.']
+        ['Fibonacci', 'Grow a square spiral, let it branch into two, or watch a fivefold Penrose crystal grow into your drawing.'],
+        ['פיבונאצ׳י', 'אפשר לגדל ספירלת ריבועים, להסתעף לשתי ספירלות או לגדל גביש פנרוז מחומש בתוך הציור.'],
+        ['Фибоначчи', 'Вырастите спираль из квадратов, разделите её надвое или наблюдайте, как кристалл Пенроуза с симметрией пятого порядка прорастает сквозь рисунок.'],
+        ['Fibonacci', 'Laat een vierkantenspiraal groeien of in tweeën splitsen, of zie hoe een vijfvoudig Penrose-kristal door je tekening groeit.']
     ],
     network: [
         ['Living network','Threads grow from your patches, branch, strengthen and fade. Cycle palette-guided or spatial growth.'],

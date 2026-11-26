@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
+import { growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
 
 function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
@@ -260,4 +261,49 @@ test('both current modes keep the whole outgoing spiral moving until each incomi
         assert(sim.state.outgoing);
         assert.deepEqual(validateFibonacciState(sim.state), sim.state);
     }
+});
+
+test('Penrose Crystal recruits the whole board from the center and keeps facets and edges moving', () => {
+    for (const [n, orientation] of [[1, 0], [22, 2], [149, 3], [327, 1]]) {
+        const state = createFibonacciState(n, orientation, 'crystal', 100);
+        const counts = new Uint8Array(n * n);
+        const advance = index => counts[index]++;
+        growFibonacciCrystal(state, advance);
+        const center = Math.floor((n - 1) / 2);
+        assert.equal(counts[center * n + center], 1);
+        if (n > 1) assert.equal(counts[0], 0);
+        for (let frame = 1; frame < 160; frame++) growFibonacciCrystal(state, advance);
+        assert(counts.every(count => count > 0), `${n}×${n} has unreached pixels`);
+        const previous = counts.slice();
+        for (let frame = 0; frame < 20; frame++) growFibonacciCrystal(state, advance);
+        assert(counts.every((count, index) => count > previous[index]));
+        if (n >= 149) assert(new Set(counts.map((count, index) => count - previous[index])).size >= 3);
+    }
+});
+
+test('Penrose Crystal uses current brush colors and resumes exactly from a serialized checkpoint', () => {
+    const sim = simulate(45, 2, 'branching', 95, 7);
+    sim.currentPalette.length = 64;
+    for (let frame = 0; frame < 20; frame++) sim.step();
+    const before = structuredClone(sim.currentBoardState);
+    setFibonacciMode(sim.state, 'crystal');
+    assert.deepEqual(sim.currentBoardState, before);
+    for (let frame = 0; frame < 120; frame++) sim.step();
+    const saved = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    assert.throws(() => validateFibonacciState({ ...saved, crystalFrame: -1 }));
+    const replayed = structuredClone(sim.currentBoardState);
+    for (const board of [sim.currentBoardState, replayed]) {
+        board[0] = { k: 22, v: 22, isGold: true };
+        board[1] = { k: 40, v: 40 };
+    }
+    for (let frame = 0; frame < 10; frame++) {
+        sim.step();
+        runFibonacciGeneration({ currentBoardState: replayed, currentPalette: sim.currentPalette }, saved);
+    }
+    assert.deepEqual(sim.currentBoardState[0], { k: 22, v: 22, isGold: true });
+    assert(sim.currentBoardState[1].k > 40 && sim.currentBoardState[1].k <= 50);
+    assert.deepEqual(sim.currentBoardState, replayed);
+    assert.deepEqual(sim.state, saved);
+    setFibonacciMode(sim.state, 'restart');
+    assert.deepEqual(validateFibonacciState(sim.state), sim.state);
 });

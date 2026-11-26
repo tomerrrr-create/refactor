@@ -3914,13 +3914,17 @@ function saveFibonacciSettings({ colorAdvance }) {
 }
 
 function cycleFibonacciMode() {
-    if (armedSimulation !== 'fibonacci') armSimulation('fibonacci');
-    else if (getFibonacciState().mode === FIBONACCI_MODES[0]) selectFibonacciMode(FIBONACCI_MODES[1]);
-    else if (isLifePlaying) selectFibonacciMode(FIBONACCI_MODES[0]);
-    else {
-        armSimulation(null);
-        window.logArtEvent('Fibonacci Off', '---');
-        return;
+    if (armedSimulation !== 'fibonacci') {
+        armSimulation('fibonacci');
+    } else {
+        const current = getFibonacciState().mode;
+        const next = nextEvolutionMode(current === 'continuous' ? FIBONACCI_MODES.at(-1) : current, [...FIBONACCI_MODES, 'off']);
+        if (next === 'off') {
+            armSimulation(null);
+            window.logArtEvent('Fibonacci Off', '---');
+            return;
+        }
+        selectFibonacciMode(next);
     }
     window.logArtEvent('SIMULATION_RULES', getSimulationRecordingDetails());
 }
