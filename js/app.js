@@ -3914,7 +3914,7 @@ function resetFibonacciRuntime(previous = fibonacciState, mode = previous?.mode 
             // existing GO_DARK macro events can reproduce the same reset.
             const { version, layoutSeed } = previous.map;
             fibonacciState.map = version === 1 ? { ...previous.map, frame: 0, front: 0 } : {
-                ...fibonacciState.map, layoutSeed: (Math.imul(layoutSeed, 1664525) + 1013904223) >>> 0
+                ...fibonacciState.map, version, layoutSeed: (Math.imul(layoutSeed, 1664525) + 1013904223) >>> 0
             };
         }
     }

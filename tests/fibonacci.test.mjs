@@ -409,7 +409,27 @@ test('Tangent Circles unfolds from a small cluster and resumes its seeded growth
     assert.throws(() => validateFibonacciState({ ...checkpoint, map: { ...checkpoint.map, layoutSeed: -1 } }), /layout seed/);
 });
 
-test('Tangent Circles version-one recordings keep the previous packing and timing', () => {
+test('Tangent Circles grows into all four corners without changing the original circles', () => {
+    for (const [size, seed, circleMinimum] of [[9, 24, 3], [21, 72378818, 3], [89, 0, 2], [149, 0xffffffff, 2]]) {
+        const previous = simulate(size, 2, 'apollonian', 100, seed);
+        previous.state.map.version = 2;
+        const current = simulate(size, 2, 'apollonian', 100, seed);
+        for (const sim of [previous, current]) sim.state.map.settings.circleMinimum = circleMinimum;
+        for (let frame = 0; frame < 40; frame++) { previous.step(); current.step(); }
+        assert.deepEqual(previous.currentBoardState, current.currentBoardState);
+
+        for (let frame = 0; frame < 300; frame++) { previous.step(); current.step(); }
+        for (const index of previous.occupied()) {
+            assert.equal(current.currentBoardState[index].k, previous.currentBoardState[index].k);
+        }
+        for (const index of [0, size - 1, size * (size - 1), size ** 2 - 1]) {
+            assert(current.currentBoardState[index].k > 0, `corner ${index} on ${size}×${size}`);
+        }
+        assert(current.occupied().length > previous.occupied().length);
+    }
+});
+
+test('Tangent Circles recordings from both previous versions keep their packing and timing', () => {
     const source = createFibonacciState(45, 2, 'apollonian', 95, 87324);
     const { layoutSeed, ...map } = source.map;
     const state = validateFibonacciState({ ...source, map: { ...map, version: 1 } });
@@ -419,6 +439,13 @@ test('Tangent Circles version-one recordings keep the previous packing and timin
     }
     const hash = createHash('sha256').update(Buffer.from(currentBoardState.map(({ k }) => k))).digest('hex');
     assert.equal(hash, '3ca97f226b6f941b07e2f3354a2e21cd330e2a24e994dd55309a4cfecbae0a19');
+    const seeded = validateFibonacciState({ ...source, map: { ...source.map, version: 2 } });
+    for (const cell of currentBoardState) cell.k = cell.v = 0;
+    for (let frame = 0; frame < 240; frame++) {
+        runFibonacciGeneration({ currentBoardState, currentPalette: Array(23) }, seeded);
+    }
+    const seededHash = createHash('sha256').update(Buffer.from(currentBoardState.map(({ k }) => k))).digest('hex');
+    assert.equal(seededHash, 'aa05c25ac18330f2605e7820742f1e229d28daca67f72eb1c87c276266990e25');
 });
 
 test('Voronoi drawing adds a bounded, deterministic site and changes the evolving pattern', () => {
