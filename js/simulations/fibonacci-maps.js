@@ -31,21 +31,27 @@ export function validateMapSettings(mode, settings) {
     return clean;
 }
 
-export function createFibonacciMap(mode) {
-    return { version: 1, frame: 0, front: 0, settings: { ...MAP_DEFAULTS[mode] }, ...(mode === 'voronoi' ? { seeds: [] } : {}) };
+export function createFibonacciMap(mode, layoutSeed = 0) {
+    return { version: mode === 'apollonian' ? 2 : 1, frame: 0, front: 0, settings: { ...MAP_DEFAULTS[mode] },
+        ...(mode === 'voronoi' ? { seeds: [] } : {}), ...(mode === 'apollonian' ? { layoutSeed } : {}) };
 }
 
 export function validateFibonacciMap(mode, n, map) {
-    const { version, frame, front, seeds, settings } = map ?? {};
-    if (version !== 1 || frame !== (frame >>> 0) || !Number.isSafeInteger(front) ||
+    const { version, frame, front, seeds, settings, layoutSeed } = map ?? {};
+    const growingCircles = version === 2 && mode === 'apollonian';
+    if ((version !== 1 && !growingCircles) || frame !== (frame >>> 0) || !Number.isSafeInteger(front) ||
         front < frame * 25 || front > frame * 200) throw new Error('Invalid Fibonacci map checkpoint');
+    if (growingCircles ? layoutSeed !== (layoutSeed >>> 0) : layoutSeed !== undefined) {
+        throw new Error('Invalid Tangent Circles layout seed');
+    }
     if (mode === 'voronoi') {
         if (!Array.isArray(seeds) || seeds.length > MAX_SEEDS || new Set(seeds).size !== seeds.length ||
             seeds.some(index => !Number.isInteger(index) || index < 0 || index >= n * n)) {
             throw new Error('Invalid Voronoi seeds');
         }
     } else if (seeds !== undefined) throw new Error('Unexpected Fibonacci map seeds');
-    return { version, frame, front, settings: validateMapSettings(mode, settings), ...(seeds ? { seeds: [...seeds] } : {}) };
+    return { version, frame, front, settings: validateMapSettings(mode, settings), ...(seeds ? { seeds: [...seeds] } : {}),
+        ...(growingCircles ? { layoutSeed } : {}) };
 }
 
 export function seedFibonacciMap(state, changes) {
@@ -216,6 +222,127 @@ function drawCircles(n, plan, size) {
     fillGap(initial, -1, 1);
 }
 
+const INACTIVE_CIRCLE_CELL = 65535;
+
+function drawGrowingCircles(n, plan, size, seed) {
+    // All circles are constructed at their final size. Only their radius of
+    // activation changes over time, so children start in fully formed gaps.
+    const center = (n - 1) / 2;
+    const minimum = Math.max(1.25, n / 190) * [1, 1.45, 2.2][size - 1];
+    let cursor = seed;
+    function random() {
+        cursor = (Math.imul(cursor, 1664525) + 1013904223) >>> 0;
+        return cursor / 2 ** 32;
+    }
+    const angle = random() * Math.PI * 2;
+    const outer = n * (.56 + .05 * random());
+    const shiftX = center + (random() - .5) * n * .13;
+    const shiftY = center + (random() - .5) * n * .13;
+    const ringRadius = outer / 3;
+    const inversionDistance = outer / (.08 + .09 * random());
+    const inversionAngle = random() * Math.PI * 2;
+    const inversionX = inversionDistance * Math.cos(inversionAngle);
+    const inversionY = inversionDistance * Math.sin(inversionAngle);
+    const power = inversionDistance ** 2 - outer ** 2;
+    const disk = (radius, distance, direction) => ({ k: 1 / radius, x: distance * Math.cos(direction), y: distance * Math.sin(direction) });
+    function reflect(circles, slot) {
+        const old = circles[slot];
+        let k = -old.k, x = -old.k * old.x, y = -old.k * old.y;
+        for (let index = 0; index < circles.length; index++) {
+            if (index === slot) continue;
+            const circle = circles[index];
+            k += 2 * circle.k;
+            x += 2 * circle.k * circle.x;
+            y += 2 * circle.k * circle.y;
+        }
+        return { k, x: x / k, y: y / k };
+    }
+    function transform(circle) {
+        // Inversion preserves tangency while loosening the symmetry and
+        // making some branches more prominent in each run.
+        const dx = circle.x - inversionX, dy = circle.y - inversionY;
+        const unwarpedRadius = 1 / circle.k;
+        const scale = power / (dx * dx + dy * dy - unwarpedRadius ** 2);
+        return { radius: unwarpedRadius * scale, cx: inversionX + scale * dx + shiftX, cy: inversionY + scale * dy + shiftY };
+    }
+    function schedule(circle, birth, { radius, cx, cy } = transform(circle)) {
+        const duration = Math.round(5 + 21 * Math.sqrt(radius / n));
+        const offset = phase(circle.x, circle.y);
+        for (let row = Math.max(0, Math.ceil(cy - radius)); row <= Math.min(n - 1, Math.floor(cy + radius)); row++) {
+            for (let col = Math.max(0, Math.ceil(cx - radius)); col <= Math.min(n - 1, Math.floor(cx + radius)); col++) {
+                const distance = Math.hypot(col - cx, row - cy);
+                if (distance > radius) continue;
+                const index = row * n + col;
+                plan.edge[index] = radius - distance;
+                plan.delay[index] = birth + Math.round(duration * distance / radius);
+                plan.period[index] = radius < n / 20 ? 4 : 7;
+                plan.offsets[index] = offset;
+            }
+        }
+        return { ...circle, ready: birth + duration };
+    }
+
+    plan.delay.fill(INACTIVE_CIRCLE_CELL);
+    if (n === 1) { plan.delay[0] = 0; return; }
+
+    function fillGaps(circles, previous, depth, branchSeed) {
+        if (depth === 16) return;
+        for (let slot = 0; slot < 4; slot++) {
+            if (slot === previous) continue;
+            const circle = reflect(circles, slot);
+            if (circle.k <= 0) continue;
+            const geometry = transform(circle);
+            if (geometry.radius < minimum) continue;
+            const ready = Math.max(...circles.map((neighbor, index) => index === slot ? 0 : neighbor.ready));
+            // Each gap owns its timing so a change in minimum size can prune
+            // a branch without rescheduling the circles that remain.
+            const gapSeed = Math.imul(branchSeed ^ (slot + 1), 0x9e3779b9);
+            const birth = ready + 2 + ((gapSeed ^ (gapSeed >>> 16)) >>> 0) % 13;
+            const next = [...circles];
+            next[slot] = schedule(circle, birth, geometry);
+            fillGaps(next, slot, depth + 1, gapSeed);
+        }
+    }
+
+    // Six disks surround an equal central disk. They leave six triangular
+    // gaps inside the ring and six more against the enclosing circle.
+    const directions = Array.from({ length: 6 }, (_, i) => angle + i * Math.PI / 3);
+    const rings = directions.map(direction => disk(ringRadius, 2 * ringRadius, direction));
+    const core = disk(ringRadius, 0, 0);
+    const innerGap = direction => disk(ringRadius / (3 + 2 * Math.sqrt(3)), 2 * ringRadius / Math.sqrt(3), direction);
+    const firstGap = innerGap(angle + Math.PI / 6);
+    const opening = [core, rings[0], rings[1], schedule(firstGap, 0)];
+    const starters = [0, 1].map((slot, i) => schedule(reflect(opening, slot), 4 + 4 * i));
+    const openingReady = Math.max(opening[3].ready, ...starters.map(circle => circle.ready));
+    const ringOrder = random() < .5 ? [0, 1, 5, 2, 4, 3] : [1, 0, 2, 5, 3, 4];
+    const grownCore = schedule(core, openingReady + 2);
+    for (const [index, slot] of ringOrder.entries()) {
+        rings[slot] = schedule(rings[slot], openingReady + 5 + index * 5 + Math.floor(random() * 6));
+    }
+    const enclosure = { ...disk(-outer, 0, 0), ready: 0 };
+    const sideRadius = ringRadius * (3 - Math.sqrt(3)) ** 2 / (2 * (4 - Math.sqrt(3)));
+    for (const [index, direction] of directions.entries()) {
+        const left = rings[index], right = rings[(index + 1) % rings.length];
+        const side = schedule(disk(sideRadius, outer - sideRadius, direction + Math.PI / 6), Math.max(left.ready, right.ready) + 2);
+        fillGaps([enclosure, left, right, side], 3, 0, seed ^ (index + 7));
+        const neighbors = [grownCore, left, right];
+        if (index === 0) {
+            const base = [...neighbors, opening[3]];
+            for (const [slot, starter] of starters.entries()) {
+                const next = [...base];
+                next[slot] = starter;
+                fillGaps(next, slot, 0, seed ^ (slot + 13));
+            }
+            const birth = Math.max(grownCore.ready, left.ready, opening[3].ready) + 4;
+            base[2] = schedule(reflect(base, 2), birth);
+            fillGaps(base, 2, 0, seed ^ 15);
+        } else {
+            const inner = schedule(innerGap(direction + Math.PI / 6), Math.max(grownCore.ready, left.ready, right.ready) + 2);
+            fillGaps([...neighbors, inner], 3, 0, seed ^ index);
+        }
+    }
+}
+
 function drawVoronoi(state, plan) {
     const { n, orientation, map } = state;
     const density = [4, 8, 14][map.settings.seedDensity - 1];
@@ -265,9 +392,12 @@ function getPlan(state) {
     const scale = map.settings.tileSize ?? map.settings.circleMinimum ?? map.settings.seedDensity;
     const refinement = mode === 'pinwheel-map' ? Math.min(2, Math.floor(map.front / 2400)) : 0;
     if (cachedPlan?.n === n && cachedPlan.mode === mode && cachedPlan.scale === scale &&
-        cachedPlan.orientation === orientation && cachedPlan.seeds === map.seeds && cachedPlan.refinement === refinement) return cachedPlan;
+        cachedPlan.orientation === orientation && cachedPlan.seeds === map.seeds && cachedPlan.refinement === refinement &&
+        cachedPlan.layoutSeed === map.layoutSeed) return cachedPlan;
     const plan = makePlan(n);
+    const growingCircles = mode === 'apollonian' && map.version === 2;
     if (mode === 'voronoi') drawVoronoi(state, plan);
+    else if (growingCircles) drawGrowingCircles(n, plan, scale, map.layoutSeed);
     else {
         if (mode === 'pinwheel-map') drawPinwheel(n, plan, scale, refinement);
         if (mode === 'octagonal') drawOctagonal(n, plan, scale);
@@ -279,16 +409,17 @@ function getPlan(state) {
             plan.delay[index] += Math.floor(Math.max(0, distance - 1.5) / speed);
         }
     }
-    cachedPlan = { ...plan, n, mode, scale, orientation, seeds: map.seeds, refinement };
+    cachedPlan = { ...plan, n, mode, scale, orientation, seeds: map.seeds, refinement, layoutSeed: map.layoutSeed, growingCircles };
     return cachedPlan;
 }
 
 export function growFibonacciMap(state, advance) {
-    const { period, edge, offsets, delay } = getPlan(state);
+    const { period, edge, offsets, delay, growingCircles } = getPlan(state);
     const { map } = state;
     const nextFront = map.front + map.settings.growthSpeed;
     const edgeWidth = map.settings.crystalEdges ? .65 * map.settings.crystalEdges / 100 : -1;
     for (let index = 0; index < delay.length; index++) {
+        if (growingCircles && delay[index] === INACTIVE_CIRCLE_CELL) continue;
         const arrival = delay[index] * 100;
         if (arrival >= nextFront) continue;
         const interval = edge[index] <= edgeWidth ? 2 : period[index];

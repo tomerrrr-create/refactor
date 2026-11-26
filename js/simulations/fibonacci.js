@@ -35,7 +35,7 @@ export function createFibonacciState(n, orientation = 0, mode = 'restart',
     const center = Math.floor((n - 1) / 2);
     return { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0,
         ...(mode === 'crystal' ? { crystalFrame: 0 } : {}),
-        ...(FIBONACCI_MAPS.includes(mode) ? { map: createFibonacciMap(mode) } : {}) };
+        ...(FIBONACCI_MAPS.includes(mode) ? { map: createFibonacciMap(mode, seed) } : {}) };
 }
 
 const wrap = (coordinate, n) => (coordinate % n + n) % n;
@@ -138,7 +138,7 @@ function validateBranch(n, primary, branch) {
     return copy;
 }
 
-export function setFibonacciMode(state, mode) {
+export function setFibonacciMode(state, mode, layoutSeed = state.seed) {
     if (state.mode === mode) return;
     if (state.mode === 'branching' && mode !== 'branching') {
         const plan = getPlan(state.n, state);
@@ -153,7 +153,7 @@ export function setFibonacciMode(state, mode) {
         delete state.crystalSettings;
         delete state.crystalFront;
     }
-    if (FIBONACCI_MAPS.includes(mode)) state.map = createFibonacciMap(mode);
+    if (FIBONACCI_MAPS.includes(mode)) state.map = createFibonacciMap(mode, layoutSeed);
     else delete state.map;
     state.mode = mode;
 }

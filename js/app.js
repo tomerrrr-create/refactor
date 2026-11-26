@@ -3909,6 +3909,14 @@ function resetFibonacciRuntime(previous = fibonacciState, mode = previous?.mode 
     }
     if (fibonacciState.map && previous?.map) {
         fibonacciState.map.settings = previous.map.settings;
+        if (mode === 'apollonian') {
+            // Go Dark is a fresh packing. Derive it from the recorded run so
+            // existing GO_DARK macro events can reproduce the same reset.
+            const { version, layoutSeed } = previous.map;
+            fibonacciState.map = version === 1 ? { ...previous.map, frame: 0, front: 0 } : {
+                ...fibonacciState.map, layoutSeed: (Math.imul(layoutSeed, 1664525) + 1013904223) >>> 0
+            };
+        }
     }
 }
 
@@ -3938,7 +3946,9 @@ function selectFibonacciMode(mode) {
     const state = getFibonacciState();
     const changed = state.mode !== mode;
     if (mode === 'crystal' && state.mode !== mode) state.crystalSettings = fibonacciCrystalSettings;
-    setFibonacciMode(state, mode);
+    const layoutSeed = changed && mode === 'apollonian' && !isExecutingMacroCommand
+        ? Math.floor(Math.random() * 2 ** 32) : state.seed;
+    setFibonacciMode(state, mode, layoutSeed);
     if (changed && state.map) state.map.settings = fibonacciMapSettings[mode];
     updateFibonacciButtonUI();
 }
