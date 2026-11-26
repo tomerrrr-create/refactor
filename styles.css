@@ -1987,6 +1987,19 @@ button, .ctrl {
 :root[data-simulation-backdrop-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
 :root[data-simulation-backdrop-theme="gold"] #simModeBackground::before,
 :root[data-simulation-backdrop-theme="teal"] #simModeBackground::after { opacity: 1; }
+
+#controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground {
+  border-color: #6f3a4a80;
+  box-shadow: 0 4px 20px #0006;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 28px, #d291a313 28px 29px),
+    repeating-linear-gradient(-45deg, transparent 0 28px, #d291a313 28px 29px),
+    linear-gradient(135deg, #2c141d, #150b10);
+}
+#controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground::before,
+#controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground::after {
+  visibility: hidden;
+}
 /* Fade only the decorative frame; simulation controls remain independent. */
 :root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
 
