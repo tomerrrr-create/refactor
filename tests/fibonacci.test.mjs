@@ -307,3 +307,26 @@ test('Penrose Crystal uses current brush colors and resumes exactly from a seria
     setFibonacciMode(sim.state, 'restart');
     assert.deepEqual(validateFibonacciState(sim.state), sim.state);
 });
+
+test('crystal tuning changes growth without jumping the front and records the exact result', () => {
+    const current = simulate(63, 1, 'crystal');
+    const baseline = simulate(63, 1, 'crystal');
+    current.state.crystalSettings = { growthSpeed: 50, tileSize: 1, crystalEdges: 0 };
+    for (let frame = 0; frame < 20; frame++) {
+        current.step();
+        baseline.step();
+    }
+    assert.equal(current.state.crystalFront, 1000);
+    assert(current.occupied().length < baseline.occupied().length / 2);
+    current.state.crystalSettings = { growthSpeed: 200, tileSize: 3, crystalEdges: 175 };
+    const checkpoint = validateFibonacciState(JSON.parse(JSON.stringify(current.state)));
+    const restored = structuredClone(current.currentBoardState);
+    current.step();
+    assert.equal(current.state.crystalFront, 1200);
+    assert(current.occupied().length < baseline.occupied().length);
+    runFibonacciGeneration({ currentBoardState: restored, currentPalette: current.currentPalette }, checkpoint);
+    assert.deepEqual(checkpoint, current.state);
+    assert.deepEqual(restored, current.currentBoardState);
+    assert.throws(() => validateFibonacciState({ ...checkpoint, crystalFront: -1 }));
+    assert.throws(() => validateFibonacciState({ ...checkpoint, crystalSettings: { ...checkpoint.crystalSettings, crystalEdges: 201 } }));
+});

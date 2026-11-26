@@ -1,4 +1,4 @@
-import { growFibonacciCrystal } from './fibonacci-crystal.js';
+import { growFibonacciCrystal, validateCrystalSettings } from './fibonacci-crystal.js';
 
 export const FIBONACCI_MODES = Object.freeze(['restart', 'branching', 'crystal']);
 export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
@@ -146,7 +146,11 @@ export function setFibonacciMode(state, mode) {
         else if (state.outgoing?.branch) state.outgoing = validateOrigin(state.n, state.outgoing);
     }
     if (mode === 'crystal') state.crystalFrame = 0;
-    else delete state.crystalFrame;
+    else {
+        delete state.crystalFrame;
+        delete state.crystalSettings;
+        delete state.crystalFront;
+    }
     state.mode = mode;
 }
 
@@ -164,7 +168,15 @@ export function validateFibonacciState(state) {
     if (mode === 'crystal') {
         if (state.crystalFrame !== (state.crystalFrame >>> 0)) throw new Error('Invalid Fibonacci crystal frame');
         copy.crystalFrame = state.crystalFrame;
-    } else if (state.crystalFrame !== undefined) throw new Error('Unexpected Fibonacci crystal frame');
+        if (state.crystalSettings !== undefined) copy.crystalSettings = validateCrystalSettings(state.crystalSettings);
+        if (state.crystalFront !== undefined) {
+            if (!copy.crystalSettings || !Number.isSafeInteger(state.crystalFront) || state.crystalFront < state.crystalFrame * 25 ||
+                state.crystalFront > state.crystalFrame * 200) throw new Error('Invalid Penrose Crystal front');
+            copy.crystalFront = state.crystalFront;
+        }
+    } else if (state.crystalFrame !== undefined || state.crystalSettings !== undefined || state.crystalFront !== undefined) {
+        throw new Error('Unexpected Fibonacci crystal state');
+    }
     if (!frame && state.outgoing === undefined && state.branch === undefined) return copy;
     const plan = getPlan(n, copy);
     let secondary;

@@ -1,5 +1,20 @@
 const PHI = (1 + Math.sqrt(5)) / 2;
 const mix = ([ax, ay], [bx, by]) => [ax + (bx - ax) / PHI, ay + (by - ay) / PHI];
+export const DEFAULT_CRYSTAL_SETTINGS = Object.freeze({ growthSpeed: 100, tileSize: 2, crystalEdges: 100 });
+export const CRYSTAL_LIMITS = Object.freeze({ growthSpeed: [25, 200, 25], tileSize: [1, 3, 1], crystalEdges: [0, 200, 25] });
+
+export function validateCrystalSettings(settings) {
+    const result = {};
+    for (const [key, [min, max, step]] of Object.entries(CRYSTAL_LIMITS)) {
+        const value = settings?.[key];
+        if (!Number.isInteger(value) || value < min || value > max || (value - min) % step !== 0) {
+            throw new Error('Invalid Penrose Crystal setting: ' + key);
+        }
+        result[key] = value;
+    }
+    return result;
+}
+
 let cachedPlan;
 
 function penroseTriangles(radius, orientation, depth) {
@@ -43,12 +58,12 @@ function edgeDistance([ax, ay], [bx, by], [px, py]) {
     return (x, y) => (dx * (y - ay) - dy * (x - ax)) * scale;
 }
 
-function getCrystalPlan(n, orientation) {
-    if (cachedPlan?.n === n && cachedPlan.orientation === orientation) return cachedPlan;
+function getCrystalPlan(n, orientation, tileSize) {
+    if (cachedPlan?.n === n && cachedPlan.orientation === orientation && cachedPlan.tileSize === tileSize) return cachedPlan;
     const center = (n - 1) / 2;
     const radius = n * .8;
     const resolution = Math.max(2.6, Math.min(12, n * .12));
-    const depth = Math.max(0, Math.round(Math.log(radius / resolution) / Math.log(PHI)));
+    const depth = Math.max(0, Math.round(Math.log(radius / resolution) / Math.log(PHI)) + 2 - tileSize);
     const triangles = penroseTriangles(radius, orientation, depth);
     const baseCounts = new Map();
     for (const triangle of triangles) {
@@ -59,6 +74,7 @@ function getCrystalPlan(n, orientation) {
     const arrival = new Uint16Array(n * n);
     const cadence = new Uint8Array(n * n);
     const phase = new Uint8Array(n * n);
+    const distanceToEdge = new Float64Array(n * n);
     const speed = Math.max(.5, n / 150);
     for (const triangle of triangles) {
         const [type, a, b, c] = triangle;
@@ -78,25 +94,33 @@ function getCrystalPlan(n, orientation) {
                 const x = col - center;
                 const edgeA = ab(x, y), edgeB = ac(x, y), edgeC = bc(x, y);
                 if (Math.min(edgeA, edgeB, edgeC) < -1e-6) continue;
-                const edge = Math.min(edgeA, edgeB, seam ? Infinity : edgeC) <= .65;
+                distanceToEdge[index] = Math.min(edgeA, edgeB, seam ? Infinity : edgeC);
                 arrival[index] = Math.floor(Math.max(0, Math.hypot(x, y) - 1.5) / speed);
-                cadence[index] = edge ? 2 : 4 + type;
+                cadence[index] = 4 + type;
                 phase[index] = ((offset % 20) + 20) % 20;
             }
         }
     }
-    cachedPlan = { n, orientation, arrival, cadence, phase };
+    cachedPlan = { n, orientation, tileSize, arrival, cadence, phase, distanceToEdge };
     return cachedPlan;
 }
 
 export function growFibonacciCrystal(state, advance) {
-    const { arrival, cadence, phase } = getCrystalPlan(state.n, state.orientation);
+    const { growthSpeed, tileSize, crystalEdges } = state.crystalSettings ?? DEFAULT_CRYSTAL_SETTINGS;
+    const { arrival, cadence, phase, distanceToEdge } = getCrystalPlan(state.n, state.orientation, tileSize);
+    // Track distance independently from the color clock, so changing
+    // speed changes the next increment without moving the front backward.
+    const front = state.crystalFront ?? state.crystalFrame * 100;
+    const nextFront = front + growthSpeed;
+    const edgeWidth = crystalEdges === 0 ? -Infinity : .65 * crystalEdges / 100;
     for (let index = 0; index < arrival.length; index++) {
-        const age = state.crystalFrame - arrival[index];
-        if (age < 0 || !cadence[index]) continue;
+        const arrivalDistance = arrival[index] * 100;
+        if (arrivalDistance >= nextFront || !cadence[index]) continue;
+        const interval = distanceToEdge[index] <= edgeWidth ? 2 : cadence[index];
         // The front picks up the existing pigment; the facets keep moving
         // at different rates once the same front has crossed the board.
-        if (age === 0 || (age + phase[index]) % cadence[index] === 0) advance(index);
+        if (arrivalDistance >= front || (state.crystalFrame - arrival[index] + phase[index]) % interval === 0) advance(index);
     }
+    if (state.crystalSettings) state.crystalFront = Math.min(0xffffffff * 200, nextFront);
     state.crystalFrame = Math.min(0xffffffff, state.crystalFrame + 1);
 }

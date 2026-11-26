@@ -79,6 +79,7 @@ test('portable simulation preferences preserve explicit defaults and reject unus
         geometricFlowVisible: false,
         fibonacciVisible: true,
         fibonacciColorAdvance: 91,
+        fibonacciCrystal: { growthSpeed: 50, tileSize: 3, crystalEdges: 175 },
         rememberSimulationModes: false,
         wind: { mode: 'ripple', strength: 5, speed: 2, range: .6, colorSpan: 2, trail: false }
     } };
@@ -86,7 +87,8 @@ test('portable simulation preferences preserve explicit defaults and reject unus
     const legacy = { ...settings, simulationPreferences: { ...settings.simulationPreferences, fibonacciColorAdvance: 85 } };
     assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(legacy)).simulationPreferences.fibonacciColorAdvance, 90);
     for (const invalid of [{ gravityCycle: [] }, { resonanceCycle: [5, 5] }, { circularCycle: ['flow'] },
-        { geometricFlowCycle: ['unknown'] }, { magnetAnchorLimit: 1500 }, { rememberSimulationModes: 'false' }, { fibonacciVisible: 1 }, { fibonacciColorAdvance: 89 }, { fibonacciColorAdvance: 101 }]) {
+        { geometricFlowCycle: ['unknown'] }, { magnetAnchorLimit: 1500 }, { rememberSimulationModes: 'false' }, { fibonacciVisible: 1 }, { fibonacciColorAdvance: 89 }, { fibonacciColorAdvance: 101 },
+        { fibonacciCrystal: { growthSpeed: 26, tileSize: 3, crystalEdges: 175 } }]) {
         assert.throws(() => serializeWorkspaceSettings({ ...settings, simulationPreferences: invalid }));
     }
 });
