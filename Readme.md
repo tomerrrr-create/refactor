@@ -23,9 +23,9 @@ This is the complete guide to the application's current interactions, defaults, 
 
 ### Creation and color selection
 
-After the opening animation, the first tap or click opens **Creation / Evolution**, with localized labels beneath the Evolution control symbol. Evolution uses the default Gravity icon. A centered pair of halos sits below the two board choices. Selecting a board highlights it in gold and activates both halos. The gold halo opens the selected board with the current settings. Creation keeps the displayed board. Evolution uses the active profile’s Init size and brush size, fills the board with random colors from the active palette, and starts the brush at the first color in the active sort order. Escape closes the choice and continues with the displayed board. Technicians → Features → **Create / Evolve on startup** is on by default. Turn it off to return to direct interaction after the opening animation. The setting is saved in this browser.
+After the opening animation, the first tap or click opens **Creation / Evolution**, with localized labels beneath the Evolution control symbol. Evolution uses the default Gravity icon. Selecting a board highlights it in gold and reveals two centered actions without resizing the dialog. **Mine** opens the selected board with the current settings. Creation keeps the displayed board. Evolution uses the active profile’s Init size and brush size, fills the board with random colors from the active palette, and starts the brush at the first color in the active sort order. Escape closes the choice and continues with the displayed board. Technicians → Features → **Create / Evolve on startup** is on by default. Turn it off to return to direct interaction after the opening animation. The setting is saved in this browser.
 
-The silver halo clears the app’s local settings and profile drafts and fades directly to the selected board. For Evolution, the same board and brush initialization uses the factory settings loaded after the reset. Reduced-motion mode switches immediately.
+**Origin** clears the app’s local settings and profile drafts and fades directly to the selected board. For Evolution, the same board and brush initialization uses the factory settings loaded after the reset. Reduced-motion mode switches immediately.
 
 The brush cycles **Paint → Continuous → Copy**. The white filled triangle indicates Continuous mode, which fills gaps between successive pointer positions; the gold filled triangle indicates ordinary Paint without automatic completion. Copy retains its black triangle with a white outline. These indicator colors do not select the paint color. The factory default remains Continuous, so a fresh default session starts with a white triangle. Color, footprint size, shape and symmetry still apply. Continuous strokes connect samples within a gesture; leaving the canvas breaks the segment. Copy mode copies a dragged source tile onto the destination footprint.
 
@@ -898,7 +898,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 
 | Area | Examples |
 | --- | --- |
-| First interaction, Create / Evolve, Evolution initialization through both halos, toolbar holds and the startup switch | `tools/check-opening-choice.mjs` |
+| First interaction, Create / Evolve, Evolution initialization through Mine and Origin, toolbar holds and the startup switch | `tools/check-opening-choice.mjs` |
 | Browser-local compact color-picker experiment: full palettes, pointer preview/drag/cancel, keyboard, Rainbow, paging restoration, reload and profile independence | `tools/check-compact-color-picker.mjs` |
 | Opening-palette history policy: raw/resolved Undo/Redo, legacy checkpoints, real palette switches and playback lifecycle | `tools/check-macro-palette-context.mjs` (optional `PALETTE_RECIPE` runs the reported full-file regression) |
 | Real file import, opening-palette catalogue, drawing Undo, explicit changes and file replacement on desktop/English and touch/Hebrew | `tools/check-macro-palette-ui.mjs` |

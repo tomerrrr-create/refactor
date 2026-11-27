@@ -52,14 +52,16 @@
         <span id="openingEvolutionLabel" data-debug-text="opening_choice_evolution">Evolution</span>
       </button>
     </div>
-    <div class="opening-choice-actions">
-      <button id="openingContinue" class="opening-choice-action" type="button" disabled aria-label="Continue">
-        <span class="opening-choice-halo" aria-hidden="true"></span>
+    <div class="opening-choice-actions" inert>
+      <button id="openingContinue" class="opening-choice-action" type="button" disabled aria-describedby="openingMineDetails">
+        <span lang="en">Mine</span>
       </button>
-      <button id="openingEclipse" class="opening-choice-action" type="button" disabled aria-label="Reset all local app data">
-        <span class="opening-choice-halo" aria-hidden="true"></span>
+      <button id="openingEclipse" class="opening-choice-action" type="button" disabled aria-describedby="openingOriginDetails">
+        <span lang="en">Origin</span>
       </button>
     </div>
+    <span id="openingMineDetails" data-debug-text="opening_choice_mine_details" hidden>Open with your current settings.</span>
+    <span id="openingOriginDetails" data-debug-text="opening_reset_label" hidden>Reset all local app data</span>
     <p id="openingEclipseError" role="status" data-debug-text="opening_reset_error" hidden></p>
   </dialog>
   <dialog id="openingResetVeil"></dialog>

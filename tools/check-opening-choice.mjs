@@ -90,15 +90,12 @@ try {
         assert.equal(await choice.getAttribute('dir'), mobile ? 'rtl' : 'ltr');
         const labels = mobile ? ['יצירה', 'אבולוציה'] : ['Creation', 'Evolution'];
         assert.deepEqual(await choice.locator('button[data-opening-choice]').allInnerTexts(), labels);
-        const actionSurfaces = () => choice.locator('.opening-choice-action').evaluateAll(buttons => buttons.map(button => {
-            const style = getComputedStyle(button);
-            return [style.backgroundColor, style.borderTopColor];
-        }));
         const transparent = 'rgba(0, 0, 0, 0)';
-        const unselectedSurfaces = [[transparent, transparent], [transparent, transparent]];
-        assert.deepEqual(await actionSurfaces(), unselectedSurfaces);
-        assert(await eclipse.isVisible() && await eclipse.isDisabled(), 'reset is visible and requires a board choice');
-        assert(await continueButton.isVisible() && await continueButton.isDisabled());
+        const actions = choice.locator('.opening-choice-actions');
+        assert(await eclipse.isHidden() && await eclipse.isDisabled(), 'Origin is hidden until a board is selected');
+        assert(await continueButton.isHidden() && await continueButton.isDisabled(), 'Mine is hidden until a board is selected');
+        assert.equal(await choice.getByRole('button', { name: 'Mine', exact: true }).count(), 0);
+        assert.equal(await choice.getByRole('button', { name: 'Origin', exact: true }).count(), 0);
         assert.deepEqual(await choice.locator('[data-opening-choice]').evaluateAll(buttons =>
             buttons.map(button => button.getAttribute('aria-pressed'))), ['false', 'false']);
         const cardStyles = () => choice.locator('[data-opening-choice]').evaluateAll(buttons => buttons.map(button => {
@@ -110,20 +107,6 @@ try {
         assert(await choice.evaluate(dialog => dialog === document.activeElement));
         assert.equal(await choice.locator('.glyph-special-reset').evaluate(dot =>
             getComputedStyle(dot).backgroundColor), initialCards[0][2]);
-        for (const action of [continueButton, eclipse]) {
-            assert.equal((await action.textContent()).trim(), '');
-            assert(await action.getAttribute('aria-label'));
-            assert.equal(await action.getAttribute('title'), null);
-            const halo = action.locator('.opening-choice-halo');
-            assert(await halo.isVisible());
-            assert.equal(await halo.evaluate(el => getComputedStyle(el).boxShadow), 'none');
-        }
-        const actions = await choice.locator('.opening-choice-actions').boundingBox();
-        const buttons = await Promise.all([continueButton.boundingBox(), eclipse.boundingBox()]);
-        const centers = buttons.map(({ x, width }) => x + width / 2);
-        assert(buttons.every(({ width, height }) => width >= 44 && height >= 44));
-        assert(Math.abs((centers[0] + centers[1]) / 2 - (actions.x + actions.width / 2)) < 1);
-        assert(Math.abs(centers[1] - centers[0]) < 60, 'both actions form a compact, centered pair');
         assert.equal(await choice.locator('.opening-choice-mark svg').innerHTML(), await control.locator('svg').innerHTML());
         assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
@@ -134,9 +117,16 @@ try {
         await tap(choice.locator('[data-opening-choice=create]'));
         assert(await choice.isVisible(), 'selection keeps the modal open');
         assert.equal(await choice.evaluate(el => el.offsetHeight), dialogHeight);
-        assert(await eclipse.isEnabled(), 'reset can be used immediately after the first selection');
-        assert(await continueButton.isEnabled());
-        assert.deepEqual(await actionSurfaces(), unselectedSurfaces);
+        assert(await eclipse.isVisible() && await eclipse.isEnabled());
+        assert(await continueButton.isVisible() && await continueButton.isEnabled());
+        assert(await choice.getByRole('button', { name: 'Mine', exact: true }).isVisible());
+        assert(await choice.getByRole('button', { name: 'Origin', exact: true }).isVisible());
+        const actionBounds = await actions.boundingBox();
+        const buttons = await Promise.all([continueButton.boundingBox(), eclipse.boundingBox()]);
+        const centers = buttons.map(({ x, width }) => x + width / 2);
+        assert(buttons.every(({ width, height }) => width >= 44 && height >= 44));
+        assert(Math.abs((centers[0] + centers[1]) / 2 - (actionBounds.x + actionBounds.width / 2)) < 1);
+        assert(Math.abs(centers[1] - centers[0]) < 100, 'Mine and Origin form a compact, centered pair');
         assert.equal(await continueButton.evaluate(el => getComputedStyle(el).color), 'rgb(245, 206, 128)');
         assert.equal(await eclipse.evaluate(el => getComputedStyle(el).color), 'rgb(201, 211, 223)');
         assert.equal(await choice.locator('[data-opening-choice=create]').getAttribute('aria-pressed'), 'true');
@@ -148,7 +138,7 @@ try {
         await tapAt(page.locator('#boardCanvas'));
         assert.notDeepEqual((await state()).pixels, initial.pixels, 'the next tap can draw normally');
 
-        const resetThroughEclipse = async (mode, expectedSize) => {
+        const resetThroughOrigin = async (mode, expectedSize) => {
             await page.evaluate(() => {
                 localStorage.setItem('colorGridSimulationDrawerColors', '["gold","gold","gold"]');
                 localStorage.setItem('colorGridInterfaceZoom', '70');
@@ -183,9 +173,9 @@ try {
 
         await boot(true);
         await tap(gate);
-        assert(await eclipse.isVisible() && await eclipse.isDisabled());
+        assert(await eclipse.isHidden() && await eclipse.isDisabled());
         await tap(choice.locator('[data-opening-choice=create]'));
-        await resetThroughEclipse('create', initial.size);
+        await resetThroughOrigin('create', initial.size);
 
         await boot(true);
         await tap(gate);
@@ -194,10 +184,10 @@ try {
         assert(await choice.isVisible());
         assert.equal(await choice.locator('[data-opening-choice=create]').getAttribute('aria-pressed'), 'false');
         assert.equal(await choice.locator('[data-opening-choice=evolve]').getAttribute('aria-pressed'), 'true');
-        assert(!(await state()).simulation, 'Evolution waits for Continue or the eclipse');
+        assert(!(await state()).simulation, 'Evolution waits for Mine or Origin');
         await page.screenshot({ path: '/tmp/fyi-start-selected-' + (mobile ? 'mobile' : 'desktop') + '.png', animations: 'disabled' });
         assert.equal(await choice.locator('[data-opening-choice=evolve]').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(215, 179, 110)');
-        await resetThroughEclipse('evolve', 249);
+        await resetThroughOrigin('evolve', 249);
         const checkEvolutionBoard = async () => {
             const evolved = await state();
             assert.equal(evolved.selected, 0);

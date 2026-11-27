@@ -3096,38 +3096,36 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .opening-choice-icon svg { width: 29px; height: 29px; }
 .opening-choice-actions {
   display: grid;
-  grid-template-columns: repeat(2, 44px);
+  grid-template-columns: repeat(2, minmax(0, 88px));
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   margin-top: 8px;
-  padding-top: 8px;
+  padding-block: 8px 3px;
   border-top: 1px solid #9f83513d;
+  transition: opacity 280ms ease-out;
+}
+.opening-choice-actions[inert] {
+  visibility: hidden;
+  opacity: 0;
 }
 .opening-choice-action {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 44px;
   padding: 4px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-  color: #c0bcb4;
-  transition: opacity 220ms ease-out;
+  border: 1px solid color-mix(in srgb, currentColor 34%, transparent);
+  border-radius: 7px;
+  background: linear-gradient(155deg, color-mix(in srgb, currentColor 10%, #171719), #191816 75%);
+  font-family: Eurostile, "Bank Gothic", "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-shadow: 0 0 10px color-mix(in srgb, currentColor 38%, transparent);
+  transition: border-color 180ms ease-out;
 }
-.opening-choice-action:disabled { opacity: .42; }
-.opening-choice-action:focus-visible { outline: 1px solid #c6a869; outline-offset: -4px; }
-.opening-choice-halo {
-  width: 19px;
-  height: 19px;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  transition: box-shadow 220ms ease-out, color 220ms ease-out;
-}
-#openingContinue:enabled { color: #f5ce80; --opening-halo-glow: #efb75780; }
-#openingEclipse:enabled { color: #c9d3df; --opening-halo-glow: #b8c9df59; }
-.opening-choice-action:enabled .opening-choice-halo {
-  box-shadow: 0 0 10px var(--opening-halo-glow), inset 0 0 5px var(--opening-halo-glow);
+#openingContinue { color: #f5ce80; }
+#openingEclipse { color: #c9d3df; }
+.opening-choice-action:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
+@media (hover: hover) {
+  .opening-choice-action:hover { border-color: currentColor; }
 }
 #openingEclipseError { margin: 4px 0; font-size: .8rem; }
 #openingResetVeil[open] {
@@ -3155,6 +3153,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 @media (prefers-reduced-motion: reduce) {
   #openingChoiceDialog[open] { animation: none; }
-  .opening-choice-options button, .opening-choice-action, .opening-choice-halo { transition: none; }
+  .opening-choice-options button, .opening-choice-actions, .opening-choice-action { transition: none; }
   #openingResetVeil[open] { animation: none; }
 }
