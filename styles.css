@@ -1960,6 +1960,9 @@ button, .ctrl {
   --sim-drawer-frame: #49694d80;
   --sim-drawer-gradient: linear-gradient(135deg, #14291f, #070e0a);
 }
+#controlsContainer[data-evolution-page="0"][data-drawer-color="pine-green"] {
+  --sim-drawer-diamond-ink: rgb(166 198 163 / 5%);
+}
 [data-drawer-color="ink-violet"] {
   --sim-drawer-lip: #a28abb;
   --sim-drawer-diamond-ink: #bc9ed61a;
