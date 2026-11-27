@@ -61,17 +61,32 @@ const PROFILE_EROSION_STAGES = [
     { 'channels-solid': 3, channels: 4 }
 ];
 
+const FORMER_PROFILE_ONE_CHI_FLOW = ['Harmony', 'Ripples', 'Alexis'];
+const PROFILE_THREE_CHI_FLOW = ['Electric', 'Harmony', 'Alexis'];
+const PROFILE_CHI_FLOW = [['Topography', 'Harmony', 'Ripples'], FORMER_PROFILE_ONE_CHI_FLOW, PROFILE_THREE_CHI_FLOW];
+const PROFILE_DEFAULTS_VERSION = 16;
+
+function chiFlowPresetSlots(sources, reachPercent) {
+    return sources.map(name => ({
+        ...clone(CHI_FLOW_PRESETS[name]),
+        ...(reachPercent === undefined ? {} : { reachPercent })
+    }));
+}
+
+function applyProfileChiFlow(snapshot, index) {
+    const sources = PROFILE_CHI_FLOW[index];
+    snapshot.settings.cycles.chiFlow = chiFlowPresetSlots(sources, index === 2 ? 400 : undefined);
+    if (snapshot.identity) snapshot.identity.chiFlow = {
+        index: 0, sources: [...sources],
+        yoursRules: clone(snapshot.settings.cycles.chiFlow[0])
+    };
+}
+
 function applyProfileOneDefaults(snapshot) {
     Object.assign(snapshot.settings.startup, {
         paletteName: RANDOM_STARTUP_PALETTE, fill: 'random', brushColor: 'none', brushSize: 1, separatorPx: 2, boardSize: 21, symmetry: 'off', interfaceMode: 'creative'
     });
     snapshot.settings.brush.symmetry = 'off';
-    const sources = ['Harmony', 'Ripples', 'Alexis'];
-    snapshot.settings.cycles.chiFlow = sources.map(name => clone(CHI_FLOW_PRESETS[name]));
-    if (snapshot.identity) snapshot.identity.chiFlow = {
-        index: 0, sources,
-        yoursRules: clone(snapshot.settings.cycles.chiFlow[0])
-    };
 }
 
 // Profile 1 supplies every unspecified setting; named rules remain snapshots.
@@ -86,12 +101,6 @@ export function defaultProfileSnapshots(initial) {
         const snapshot = profiles[index];
         Object.assign(snapshot.settings.startup, { paletteName, fill, interfaceMode: 'simulation' });
         snapshot.settings.simulationTheme = theme;
-        snapshot.settings.cycles.chiFlow = ['Electric', 'Harmony', 'Alexis'].map(name =>
-            ({ ...clone(CHI_FLOW_PRESETS[name]), reachPercent: 400 }));
-        if (snapshot.identity) {
-            snapshot.identity.chiFlow = { index: 0, sources: ['Electric', 'Harmony', 'Alexis'],
-                yoursRules: clone(snapshot.settings.cycles.chiFlow[0]) };
-        }
     }
     Object.assign(profiles[2].settings.startup, { boardSize: 15, fill: 'random', separatorPx: 0 });
     profiles[0].settings.startup.separatorPx = 5; // Relative Large.
@@ -120,6 +129,7 @@ export function defaultProfileSnapshots(initial) {
     }
     profiles[2].settings.startup.brushColor = 'lightest';
     profiles.forEach((snapshot, index) => {
+        applyProfileChiFlow(snapshot, index);
         snapshot.settings.rules.erosion.erosionStages = { ...PROFILE_EROSION_STAGES[index] };
         delete snapshot.settings.rules.erosion.erosionEvents;
         delete snapshot.settings.rules.erosion.erosionPace;
@@ -210,7 +220,7 @@ export function createProfileState(initial, storage) {
     initial = validateProfileSnapshot(initial);
     const factories = [0, 1, 2].map(factoryProfileSnapshot);
     const defaults = factories.map(value => defaultComparable(value, value));
-    let state = { version: 1, defaultsVersion: 15, selected: 0,
+    let state = { version: 1, defaultsVersion: PROFILE_DEFAULTS_VERSION, selected: 0,
         profiles: defaultProfileSnapshots(initial).map((snapshot, index) => {
             const baseline = withSavedSessionPreferences(snapshot, factories[index]);
             return { saved: clone(baseline), draft: clone(baseline) };
@@ -224,7 +234,7 @@ export function createProfileState(initial, storage) {
             const value = JSON.parse(text);
             if (value?.version !== 1 || !Number.isInteger(value.selected) || value.selected < 0 || value.selected > 2 ||
                 !Array.isArray(value.profiles) || value.profiles.length !== 3) throw Error('Invalid profiles');
-            state = { version: 1, defaultsVersion: 15, selected: value.selected, profiles: value.profiles.map(profile => ({
+            state = { version: 1, defaultsVersion: PROFILE_DEFAULTS_VERSION, selected: value.selected, profiles: value.profiles.map(profile => ({
                 saved: validateProfileSnapshot(profile.saved), draft: validateProfileSnapshot(profile.draft)
             })) };
             if (!value.defaultsVersion) {
@@ -330,8 +340,7 @@ export function createProfileState(initial, storage) {
                         }
                     }
                     if (equal(snapshot.settings.cycles.chiFlow, previous.cycles.chiFlow)) {
-                        snapshot.settings.cycles.chiFlow = updated.settings.cycles.chiFlow;
-                        if (snapshot.identity) snapshot.identity.chiFlow = updated.identity.chiFlow;
+                        applyProfileChiFlow(snapshot, 0);
                     }
                 }
             }
@@ -407,6 +416,25 @@ export function createProfileState(initial, storage) {
                         if (identity?.sources[0] === 'yours' && equal(identity.yoursRules, paint4) && equal(slots[0], paint4)) {
                             slots[0] = clone(defaultGameOfLifeRules);
                             identity.yoursRules = clone(defaultGameOfLifeRules);
+                        }
+                    }
+                }
+            }
+            if ((value.defaultsVersion || 0) < 16) {
+                const previousSources = [FORMER_PROFILE_ONE_CHI_FLOW, PROFILE_THREE_CHI_FLOW];
+                for (const [index, sources] of previousSources.entries()) {
+                    const previousSlots = chiFlowPresetSlots(sources, index === 1 ? 400 : undefined);
+                    const profile = state.profiles[index];
+                    for (const snapshot of [profile.saved, profile.draft]) {
+                        const identity = snapshot.identity?.chiFlow;
+                        if (!equal(snapshot.settings.cycles.chiFlow, previousSlots) ||
+                            (identity && !equal(identity.sources, sources))) continue;
+                        applyProfileChiFlow(snapshot, index);
+                        if (identity) {
+                            snapshot.identity.chiFlow.index = identity.index;
+                            if (!equal(identity.yoursRules, previousSlots[0])) {
+                                snapshot.identity.chiFlow.yoursRules = identity.yoursRules;
+                            }
                         }
                     }
                 }
