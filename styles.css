@@ -1694,6 +1694,9 @@ button, .ctrl {
 .technician-reset-button:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 3px; }
 .technician-reset-button.reset-complete svg { animation: workspace-reset-orbit .9s ease-in-out; }
 #workspaceResetStatus { margin: 10px 0 0; }
+.technician-update-section .init-settings-note { margin: 8px 0 0; }
+.technician-update-section .init-settings-note:empty { margin: 0; }
+#btnTechnicianUpdate:disabled { opacity: .6; cursor: default; }
 #workspaceResetStatus:empty { display: none; }
 @keyframes workspace-reset-orbit { from { transform: rotate(-180deg); opacity: .4; } to { transform: rotate(0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .technician-reset-button.reset-complete svg { animation: none; } }

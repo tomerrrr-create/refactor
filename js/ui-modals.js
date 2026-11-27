@@ -1735,8 +1735,28 @@ export function initializeModals(appContext) {
     smoothNotice.addEventListener('close', () => {
         if (app.dom.technicianDialog.open) smoothRenderingToggle.focus({ preventScroll: true });
     });
+    const technicianUpdate = document.getElementById('btnTechnicianUpdate');
+    const technicianUpdateStatus = document.getElementById('technicianUpdateStatus');
+    technicianUpdate.addEventListener('click', async () => {
+        technicianUpdate.disabled = true;
+        technicianUpdateStatus.textContent = app.getText('pwa_update_checking');
+        try {
+            const { applyLatestVersion } = await import('./pwa.js');
+            if (await applyLatestVersion(() => {
+                if (!app.dom.technicianDialog.open) throw new Error('Technicians closed');
+            })) {
+                window.location.reload();
+                return;
+            }
+            technicianUpdateStatus.textContent = app.getText('pwa_update_current');
+        } catch {
+            technicianUpdateStatus.textContent = app.getText('pwa_update_check_failed');
+        }
+        technicianUpdate.disabled = false;
+    });
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
+        if (!technicianUpdate.disabled) technicianUpdateStatus.textContent = '';
         app.refreshProfiles();
         app.refreshLuminanceAnchor();
         hideWorkspaceResetConfirmation();
