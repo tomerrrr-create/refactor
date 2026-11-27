@@ -125,7 +125,8 @@ try {
         }
         const tech = page.locator('#technicianDialog');
         await tech.waitFor({ state: 'visible' });
-        await tap(page.locator('#btnConfigureFeatures'));
+        const features = page.locator('#btnConfigureFeatures');
+        if (await features.getAttribute('aria-expanded') === 'false') await features.press('Enter');
         await tap(page.locator('#openingChoiceToggle'));
         assert.equal(await page.locator('#openingChoiceToggle').isChecked(), false);
         await boot(true);
