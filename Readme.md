@@ -129,8 +129,9 @@ Game of Life and Chi Flow have three configurable cycle positions, represented b
 | --- | --- | --- | --- |
 | Game of Life, profiles 1/2 | Yours, initially Paint 3 rules | Shuffle | Coral |
 | Game of Life, profile 3 | Paint 1 | Shuffle | Coral |
-| Chi Flow, profile 1 | Harmony | Ripples | Alexis |
-| Chi Flow, profiles 2/3 | Electric | Harmony | Alexis |
+| Chi Flow, profile 1 | Topography | Harmony | Ripples |
+| Chi Flow, profile 2 | Harmony | Ripples | Alexis |
+| Chi Flow, profile 3 | Electric | Harmony | Alexis |
 
 The settings toolbar has three symbol buttons for the assigned cycle positions, followed by a reset dot. Opening retains the selected position. Choosing a preset or editing neighbor rules changes that position’s draft; selecting another position retains its pending edits. Save commits all three slots and the selected position; Cancel discards the entire draft. The reset dot explicitly restores all three default assignments while retaining the selected position; the main rule Reset edits the current slot. Last manual rules remain in the compatible Yours metadata.
 
@@ -218,7 +219,7 @@ On a fresh installation, FYI opens profile 1 with luminance sorting, Small relat
 
 All three opening brush sizes are 1 and opening symmetry is Off. Opening uses Startup brush size/mode/symmetry instead of the last live brush; switching profiles within a session still restores their working choices. The separately configured **opening profile** defaults to 1, independent of the last profile selected during a session.
 
-Profile 1's Chi Flow slots are Harmony → Ripples → Alexis, with each preset's own reach. Profiles 2/3 use Electric → Harmony → Alexis at 400% Magnetic Reach. Profile 3's first Game of Life slot is Paint 1. Profile 2 replaces Temperature and Outside in in its sort cycle with Folded Rainbow and Zigzag; profile 3 shares profile 1's sort cycle. Forward/Channel erosion acceleration defaults are I/V, III/V and IV/V for profiles 1/2/3. Both profile Reset and erosion-dialog Reset use the selected profile's factory erosion values.
+Chi Flow defaults to Topography → Harmony → Ripples in profile 1 and Harmony → Ripples → Alexis in profile 2, with each preset’s own reach. Profile 3 uses Electric → Harmony → Alexis at 400% Magnetic Reach. Existing factory-matching cycles in profiles 1 and 2 receive the new defaults on upgrade. Customized cycles retain their choices. Profile 3's first Game of Life slot is Paint 1. Profile 2 replaces Temperature and Outside in in its sort cycle with Folded Rainbow and Zigzag; profile 3 shares profile 1's sort cycle. Forward/Channel erosion acceleration defaults are I/V, III/V and IV/V for profiles 1/2/3. Both profile Reset and erosion-dialog Reset use the selected profile's factory erosion values.
 
 ### Saving, exporting and copying profiles
 
@@ -616,7 +617,7 @@ Chi Flow is a color-index cellular automaton, rather than a classical Abelian sa
 
 An ignition pass operates when the input has between one and 149 active cells. It injects random palette entries in bounded 9×9 areas around those cells. It is stochastic and does not independently ignite a completely empty board. This engine does not apply a general `isGold` exclusion.
 
-Default rules correspond to Harmony. Presets are centralized in `CHI_FLOW_PRESETS` in `constants.js`; the low-level fallback is Yours → Ripples → Nova. Factory profile 1 overrides it with Harmony → Ripples → Alexis, while profiles 2/3 use Electric → Harmony → Alexis at 400% reach. The user can replace any of those positions without changing the engine ID.
+Default rules correspond to Harmony. Presets are centralized in `CHI_FLOW_PRESETS` in `constants.js`; the low-level fallback is Yours → Ripples → Nova. Factory profile 1 overrides it with Topography → Harmony → Ripples. Profile 2 uses Harmony → Ripples → Alexis. Profile 3 uses Electric → Harmony → Alexis at 400% reach. The user can replace any of those positions without changing the engine ID.
 
 ### 7. Turing Patterns (Reaction-Diffusion)
 

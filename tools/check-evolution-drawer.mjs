@@ -30,7 +30,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.waitForFunction(()=>document.getElementById('controlsContainer').classList.contains('sim-mode-active'));await page.waitForTimeout(600);
  assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top||a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId)),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort','erosion','contour'],'fresh entry uses physical left-to-right order');
  const freshCycle=await page.evaluate(()=>drawerTest.state().settings.cycles.chiFlow);
- assert.deepEqual(freshCycle,['Harmony','Ripples','Alexis'].map(name=>CHI_FLOW_PRESETS[name]));
+ assert.deepEqual(freshCycle,['Topography','Harmony','Ripples'].map(name=>CHI_FLOW_PRESETS[name]));
  const freshSwitch=page.locator('#btnEvolutionDrawerInternal');
  for(const start of [10,20]){
   if(config.width<600)await freshSwitch.tap();else await freshSwitch.click();
@@ -160,7 +160,15 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual((await state()).slots,custom);unchanged(initial,await state());
  await reload();assert.deepEqual((await state()).slots,custom,'arrangement survives reopening');assert.equal(await container.getAttribute('data-evolution-page'),'0');
  await page.evaluate(()=>drawerTest.tech());assert.equal(await page.locator('[data-drawer-view]').count(),0);
- for(const index of [1,2]){await tap(page.locator('[data-profile-choice="'+index+'"]'));assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT,'every untouched factory profile starts with the new layout');}
+ const profileCycles = [['Harmony','Ripples','Alexis'], ['Electric','Harmony','Alexis']];
+ for(const [index, sources] of profileCycles.entries()){
+  await tap(page.locator('[data-profile-choice="'+(index+1)+'"]'));
+  const profile=await state();
+  assert.deepEqual(profile.slots,DEFAULT_EVOLUTION_LAYOUT,'every untouched factory profile starts with the new layout');
+  assert.deepEqual(profile.settings.cycles.chiFlow,sources.map(name=>({
+   ...CHI_FLOW_PRESETS[name], ...(index===1 ? {reachPercent:400} : {})
+  })));
+ }
  await tap(page.locator('[data-profile-choice="0"]'));assert.deepEqual((await state()).slots,custom,'each profile retains its own arrangement');
  await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  await open();

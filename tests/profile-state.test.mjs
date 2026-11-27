@@ -131,7 +131,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     expected.simulationPlaybackTheme = 'gold';
     expected.rules.erosion.erosionStages.channels = 4;
     Object.assign(expected.startup, { paletteName: '@random', fill: 'random', brushColor: 'none', separatorPx: 2, boardSize: 21, symmetry: 'off' });
-    expected.cycles.chiFlow = ['Harmony', 'Ripples', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
+    expected.cycles.chiFlow = ['Topography', 'Harmony', 'Ripples'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
     assert.deepEqual(one, expected);
     assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
     assert.equal(two.startup.fill, 'random');
@@ -142,10 +142,11 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     assert.equal(three.startup.brushSize, 1);
     assert.equal(three.brush.size, 1);
     assert.deepEqual(snapshots.map(s => s.settings.simulationTheme), ['gold', 'gold', 'teal']);
+    assert.deepEqual(two.cycles.chiFlow, ['Harmony', 'Ripples', 'Alexis'].map(name => CHI_FLOW_PRESETS[name]));
+    assert.deepEqual(three.cycles.chiFlow.map(r => r.flow), [[1], [3, 5, 7], [4, 5, 6, 7, 8]]);
+    assert(three.cycles.chiFlow.every(r => r.reachPercent === 400));
     for (const settings of [two, three]) {
         assert.equal(settings.startup.interfaceMode, 'simulation');
-        assert.deepEqual(settings.cycles.chiFlow.map(r => r.flow), [[1], [3, 5, 7], [4, 5, 6, 7, 8]]);
-        assert(settings.cycles.chiFlow.every(r => r.reachPercent === 400));
         assert.deepEqual({ ...settings.rules, erosion: one.rules.erosion }, one.rules);
         assert.equal(settings.simulationInit.boardSize, one.simulationInit.boardSize);
         assert.deepEqual(settings.smoothing, one.smoothing);
@@ -401,10 +402,51 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
     state.persist();
     assert.deepEqual(createProfileState(initial(), disk).draft(), state.draft());
     const factory = factoryProfileSnapshot(0);
-    assert.deepEqual(factory.identity.chiFlow.sources, ['Harmony','Ripples','Alexis']);
+    assert.deepEqual(factory.identity.chiFlow.sources, ['Topography','Harmony','Ripples']);
     assert.equal(factory.identity.chiFlow.index, 0);
-    assert.deepEqual(factory.identity.chiFlow.yoursRules, CHI_FLOW_PRESETS.Harmony);
+    assert.deepEqual(factory.identity.chiFlow.yoursRules, CHI_FLOW_PRESETS.Topography);
     assert.equal(loadProfileStartup(initial().settings.startup, storage()).paletteName, '@random');
+});
+
+test('version 16 updates previous factory Chi Flow cycles and preserves saved custom cycles', () => {
+    const previous = [factoryProfileSnapshot(0), factoryProfileSnapshot(1), factoryProfileSnapshot(2)];
+    for (const [index, sources] of [['Harmony', 'Ripples', 'Alexis'], ['Electric', 'Harmony', 'Alexis']].entries()) {
+        const snapshot = previous[index];
+        const slots = sources.map(name => ({
+            ...structuredClone(CHI_FLOW_PRESETS[name]), ...(index === 1 ? { reachPercent: 400 } : {})
+        }));
+        snapshot.settings.cycles.chiFlow = slots;
+        snapshot.identity.chiFlow = { index: 1, sources, yoursRules: structuredClone(slots[0]) };
+    }
+    const personalRules = { awakening: [1], flow: [2, 4], reach: 2 };
+    previous[0].identity.chiFlow.yoursRules = personalRules;
+    const profiles = previous.map(snapshot => ({ saved: snapshot, draft: structuredClone(snapshot) }));
+    const disk = storage();
+    const oldStore = () => disk.setItem(PROFILE_STORAGE_KEY, JSON.stringify({
+        version: 1, defaultsVersion: 15, selected: 0, profiles
+    }));
+    oldStore();
+    const upgraded = createProfileState(initial(), disk);
+    for (const index of [0, 1]) {
+        const factory = factoryProfileSnapshot(index), draft = upgraded.draft(index);
+        assert.deepEqual(draft.settings.cycles.chiFlow, factory.settings.cycles.chiFlow);
+        assert.deepEqual(draft.identity.chiFlow.sources, factory.identity.chiFlow.sources);
+        assert.equal(draft.identity.chiFlow.index, 1);
+        assert.deepEqual(draft.identity.chiFlow.yoursRules, index === 0 ? personalRules : factory.identity.chiFlow.yoursRules);
+    }
+    assert.deepEqual(upgraded.draft(2).settings.cycles.chiFlow, previous[2].settings.cycles.chiFlow);
+    upgraded.persist();
+    assert.deepEqual(createProfileState(initial(), disk).draft(0), upgraded.draft(0));
+
+    previous[0].settings.cycles.chiFlow[1].reachPercent = 200;
+    previous[1].settings.cycles.chiFlow[2] = structuredClone(CHI_FLOW_PRESETS.Nova);
+    previous[1].identity.chiFlow.sources[2] = 'Nova';
+    oldStore();
+    const custom = createProfileState(initial(), disk);
+    for (const [index, old] of previous.entries()) {
+        assert.deepEqual(custom.draft(index).settings.cycles.chiFlow, old.settings.cycles.chiFlow);
+        assert.deepEqual(custom.draft(index).identity.chiFlow, old.identity.chiFlow);
+    }
 });
 
 test('profile one opens at 21 with small separators and symmetry off without changing other profiles', () => {
@@ -449,12 +491,12 @@ test('version 11 updates former profile-one defaults without losing custom draft
     disk.setItem(PROFILE_STORAGE_KEY,JSON.stringify({version:1,defaultsVersion:10,selected:0,profiles}));
     const state=createProfileState(initial(),disk);state.persist();
     const saved=JSON.parse(disk.getItem(PROFILE_STORAGE_KEY));
-    assert.equal(saved.defaultsVersion,15);
+    assert.equal(saved.defaultsVersion,16);
     assert.deepEqual(saved.profiles[0].saved.settings.startup,factoryProfileSnapshot(0).settings.startup);
     assert.deepEqual(state.draft(),profiles[0].draft);
     assert.deepEqual(state.draft(1),profiles[1].draft);assert.deepEqual(state.draft(2),profiles[2].draft);
     assert.deepEqual(saved.profiles[0].saved.settings.cycles.gameOfLife,factoryProfileSnapshot(0).settings.cycles.gameOfLife);
-    assert.deepEqual(saved.profiles[0].saved.settings.cycles.chiFlow,['Harmony','Ripples','Alexis'].map(name=>CHI_FLOW_PRESETS[name]));
+    assert.deepEqual(saved.profiles[0].saved.settings.cycles.chiFlow,['Topography','Harmony','Ripples'].map(name=>CHI_FLOW_PRESETS[name]));
     assert.deepEqual(createProfileState(initial(),disk).draft(),state.draft());
 });
 
