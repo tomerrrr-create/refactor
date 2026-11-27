@@ -1967,10 +1967,10 @@ button, .ctrl {
   --sim-drawer-gradient: linear-gradient(135deg, #291b38, #110a1a);
 }
 :root[data-individual-drawer-colors] [data-drawer-color="warm-charcoal"] {
-  --sim-drawer-lip: #a19a91;
-  --sim-drawer-diamond-ink: #c5b9ac16;
-  --sim-drawer-frame: #61595280;
-  --sim-drawer-gradient: linear-gradient(135deg, #25221f, #100e0d);
+  --sim-drawer-lip: #a39e98;
+  --sim-drawer-diamond-ink: #d9d2ca1a;
+  --sim-drawer-frame: #716b6480;
+  --sim-drawer-gradient: linear-gradient(135deg, #252423, #100f0f);
 }
 #controlsContainer.sim-mode-active #simModeBackground {
   position: relative;
@@ -3132,6 +3132,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   animation: opening-choice-reveal 360ms cubic-bezier(.2,.7,.3,1) both;
 }
 #openingChoiceDialog::backdrop { background: #0009; }
+.opening-choice-mark {
+  display: grid;
+  place-items: center;
+  margin: 1px auto 4px;
+  color: #8d7954;
+}
+.opening-choice-mark svg { width: 23px; height: 23px; }
 .opening-choice-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

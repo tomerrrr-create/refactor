@@ -75,11 +75,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const initialBackdrop=await drawerBackdrop();
  assert.match(initialBackdrop,/rgb\(15, 23, 42\)/);
  assert(await keepDrawers.isChecked());
+ await chooseColor(1,'gold');
+ const goldBackdrop=await drawerBackdrop();
+ await chooseColor(1,'warm-charcoal');
+ assert.equal(await swatches.first().locator('[aria-pressed=true]').getAttribute('data-drawer-color'),'warm-charcoal');
+ assert.match(await drawerBackdrop(),/rgb\(37, 36, 35\)/);
+ assert.notEqual(await drawerBackdrop(),goldBackdrop);
  for (const [drawer,color] of newDrawerColors.entries()) await chooseColor(drawer+1,color);
  assert.match(await drawerBackdrop(),/rgb\(20, 41, 31\)/);
  const editedBackdrop=await drawerBackdrop();
  await tap('#evolutionDrawerDialog [data-close]');
- for(const expected of [/rgb\(41, 27, 56\)/,/rgb\(37, 34, 31\)/,/rgb\(20, 41, 31\)/]){
+ for(const expected of [/rgb\(41, 27, 56\)/,/rgb\(37, 36, 35\)/,/rgb\(20, 41, 31\)/]){
   await tap('#btnEvolutionDrawerInternal');assert.match(await drawerBackdrop(),expected);
  }
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
@@ -104,7 +110,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  for(const [drawer,color] of newDrawerColors.entries()){
   assert.equal(await swatches.nth(drawer).locator('[aria-pressed=true]').getAttribute('data-drawer-color'),color);
  }
- await chooseColor(1,'blue');await chooseColor(2,'gold');await chooseColor(3,'burgundy');
+ const beforeReset=await state();
+ await tap('#evolutionDrawerDialog [data-reset]');
+ for(const [drawer,color] of defaultDrawerColors.entries()){
+  assert.equal(await swatches.nth(drawer).locator('[aria-pressed=true]').getAttribute('data-drawer-color'),color);
+ }
+ assert.equal(await drawerBackdrop(),initialBackdrop);
+ assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridSimulationDrawerColors')),JSON.stringify(defaultDrawerColors));
+ assert.equal((await state()).settings.simulationPlaybackTheme,beforeReset.settings.simulationPlaybackTheme);
  await tap('#evolutionDrawerDialog [data-close]');await tech();
  if(await page.locator('#btnConfigureDisplay').getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
  await keepDrawers.uncheck();await tap('#btnTechnicianCloseTop');await map();

@@ -177,6 +177,15 @@ export function getThemeColorLabel(color) {
 export function setDrawerColor(page, color) {
   if (!Number.isInteger(page) || !DEFAULT_DRAWER_COLORS[page] || !SIMULATION_DRAWER_COLORS.includes(color)) return;
   drawerColors[page] = color;
+  persistDrawerColors();
+}
+
+export function resetDrawerColors() {
+  drawerColors = [...DEFAULT_DRAWER_COLORS];
+  persistDrawerColors();
+}
+
+function persistDrawerColors() {
   try { localStorage.setItem(DRAWER_COLORS_STORAGE_KEY, JSON.stringify(drawerColors)); } catch {}
 }
 

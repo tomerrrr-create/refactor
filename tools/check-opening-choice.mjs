@@ -73,8 +73,10 @@ try {
         await choice.waitFor({ state: 'visible' });
         assert.deepEqual(await state(), initial, 'the opening tap does not draw or log');
         assert.equal(await choice.getAttribute('dir'), mobile ? 'rtl' : 'ltr');
-        assert.deepEqual(await choice.locator('button').allTextContents().then(text => text.map(label => label.trim())), ['Creation', 'Evolution']);
-        assert.equal((await choice.textContent()).replace(/\s+/g, ' ').trim(), 'Creation Evolution');
+        const labels = mobile ? ['יצירה', 'אבולוציה'] : ['Creation', 'Evolution'];
+        assert.equal((await choice.textContent()).replace(/\s+/g, ' ').trim(), labels.join(' '));
+        assert.equal(await choice.locator('.opening-choice-mark svg').innerHTML(), await control.locator('svg').innerHTML());
+        assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
             await page.locator('#btnContourColorLuminance svg').innerHTML());
         assert(await choice.locator('[data-opening-choice=create] .glyph-special-reset').isVisible());
