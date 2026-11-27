@@ -2,8 +2,9 @@ import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js'
 import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
 import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,isFibonacciColorAdvance,normalizeFibonacciColorAdvance,createFibonacciState,setFibonacciMode,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
-import {CLASSIC_CRYSTAL_SETTINGS,DEFAULT_CRYSTAL_SETTINGS,validateCrystalSettings} from './simulations/fibonacci-crystal.js';
-import { MAP_DEFAULTS, seedFibonacciMap, validateMapSettings } from './simulations/fibonacci-maps.js';
+import {CLASSIC_CRYSTAL_SETTINGS,DEFAULT_CRYSTAL_PREFERENCES,validateCrystalSettings} from './simulations/fibonacci-crystal.js';
+import { DEFAULT_MAP_PREFERENCES, seedFibonacciMap, validateMapSettings } from './simulations/fibonacci-maps.js';
+import { restorePatternGrowthPreference } from './simulations/pattern-growth.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
@@ -93,8 +94,8 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let resonanceCycle=loadResonanceCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
       let fibonacciState = null, fibonacciColorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE;
-      let fibonacciCrystalSettings = DEFAULT_CRYSTAL_SETTINGS;
-      let fibonacciMapSettings = { ...MAP_DEFAULTS };
+      let fibonacciCrystalSettings = DEFAULT_CRYSTAL_PREFERENCES;
+      let fibonacciMapSettings = { ...DEFAULT_MAP_PREFERENCES };
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
       let cymaticsState=null,cymaticsRules={...INITIAL_CYMATICS_RULES},cymaticsFrequencies=createCymaticsFrequencies(),cymaticsStrengths=createCymaticsStrengths(),replayCymaticsRules=null,cymaticsSettingsUI=null;
       let evolutionTuning = validateEvolutionTuning(INITIAL_EVOLUTION_TUNING);
@@ -1500,7 +1501,7 @@ case 'brightnessEvo':
                 case 'ink': boardState=runInkEvolution(context); break;
                 case 'oil': boardState=runOilEvolution(context); break;
                 case 'network': boardState=runNetworkEvolution(context); break;
-                case 'fibonacci': boardState = runFibonacciGeneration(context, getFibonacciState()); break;
+                case 'fibonacci': boardState = runFibonacciEvolution(context); break;
             case 'islands': boardState = runIslandsGeneration(context, islandsSession); break;
             case 'gravitationalSort': nextState = Simulations.runGravitationalSortGeneration({...context, gravitationalSortRules:getActiveGravityRules()}); boardState = nextState; break;
             case 'erosion': nextState = Simulations.runErosionGeneration(context); boardState = nextState; break;
@@ -1642,7 +1643,7 @@ case 'brightnessEvo':
                 case 'ink': boardState=runInkEvolution(context); break;
                 case 'oil': boardState=runOilEvolution(context); break;
                 case 'network': boardState=runNetworkEvolution(context); break;
-                case 'fibonacci': boardState = runFibonacciGeneration(context, getFibonacciState()); break;
+                case 'fibonacci': boardState = runFibonacciEvolution(context); break;
                 case 'islands':
                     boardState = runIslandsGeneration(context, islandsSession);
                     break;
@@ -2528,13 +2529,16 @@ if (simulationName === 'magnet') {
             if (fibonacciState) fibonacciState.colorAdvance = fibonacciColorAdvance;
         }
         if (preferences.fibonacciCrystal) {
-            fibonacciCrystalSettings = { ...preferences.fibonacciCrystal };
+            fibonacciCrystalSettings = restorePatternGrowthPreference(preferences.fibonacciCrystal, DEFAULT_CRYSTAL_PREFERENCES);
             if (fibonacciState?.mode === 'crystal') fibonacciState.crystalSettings = fibonacciCrystalSettings;
         }
         if (preferences.fibonacciMaps) {
-            fibonacciMapSettings = { ...fibonacciMapSettings, ...preferences.fibonacciMaps };
-            const savedMap = preferences.fibonacciMaps[fibonacciState?.mode];
-            if (savedMap) fibonacciState.map = { ...fibonacciState.map, settings: savedMap };
+            for (const [mode, settings] of Object.entries(preferences.fibonacciMaps)) {
+                fibonacciMapSettings[mode] = restorePatternGrowthPreference(settings, DEFAULT_MAP_PREFERENCES[mode]);
+            }
+            if (fibonacciState?.map && Object.hasOwn(preferences.fibonacciMaps, fibonacciState.mode)) {
+                fibonacciState.map = { ...fibonacciState.map, settings: fibonacciMapSettings[fibonacciState.mode] };
+            }
         }
         for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible], ['fibonacci', preferences.fibonacciVisible]]) {
             if (visible === undefined) continue;
@@ -3976,6 +3980,13 @@ function resetFibonacciRuntime(previous = fibonacciState, mode = previous?.mode 
 function getFibonacciState() {
     if (fibonacciState?.n !== n) resetFibonacciRuntime();
     return fibonacciState;
+}
+
+function runFibonacciEvolution(context) {
+    const recordedPalette = isMacroPlaying || isExecutingMacroCommand ? macroPaletteContext.recordedIndex() : null;
+    return runFibonacciGeneration({
+        ...context, growthPaletteSize: C.PALETTES[recordedPalette]?.colors.length
+    }, getFibonacciState());
 }
 
 function restoreFibonacciState(state) {
@@ -6555,6 +6566,7 @@ else if (action.eventName === 'Invert Colors') {
                     (fibonacciState?.mode === 'crystal' ? fibonacciState.crystalSettings ?? CLASSIC_CRYSTAL_SETTINGS : fibonacciCrystalSettings))
             } }),
             getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode, fibonacci: fibonacciState?.mode })[simulation],
+            getTuningPaletteSize: paletteLen,
             getEvolutionTuningTrigger: simulation => simulation === 'fibonacci'
                 ? PATTERN_EVOLUTIONS.find(({ id }) => id === fibonacciState?.mode)?.button : undefined,
             canEditEvolutionTuning: simulation => armedSimulation === simulation && !(simulation==='islands'&&islandsSession?.mode==='oil') && experimentalSimulations.visible(activeEvolutionControl()) && !isBreathing && !isMacroLoaded && !isMacroPlaying,

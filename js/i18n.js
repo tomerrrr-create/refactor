@@ -154,6 +154,7 @@ export const translations = {
   tuning_crystal_preset_bold: {en:'Bold Edges',he:'קווים מודגשים',ru:'Чёткие контуры',nl:'Duidelijke randen'},
   tuning_crystal_preset_soft: {en:'Soft Facets',he:'פאות רכות',ru:'Мягкие грани',nl:'Zachte facetten'},
   tuning_growthSpeed: {en:'Growth Speed',he:'קצב צמיחה',ru:'Скорость роста',nl:'Groeisnelheid'},
+  tuning_growth_auto: {en:'Auto',he:'אוטומטי',ru:'Авто',nl:'Auto'},
   tuning_growthSpeed_note: {en:'How quickly the pattern grows across the board.',he:'כמה מהר הדפוס מתפשט על הלוח.',ru:'Скорость распространения узора по полю.',nl:'Hoe snel het patroon zich over het bord uitbreidt.'},
   tuning_tileSize: {en:'Tile Size',he:'גודל המעוינים',ru:'Размер ромбов',nl:'Grootte van de ruiten'},
   tuning_tileSize_note: {en:'Smaller tiles create a denser pattern.',he:'יחידות ריצוף קטנות יוצרות דפוס צפוף יותר.',ru:'Мелкие плитки делают узор плотнее.',nl:'Kleinere tegels maken het patroon dichter.'},
