@@ -3086,8 +3086,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .opening-choice-icon svg { width: 29px; height: 29px; }
 .opening-choice-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(2, 44px);
+  justify-content: center;
+  gap: 8px;
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid #9f83513d;
@@ -3106,10 +3107,17 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .opening-choice-action:disabled { opacity: .42; }
 .opening-choice-action:focus-visible { outline: 1px solid #c6a869; outline-offset: -4px; }
-.opening-choice-action svg { width: 20px; height: 20px; flex: none; }
-#openingContinue:enabled { color: #f2d59e; }
-#openingEclipse:enabled svg {
-  animation: opening-eclipse-glow 5.2s ease-in-out infinite;
+.opening-choice-halo {
+  width: 19px;
+  height: 19px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  transition: box-shadow 220ms ease-out, color 220ms ease-out;
+}
+#openingContinue:enabled { color: #f5ce80; --opening-halo-glow: #efb75780; }
+#openingEclipse:enabled { color: #c9d3df; --opening-halo-glow: #b8c9df59; }
+.opening-choice-action:enabled .opening-choice-halo {
+  box-shadow: 0 0 10px var(--opening-halo-glow), inset 0 0 5px var(--opening-halo-glow);
 }
 #openingEclipseError { margin: 4px 0; font-size: .8rem; }
 #openingResetVeil[open] {
@@ -3127,10 +3135,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   animation: opening-reset-darken 460ms ease-in-out both;
 }
 #openingResetVeil::backdrop { background: transparent; }
-@keyframes opening-eclipse-glow {
-  0%, 100% { opacity: .7; filter: drop-shadow(0 0 1px #d7ab6622); }
-  50% { opacity: 1; filter: drop-shadow(0 0 5px #d7ab6680); }
-}
 @keyframes opening-reset-darken {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -3141,6 +3145,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 @media (prefers-reduced-motion: reduce) {
   #openingChoiceDialog[open] { animation: none; }
-  .opening-choice-options button, .opening-choice-action { transition: none; }
-  #openingEclipse:enabled svg, #openingResetVeil[open] { animation: none; }
+  .opening-choice-options button, .opening-choice-action, .opening-choice-halo { transition: none; }
+  #openingResetVeil[open] { animation: none; }
 }

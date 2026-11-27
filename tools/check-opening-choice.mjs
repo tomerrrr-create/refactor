@@ -108,12 +108,20 @@ try {
             assert.equal((await action.textContent()).trim(), '');
             assert(await action.getAttribute('aria-label'));
             assert.equal(await action.getAttribute('title'), null);
-            assert(await action.locator('svg').isVisible());
+            const halo = action.locator('.opening-choice-halo');
+            assert(await halo.isVisible());
+            assert.equal(await halo.evaluate(el => getComputedStyle(el).boxShadow), 'none');
         }
+        const actions = await choice.locator('.opening-choice-actions').boundingBox();
+        const buttons = await Promise.all([continueButton.boundingBox(), eclipse.boundingBox()]);
+        const centers = buttons.map(({ x, width }) => x + width / 2);
+        assert(buttons.every(({ width, height }) => width >= 44 && height >= 44));
+        assert(Math.abs((centers[0] + centers[1]) / 2 - (actions.x + actions.width / 2)) < 1);
+        assert(Math.abs(centers[1] - centers[0]) < 60, 'both actions form a compact, centered pair');
         assert.equal(await choice.locator('.opening-choice-mark svg').innerHTML(), await control.locator('svg').innerHTML());
         assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
-            await page.locator('#btnContourColorLuminance svg').innerHTML());
+            await page.locator('#iconGsUp').innerHTML());
         assert(await choice.locator('[data-opening-choice=create] .glyph-special-reset').isVisible());
         await page.screenshot({ path: '/tmp/fyi-start-choice-' + (mobile ? 'mobile' : 'desktop') + '.png', animations: 'disabled' });
         const dialogHeight = await choice.evaluate(el => el.offsetHeight);
@@ -123,6 +131,8 @@ try {
         assert(await eclipse.isEnabled(), 'reset can be used immediately after the first selection');
         assert(await continueButton.isEnabled());
         assert.deepEqual(await actionSurfaces(), unselectedSurfaces);
+        assert.equal(await continueButton.evaluate(el => getComputedStyle(el).color), 'rgb(245, 206, 128)');
+        assert.equal(await eclipse.evaluate(el => getComputedStyle(el).color), 'rgb(201, 211, 223)');
         assert.equal(await choice.locator('[data-opening-choice=create]').getAttribute('aria-pressed'), 'true');
         assert.deepEqual((await cardStyles())[1], initialCards[1], 'only the clicked card receives the gold fill');
         await tap(continueButton);
