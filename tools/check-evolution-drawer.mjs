@@ -11,7 +11,7 @@ const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://l
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
 try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:375,height:667},{lang:'nl',width:1024,height:768}].filter(c=>!process.env.DRAWER_LANG||c.lang===process.env.DRAWER_LANG)){
- const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block',reducedMotion:config.lang==='he'?'reduce':'no-preference'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block',reducedMotion:config.lang==='he'?'reduce':'no-preference'});await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridOpeningChoice','false');},config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.drawerTest={
  setup:()=>{pauseLife();resetArmedState();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=5+i%12;t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();},
@@ -180,19 +180,37 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await checkBackdrop(2);
  }
  await page.screenshot({path:path.join(artifacts,config.lang+'-patterns-burgundy.png'),animations:'disabled'});
- assert.equal(await trigger.locator('.drawer-page-number').textContent(),'3');
+ assert.equal(await trigger.locator('.drawer-page-number').textContent(),'III');
+ const romanStyle=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>{
+  const style=getComputedStyle(e),glyph=getComputedStyle(e.querySelector('.drawer-page-number'));
+  return {border:style.borderTopWidth,background:style.backgroundColor,lip:getComputedStyle(e,'::before').display,ink:glyph.color,font:glyph.fontFamily};
+ });
+ const romanAtRest=await romanStyle();
+ assert.equal(romanAtRest.border,'0px');
+ assert.equal(romanAtRest.background,'rgba(0, 0, 0, 0)');
+ assert.equal(romanAtRest.lip,'none');
+ assert.equal(romanAtRest.ink,'rgb(187, 192, 198)');
+ assert.match(romanAtRest.font,/Georgia/);
+
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(20).filter(Boolean));
  for(const drawer of ['2','0','1']){
   assert.equal(await pageIndex(),drawer);
+  const numeral=['I','II','III'][Number(drawer)];
+  assert.equal(await trigger.locator('.drawer-page-number').textContent(),numeral);
+  assert(await trigger.locator('.drawer-page-number').evaluate(e=>e.offsetWidth<e.parentElement.clientWidth));
+  assert.deepEqual(await trigger.boundingBox(),position);
   await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});
   assert.equal(await pageIndex(),drawer,'short upward swipe opens the map without navigating');
-  assert.equal(await dialog.locator('.drawer-slots').count(),3);assert.equal(await dialog.locator('.drawer-reserved-slot').count(),3);
+  assert.equal(await dialog.locator('.drawer-slots').count(),3);
+  assert.deepEqual(await dialog.locator('.drawer-reserved-slot .drawer-page-number').allTextContents(),['I','II','III']);
+  assert.deepEqual(await dialog.locator('.drawer-pages h3').allTextContents(),['Life','Pulse','Geometry']);
   await tap(dialog.locator('[data-cancel]'));await tap(trigger);
   await checkBackdrop((Number(drawer)+1)%3);
  }
  assert.equal(await pageIndex(),'2');
  await tap(page.locator('#btnPenroseCrystal'));await tap(page.locator('#btnPlayPauseLife'));
  const playback=await state();assert(playback.playing);
+ assert.deepEqual(await romanStyle(),romanAtRest,'the unframed silver numeral stays stable during playback');
  assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).opacity),'1');
  await checkBackdrop(2);
  await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});

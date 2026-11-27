@@ -4,6 +4,9 @@ import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
 import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId, evolutionSlotOrder } from './evolution-drawer-settings.js';
 
+const DRAWER_NAMES = ['Life', 'Pulse', 'Geometry'];
+const DRAWER_NUMERALS = ['I', 'II', 'III'];
+
 export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,showPatterns=()=>false,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
@@ -31,7 +34,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const displaySlots=()=>{const slots=slotsNow();return evolutionSlotOrder(slots,showPatterns()).map(i=>slots[i]);};
     const entry=id=>EVOLUTION_CATALOG.find(e=>e.id===evolutionControlId(id));
     const label=id=>getText(entry(id).key).split('\n')[0];
-    const pageLabel=index=>index===2?getText('drawer_patterns'):getText('drawer_page').replace('{n}',index+1);
+    const pageLabel=index=>DRAWER_NAMES[index];
     const navigateAllowed=()=>canNavigate();
     const canOpenMap=()=>navigateAllowed()&&(canEdit()||(showPatterns()&&isRunning()));
     function icon(id){
@@ -70,11 +73,11 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const active=getActive(),slots=displaySlots();
         const at=active?slots.indexOf(evolutionControlId(active)):-1;
         const otherPage=at>=0&&isVisible(evolutionControlId(active))&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
-        const text=getText('drawer_navigation').replace('{n}',page+1).replace('{total}',pageCount());
+        const text=getText('drawer_navigation').replace('{name}',pageLabel(page)).replace('{n}',page+1).replace('{total}',pageCount());
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);trigger.dataset.page=String(page);
         trigger.toggleAttribute('data-numbered-drawer',showPatterns());
-        symbol.querySelector('.drawer-page-number').textContent=String(page+1);
+        symbol.querySelector('.drawer-page-number').textContent=DRAWER_NUMERALS[page];
         trigger.title=getText('drawer_switch_tooltip');
         trigger.setAttribute('aria-label',[text,activeText,getText('drawer_open_hint'),getText('drawer_reset_modes_hold')].filter(Boolean).join(' — '));
         if(dialog.open){
@@ -138,7 +141,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const colors=tilePalette.originalColors??tilePalette.colors;
         for(let drawer=0;drawer<pageCount();drawer++){
             const section=document.createElement('section'),heading=document.createElement('h3'),grid=document.createElement('div');
-            heading.id=`drawerPageTitle${drawer}`;heading.textContent=pageLabel(drawer);section.append(heading);
+            heading.id=`drawerPageTitle${drawer}`;heading.lang='en';heading.textContent=pageLabel(drawer);section.append(heading);
             grid.className='drawer-slots';grid.setAttribute('role','group');grid.setAttribute('aria-labelledby',heading.id);
             for(let local=0;local<EVOLUTION_PAGE_SIZE;local++){
                 const index=drawer*EVOLUTION_PAGE_SIZE+local,id=draft[order[index]],button=document.createElement('button');
@@ -147,7 +150,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
                     button.className='drawer-reserved-slot';button.disabled=true;button.dataset.page=String(drawer);
                     button.toggleAttribute('data-numbered-drawer',showPatterns());
                     const preview=symbol.cloneNode(true);
-                    preview.querySelector('.drawer-page-number').textContent=String(drawer+1);
+                    preview.querySelector('.drawer-page-number').textContent=DRAWER_NUMERALS[drawer];
                     button.append(preview);button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
                 }
                 if(id&&!isVisible(id)){
