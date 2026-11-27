@@ -1954,6 +1954,24 @@ button, .ctrl {
   --sim-drawer-frame: #6f3a4a80;
   --sim-drawer-gradient: linear-gradient(135deg, #2c141d, #150b10);
 }
+:root[data-individual-drawer-colors] [data-drawer-color="pine-green"] {
+  --sim-drawer-lip: #86a387;
+  --sim-drawer-diamond-ink: #a6c6a31a;
+  --sim-drawer-frame: #49694d80;
+  --sim-drawer-gradient: linear-gradient(135deg, #14291f, #070e0a);
+}
+:root[data-individual-drawer-colors] [data-drawer-color="ink-violet"] {
+  --sim-drawer-lip: #a28abb;
+  --sim-drawer-diamond-ink: #bc9ed61a;
+  --sim-drawer-frame: #694d817f;
+  --sim-drawer-gradient: linear-gradient(135deg, #291b38, #110a1a);
+}
+:root[data-individual-drawer-colors] [data-drawer-color="warm-charcoal"] {
+  --sim-drawer-lip: #a19a91;
+  --sim-drawer-diamond-ink: #c5b9ac16;
+  --sim-drawer-frame: #61595280;
+  --sim-drawer-gradient: linear-gradient(135deg, #25221f, #100e0d);
+}
 #controlsContainer.sim-mode-active #simModeBackground {
   position: relative;
   isolation: isolate;
@@ -2554,7 +2572,13 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   #evolutionDrawerDialog[data-patterns] { width:min(920px,calc(100vw - 24px)); }
   #evolutionDrawerDialog[data-patterns] .drawer-pages { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
-.drawer-color-options { display:flex; justify-content:center; gap:4px; margin-top:4px; }
+#evolutionDrawerDialog .drawer-pages > section { container-type:inline-size; }
+.drawer-color-options {
+  display:grid; grid-template-columns:repeat(3,44px); justify-content:center; margin-top:4px;
+}
+@container (min-width:264px) {
+  .drawer-color-options { grid-template-columns:repeat(6,44px); }
+}
 :root:not([data-individual-drawer-colors]) .drawer-color-options,
 #evolutionDrawerDialog[data-view-only] .drawer-color-options { display:none; }
 .drawer-color-options button {
@@ -3073,4 +3097,76 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   }
   & > #btnBrushMode.brush-continuous svg path { fill: var(--tier-white); }
   & #gapValue { color: var(--tier-white); }
+}
+
+#openingChoiceGate {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  touch-action: none;
+}
+#openingChoiceGate[hidden] { display: none; }
+#openingChoiceGate:focus-visible {
+  outline: 1px solid #c6a869;
+  outline-offset: -5px;
+}
+#openingChoiceDialog {
+  box-sizing: border-box;
+  width: min(300px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 10px;
+  border: 1px solid #9f83515e;
+  border-radius: 18px;
+  background: linear-gradient(155deg, #211e19, #121412 75%);
+  color: #f1e8d6;
+  box-shadow: 0 16px 64px #0009;
+  text-align: center;
+}
+#openingChoiceDialog[open] {
+  animation: opening-choice-reveal 360ms cubic-bezier(.2,.7,.3,1) both;
+}
+#openingChoiceDialog::backdrop { background: #0009; }
+.opening-choice-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+.opening-choice-options button {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 88px;
+  padding: 11px 6px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #e9cca0;
+  font: inherit;
+  font-weight: 500;
+  text-align: center;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.opening-choice-options button:focus-visible {
+  outline: 2px solid #e9cca0;
+  outline-offset: -3px;
+}
+.opening-choice-options button:active { background: #d5aa481f; }
+@media (hover: hover) {
+  .opening-choice-options button:hover { border-color: #aa9052a0; background: #d5aa4816; }
+}
+.opening-choice-icon { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 5px; }
+.opening-choice-icon svg { width: 29px; height: 29px; }
+@keyframes opening-choice-reveal {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #openingChoiceDialog[open] { animation: none; }
+  .opening-choice-options button { transition: none; }
 }

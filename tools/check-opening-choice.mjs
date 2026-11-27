@@ -1,0 +1,165 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
+
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const root = new URL('../dist/', import.meta.url);
+let app = await readFile(new URL('js/app.js', root), 'utf8');
+app = app.replace('      initializeApp();', `window.openingTest = {
+    state: () => ({
+        size: n, pixels: boardState.map(cell => [cell.k, cell.v, cell.isGold]),
+        history: history.length, recipe: artRecipeLog.length, simulation: isSimModeActive,
+        playing: isLifePlaying, selected: selectedColorIndex, lastColor: palette().length - 1,
+        brushSize, separator: separatorPx, settings: {...simulationInitSettings}
+    })
+}; initializeApp().then(() => openingTest.ready = true);`);
+if (!process.env.REAL_SPLASH) {
+    for (const ms of [5000, 1500, 2000]) {
+        app = app.replace('await new Promise(r => setTimeout(r, ' + ms + '));', '');
+    }
+}
+
+const server = createServer(async (req, res) => {
+    try {
+        const file = new URL(req.url, root).pathname.slice(1) || 'index.html';
+        const type = file.endsWith('.js') ? 'text/javascript'
+            : file.endsWith('.css') ? 'text/css'
+            : file.endsWith('.html') ? 'text/html' : 'application/octet-stream';
+        res.setHeader('Content-Type', type);
+        res.end(file === 'js/app.js' ? app : await readFile(new URL(file, root)));
+    } catch {
+        res.writeHead(404);
+        res.end();
+    }
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const base = 'http://127.0.0.1:' + server.address().port;
+const browser = await chromium.launch({
+    headless: true, executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox']
+});
+
+try {
+    for (const mobile of [false, true]) {
+        const context = await browser.newContext({
+            viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 },
+            isMobile: mobile, hasTouch: mobile, serviceWorkers: 'block',
+            reducedMotion: mobile ? 'reduce' : 'no-preference'
+        });
+        await context.addInitScript(lang => localStorage.setItem('userLanguage', lang), mobile ? 'he' : 'en');
+        const page = await context.newPage();
+        const errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        const choice = page.locator('#openingChoiceDialog');
+        const gate = page.locator('#openingChoiceGate');
+        const control = page.locator('#btnToggleSimMode');
+        const tap = locator => mobile ? locator.tap() : locator.click();
+        const coords = (x, y) => mobile ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
+        const tapAt = async locator => {
+            const { x, y, width, height } = await locator.boundingBox();
+            await coords(x + width / 2, y + height / 2);
+        };
+        const state = () => page.evaluate(() => openingTest.state());
+        const boot = async (reload = false) => {
+            if (reload) await page.reload();
+            else await page.goto(base);
+            await page.waitForFunction(() => window.openingTest?.ready);
+            assert.equal(await choice.isVisible(), false, 'the menu waits for a tap');
+        };
+        await boot();
+        assert(await gate.isVisible());
+        assert(await page.locator('#openingChoiceToggle').isChecked());
+        const initial = await state();
+        await tapAt(page.locator('#boardCanvas'));
+        await choice.waitFor({ state: 'visible' });
+        assert.deepEqual(await state(), initial, 'the opening tap does not draw or log');
+        assert.equal(await choice.getAttribute('dir'), mobile ? 'rtl' : 'ltr');
+        assert.deepEqual(await choice.locator('button').allTextContents().then(text => text.map(label => label.trim())), ['Creation', 'Evolution']);
+        assert.equal((await choice.textContent()).replace(/\s+/g, ' ').trim(), 'Creation Evolution');
+        assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
+            await page.locator('#btnContourColorLuminance svg').innerHTML());
+        assert(await choice.locator('[data-opening-choice=create] .glyph-special-reset').isVisible());
+        await page.screenshot({ path: '/tmp/fyi-start-choice-' + (mobile ? 'mobile' : 'desktop') + '.png', animations: 'disabled' });
+        await tap(choice.locator('[data-opening-choice=create]'));
+        await choice.waitFor({ state: 'hidden' });
+        assert.deepEqual(await state(), initial, 'Create keeps the displayed board and its history');
+        assert.equal(await gate.isVisible(), false);
+        await tapAt(page.locator('#boardCanvas'));
+        assert.notDeepEqual((await state()).pixels, initial.pixels, 'the next tap can draw normally');
+
+        await boot(true);
+        await tapAt(control);
+        await choice.waitFor({ state: 'visible' });
+        assert(!(await state()).simulation, 'the opening tap does not activate the toolbar control');
+        await tap(choice.locator('[data-opening-choice=evolve]'));
+        await page.waitForFunction(() => {
+            const state = openingTest.state();
+            return state.simulation && state.size === state.settings.boardSize;
+        });
+        const evolved = await state();
+        assert.equal(evolved.size, 249);
+        assert.equal(evolved.brushSize, evolved.settings.brushSize);
+        assert.equal(evolved.selected, evolved.lastColor);
+        assert.equal(evolved.separator, 0);
+        assert(evolved.pixels.every(([color, value]) => color === 0 && value === 0));
+        assert.equal(evolved.playing, false);
+        assert.equal(await gate.isVisible(), false);
+
+        await boot(true);
+        await coords(8, 8);
+        await choice.waitFor({ state: 'visible' });
+        await page.keyboard.press('Escape');
+        await choice.waitFor({ state: 'hidden' });
+        const { x, y, width, height } = await control.boundingBox();
+        const start = { x: x + width / 2, y: y + height / 2 };
+        if (mobile) {
+            const session = await context.newCDPSession(page);
+            await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [start] });
+            await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...start, y: start.y - 45 }] });
+            await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+            await session.detach();
+        } else {
+            await page.mouse.move(start.x, start.y);
+            await page.mouse.down();
+            await page.mouse.move(start.x, start.y - 45, { steps: 4 });
+            await page.mouse.up();
+        }
+        const tech = page.locator('#technicianDialog');
+        await tech.waitFor({ state: 'visible' });
+        const features = page.locator('#btnConfigureFeatures');
+        if (await features.getAttribute('aria-expanded') === 'false') await features.press('Enter');
+        await tap(page.locator('#openingChoiceToggle'));
+        assert.equal(await page.locator('#openingChoiceToggle').isChecked(), false);
+        await boot(true);
+        assert.equal(await gate.isVisible(), false, 'turning the flag off skips the choice after reload');
+        assert.equal(await page.locator('#openingChoiceToggle').isChecked(), false);
+        await tap(control);
+        await page.waitForFunction(() => openingTest.state().simulation);
+        assert.equal(await choice.isVisible(), false);
+        assert.notEqual((await state()).size, 249, 'ordinary mode switch still retains the board');
+        const boardControl = await control.boundingBox();
+        const holdAt = { x: boardControl.x + boardControl.width / 2, y: boardControl.y + boardControl.height / 2 };
+        if (mobile) {
+            const session = await context.newCDPSession(page);
+            await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [holdAt] });
+            await page.waitForTimeout(720);
+            await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+            await session.detach();
+        } else {
+            await page.mouse.move(holdAt.x, holdAt.y);
+            await page.mouse.down();
+            await page.waitForTimeout(720);
+            await page.mouse.up();
+        }
+        await page.waitForFunction(() => openingTest.state().size === 249);
+        const relativeBrush = ({ selected, lastColor, ...board }) => ({ ...board, brushIsLast: selected === lastColor });
+        assert.deepEqual(relativeBrush(await state()), relativeBrush(evolved),
+            'Evolve and a real hold produce the same board and logger state even if startup chooses different palettes');
+
+        assert.deepEqual(errors, []);
+        console.log(JSON.stringify({ mobile, passed: true }));
+        await context.close();
+    }
+} finally {
+    await browser.close();
+    server.close();
+}

@@ -23,6 +23,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const ctx=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
  await ctx.addInitScript(lang=>{
   localStorage.setItem('userLanguage',lang);
+  localStorage.setItem('colorGridOpeningChoice','false');
   if(localStorage.getItem('colorGridExperimentalSimulationsV1')===null) {
    localStorage.setItem('colorGridExperimentalSimulationsV1','{"patterns":false}');
   }
@@ -55,10 +56,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
 
  assert.deepEqual(await page.locator('#simulationPlaybackThemeSettings [data-theme]').evaluateAll(es=>es.map(e=>e.dataset.theme)),Object.keys(colors));
  const swatches=page.locator('.drawer-color-options');
+ const defaultDrawerColors=['blue','gold','burgundy'];
+ const newDrawerColors=['pine-green','ink-violet','warm-charcoal'];
+ const drawerTargets=await swatches.getByRole('button').evaluateAll(buttons=>buttons.map(button=>{
+  const {width,height}=button.getBoundingClientRect();return {width,height};
+ }));
+ assert.equal(drawerTargets.length,18);
+ assert(drawerTargets.every(({width,height})=>width>=43&&height>=43),'drawer color targets remain touch-sized');
  assert(fresh.patterns);
  assert.equal(await swatches.count(),3);
- for(const [drawer,color] of ['blue','gold','burgundy'].entries()){
-  assert.deepEqual(await swatches.nth(drawer).locator('button').evaluateAll(es=>es.map(e=>e.dataset.drawerColor)),['blue','gold','burgundy']);
+ for(const [drawer,color] of defaultDrawerColors.entries()){
+  assert.deepEqual(await swatches.nth(drawer).locator('button').evaluateAll(es=>es.map(e=>e.dataset.drawerColor)),[...defaultDrawerColors,...newDrawerColors]);
   assert.equal(await swatches.nth(drawer).locator('[aria-pressed=true]').getAttribute('data-drawer-color'),color);
  }
  const chooseColor=async(drawer,color)=>tap('.drawer-pages section:nth-child('+drawer+') [data-drawer-color='+color+']');
@@ -67,11 +75,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const initialBackdrop=await drawerBackdrop();
  assert.match(initialBackdrop,/rgb\(15, 23, 42\)/);
  assert(await keepDrawers.isChecked());
- await chooseColor(1,'burgundy');await chooseColor(2,'blue');await chooseColor(3,'gold');
- assert.match(await drawerBackdrop(),/rgb\(44, 20, 29\)/);
+ for (const [drawer,color] of newDrawerColors.entries()) await chooseColor(drawer+1,color);
+ assert.match(await drawerBackdrop(),/rgb\(20, 41, 31\)/);
  const editedBackdrop=await drawerBackdrop();
  await tap('#evolutionDrawerDialog [data-close]');
- for(const expected of [/rgb\(15, 23, 42\)/,/rgb\(42, 34, 19\)/,/rgb\(44, 20, 29\)/]){
+ for(const expected of [/rgb\(41, 27, 56\)/,/rgb\(37, 34, 31\)/,/rgb\(20, 41, 31\)/]){
   await tap('#btnEvolutionDrawerInternal');assert.match(await drawerBackdrop(),expected);
  }
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
@@ -93,7 +101,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert((await state()).patterns);assert(await keepDrawers.isChecked());assert(await page.locator('#individualDrawerColorsToggle').isChecked());
  assert.equal(await drawerBackdrop(),editedBackdrop);
  await map();
- for(const [drawer,color] of ['burgundy','blue','gold'].entries()){
+ for(const [drawer,color] of newDrawerColors.entries()){
   assert.equal(await swatches.nth(drawer).locator('[aria-pressed=true]').getAttribute('data-drawer-color'),color);
  }
  await chooseColor(1,'blue');await chooseColor(2,'gold');await chooseColor(3,'burgundy');

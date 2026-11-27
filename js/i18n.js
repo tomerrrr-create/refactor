@@ -69,6 +69,7 @@ export const translations = {
   drawer_title: {"en":"Evolution map", "he":"מפת האבולוציות", "ru":"Карта эволюций", "nl":"Evolutiekaart"},
   drawer_instructions: {"en":"Select an evolution, then its destination. Occupied places swap. Save to apply.","he":"בחרו סימולציה ואז מקום יעד. מקומות תפוסים מתחלפים. שמרו כדי להחיל.","ru":"Выберите эволюцию, затем место назначения. Занятые места меняются местами. Сохраните изменения.","nl":"Kies een evolutie en daarna de bestemming. Bezette plekken wisselen. Sla op om toe te passen."},
   drawer_page: {"en":"Drawer {n}","he":"מגרה {n}","ru":"Панель {n}","nl":"Lade {n}"},
+  opening_choice_setting: {en:'Create / Evolve on startup',he:'יצירה / אבולוציה בפתיחה',ru:'Создание / эволюция при запуске',nl:'Maken / evolueren bij het openen'},
   drawer_patterns: {en:'Patterns',he:'תצורות',ru:'Узоры',nl:'Patronen'},
   drawer_color: {en:'{name} color',he:'צבע · {name}',ru:'Цвет · {name}',nl:'Kleur · {name}'},
   individual_drawer_colors: {en:'Individual drawer colors',he:'צבע נפרד לכל מגירה',ru:'Отдельные цвета панелей',nl:'Eigen kleur per lade'},

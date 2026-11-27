@@ -6,8 +6,9 @@ const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
 const GOLD_SORT_EXEMPTION_STORAGE_KEY = 'colorGridGoldExcludeSort';
 const DRAWER_COLORS_STORAGE_KEY = 'colorGridSimulationDrawerColors';
-export const SIMULATION_DRAWER_COLORS = Object.freeze(['blue', 'gold', 'burgundy']);
-let drawerColors = [...SIMULATION_DRAWER_COLORS];
+const DEFAULT_DRAWER_COLORS = Object.freeze(['blue', 'gold', 'burgundy']);
+export const SIMULATION_DRAWER_COLORS = Object.freeze([...DEFAULT_DRAWER_COLORS, 'pine-green', 'ink-violet', 'warm-charcoal']);
+let drawerColors = [...DEFAULT_DRAWER_COLORS];
 const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
 const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
 const DEFAULT_GLOW_PULSE_SECONDS = 3.2;
@@ -18,14 +19,21 @@ let goldTransitionMs = DEFAULT_GOLD_TRANSITION_SECONDS * 1000;
 let goldPlaybackTransition;
 const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
-  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', 'moon-silver': 'Moon Silver', ivory: 'Ivory', 'dark-gray': 'Dark Gray', burgundy: 'Burgundy'},
-  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', 'moon-silver': 'כסף ירחי', ivory: 'שנהב', 'dark-gray': 'אפור כהה', burgundy: 'בורדו'},
-  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', 'moon-silver': 'Лунное серебро', ivory: 'Слоновая кость', 'dark-gray': 'Тёмно-серый', burgundy: 'Бордовый'},
-  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', 'moon-silver': 'Maanzilver', ivory: 'Ivoor', 'dark-gray': 'Donkergrijs', burgundy: 'Bordeaux'}
+  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', 'moon-silver': 'Moon Silver', ivory: 'Ivory', 'dark-gray': 'Dark Gray'},
+  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', 'moon-silver': 'כסף ירחי', ivory: 'שנהב', 'dark-gray': 'אפור כהה'},
+  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', 'moon-silver': 'Лунное серебро', ivory: 'Слоновая кость', 'dark-gray': 'Тёмно-серый'},
+  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', 'moon-silver': 'Maanzilver', ivory: 'Ivoor', 'dark-gray': 'Donkergrijs'}
+};
+
+const DRAWER_COLOR_LABELS = {
+  en: {burgundy: 'Burgundy', 'pine-green': 'Pine Green', 'ink-violet': 'Ink Violet', 'warm-charcoal': 'Warm Charcoal'},
+  he: {burgundy: 'בורדו', 'pine-green': 'ירוק אורן', 'ink-violet': 'סגול דיו', 'warm-charcoal': 'פחם חם'},
+  ru: {burgundy: 'Бордовый', 'pine-green': 'Хвойный зелёный', 'ink-violet': 'Чернильный фиолетовый', 'warm-charcoal': 'Тёплый угольный'},
+  nl: {burgundy: 'Bordeaux', 'pine-green': 'Dengroen', 'ink-violet': 'Inktviolet', 'warm-charcoal': 'Warm antraciet'}
 };
 
 export function isSimulationTheme(value) {
-  return typeof value === 'string' && value !== 'burgundy' && Object.hasOwn(LABELS.en, value);
+  return typeof value === 'string' && Object.hasOwn(LABELS.en, value);
 }
 
 export function getSimulationTheme() {
@@ -162,11 +170,12 @@ export function getDrawerColor(page) {
 }
 
 export function getThemeColorLabel(color) {
-  return (LABELS[getCurrentLang()] || LABELS.en)[color];
+  const language = getCurrentLang();
+  return (LABELS[language] || LABELS.en)[color] ?? (DRAWER_COLOR_LABELS[language] || DRAWER_COLOR_LABELS.en)[color];
 }
 
 export function setDrawerColor(page, color) {
-  if (!Number.isInteger(page) || !SIMULATION_DRAWER_COLORS[page] || !SIMULATION_DRAWER_COLORS.includes(color)) return;
+  if (!Number.isInteger(page) || !DEFAULT_DRAWER_COLORS[page] || !SIMULATION_DRAWER_COLORS.includes(color)) return;
   drawerColors[page] = color;
   try { localStorage.setItem(DRAWER_COLORS_STORAGE_KEY, JSON.stringify(drawerColors)); } catch {}
 }
@@ -211,7 +220,7 @@ export function initializeSimulationTheme(toolbar) {
   initializeSessionSwitch('individualDrawerColorsToggle', 'data-individual-drawer-colors');
   let savedDrawerColors;
   try { savedDrawerColors = JSON.parse(localStorage.getItem(DRAWER_COLORS_STORAGE_KEY)); } catch {}
-  drawerColors = SIMULATION_DRAWER_COLORS.map((color, page) =>
+  drawerColors = DEFAULT_DRAWER_COLORS.map((color, page) =>
     Array.isArray(savedDrawerColors) && SIMULATION_DRAWER_COLORS.includes(savedDrawerColors[page]) ? savedDrawerColors[page] : color
   );
   initializeDurationSlider('glowPulse', GLOW_PULSE_STORAGE_KEY, GLOW_PULSE_SECONDS, DEFAULT_GLOW_PULSE_SECONDS,
