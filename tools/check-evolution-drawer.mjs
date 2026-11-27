@@ -72,10 +72,21 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await dot.count(),1);
  const dotColor=()=>dot.evaluate(e=>getComputedStyle(e).backgroundColor);
  const seenThemes=new Set();
+ const backdrop=page.locator('#simModeBackground');
+ const diamondCount=image=>(image.match(/repeating-linear-gradient/g)??[]).length;
+ const backgroundImage=(pseudo=null)=>backdrop.evaluate((element,pseudo)=>getComputedStyle(element,pseudo).backgroundImage,pseudo);
  for(const theme of ['blue','teal','gold']){
   await page.evaluate(theme=>drawerTest.theme(theme),theme);
   assert.equal(await dotColor(),'rgb(187, 192, 198)');
   seenThemes.add(await trigger.locator('.drawer-internal-symbol').evaluate(e=>getComputedStyle(e,'::before').borderBottomColor));
+  if(theme!=='teal'){
+   const image=await backgroundImage(theme==='gold'?'::before':null);
+   assert.equal(diamondCount(image),2);
+   assert.match(image,/45deg.*28px.*29px/);
+   assert.match(image,theme==='gold'?/rgb\(42, 34, 19\)/:/rgb\(15, 23, 42\)/);
+   await page.waitForTimeout(420);
+   await backdrop.screenshot({path:path.join(artifacts,config.lang+'-diamonds-'+theme+'.png')});
+  }else assert.equal(diamondCount(await backgroundImage('::after')),0);
  }
  assert.equal(seenThemes.size,3,'only the lip takes the resting overlay color');
  assert.equal(await dot.evaluate(e=>getComputedStyle(e).transitionDuration),config.lang==='he'?'0s':'0.18s');
@@ -84,6 +95,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);await page.waitForTimeout(300);
  assert((await dot.boundingBox()).x>firstDot.x,'the same dot moves to the other page');
  assert.equal(await dotColor(),'rgb(187, 192, 198)');
+ assert.equal(diamondCount(await backgroundImage('::before')),2,'Gold uses diamonds on drawer two');
  assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10,20).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
@@ -161,7 +173,6 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.locator('#patternsExperimentToggle').check();await tap(page.locator('#btnTechnicianCloseTop'));
  for(let i=0;i<3&&await pageIndex()!=='2';i++)await tap(trigger);
  assert.equal(await pageIndex(),'2');
- const backdrop=page.locator('#simModeBackground');
  const readBackdrop=()=>backdrop.evaluate(element=>({
   image:getComputedStyle(element).backgroundImage,
   layers:['::before','::after'].map(pseudo=>getComputedStyle(element,pseudo).visibility)

@@ -1934,6 +1934,10 @@ button, .ctrl {
 
 /* Crossfade the decorative backdrop without moving simulation controls. */
 .sim-mode-active #simModeBackground {
+  --sim-drawer-diamond-ink: #9aafd713;
+  --sim-drawer-diamonds:
+    repeating-linear-gradient(45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px),
+    repeating-linear-gradient(-45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px);
   position: relative;
   isolation: isolate;
   border-color: #334155;
@@ -1950,7 +1954,7 @@ button, .ctrl {
   opacity: 0;
   transition: opacity 400ms ease-in-out;
 }
-.sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
+.sim-mode-active #simModeBackground::before { background: var(--sim-drawer-diamonds), linear-gradient(135deg,#2a2213,#100d08); }
 .sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
 :root[data-simulation-theme="blue"] { --sim-rest-color: var(--sim-theme-blue); }
 :root[data-simulation-theme="teal"] { --sim-rest-color: var(--sim-theme-teal); }
@@ -1983,18 +1987,22 @@ button, .ctrl {
   background: var(--sim-neutral-backdrop);
   opacity: 1;
 }
-:root[data-simulation-backdrop-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
+:root[data-simulation-backdrop-theme="blue"] .sim-mode-active #simModeBackground {
+  background: var(--sim-drawer-diamonds), linear-gradient(135deg, #0f172a, #05070d);
+}
+:root[data-simulation-backdrop-theme="gold"] .sim-mode-active #simModeBackground {
+  --sim-drawer-diamond-ink: #dab77913;
+  border-color: #b28b3645;
+}
 :root[data-simulation-backdrop-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
 :root[data-simulation-backdrop-theme="gold"] #simModeBackground::before,
 :root[data-simulation-backdrop-theme="teal"] #simModeBackground::after { opacity: 1; }
 
 #controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground {
+  --sim-drawer-diamond-ink: #d291a313;
   border-color: #6f3a4a80;
   box-shadow: 0 4px 20px #0006;
-  background:
-    repeating-linear-gradient(45deg, transparent 0 28px, #d291a313 28px 29px),
-    repeating-linear-gradient(-45deg, transparent 0 28px, #d291a313 28px 29px),
-    linear-gradient(135deg, #2c141d, #150b10);
+  background: var(--sim-drawer-diamonds), linear-gradient(135deg, #2c141d, #150b10);
 }
 #controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground::before,
 #controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground::after {
