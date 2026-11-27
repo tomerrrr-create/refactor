@@ -82,10 +82,10 @@ try {
             await page.locator('#technicianDialog').waitFor({state:'visible'});
             if (checkMenu) {
                 const panel = page.locator('#technicianSettingsScroll');
-                const actionIds = ['btnTechnicianUpdate', 'btnSimulationModeEditor', 'btnResetWorkspace'];
+                const actionIds = ['btnTechnicianUpdate', 'btnSimulationModeEditor'];
                 const tabIds = ['btnConfigureAbTest', 'btnConfigureDisplay', 'btnConfigureMacro', 'btnConfigureFeatures'];
-                const ids = await panel.locator([...actionIds, ...tabIds, 'profileControls'].map(id => '#' + id).join(',')).evaluateAll(nodes => nodes.map(node => node.id));
-                assert.deepEqual(ids, [...actionIds, ...tabIds, 'profileControls']);
+                const ids = await panel.locator([...actionIds, ...tabIds, 'profileControls', 'btnResetWorkspace'].map(id => '#' + id).join(',')).evaluateAll(nodes => nodes.map(node => node.id));
+                assert.deepEqual(ids, [...actionIds, ...tabIds, 'profileControls', 'btnResetWorkspace']);
                 for (const id of actionIds) assert(await panel.locator('#' + id).evaluate(button => {
                     const rect = button.getBoundingClientRect(), scroller = button.closest('#technicianSettingsScroll').getBoundingClientRect();
                     return rect.top >= scroller.top && rect.bottom <= scroller.bottom;
