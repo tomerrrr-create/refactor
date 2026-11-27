@@ -18,6 +18,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  state:()=>({slots:[...evolutionSlots],board:boardState.map(t=>t.k),logs:[...artRecipeLog],history:history.length,armed:armedSimulation,playing:isLifePlaying,gen:currentGenerationCount,loaded:isMacroLoaded,macro:isMacroPlaying,settings:getWorkspaceSettings()}),
  hidePatterns:()=>{experimentalSimulations.set('patterns',false);evolutionDrawer.applyLayout();},
  hideOptional:()=>{for(const name of ['spiral','breathe','fibonacci'])experimentalSimulations.set(name,false);evolutionDrawer.applyLayout();},
+ palette:group=>switchToPalette(C.PALETTE_GROUPS.find(item=>item.id===group).indexes[0],{adapt:true}),
+ front:()=>fibonacciState?.map?.front??fibonacciState?.crystalFront??0,
  theme:applySimulationTheme,open:()=>evolutionDrawer.open(),arm:armSimulation,play:togglePlayPauseLife,pause:pauseLife,tech:()=>modals.openTechnicianMenu(),loadSettings:importWorkspaceSettings,recipe:async()=>await createArtRecipeFile().text(),macro:playMacro
  };initializeApp().then(()=>drawerTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -247,5 +249,48 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await checkBackdrop(2);
  await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});assert(await dialog.locator('[data-drawer-slot="20"]').isEnabled());
  await tap(dialog.locator('[data-cancel]'));
+ await page.evaluate(()=>{drawerTest.setup();drawerTest.palette('classic');});
+ const growthDialog=page.locator('#fibonacciTuningDialog');
+ const auto=growthDialog.locator('[data-growth-auto]');
+ const speed=growthDialog.locator('#fibonacciTuning_growthSpeed');
+ const output=growthDialog.locator('output[for="fibonacciTuning_growthSpeed"]');
+ const tangent=page.locator('#btnTangentCircles');
+ const openGrowth=async button=>{
+  await swipe(button,0,-35);
+  await growthDialog.waitFor({state:'visible'});
+ };
+ const finishGrowth=async selector=>{
+  await growthDialog.locator(selector).click();
+  await growthDialog.waitFor({state:'hidden'});
+ };
+ for (const id of ['btnPenroseCrystal','btnPinwheelTiles','btnOctagonalCrystal','btnVoronoiCells','btnTangentCircles']) {
+  const button=page.locator('#'+id);
+  await tap(button);await openGrowth(button);
+  assert(await auto.isChecked());assert(await speed.isDisabled());assert.equal(await output.textContent(),'10%');
+  await finishGrowth('[data-cancel]');
+ }
+ await openGrowth(tangent);
+ await auto.uncheck();assert(await speed.isEnabled());assert.equal(await speed.inputValue(),'50');
+ await speed.fill('75');
+ await auto.check();assert.equal(await output.textContent(),'10%');
+ await finishGrowth('[type=submit]');
+ await openGrowth(tangent);
+ await auto.uncheck();assert.equal(await speed.inputValue(),'75');
+ await finishGrowth('[data-cancel]');
+ const front=()=>page.evaluate(()=>drawerTest.front());
+ let distance=await front();
+ for (const [group,increment] of [['classic',10],['extended',25],['continuous',100]]) {
+  await page.evaluate(group=>drawerTest.palette(group),group);
+  await tap(page.locator('#btnStepForward'));
+  distance+=increment;assert.equal(await front(),distance);
+ }
+ const recordedPattern=await state();
+ const growthRecipe=await page.evaluate(()=>drawerTest.recipe());
+ assert(growthRecipe.includes('"growthSpeedAuto":true'));
+ await page.locator('#projectFileInput').setInputFiles({name:'pattern-growth.txt',mimeType:'text/plain',buffer:Buffer.from(growthRecipe)});
+ await page.waitForFunction(()=>drawerTest.state().loaded);
+ await page.evaluate(()=>drawerTest.macro());
+ await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});
+ assert.deepEqual((await state()).board,recordedPattern.board,'the macro replays every recorded palette and Auto generation');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}

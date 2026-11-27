@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
-import { CLASSIC_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_SETTINGS, growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
-import { FIBONACCI_MAPS, seedFibonacciMap } from '../js/simulations/fibonacci-maps.js';
+import { CLASSIC_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_PREFERENCES, DEFAULT_CRYSTAL_SETTINGS, growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
+import { DEFAULT_MAP_PREFERENCES, FIBONACCI_MAPS, seedFibonacciMap } from '../js/simulations/fibonacci-maps.js';
+import { restorePatternGrowthPreference } from '../js/simulations/pattern-growth.js';
 
 function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
@@ -13,6 +14,45 @@ function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, s
     const occupied = () => currentBoardState.flatMap(({ k }, index) => k > 0 ? [index] : []);
     return { currentBoardState, currentPalette, state, step, occupied };
 }
+
+test('pattern Auto growth follows palette sizes without resetting the front and survives recorded checkpoints', () => {
+    for (const mode of ['crystal', ...FIBONACCI_MAPS]) {
+        const { state, currentBoardState } = simulate(21, 0, mode);
+        const settings = { ...(mode === 'crystal' ? DEFAULT_CRYSTAL_PREFERENCES : DEFAULT_MAP_PREFERENCES[mode]), growthSpeed: 75 };
+        if (state.map) state.map.settings = settings;
+        else state.crystalSettings = settings;
+        const front = snapshot => snapshot.map?.front ?? snapshot.crystalFront ?? 0;
+        let expectedFront = 0;
+        for (const [size, increment] of [[23, 10], [25, 10], [64, 25], [264, 100], [36, 25], [96, 100]]) {
+            const palette = Array(size).fill('#000');
+            const replay = validateFibonacciState(JSON.parse(JSON.stringify(state)));
+            const replayBoard = structuredClone(currentBoardState);
+            runFibonacciGeneration({ currentBoardState, currentPalette: palette }, state);
+            runFibonacciGeneration({ currentBoardState: replayBoard, currentPalette: palette }, replay);
+            expectedFront += increment;
+            assert.equal(front(state), expectedFront, mode);
+            assert.deepEqual(replay, validateFibonacciState(state));
+            assert.deepEqual(replayBoard, currentBoardState);
+        }
+        // A playback palette override recolors the pattern while retaining the recorded growth pace.
+        runFibonacciGeneration({ currentBoardState, currentPalette: Array(264).fill('#000'), growthPaletteSize: 23 }, state);
+        assert.equal(front(state), expectedFront += 10);
+        settings.growthSpeedAuto = false;
+        runFibonacciGeneration({ currentBoardState, currentPalette: Array(23).fill('#000') }, state);
+        assert.equal(front(validateFibonacciState(state)), expectedFront += 75);
+        delete settings.growthSpeedAuto;
+        runFibonacciGeneration({ currentBoardState, currentPalette: Array(264).fill('#000') }, state);
+        assert.equal(front(validateFibonacciState(state)), expectedFront + 75);
+    }
+});
+
+test('older profile speeds retain manual choices and gain Auto for factory values', () => {
+    assert.deepEqual(restorePatternGrowthPreference(DEFAULT_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_PREFERENCES), DEFAULT_CRYSTAL_PREFERENCES);
+    const manual = { ...DEFAULT_CRYSTAL_SETTINGS, growthSpeed: 75 };
+    assert.deepEqual(restorePatternGrowthPreference(manual, DEFAULT_CRYSTAL_PREFERENCES), { ...manual, growthSpeedAuto: false });
+    const fixedDefault = { ...DEFAULT_CRYSTAL_PREFERENCES, growthSpeedAuto: false };
+    assert.deepEqual(restorePatternGrowthPreference(fixedDefault, DEFAULT_CRYSTAL_PREFERENCES), fixedDefault);
+});
 
 test('Square Spiral starts at the center and grows exact Fibonacci rectangles in all orientations', () => {
     for (let orientation = 0; orientation < 4; orientation++) {

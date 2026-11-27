@@ -2,8 +2,9 @@ import { focusSettingsHeading } from './dialog-focus.js';
 import { INITIAL_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
 import { DEFAULT_FIBONACCI_COLOR_ADVANCE, FIBONACCI_COLOR_ADVANCE_RANGE } from './simulations/fibonacci.js';
-import { CLASSIC_CRYSTAL_SETTINGS, CRYSTAL_LIMITS, DEFAULT_CRYSTAL_SETTINGS } from './simulations/fibonacci-crystal.js';
-import { MAP_DEFAULTS, MAP_LIMITS } from './simulations/fibonacci-maps.js';
+import { CLASSIC_CRYSTAL_SETTINGS, CRYSTAL_LIMITS, DEFAULT_CRYSTAL_PREFERENCES, DEFAULT_CRYSTAL_SETTINGS } from './simulations/fibonacci-crystal.js';
+import { DEFAULT_MAP_PREFERENCES, MAP_LIMITS } from './simulations/fibonacci-maps.js';
+import { MIN_PATTERN_GROWTH_SPEED, resolvePatternGrowthSpeed } from './simulations/pattern-growth.js';
 
 const definitions = {
     brightnessEvo: { title: 'tuning_brightness_title', button: 'btnBrightnessEvo',
@@ -12,7 +13,7 @@ const definitions = {
         modes: ['solo', 'group', 'random-cell', 'random-color'], fields: ['speed', 'depth'] },
     fibonacci: { title: 'tuning_fibonacci_title', button: 'btnFibonacci',
         fields: ['colorAdvance', 'growthSpeed', 'tileSize', 'circleMinimum', 'seedDensity', 'crystalEdges'],
-        modeDefaults: { crystal: DEFAULT_CRYSTAL_SETTINGS, ...MAP_DEFAULTS },
+        modeDefaults: { crystal: DEFAULT_CRYSTAL_PREFERENCES, ...DEFAULT_MAP_PREFERENCES },
         defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE },
         limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE, ...CRYSTAL_LIMITS, ...MAP_LIMITS } },
     islands: { title: 'tuning_islands_title', button: 'btnIslands', fields: ['activity'] },
@@ -101,7 +102,7 @@ export function initializeEvolutionTuningModals(app) {
                     button.setAttribute('aria-pressed', String(Boolean(selected)));
                 }
             }
-            for (const [field, { row, label, note, input, output }] of fields) {
+            for (const [field, { row, label, note, input, output, autoToggle, autoText }] of fields) {
                 row.hidden = Boolean(definition.modeDefaults && field !== 'colorAdvance' && !Object.hasOwn(modeDefaults ?? {}, field));
                 label.textContent = app.getText('tuning_' + field);
                 note.hidden = compact;
@@ -111,8 +112,19 @@ export function initializeEvolutionTuningModals(app) {
                     input.setAttribute('aria-describedby', note.id);
                 }
                 if (!draft || row.hidden) continue;
-                input.value = draft[field];
-                output.value = format(field, draft[field], app.getText);
+                let value = draft[field];
+                if (autoToggle) {
+                    const automatic = draft.growthSpeedAuto === true;
+                    const [min, , step] = definition.limits[field];
+                    autoToggle.checked = automatic;
+                    autoText.textContent = app.getText('tuning_growth_auto');
+                    input.disabled = automatic;
+                    input.min = automatic ? MIN_PATTERN_GROWTH_SPEED : min;
+                    input.step = automatic ? 1 : step;
+                    value = resolvePatternGrowthSpeed(draft, app.getTuningPaletteSize());
+                }
+                input.value = value;
+                output.value = format(field, value, app.getText);
                 input.setAttribute('aria-valuetext', output.value);
             }
         }
@@ -138,6 +150,20 @@ export function initializeEvolutionTuningModals(app) {
             const input = row.querySelector('input');
             Object.assign(input, { min, max, step });
             const nodes = { row, input, label: row.querySelector('label'), output: row.querySelector('output'), note: row.querySelector('p') };
+            if (field === 'growthSpeed') {
+                const controls = document.createElement('div');
+                controls.className = 'tuning-growth-controls';
+                controls.innerHTML = '<label class="tuning-growth-auto"><input type="checkbox" data-growth-auto><span></span></label>';
+                nodes.output.before(controls);
+                controls.append(nodes.output);
+                nodes.autoToggle = controls.querySelector('input');
+                nodes.autoText = controls.querySelector('span');
+                nodes.autoToggle.addEventListener('change', () => {
+                    if (!draft) return;
+                    draft.growthSpeedAuto = nodes.autoToggle.checked;
+                    render();
+                });
+            }
             fields.set(field, nodes);
             input.addEventListener('input', () => { if (draft) { draft[field] = Number(input.value); render(); } });
             dialog.querySelector('.tuning-fields').append(row);

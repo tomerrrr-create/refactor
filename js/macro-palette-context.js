@@ -5,6 +5,7 @@ export function createMacroPaletteContext() {
     return {
         reset() { recorded = null; },
         record(index) { recorded = Number.isInteger(index) && index >= 0 ? index : null; },
+        recordedIndex() { return recorded; },
         historyPalette(target, { selected, current }) {
             return selected != null && recorded !== null && target === recorded ? current : target;
         }

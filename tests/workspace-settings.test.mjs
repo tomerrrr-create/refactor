@@ -69,7 +69,9 @@ test('retired swipe selections remain readable and migrate into ordinary cycle s
 });
 
 test('portable simulation preferences preserve explicit defaults and reject unusable cycles', () => {
-    assert.deepEqual(defaultSimulationPreferences().fibonacciCrystal, { growthSpeed: 25, tileSize: 1, crystalEdges: 0 });
+    assert.deepEqual(defaultSimulationPreferences().fibonacciCrystal,
+        { growthSpeed: 25, tileSize: 1, crystalEdges: 0, growthSpeedAuto: true });
+    assert(Object.values(defaultSimulationPreferences().fibonacciMaps).every(settings => settings.growthSpeedAuto === true));
     const settings = { ...defaultWorkspaceSettings(), simulationPreferences: {
         gravityCycleVersion: 2,
         gravityCycle: ['reverse_up'],
@@ -81,11 +83,11 @@ test('portable simulation preferences preserve explicit defaults and reject unus
         fibonacciVisible: true,
         patternsVisible: true,
         fibonacciColorAdvance: 91,
-        fibonacciCrystal: { growthSpeed: 50, tileSize: 3, crystalEdges: 175 },
+        fibonacciCrystal: { growthSpeed: 50, tileSize: 3, crystalEdges: 175, growthSpeedAuto: false },
         fibonacciMaps: {
             'pinwheel-map': { growthSpeed: 75, tileSize: 1, crystalEdges: 0 },
             apollonian: { growthSpeed: 100, circleMinimum: 3, crystalEdges: 25 },
-            voronoi: { growthSpeed: 125, seedDensity: 1, crystalEdges: 175 }
+            voronoi: { growthSpeed: 125, seedDensity: 1, crystalEdges: 175, growthSpeedAuto: true }
         },
         rememberSimulationModes: false,
         wind: { mode: 'ripple', strength: 5, speed: 2, range: .6, colorSpan: 2, trail: false }
@@ -96,6 +98,7 @@ test('portable simulation preferences preserve explicit defaults and reject unus
     for (const invalid of [{ gravityCycle: [] }, { resonanceCycle: [5, 5] }, { circularCycle: ['flow'] },
         { geometricFlowCycle: ['unknown'] }, { magnetAnchorLimit: 1500 }, { rememberSimulationModes: 'false' }, { fibonacciVisible: 1 }, { patternsVisible: 1 }, { fibonacciColorAdvance: 89 }, { fibonacciColorAdvance: 101 },
         { fibonacciCrystal: { growthSpeed: 26, tileSize: 3, crystalEdges: 175 } },
+        { fibonacciCrystal: { growthSpeed: 25, tileSize: 3, crystalEdges: 175, growthSpeedAuto: 'true' } },
         { fibonacciMaps: { voronoi: { growthSpeed: 25, seedDensity: 4, crystalEdges: 100 } } }]) {
         assert.throws(() => serializeWorkspaceSettings({ ...settings, simulationPreferences: invalid }));
     }

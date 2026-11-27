@@ -1,4 +1,5 @@
 import { growFibonacciCrystal, validateCrystalSettings } from './fibonacci-crystal.js';
+import { MIN_PATTERN_GROWTH_SPEED } from './pattern-growth.js';
 import { createFibonacciMap, FIBONACCI_MAPS, growFibonacciMap, validateFibonacciMap } from './fibonacci-maps.js';
 
 export const FIBONACCI_MODES = Object.freeze(['restart', 'branching']);
@@ -175,7 +176,7 @@ export function validateFibonacciState(state) {
         copy.crystalFrame = state.crystalFrame;
         if (state.crystalSettings !== undefined) copy.crystalSettings = validateCrystalSettings(state.crystalSettings);
         if (state.crystalFront !== undefined) {
-            if (!copy.crystalSettings || !Number.isSafeInteger(state.crystalFront) || state.crystalFront < state.crystalFrame * 25 ||
+            if (!copy.crystalSettings || !Number.isSafeInteger(state.crystalFront) || state.crystalFront < state.crystalFrame * MIN_PATTERN_GROWTH_SPEED ||
                 state.crystalFront > state.crystalFrame * 200) throw new Error('Invalid Penrose Crystal front');
             copy.crystalFront = state.crystalFront;
         }
@@ -299,16 +300,16 @@ function runBranchingGeneration(board, colorCount, groups, state, primary) {
     return board;
 }
 
-export function runFibonacciGeneration({ currentBoardState, currentPalette }, state) {
+export function runFibonacciGeneration({ currentBoardState, currentPalette, growthPaletteSize = currentPalette.length }, state) {
     const colorCount = currentPalette.length;
     const groups = getColorAdvanceGroups(state);
     state.generation = (state.generation + 1) >>> 0;
     if (state.mode === 'crystal') {
-        growFibonacciCrystal(state, index => advanceColor(currentBoardState, index, colorCount, groups));
+        growFibonacciCrystal(state, index => advanceColor(currentBoardState, index, colorCount, groups), growthPaletteSize);
         return currentBoardState;
     }
     if (state.map) {
-        growFibonacciMap(state, index => advanceColor(currentBoardState, index, colorCount, groups));
+        growFibonacciMap(state, index => advanceColor(currentBoardState, index, colorCount, groups), growthPaletteSize);
         return currentBoardState;
     }
     let plan = getPlan(state.n, state);

@@ -1,4 +1,6 @@
 // Geometry and replay state for the four map-based Fibonacci modes.
+import { MIN_PATTERN_GROWTH_SPEED, resolvePatternGrowthSpeed, validatePatternGrowthMode } from './pattern-growth.js';
+
 export const FIBONACCI_MAPS = Object.freeze(['pinwheel-map', 'octagonal', 'apollonian', 'voronoi']);
 const SCALE = [1, 3, 1];
 export const MAP_LIMITS = {
@@ -14,6 +16,8 @@ export const MAP_DEFAULTS = {
     apollonian: { growthSpeed: 50, circleMinimum: 1, crystalEdges: 200 },
     voronoi: { growthSpeed: 25, seedDensity: 1, crystalEdges: 75 }
 };
+export const DEFAULT_MAP_PREFERENCES = Object.fromEntries(Object.entries(MAP_DEFAULTS)
+    .map(([mode, settings]) => [mode, { ...settings, growthSpeedAuto: true }]));
 const MAX_SEEDS = 32;
 const FRAME_MAX = 0xffffffff;
 let cachedPlan;
@@ -28,7 +32,7 @@ export function validateMapSettings(mode, settings) {
         }
         clean[key] = value;
     }
-    return clean;
+    return { ...clean, ...validatePatternGrowthMode(settings) };
 }
 
 export function createFibonacciMap(mode, layoutSeed = 0) {
@@ -40,7 +44,7 @@ export function validateFibonacciMap(mode, n, map) {
     const { version, frame, front, seeds, settings, layoutSeed } = map ?? {};
     const growingCircles = (version === 2 || version === 3) && mode === 'apollonian';
     if ((version !== 1 && !growingCircles) || frame !== (frame >>> 0) || !Number.isSafeInteger(front) ||
-        front < frame * 25 || front > frame * 200) throw new Error('Invalid Fibonacci map checkpoint');
+        front < frame * MIN_PATTERN_GROWTH_SPEED || front > frame * 200) throw new Error('Invalid Fibonacci map checkpoint');
     if (growingCircles ? layoutSeed !== (layoutSeed >>> 0) : layoutSeed !== undefined) {
         throw new Error('Invalid Tangent Circles layout seed');
     }
@@ -468,10 +472,10 @@ function getPlan(state) {
     return cachedPlan;
 }
 
-export function growFibonacciMap(state, advance) {
+export function growFibonacciMap(state, advance, colorCount) {
     const { period, edge, offsets, delay, growingCircles } = getPlan(state);
     const { map } = state;
-    const nextFront = map.front + map.settings.growthSpeed;
+    const nextFront = map.front + resolvePatternGrowthSpeed(map.settings, colorCount);
     const edgeWidth = map.settings.crystalEdges ? .65 * map.settings.crystalEdges / 100 : -1;
     for (let index = 0; index < delay.length; index++) {
         if (growingCircles && delay[index] === INACTIVE_CIRCLE_CELL) continue;

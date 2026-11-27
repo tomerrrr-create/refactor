@@ -27,8 +27,8 @@ import { normalizeWindSettings } from './wind-settings.js';
 import { DEFAULT_EXPERIMENT_VISIBILITY } from './experimental-simulations.js';
 import { DEFAULT_REMEMBER_SIMULATION_MODES } from './evolution-mode-memory.js';
 import { DEFAULT_FIBONACCI_COLOR_ADVANCE, normalizeFibonacciColorAdvance } from './simulations/fibonacci.js';
-import { DEFAULT_CRYSTAL_SETTINGS, validateCrystalSettings } from './simulations/fibonacci-crystal.js';
-import { FIBONACCI_MAPS, MAP_DEFAULTS, validateMapSettings } from './simulations/fibonacci-maps.js';
+import { DEFAULT_CRYSTAL_PREFERENCES, validateCrystalSettings } from './simulations/fibonacci-crystal.js';
+import { FIBONACCI_MAPS, DEFAULT_MAP_PREFERENCES, validateMapSettings } from './simulations/fibonacci-maps.js';
 
 export function defaultSimulationPreferences() {
     return {
@@ -37,8 +37,8 @@ export function defaultSimulationPreferences() {
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
         geometricFlowVisible: DEFAULT_EXPERIMENT_VISIBILITY.spiral, breatheVisible: DEFAULT_EXPERIMENT_VISIBILITY.breathe,
         fibonacciVisible: DEFAULT_EXPERIMENT_VISIBILITY.fibonacci,
-        fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, fibonacciCrystal: { ...DEFAULT_CRYSTAL_SETTINGS },
-        rememberSimulationModes: DEFAULT_REMEMBER_SIMULATION_MODES, fibonacciMaps: structuredClone(MAP_DEFAULTS)
+        fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, fibonacciCrystal: { ...DEFAULT_CRYSTAL_PREFERENCES },
+        rememberSimulationModes: DEFAULT_REMEMBER_SIMULATION_MODES, fibonacciMaps: structuredClone(DEFAULT_MAP_PREFERENCES)
     };
 }
 
