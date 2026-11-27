@@ -431,6 +431,7 @@ test('Tangent Circles grows into all four corners without changing the original 
 
 test('Tangent Circles recordings from both previous versions keep their packing and timing', () => {
     const source = createFibonacciState(45, 2, 'apollonian', 95, 87324);
+    source.map.settings = { growthSpeed: 50, circleMinimum: 2, crystalEdges: 100 };
     const { layoutSeed, ...map } = source.map;
     const state = validateFibonacciState({ ...source, map: { ...map, version: 1 } });
     const currentBoardState = Array.from({ length: 45 ** 2 }, () => ({ k: 0, v: 0 }));
