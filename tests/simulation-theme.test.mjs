@@ -54,11 +54,12 @@ test('drawer switches start on every load and colors survive independently', () 
     h.individualDrawers.checked = false;h.individualDrawers.handlers.change();
     assert(!h.root.hasAttribute('data-individual-drawer-colors'));
     assert.equal(h.run('drawerColors.join()'), 'blue,gold,burgundy');
-    h.run("setDrawerColor(0, 'burgundy'); setDrawerColor(1, 'burgundy'); setDrawerColor(2, 'ivory')");
+    h.run("setDrawerColor(0, 'pine-green'); setDrawerColor(1, 'ink-violet'); setDrawerColor(2, 'warm-charcoal'); setDrawerColor(2, 'ivory'); setDrawerColor(3, 'blue')");
+    assert.equal(h.run("['pine-green','ink-violet','warm-charcoal'].some(isSimulationTheme)"), false);
     const reopened = harness(Object.fromEntries(h.storage));reopened.run('initializeSimulationTheme()');
     assert(reopened.keepDrawers.checked);assert(reopened.root.hasAttribute('data-keep-simulation-drawers'));
     assert(reopened.individualDrawers.checked);assert(reopened.root.hasAttribute('data-individual-drawer-colors'));
-    assert.equal(reopened.run('drawerColors.join()'), 'burgundy,burgundy,burgundy');
+    assert.equal(reopened.run('drawerColors.join()'), 'pine-green,ink-violet,warm-charcoal');
     const invalid = harness({colorGridSimulationDrawerColors:'["gold","invalid",null]'});
     invalid.run('initializeSimulationTheme()');
     assert.equal(invalid.run('drawerColors.join()'), 'gold,gold,burgundy');
