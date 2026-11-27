@@ -18,6 +18,7 @@ export const MAP_DEFAULTS = {
 };
 export const DEFAULT_MAP_PREFERENCES = Object.fromEntries(Object.entries(MAP_DEFAULTS)
     .map(([mode, settings]) => [mode, { ...settings, growthSpeedAuto: true }]));
+const TANGENT_CIRCLES_VERSION = 4;
 const MAX_SEEDS = 32;
 const FRAME_MAX = 0xffffffff;
 let cachedPlan;
@@ -36,13 +37,13 @@ export function validateMapSettings(mode, settings) {
 }
 
 export function createFibonacciMap(mode, layoutSeed = 0) {
-    return { version: mode === 'apollonian' ? 3 : 1, frame: 0, front: 0, settings: { ...MAP_DEFAULTS[mode] },
+    return { version: mode === 'apollonian' ? TANGENT_CIRCLES_VERSION : 1, frame: 0, front: 0, settings: { ...MAP_DEFAULTS[mode] },
         ...(mode === 'voronoi' ? { seeds: [] } : {}), ...(mode === 'apollonian' ? { layoutSeed } : {}) };
 }
 
 export function validateFibonacciMap(mode, n, map) {
     const { version, frame, front, seeds, settings, layoutSeed } = map ?? {};
-    const growingCircles = (version === 2 || version === 3) && mode === 'apollonian';
+    const growingCircles = (version === 2 || version === 3 || version === TANGENT_CIRCLES_VERSION) && mode === 'apollonian';
     if ((version !== 1 && !growingCircles) || frame !== (frame >>> 0) || !Number.isSafeInteger(front) ||
         front < frame * MIN_PATTERN_GROWTH_SPEED || front > frame * 200) throw new Error('Invalid Fibonacci map checkpoint');
     if (growingCircles ? layoutSeed !== (layoutSeed >>> 0) : layoutSeed !== undefined) {
@@ -228,7 +229,7 @@ function drawCircles(n, plan, size) {
 
 const INACTIVE_CIRCLE_CELL = 65535;
 
-function fillBoardCircleGaps(n, centerX, centerY, innerRadius, minimum, packed, schedule) {
+function fillBoardCircleGaps(n, centerX, centerY, innerRadius, minimum, packed, schedule, startTime = () => 0) {
     const edge = n - 1;
     const farthestX = Math.max(centerX, edge - centerX);
     const farthestY = Math.max(centerY, edge - centerY);
@@ -262,7 +263,7 @@ function fillBoardCircleGaps(n, centerX, centerY, innerRadius, minimum, packed, 
     function add(candidate, order, minimumRadius = minimum) {
         const { cx, cy, radius, ready } = candidate;
         if (radius < minimumRadius) return;
-        const birth = Math.max(41 + Math.floor(order / 3), ready + 4) + order % 4;
+        const birth = Math.max(41 + Math.floor(order / 3), ready + 4, startTime(radius, order)) + order % 4;
         const circle = schedule({ x: cx - centerX, y: cy - centerY }, birth, { cx, cy, radius }, true);
         constrain({ cx, cy, radius, ready: circle.ready });
     }
@@ -278,7 +279,78 @@ function fillBoardCircleGaps(n, centerX, centerY, innerRadius, minimum, packed, 
     }
 }
 
-function drawGrowingCircles(n, plan, size, seed, fillBoard) {
+function unequalTangentCircles(outerRadius, angle) {
+    // Put three mutually tangent circles in a 100:75:55 ratio. Descartes'
+    // negative curvature gives their common enclosing circle.
+    const radii = [1, .75, .55];
+    const [a, b, c] = radii;
+    const [ka, kb, kc] = radii.map(radius => 1 / radius);
+    const radius = 1 / (2 * Math.sqrt(ka * kb + kb * kc + kc * ka) - ka - kb - kc);
+    const ab = a + b, ac = a + c, bc = b + c;
+    const x = (ab ** 2 + ac ** 2 - bc ** 2) / (2 * ab);
+    const y = Math.sqrt(ac ** 2 - x ** 2);
+    // Intersect the three tangency distances to locate the enclosure center.
+    const cx = (ab ** 2 + (radius - a) ** 2 - (radius - b) ** 2) / (2 * ab);
+    const cy = (ac ** 2 + (radius - a) ** 2 - (radius - c) ** 2 - 2 * x * cx) / (2 * y);
+    const scale = outerRadius / radius;
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+    return [[0, 0], [ab, 0], [x, y]].map(([px, py], index) => ({
+        k: 1 / (radii[index] * scale),
+        x: ((px - cx) * cos - (py - cy) * sin) * scale,
+        y: ((px - cx) * sin + (py - cy) * cos) * scale
+    }));
+}
+
+function scheduleUnequalCircleGaps({ initial, minimum, tinyRadius, reflect, transform, schedule }) {
+    const larger = [], tiny = [];
+    function findGaps(circles, previous, depth) {
+        if (depth === 16) return;
+        for (let slot = 0; slot < 4; slot++) {
+            if (slot === previous) continue;
+            const circle = reflect(circles, slot);
+            if (circle.k <= 0) continue;
+            const geometry = transform(circle);
+            if (geometry.radius < minimum) continue;
+            const neighbors = circles.filter((_, index) => index !== slot);
+            const earliest = Math.max(...neighbors.map(neighbor => neighbor.ready)) + 3;
+            const pending = geometry.radius < tinyRadius ? tiny : larger;
+            pending.push({ circles, slot, depth, circle, geometry, earliest });
+        }
+    }
+
+    findGaps(initial, -1, 0);
+    let clock = 0, mediumReady = Math.max(...initial.map(circle => circle.ready));
+    let tinyStart, tinyWave;
+    let tinyCount = 0;
+    while (larger.length || tiny.length) {
+        const isTiny = larger.length === 0;
+        const queue = isTiny ? tiny : larger;
+        if (isTiny && tinyCount % 5 === 0) {
+            tinyStart ??= mediumReady + 8;
+            tinyWave = tinyWave === undefined ? tinyStart : Math.max(clock, tinyWave) + 7;
+        }
+        const earliest = queue.reduce((first, gap) => Math.min(first, gap.earliest), Infinity);
+        clock = Math.max(clock, earliest, isTiny ? tinyWave : 0);
+
+        let best = -1;
+        for (const [index, gap] of queue.entries()) {
+            if (gap.earliest <= clock && (best < 0 || gap.geometry.radius > queue[best].geometry.radius)) best = index;
+        }
+        const [{ circles, slot, depth, circle, geometry }] = queue.splice(best, 1);
+        const next = [...circles];
+        next[slot] = schedule(circle, clock, geometry);
+        if (isTiny) tinyCount++;
+        else {
+            mediumReady = Math.max(mediumReady, next[slot].ready);
+            clock += 2;
+        }
+        findGaps(next, slot, depth + 1);
+    }
+    return tinyStart ?? mediumReady + 8;
+}
+
+function drawGrowingCircles(n, plan, size, seed, version) {
+    const fillBoard = version >= 3;
     // All circles are constructed at their final size. Only their radius of
     // activation changes over time, so children start in fully formed gaps.
     const center = (n - 1) / 2;
@@ -312,6 +384,9 @@ function drawGrowingCircles(n, plan, size, seed, fillBoard) {
         return { k, x: x / k, y: y / k };
     }
     function transform(circle) {
+        if (version === TANGENT_CIRCLES_VERSION) {
+            return { radius: 1 / circle.k, cx: circle.x + shiftX, cy: circle.y + shiftY };
+        }
         // Inversion preserves tangency while loosening the symmetry and
         // making some branches more prominent in each run.
         const dx = circle.x - inversionX, dy = circle.y - inversionY;
@@ -342,6 +417,19 @@ function drawGrowingCircles(n, plan, size, seed, fillBoard) {
 
     plan.delay.fill(INACTIVE_CIRCLE_CELL);
     if (n === 1) { plan.delay[0] = 0; return; }
+
+    if (version === TANGENT_CIRCLES_VERSION) {
+        const seeds = unequalTangentCircles(outer, angle).map((circle, index) => schedule(circle, index * 6));
+        const enclosure = { k: -1 / outer, x: 0, y: 0, ready: 0 };
+        const tinyRadius = Math.max(minimum * 1.35, n * .036);
+        const tinyStart = scheduleUnequalCircleGaps({
+            initial: [enclosure, ...seeds], minimum, tinyRadius, reflect, transform, schedule
+        });
+        const edgeStart = Math.max(...seeds.map(circle => circle.ready)) + 8;
+        fillBoardCircleGaps(n, shiftX, shiftY, outer, minimum, packed, schedule, (radius, order) =>
+            radius < tinyRadius ? tinyStart + Math.floor(order / 5) * 7 : edgeStart);
+        return;
+    }
 
     function fillGaps(circles, previous, depth, branchSeed) {
         if (depth === 16) return;
@@ -456,7 +544,7 @@ function getPlan(state) {
     const plan = makePlan(n);
     const growingCircles = mode === 'apollonian' && map.version >= 2;
     if (mode === 'voronoi') drawVoronoi(state, plan);
-    else if (growingCircles) drawGrowingCircles(n, plan, scale, map.layoutSeed, map.version === 3);
+    else if (growingCircles) drawGrowingCircles(n, plan, scale, map.layoutSeed, map.version);
     else {
         if (mode === 'pinwheel-map') drawPinwheel(n, plan, scale, refinement);
         if (mode === 'octagonal') drawOctagonal(n, plan, scale);

@@ -303,6 +303,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const recordedPattern=await state();
  const growthRecipe=await page.evaluate(()=>drawerTest.recipe());
  assert(growthRecipe.includes('"growthSpeedAuto":true'));
+ assert.match(growthRecipe, /"map":\{"version":4[,}]/);
  await page.locator('#projectFileInput').setInputFiles({name:'pattern-growth.txt',mimeType:'text/plain',buffer:Buffer.from(growthRecipe)});
  await page.waitForFunction(()=>drawerTest.state().loaded);
  await page.evaluate(()=>drawerTest.macro());
