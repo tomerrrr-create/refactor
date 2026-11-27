@@ -27,7 +27,7 @@ test('Symmetry gestures are unavailable during Wind and retain their normal beha
 test('color control exits Wind on tap or before opening the picker and otherwise retains brush actions',()=>{
  let gestures;const events=[],c=vm.createContext({dom:{btnColorPicker:{}},windMode:false,isBreathing:false,isLifePlaying:false,armedSimulation:null,
  selectedColorIndex:3,selectedColor:'color3',isRainbowModeActive:false,
- C:{LONG_PRESS_SHOW_MS:600},hideLongPressDisplay(){},palette:()=>['color0'],
+ C:{LONG_PRESS_SHOW_MS:600},hideLongPressDisplay(){},palette:()=>['color0'],luminanceAnchorPreference:{enabled:()=>false},
  handleColorPickerClick:()=>events.push('color'),modals:{openColorPickerModal:()=>events.push('color-settings')},
  setWindMode(enabled){c.windMode=enabled;events.push('wind-off');},
  updateGlowEffect(){},updateColorPickerButtonUI(){},bindPickerGestures:(button,options)=>{gestures=options;}});

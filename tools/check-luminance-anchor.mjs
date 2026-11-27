@@ -7,6 +7,8 @@ const root=path.resolve('dist');await mkdir('/tmp/luminance-anchor-check',{recur
 let source=await readFile(root+'/js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.anchorTest={
  state:()=>({magnet:magnetRules.anchorColor==='luminance',life:gameOfLifeRules.deadColor==='luminance',lineColor:contourActionRules.lineColor,anchorIndex:magnetRules.anchorColorIndex,tiles:boardState.map(t=>[t.k,t.v,!!t.isGold]),playing:isLifePlaying,sort:currentSortMethod}),
+ brush:()=>({index:selectedColorIndex,color:selectedColor,rainbow:isRainbowModeActive,colors:palette(),
+    luminanceFirst:sortColorsArray(C.PALETTES[activePaletteIndex].originalColors,'luminance')[0]}),
  tech:()=>modals.openTechnicianMenu(),magnet:()=>modals.openMagnetSettingsModal(),life:()=>modals.openGolSettingsModal(),contour:()=>modals.openContourSettingsModal(),
  applyContour:()=>applyContoursOnce(),
  setup:()=>{pauseLife();resetArmedState();n=9;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>t.k=t.v=i%paletteLen());currentSortMethod='reversed';C.PALETTES.forEach(p=>p.colors=sortColorsArray(p.originalColors,'reversed'));renderToScreen(null);},
@@ -20,10 +22,31 @@ const server=createServer(async(req,res)=>{try{const name=new URL(req.url,'http:
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
 try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844,lang:'he'}]){
- const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
+ await context.addInitScript(lang=>{
+  localStorage.setItem('userLanguage',lang);
+  localStorage.setItem('colorGridOpeningChoice','false');
+ },config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('PAGE ERROR',e.message);});
  const boot=async()=>{await page.goto(base);await page.waitForFunction(()=>window.anchorTest?.ready);};
  const state=()=>page.evaluate(()=>anchorTest.state());
+ const brush=()=>page.evaluate(()=>anchorTest.brush());
+ const picker=page.locator('#btnColorPicker');
+ const holdPicker=async ms=>{
+  const {x,y,width,height}=await picker.boundingBox();
+  const point={x:x+width/2,y:y+height/2};
+  if(config.width<600){
+   const input=await context.newCDPSession(page);
+   await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point]});
+   await page.waitForTimeout(ms);
+   await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+   await input.detach();
+  }else{
+   await page.mouse.move(point.x,point.y);await page.mouse.down();
+   await page.waitForTimeout(ms);await page.mouse.up();
+  }
+ };
+ const tapPicker=()=>config.width<600?picker.tap():picker.click();
  const closeTech=()=>page.locator('#btnTechnicianCloseTop').click();
  const tech=async()=>{await page.evaluate(()=>anchorTest.tech());await page.locator('#btnConfigureFeatures').click();return page.locator('#luminanceAnchorToggle');};
  const allOn=async()=>{const s=await state();return s.magnet&&s.life&&s.lineColor==='luminance';};
@@ -48,6 +71,18 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const bird=await birdShape('[data-i18n-title="luminance_anchor_note"]');assert(bird);
  await toggle.uncheck();await closeTech();await page.evaluate(()=>anchorTest.setup());const original=await state();
  toggle=await tech();await toggle.check();assert(await allOn());assert.deepEqual((await state()).tiles,original.tiles);assert.equal((await state()).sort,'reversed');await page.screenshot({path:`/tmp/luminance-anchor-check/${config.lang}-technicians.png`});await closeTech();
+ await holdPicker(740);
+ const anchoredBrush=await brush();
+ assert.equal(anchoredBrush.color,anchoredBrush.luminanceFirst);
+ assert.equal(anchoredBrush.colors[anchoredBrush.index],anchoredBrush.luminanceFirst);
+ assert.notEqual(anchoredBrush.index,0,'Reverse puts the Luminance anchor away from index zero');
+ await tapPicker();
+ const nextBrush=await brush();
+ assert.equal(nextBrush.index,(anchoredBrush.index-1+anchoredBrush.colors.length)%anchoredBrush.colors.length);
+ assert.equal(nextBrush.color,anchoredBrush.colors[nextBrush.index]);
+ assert.equal((await state()).sort,'reversed');
+ await holdPicker(1350);assert((await brush()).rainbow);
+ await tapPicker();assert.equal((await brush()).index,0);
  await page.evaluate(()=>anchorTest.contour());
  const contourBird=page.locator('#btnContourColorLuminance');
  assert.equal(await birdShape('#btnContourColorLuminance'),bird);
@@ -56,6 +91,9 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  await page.locator('#btnContourSettingsCancel').click();await page.locator('#contourSettingsModal').waitFor({state:'hidden'});
  await contour('lightest',false);assert(await allOn());
  await contour('lightest');assert.equal((await state()).lineColor,'lightest');
+ await holdPicker(740);
+ const mixedBrush=await brush();
+ assert.equal(mixedBrush.index,0);assert.equal(mixedBrush.color,mixedBrush.colors[0]);
  toggle=await tech();assert(!(await toggle.isChecked()));await toggle.check();assert(await allOn());
  await toggle.uncheck();assert.equal((await state()).lineColor,'darkest');await toggle.check();await closeTech();
  await page.evaluate(()=>anchorTest.applyContour());
