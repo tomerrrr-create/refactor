@@ -1,4 +1,4 @@
-import { CYMATICS_RESONANCE_MAPS } from './cymatics-settings.js';
+import { INITIAL_CYMATICS_RULES } from './cymatics-settings.js';
 import { MAGNET_CYCLE } from './magnet-modes.js';
 import { DEFAULT_GEOMETRIC_FLOW_CYCLE } from './geometric-flow-cycle.js';
 import { FIBONACCI_MODES } from './simulations/fibonacci.js';
@@ -11,7 +11,7 @@ export const evolutionModeKey = simulation => ['nudgeBrighter','nudgeDarker'].in
 export const DEFAULT_EVOLUTION_CYCLE_MODES = Object.freeze({
     gameOfLife:'personal',sandpile:'personal',gravitationalSort:'up',spiral:DEFAULT_GEOMETRIC_FLOW_CYCLE[0],
     magnet:MAGNET_CYCLE[1],brightnessEvo:'brightness',dla:'genetics',breathe:'solo',
-    ink:'turbine2',network:'spatial',fibonacci:FIBONACCI_MODES[0],erosion:'channels',islands:'classic',contour:'all',cymatics:CYMATICS_RESONANCE_MAPS.heart,nudge:'nudgeBrighter',wind:'ripple'
+    ink:'turbine2',network:'spatial',fibonacci:FIBONACCI_MODES[0],erosion:'channels',islands:'classic',contour:'all',cymatics:INITIAL_CYMATICS_RULES.resonanceVersion,nudge:'nudgeBrighter',wind:'ripple'
 });
 export const defaultEvolutionCycleMode = simulation => DEFAULT_EVOLUTION_CYCLE_MODES[evolutionModeKey(simulation)];
 export function createEvolutionModeMemory({storage, blocked = () => false} = {}) {

@@ -2575,11 +2575,11 @@ if (simulationName === 'magnet') {
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
         if(settings.rules.cymatics===undefined){
             cymaticsFrequencies=createCymaticsFrequencies(undefined,settings.cymaticsFrequencies);
-            cymaticsRules={...cymaticsRules,frequency:cymaticsFrequencies.heart};
+            cymaticsRules={...cymaticsRules,frequency:cymaticsFrequencies.interference};
         }else cymaticsFrequencies=rememberCymaticsFrequency(settings.cymaticsFrequencies,cymaticsRules);
         if(settings.rules.cymatics===undefined){
             cymaticsStrengths=createCymaticsStrengths(undefined,settings.cymaticsStrengths);
-            cymaticsRules={...cymaticsRules,strength:cymaticsStrengths.heart};
+            cymaticsRules={...cymaticsRules,strength:cymaticsStrengths.interference};
         }else cymaticsStrengths=rememberCymaticsStrength(settings.cymaticsStrengths,cymaticsRules);
         if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();

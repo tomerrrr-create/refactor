@@ -22,7 +22,7 @@ const cases=[
  ['brightnessEvo','btnBrightnessEvo','brightness','contrast','.mode-contrast'],['dla','btnDla','genetics','no-genetics','.mode-no-genetics'],
  ['breathe','btnShowBreatheMenu','solo','group','.mode-group'],['erosion','btnErosion','channels','channels-solid','svg#iconErosionSolid'],
  ['islands','btnIslands','classic','oil','.mode-oil'],['contour','btnContour','all','dead','[data-cracks-area="dead"]'],
- ['cymatics','btnCymatics',resonanceMap.heart,resonanceMap.grid,'[data-cymatics-map="grid"]'],['nudgeBrighter','btnNudgeBrighter','nudgeBrighter','nudgeDarker','[data-nudge-mode="darker"]'],
+ ['cymatics','btnCymatics',resonanceMap.interference,resonanceMap.heart,'[data-cymatics-map="heart"]'],['nudgeBrighter','btnNudgeBrighter','nudgeBrighter','nudgeDarker','[data-nudge-mode="darker"]'],
  ['gameOfLife','btnGameOfLife','personal','shuffle','stars'],['sandpile','btnSandpile','personal','ripples','stars']
 ];
 await mkdir('/tmp/evolution-mode-memory',{recursive:true});

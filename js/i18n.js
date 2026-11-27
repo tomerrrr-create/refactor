@@ -49,7 +49,7 @@ export const translations = {
   branches_baby: {en:"Baby mode",he:"מצב תינוק",ru:"Детская",nl:"Babymodus"},
   branches_main: {en:"Main",he:"ראשי",ru:"Основная",nl:"Hoofdversie"},
   tooltip_cymatics: {"en":"Resonance","he":"תהודה","ru":"Резонанс","nl":"Resonantie"},
-  help_cymatics: {en:"Resonance\nTap to cycle Heart, Crosshatch, Interference and Diagonals by default. Swipe up to choose which maps are included.",he:"רזוננס\nכברירת מחדל, לחיצה מעבירה בין לב, שתי וערב, הפרעות ואלכסונים. החליקו למעלה כדי לבחור אילו מפות ייכללו בסייקל.",ru:"Резонанс\nПо умолчанию нажатие переключает сердце, сетку, интерференцию и диагонали. Смахните вверх, чтобы настроить цикл.",nl:"Resonantie\nTik voor Hart, Raster, Interferentie en Diagonalen. Veeg omhoog om de cyclus aan te passen."},
+  help_cymatics: {en:"Resonance\nTap to cycle Interference, Heart, Crosshatch and Diagonals by default. Swipe up to choose which maps are included.",he:"רזוננס\nכברירת מחדל, לחיצה מעבירה בין הפרעות, לב, שתי וערב ואלכסונים. החליקו למעלה כדי לבחור אילו מפות ייכללו בסייקל.",ru:"Резонанс\nПо умолчанию нажатие переключает интерференцию, сердце, сетку и диагонали. Смахните вверх, чтобы настроить цикл.",nl:"Resonantie\nTik voor Interferentie, Hart, Raster en Diagonalen. Veeg omhoog om de cyclus aan te passen."},
   cymatics_map_heart: {en:"Heart",he:"לב",ru:"Сердце",nl:"Hart"},
   cymatics_map_clouds: {"en":"Clouds","he":"עננים","ru":"Облака","nl":"Wolken"},
   cymatics_map_cosmic: {"en":"Cosmological empathy","he":"אמפתיה קוסמולוגית","ru":"Космологическая эмпатия","nl":"Kosmologische empathie"},

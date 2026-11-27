@@ -188,29 +188,38 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await checkBackdrop(2);
  }
  await page.screenshot({path:path.join(artifacts,config.lang+'-patterns-burgundy.png'),animations:'disabled'});
- assert.equal(await trigger.locator('.drawer-page-number').textContent(),'III');
- const romanStyle=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>{
-  const style=getComputedStyle(e),glyph=getComputedStyle(e.querySelector('.drawer-page-number'));
+ const name=trigger.locator('.drawer-page-name');
+ assert.equal(await name.innerText(),'Geometry');
+ if(config.width<600){
+  await page.setViewportSize({width:320,height:config.height});
+  assert.equal(await name.innerText(),'Geo');
+  assert.match(await trigger.getAttribute('aria-label'),/Geometry/);
+  assert(await name.evaluate(e=>e.offsetWidth<=e.parentElement.clientWidth));
+  await page.setViewportSize({width:config.width,height:config.height});
+  assert.equal(await name.innerText(),'Geometry');
+ }
+ const labelStyle=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>{
+  const style=getComputedStyle(e),glyph=getComputedStyle(e.querySelector('.drawer-page-name'));
   return {border:style.borderTopWidth,background:style.backgroundColor,lip:getComputedStyle(e,'::before').display,ink:glyph.color,font:glyph.fontFamily};
  });
- const romanAtRest=await romanStyle();
- assert.equal(romanAtRest.border,'0px');
- assert.equal(romanAtRest.background,'rgba(0, 0, 0, 0)');
- assert.equal(romanAtRest.lip,'none');
- assert.equal(romanAtRest.ink,'rgb(187, 192, 198)');
- assert.match(romanAtRest.font,/Georgia/);
+ const labelAtRest=await labelStyle();
+ assert.equal(labelAtRest.border,'0px');
+ assert.equal(labelAtRest.background,'rgba(0, 0, 0, 0)');
+ assert.equal(labelAtRest.lip,'none');
+ assert.equal(labelAtRest.ink,'rgb(187, 192, 198)');
+ assert.match(labelAtRest.font,/Georgia/);
 
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(20).filter(Boolean));
  for(const drawer of ['2','0','1']){
   assert.equal(await pageIndex(),drawer);
-  const numeral=['I','II','III'][Number(drawer)];
-  assert.equal(await trigger.locator('.drawer-page-number').textContent(),numeral);
-  assert(await trigger.locator('.drawer-page-number').evaluate(e=>e.offsetWidth<e.parentElement.clientWidth));
+  const label=['Life','Pulse','Geometry'][Number(drawer)];
+  assert.equal(await name.innerText(),label);
+  assert(await trigger.locator('.drawer-page-name').evaluate(e=>e.offsetWidth<e.parentElement.clientWidth));
   assert.deepEqual(await trigger.boundingBox(),position);
   await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});
   assert.equal(await pageIndex(),drawer,'short upward swipe opens the map without navigating');
   assert.equal(await dialog.locator('.drawer-slots').count(),3);
-  assert.deepEqual(await dialog.locator('.drawer-reserved-slot .drawer-page-number').allTextContents(),['I','II','III']);
+  assert.deepEqual(await dialog.locator('.drawer-reserved-slot .drawer-page-full-name').allTextContents(),['Life','Pulse','Geometry']);
   assert.deepEqual(await dialog.locator('.drawer-pages h3').allTextContents(),['Life','Pulse','Geometry']);
   await tap(dialog.locator('[data-cancel]'));await tap(trigger);
   await checkBackdrop((Number(drawer)+1)%3);
@@ -218,7 +227,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await pageIndex(),'2');
  await tap(page.locator('#btnPenroseCrystal'));await tap(page.locator('#btnPlayPauseLife'));
  const playback=await state();assert(playback.playing);
- assert.deepEqual(await romanStyle(),romanAtRest,'the unframed silver numeral stays stable during playback');
+ assert.deepEqual(await labelStyle(),labelAtRest,'the unframed silver label stays stable during playback');
  assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).opacity),'1');
  await checkBackdrop(2);
  await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});
