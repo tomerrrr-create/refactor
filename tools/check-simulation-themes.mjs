@@ -10,7 +10,6 @@ const colors={
  blue:'rgb(63, 81, 181)', gold:'rgb(165, 139, 84)', teal:'rgb(104, 189, 181)',
  'moon-silver':'rgb(182, 195, 212)', ivory:'rgb(231, 216, 181)', 'dark-gray':'rgb(123, 126, 130)'
 };
-const addedFrames={ 'moon-silver':'#242c39', ivory:'#312c23', 'dark-gray':'#1a1b1e' };
 let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.themeTest={
  setup:()=>{pauseLife();isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();armSimulation('nudgeBrighter');},
@@ -47,18 +46,27 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   assert.deepEqual(await page.locator(group+' [data-theme]').evaluateAll(es=>es.map(e=>e.dataset.theme)),Object.keys(colors));
   assert((await page.locator(group+' [data-theme]').evaluateAll(es=>es.map(e=>e.getAttribute('aria-label')))).every(Boolean));
  }
+ const keepDrawers=page.locator('#keepSimulationDrawersToggle');
+ const drawerBackdrop=()=>backdrop.evaluate(e=>getComputedStyle(e).backgroundImage);
+ const initialBackdrop=await drawerBackdrop();
+ assert.match(initialBackdrop,/rgb\(15, 23, 42\)/);
+ assert(await keepDrawers.isChecked());
+ await tap('#evolutionDrawerDialog [data-close]');
+ await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
+ assert.equal(await opacity(),'1');assert.equal(await drawerBackdrop(),initialBackdrop);
+ await tap('#btnPlayPauseLife');
+ await tech();
+ if(await page.locator('#btnConfigureDisplay').getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
+ await keepDrawers.uncheck();await tap('#btnTechnicianCloseTop');await map();
  assert.equal(await page.locator('#simModeBackground .sim-theme-layer').count(),0);
  for(const [rest,playback] of [['blue','gold'],['gold','teal'],['teal','blue'],['moon-silver','dark-gray'],['dark-gray','ivory'],['ivory','moon-silver']]){
   const before=await state();await tap('#simulationThemeSettings [data-theme='+rest+']');await tap('#simulationPlaybackThemeSettings [data-theme='+playback+']');
   const selected=await state();assert.deepEqual(selected.board,before.board);assert.equal(selected.history,before.history);assert.equal(selected.settings.simulationTheme,rest);assert.equal(selected.settings.simulationPlaybackTheme,playback);
   await tap('#evolutionDrawerDialog [data-close]');const frame=await backdrop.boundingBox(),buttonBounds=await page.locator('#btnNudgeBrighter').boundingBox();assert.equal(await opacity(),'1');assert((await backdrop.evaluate(e=>getComputedStyle(e).transitionProperty)).includes('opacity'));await page.screenshot({path:artifacts+'/'+config.lang+'-'+rest+'-paused.png'});await tap('#btnPlayPauseLife');assert((await state()).playing);assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),playback);await page.waitForTimeout(450);
-  assert.equal(await ink(),playback==='gold'?'rgb(118, 103, 65)':colors[playback]);assert.equal(await opacity(),'0');assert.deepEqual(await backdrop.boundingBox(),frame);assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);await page.screenshot({path:artifacts+'/'+config.lang+'-'+playback+'-running.png'});
+  assert.equal(await ink(),'rgb(118, 103, 65)');assert.equal(await opacity(),'0');assert.deepEqual(await backdrop.boundingBox(),frame);assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);await page.screenshot({path:artifacts+'/'+config.lang+'-'+playback+'-running.png'});
   await tap('#btnPlayPauseLife');assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);await page.waitForTimeout(450);
-  assert.equal(await ink(),colors[rest]);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);
-  if(addedFrames[rest]){
-   const rgb=addedFrames[rest].slice(1).match(/../g).map(channel=>parseInt(channel,16)).join(', ');
-   assert((await backdrop.evaluate(e=>getComputedStyle(e,'::before').backgroundImage)).includes('rgb('+rgb+')'));
-  }
+  assert.equal(await ink(),colors.gold);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);
+  assert.equal(await drawerBackdrop(),initialBackdrop);
   await map();
  }
  // Reduced motion retains the same visibility states without transitions.
@@ -90,7 +98,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   return {progress:+bar.style.getPropertyValue('--gold-playback-progress'),window:read('simModeBackground').opacity,
    halo:+getComputedStyle(document.getElementById('btnNudgeBrighter'),'::before').opacity,
    tools:read('btnResizeUp'),sort:read('btnCycleSort'),save,toggle,moving:bar.hasAttribute('data-gold-playback-moving'),
-   frameTheme:document.documentElement.dataset.simulationBackdropTheme};
+   frameImage:getComputedStyle(document.getElementById('simModeBackground')).backgroundImage};
  });
  const waitForProgress=(min,max)=>page.waitForFunction(([min,max])=>{
   const bar=document.getElementById('controlsContainer');
@@ -106,7 +114,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert(leaving.progress>0&&leaving.progress<.5);
  assert(Math.abs(leaving.window+leaving.halo-1)<.015,'frame and halo share their progress');
  assert(Math.abs(leaving.window+leaving.progress-1)<.01);
- assert.equal(leaving.frameTheme,'blue');
+ assert.equal(leaving.frameImage,initialBackdrop);
  assert.notEqual(leaving.tools.color,paused.tools.color);
  assert.deepEqual(leaving.sort,paused.sort,'Sort is visually exempt by default during the transition');
  for(const name of ['save','toggle']){
@@ -126,7 +134,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const returning=await visual();
  assert(returning.save.opacity>0&&returning.save.opacity<1&&!returning.save.inert);
  assert(Math.abs(returning.window+returning.halo-1)<.015);
- assert.equal(returning.frameTheme,'blue');
+ assert.equal(returning.frameImage,initialBackdrop);
  await waitForProgress(0,0);
  assert.deepEqual(await visual(),paused,'Pause settles back to the original visual state');
  await tech();
@@ -178,5 +186,6 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await boot(true);
  assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'0','transition duration survives reload');
  assert(!(await page.locator('#goldExcludeSortToggle').isChecked()),'Sort choice survives reload');
+ assert(!(await keepDrawers.isChecked()),'drawer visibility choice survives reload');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}

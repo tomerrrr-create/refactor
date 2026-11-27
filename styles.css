@@ -283,7 +283,6 @@ body {
   display: block;
   grid-column: 3 / 8; 
   grid-row: 2 / span 2;    
-  background: linear-gradient(to bottom, #0f172a, #000000);
   border-radius: 12px;
   border: 1px solid #334155;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -1932,26 +1931,41 @@ button, .ctrl {
 .guide-ripple-tile canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 @media (max-height:650px) { .guide-welcome h2 { margin:12px auto 20px; } .guide-ripple-tile { height:clamp(160px,32dvh,220px); } }
 
-/* Crossfade the decorative backdrop without moving simulation controls. */
-.sim-mode-active #simModeBackground {
+/* Drawer colors are tied to position. Backdrop visibility is independent of the icons. */
+#controlsContainer.sim-mode-active {
+  --sim-drawer-ink: var(--sim-theme-gold);
+  --sim-drawer-lip: var(--sim-theme-blue);
+  --sim-drawer-diamond-ink: #9aafd713;
+  --sim-drawer-frame: #334155;
+  --sim-drawer-gradient: linear-gradient(135deg, #0f172a, #05070d);
+}
+#controlsContainer.sim-mode-active[data-evolution-page="1"] {
+  --sim-drawer-lip: var(--sim-theme-gold);
+  --sim-drawer-diamond-ink: #dab77913;
+  --sim-drawer-frame: #b28b3645;
+  --sim-drawer-gradient: linear-gradient(135deg, #2a2213, #100d08);
+}
+#controlsContainer.sim-mode-active[data-evolution-page="2"] {
+  --sim-drawer-lip: #966374;
+  --sim-drawer-diamond-ink: #d291a313;
+  --sim-drawer-frame: #6f3a4a80;
+  --sim-drawer-gradient: linear-gradient(135deg, #2c141d, #150b10);
+}
+#controlsContainer.sim-mode-active #simModeBackground {
   position: relative;
   isolation: isolate;
-  border-color: #334155;
+  border-color: var(--sim-drawer-frame);
+  box-shadow: 0 4px 20px #0006;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px),
+    repeating-linear-gradient(-45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px),
+    var(--sim-drawer-gradient);
   opacity: 1;
-  transition: opacity 400ms ease-in-out, border-color 400ms ease-in-out, box-shadow 400ms ease-in-out;
+  transition: opacity 400ms ease-in-out, border-color 400ms ease-in-out;
 }
-.sim-mode-active #simModeBackground::before,
-.sim-mode-active #simModeBackground::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 400ms ease-in-out;
-}
-.sim-mode-active #simModeBackground::before { background: linear-gradient(135deg,#1c1a12,#0d0e0c); }
-.sim-mode-active #simModeBackground::after { background: linear-gradient(135deg,#142724,#0a100f); }
+:root[data-simulation-running]:not([data-keep-simulation-drawers]) #controlsContainer.sim-mode-active #simModeBackground { opacity: 0; }
+:where(:root[data-simulation-running]) #controlsContainer.sim-mode-active { --sim-drawer-ink: var(--sim-gold-muted); }
+#controlsContainer.sim-mode-active > [data-evolution-id] { --sim-color: var(--sim-drawer-ink); }
 :root[data-simulation-theme="blue"] { --sim-rest-color: var(--sim-theme-blue); }
 :root[data-simulation-theme="teal"] { --sim-rest-color: var(--sim-theme-teal); }
 :root[data-simulation-theme="moon-silver"] { --sim-rest-color: var(--sim-theme-moon-silver); }
@@ -1962,46 +1976,8 @@ button, .ctrl {
 :root[data-simulation-running][data-simulation-effective-theme="gold"] { --sim-color: var(--sim-gold-muted); }
 :root[data-simulation-effective-theme="teal"] { --sim-color: var(--sim-theme-teal); }
 :root[data-simulation-effective-theme="moon-silver"] { --sim-color: var(--sim-theme-moon-silver); }
-:root[data-simulation-backdrop-theme="moon-silver"] {
-  --sim-neutral-frame: #8395ae63;
-  --sim-neutral-backdrop: linear-gradient(135deg, #242c39, #10141d);
-}
 :root[data-simulation-effective-theme="ivory"] { --sim-color: var(--sim-theme-ivory); }
-:root[data-simulation-backdrop-theme="ivory"] {
-  --sim-neutral-frame: #c9b8935e;
-  --sim-neutral-backdrop: linear-gradient(135deg, #312c23, #14120e);
-}
 :root[data-simulation-effective-theme="dark-gray"] { --sim-color: var(--sim-theme-dark-gray); }
-:root[data-simulation-backdrop-theme="dark-gray"] {
-  --sim-neutral-frame: #686d7559;
-  --sim-neutral-backdrop: linear-gradient(135deg, #1a1b1e, #08090a);
-}
-:root:is([data-simulation-backdrop-theme="moon-silver"], [data-simulation-backdrop-theme="ivory"], [data-simulation-backdrop-theme="dark-gray"]) .sim-mode-active #simModeBackground {
-  border-color: var(--sim-neutral-frame);
-}
-:root:is([data-simulation-backdrop-theme="moon-silver"], [data-simulation-backdrop-theme="ivory"], [data-simulation-backdrop-theme="dark-gray"]) .sim-mode-active #simModeBackground::before {
-  background: var(--sim-neutral-backdrop);
-  opacity: 1;
-}
-:root[data-simulation-backdrop-theme="gold"] .sim-mode-active #simModeBackground { border-color: #b28b3645; }
-:root[data-simulation-backdrop-theme="teal"] .sim-mode-active #simModeBackground { border-color: #68bdb545; box-shadow: 0 4px 20px #0006, 0 0 12px #68bdb514; }
-:root[data-simulation-backdrop-theme="gold"] #simModeBackground::before,
-:root[data-simulation-backdrop-theme="teal"] #simModeBackground::after { opacity: 1; }
-
-#controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground {
-  border-color: #6f3a4a80;
-  box-shadow: 0 4px 20px #0006;
-  background:
-    repeating-linear-gradient(45deg, transparent 0 28px, #d291a313 28px 29px),
-    repeating-linear-gradient(-45deg, transparent 0 28px, #d291a313 28px 29px),
-    linear-gradient(135deg, #2c141d, #150b10);
-}
-#controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground::before,
-#controlsContainer.sim-mode-active[data-evolution-page="2"] #simModeBackground::after {
-  visibility: hidden;
-}
-/* Fade only the decorative frame; simulation controls remain independent. */
-:root[data-simulation-running] .sim-mode-active #simModeBackground { opacity: 0; }
 
 /* The halo breathes behind the icon. Fade it separately from the pulse on Pause or handoff. */
 .sim-mode-active .ctrl[data-evolution-id] { isolation: isolate; }
@@ -2027,9 +2003,7 @@ button, .ctrl {
 
 @media (prefers-reduced-motion: reduce) {
   :root,
-  .sim-mode-active #simModeBackground,
-  .sim-mode-active #simModeBackground::before,
-  .sim-mode-active #simModeBackground::after { transition: none; }
+  #controlsContainer.sim-mode-active #simModeBackground { transition: none; }
   .sim-mode-active .ctrl[data-evolution-id]::before { animation: none; transition: none; }
 }
 
@@ -2692,7 +2666,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .drawer-internal-symbol::before {
   content:''; position:absolute; inset:-1px; border-radius:inherit;
-  border-bottom:1px solid color-mix(in srgb,var(--sim-rest-color) 58%,#373a3e);
+  border-bottom:1px solid color-mix(in srgb,var(--sim-drawer-lip, var(--sim-rest-color)) 58%,#373a3e);
   opacity:1; transition:opacity 400ms ease-in-out;
 }
 .drawer-page-dot {
@@ -2997,9 +2971,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 
 #controlsContainer.sim-mode-active[data-gold-playback-motion] {
   --gold-playback-tint: calc(100% * var(--gold-playback-progress));
+  --sim-drawer-ink: color-mix(in srgb, var(--sim-theme-gold), var(--sim-gold-muted) var(--gold-playback-tint));
   --sim-color: color-mix(in srgb, var(--sim-rest-color), var(--sim-gold-muted) var(--gold-playback-tint));
 }
-#controlsContainer.sim-mode-active[data-gold-playback-motion] #simModeBackground,
+:root:not([data-keep-simulation-drawers]) #controlsContainer.sim-mode-active[data-gold-playback-motion] #simModeBackground,
 #controlsContainer.sim-mode-active[data-gold-playback-motion] .drawer-internal-symbol::before {
   opacity: calc(1 - var(--gold-playback-progress));
   transition: none;
