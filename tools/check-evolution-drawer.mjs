@@ -88,8 +88,9 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  async function checkBackdrop(index){
   const image=await backgroundImage();
   assert.match(image,drawerColors[index]);
-  assert.equal((image.match(/repeating-linear-gradient/g)??[]).length,2);
-  assert.match(image,/45deg.*28px.*29px/);
+  const grid=await backdrop.evaluate(element=>getComputedStyle(element,'::before').backgroundImage);
+  assert.equal((grid.match(/repeating-linear-gradient/g)??[]).length,2);
+  assert.match(grid,/45deg.*28px.*29px/);
  }
  const lip=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>getComputedStyle(e,'::before').borderBottomColor);
  const firstLip=await lip();

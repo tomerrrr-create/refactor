@@ -42,6 +42,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const map=async()=>{await page.evaluate(()=>themeTest.map());await page.locator('#evolutionDrawerDialog').waitFor({state:'visible'});};
  const backdrop=page.locator('#simModeBackground');
  const opacity=()=>backdrop.evaluate(e=>getComputedStyle(e).opacity);
+ const gridOpacity=()=>backdrop.evaluate(e=>getComputedStyle(e,'::before').opacity);
+ const gridImage=()=>backdrop.evaluate(e=>getComputedStyle(e,'::before').backgroundImage);
  const borderColor=()=>backdrop.evaluate(e=>getComputedStyle(e).borderTopColor);
  const finishBorderFade=()=>backdrop.evaluate(e=>Promise.all(e.getAnimations().map(animation=>animation.finished)));
  const transparent='rgba(0, 0, 0, 0)';
@@ -76,7 +78,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const drawerBackdrop=()=>backdrop.evaluate(e=>getComputedStyle(e).backgroundImage);
  const initialBackdrop=await drawerBackdrop();
  assert.match(initialBackdrop,/rgb\(20, 41, 31\)/);
- assert.match(initialBackdrop,/rgba\(166, 198, 163, 0\.05\)/);
+ assert.match(await gridImage(),/rgba\(166, 198, 163, 0\.05\)/);
  assert(await keepDrawers.isChecked());
  await chooseColor(1,'gold');
  const goldBackdrop=await drawerBackdrop();
@@ -92,12 +94,13 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await tap('#btnEvolutionDrawerInternal');
   const image=await drawerBackdrop();
   assert.match(image,expected);
-  assert.doesNotMatch(image,/rgba\(166, 198, 163, 0\.05\)/);
+  assert.doesNotMatch(await gridImage(),/rgba\(166, 198, 163, 0\.05\)/);
  }
  await finishBorderFade();
  const editedBorder=await borderColor();
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
  assert.equal(await opacity(),'1');assert.equal(await drawerBackdrop(),editedBackdrop);
+ assert.equal(await gridOpacity(),'1');
  assert.equal(await borderColor(),editedBorder);assert.notEqual(editedBorder,transparent);
  await tap('#btnPlayPauseLife');
  await tech();
@@ -114,12 +117,15 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap('#evolutionDrawerDialog [data-close]');
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
  assert.equal(await borderColor(),transparent);assert.equal(await opacity(),'1');
+ assert.equal(await gridOpacity(),'0');
  await tap('#btnEvolutionDrawerInternal');
  assert.match(await drawerBackdrop(),/rgb\(41, 27, 56\)/);
  assert.equal(await borderColor(),transparent);
+ assert.equal(await gridOpacity(),'0');
  await tap('#btnEvolutionDrawerInternal');
  assert.equal(await drawerBackdrop(),editedBackdrop);
  assert.equal(await borderColor(),transparent);
+ assert.equal(await gridOpacity(),'0');
  await tap('#btnPlayPauseLife');
  await boot(true);await page.evaluate(()=>themeTest.setup());
  assert((await state()).patterns);assert(await keepDrawers.isChecked());
@@ -148,14 +154,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const shadow=await backdrop.evaluate(e=>getComputedStyle(e).boxShadow);
  assert.deepEqual(await backdrop.evaluate(e=>{
   const style=getComputedStyle(e);
-  return [style.transitionProperty,style.transitionDuration];
- }),['border-color','0.4s']);
+  const grid=getComputedStyle(e,'::before');
+  return [style.transitionProperty,style.transitionDuration,grid.transitionProperty,grid.transitionDuration];
+ }),['border-color','0.4s','opacity','0.4s']);
+ assert.equal(await gridOpacity(),'1');
  assert.equal(await opacity(),'1');
  await tap('#btnPlayPauseLife');assert((await state()).playing);
  assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),'gold');
  await page.waitForTimeout(450);
  assert.equal(await ink(),'rgb(118, 103, 65)');assert.equal(await opacity(),'1');
  assert.equal(await borderColor(),transparent);assert.equal(await drawerBackdrop(),initialBackdrop);
+ assert.equal(await gridOpacity(),'0');
  assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).boxShadow),shadow);
  await page.screenshot({path:artifacts+'/'+config.lang+'-border-faded.png'});
  assert.deepEqual(await backdrop.boundingBox(),frame);
@@ -164,13 +173,17 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);
  assert.equal(await ink(),pausedInk);assert.equal(await opacity(),'1');
  assert.equal(await borderColor(),restingBorder);assert.notEqual(restingBorder,transparent);
+ assert.equal(await gridOpacity(),'1');
  assert.equal(await drawerBackdrop(),initialBackdrop);
  // Reduced motion retains the same visibility states without transitions.
  await page.emulateMedia({reducedMotion:'reduce'});
  assert.equal(await opacity(),'1');assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
+ assert.equal(await backdrop.evaluate(e=>getComputedStyle(e,'::before').transitionDuration),'0s');
  await tap('#btnPlayPauseLife');assert.equal(await borderColor(),transparent);
+ assert.equal(await gridOpacity(),'0');
  assert.equal(await opacity(),'1');assert.equal(await drawerBackdrop(),initialBackdrop);
  await tap('#btnPlayPauseLife');assert.equal(await borderColor(),restingBorder);
+ assert.equal(await gridOpacity(),'1');
  await page.emulateMedia({reducedMotion:'no-preference'});
  await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,rest);assert.equal(current.settings.simulationPlaybackTheme,'gold');
  // Saved legacy profiles normalize only the retired appearance fields.
