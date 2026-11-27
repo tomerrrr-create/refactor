@@ -533,7 +533,7 @@ currentSortMethod,
         return true;
       }
 
-      function applyState(state, { preserveCracksPreferences = false, preserveBrightnessPreferences = false, preserveCymaticsPreferences = false } = {}) {
+      function applyState(state, { preserveCracksPreferences = false, preserveBrightnessPreferences = false, preserveCymaticsPreferences = false, preserveFibonacciPreferences = false } = {}) {
         const brightnessPreferences = preserveBrightnessPreferences ? { rules:{...evolutionTuning.brightnessEvo}, mode:brightnessEvoMode } : null;
         if (state.gravityRules) validateGravitySnapshot(state.gravityRules);
         if (state.contourState) {
@@ -639,6 +639,7 @@ k: tileState.k,
             resetFibonacciRuntime();
             updateFibonacciButtonUI();
         } else fibonacciState = null;
+        if (preserveFibonacciPreferences && fibonacciState) applyFibonacciPreferences(fibonacciState);
         applySeparator();
       }
 
@@ -675,7 +676,7 @@ k: tileState.k,
         if (history.length === 0) return;
         const lastAction = history.pop();
         future.push(lastAction);
-        applyState(lastAction.before, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveBrightnessPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveCymaticsPreferences: !isExecutingMacroCommand && !isMacroPlaying });
+        applyArtworkHistoryState(lastAction.before);
         window.logArtEvent('UNDO', JSON.stringify({ recipeVersion: 2, id: lastAction.id, settings: getHistorySettings(getCurrentState()) }), isExecutingMacroCommand);
         historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
@@ -688,10 +689,20 @@ k: tileState.k,
         if (future.length === 0) return;
         const nextAction = future.pop();
         history.push(nextAction);
-        applyState(nextAction.after, { preserveCracksPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveBrightnessPreferences: !isExecutingMacroCommand && !isMacroPlaying, preserveCymaticsPreferences: !isExecutingMacroCommand && !isMacroPlaying });
+        applyArtworkHistoryState(nextAction.after);
         window.logArtEvent('REDO', JSON.stringify({ recipeVersion: 2, id: nextAction.id, settings: getHistorySettings(getCurrentState()) }), isExecutingMacroCommand);
         historyRecipeCursor = artRecipeLog.length;
         updateUndoRedoButtons();
+      }
+
+      function applyArtworkHistoryState(state) {
+        const preservePreferences = !isExecutingMacroCommand && !isMacroPlaying;
+        applyState(state, {
+            preserveCracksPreferences: preservePreferences,
+            preserveBrightnessPreferences: preservePreferences,
+            preserveCymaticsPreferences: preservePreferences,
+            preserveFibonacciPreferences: preservePreferences
+        });
       }
 
       function updateUndoRedoButtons() {
@@ -3945,6 +3956,12 @@ function restoreFibonacciState(state) {
     if (armedSimulation !== 'fibonacci') armSimulation('fibonacci');
     fibonacciState = state;
     updateFibonacciButtonUI();
+}
+
+function applyFibonacciPreferences(state) {
+    state.colorAdvance = fibonacciColorAdvance;
+    if (state.mode === 'crystal') state.crystalSettings = fibonacciCrystalSettings;
+    else if (state.map) state.map = { ...state.map, settings: fibonacciMapSettings[state.mode] };
 }
 
 function updateFibonacciButtonUI() {
