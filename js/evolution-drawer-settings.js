@@ -27,7 +27,7 @@ export const DEFAULT_EVOLUTION_LAYOUT = Object.freeze([
     'nudgeBrighter', 'gravitationalSort', null, 'ink', 'erosion',
     'contour', 'dla', 'breathe', 'network', 'turing',
     'cymatics', null, null, null, 'spiral',
-    'crystal', 'octagonal', null, 'fibonacci', 'voronoi',
+    'crystal', 'octagonal', null, 'voronoi', 'fibonacci',
     'pinwheel-map', null, null, null, 'apollonian'
 ]);
 // Older ten/twenty-place preferences remain readable. Upgrade once: layouts
