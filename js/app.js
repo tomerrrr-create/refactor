@@ -28,7 +28,7 @@ import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,valid
 import {createEvolutionDrawer} from './evolution-drawer.js';
 import { CONTOUR_LINE_COLORS, FIRST_WHISPER_ICON_PATH, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, createCracksSession, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
-import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
+import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel, DEFAULT_XL_BRUSH_WIDTH, loadXlBrushWidth, saveXlBrushWidth } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
 import { loadStartupProfile, saveStartupProfile } from './startup-profile.js';
 import { loadInterfaceZoom, saveInterfaceZoom } from './interface-zoom.js';
@@ -424,6 +424,9 @@ chiFlowRules = cloneChiFlowRules(chiFlowCycle[0]);
       let startupSettings = loadProfileStartup(loadStartup());
       let simulationInitSettings = loadSimInit();
       let brushSize = 1;
+      let xlBrushWidth = loadXlBrushWidth();
+      // Profiles store the XL slot; its physical width is a browser preference.
+      const getBrushWidth = size => size === DEFAULT_XL_BRUSH_WIDTH ? xlBrushWidth : size;
       let paletteBrushFeedbackTimer = null;
       let colorBrushFeedbackTimer = null;
       let brushShape = 'circle';
@@ -968,7 +971,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
         const restore = button === dom.btnPalette ? updatePaletteHeader : updateColorPickerButtonUI;
         restore();
         button.textContent = brushSizeLabel(brushSize);
-        button.title = `${getText('init_brush_size')}: ${brushSize}`;
+        button.title = `${getText('init_brush_size')}: ${getBrushWidth(brushSize)}`;
         button.setAttribute('aria-label', button.title);
         button.classList.add('palette-brush-size-feedback');
         if (button === dom.btnPalette) paletteBrushFeedbackTimer = setTimeout(restore, 900);
@@ -3742,7 +3745,7 @@ function updateWindButtonUI() {
     }
 
 function getTilesInRadius(centerIndex, size) {
-    return getBrushTiles(centerIndex, n, size, brushShape);
+    return getBrushTiles(centerIndex, n, getBrushWidth(size), brushShape);
 }
 
     function getSymmetricIndices(index) {
@@ -6535,6 +6538,9 @@ else if (action.eventName === 'Invert Colors') {
             updateGlowEffect, updateColorPickerButtonUI,
             paletteLen, getSelectedColorIndex: () => selectedColorIndex,
             getBrush: () => ({ size: brushSize, shape: brushShape }),
+            getBrushWidth,
+            getXlBrushWidth: () => xlBrushWidth,
+            setXlBrushWidth: width => { xlBrushWidth = saveXlBrushWidth(width); },
             setBrush: ({ size, shape }) => {
                 if (!BRUSH_SIZES.includes(size) || !BRUSH_SHAPES.includes(shape)) throw new RangeError('Invalid brush');
                 brushSize = size; brushShape = shape; settingsProfiles?.scheduleCapture();

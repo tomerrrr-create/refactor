@@ -199,6 +199,7 @@ export const translations = {
   magnet_anchor_luminance: { en: 'Anchor: darkest by Luminance', he: 'עוגן: הכהה ביותר לפי Luminance', ru: 'Якорь: самый тёмный по яркости', nl: 'Anker: donkerste volgens luminantie' },
   magnet_anchor_current: { en: 'Anchor: Root or selected color', he: 'עוגן: Root או צבע נבחר', ru: 'Якорь: Root или выбранный цвет', nl: 'Anker: Root of gekozen kleur' },
   gol_dead_luminance: { en: 'Dead color: darkest by Luminance', he: 'צבע מת: הכהה ביותר לפי Luminance', ru: 'Мёртвый цвет: самый тёмный по яркости', nl: 'Dode kleur: donkerste volgens luminantie' },
+  brush_xl_width: { en: 'XL brush width (cells)', he: 'רוחב מברשת XL (תאים)', ru: 'Ширина кисти XL (клетки)', nl: 'XL-penseelbreedte (cellen)' },
   brush_width: { en: '{n} cells wide', he: 'רוחב של {n} תאים', ru: 'Ширина: {n} клеток', nl: '{n} cellen breed' },
   brush_color_page: { en: 'Color page {n}', he: 'עמוד צבעים {n}', ru: 'Страница цветов {n}', nl: 'Kleurenpagina {n}' },
   studio_popup_blocked: { en: "Allow pop-ups for this site to open Video Studio.", he: "יש לאפשר חלונות קופצים לאתר כדי לפתוח את הסטודיו.", ru: "Разрешите всплывающие окна для открытия видеостудии.", nl: "Sta pop-ups toe om de videostudio te openen." },

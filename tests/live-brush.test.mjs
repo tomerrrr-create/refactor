@@ -11,7 +11,7 @@ function harness({live=true,continuous=false,brush=1,shape='circle',symmetry='of
  const canvas={setPointerCapture:id=>captures.add(id),hasPointerCapture:id=>captures.has(id),releasePointerCapture:id=>captures.delete(id),getBoundingClientRect:()=>({left:0,top:0,right:90,bottom:90})};
  const c=vm.createContext({clearPaletteColorTransition() {}, capturePaletteColors() { return null; }, showPaletteColorTransition() {}, dom: { board: {} }, n:9,boardState:Array.from({length:81},()=>({k:3,v:3,isGold:false})),isLifePlaying:live,
   recordPausedBrushMotion:progressive,replayBrushBefore:null,simulationStartState:live?{}:null,simulationHasBrushInput:false,isBreathing:false,isMacroLoaded:false,isMacroPlaying:false,isExecutingMacroCommand:false,
-  windMode:false,windPainter:{down:()=>true,move(){},up(){}},windPointerId:null,canvas,brushSize:brush,brushShape:shape,getBrushTiles,symmetryMode:symmetry,
+  windMode:false,windPainter:{down:()=>true,move(){},up(){}},windPointerId:null,canvas,brushSize:brush,brushShape:shape,getBrushTiles,getBrushWidth:size=>size,symmetryMode:symmetry,
   isBrushModeOn:true,isContinuousBrushOn:continuous,isRainbowModeActive:false,selectedColorIndex:0,selectedColor:'#000000',
   armedSimulation:'gravitationalSort',dlaState:null,performance:{now:()=>100},Math:rng,Map,Set,
   setTimeout:fn=>{timers.set(++serial,fn);return serial;},clearTimeout:id=>timers.delete(id),C:{LONG_PRESS_SHOW_MS:600},

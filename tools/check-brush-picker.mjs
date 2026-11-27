@@ -14,7 +14,7 @@ const browser=await chromium.launch({headless:true,executablePath:process.env.CH
 const results=[];
 try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844,lang:'he'},{width:320,height:568,lang:'ru'},{width:844,height:390,lang:'nl'}]){
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},serviceWorkers:'block',isMobile:config.width<600,hasTouch:config.width<600});
- await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridCompactColorPicker','false');},config.lang);
+ await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridOpeningChoice','false');localStorage.setItem('colorGridCompactColorPicker','false');},config.lang);
  const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
  source=source.replace('modals = initializeModals(contextForModals);','window.brushContext=contextForModals;modals = initializeModals(contextForModals);');
@@ -37,6 +37,34 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  const tap=async(x,y)=>{const q=await point(x,y);if(config.width<600)await p.touchscreen.tap(q.x,q.y);else await p.mouse.click(q.x,q.y);};
  const shape=async value=>p.locator(`[data-brush-shape="${value}"]`).click();
  const size=async value=>p.locator(`[data-brush-size="${value}"]`).click();
+ // The technician setting changes the existing XL slot immediately and survives reload.
+ const editXl = async (next, previous) => {
+  await p.evaluate(()=>brushTest.tech());
+  await p.locator('#btnConfigureDisplay').click();
+  const width = p.locator('#xlBrushWidth');
+  assert.equal(await width.inputValue(), String(previous));
+  await width.fill(String(next));await width.press('Tab');
+  await p.locator('#btnTechnicianCloseTop').click();
+ };
+ await editXl(26, 23);
+ await p.evaluate(()=>brushTest.setup());
+ await open();await shape('square');await size(23);
+ const xl = p.locator('[data-brush-size="23"]');
+ assert.equal(await xl.textContent(),'XL');
+ assert.match(await xl.getAttribute('aria-label'),/26/);
+ await close();await tap(15,15);
+ const painted = await p.evaluate(()=>brushTest.state());
+ assert.equal(painted.tiles.filter(tile=>tile[0]===0).length,26*26);
+ const recorded = await p.evaluate(()=>brushTest.record());
+ await p.reload();await p.waitForFunction(()=>window.brushTest?.ready);
+ await editXl(23, 26);
+ await p.evaluate(text=>{brushTest.setup();brushTest.replay(text);},recorded);
+ assert.deepEqual((await p.evaluate(()=>brushTest.state())).tiles,painted.tiles,'replay preserves the recorded footprint with a different XL preference');
+ if (process.env.BRUSH_XL_ONLY) {
+  assert.deepEqual(errors,[]);
+  results.push({...config,passed:true});console.log('PASS XL',JSON.stringify(config));
+  await context.close();continue;
+ }
  await p.evaluate(()=>brushTest.setup());await open();
  assert.equal(await p.locator('[data-brush-shape]').count(),5);assert.equal(await p.locator('#btnNextPalette, #btnPrevPalette, #colorPickerHeader').count(),0);assert(await p.locator('[data-brush-shape]').evaluateAll(buttons=>buttons.every(b=>!b.textContent.trim()&&b.getAttribute('aria-label')&&b.title)));assert(await p.locator('#colorPickerPaletteName').evaluate(e=>e.closest('.brush-picker-heading')!==null));assert.equal(await p.locator('[data-brush-size]').count(),9);
  const rows=await p.evaluate(()=>({shapes:[...document.querySelectorAll('[data-brush-shape]')].map(b=>{const r=b.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};}),sizes:[...document.querySelectorAll('[data-brush-size]')].slice(0,3).map(b=>{const r=b.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};})}));
