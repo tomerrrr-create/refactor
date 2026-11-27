@@ -81,7 +81,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const drawerBackdrop=()=>backdrop.evaluate(e=>getComputedStyle(e).backgroundImage);
  const initialBackdrop=await drawerBackdrop();
  assert.match(initialBackdrop,/rgb\(20, 41, 31\)/);
- assert.equal((await texture()).color,'rgba(166, 198, 163, 0.05)');
+ assert.equal((await texture()).color,'rgba(166, 198, 163, 0.08)');
  assert.match((await texture()).mask,/drawer-life-contours\.png/);
  assert(await keepDrawers.isChecked());
  await chooseColor(1,'gold');

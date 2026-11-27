@@ -1947,7 +1947,7 @@ button, .ctrl {
   --sim-drawer-gradient: linear-gradient(135deg, #0f172a, #05070d);
 }
 #controlsContainer[data-evolution-page="1"][data-drawer-color="blue"] {
-  --sim-drawer-diamond-ink: rgb(154 175 215 / 5%);
+  --sim-drawer-diamond-ink: rgb(154 175 215 / 8%);
 }
 :where(#controlsContainer.sim-mode-active),
 [data-drawer-color="gold"] {
@@ -1969,7 +1969,7 @@ button, .ctrl {
   --sim-drawer-gradient: linear-gradient(135deg, #14291f, #070e0a);
 }
 #controlsContainer[data-evolution-page="0"][data-drawer-color="pine-green"] {
-  --sim-drawer-diamond-ink: rgb(166 198 163 / 5%);
+  --sim-drawer-diamond-ink: rgb(166 198 163 / 8%);
 }
 [data-drawer-color="ink-violet"] {
   --sim-drawer-lip: #a28abb;

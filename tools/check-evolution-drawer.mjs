@@ -98,8 +98,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
    assert.match(texture.image,/45deg.*28px.*29px/);
   }else{
    const [filename,color]=index===0
-    ? ['drawer-life-contours.png','rgba(166, 198, 163, 0.05)']
-    : ['drawer-pulse-waves.png','rgba(154, 175, 215, 0.05)'];
+    ? ['drawer-life-contours.png','rgba(166, 198, 163, 0.08)']
+    : ['drawer-pulse-waves.png','rgba(154, 175, 215, 0.08)'];
    assert(texture.mask.includes(filename));
    assert.equal(texture.color,color);
   }
