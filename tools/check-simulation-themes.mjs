@@ -108,7 +108,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await borderColor(),editedBorder);assert.notEqual(editedBorder,transparent);
  await tap('#btnPlayPauseLife');
  await tech();
- if(await page.locator('#btnConfigureDisplay').getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
+ if(await page.locator('#btnConfigureAbTest').getAttribute('aria-expanded')==='false')await tap('#btnConfigureAbTest');
  await keepDrawers.uncheck();
  assert(await keepDrawers.isVisible());
  assert.equal(await page.locator('#individualDrawerColorsToggle,#goldPlaybackHierarchyToggle,#goldTransitionDuration,#goldExcludeSortToggle').count(),0);
@@ -147,7 +147,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridSimulationDrawerColors')),JSON.stringify(defaultDrawerColors));
  assert.equal((await state()).settings.simulationPlaybackTheme,beforeReset.settings.simulationPlaybackTheme);
  await tap('#evolutionDrawerDialog [data-close]');await tech();
- if(await page.locator('#btnConfigureDisplay').getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
+ if(await page.locator('#btnConfigureAbTest').getAttribute('aria-expanded')==='false')await tap('#btnConfigureAbTest');
  await keepDrawers.uncheck();await tap('#btnTechnicianCloseTop');await map();
  assert.equal(await page.locator('#simModeBackground .sim-theme-layer').count(),0);
  const rest=fresh.settings.simulationTheme;

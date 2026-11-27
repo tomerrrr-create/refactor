@@ -53,7 +53,6 @@ try{for(const touch of [false,true]){
  assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
  assert.equal(await page.locator('#btnInk').getAttribute('data-evolution-feature-hidden'),null);
  await tech();assert.equal(await page.locator('#inkExperimentToggle, #oilExperimentToggle, #networkExperimentToggle, #btnOil').count(),0);
- assert(await page.locator('#featureSettings #brushMotionRecordingNote').isVisible());
  assert(await page.locator('#featureSettings #spiralExperimentToggle').isVisible());
  await page.locator('#btnConfigureMacro').click();
  assert(!(await page.locator('#featureSettings').isVisible()));
@@ -61,6 +60,13 @@ try{for(const touch of [false,true]){
  await page.locator('#btnConfigureDisplay').click();
  assert(!(await page.locator('#macroSettings').isVisible()));
  assert(await page.locator('#displaySettings #interfaceZoom').isVisible());
+ await page.locator('#btnConfigureAbTest').click();
+ assert(!(await page.locator('#displaySettings').isVisible()));
+ assert(await page.locator('#abTestSettings #brushMotionRecordingNote').isVisible());
+ assert.deepEqual(await page.locator('#abTestSettings input').evaluateAll(inputs=>inputs.map(input=>input.id)),[
+  'compactColorsToggle','xlBrushWidth','keepSimulationDrawersToggle','rememberEvolutionModesToggle',
+  'brushMotionRecordingToggle','openingChoiceToggle'
+ ]);
  await page.locator('#btnConfigureFeatures').click();
  assert(await page.locator('#spiralExperimentToggle').isChecked());
  assert(await page.locator('#breatheExperimentToggle').isChecked());
