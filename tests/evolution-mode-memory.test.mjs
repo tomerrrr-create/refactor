@@ -44,10 +44,10 @@ test('explicit Off restarts the cycle while leaving for another simulation recal
  memory.clear();assert.equal(memory.entry('gravitationalSort'),undefined);
 });
 
-test('Fibonacci recalls a selected spiral and returns to New Spiral after Off',()=>{
+test('Fibonacci recalls a selected spiral and returns to Recursive Spirals after Off',()=>{
  const memory=createEvolutionModeMemory({storage:storage()});
  memory.remember('fibonacci','branching');
  assert.equal(memory.entry('fibonacci'),'branching');
  memory.finishCycle('fibonacci');
- assert.equal(memory.entry('fibonacci'),'restart');
+ assert.equal(memory.entry('fibonacci'),'recursive');
 });

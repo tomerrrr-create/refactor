@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { createFibonacciState, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
+import { createFibonacciState, getFibonacciBranchSchedule, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
 import { CLASSIC_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_PREFERENCES, DEFAULT_CRYSTAL_SETTINGS, growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
 import { DEFAULT_MAP_PREFERENCES, FIBONACCI_MAPS, seedFibonacciMap } from '../js/simulations/fibonacci-maps.js';
 import { restorePatternGrowthPreference } from '../js/simulations/pattern-growth.js';
@@ -74,6 +74,59 @@ test('Square Spiral starts at the center and grows exact Fibonacci rectangles in
         }
         assert.deepEqual([...milestones], [1]);
     }
+});
+
+test('recursive spirals wait for 21 and branch through 34 and 55 on a 249-cell board', () => {
+    for (let orientation = 0; orientation < 4; orientation++) {
+        const { state } = simulate(249, orientation, 'recursive');
+        const { primary, branches } = getFibonacciBranchSchedule(249, state);
+        const rootMilestones = primary.squares.filter(square => [21, 34, 55].includes(square.side));
+        assert.deepEqual(branches.filter(branch => branch.depth === 1).map(branch => branch.start),
+            rootMilestones.map(square => square.frame));
+        assert(branches.some(branch => branch.depth >= 3), 'offspring branch recursively');
+        assert(new Set(branches.map(branch => branch.origin)).size === branches.length);
+        for (const { start } of branches) {
+            assert(branches.filter(branch => branch.start <= start && branch.end > start).length <= 3);
+        }
+        const earlyBoard = simulate(13, orientation, 'recursive');
+        assert.equal(getFibonacciBranchSchedule(13, earlyBoard.state).branches.length, 0);
+    }
+});
+
+test('recursive growth advances overlaps once and resumes from checkpoints through wraparound', () => {
+    const sim = simulate(249, 0, 'recursive');
+    const { primary, branches } = getFibonacciBranchSchedule(249, sim.state);
+    const first = branches[0];
+    sim.currentBoardState[sim.state.origin].isGold = true;
+    sim.currentBoardState[first.origin].k = sim.currentBoardState[first.origin].v = 120;
+    for (let frame = 1; frame < first.start; frame++) sim.step();
+    assert.equal(sim.currentBoardState[first.origin].k, 120);
+    sim.step();
+    assert.equal(sim.currentBoardState[first.origin].k, 121);
+    assert.equal(sim.currentBoardState[sim.state.origin].k, 0);
+    const overlapFrame = branches[2].start + 220;
+    while (sim.state.frame < overlapFrame) sim.step();
+    const snapshot = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    const board = structuredClone(sim.currentBoardState);
+    const before = board.map(cell => cell.k);
+    sim.step();
+    runFibonacciGeneration({ currentBoardState: board, currentPalette: sim.currentPalette }, snapshot);
+    assert.deepEqual(snapshot, sim.state);
+    assert.deepEqual(board, sim.currentBoardState);
+    assert(before.every((color, index) => [color, color + 1].includes(board[index].k)));
+
+    while (sim.state.frame < primary.frameEnds.length - 1) sim.step();
+    sim.step();
+    assert.equal(sim.state.frame, 1);
+    assert(sim.state.outgoing);
+    const next = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    const nextBoard = structuredClone(sim.currentBoardState);
+    sim.step();
+    runFibonacciGeneration({ currentBoardState: nextBoard, currentPalette: sim.currentPalette }, next);
+    assert.deepEqual(next, sim.state);
+    assert.deepEqual(nextBoard, sim.currentBoardState);
+    setFibonacciMode(sim.state, 'restart');
+    assert.equal(validateFibonacciState(sim.state).mode, 'restart');
 });
 
 test('protected gold and individual colors survive continuous playback', () => {
