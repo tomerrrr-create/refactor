@@ -9,7 +9,6 @@ export function initializeOpeningChoice(onEvolve) {
     const gate = document.getElementById('openingChoiceGate');
     const dialog = document.getElementById('openingChoiceDialog');
     const eclipse = document.getElementById('openingEclipse');
-    const actions = document.getElementById('openingChoiceActions');
     const continueButton = document.getElementById('openingContinue');
     const choices = dialog.querySelectorAll('[data-opening-choice]');
     const resetError = document.getElementById('openingEclipseError');
@@ -44,7 +43,8 @@ export function initializeOpeningChoice(onEvolve) {
         button.addEventListener('click', () => {
             selectedMode = button.dataset.openingChoice;
             choices.forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
-            actions.hidden = false;
+            continueButton.disabled = false;
+            eclipse.disabled = false;
         });
     });
     continueButton.addEventListener('click', () => {
