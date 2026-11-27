@@ -22,6 +22,8 @@ export function normalizeFibonacciColorAdvance(value) {
 
 const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 const FIBONACCI_VERSION = 8;
+const CONTINUOUS_RECURSION_VERSION = 9;
+const RECURSIVE_BACKGROUND_TRANSITION = 24;
 const HANDOFF_HOLD = 3;
 const HANDOFF_COVERAGE = .05;
 const HANDOFF_FADE = 24;
@@ -39,7 +41,8 @@ let colorGroups;
 let branchingCells;
 
 export function createFibonacciState(n, orientation = 0, mode = 'restart',
-    colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0, version = FIBONACCI_VERSION) {
+    colorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE, seed = 0,
+    version = mode === 'recursive' ? CONTINUOUS_RECURSION_VERSION : FIBONACCI_VERSION) {
     const center = Math.floor((n - 1) / 2);
     return { version, n, orientation, mode, frame: 0, origin: center * n + center, colorAdvance, seed, generation: 0,
         ...(mode === 'crystal' ? { crystalFrame: 0 } : {}),
@@ -228,7 +231,9 @@ export function setFibonacciMode(state, mode, layoutSeed = state.seed) {
         state.frame = Math.min(state.frame, plan.frameEnds.length - 1);
         delete state.branch;
         delete state.outgoing;
-        if (mode === 'recursive') state.version = FIBONACCI_VERSION;
+        delete state.filledAt;
+        if (mode === 'recursive') state.version = CONTINUOUS_RECURSION_VERSION;
+        else if (state.version === CONTINUOUS_RECURSION_VERSION) state.version = FIBONACCI_VERSION;
     } else if (state.mode === 'branching' && mode !== 'branching') {
         const plan = getPlan(state.n, state);
         state.frame = Math.min(state.frame, plan.frameEnds.length - 1);
@@ -248,8 +253,10 @@ export function setFibonacciMode(state, mode, layoutSeed = state.seed) {
 }
 
 export function validateFibonacciState(state) {
-    if ((state?.version !== 7 && state?.version !== FIBONACCI_VERSION) || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
-        !recordedModes.has(state.mode) || (state.mode === 'recursive' && state.version !== FIBONACCI_VERSION) ||
+    const continuous = state?.mode === 'recursive' && state.version === CONTINUOUS_RECURSION_VERSION;
+    const legacy = state?.version === FIBONACCI_VERSION || (state?.version === 7 && state.mode !== 'recursive');
+    if ((!continuous && !legacy) || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
+        !recordedModes.has(state.mode) ||
         !Number.isSafeInteger(state.frame) || state.frame < 0 || state.frame > 4 * state.n ** 2 ||
         normalizeFibonacciColorAdvance(state.colorAdvance) === undefined ||
         state.seed !== (state.seed >>> 0) || state.generation !== (state.generation >>> 0)) {
@@ -258,6 +265,11 @@ export function validateFibonacciState(state) {
     const { version, n, mode, frame, colorAdvance, seed, generation } = state;
     const { origin, orientation } = validateOrigin(n, state);
     const copy = { version, n, orientation, mode, frame, origin, colorAdvance, seed, generation };
+    if (state.filledAt !== undefined) {
+        if (!continuous || !frame || state.filledAt !== (state.filledAt >>> 0)) throw new Error('Invalid Fibonacci background');
+        copy.filledAt = state.filledAt;
+    }
+    if (continuous && state.outgoing !== undefined) throw new Error('Unexpected Fibonacci handoff');
     if (mode === 'crystal') {
         if (state.crystalFrame !== (state.crystalFrame >>> 0)) throw new Error('Invalid Fibonacci crystal frame');
         copy.crystalFrame = state.crystalFrame;
@@ -391,10 +403,30 @@ function runBranchingGeneration(board, colorCount, groups, state, primary) {
     return board;
 }
 
+function advanceRecursiveBackground(board, colorCount, groups, { n, generation, seed, filledAt }) {
+    const age = (generation - filledAt) >>> 0;
+    for (let row = 0; row < n; row += 2) {
+        const rows = Math.min(2, n - row);
+        for (let col = 0; col < n; col += 2) {
+            const index = row * n + col;
+            const phase = Math.imul(index ^ seed, 0x85ebca6b) >>> 0;
+            // Offset the slower cadence across patches, easing into it as the first round ends.
+            if (age > (phase >>> 8) % RECURSIVE_BACKGROUND_TRANSITION && (generation + phase) % 3 === 0) continue;
+            if (!branchingCells[index]) advanceColor(board, index, colorCount, groups);
+            if (col + 1 < n && !branchingCells[index + 1]) advanceColor(board, index + 1, colorCount, groups);
+            if (rows === 2) {
+                if (!branchingCells[index + n]) advanceColor(board, index + n, colorCount, groups);
+                if (col + 1 < n && !branchingCells[index + n + 1]) advanceColor(board, index + n + 1, colorCount, groups);
+            }
+        }
+    }
+}
+
 function runRecursiveGeneration(board, colorCount, groups, state) {
     let { primary, branches } = getFibonacciBranchSchedule(state.n, state);
     if (state.n > 1 && state.frame === primary.frameEnds.length - 1) {
-        state.outgoing = { origin: state.origin, orientation: state.orientation };
+        if (state.version === CONTINUOUS_RECURSION_VERSION) state.filledAt ??= state.generation;
+        else state.outgoing = { origin: state.origin, orientation: state.orientation };
         Object.assign(state, primary.nextRound, { frame: 0 });
         ({ primary, branches } = getFibonacciBranchSchedule(state.n, state));
     }
@@ -407,6 +439,7 @@ function runRecursiveGeneration(board, colorCount, groups, state) {
         const frame = Math.min(state.frame - branch.start + 1, branch.plan.frameEnds.length - 1);
         if (frame > 0) advance(branch.plan, branch.plan.frameEnds[frame]);
     }
+    if (state.filledAt !== undefined) advanceRecursiveBackground(board, colorCount, groups, state);
     if (state.outgoing) {
         const { hold, handoffEnd } = handoffTiming(state.version, primary);
         if (state.frame >= handoffEnd) delete state.outgoing;

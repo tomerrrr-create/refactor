@@ -6,10 +6,10 @@ import { CLASSIC_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_PREFERENCES, DEFAULT_CRYSTAL_
 import { DEFAULT_MAP_PREFERENCES, FIBONACCI_MAPS, seedFibonacciMap } from '../js/simulations/fibonacci-maps.js';
 import { restorePatternGrowthPreference } from '../js/simulations/pattern-growth.js';
 
-function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0) {
+function simulate(n, orientation = 0, mode = 'continuous', colorAdvance = 100, seed = 0, version) {
     const currentBoardState = Array.from({ length: n * n }, () => ({ k: 0, v: 0 }));
     const currentPalette = Array(4096).fill('#000');
-    const state = createFibonacciState(n, orientation, mode, colorAdvance, seed);
+    const state = createFibonacciState(n, orientation, mode, colorAdvance, seed, version);
     const step = () => runFibonacciGeneration({ currentBoardState, currentPalette }, state);
     const occupied = () => currentBoardState.flatMap(({ k }, index) => k > 0 ? [index] : []);
     return { currentBoardState, currentPalette, state, step, occupied };
@@ -116,17 +116,48 @@ test('recursive growth advances overlaps once and resumes from checkpoints throu
     assert(before.every((color, index) => [color, color + 1].includes(board[index].k)));
 
     while (sim.state.frame < primary.frameEnds.length - 1) sim.step();
+    const atFullBoard = sim.currentBoardState.map(cell => cell.k);
+    sim.step();
+    assert.equal(sim.state.frame, 1);
+    assert.equal(sim.state.filledAt, sim.state.generation);
+    assert.equal(sim.state.outgoing, undefined);
+    assert(sim.currentBoardState.every((cell, index) => cell.k === atFullBoard[index] + Number(!cell.isGold)));
+    while (sim.state.frame < 40) sim.step();
+    const next = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    const nextBoard = structuredClone(sim.currentBoardState);
+    const colors = nextBoard.map(cell => cell.k);
+    for (let frame = 0; frame < 3; frame++) {
+        sim.step();
+        runFibonacciGeneration({ currentBoardState: nextBoard, currentPalette: sim.currentPalette }, next);
+    }
+    assert.deepEqual(next, sim.state);
+    assert.deepEqual(nextBoard, sim.currentBoardState);
+    assert(nextBoard.every((cell, index) => cell.isGold ? cell.k === colors[index] : [2, 3].includes(cell.k - colors[index])));
+    assert(nextBoard.some((cell, index) => cell.k - colors[index] === 2), 'background has a slower cadence');
+    assert(nextBoard.some((cell, index) => cell.k - colors[index] === 3), 'new spirals keep their full pace');
+    setFibonacciMode(sim.state, 'restart');
+    assert.equal(sim.state.filledAt, undefined);
+    assert.equal(validateFibonacciState(sim.state).version, 8);
+});
+
+test('version 8 recursive recordings retain the original strip handoff', () => {
+    const sim = simulate(45, 3, 'recursive', 100, 0, 8);
+    const end = getFibonacciBranchSchedule(45, sim.state).primary.frameEnds.length - 1;
+    while (sim.state.frame < end) sim.step();
     sim.step();
     assert.equal(sim.state.frame, 1);
     assert(sim.state.outgoing);
-    const next = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
-    const nextBoard = structuredClone(sim.currentBoardState);
-    sim.step();
-    runFibonacciGeneration({ currentBoardState: nextBoard, currentPalette: sim.currentPalette }, next);
-    assert.deepEqual(next, sim.state);
-    assert.deepEqual(nextBoard, sim.currentBoardState);
-    setFibonacciMode(sim.state, 'restart');
-    assert.equal(validateFibonacciState(sim.state).mode, 'restart');
+    assert.equal(sim.state.filledAt, undefined);
+
+    const replay = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    const board = structuredClone(sim.currentBoardState);
+    for (let i = 0; i < end && replay.outgoing; i++) {
+        sim.step();
+        runFibonacciGeneration({ currentBoardState: board, currentPalette: sim.currentPalette }, replay);
+    }
+    assert.equal(replay.outgoing, undefined);
+    assert.deepEqual(replay, sim.state);
+    assert.deepEqual(board, sim.currentBoardState);
 });
 
 test('protected gold and individual colors survive continuous playback', () => {
