@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {INITIAL_INK_RULES,validateInkRules,createInkState,restoreInkState,validateInkSnapshot,runInkGeneration} from '../js/simulations/ink.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings} from '../js/workspace-settings.js';
-import {DEFAULT_EVOLUTION_LAYOUT,validateEvolutionSlots} from '../js/evolution-drawer-settings.js';
+import {validateEvolutionSlots} from '../js/evolution-drawer-settings.js';
 const palette=Array.from({length:64},(_,i)=>'#'+(i*221991).toString(16).padStart(6,'0'));
 const boardFor=n=>Array.from({length:n*n},(_,id)=>({id,k:((id%n-n*.4)**2+(Math.floor(id/n)-n*.5)**2<n*n*.055)?40+(id%24):0,v:id/7,prevK:id%9,isGold:id%211===0}));
 function step(board,state,rules=INITIAL_INK_RULES){return runInkGeneration({n:state.n,currentBoardState:board,currentPalette:palette,inkRules:rules},state);}
@@ -36,5 +36,11 @@ test('zero Flow, uniform boards, tiny boards and fully protected artwork remain 
 test('optional Ink preferences preserve the old V1 baseline and old drawer positions',()=>{
  const settings=defaultWorkspaceSettings();assert(!Object.hasOwn(settings.rules,'ink'));const text=serializeWorkspaceSettings(settings);assert.deepEqual(deserializeWorkspaceSettings(text),settings);
  settings.rules.ink={flow:80,swirl:20,viscosity:70};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.ink,settings.rules.ink);
- const old=DEFAULT_EVOLUTION_LAYOUT.slice(0,20);old[8]=null;old[16]='fibonacci';const migrated=validateEvolutionSlots(old);for(let i=0;i<old.length;i++)if(old[i]!==null)assert.equal(migrated[i],old[i]);assert.equal(migrated[8],'ink');assert.equal(old[8],null);
+ const old=[
+  'sandpile','magnet','gameOfLife','brightnessEvo','islands',
+  'nudgeBrighter','gravitationalSort',null,null,'erosion',
+  'contour','dla','breathe','network','turing',
+  'cymatics','fibonacci',null,null,'spiral'
+ ];
+ const migrated=validateEvolutionSlots(old);for(let i=0;i<old.length;i++)if(old[i]!==null)assert.equal(migrated[i],old[i]);assert.equal(migrated[8],'ink');assert.equal(old[8],null);
 });

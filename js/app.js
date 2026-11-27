@@ -26,7 +26,7 @@ import {createCymaticsState,restoreCymaticsState,validateCymaticsSnapshot,runCym
 import {createCymaticsSettingsDialog} from './cymatics-settings-dialog.js';
 import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,validateEvolutionSlots,PATTERN_EVOLUTIONS,isPatternEvolution} from './evolution-drawer-settings.js';
 import {createEvolutionDrawer} from './evolution-drawer.js';
-import { CONTOUR_LINE_COLORS, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
+import { CONTOUR_LINE_COLORS, FIRST_WHISPER_ICON_PATH, INITIAL_CRACKS_GROWTH, validateCracksBrush, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, DEFAULT_CRACKS_GROWTH, validateCracksGrowth } from './cracks-settings.js';
 import { createCracksState, createCracksSession, restoreCracksState, runCracksGeneration, queueCracksGrowth, prepareCracksResume } from './simulations/cracks.js';
 import { getBrushTiles, BRUSH_SIZES, BRUSH_SHAPES, brushSizeLabel } from './brush-footprint.js';
 import { capturePaletteColors, showPaletteColorTransition, clearPaletteColorTransition } from './palette-color-transition.js';
@@ -6373,6 +6373,7 @@ else if (action.eventName === 'Invert Colors') {
             resetApp.inert = true;
             splashScreen.style.zIndex = '1200';
         }
+        dom.btnContour.querySelector('.contour-cracks-icon').setAttribute('d', FIRST_WHISPER_ICON_PATH);
         initializeLanguage();
         onLanguageChange(updateAllUIText);
         macroActivity = createMacroActivity({ board: dom.board, getText, getLang: getCurrentLang,

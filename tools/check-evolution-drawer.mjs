@@ -4,6 +4,7 @@ import {createServer} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
+import {CHI_FLOW_PRESETS} from '../js/constants.js';
 import {DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,validateEvolutionSlots,moveEvolutionSlot} from '../js/evolution-drawer-settings.js';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../',import.meta.url)),artifacts='/tmp/evolution-drawer-check';await mkdir(artifacts,{recursive:true});
@@ -27,7 +28,9 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual((await page.evaluate(()=>drawerTest.state())).slots,DEFAULT_EVOLUTION_LAYOUT,'first launch uses the requested layout before any test setup');
  if(config.width<600)await page.locator('#btnToggleSimMode').tap();else await page.locator('#btnToggleSimMode').click();
  await page.waitForFunction(()=>document.getElementById('controlsContainer').classList.contains('sim-mode-active'));await page.waitForTimeout(600);
- assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top||a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId)),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort','ink','erosion'],'fresh entry uses physical left-to-right order');
+ assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top||a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId)),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort','erosion','contour'],'fresh entry uses physical left-to-right order');
+ const freshCycle=await page.evaluate(()=>drawerTest.state().settings.cycles.chiFlow);
+ assert.deepEqual(freshCycle,['Harmony','Ripples','Alexis'].map(name=>CHI_FLOW_PRESETS[name]));
  const freshSwitch=page.locator('#btnEvolutionDrawerInternal');
  for(const start of [10,20]){
   if(config.width<600)await freshSwitch.tap();else await freshSwitch.click();
@@ -66,7 +69,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  async function reload(){await page.waitForTimeout(300);await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();drawerTest.hidePatterns();});}
  let initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
  const physicalRows=()=>page.locator('#controlsContainer [data-evolution-slot],#btnEvolutionDrawerInternal').evaluateAll(es=>[2,3].map(row=>es.filter(e=>e.getBoundingClientRect().width&&getComputedStyle(e).gridRowStart===String(row)).sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId||'navigation')));
- assert.deepEqual(await physicalRows(),[['sandpile','magnet','gameOfLife','brightnessEvo','islands'],['nudgeBrighter','gravitationalSort','navigation','ink','erosion']],'physical left-to-right order on the first drawer');
+ assert.deepEqual(await physicalRows(),[['sandpile','magnet','gameOfLife','brightnessEvo','islands'],['nudgeBrighter','gravitationalSort','navigation','erosion','contour']],'physical left-to-right order on the first drawer');
  assert.equal(await page.locator('.drawer-view-option,[data-drawer-view],.evolution-drawer-trigger,#btnEvolutionDrawerRight,.drawer-recess').count(),0,'removed presentations leave no controls or technician choice');
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(0,10).filter(Boolean));
  const layout=await container.evaluate(e=>({rows:getComputedStyle(e).gridTemplateRows.split(' ').length,bottom:['btnSave','btnInvert','btnToggleSimMode','btnRandom','btnCycleSort','btnUndo','btnRedo'].map(id=>getComputedStyle(document.getElementById(id)).gridRowStart)}));
@@ -120,14 +123,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert((await dot.boundingBox()).x>firstDot.x,'the same dot moves to the other page');
  assert.equal(await dotColor(),'rgb(187, 192, 198)');
  await checkBackdrop(1);assert.notEqual(await lip(),firstLip);
- assert.deepEqual(await physicalRows(),[['contour','dla','network','turing'],['cymatics','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10,20).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['ink','dla','network','turing'],['cymatics','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10,20).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#spiralExperimentToggle').check();
  await page.locator('#breatheExperimentToggle').check();
  await page.locator('#fibonacciExperimentToggle').check();
  await tap(page.locator('#btnTechnicianCloseTop'));
- assert.deepEqual(await physicalRows(),[['contour','dla','breathe','network','turing'],['cymatics','fibonacci','navigation','spiral']]);
+ assert.deepEqual(await physicalRows(),[['ink','dla','breathe','network','turing'],['cymatics','fibonacci','navigation','spiral']]);
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#breatheExperimentToggle').uncheck();

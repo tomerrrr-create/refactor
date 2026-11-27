@@ -7,8 +7,8 @@ const ids=slots=>slots.filter(id=>id!==null).sort();
 const complete=slots=>{assert.deepEqual(ids(slots),EVOLUTION_CATALOG.map(e=>e.id).sort());assert(INTERNAL_NAV_SLOTS.every(i=>slots[i]===null));};
 test('permanent drawers reserve bottom center and retain the approved default order',()=>{
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,30);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort',null,'ink','erosion']);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10,20),['contour','dla','breathe','network','turing','cymatics',null,null,null,'spiral']);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort',null,'erosion','contour']);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10,20),['ink','dla','breathe','network','turing','cymatics',null,null,null,'spiral']);
  assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(20),['crystal','octagonal',null,'voronoi','fibonacci','pinwheel-map',null,null,null,'apollonian']);
  complete(DEFAULT_EVOLUTION_LAYOUT);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);

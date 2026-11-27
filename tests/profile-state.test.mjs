@@ -131,7 +131,7 @@ test('factory profiles keep unspecified settings and have distinct startup, sort
     expected.simulationPlaybackTheme = 'gold';
     expected.rules.erosion.erosionStages.channels = 4;
     Object.assign(expected.startup, { paletteName: '@random', fill: 'random', brushColor: 'none', separatorPx: 2, boardSize: 21, symmetry: 'off' });
-    expected.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
+    expected.cycles.chiFlow = ['Harmony', 'Ripples', 'Alexis'].map(name => structuredClone(CHI_FLOW_PRESETS[name]));
     assert.deepEqual(one, expected);
     assert.equal(two.startup.paletteName, 'Golden Midnight Extended');
     assert.equal(two.startup.fill, 'random');
@@ -401,7 +401,7 @@ test('profile 1 default upgrade preserves personal choices and other profiles an
     state.persist();
     assert.deepEqual(createProfileState(initial(), disk).draft(), state.draft());
     const factory = factoryProfileSnapshot(0);
-    assert.deepEqual(factory.identity.chiFlow.sources, ['Harmony','Nova','Alexis']);
+    assert.deepEqual(factory.identity.chiFlow.sources, ['Harmony','Ripples','Alexis']);
     assert.equal(factory.identity.chiFlow.index, 0);
     assert.deepEqual(factory.identity.chiFlow.yoursRules, CHI_FLOW_PRESETS.Harmony);
     assert.equal(loadProfileStartup(initial().settings.startup, storage()).paletteName, '@random');
@@ -454,7 +454,7 @@ test('version 11 updates former profile-one defaults without losing custom draft
     assert.deepEqual(state.draft(),profiles[0].draft);
     assert.deepEqual(state.draft(1),profiles[1].draft);assert.deepEqual(state.draft(2),profiles[2].draft);
     assert.deepEqual(saved.profiles[0].saved.settings.cycles.gameOfLife,factoryProfileSnapshot(0).settings.cycles.gameOfLife);
-    assert.deepEqual(saved.profiles[0].saved.settings.cycles.chiFlow,['Harmony','Nova','Alexis'].map(name=>CHI_FLOW_PRESETS[name]));
+    assert.deepEqual(saved.profiles[0].saved.settings.cycles.chiFlow,['Harmony','Ripples','Alexis'].map(name=>CHI_FLOW_PRESETS[name]));
     assert.deepEqual(createProfileState(initial(),disk).draft(),state.draft());
 });
 

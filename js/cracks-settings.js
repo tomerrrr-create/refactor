@@ -1,3 +1,5 @@
+export const FIRST_WHISPER_ICON_PATH = 'M20 36C18 27 20 17 25 9M20 27C12 26 10 21 9 17M21 21C29 21 33 17 35 12';
+
 // Shared file metadata: Contours uses palette endpoints; Cracks always uses brush.
 export const CONTOUR_LINE_COLORS = Object.freeze(['darkest','lightest','brush']);
 export const DEFAULT_CRACKS_MATERIAL = Object.freeze({ enabled: false, strength: 0 });
