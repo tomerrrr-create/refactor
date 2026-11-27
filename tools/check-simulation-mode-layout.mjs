@@ -77,9 +77,31 @@ try {
             }
             assert.fail('Missing drawer control: ' + id);
         };
-        const openEditor = async () => {
+        const openEditor = async ({ checkMenu = false } = {}) => {
             await swipeUp('#btnToggleSimMode', touch ? 18 : 40);
             await page.locator('#technicianDialog').waitFor({state:'visible'});
+            if (checkMenu) {
+                const panel = page.locator('#technicianSettingsScroll');
+                const actionIds = ['btnTechnicianUpdate', 'btnSimulationModeEditor', 'btnResetWorkspace'];
+                const tabIds = ['btnConfigureAbTest', 'btnConfigureDisplay', 'btnConfigureMacro', 'btnConfigureFeatures'];
+                const ids = await panel.locator([...actionIds, ...tabIds, 'profileControls'].map(id => '#' + id).join(',')).evaluateAll(nodes => nodes.map(node => node.id));
+                assert.deepEqual(ids, [...actionIds, ...tabIds, 'profileControls']);
+                for (const id of actionIds) assert(await panel.locator('#' + id).evaluate(button => {
+                    const rect = button.getBoundingClientRect(), scroller = button.closest('#technicianSettingsScroll').getBoundingClientRect();
+                    return rect.top >= scroller.top && rect.bottom <= scroller.bottom;
+                }));
+                assert.equal(await panel.locator('#profileControls #btnProfileSave').count(), 1);
+                await tap('#btnConfigureAbTest');
+                assert(await panel.locator('#abTestSettings').isVisible());
+                await tap('#btnConfigureDisplay');
+                assert(await panel.locator('#displaySettings').isVisible());
+                assert(!(await panel.locator('#abTestSettings').isVisible()));
+                await tap('#btnConfigureDisplay');
+                await tap('#btnResetWorkspace');
+                await page.locator('#workspaceResetConfirmation').waitFor({state:'visible'});
+                await tap('#btnCancelWorkspaceReset');
+                await page.locator('#workspaceResetConfirmation').waitFor({state:'hidden'});
+            }
             await tap('#btnSimulationModeEditor');
             await editor.waitFor({state:'visible'});
             const box = await editor.boundingBox();
@@ -139,7 +161,7 @@ try {
         const legacy = await state();
         assert(legacy.logs.some(line => line.includes('STEP FORWARD') && line.includes('"direction":"pinwheel"')));
 
-        await openEditor();
+        await openEditor({ checkMenu: true });
         assert.equal(await browserLayout(), null);
         assert.equal(await editor.locator('select').count(), 0);
         assert.equal(await page.locator(familyPicker + ' button > svg:visible').count(), 3);
