@@ -36,6 +36,7 @@ import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, getSimulationPlaybackTheme, applySimulationPlaybackTheme, setSimulationRunning } from './simulation-theme.js';
+import { initializeOpeningChoice } from './opening-choice.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
@@ -2822,6 +2823,12 @@ function updateMacroPaletteButtonUI(paletteIndex) {
           setTimeout(() => { dom.longPressDisplay.innerHTML = ''; }, 250);
       }
       
+      function initializeEvolutionBoard() {
+        if (isLifePlaying) return;
+        if (!isSimModeActive) toggleSimMode();
+        prepareBoardForSimMode();
+      }
+
       function prepareBoardForSimMode() {
         animateBoardTransition(() => {
             performAction(() => {
@@ -6607,6 +6614,7 @@ applySortMethod,
         };
         modals = initializeModals(contextForModals);
         initializeQuickStart();
+        const armOpeningChoice = initializeOpeningChoice(initializeEvolutionBoard);
         initializeSimulationTheme(dom.controlsContainer);
         
         activePaletteIndex = resolveStartupPaletteIndex(startupSettings.paletteName);
@@ -6905,11 +6913,7 @@ dom.btnWind.addEventListener('keydown', event => {
 });
         bindPickerGestures(dom.btnDark, {
             onTap: goDarkAction, onOpen: visitSomewhereAction,
-            onHold: () => {
-                if (isLifePlaying) return;
-                if (!isSimModeActive) toggleSimMode();
-                prepareBoardForSimMode();
-            },
+            onHold: initializeEvolutionBoard,
             canInteract: () => !isBreathing,
             beforeStart: hideLongPressDisplay, holdMs: C.LONG_PRESS_SHOW_MS
         });
@@ -6918,10 +6922,7 @@ dom.btnWind.addEventListener('keydown', event => {
             onSwipeSide: goDarkAction,
             onSwipeDown: goDarkAction,
             onOpen: () => modals.openTechnicianMenu(dom.btnToggleSimMode),
-            onHold: () => {
-                if (!isSimModeActive) toggleSimMode();
-                prepareBoardForSimMode();
-            },
+            onHold: initializeEvolutionBoard,
             canInteract: () => !isBreathing && !isLifePlaying, beforeStart: hideLongPressDisplay,
             holdMs: C.LONG_PRESS_SHOW_MS
         });
@@ -7006,6 +7007,7 @@ dom.btnWind.addEventListener('keydown', event => {
         await new Promise(r => setTimeout(r, 2000));
         splashScreen.remove();
         dom.btnPalette.classList.remove('splash-palette-reveal');
+        armOpeningChoice();
       }
 
       initializeApp();

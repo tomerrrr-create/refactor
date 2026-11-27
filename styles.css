@@ -3074,3 +3074,81 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   & > #btnBrushMode.brush-continuous svg path { fill: var(--tier-white); }
   & #gapValue { color: var(--tier-white); }
 }
+
+#openingChoiceGate {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  touch-action: none;
+}
+#openingChoiceGate[hidden] { display: none; }
+#openingChoiceGate:focus-visible {
+  outline: 1px solid #c6a869;
+  outline-offset: -5px;
+}
+#openingChoiceDialog {
+  box-sizing: border-box;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: clamp(14px, 4vw, 24px);
+  border: 1px solid #9f83515e;
+  border-radius: 18px;
+  background: linear-gradient(155deg, #211e19, #121412 75%);
+  color: #f1e8d6;
+  box-shadow: 0 16px 64px #0009;
+  text-align: center;
+}
+#openingChoiceDialog[open] {
+  animation: opening-choice-reveal 360ms cubic-bezier(.2,.7,.3,1) both;
+}
+#openingChoiceDialog::backdrop { background: #0009; }
+#openingChoiceTitle {
+  margin: 1px 0 17px;
+  font-size: 18px;
+  font-weight: 500;
+}
+.opening-choice-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.opening-choice-options button {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 124px;
+  padding: 11px 6px;
+  border: 1px solid #aa90523b;
+  border-radius: 12px;
+  background: #d5aa4808;
+  color: #e9cca0;
+  font: inherit;
+  text-align: center;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.opening-choice-options button:focus-visible {
+  outline: 2px solid #e9cca0;
+  outline-offset: -3px;
+}
+.opening-choice-options button:active { background: #d5aa481f; }
+@media (hover: hover) {
+  .opening-choice-options button:hover { border-color: #aa9052a0; background: #d5aa4816; }
+}
+.opening-choice-icon { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 5px; }
+.opening-choice-icon svg { width: 29px; height: 29px; }
+.opening-choice-name { font-size: 16px; font-weight: 500; }
+.opening-choice-note { margin-top: 3px; font-size: 11px; color: #c1b7a1; line-height: 1.35; }
+@keyframes opening-choice-reveal {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #openingChoiceDialog[open] { animation: none; }
+  .opening-choice-options button { transition: none; }
+}
