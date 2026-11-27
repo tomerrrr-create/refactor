@@ -23,8 +23,8 @@ function harness(t, pointerType = 'touch', buttonId = 'btnToggleSimMode') {
         modals: { openTechnicianMenu(trigger) { assert.equal(trigger, button); actions.push('technicians'); } } });
     Object.assign(globalThis, {document: {addEventListener() {}, elementFromPoint: (x,y) => x >= 0 && x <= 50 && y >= 0 && y <= 50 ? button : null}, window: {addEventListener() {}},
         setTimeout(fn, ms) { const id = ++nextId; timers.set(id, {fn, at: now + ms}); return id; }, clearTimeout: id => timers.delete(id)});
-    const initialize = app.indexOf('function initializeEvolutionBoard()');
-    vm.runInContext(app.slice(initialize, app.indexOf('function prepareBoardForSimMode()', initialize)), context);
+    const initialize = app.indexOf('function initializeEvolutionBoard(');
+    vm.runInContext(app.slice(initialize, app.indexOf('function prepareBoardForSimMode(', initialize)), context);
     const start = app.indexOf('bindPickerGestures(dom.'+buttonId+',');
     vm.runInContext(app.slice(start, buttonId==='btnDark'?app.indexOf('bindPickerGestures(dom.btnToggleSimMode,',start):app.indexOf('// A swipe opens settings', start)), context);
     const event = (type, x = 25, y = 25) => handlers.get(type)?.({pointerId: 1, pointerType, isPrimary: true, button: 0, clientX: x, clientY: y, detail: 1});
@@ -78,7 +78,7 @@ test('cancelled Go Dark swipe and blocked breathing interaction do not change th
 });
 
 test('simulation initialization preserves current symmetry by default and honors explicit settings', () => {
-    const start = app.indexOf('function prepareBoardForSimMode()');
+    const start = app.indexOf('function prepareBoardForSimMode(');
     const end = app.indexOf('function handlePointerDownCtrl', start);
     for (const current of ['off', 'horizontal', 'vertical', 'mandala', 'kaleidoscope']) {
         for (const configured of [undefined, 'off', 'horizontal', 'kaleidoscope']) for (const playing of [false,true]) {

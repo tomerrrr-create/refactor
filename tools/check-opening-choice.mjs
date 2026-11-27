@@ -10,8 +10,10 @@ app = app.replace('      initializeApp();', `window.openingTest = {
         size: n, pixels: boardState.map(cell => [cell.k, cell.v, cell.isGold]),
         history: history.length, recipe: artRecipeLog.length, simulation: isSimModeActive,
         playing: isLifePlaying, selected: selectedColorIndex, lastColor: palette().length - 1,
+        brushColor: selectedColor, firstColor: palette()[0],
         brushSize, separator: separatorPx, settings: {...simulationInitSettings}
-    })
+    }),
+    initSnapshot: () => JSON.parse(artRecipeLog.find(line => line.includes(' INIT_STATE -> ')).split(' INIT_STATE -> ')[1])
 }; initializeApp().then(() => openingTest.ready = true);`);
 if (!process.env.REAL_SPLASH) {
     for (const ms of [5000, 1500, 2000]) {
@@ -84,6 +86,14 @@ try {
         assert.deepEqual(await choice.locator('button[data-opening-choice]').allInnerTexts(), labels);
         assert(await eclipse.isVisible() && await eclipse.isDisabled(), 'reset is visible and requires a board choice');
         assert(await continueButton.isVisible() && await continueButton.isDisabled());
+        assert.deepEqual(await choice.locator('[data-opening-choice]').evaluateAll(buttons =>
+            buttons.map(button => button.getAttribute('aria-pressed'))), ['false', 'false']);
+        for (const action of [continueButton, eclipse]) {
+            assert.equal((await action.textContent()).trim(), '');
+            assert(await action.getAttribute('aria-label'));
+            assert.equal(await action.getAttribute('title'), null);
+            assert(await action.locator('svg').isVisible());
+        }
         assert.equal(await choice.locator('.opening-choice-mark svg').innerHTML(), await control.locator('svg').innerHTML());
         assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
@@ -114,13 +124,11 @@ try {
             assert(await eclipse.isEnabled());
             const navigation = page.waitForEvent('framenavigated', frame => frame === page.mainFrame());
             await tap(eclipse);
-            await veil.waitFor({ state: 'visible' });
-            assert.equal(await veil.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(0, 0, 0)');
-            assert.equal(await veil.locator('svg').evaluate(el => getComputedStyle(el).animationName),
-                mobile ? 'opening-reset-still' : 'opening-reset-heart');
             if (!mobile) {
-                await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('#openingResetVeil svg')).opacity) >= .8);
-                await page.screenshot({ path: '/tmp/fyi-start-eclipse-heart.png', animations: 'allow' });
+                await veil.waitFor({ state: 'visible' });
+                assert.equal(await veil.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(0, 0, 0)');
+                assert.equal(await veil.locator('svg').count(), 0);
+                assert.equal(await veil.evaluate(el => getComputedStyle(el).animationName), 'opening-reset-darken');
             }
             await navigation;
             await page.waitForFunction(() => window.openingTest?.ready);
@@ -154,10 +162,23 @@ try {
         assert.equal(await choice.locator('[data-opening-choice=evolve]').getAttribute('aria-pressed'), 'true');
         assert(!(await state()).simulation, 'Evolution waits for Continue or the eclipse');
         await page.screenshot({ path: '/tmp/fyi-start-selected-' + (mobile ? 'mobile' : 'desktop') + '.png', animations: 'disabled' });
+        assert.equal(await choice.locator('[data-opening-choice=evolve]').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(215, 179, 110)');
         await resetThroughEclipse('evolve', 249);
         const resetEvolved = await state();
-        assert.equal(resetEvolved.selected, resetEvolved.lastColor);
-        assert(resetEvolved.pixels.every(([color, value]) => color === 0 && value === 0));
+        assert.equal(resetEvolved.selected, 0);
+        assert.equal(resetEvolved.brushColor, resetEvolved.firstColor);
+        assert.equal(resetEvolved.brushSize, resetEvolved.settings.brushSize);
+        assert.equal(resetEvolved.separator, 0);
+        assert(resetEvolved.pixels.every(([color, value, gold]) =>
+            color >= 0 && color <= resetEvolved.lastColor && color === value && !gold));
+        assert(new Set(resetEvolved.pixels.map(([color]) => color)).size > 1);
+        const snapshot = await page.evaluate(() => openingTest.initSnapshot());
+        assert.equal(snapshot.n, resetEvolved.size);
+        const recordedColors = snapshot.board.split(',').flatMap(run => {
+            const [count, color] = run.split('x').map(Number);
+            return Array(count).fill(color);
+        });
+        assert.deepEqual(recordedColors, resetEvolved.pixels.map(([color]) => color));
 
         await boot(true);
         await tapAt(control);
@@ -225,7 +246,8 @@ try {
             await page.mouse.up();
         }
         await page.waitForFunction(() => openingTest.state().size === 249);
-        const relativeBrush = ({ selected, lastColor, ...board }) => ({ ...board, brushIsLast: selected === lastColor });
+        const relativeBrush = ({ selected, lastColor, brushColor, firstColor, ...board }) =>
+            ({ ...board, brushIsLast: selected === lastColor });
         assert.deepEqual(relativeBrush(await state()), relativeBrush(evolved),
             'Evolve and a real hold produce the same board and logger state even if startup chooses different palettes');
 

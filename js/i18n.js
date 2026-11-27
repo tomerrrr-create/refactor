@@ -68,7 +68,6 @@ export const translations = {
   opening_choice_creation: {en:'Creation',he:'יצירה',ru:'Создание',nl:'Creatie'},
   opening_choice_evolution: {en:'Evolution',he:'אבולוציה',ru:'Эволюция',nl:'Evolutie'},
   opening_choice_continue: {en:'Continue',he:'המשך',ru:'Продолжить',nl:'Verder'},
-  opening_choice_reset: {en:'Reset',he:'איפוס',ru:'Сбросить',nl:'Wissen'},
   opening_reset_label: {en:'Reset all local app data',he:'איפוס כל הנתונים המקומיים של האפליקציה',ru:'Сбросить все локальные данные приложения',nl:'Alle lokale appgegevens wissen'},
   opening_reset_error: {en:'Reset is unavailable in this browser.',he:'האיפוס אינו זמין בדפדפן הזה.',ru:'Сброс недоступен в этом браузере.',nl:'Wissen is niet beschikbaar in deze browser.'},
   opening_choice_setting: {en:'Create / Evolve on startup',he:'יצירה / אבולוציה בפתיחה',ru:'Создание / эволюция при запуске',nl:'Maken / evolueren bij het openen'},

@@ -3056,9 +3056,11 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   .opening-choice-options button:hover { border-color: #aa9052a0; background: #d5aa4816; }
 }
 .opening-choice-options button[aria-pressed="true"] {
-  border-color: #aa9052a0;
-  background: #d5aa481f;
+  border-color: #f0d393;
+  background: #d7b36e;
+  color: #241a0d;
 }
+.opening-choice-options button[aria-pressed="true"] .glyph-special-reset { background-color: currentColor; }
 .opening-choice-icon { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 5px; }
 .opening-choice-icon svg { width: 29px; height: 29px; }
 .opening-choice-actions {
@@ -3073,27 +3075,23 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
   min-height: 44px;
   padding: 4px;
   border: 1px solid transparent;
   border-radius: 10px;
   color: #c0bcb4;
-  font-size: .875rem;
   transition: opacity 220ms ease-out;
 }
 .opening-choice-action:disabled { opacity: .42; }
 .opening-choice-action:focus-visible { outline: 1px solid #c6a869; outline-offset: -4px; }
 .opening-choice-action svg { width: 20px; height: 20px; flex: none; }
 #openingContinue { background: #d5aa4824; border-color: #9f835169; color: #f2d59e; }
-#openingChoiceDialog[dir="rtl"] #openingContinue svg { transform: scaleX(-1); }
 #openingEclipse:enabled svg {
   animation: opening-eclipse-glow 5.2s ease-in-out infinite;
 }
 #openingEclipseError { margin: 4px 0; font-size: .8rem; }
 #openingResetVeil[open] {
-  display: grid;
-  place-items: center;
+  display: block;
   position: fixed;
   inset: 0;
   width: 100%;
@@ -3104,16 +3102,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   padding: 0;
   border: 0;
   background: #000;
-  color: #e4b571;
   animation: opening-reset-darken 460ms ease-in-out both;
 }
 #openingResetVeil::backdrop { background: transparent; }
-#openingResetVeil svg {
-  width: 46px;
-  height: 46px;
-  filter: drop-shadow(0 0 13px #e5ab505c);
-  animation: opening-reset-heart 1520ms 320ms both;
-}
 @keyframes opening-eclipse-glow {
   0%, 100% { opacity: .7; filter: drop-shadow(0 0 1px #d7ab6622); }
   50% { opacity: 1; filter: drop-shadow(0 0 5px #d7ab6680); }
@@ -3121,13 +3112,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 @keyframes opening-reset-darken {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-@keyframes opening-reset-heart {
-  0% { opacity: 0; transform: scale(.88); }
-  35% { opacity: 1; transform: scale(1.07); animation-timing-function: ease-in-out; }
-  53% { opacity: .65; transform: scale(.98); animation-timing-function: ease-in-out; }
-  66% { opacity: .83; transform: scale(1.02); animation-timing-function: ease-out; }
-  100% { opacity: 0; transform: scale(1); }
 }
 @keyframes opening-choice-reveal {
   from { opacity: 0; transform: translateY(5px); }
@@ -3137,8 +3121,4 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   #openingChoiceDialog[open] { animation: none; }
   .opening-choice-options button, .opening-choice-action { transition: none; }
   #openingEclipse:enabled svg, #openingResetVeil[open] { animation: none; }
-  #openingResetVeil svg { animation: opening-reset-still 320ms linear both; }
-}
-@keyframes opening-reset-still {
-  from, to { opacity: .8; }
 }

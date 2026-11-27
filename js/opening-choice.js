@@ -27,8 +27,8 @@ export function initializeOpeningChoice(onEvolve) {
         gate.hidden = true;
         dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         const resetLabel = getText('opening_reset_label');
+        continueButton.setAttribute('aria-label', getText('opening_choice_continue'));
         eclipse.setAttribute('aria-label', resetLabel);
-        eclipse.title = resetLabel;
         veil.setAttribute('aria-label', resetLabel);
         dialog.showModal();
     }, { once: true });
@@ -58,7 +58,7 @@ export function initializeOpeningChoice(onEvolve) {
         resetError.hidden = true;
         veil.showModal();
         try {
-            await Promise.all(veil.getAnimations({ subtree: true }).map(animation => animation.finished));
+            await Promise.all(veil.getAnimations().map(animation => animation.finished));
             queueAppReset(mode);
             window.location.reload();
         } catch {

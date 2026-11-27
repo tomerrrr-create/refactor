@@ -23,9 +23,9 @@ This is the complete guide to the application's current interactions, defaults, 
 
 ### Creation and color selection
 
-After the opening animation, the first tap or click opens **Creation / Evolution**, with localized labels beneath the Evolution control symbol. **Continue** and **Reset** are visible below the choices and become active when the user selects a board. Continue opens the selected board with the current settings. Creation keeps the displayed board. Evolution runs the same initialization as holding Go Dark or the Evolution control, including the active profile’s Init preferences. Escape closes the choice and continues with the displayed board. Technicians → Features → **Create / Evolve on startup** is on by default. Turn it off to return to direct interaction after the opening animation. The setting is saved in this browser.
+After the opening animation, the first tap or click opens **Creation / Evolution**, with localized labels beneath the Evolution control symbol. The sun and moon are visible below the choices. Selecting a board highlights it in gold and activates both icons. The sun opens the selected board with the current settings. Creation keeps the displayed board. Evolution runs the same initialization as holding Go Dark or the Evolution control, including the active profile’s Init preferences. Escape closes the choice and continues with the displayed board. Technicians → Features → **Create / Evolve on startup** is on by default. Turn it off to return to direct interaction after the opening animation. The setting is saved in this browser.
 
-Reset clears the app’s local settings and profile drafts, then opens the selected board with fresh defaults. A gold heartbeat on black bridges the reset and the direct return to the board. Reduced-motion mode uses a brief, still heart.
+The moon clears the app’s local settings and profile drafts and fades directly to the selected board. For Evolution, the board uses the default Init size and fills every cell with a random color from the loaded palette. The brush starts at the first color in the active sort order. Reduced-motion mode switches immediately.
 
 The brush cycles **Paint → Continuous → Copy**. The white filled triangle indicates Continuous mode, which fills gaps between successive pointer positions; the gold filled triangle indicates ordinary Paint without automatic completion. Copy retains its black triangle with a white outline. These indicator colors do not select the paint color. The factory default remains Continuous, so a fresh default session starts with a white triangle. Color, footprint size, shape and symmetry still apply. Continuous strokes connect samples within a gesture; leaving the canvas breaks the segment. Copy mode copies a dragged source tile onto the destination footprint.
 
@@ -896,7 +896,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 
 | Area | Examples |
 | --- | --- |
-| First interaction, Create / Evolve, long-hold equivalence, eclipse reset and the startup switch | `tools/check-opening-choice.mjs` |
+| First interaction, Create / Evolve, long-hold equivalence, moon reset and the startup switch | `tools/check-opening-choice.mjs` |
 | Browser-local compact color-picker experiment: full palettes, pointer preview/drag/cancel, keyboard, Rainbow, paging restoration, reload and profile independence | `tools/check-compact-color-picker.mjs` |
 | Opening-palette history policy: raw/resolved Undo/Redo, legacy checkpoints, real palette switches and playback lifecycle | `tools/check-macro-palette-context.mjs` (optional `PALETTE_RECIPE` runs the reported full-file regression) |
 | Real file import, opening-palette catalogue, drawing Undo, explicit changes and file replacement on desktop/English and touch/Hebrew | `tools/check-macro-palette-ui.mjs` |
