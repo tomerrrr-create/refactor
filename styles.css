@@ -1346,8 +1346,8 @@ body {
 
 
 /* --- Spiral Modes Button States --- */
-#btnSpiral:not([class*="mode-"]) svg { display: none !important; }
-#btnSpiral:not([class*="mode-"]) #iconSpiralRadial { display: block !important; }
+#btnSpiral:not([data-mode-layout]):not([class*="mode-"]) svg { display: none !important; }
+#btnSpiral:not([data-mode-layout]):not([class*="mode-"]) #iconSpiralRadial { display: block !important; }
 
 #btnSpiral.mode-b #iconSpiralB { display: block !important; }
 #btnSpiral.mode-b svg:not(#iconSpiralB) { display: none !important; }
@@ -1404,7 +1404,7 @@ button, .ctrl {
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 8px #d5aa4840;
 }
-#btnPalette, #btnColorPicker, #btnWind, #btnCycleSort, #btnResizeUp, #btnResizeDown,
+#btnPalette, #btnColorPicker, #btnWind, #btnCycleSort, #btnResizeUp, #btnResizeDown, #btnToggleSimMode,
 #btnCymatics, #btnGameOfLife, #btnGravitationalSort, #btnContour, #btnSpiral,
 #btnMagnetModes, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker {
   touch-action: none !important;
@@ -1687,7 +1687,8 @@ button, .ctrl {
 @media (hover: hover) and (pointer: fine) { .cycle-slot-button:hover, .cycle-reset-dot:hover { background: #d5aa4814; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .cycle-slot-button { transition: none; } }
 
-.technician-reset-section { margin-top: 8px; padding-top: 18px; border-top: 1px solid #b28b362b; text-align: center; }
+.technician-primary-actions { display: grid; gap: 12px; margin-block-end: 22px; }
+.technician-reset-section { text-align: center; }
 .technician-reset-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 9px 18px; border: 1px solid #b28b3659; border-radius: 999px; background: radial-gradient(ellipse at center, #b28b3619, #090a09); color: #d5aa48; font: inherit; font-size: 13px; cursor: pointer; transition: box-shadow .3s ease, color .3s ease; }
 .technician-reset-button svg { width: 23px; height: 23px; }
 .technician-reset-button:hover { color: #ffe7a0; box-shadow: 0 0 20px #b28b3626; }
@@ -3177,3 +3178,90 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   .opening-choice-options button { transition: none; }
   #openingResetVeil[open] { animation: none; }
 }
+
+/* The editor reuses the existing toolbar slots and each mode's original SVG. */
+:is(#btnGravitationalSort, #btnSpiral, #btnInk)[data-mode-layout] > svg:not([data-mode-layout-icon]) {
+  display: none !important;
+}
+:is(#btnGravitationalSort, #btnSpiral, #btnInk)[data-mode-layout] > svg[data-mode-layout-icon] {
+  display: block !important;
+}
+[data-mode-layout="empty"]::after {
+  content: '';
+  width: .9rem;
+  height: 1px;
+  background: currentColor;
+  opacity: .65;
+}
+.mode-layout-dialog {
+  margin: auto;
+  width: min(44rem, calc(100vw - 1.5rem));
+  max-height: min(88dvh, 48rem);
+  overflow: auto;
+  border: 1px solid #50463d;
+  border-radius: 1rem;
+  background: #181615;
+  color: #f8efe4;
+  padding: clamp(.8rem, 3vw, 1.5rem);
+}
+.mode-layout-dialog::backdrop { background: rgb(0 0 0 / .65); }
+.mode-layout-dialog h2 { margin: 0 0 .8rem; font-size: 1.2rem; }
+.mode-layout-family { display: grid; justify-items: center; gap: .35rem; margin-block-end: .6rem; }
+#modeLayoutFamily { display: flex; gap: .5rem; }
+#modeLayoutFamilyName { margin: 0; }
+.mode-layout-dialog button {
+  color: inherit;
+  min-width: 0;
+  min-height: 2.5rem;
+  border: 1px solid #50463d;
+  border-radius: .45rem;
+  background: #211e1c;
+  padding: .25rem .5rem;
+}
+.mode-layout-dialog button:disabled { opacity: .42; }
+.mode-layout-dialog button:not(:disabled) { cursor: pointer; }
+.mode-layout-dialog :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.mode-layout-dialog :is(.mode-layout-primary, .mode-layout-option[aria-pressed="true"], .mode-layout-icon-button:is([aria-pressed="true"], [aria-expanded="true"])) {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.mode-layout-rows { display: grid; gap: .4rem; max-height: 46dvh; overflow: auto; padding: .25rem; }
+.mode-layout-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem auto 2.5rem 2.5rem;
+  gap: .4rem;
+  align-items: center;
+  border-bottom: 1px solid #3c342d;
+  padding-block-end: .35rem;
+}
+.mode-layout-row label, .mode-layout-mark, .mode-layout-option {
+  display: flex;
+  gap: .45rem;
+  align-items: center;
+  text-align: start;
+}
+.mode-layout-dialog input[type="checkbox"] { accent-color: var(--gold); }
+.mode-layout-dialog svg { width: 1.5rem; height: 1.5rem; flex: none; }
+.mode-layout-dialog .mode-layout-icon-button {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 2.15rem;
+  padding-inline: .25rem;
+}
+#modeLayoutFamily .mode-layout-icon-button { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
+.mode-layout-transfer, .mode-layout-transfer > span:not([hidden]) { display: flex; gap: .2rem; }
+[dir="rtl"] .mode-layout-transfer [data-move] svg { transform: scaleX(-1); }
+.mode-layout-parked { margin-block-start: .65rem; padding-block-start: .55rem; border-block-start: 1px solid #3c342d; }
+.mode-layout-parked h3 { margin-block: 0 .4rem; font-size: .875rem; color: #d6bda7; }
+.mode-layout-parked-icons { display: flex; flex-wrap: wrap; gap: .35rem; }
+.mode-layout-parked-icons .mode-layout-icon-button { min-inline-size: 2.5rem; }
+.mode-layout-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-block-start: .6rem; }
+.mode-layout-status { color: #ddc8b3; margin-block-start: .4rem; }
+.mode-layout-picker { width: min(28rem, calc(100vw - 1.5rem)); }
+.mode-layout-option small { margin-inline-start: auto; color: #d6bda7; }
+@media (max-width: 550px) {
+  .mode-layout-row { grid-template-columns: minmax(0, 1fr) max-content 2.15rem 2.15rem; }
+  .mode-layout-row label { gap: .25rem; }
+  .mode-layout-mark { grid-column: 1 / -1; }
+}
+#gravitationalSortSettingsModal[data-fixed-direction] [data-gravity-directions] { display: none; }
