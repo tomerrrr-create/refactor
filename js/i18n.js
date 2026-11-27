@@ -135,6 +135,7 @@ export const translations = {
   network_mode_spatial:{en:'Network · spatial',he:'רשת · מרחבית',ru:'Сеть · пространственная',nl:'Netwerk · ruimtelijk'},
   network_spatial_description:{en:'Patches connect by distance, size and existing traffic. Sorting leaves growth unchanged. The background is calculated or darkest by luminance.',he:'הכתמים מתחברים לפי מרחק, גודל ותנועה קיימת. המיון אינו משנה את הצמיחה. הרקע מחושב או הכהה ביותר לפי לומיננס.',ru:'Связи зависят от расстояния, размера и нагрузки. Сортировка не меняет рост. Фон вычисляется или выбирается по яркости.',nl:'Verbindingen volgen afstand, grootte en bestaand verkeer. Sorteren verandert de groei niet. De achtergrond is berekend of het donkerst op luminantie.'},
   help_fibonacci: {en:'Fibonacci',he:'פיבונאצ׳י',ru:'Фибоначчи',nl:'Fibonacci'},
+  fibonacci_recursive: {en:'Recursive Spirals',he:'ספירלות בתוך ספירלות',ru:'Рекурсивные спирали',nl:'Recursieve spiralen'},
   fibonacci_branching: {en:'Branching Spirals',he:'ספירלות מסתעפות',ru:'Ветвящиеся спирали',nl:'Vertakkende spiralen'},
   fibonacci_crystal: {en:'Penrose Crystal',he:'גביש פנרוז',ru:'Кристалл Пенроуза',nl:'Penrose-kristal'},
   'fibonacci_pinwheel-map': {en:'Pinwheel Tiles',he:'משולשים מסתובבים',ru:'Вращающиеся треугольники',nl:'Draaiende driehoeken'},

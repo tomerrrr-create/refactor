@@ -2995,6 +2995,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #btnFibonacci svg, .pattern-evolution svg { stroke:var(--sim-color); }
 #btnFibonacci.simulation-active svg, .pattern-evolution.simulation-active svg { stroke:var(--gold); }
 
+#btnFibonacci:not([data-mode="recursive"]) [data-fibonacci-icon="recursive"],
 #btnFibonacci:not([data-mode="restart"]) [data-fibonacci-icon="restart"],
 #btnFibonacci:not([data-mode="branching"]) [data-fibonacci-icon="branching"],
 #btnFibonacci:not([data-mode="continuous"]) [data-fibonacci-icon="continuous"] { display:none; }
