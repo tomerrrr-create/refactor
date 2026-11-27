@@ -11,9 +11,15 @@ app = app.replace('      initializeApp();', `window.openingTest = {
         history: history.length, recipe: artRecipeLog.length, simulation: isSimModeActive,
         playing: isLifePlaying, selected: selectedColorIndex, lastColor: palette().length - 1,
         brushColor: selectedColor, firstColor: palette()[0],
+        sort: currentSortMethod, paletteIndex: activePaletteIndex,
         brushSize, separator: separatorPx, settings: {...simulationInitSettings}
     }),
-    initSnapshot: () => JSON.parse(artRecipeLog.find(line => line.includes(' INIT_STATE -> ')).split(' INIT_STATE -> ')[1])
+    initSnapshot: () => JSON.parse(artRecipeLog.find(line => line.includes(' INIT_STATE -> ')).split(' INIT_STATE -> ')[1]),
+    customiseEvolution: () => {
+        switchToPalette(C.PALETTE_GROUPS.find(group => group.id === 'extended').indexes[0]);
+        applySortMethod('reversed');
+        simulationInitSettings = { ...simulationInitSettings, boardSize: 35, brushSize: 3, brushColor: 'last' };
+    }
 }; initializeApp().then(() => openingTest.ready = true);`);
 if (!process.env.REAL_SPLASH) {
     for (const ms of [5000, 1500, 2000]) {
@@ -192,23 +198,30 @@ try {
         await page.screenshot({ path: '/tmp/fyi-start-selected-' + (mobile ? 'mobile' : 'desktop') + '.png', animations: 'disabled' });
         assert.equal(await choice.locator('[data-opening-choice=evolve]').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(215, 179, 110)');
         await resetThroughEclipse('evolve', 249);
-        const resetEvolved = await state();
-        assert.equal(resetEvolved.selected, 0);
-        assert.equal(resetEvolved.brushColor, resetEvolved.firstColor);
-        assert.equal(resetEvolved.brushSize, resetEvolved.settings.brushSize);
-        assert.equal(resetEvolved.separator, 0);
-        assert(resetEvolved.pixels.every(([color, value, gold]) =>
-            color >= 0 && color <= resetEvolved.lastColor && color === value && !gold));
-        assert(new Set(resetEvolved.pixels.map(([color]) => color)).size > 1);
-        const snapshot = await page.evaluate(() => openingTest.initSnapshot());
-        assert.equal(snapshot.n, resetEvolved.size);
-        const recordedColors = snapshot.board.split(',').flatMap(run => {
-            const [count, color] = run.split('x').map(Number);
-            return Array(count).fill(color);
-        });
-        assert.deepEqual(recordedColors, resetEvolved.pixels.map(([color]) => color));
+        const checkEvolutionBoard = async () => {
+            const evolved = await state();
+            assert.equal(evolved.selected, 0);
+            assert.equal(evolved.brushColor, evolved.firstColor);
+            assert.equal(evolved.brushSize, evolved.settings.brushSize);
+            assert.equal(evolved.separator, 0);
+            assert(evolved.pixels.every(([color, value, gold]) =>
+                color >= 0 && color <= evolved.lastColor && color === value && !gold));
+            assert(new Set(evolved.pixels.map(([color]) => color)).size > 1);
+            const snapshot = await page.evaluate(() => openingTest.initSnapshot());
+            assert.equal(snapshot.n, evolved.size);
+            assert.equal(snapshot.pal, evolved.paletteIndex);
+            assert.equal(snapshot.sort, evolved.sort);
+            const recordedColors = snapshot.board.split(',').flatMap(run => {
+                const [count, color] = run.split('x').map(Number);
+                return Array(count).fill(color);
+            });
+            assert.deepEqual(recordedColors, evolved.pixels.map(([color]) => color));
+        };
+        await checkEvolutionBoard();
 
         await boot(true);
+        await page.evaluate(() => openingTest.customiseEvolution());
+        const customized = await state();
         await tapAt(control);
         await choice.waitFor({ state: 'visible' });
         assert(!(await state()).simulation, 'the opening tap does not activate the toolbar control');
@@ -219,11 +232,11 @@ try {
             return state.simulation && state.size === state.settings.boardSize;
         });
         const evolved = await state();
-        assert.equal(evolved.size, 249);
-        assert.equal(evolved.brushSize, evolved.settings.brushSize);
-        assert.equal(evolved.selected, evolved.lastColor);
-        assert.equal(evolved.separator, 0);
-        assert(evolved.pixels.every(([color, value]) => color === 0 && value === 0));
+        assert.equal(evolved.size, 35);
+        assert.equal(evolved.brushSize, 3);
+        assert.equal(evolved.paletteIndex, customized.paletteIndex);
+        assert.equal(evolved.sort, 'reversed');
+        await checkEvolutionBoard();
         assert.equal(evolved.playing, false);
         assert.equal(await gate.isVisible(), false);
 
@@ -255,10 +268,11 @@ try {
         await boot(true);
         assert.equal(await gate.isVisible(), false, 'turning the flag off skips the choice after reload');
         assert.equal(await page.locator('#openingChoiceToggle').isChecked(), false);
+        const beforeSwitch = await state();
         await tap(control);
         await page.waitForFunction(() => openingTest.state().simulation);
         assert.equal(await choice.isVisible(), false);
-        assert.notEqual((await state()).size, 249, 'ordinary mode switch still retains the board');
+        assert.equal((await state()).size, beforeSwitch.size, 'ordinary mode switch still retains the board');
         const boardControl = await control.boundingBox();
         const holdAt = { x: boardControl.x + boardControl.width / 2, y: boardControl.y + boardControl.height / 2 };
         if (mobile) {
@@ -273,11 +287,13 @@ try {
             await page.waitForTimeout(720);
             await page.mouse.up();
         }
-        await page.waitForFunction(() => openingTest.state().size === 249);
-        const relativeBrush = ({ selected, lastColor, brushColor, firstColor, ...board }) =>
-            ({ ...board, brushIsLast: selected === lastColor });
-        assert.deepEqual(relativeBrush(await state()), relativeBrush(evolved),
-            'Evolve and a real hold produce the same board and logger state even if startup chooses different palettes');
+        await page.waitForFunction(size => openingTest.state().size === size, beforeSwitch.settings.boardSize);
+        const held = await state();
+        assert(held.pixels.every(([color, value]) => color === 0 && value === 0),
+            'a toolbar hold still prepares a dark board');
+        assert.equal(held.selected, held.lastColor);
+        assert.equal(held.brushSize, held.settings.brushSize);
+        assert.equal(held.separator, 0);
 
         assert.deepEqual(errors, []);
         console.log(JSON.stringify({ mobile, passed: true }));

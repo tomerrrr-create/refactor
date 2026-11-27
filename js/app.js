@@ -2855,25 +2855,25 @@ function updateMacroPaletteButtonUI(paletteIndex) {
           setTimeout(() => { dom.longPressDisplay.innerHTML = ''; }, 250);
       }
       
-      function initializeEvolutionBoard({ afterReset = false } = {}) {
+      function initializeEvolutionBoard({ fromOpening = false, immediate = false } = {}) {
         if (isLifePlaying) return;
-        if (!isSimModeActive) toggleSimMode({ immediate: afterReset });
-        return prepareBoardForSimMode({ afterReset });
+        if (!isSimModeActive) toggleSimMode({ immediate });
+        return prepareBoardForSimMode({ fromOpening, immediate });
       }
 
-      function prepareBoardForSimMode({ afterReset = false } = {}) {
+      function prepareBoardForSimMode({ fromOpening = false, immediate = false } = {}) {
         const prepare = () => {
             performAction(() => {
                 if (n !== simulationInitSettings.boardSize) _performResize(simulationInitSettings.boardSize);
                 separatorPx = 0; selectedRelativeSeparator = 0; separatorIsSnapshot = false;
                 applySeparator();
-                if (afterReset) fillRandom({ animate: false });
+                if (fromOpening) fillRandom({ animate: false });
                 else goDark();
                 // A new board starts a new fracture run, even at the same size.
                 cracksState = null;
                 cymaticsState = null; inkState = null; oilState = null; networkState = null;
                 const currentPalette = palette();
-                const colorChoice = afterReset ? 'first' : simulationInitSettings.brushColor || 'last';
+                const colorChoice = fromOpening ? 'first' : simulationInitSettings.brushColor || 'last';
                 selectedColorIndex = colorChoice === 'rainbow' ? -1 : colorChoice === 'first' ? 0 : colorChoice === 'lightest'
                     ? currentPalette.indexOf(sortColorsArray(currentPalette, 'luminance').at(-1)) : currentPalette.length - 1;
                 selectedColor = selectedColorIndex >= 0 ? currentPalette[selectedColorIndex] : null;
@@ -2896,7 +2896,7 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 logCurrentStateAsInit();
             });
         };
-        return afterReset ? prepare() : animateBoardTransition(prepare);
+        return immediate ? prepare() : animateBoardTransition(prepare);
       }
 
 
@@ -6664,7 +6664,7 @@ applySortMethod,
         };
         modals = initializeModals(contextForModals);
         initializeQuickStart();
-        const armOpeningChoice = initializeOpeningChoice(initializeEvolutionBoard);
+        const armOpeningChoice = initializeOpeningChoice(() => initializeEvolutionBoard({ fromOpening: true }));
         initializeSimulationTheme();
         
         activePaletteIndex = resolveStartupPaletteIndex(startupSettings.paletteName);
@@ -7052,7 +7052,7 @@ dom.btnWind.addEventListener('keydown', event => {
         window.addEventListener('contextmenu', e => e.preventDefault());
         
         if (resetOpeningMode) {
-            if (resetOpeningMode === 'evolve') initializeEvolutionBoard({ afterReset: true });
+            if (resetOpeningMode === 'evolve') initializeEvolutionBoard({ fromOpening: true, immediate: true });
             const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
             await splashScreen.animate([{ opacity: 1 }, { opacity: 0 }], {
                 duration: reducedMotion ? 0 : 540,
