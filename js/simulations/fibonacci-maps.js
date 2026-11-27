@@ -18,7 +18,7 @@ export const MAP_DEFAULTS = {
 };
 export const DEFAULT_MAP_PREFERENCES = Object.fromEntries(Object.entries(MAP_DEFAULTS)
     .map(([mode, settings]) => [mode, { ...settings, growthSpeedAuto: true }]));
-const TANGENT_CIRCLES_VERSION = 4;
+const TANGENT_CIRCLES_VERSION = 5;
 const MAX_SEEDS = 32;
 const FRAME_MAX = 0xffffffff;
 let cachedPlan;
@@ -43,7 +43,7 @@ export function createFibonacciMap(mode, layoutSeed = 0) {
 
 export function validateFibonacciMap(mode, n, map) {
     const { version, frame, front, seeds, settings, layoutSeed } = map ?? {};
-    const growingCircles = (version === 2 || version === 3 || version === TANGENT_CIRCLES_VERSION) && mode === 'apollonian';
+    const growingCircles = mode === 'apollonian' && Number.isInteger(version) && version >= 2 && version <= TANGENT_CIRCLES_VERSION;
     if ((version !== 1 && !growingCircles) || frame !== (frame >>> 0) || !Number.isSafeInteger(front) ||
         front < frame * MIN_PATTERN_GROWTH_SPEED || front > frame * 200) throw new Error('Invalid Fibonacci map checkpoint');
     if (growingCircles ? layoutSeed !== (layoutSeed >>> 0) : layoutSeed !== undefined) {
@@ -279,26 +279,32 @@ function fillBoardCircleGaps(n, centerX, centerY, innerRadius, minimum, packed, 
     }
 }
 
-function unequalTangentCircles(outerRadius, angle) {
-    // Put three mutually tangent circles in a 100:75:55 ratio. Descartes'
-    // negative curvature gives their common enclosing circle.
-    const radii = [1, .75, .55];
-    const [a, b, c] = radii;
+function tangentEnclosureRadius(radii) {
+    // Descartes' negative curvature gives the common enclosing circle.
     const [ka, kb, kc] = radii.map(radius => 1 / radius);
-    const radius = 1 / (2 * Math.sqrt(ka * kb + kb * kc + kc * ka) - ka - kb - kc);
+    return 1 / (2 * Math.sqrt(ka * kb + kb * kc + kc * ka) - ka - kb - kc);
+}
+
+function unequalTangentCircles(outerRadius, angle, version) {
+    const previousRadii = [1, .75, .55];
+    const radii = version === 4 ? previousRadii : [.30, .55, .75];
+    const [a, b, c] = radii;
+    const radius = tangentEnclosureRadius(radii);
     const ab = a + b, ac = a + c, bc = b + c;
     const x = (ab ** 2 + ac ** 2 - bc ** 2) / (2 * ab);
     const y = Math.sqrt(ac ** 2 - x ** 2);
     // Intersect the three tangency distances to locate the enclosure center.
     const cx = (ab ** 2 + (radius - a) ** 2 - (radius - b) ** 2) / (2 * ab);
     const cy = (ac ** 2 + (radius - a) ** 2 - (radius - c) ** 2 - 2 * x * cx) / (2 * y);
-    const scale = outerRadius / radius;
+    // Use the same unit of length across versions for these opening radii.
+    const scale = outerRadius / tangentEnclosureRadius(previousRadii);
     const cos = Math.cos(angle), sin = Math.sin(angle);
-    return [[0, 0], [ab, 0], [x, y]].map(([px, py], index) => ({
+    const circles = [[0, 0], [ab, 0], [x, y]].map(([px, py], index) => ({
         k: 1 / (radii[index] * scale),
         x: ((px - cx) * cos - (py - cy) * sin) * scale,
         y: ((px - cx) * sin + (py - cy) * cos) * scale
     }));
+    return { circles, enclosureRadius: version === 4 ? outerRadius : radius * scale };
 }
 
 function scheduleUnequalCircleGaps({ initial, minimum, tinyRadius, reflect, transform, schedule }) {
@@ -384,7 +390,7 @@ function drawGrowingCircles(n, plan, size, seed, version) {
         return { k, x: x / k, y: y / k };
     }
     function transform(circle) {
-        if (version === TANGENT_CIRCLES_VERSION) {
+        if (version >= 4) {
             return { radius: 1 / circle.k, cx: circle.x + shiftX, cy: circle.y + shiftY };
         }
         // Inversion preserves tangency while loosening the symmetry and
@@ -418,15 +424,16 @@ function drawGrowingCircles(n, plan, size, seed, version) {
     plan.delay.fill(INACTIVE_CIRCLE_CELL);
     if (n === 1) { plan.delay[0] = 0; return; }
 
-    if (version === TANGENT_CIRCLES_VERSION) {
-        const seeds = unequalTangentCircles(outer, angle).map((circle, index) => schedule(circle, index * 6));
-        const enclosure = { k: -1 / outer, x: 0, y: 0, ready: 0 };
+    if (version >= 4) {
+        const { circles, enclosureRadius } = unequalTangentCircles(outer, angle, version);
+        const seeds = circles.map((circle, index) => schedule(circle, index * 6));
+        const enclosure = { k: -1 / enclosureRadius, x: 0, y: 0, ready: 0 };
         const tinyRadius = Math.max(minimum * 1.35, n * .036);
         const tinyStart = scheduleUnequalCircleGaps({
             initial: [enclosure, ...seeds], minimum, tinyRadius, reflect, transform, schedule
         });
         const edgeStart = Math.max(...seeds.map(circle => circle.ready)) + 8;
-        fillBoardCircleGaps(n, shiftX, shiftY, outer, minimum, packed, schedule, (radius, order) =>
+        fillBoardCircleGaps(n, shiftX, shiftY, enclosureRadius, minimum, packed, schedule, (radius, order) =>
             radius < tinyRadius ? tinyStart + Math.floor(order / 5) * 7 : edgeStart);
         return;
     }

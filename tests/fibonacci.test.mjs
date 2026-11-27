@@ -429,7 +429,7 @@ test('Tangent Circles opens with three different footprints and resumes seeded g
     const differentLayout = simulate(size, 0, 'apollonian', 100, 72378818);
     for (let frame = 0; frame < 36; frame++) { sim.step(); differentLayout.step(); }
     const opening = sim.occupied();
-    assert.equal(sim.state.map.version, 4);
+    assert.equal(sim.state.map.version, 5);
     assert(opening.length > 0 && opening.length < size ** 2 / 2);
     assert.notDeepEqual(opening, differentLayout.occupied());
     const remaining = new Set(opening);
@@ -500,7 +500,8 @@ test('Tangent Circles recordings from all previous versions keep their packing a
     assert.equal(hash, '3ca97f226b6f941b07e2f3354a2e21cd330e2a24e994dd55309a4cfecbae0a19');
     for (const [version, expectedHash] of [
         [2, 'aa05c25ac18330f2605e7820742f1e229d28daca67f72eb1c87c276266990e25'],
-        [3, 'a5613f6d19cb99e49e414d57e6a28db6944166c5b8ca846b68e8eeac714ca072']
+        [3, 'a5613f6d19cb99e49e414d57e6a28db6944166c5b8ca846b68e8eeac714ca072'],
+        [4, 'a81f1389799defa1e13b7df89c15f1c4fd9901f5016d21b6b4902fa0724f4637']
     ]) {
         const seeded = validateFibonacciState({ ...source, map: { ...source.map, version } });
         for (const cell of currentBoardState) cell.k = cell.v = 0;
