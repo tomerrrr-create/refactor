@@ -19,6 +19,7 @@ function harness(saved = {}, blocked = false) {
     const transition = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
     const transitionValue = {};
     const sortToggle = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
+    const keepDrawers = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
     const sortButton = {
         excluded: false,
         toggleAttribute(name, value) {
@@ -33,15 +34,25 @@ function harness(saved = {}, blocked = false) {
     const select = selector => selector.includes('Playback') ? playback : rest;
     const controls = { goldPlaybackHierarchyToggle: hierarchy, glowPulse: pulse, glowPulseValue: pulseValue,
         goldTransitionDuration: transition, goldTransitionDurationValue: transitionValue,
-        goldExcludeSortToggle: sortToggle, btnCycleSort: sortButton };
+        goldExcludeSortToggle: sortToggle, btnCycleSort: sortButton, keepSimulationDrawersToggle: keepDrawers };
     const context = vm.createContext({ document: { documentElement: root,
         getElementById: id => controls[id] ?? { querySelectorAll: () => select(id) }, querySelectorAll: select },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
         getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
-    return { context, root, storage, rest, playback, hierarchy, pulse, transition, sortToggle, sortButton, styles, run: code => vm.runInContext(code, context) };
+    return { context, root, storage, rest, playback, hierarchy, pulse, transition, sortToggle, sortButton, keepDrawers, styles, run: code => vm.runInContext(code, context) };
 }
+
+test('the drawer backdrop stays visible by default and the opt-out survives reopening', () => {
+    const h = harness();h.run('initializeSimulationTheme()');
+    assert(h.keepDrawers.checked);assert(h.root.hasAttribute('data-keep-simulation-drawers'));
+    h.keepDrawers.checked = false;h.keepDrawers.handlers.change();
+    assert(!h.root.hasAttribute('data-keep-simulation-drawers'));
+    const reopened = harness(Object.fromEntries(h.storage));reopened.run('initializeSimulationTheme()');
+    assert(!reopened.keepDrawers.checked);assert(!reopened.root.hasAttribute('data-keep-simulation-drawers'));
+    const blocked = harness({},true);blocked.run('initializeSimulationTheme()');assert(blocked.keepDrawers.checked);
+});
 
 test('Glow Pulse defaults to 3.2 seconds and saves the selected duration', () => {
     const h = harness();

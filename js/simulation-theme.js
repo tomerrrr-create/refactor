@@ -5,6 +5,7 @@ const STORAGE_KEY = 'colorGridSimulationTheme';
 const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
 const GOLD_SORT_EXEMPTION_STORAGE_KEY = 'colorGridGoldExcludeSort';
+const KEEP_DRAWERS_STORAGE_KEY = 'colorGridKeepSimulationDrawers';
 const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
 const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
 const DEFAULT_GLOW_PULSE_SECONDS = 3.2;
@@ -38,7 +39,7 @@ function updateEffectiveTheme() {
   const running = root.hasAttribute('data-simulation-running');
   const theme = running ? getSimulationPlaybackTheme() : getSimulationTheme();
   root.dataset.simulationEffectiveTheme = theme;
-  root.dataset.simulationBackdropTheme = goldPlaybackTransition?.sync(running) ? getSimulationTheme() : theme;
+  goldPlaybackTransition?.sync(running);
 }
 
 // Running state is transient; only the two chosen colors are saved.
@@ -105,7 +106,6 @@ function createGoldPlaybackTransition(toolbar) {
           frame = requestAnimationFrame(advance);
         }
       }
-      return enabled;
     }
   };
 }
@@ -158,6 +158,19 @@ function initializeGoldSortExemption() {
   });
 }
 
+function initializeDrawerVisibility() {
+  const toggle = document.getElementById('keepSimulationDrawersToggle');
+  const root = document.documentElement;
+  toggle.checked = true;
+  try { toggle.checked = localStorage.getItem(KEEP_DRAWERS_STORAGE_KEY) !== 'false'; } catch {}
+  const apply = () => root.toggleAttribute('data-keep-simulation-drawers', toggle.checked);
+  apply();
+  toggle.addEventListener('change', () => {
+    apply();
+    try { localStorage.setItem(KEEP_DRAWERS_STORAGE_KEY, String(toggle.checked)); } catch {}
+  });
+}
+
 function initializeDurationSlider(sliderId, storageKey, durations, defaultDuration, apply) {
   const slider = document.getElementById(sliderId);
   const value = document.getElementById(sliderId + 'Value');
@@ -186,6 +199,7 @@ export function initializeSimulationTheme(toolbar) {
   if (toolbar) goldPlaybackTransition = createGoldPlaybackTransition(toolbar);
   initializeGoldPlaybackHierarchy();
   initializeGoldSortExemption();
+  initializeDrawerVisibility();
   initializeDurationSlider('glowPulse', GLOW_PULSE_STORAGE_KEY, GLOW_PULSE_SECONDS, DEFAULT_GLOW_PULSE_SECONDS,
     duration => document.documentElement.style.setProperty('--simulation-halo-duration', `${duration}s`));
   initializeDurationSlider('goldTransitionDuration', GOLD_TRANSITION_STORAGE_KEY, GOLD_TRANSITION_SECONDS, DEFAULT_GOLD_TRANSITION_SECONDS,

@@ -17,6 +17,7 @@ export const translations = {
   glow_pulse: {en:"Glow Pulse",he:"פעימת ההילה",ru:"Пульсация ореола",nl:"Gloedpuls"},
   gold_transition_duration: {en:"Transition duration",he:"משך המעבר",ru:"Длительность перехода",nl:"Duur van de overgang"},
   gold_exclude_sort: {en:"Exclude Sort from Gold Hierarchy",he:"החרגת כפתור המיון מהיררכיית הזהב",ru:"Исключить сортировку из золотой иерархии",nl:"Sorteren buiten de goudhiërarchie houden"},
+  keep_simulation_drawers: {en:'Keep drawers visible during playback',he:'השארת המגירות גלויות בזמן ניגון',ru:'Показывать панели во время воспроизведения',nl:'Laden zichtbaar houden tijdens afspelen'},
   technician_group_macro: {en:"Macro",he:"מאקרו",ru:"Макрос",nl:"Macro"},
   gold_playback_hierarchy: {en:"Gold Playback Hierarchy",he:"שלוש דרגות זהב בניגון",ru:"Три оттенка золота при воспроизведении",nl:"Drie goudtinten tijdens afspelen"},
   technician_group_features: {en:"Features",he:"אפשרויות הפעלה",ru:"Возможности",nl:"Functies"},
