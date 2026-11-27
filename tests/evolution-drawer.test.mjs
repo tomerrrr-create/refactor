@@ -9,7 +9,7 @@ test('permanent drawers reserve bottom center and retain the approved default or
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,30);
  assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort',null,'ink','erosion']);
  assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10,20),['contour','dla','breathe','network','turing','cymatics',null,null,null,'spiral']);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(20),['crystal','octagonal',null,'fibonacci','voronoi','pinwheel-map',null,null,null,'apollonian']);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(20),['crystal','octagonal',null,'voronoi','fibonacci','pinwheel-map',null,null,null,'apollonian']);
  complete(DEFAULT_EVOLUTION_LAYOUT);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
  for(const lang of ['en','he','ru','nl'])assert(translations.drawer_navigation_slot[lang]);
