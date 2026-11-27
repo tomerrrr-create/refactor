@@ -10,6 +10,7 @@ export function initializeOpeningChoice(onEvolve) {
     const dialog = document.getElementById('openingChoiceDialog');
     const eclipse = document.getElementById('openingEclipse');
     const continueButton = document.getElementById('openingContinue');
+    const actions = dialog.querySelector('.opening-choice-actions');
     const choices = dialog.querySelectorAll('[data-opening-choice]');
     const resetError = document.getElementById('openingEclipseError');
     const veil = document.getElementById('openingResetVeil');
@@ -29,10 +30,7 @@ export function initializeOpeningChoice(onEvolve) {
     gate.addEventListener('click', () => {
         gate.hidden = true;
         dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
-        const resetLabel = getText('opening_reset_label');
-        continueButton.setAttribute('aria-label', getText('opening_choice_continue'));
-        eclipse.setAttribute('aria-label', resetLabel);
-        veil.setAttribute('aria-label', resetLabel);
+        veil.setAttribute('aria-label', getText('opening_reset_label'));
         dialog.showModal();
         dialog.focus({ preventScroll: true });
     }, { once: true });
@@ -49,6 +47,7 @@ export function initializeOpeningChoice(onEvolve) {
             choices.forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
             continueButton.disabled = false;
             eclipse.disabled = false;
+            actions.inert = false;
         });
     });
     continueButton.addEventListener('click', () => {
