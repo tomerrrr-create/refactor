@@ -26,16 +26,16 @@ function harness(saved = {}, blocked = false) {
     return { context, root, storage, pulse, keepDrawers, styles, run: code => vm.runInContext(code, context) };
 }
 
-test('drawer backdrop starts on every load and colors survive independently', () => {
+test('drawer border starts on every load and colors survive independently', () => {
     const h = harness({ colorGridKeepSimulationDrawers: 'false' });h.run('initializeSimulationTheme()');
-    assert(h.keepDrawers.checked);assert(h.root.hasAttribute('data-keep-simulation-drawers'));
+    assert(h.keepDrawers.checked);assert(h.root.hasAttribute('data-keep-simulation-drawer-border'));
     h.keepDrawers.checked = false;h.keepDrawers.handlers.change();
-    assert(!h.root.hasAttribute('data-keep-simulation-drawers'));
+    assert(!h.root.hasAttribute('data-keep-simulation-drawer-border'));
     assert.equal(h.run('drawerColors.join()'), 'pine-green,blue,burgundy');
     h.run("setDrawerColor(0, 'pine-green'); setDrawerColor(1, 'ink-violet'); setDrawerColor(2, 'warm-charcoal'); setDrawerColor(2, 'ivory'); setDrawerColor(3, 'blue')");
     assert.equal(h.run("['pine-green','ink-violet','warm-charcoal'].some(isSimulationTheme)"), false);
     const reopened = harness(Object.fromEntries(h.storage));reopened.run('initializeSimulationTheme()');
-    assert(reopened.keepDrawers.checked);assert(reopened.root.hasAttribute('data-keep-simulation-drawers'));
+    assert(reopened.keepDrawers.checked);assert(reopened.root.hasAttribute('data-keep-simulation-drawer-border'));
     assert.equal(reopened.run('drawerColors.join()'), 'pine-green,ink-violet,warm-charcoal');
     reopened.run('resetDrawerColors()');
     assert.equal(reopened.run('drawerColors.join()'), 'pine-green,blue,burgundy');

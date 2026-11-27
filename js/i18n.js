@@ -15,7 +15,7 @@ export const translations = {
   magnet_method_field_cosmic_magnet:{en:'Combined Cosmic',he:'קוסמי משולב',ru:'Космический с общим полем',nl:'Kosmisch gecombineerd'},
   technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},
   glow_pulse: {en:"Glow Pulse",he:"פעימת ההילה",ru:"Пульсация ореола",nl:"Gloedpuls"},
-  keep_simulation_drawers: {en:'Keep drawers visible during playback',he:'השארת המגירות גלויות בזמן ניגון',ru:'Показывать панели во время воспроизведения',nl:'Laden zichtbaar houden tijdens afspelen'},
+  keep_simulation_drawers: {en:'Keep Drawer Border Visible During Playback',he:'השארת מסגרת המגירה גלויה בזמן ניגון',ru:'Сохранять рамку панели при воспроизведении',nl:'Rand van de lade zichtbaar houden tijdens afspelen'},
   technician_group_macro: {en:"Macro",he:"מאקרו",ru:"Макрос",nl:"Macro"},
   technician_group_features: {en:"Features",he:"אפשרויות הפעלה",ru:"Возможности",nl:"Functies"},
   technician_group_startup: {en:"Initialization & startup",he:"אתחול ופתיחה",ru:"Инициализация и запуск",nl:"Initialisatie en opstarten"},
