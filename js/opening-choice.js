@@ -15,6 +15,9 @@ export function initializeOpeningChoice(onEvolve) {
     const veil = document.getElementById('openingResetVeil');
     const switchIcon = document.querySelector('#btnToggleSimMode > svg');
     dialog.querySelector('.opening-choice-mark').append(switchIcon.cloneNode(true));
+    const gravityIcon = document.getElementById('iconGsUp').cloneNode(true);
+    gravityIcon.removeAttribute('id');
+    dialog.querySelector('[data-opening-choice="evolve"] .opening-choice-icon').append(gravityIcon);
     let selectedMode = null;
 
     toggle.checked = true;
