@@ -15,6 +15,10 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
             <p id="modeLayoutFamilyName"></p>
         </div>
         <div class="mode-layout-rows"></div>
+        <section class="mode-layout-parked" aria-labelledby="modeLayoutParkedTitle" hidden>
+            <h3 id="modeLayoutParkedTitle" data-copy="outside_cycle"></h3>
+            <div class="mode-layout-parked-icons"></div>
+        </section>
         <div class="mode-layout-actions">
             <button type="button" data-copy="reset"></button>
             <button type="button" data-copy="import"></button>
@@ -34,6 +38,8 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
     const familyPicker = dialog.querySelector('#modeLayoutFamily');
     const familyCaption = dialog.querySelector('#modeLayoutFamilyName');
     const rows = dialog.querySelector('.mode-layout-rows');
+    const parked = dialog.querySelector('.mode-layout-parked');
+    const parkedIcons = parked.querySelector('.mode-layout-parked-icons');
     const file = dialog.querySelector('input[type=file]');
     const status = dialog.querySelector('[role=status]');
     const t = key => getText('mode_layout_' + key);
@@ -85,8 +91,7 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
         openTransfer = undefined;
     }
 
-    function transferButtons(entries, index) {
-        const entry = entries[index];
+    function transferButtons(entries, entry, index) {
         const transfer = document.createElement('div');
         transfer.className = 'mode-layout-transfer';
         const destinations = document.createElement('span');
@@ -114,11 +119,11 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
             if (family === selectedFamily) continue;
             const choice = familyButton(family, () => {
                 const scrollTop = rows.scrollTop;
-                entries.splice(index, 1);
+                entries.splice(entries.indexOf(entry), 1);
                 draft.families[family].push(entry);
                 renderRows();
                 rows.scrollTop = scrollTop;
-                const nextRow = rows.children[Math.min(index, entries.length - 1)];
+                const nextRow = rows.children[Math.min(index, rows.children.length - 1)];
                 const focus = nextRow?.querySelector('[data-move]') ?? familyPicker.querySelector('[aria-pressed=true]');
                 focus.focus({ preventScroll: true });
             });
@@ -129,28 +134,31 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
         return transfer;
     }
 
-    function orderButton(row, entries, index, offset) {
+    function orderButton(row, entries, cycle, index, offset) {
         const next = index + offset;
         const direction = offset < 0 ? 'up' : 'down';
         const control = button(offset < 0 ? '↑' : '↓', () => {
-            [entries[index], entries[next]] = [entries[next], entries[index]];
+            const from = entries.indexOf(cycle[index]);
+            const to = entries.indexOf(cycle[next]);
+            [entries[from], entries[to]] = [entries[to], entries[from]];
             renderRows();
             const moved = rows.children[next];
             const same = moved.querySelector('[data-order="' + direction + '"]');
             (same.disabled ? moved.querySelector('[data-move]') : same).focus();
         });
         control.dataset.order = direction;
-        control.setAttribute('aria-label', t(direction) + ' · ' + modeName(entries[index].id));
-        control.disabled = next < 0 || next >= entries.length;
+        control.setAttribute('aria-label', t(direction) + ' · ' + modeName(cycle[index].id));
+        control.disabled = next < 0 || next >= cycle.length;
         row.append(control);
     }
 
     function renderRows() {
         const entries = draft.families[selectedFamily];
+        const cycle = entries.filter(entry => entry.inCycle);
         closeTransfer();
         rows.replaceChildren();
-        if (!entries.length) rows.textContent = t('empty');
-        entries.forEach((entry, index) => {
+        if (!cycle.length) rows.textContent = t(entries.length ? 'empty_cycle' : 'empty');
+        cycle.forEach((entry, index) => {
             const row = document.createElement('div');
             row.className = 'mode-layout-row';
             row.dataset.mode = entry.id;
@@ -160,15 +168,39 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
             const membership = document.createElement('label');
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.checked = entry.inCycle;
+            checkbox.checked = true;
             checkbox.setAttribute('aria-label', t('cycle') + ' · ' + modeName(entry.id));
-            checkbox.addEventListener('change', () => { entry.inCycle = checkbox.checked; });
+            checkbox.addEventListener('change', () => {
+                const scrollTop = rows.scrollTop;
+                entry.inCycle = false;
+                renderRows();
+                rows.scrollTop = scrollTop;
+                parkedIcons.querySelector('[data-parked-mode="' + entry.id + '"]').focus({ preventScroll: true });
+            });
             membership.append(checkbox, t('cycle'));
-            row.append(mark, transferButtons(entries, index), membership);
-            orderButton(row, entries, index, -1);
-            orderButton(row, entries, index, 1);
+            row.append(mark, transferButtons(entries, entry, index), membership);
+            orderButton(row, entries, cycle, index, -1);
+            orderButton(row, entries, cycle, index, 1);
             rows.append(row);
         });
+
+        const parkedModes = entries.filter(entry => !entry.inCycle);
+        parked.hidden = !parkedModes.length;
+        parkedIcons.replaceChildren(...parkedModes.map(entry => {
+            const add = button('', () => {
+                entries.splice(entries.indexOf(entry), 1);
+                entry.inCycle = true;
+                entries.push(entry);
+                renderRows();
+                rows.lastElementChild.querySelector('input').focus();
+            });
+            add.className = 'mode-layout-icon-button';
+            add.dataset.parkedMode = entry.id;
+            add.title = t('add_to_cycle') + ' · ' + modeName(entry.id);
+            add.setAttribute('aria-label', add.title);
+            add.append(modeLayoutIcon(entry.id));
+            return add;
+        }));
     }
 
     trigger.addEventListener('click', () => {

@@ -90,6 +90,8 @@ try {
         const family = id => tap(familyPicker + ' [data-family="' + id + '"]');
         const selectedFamily = () => page.locator(familyPicker + ' [aria-pressed=true]').getAttribute('data-family');
         const row = mode => editor.locator('[data-mode="' + mode + '"]');
+        const parkedMode = mode => editor.locator('[data-parked-mode="' + mode + '"]');
+        const cycleOrder = () => editor.locator('.mode-layout-row').evaluateAll(nodes => nodes.map(node => node.dataset.mode));
         const move = async (mode, to) => {
             const from = await selectedFamily();
             const selector = '#simulationModeEditor [data-mode="' + mode + '"]';
@@ -154,7 +156,6 @@ try {
         await move('pinwheel', 'spiral');
         assert.equal(await selectedFamily(), 'gravitationalSort');
         assert.equal(await row('pinwheel').count(), 0);
-        await row('center_x').locator('input').uncheck();
         await move('center_x', 'spiral');
         assert.equal(await selectedFamily(), 'gravitationalSort');
         assert.equal(await row('center_x').count(), 0);
@@ -165,7 +166,10 @@ try {
         await family('spiral');
         await row('pinwheel').locator('[data-order=up]').click();
         await row('pinwheel').locator('[data-order=up]').click();
-        assert(!(await row('center_x').locator('input').isChecked()));
+        await tap('#simulationModeEditor [data-mode=center_x] input');
+        assert.equal(await row('center_x').count(), 0);
+        assert.equal(await parkedMode('center_x').locator('svg').count(), 1);
+        assert.deepEqual(await cycleOrder(), ['pinwheel', 'radial', 'down', 'circular']);
         assert.equal(await shapeFamilyIcon.innerHTML(), shapeGlyph, 'Family icons stay fixed when the first mode changes');
         const downloading = page.waitForEvent('download');
         await editor.locator('[data-copy=export]').click();
@@ -175,6 +179,7 @@ try {
         await apply();
         assert.deepEqual(await browserLayout(), exported);
         assert.deepEqual((await state()).project.tiles, legacy.project.tiles, 'Applying a layout leaves the board intact');
+        assert.deepEqual((await state()).logs, legacy.logs, 'Layout editing creates no logger commands');
         assert.equal((await state()).control, 'spiral');
 
         await page.reload();
@@ -241,6 +246,16 @@ try {
         await replay(legacy, 'legacy-modes.txt');
 
         await openEditor();
+        await family('spiral');
+        assert.deepEqual(await cycleOrder(), ['pinwheel', 'radial', 'down', 'circular']);
+        assert(await parkedMode('center_x').isVisible(), 'Parked state persists through refresh');
+        await tap('#simulationModeEditor [data-mode=radial] input');
+        assert.deepEqual(await cycleOrder(), ['pinwheel', 'down', 'circular']);
+        await row('pinwheel').locator('[data-order=down]').click();
+        assert.deepEqual(await cycleOrder(), ['down', 'pinwheel', 'circular'], 'Ordering skips parked modes');
+        await tap('#simulationModeEditor [data-parked-mode=radial]');
+        assert.deepEqual(await cycleOrder(), ['down', 'pinwheel', 'circular', 'radial'], 'Restoring appends to the cycle');
+        assert.equal(await parkedMode('radial').count(), 0);
         await editor.locator('[data-copy=reset]').click();
         assert.deepEqual(await browserLayout(), exported, 'Reset edits a draft');
         await apply();
@@ -269,7 +284,9 @@ try {
         await openEditor();
         await family('spiral');
         const enabledModes = editor.locator('input[type=checkbox]:checked');
-        while (await enabledModes.count()) await enabledModes.first().uncheck();
+        while (await enabledModes.count()) await enabledModes.first().click();
+        assert.deepEqual(await cycleOrder(), []);
+        assert.equal(await editor.locator('[data-parked-mode]').count(), exported.families.spiral.length);
         await apply();
         assert.deepEqual((await state()).project.tiles, creation.project.tiles);
         await visibleControl(geo);

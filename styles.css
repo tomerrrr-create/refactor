@@ -3250,6 +3250,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #modeLayoutFamily .mode-layout-icon-button { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
 .mode-layout-transfer, .mode-layout-transfer > span:not([hidden]) { display: flex; gap: .2rem; }
 [dir="rtl"] .mode-layout-transfer [data-move] svg { transform: scaleX(-1); }
+.mode-layout-parked { margin-block-start: .65rem; padding-block-start: .55rem; border-block-start: 1px solid #3c342d; }
+.mode-layout-parked h3 { margin-block: 0 .4rem; font-size: .875rem; color: #d6bda7; }
+.mode-layout-parked-icons { display: flex; flex-wrap: wrap; gap: .35rem; }
+.mode-layout-parked-icons .mode-layout-icon-button { min-inline-size: 2.5rem; }
 .mode-layout-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-block-start: .6rem; }
 .mode-layout-status { color: #ddc8b3; margin-block-start: .4rem; }
 .mode-layout-picker { width: min(28rem, calc(100vw - 1.5rem)); }
