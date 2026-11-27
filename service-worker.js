@@ -1,5 +1,5 @@
 // Generated asset list/version: run node tools/update-pwa-cache.mjs after app changes.
-const VERSION = '1190d009d1d3d81868fb';
+const VERSION = '1968c59a43339102bd7a';
 const ASSETS = [
     "./",
     "./index.html",
@@ -132,6 +132,8 @@ const ASSETS = [
     "./js/wind-settings.js",
     "./js/workspace-settings.js",
     "./vendor/tailwind-runtime.js",
+    "./icons/drawer-life-contours.png",
+    "./icons/drawer-pulse-waves.png",
     "./icons/fyi-eclipse-180.png",
     "./icons/fyi-eclipse-192.png",
     "./icons/fyi-eclipse-512.png",

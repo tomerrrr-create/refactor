@@ -1946,6 +1946,9 @@ button, .ctrl {
   --sim-drawer-frame: #334155;
   --sim-drawer-gradient: linear-gradient(135deg, #0f172a, #05070d);
 }
+#controlsContainer[data-evolution-page="1"][data-drawer-color="blue"] {
+  --sim-drawer-diamond-ink: rgb(154 175 215 / 5%);
+}
 :where(#controlsContainer.sim-mode-active),
 [data-drawer-color="gold"] {
   --sim-drawer-lip: var(--sim-theme-gold);
@@ -1999,6 +2002,13 @@ button, .ctrl {
     repeating-linear-gradient(-45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px);
   opacity: 1;
   transition: opacity 400ms ease-in-out;
+}
+#controlsContainer[data-evolution-page="0"] { --sim-drawer-texture: url("icons/drawer-life-contours.png"); }
+#controlsContainer[data-evolution-page="1"] { --sim-drawer-texture: url("icons/drawer-pulse-waves.png"); }
+#controlsContainer.sim-mode-active:is([data-evolution-page="0"], [data-evolution-page="1"]) #simModeBackground::before {
+  background: var(--sim-drawer-diamond-ink);
+  -webkit-mask: var(--sim-drawer-texture) center / 100% 100% no-repeat;
+  mask: var(--sim-drawer-texture) center / 100% 100% no-repeat;
 }
 :root[data-simulation-running]:not([data-keep-simulation-drawer-border]) #controlsContainer.sim-mode-active #simModeBackground { border-color: transparent; }
 :root[data-simulation-running]:not([data-keep-simulation-drawer-border]) #controlsContainer.sim-mode-active #simModeBackground::before { opacity: 0; }
