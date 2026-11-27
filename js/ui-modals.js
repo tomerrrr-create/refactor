@@ -1623,8 +1623,14 @@ export function initializeModals(appContext) {
     }
     const nudgeSpeed = document.getElementById('nudgeSpeed');
     const nudgeSpeedValue = document.getElementById('nudgeSpeedValue');
+    const nudgeAuto = document.getElementById('nudgeAuto');
     function updateNudgeSpeedValue() {
-        const interval = 200 - Number(nudgeSpeed.value);
+        const { intervalMs: interval, auto } = app.getNudgeSettings();
+        const replay = app.isNudgeReplayActive();
+        nudgeSpeed.value = String(200 - interval);
+        nudgeSpeed.disabled = auto || replay;
+        nudgeAuto.checked = auto;
+        nudgeAuto.disabled = replay;
         const text = interval === 0 ? app.getText('nudge_fast') : app.getText('nudge_interval').replace('{ms}', interval);
         nudgeSpeedValue.value = text;
         nudgeSpeed.setAttribute('aria-valuetext', text);
@@ -1635,11 +1641,13 @@ export function initializeModals(appContext) {
     });
     // Store once on release, rather than synchronously writing storage for every drag event.
     nudgeSpeed.addEventListener('change', () => app.persistNudgeSettings());
+    nudgeAuto.addEventListener('change', () => {
+        app.setNudgeAuto(nudgeAuto.checked);
+        updateNudgeSpeedValue();
+    });
     const nudgeDialog = document.getElementById('nudgeSettingsDialog');
     function openNudgeSettingsModal() {
-        nudgeSpeed.value = String(200 - app.getNudgeSettings().intervalMs);
         updateNudgeSpeedValue();
-        nudgeSpeed.disabled = app.isNudgeReplayActive();
         nudgeDialog.showModal();
         focusSettingsHeading(nudgeDialog);
     }

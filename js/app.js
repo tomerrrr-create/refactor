@@ -5,6 +5,7 @@ import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,isFibonacciColorAdvance,
 import {CLASSIC_CRYSTAL_SETTINGS,DEFAULT_CRYSTAL_PREFERENCES,validateCrystalSettings} from './simulations/fibonacci-crystal.js';
 import { DEFAULT_MAP_PREFERENCES, seedFibonacciMap, validateMapSettings } from './simulations/fibonacci-maps.js';
 import { restorePatternGrowthPreference } from './simulations/pattern-growth.js';
+import { automaticNudgeInterval, DEFAULT_NUDGE_INTERVAL, isNudgeInterval, loadNudgeSettings } from './nudge-settings.js';
 import {DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,createNetworkState,restoreNetworkState,validateNetworkSnapshot,runNetworkGeneration} from './simulations/network.js';
 import {createNetworkSettingsDialog} from './network-settings-dialog.js';
 import {INITIAL_OIL_RULES,validateOilRules,createOilState,restoreOilState,validateOilSnapshot,runOilGeneration} from './simulations/oil.js';
@@ -103,33 +104,50 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       const ANIMATION_DURATION = 200; // ms
       let animationLoopId = null;
 // Preferences are independent of macro playback; replay never overwrites them.
-let nudgeIntervalMs = 35;
+const savedNudgeSettings = loadNudgeSettings();
+let nudgeIntervalMs = savedNudgeSettings?.intervalMs ?? DEFAULT_NUDGE_INTERVAL;
+let nudgeAuto = savedNudgeSettings?.auto ?? true;
 let replayNudgeTiming = null;
 let lastNudgeTime = -Infinity;
-try {
-    const saved = JSON.parse(localStorage.getItem('colorGridNudge'));
-    if (Number.isInteger(saved?.intervalMs) && saved.intervalMs >= 0 && saved.intervalMs <= 200) nudgeIntervalMs = saved.intervalMs;
-} catch { /* Use defaults when storage is unavailable. */ }
 
 const liveNudgeTiming = { nudgeTimingVersion: 1, intervalMs: nudgeIntervalMs };
 
 function persistNudgeSettings() {
     try {
-        localStorage.setItem('colorGridNudge', JSON.stringify({ intervalMs: nudgeIntervalMs }));
+        localStorage.setItem('colorGridNudge', JSON.stringify({ intervalMs: nudgeIntervalMs, auto: nudgeAuto }));
     } catch { /* Settings still apply for this session. */ }
 }
 
-function setNudgeInterval(intervalMs, persist = true) {
-    if (!Number.isInteger(intervalMs) || intervalMs < 0 || intervalMs > 200) throw new Error('Invalid Nudge interval');
-    if (nudgeIntervalMs === intervalMs) return;
+function liveNudgeInterval() {
+    return nudgeAuto ? automaticNudgeInterval(paletteLen()) : nudgeIntervalMs;
+}
+
+function recordNudgeIntervalChange(previous) {
+    const intervalMs = liveNudgeInterval();
+    if (intervalMs !== previous) window.logArtEvent('NUDGE_SPEED', JSON.stringify({ nudgeTimingVersion: 1, intervalMs }));
+}
+
+function setNudgePreferences({ intervalMs, auto }, persist = true) {
+    if (!isNudgeInterval(intervalMs) || typeof auto !== 'boolean') throw new Error('Invalid Nudge settings');
+    const previous = liveNudgeInterval();
     nudgeIntervalMs = intervalMs;
-    liveNudgeTiming.intervalMs = intervalMs;
+    nudgeAuto = auto;
     if (persist) persistNudgeSettings();
-    window.logArtEvent('NUDGE_SPEED', JSON.stringify({ nudgeTimingVersion: 1, intervalMs }));
+    recordNudgeIntervalChange(previous);
+}
+
+function setNudgeInterval(intervalMs, persist = true) {
+    setNudgePreferences({ intervalMs, auto: false }, persist);
+}
+
+function setNudgeAuto(auto) {
+    setNudgePreferences({ intervalMs: nudgeIntervalMs, auto });
 }
 
 function getNudgeTiming() {
-    return replayNudgeTiming || liveNudgeTiming;
+    if (replayNudgeTiming) return replayNudgeTiming;
+    liveNudgeTiming.intervalMs = liveNudgeInterval();
+    return liveNudgeTiming;
 }
 
 function applyNudgeTiming(rulesStr) {
@@ -139,7 +157,7 @@ function applyNudgeTiming(rulesStr) {
         return;
     }
     const timing = JSON.parse(rulesStr);
-    if (!timing || timing.nudgeTimingVersion !== 1 || !Number.isInteger(timing.intervalMs) || timing.intervalMs < 0 || timing.intervalMs > 200) {
+    if (!timing || timing.nudgeTimingVersion !== 1 || !isNudgeInterval(timing.intervalMs)) {
         throw new Error('Invalid Nudge timing');
     }
     replayNudgeTiming = { nudgeTimingVersion: 1, intervalMs: timing.intervalMs };
@@ -1328,12 +1346,15 @@ function handlePaletteSwitch(backwards = false) {
         window.logArtEvent('Palette Change', `${C.PALETTES[index].name} | Sort: ${currentSortMethod}`); // תיעוד החלפת פלטה כולל שיטת מיון
 
         performAction(() => {
-            
             activePaletteIndex = index;
             if (adapt && previousCount !== paletteLen()) applyColorAdaptation();
             resetSelectedColor();
             updatePaletteHeader();
             renderToScreen(null);
+            if (isLifePlaying && !isExecutingMacroCommand && !isMacroPlaying &&
+                (armedSimulation === 'nudgeBrighter' || armedSimulation === 'nudgeDarker') && nudgeAuto) {
+                recordNudgeIntervalChange(automaticNudgeInterval(previousCount));
+            }
             // Keep the resolved erosion snapshot inside this undoable palette action.
             if (!isExecutingMacroCommand && armedSimulation === 'erosion') {
                 window.logArtEvent('Erosion Mode Changed', JSON.stringify(getErosionRecordingRules()));
@@ -2495,7 +2516,7 @@ if (simulationName === 'magnet') {
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
             simulationPlaybackTheme: SIMULATION_PLAYBACK_THEME,
-            sortCycle: [...sortCycleMethods], nudgeIntervalMs,
+            sortCycle: [...sortCycleMethods], nudgeIntervalMs, nudgeAuto,
             ...(gameOfLifeRules.genetics === 'palette-order' ? { gameOfLifeGenetics: 'palette-order' } : {}),
             ...(gameOfLifeRules.deadColor === 'luminance' ? { gameOfLifeDeadColor: 'luminance' } : {}),
             ...(JSON.stringify(evolutionTuning) === JSON.stringify(DEFAULT_EVOLUTION_TUNING) ? {} : { evolutionTuning: structuredClone(evolutionTuning) }),
@@ -2643,8 +2664,13 @@ if (simulationName === 'magnet') {
         startupSettings = { ...settings.startup };
         simulationInitSettings = { ...settings.simulationInit };
         sortCycleMethods = [...settings.sortCycle];
-        setNudgeInterval(settings.nudgeIntervalMs);
-        persistNudgeSettings();
+        // The live device preference survives opening a profile's saved snapshot.
+        if (!options.startup || !savedNudgeSettings) {
+            setNudgePreferences({
+                intervalMs: settings.nudgeIntervalMs,
+                auto: settings.nudgeAuto ?? (Boolean(options.startup) && settings.nudgeIntervalMs === DEFAULT_NUDGE_INTERVAL)
+            });
+        }
         // Set the shared mode before recording the imported cycle snapshot.
         if (settings.gameOfLifeGenetics === 'palette-order') gameOfLifeRules.genetics = 'palette-order';
         else delete gameOfLifeRules.genetics;
@@ -6408,9 +6434,9 @@ else if (action.eventName === 'Invert Colors') {
                 return persistSortCycle(sortCycleMethods);
             },
             dom, C, getText, getCurrentLang, performAction, getSymmetricIndices, applyActionToTiles,
-            getNudgeSettings: () => ({ intervalMs: nudgeIntervalMs }),
+            getNudgeSettings: () => ({ intervalMs: getNudgeTiming().intervalMs, auto: nudgeAuto }),
             isNudgeReplayActive: () => isMacroLoaded,
-            setNudgeInterval, persistNudgeSettings,
+            setNudgeInterval, setNudgeAuto, persistNudgeSettings,
             resetWorkspaceSettings: () => settingsProfiles.resetToDefaults(),
             getStartupSettings: () => ({ ...startupSettings }),
             getStartupProfile: loadStartupProfile,

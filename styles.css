@@ -1652,6 +1652,11 @@ button, .ctrl {
 .init-settings select { width: 100%; min-height: 44px; background: #161710; color: #eaeaea; border: 1px solid #b28b3659; border-radius: 8px; padding: 8px 12px; font: inherit; }
 .init-settings input { width: 100%; min-height: 32px; accent-color: #d5aa48; }
 .init-settings output { color: #eaeaea; padding-inline-start: 8px; }
+.nudge-speed-heading, .nudge-auto-label { display:flex; align-items:center; gap:8px; }
+.nudge-speed-heading { justify-content:space-between; }
+.nudge-auto-label { min-height:32px; cursor:pointer; }
+.nudge-auto-label input { appearance:auto; width:16px; min-height:0; height:16px; }
+#nudgeSpeed:disabled { opacity:.48; }
 .init-settings-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .init-settings-actions button { min-height: 44px; padding: 10px 14px; border-radius: 8px; font: inherit; cursor: pointer; }
 .init-save { background: #d5aa48; color: #221807; border: 1px solid #d5aa48; }

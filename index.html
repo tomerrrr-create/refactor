@@ -1029,7 +1029,10 @@
     <div class="technician-panel">
       <h2 id="nudgeSettingsTitle" data-debug-text="nudge_speed"></h2>
       <div class="init-settings">
-        <label for="nudgeSpeed"><span data-debug-text="nudge_speed"></span> <output id="nudgeSpeedValue" for="nudgeSpeed"></output></label>
+        <div class="nudge-speed-heading">
+          <label for="nudgeSpeed"><span data-debug-text="nudge_speed"></span> <output id="nudgeSpeedValue" for="nudgeSpeed"></output></label>
+          <label class="nudge-auto-label"><input id="nudgeAuto" type="checkbox" checked><span data-debug-text="nudge_auto">Auto</span></label>
+        </div>
         <input id="nudgeSpeed" type="range" min="0" max="200" step="1" value="165">
         <p class="init-settings-note" data-debug-text="nudge_note"></p>
       </div>
