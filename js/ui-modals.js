@@ -1259,15 +1259,13 @@ function updateGravityCycleAvailability() {
     for (const input of inputs) input.disabled = enabled.length === 1 && enabled[0] === input;
 }
 
-function openGravitationalSortSettingsModal({ direction } = {}) {
+function openGravitationalSortSettingsModal() {
     if (app.isBreathing()) return;
     const rules = app.getGravitationalSortRules();
     const enabled = app.getGravityCycle();
     for (const input of app.dom.gravityCycleInputs) input.checked = enabled.includes(input.value);
     updateGravityCycleAvailability();
-    const modal = app.dom.gravitationalSortSettingsModal;
-    modal.toggleAttribute('data-fixed-direction', Boolean(direction));
-    showGravityDirection(direction ?? rules.direction);
+    showGravityDirection(rules.direction);
     app.dom.gsStrengthSlider.value = rules.strength * 100;
     app.dom.gsStrengthValue.textContent = `${Math.round(rules.strength * 100)}%`;
     app.dom.gravitationalSortSettingsModal.style.display = 'flex';
@@ -1282,9 +1280,7 @@ function saveGravitationalSortSettings() {
     }
     if (!app.dom.gsStrengthSlider.disabled) newRules.strength = parseInt(app.dom.gsStrengthSlider.value, 10) / 100;
     const enabled = app.dom.gravityCycleInputs.filter(input => input.checked).map(input => input.value);
-    if (app.saveGravitySettings(newRules, app.dom.gravitationalSortSettingsModal.hasAttribute('data-fixed-direction') ? null : enabled)) {
-        closeGravitationalSortSettingsModal();
-    }
+    if (app.saveGravitySettings(newRules, enabled)) closeGravitationalSortSettingsModal();
 }
 // --- START: Added for Contour Settings ---
 function openContourSettingsModal() {

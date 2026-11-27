@@ -184,7 +184,7 @@ export function createMacroActivityFade(container) {
     };
 }
 
-export function createMacroActivity({ board, getText, getLang, readState, getActiveModeIcon = () => null, document: doc = document }) {
+export function createMacroActivity({ board, getText, getLang, readState, document: doc = document }) {
     const win = doc.defaultView;
     const panel = doc.createElement('aside');
     panel.id = 'macroActivity'; panel.className = 'macro-activity'; panel.hidden = true;
@@ -220,9 +220,7 @@ export function createMacroActivity({ board, getText, getLang, readState, getAct
         panel.dir = getLang() === 'he' ? 'rtl' : 'ltr';
         const displayEntry = primary.icon === 'btnNudgeBrighter' && ['nudgeBrighter', 'nudgeDarker'].includes(state.simulation)
             ? { ...primary, label: simulations[state.simulation][0] } : primary;
-        const currentSimulation = [`PLAY:${state.simulation}`, `STEP FORWARD:${state.simulation}`].includes(displayEntry.key);
-        const modeIcon = currentSimulation ? getActiveModeIcon() : null;
-        const button = modeIcon ?? doc.getElementById(displayEntry.icon);
+        const button = doc.getElementById(displayEntry.icon);
         const cacheKey = (button?.outerHTML ?? '') + (button ? win.getComputedStyle(button).color : '') + doc.documentElement.dataset.simulationEffectiveTheme;
         if (cacheKey !== iconCacheKey) {
             iconCacheKey = cacheKey; iconSnapshot = captureMacroActivityIcon(button);
