@@ -3205,8 +3205,10 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .mode-layout-dialog::backdrop { background: rgb(0 0 0 / .65); }
 .mode-layout-dialog h2 { margin: 0 0 .8rem; font-size: 1.2rem; }
-.mode-layout-family { display: grid; gap: .35rem; margin-block-end: .6rem; }
-.mode-layout-dialog :is(button, select) {
+.mode-layout-family { display: grid; justify-items: center; gap: .35rem; margin-block-end: .6rem; }
+#modeLayoutFamily { display: flex; gap: .5rem; }
+#modeLayoutFamilyName { margin: 0; }
+.mode-layout-dialog button {
   color: inherit;
   min-width: 0;
   min-height: 2.5rem;
@@ -3218,14 +3220,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .mode-layout-dialog button:disabled { opacity: .42; }
 .mode-layout-dialog button:not(:disabled) { cursor: pointer; }
 .mode-layout-dialog :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.mode-layout-dialog :is(.mode-layout-primary, .mode-layout-option[aria-pressed="true"]) {
+.mode-layout-dialog :is(.mode-layout-primary, .mode-layout-option[aria-pressed="true"], .mode-layout-icon-button:is([aria-pressed="true"], [aria-expanded="true"])) {
   border-color: var(--gold);
   color: var(--gold);
 }
 .mode-layout-rows { display: grid; gap: .4rem; max-height: 46dvh; overflow: auto; padding: .25rem; }
 .mode-layout-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(6rem, 10rem) auto 2.5rem 2.5rem;
+  grid-template-columns: minmax(0, 1fr) 7rem auto 2.5rem 2.5rem;
   gap: .4rem;
   align-items: center;
   border-bottom: 1px solid #3c342d;
@@ -3239,12 +3241,22 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .mode-layout-dialog input[type="checkbox"] { accent-color: var(--gold); }
 .mode-layout-dialog svg { width: 1.5rem; height: 1.5rem; flex: none; }
+.mode-layout-dialog .mode-layout-icon-button {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 2.15rem;
+  padding-inline: .25rem;
+}
+#modeLayoutFamily .mode-layout-icon-button { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
+.mode-layout-transfer, .mode-layout-transfer > span:not([hidden]) { display: flex; gap: .2rem; }
+[dir="rtl"] .mode-layout-transfer [data-move] svg { transform: scaleX(-1); }
 .mode-layout-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-block-start: .6rem; }
 .mode-layout-status { color: #ddc8b3; margin-block-start: .4rem; }
 .mode-layout-picker { width: min(28rem, calc(100vw - 1.5rem)); }
 .mode-layout-option small { margin-inline-start: auto; color: #d6bda7; }
 @media (max-width: 550px) {
-  .mode-layout-row { grid-template-columns: minmax(0, 1fr) auto 2.5rem 2.5rem; }
+  .mode-layout-row { grid-template-columns: minmax(0, 1fr) max-content 2.15rem 2.15rem; }
+  .mode-layout-row label { gap: .25rem; }
   .mode-layout-mark { grid-column: 1 / -1; }
 }
 #gravitationalSortSettingsModal[data-fixed-direction] [data-gravity-directions] { display: none; }

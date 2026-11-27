@@ -1,5 +1,7 @@
 import { createModeLayout, MODE_FAMILIES, MODE_FAMILY_IDS, LAYOUT_MODES, modeLayoutIcon, validateModeLayout } from './simulation-mode-layout.js';
 
+const FAMILY_ICONS = { gravitationalSort: 'up', spiral: 'radial', ink: 'turbine2' };
+
 export function createSimulationModeEditor({ getLayout, apply, canUse, getText, getLang, activeMode, selectMode, openTuning }) {
     const trigger = document.getElementById('btnSimulationModeEditor');
     const dialog = document.createElement('dialog');
@@ -8,7 +10,10 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
     dialog.setAttribute('aria-labelledby', 'simulationModeEditorTitle');
     dialog.innerHTML = `
         <h2 id="simulationModeEditorTitle" data-copy="title"></h2>
-        <label class="mode-layout-family"><span data-copy="family"></span><select id="modeLayoutFamily"></select></label>
+        <div class="mode-layout-family">
+            <div id="modeLayoutFamily" role="group"></div>
+            <p id="modeLayoutFamilyName"></p>
+        </div>
         <div class="mode-layout-rows"></div>
         <div class="mode-layout-actions">
             <button type="button" data-copy="reset"></button>
@@ -26,7 +31,8 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
     picker.className = 'mode-layout-dialog mode-layout-picker';
     picker.setAttribute('aria-labelledby', 'assignedSimulationModesTitle');
     document.body.append(dialog, picker);
-    const familySelect = dialog.querySelector('#modeLayoutFamily');
+    const familyPicker = dialog.querySelector('#modeLayoutFamily');
+    const familyCaption = dialog.querySelector('#modeLayoutFamilyName');
     const rows = dialog.querySelector('.mode-layout-rows');
     const file = dialog.querySelector('input[type=file]');
     const status = dialog.querySelector('[role=status]');
@@ -34,7 +40,7 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
     const familyName = id => getText(MODE_FAMILIES[id].label);
     const modeName = id => getText(LAYOUT_MODES.get(id).label).split('\n')[0];
     const control = name => dialog.querySelector('[data-copy="' + name + '"]');
-    let draft;
+    let draft, selectedFamily, openTransfer;
     let session = 0;
 
     function button(label, action) {
@@ -53,6 +59,76 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
         element.append(name);
     }
 
+    function familyButton(family, action) {
+        const choice = button('', action);
+        choice.className = 'mode-layout-icon-button';
+        choice.title = familyName(family);
+        choice.setAttribute('aria-label', choice.title);
+        choice.append(modeLayoutIcon(FAMILY_ICONS[family]));
+        return choice;
+    }
+
+    function selectFamily(family) {
+        selectedFamily = family;
+        familyCaption.textContent = familyName(family);
+        for (const choice of familyPicker.children) {
+            choice.setAttribute('aria-pressed', String(choice.dataset.family === family));
+        }
+        rows.scrollTop = 0;
+        renderRows();
+    }
+
+    function closeTransfer() {
+        if (!openTransfer) return;
+        openTransfer.destinations.hidden = true;
+        openTransfer.move.setAttribute('aria-expanded', 'false');
+        openTransfer = undefined;
+    }
+
+    function transferButtons(entries, index) {
+        const entry = entries[index];
+        const transfer = document.createElement('div');
+        transfer.className = 'mode-layout-transfer';
+        const destinations = document.createElement('span');
+        destinations.setAttribute('role', 'group');
+        destinations.id = 'modeLayoutDestinations-' + entry.id;
+        destinations.setAttribute('aria-label', t('move') + ' · ' + modeName(entry.id));
+        destinations.hidden = true;
+        const move = button('', () => {
+            const closing = openTransfer?.move === move;
+            closeTransfer();
+            if (closing) return;
+            destinations.hidden = false;
+            move.setAttribute('aria-expanded', 'true');
+            openTransfer = { move, destinations };
+        });
+        move.className = 'mode-layout-icon-button';
+        move.dataset.move = '';
+        move.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-5-5 5 5-5 5"/></svg>';
+        move.title = t('move');
+        move.setAttribute('aria-label', t('move') + ' · ' + modeName(entry.id));
+        move.setAttribute('aria-controls', destinations.id);
+        move.setAttribute('aria-expanded', 'false');
+
+        for (const family of MODE_FAMILY_IDS) {
+            if (family === selectedFamily) continue;
+            const choice = familyButton(family, () => {
+                const scrollTop = rows.scrollTop;
+                entries.splice(index, 1);
+                draft.families[family].push(entry);
+                renderRows();
+                rows.scrollTop = scrollTop;
+                const nextRow = rows.children[Math.min(index, entries.length - 1)];
+                const focus = nextRow?.querySelector('[data-move]') ?? familyPicker.querySelector('[aria-pressed=true]');
+                focus.focus({ preventScroll: true });
+            });
+            choice.dataset.destination = family;
+            destinations.append(choice);
+        }
+        transfer.append(move, destinations);
+        return transfer;
+    }
+
     function orderButton(row, entries, index, offset) {
         const next = index + offset;
         const direction = offset < 0 ? 'up' : 'down';
@@ -61,7 +137,7 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
             renderRows();
             const moved = rows.children[next];
             const same = moved.querySelector('[data-order="' + direction + '"]');
-            (same.disabled ? moved.querySelector('select') : same).focus();
+            (same.disabled ? moved.querySelector('[data-move]') : same).focus();
         });
         control.dataset.order = direction;
         control.setAttribute('aria-label', t(direction) + ' · ' + modeName(entries[index].id));
@@ -70,8 +146,8 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
     }
 
     function renderRows() {
-        const family = familySelect.value;
-        const entries = draft.families[family];
+        const entries = draft.families[selectedFamily];
+        closeTransfer();
         rows.replaceChildren();
         if (!entries.length) rows.textContent = t('empty');
         entries.forEach((entry, index) => {
@@ -81,23 +157,6 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
             const mark = document.createElement('div');
             mark.className = 'mode-layout-mark';
             addModeMark(mark, entry.id);
-            const destination = document.createElement('select');
-            destination.setAttribute('aria-label', t('move') + ' · ' + modeName(entry.id));
-            destination.add(new Option(t('move'), family));
-            for (const id of MODE_FAMILY_IDS) {
-                if (id !== family) destination.add(new Option(familyName(id), id));
-            }
-            destination.addEventListener('change', () => {
-                const target = destination.value;
-                if (target === family) return;
-                const scrollTop = rows.scrollTop;
-                entries.splice(index, 1);
-                draft.families[target].push(entry);
-                renderRows();
-                rows.scrollTop = scrollTop;
-                const nextRow = rows.children[Math.min(index, entries.length - 1)];
-                (nextRow?.querySelector('select') ?? familySelect).focus({ preventScroll: true });
-            });
             const membership = document.createElement('label');
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -105,7 +164,7 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
             checkbox.setAttribute('aria-label', t('cycle') + ' · ' + modeName(entry.id));
             checkbox.addEventListener('change', () => { entry.inCycle = checkbox.checked; });
             membership.append(checkbox, t('cycle'));
-            row.append(mark, destination, membership);
+            row.append(mark, transferButtons(entries, index), membership);
             orderButton(row, entries, index, -1);
             orderButton(row, entries, index, 1);
             rows.append(row);
@@ -117,15 +176,23 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
         draft = structuredClone(getLayout());
         dialog.dir = getLang() === 'he' ? 'rtl' : 'ltr';
         dialog.querySelectorAll('[data-copy]').forEach(el => { el.textContent = t(el.dataset.copy); });
-        familySelect.replaceChildren(...MODE_FAMILY_IDS.map(id => new Option(familyName(id), id)));
+        familyPicker.setAttribute('aria-label', t('family'));
+        familyPicker.replaceChildren(...MODE_FAMILY_IDS.map(family => {
+            const choice = familyButton(family, () => selectFamily(family));
+            choice.dataset.family = family;
+            return choice;
+        }));
         status.textContent = '';
-        renderRows();
+        selectFamily(MODE_FAMILY_IDS[0]);
         dialog.showModal();
-        familySelect.focus();
+        familyPicker.firstElementChild.focus();
     });
-    familySelect.addEventListener('change', () => {
-        rows.scrollTop = 0;
-        renderRows();
+    dialog.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !openTransfer) return;
+        event.preventDefault();
+        const { move } = openTransfer;
+        closeTransfer();
+        move.focus();
     });
     dialog.addEventListener('close', () => { session++; });
     control('cancel').addEventListener('click', () => dialog.close());

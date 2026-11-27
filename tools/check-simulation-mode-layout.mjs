@@ -86,9 +86,21 @@ try {
             assert(box.x >= 0 && box.x + box.width <= (touch ? 320 : 1280));
             assert(await editor.evaluate(el => el.scrollWidth === el.clientWidth));
         };
-        const family = id => editor.locator('#modeLayoutFamily').selectOption(id);
+        const familyPicker = '#modeLayoutFamily';
+        const family = id => tap(familyPicker + ' [data-family="' + id + '"]');
+        const selectedFamily = () => page.locator(familyPicker + ' [aria-pressed=true]').getAttribute('data-family');
         const row = mode => editor.locator('[data-mode="' + mode + '"]');
-        const move = (mode, to) => row(mode).locator('select').selectOption(to);
+        const move = async (mode, to) => {
+            const from = await selectedFamily();
+            const selector = '#simulationModeEditor [data-mode="' + mode + '"]';
+            await tap(selector + ' [data-move]');
+            const destinations = row(mode).locator('[data-destination]:visible');
+            assert.equal(await destinations.count(), 2);
+            assert.equal(await row(mode).locator('[data-destination="' + from + '"]').count(), 0);
+            assert(await editor.evaluate(el => el.scrollWidth === el.clientWidth));
+            assert(await editor.locator('.mode-layout-rows').evaluate(el => el.scrollWidth === el.clientWidth));
+            await tap(selector + ' [data-destination="' + to + '"]');
+        };
         const apply = async () => {
             await editor.locator('[data-copy=apply]').click();
             await editor.waitFor({ state: 'hidden' });
@@ -127,22 +139,34 @@ try {
 
         await openEditor();
         assert.equal(await browserLayout(), null);
-        const familyPicker = editor.locator('#modeLayoutFamily');
+        assert.equal(await editor.locator('select').count(), 0);
+        assert.equal(await page.locator(familyPicker + ' button > svg:visible').count(), 3);
+        const shapeFamilyIcon = page.locator(familyPicker + ' [data-family=spiral] svg');
+        const shapeGlyph = await shapeFamilyIcon.innerHTML();
+        if (!touch) {
+            const moveButton = row('pinwheel').locator('[data-move]');
+            await moveButton.press('Enter');
+            assert.equal(await moveButton.getAttribute('aria-expanded'), 'true');
+            await moveButton.press('Escape');
+            assert.equal(await moveButton.getAttribute('aria-expanded'), 'false');
+            assert(await editor.isVisible());
+        }
         await move('pinwheel', 'spiral');
-        assert.equal(await familyPicker.inputValue(), 'gravitationalSort');
+        assert.equal(await selectedFamily(), 'gravitationalSort');
         assert.equal(await row('pinwheel').count(), 0);
         await row('center_x').locator('input').uncheck();
         await move('center_x', 'spiral');
-        assert.equal(await familyPicker.inputValue(), 'gravitationalSort');
+        assert.equal(await selectedFamily(), 'gravitationalSort');
         assert.equal(await row('center_x').count(), 0);
         await family('ink');
         await move('circular', 'spiral');
-        assert.equal(await familyPicker.inputValue(), 'ink');
+        assert.equal(await selectedFamily(), 'ink');
         assert.equal(await row('circular').count(), 0);
         await family('spiral');
         await row('pinwheel').locator('[data-order=up]').click();
         await row('pinwheel').locator('[data-order=up]').click();
         assert(!(await row('center_x').locator('input').isChecked()));
+        assert.equal(await shapeFamilyIcon.innerHTML(), shapeGlyph, 'Family icons stay fixed when the first mode changes');
         const downloading = page.waitForEvent('download');
         await editor.locator('[data-copy=export]').click();
         const download = await downloading;
