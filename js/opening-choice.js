@@ -31,6 +31,7 @@ export function initializeOpeningChoice(onEvolve) {
         eclipse.setAttribute('aria-label', resetLabel);
         veil.setAttribute('aria-label', resetLabel);
         dialog.showModal();
+        dialog.focus({ preventScroll: true });
     }, { once: true });
 
     function finish(mode) {

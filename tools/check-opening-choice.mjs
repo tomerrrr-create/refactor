@@ -84,10 +84,26 @@ try {
         assert.equal(await choice.getAttribute('dir'), mobile ? 'rtl' : 'ltr');
         const labels = mobile ? ['יצירה', 'אבולוציה'] : ['Creation', 'Evolution'];
         assert.deepEqual(await choice.locator('button[data-opening-choice]').allInnerTexts(), labels);
+        const actionSurfaces = () => choice.locator('.opening-choice-action').evaluateAll(buttons => buttons.map(button => {
+            const style = getComputedStyle(button);
+            return [style.backgroundColor, style.borderTopColor];
+        }));
+        const transparent = 'rgba(0, 0, 0, 0)';
+        const unselectedSurfaces = [[transparent, transparent], [transparent, transparent]];
+        assert.deepEqual(await actionSurfaces(), unselectedSurfaces);
         assert(await eclipse.isVisible() && await eclipse.isDisabled(), 'reset is visible and requires a board choice');
         assert(await continueButton.isVisible() && await continueButton.isDisabled());
         assert.deepEqual(await choice.locator('[data-opening-choice]').evaluateAll(buttons =>
             buttons.map(button => button.getAttribute('aria-pressed'))), ['false', 'false']);
+        const cardStyles = () => choice.locator('[data-opening-choice]').evaluateAll(buttons => buttons.map(button => {
+            const style = getComputedStyle(button);
+            return [style.backgroundColor, style.borderTopColor, style.color];
+        }));
+        const initialCards = [[transparent, transparent, 'rgb(203, 196, 181)'], [transparent, transparent, 'rgb(203, 196, 181)']];
+        assert.deepEqual(await cardStyles(), initialCards);
+        assert(await choice.evaluate(dialog => dialog === document.activeElement));
+        assert.equal(await choice.locator('.glyph-special-reset').evaluate(dot =>
+            getComputedStyle(dot).backgroundColor), initialCards[0][2]);
         for (const action of [continueButton, eclipse]) {
             assert.equal((await action.textContent()).trim(), '');
             assert(await action.getAttribute('aria-label'));
@@ -106,7 +122,9 @@ try {
         assert.equal(await choice.evaluate(el => el.offsetHeight), dialogHeight);
         assert(await eclipse.isEnabled(), 'reset can be used immediately after the first selection');
         assert(await continueButton.isEnabled());
+        assert.deepEqual(await actionSurfaces(), unselectedSurfaces);
         assert.equal(await choice.locator('[data-opening-choice=create]').getAttribute('aria-pressed'), 'true');
+        assert.deepEqual((await cardStyles())[1], initialCards[1], 'only the clicked card receives the gold fill');
         await tap(continueButton);
         await choice.waitFor({ state: 'hidden' });
         assert.deepEqual(await state(), initial, 'Create keeps the displayed board and its history');
