@@ -24,7 +24,7 @@ import { DEFAULT_VORTICES_CYCLE, VORTICES_MODES, VORTICES_SETTINGS_ENTRY_MODES }
 import { orderToolbarCycle } from './toolbar-cycle-storage.js';
 import { MAGNET_ANCHOR_LIMITS, DEFAULT_MAGNET_ANCHOR_PREFERENCE } from './magnet-anchor-limit.js';
 import { normalizeWindSettings } from './wind-settings.js';
-import { DEFAULT_GEOMETRIC_FLOW_VISIBLE } from './experimental-simulations.js';
+import { DEFAULT_EXPERIMENT_VISIBILITY } from './experimental-simulations.js';
 import { DEFAULT_REMEMBER_SIMULATION_MODES } from './evolution-mode-memory.js';
 import { DEFAULT_FIBONACCI_COLOR_ADVANCE, normalizeFibonacciColorAdvance } from './simulations/fibonacci.js';
 import { DEFAULT_CRYSTAL_SETTINGS, validateCrystalSettings } from './simulations/fibonacci-crystal.js';
@@ -35,7 +35,8 @@ export function defaultSimulationPreferences() {
         gravityCycleVersion: GRAVITY_CYCLE_VERSION, gravityCycle: [...DEFAULT_GRAVITY_CYCLE], geometricFlowCycle: [...DEFAULT_GEOMETRIC_FLOW_CYCLE],
         resonanceCycle: [...DEFAULT_RESONANCE_CYCLE], circularCycle: [...DEFAULT_VORTICES_CYCLE],
         magnetAnchorLimit: DEFAULT_MAGNET_ANCHOR_PREFERENCE, wind: normalizeWindSettings(),
-        geometricFlowVisible: DEFAULT_GEOMETRIC_FLOW_VISIBLE, breatheVisible: false, fibonacciVisible: false,
+        geometricFlowVisible: DEFAULT_EXPERIMENT_VISIBILITY.spiral, breatheVisible: DEFAULT_EXPERIMENT_VISIBILITY.breathe,
+        fibonacciVisible: DEFAULT_EXPERIMENT_VISIBILITY.fibonacci,
         fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, fibonacciCrystal: { ...DEFAULT_CRYSTAL_SETTINGS },
         rememberSimulationModes: DEFAULT_REMEMBER_SIMULATION_MODES, fibonacciMaps: structuredClone(MAP_DEFAULTS)
     };

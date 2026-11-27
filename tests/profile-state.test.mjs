@@ -210,7 +210,9 @@ test('factory reset restores the selected profile independently of personal save
     assert.deepEqual([0, 1, 2].map(i => factoryProfileSnapshot(i).settings.simulationTheme), ['gold', 'gold', 'teal']);
     for (const index of [0, 1, 2]) {
         const preferences = factoryProfileSnapshot(index).settings.simulationPreferences;
-        assert.equal(preferences.geometricFlowVisible, false);
+        assert.equal(preferences.geometricFlowVisible, true);
+        assert.equal(preferences.breatheVisible, true);
+        assert.equal(preferences.fibonacciVisible, true);
         assert.equal(preferences.rememberSimulationModes, true);
     }
     assert.equal(factoryProfileSnapshot(1).settings.startup.paletteName, 'Golden Midnight Extended');
