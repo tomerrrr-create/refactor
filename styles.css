@@ -1981,10 +1981,9 @@ button, .ctrl {
     repeating-linear-gradient(45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px),
     repeating-linear-gradient(-45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px),
     var(--sim-drawer-gradient);
-  opacity: 1;
-  transition: opacity 400ms ease-in-out, border-color 400ms ease-in-out;
+  transition: border-color 400ms ease-in-out;
 }
-:root[data-simulation-running]:not([data-keep-simulation-drawers]) #controlsContainer.sim-mode-active #simModeBackground { opacity: 0; }
+:root[data-simulation-running]:not([data-keep-simulation-drawer-border]) #controlsContainer.sim-mode-active #simModeBackground { border-color: transparent; }
 :where(:root[data-simulation-running]) #controlsContainer.sim-mode-active { --sim-drawer-ink: var(--sim-gold-muted); }
 #controlsContainer.sim-mode-active > [data-evolution-id] { --sim-color: var(--sim-drawer-ink); }
 :root[data-simulation-theme="blue"] { --sim-rest-color: var(--sim-theme-blue); }

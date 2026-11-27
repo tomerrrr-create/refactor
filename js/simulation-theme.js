@@ -78,9 +78,9 @@ function persistDrawerColors() {
   try { localStorage.setItem(DRAWER_COLORS_STORAGE_KEY, JSON.stringify(drawerColors)); } catch {}
 }
 
-function initializeDrawerBackdrop() {
+function initializeDrawerBorder() {
   const toggle = document.getElementById('keepSimulationDrawersToggle');
-  const apply = () => document.documentElement.toggleAttribute('data-keep-simulation-drawers', toggle.checked);
+  const apply = () => document.documentElement.toggleAttribute('data-keep-simulation-drawer-border', toggle.checked);
   toggle.checked = true;
   apply();
   toggle.addEventListener('change', apply);
@@ -111,7 +111,7 @@ function initializeGlowPulse() {
 }
 
 export function initializeSimulationTheme() {
-  initializeDrawerBackdrop();
+  initializeDrawerBorder();
   let savedDrawerColors;
   try { savedDrawerColors = JSON.parse(localStorage.getItem(DRAWER_COLORS_STORAGE_KEY)); } catch {}
   drawerColors = DEFAULT_DRAWER_COLORS.map((color, page) =>

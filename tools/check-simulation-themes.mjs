@@ -42,6 +42,9 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const map=async()=>{await page.evaluate(()=>themeTest.map());await page.locator('#evolutionDrawerDialog').waitFor({state:'visible'});};
  const backdrop=page.locator('#simModeBackground');
  const opacity=()=>backdrop.evaluate(e=>getComputedStyle(e).opacity);
+ const borderColor=()=>backdrop.evaluate(e=>getComputedStyle(e).borderTopColor);
+ const finishBorderFade=()=>backdrop.evaluate(e=>Promise.all(e.getAnimations().map(animation=>animation.finished)));
+ const transparent='rgba(0, 0, 0, 0)';
  const ink=()=>page.locator('#btnGravitationalSort svg').first().evaluate(e=>getComputedStyle(e).stroke);
  await boot(false);const fresh=await state();assert.equal(fresh.settings.simulationTheme,'gold');assert.equal(fresh.settings.simulationPlaybackTheme,'gold');await page.evaluate(()=>themeTest.setup());await tech();
  assert.equal(await page.locator('#technicianDialog #simulationThemeSettings,#technicianDialog #simulationPlaybackThemeSettings').count(),0);
@@ -87,8 +90,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  for(const expected of [/rgb\(41, 27, 56\)/,/rgb\(20, 41, 31\)/,/rgb\(37, 36, 35\)/]){
   await tap('#btnEvolutionDrawerInternal');assert.match(await drawerBackdrop(),expected);
  }
+ await finishBorderFade();
+ const editedBorder=await borderColor();
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
  assert.equal(await opacity(),'1');assert.equal(await drawerBackdrop(),editedBackdrop);
+ assert.equal(await borderColor(),editedBorder);assert.notEqual(editedBorder,transparent);
  await tap('#btnPlayPauseLife');
  await tech();
  if(await page.locator('#btnConfigureDisplay').getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
@@ -102,7 +108,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await swatches.count(),2);assert(await swatches.first().isVisible());
  assert.equal(await drawerBackdrop(),editedBackdrop);
  await tap('#evolutionDrawerDialog [data-close]');
- await tap('#btnPlayPauseLife');await page.waitForTimeout(450);assert.equal(await opacity(),'0');
+ await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
+ assert.equal(await borderColor(),transparent);assert.equal(await opacity(),'1');
+ await tap('#btnEvolutionDrawerInternal');
+ assert.match(await drawerBackdrop(),/rgb\(41, 27, 56\)/);
+ assert.equal(await borderColor(),transparent);
+ await tap('#btnEvolutionDrawerInternal');
+ assert.equal(await drawerBackdrop(),editedBackdrop);
+ assert.equal(await borderColor(),transparent);
  await tap('#btnPlayPauseLife');
  await boot(true);await page.evaluate(()=>themeTest.setup());
  assert((await state()).patterns);assert(await keepDrawers.isChecked());
@@ -125,22 +138,35 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await page.locator('#simModeBackground .sim-theme-layer').count(),0);
  const rest=fresh.settings.simulationTheme;
  await tap('#evolutionDrawerDialog [data-close]');
+ await finishBorderFade();
  const frame=await backdrop.boundingBox(),buttonBounds=await page.locator('#btnNudgeBrighter').boundingBox();
+ const restingBorder=await borderColor();
+ const shadow=await backdrop.evaluate(e=>getComputedStyle(e).boxShadow);
+ assert.deepEqual(await backdrop.evaluate(e=>{
+  const style=getComputedStyle(e);
+  return [style.transitionProperty,style.transitionDuration];
+ }),['border-color','0.4s']);
  assert.equal(await opacity(),'1');
  await tap('#btnPlayPauseLife');assert((await state()).playing);
  assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),'gold');
  await page.waitForTimeout(450);
- assert.equal(await ink(),'rgb(118, 103, 65)');assert.equal(await opacity(),'0');
+ assert.equal(await ink(),'rgb(118, 103, 65)');assert.equal(await opacity(),'1');
+ assert.equal(await borderColor(),transparent);assert.equal(await drawerBackdrop(),initialBackdrop);
+ assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).boxShadow),shadow);
+ await page.screenshot({path:artifacts+'/'+config.lang+'-border-faded.png'});
  assert.deepEqual(await backdrop.boundingBox(),frame);
  assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
  assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);
  assert.equal(await ink(),pausedInk);assert.equal(await opacity(),'1');
+ assert.equal(await borderColor(),restingBorder);assert.notEqual(restingBorder,transparent);
  assert.equal(await drawerBackdrop(),initialBackdrop);
  // Reduced motion retains the same visibility states without transitions.
  await page.emulateMedia({reducedMotion:'reduce'});
  assert.equal(await opacity(),'1');assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
- await tap('#btnPlayPauseLife');assert.equal(await opacity(),'0');await tap('#btnPlayPauseLife');assert.equal(await opacity(),'1');
+ await tap('#btnPlayPauseLife');assert.equal(await borderColor(),transparent);
+ assert.equal(await opacity(),'1');assert.equal(await drawerBackdrop(),initialBackdrop);
+ await tap('#btnPlayPauseLife');assert.equal(await borderColor(),restingBorder);
  await page.emulateMedia({reducedMotion:'no-preference'});
  await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,rest);assert.equal(current.settings.simulationPlaybackTheme,'gold');
  // Saved legacy profiles normalize only the retired appearance fields.
@@ -163,8 +189,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert(!(await page.locator('#btnSave').isVisible()));
  assert(!(await page.locator('#btnToggleSimMode').isVisible()));
  await tap('#btnPlayPauseLife');
- assert(await page.locator('#btnSave').isVisible());
- assert(await page.locator('#btnToggleSimMode').isVisible());
+ await page.locator('#btnSave').waitFor({state:'visible'});
+ await page.locator('#btnToggleSimMode').waitFor({state:'visible'});
  await boot(true);
  assert(await keepDrawers.isChecked(),'drawer visibility resets on reload');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await ctx.close();
