@@ -66,9 +66,10 @@ function applyProfileOneDefaults(snapshot) {
         paletteName: RANDOM_STARTUP_PALETTE, fill: 'random', brushColor: 'none', brushSize: 1, separatorPx: 2, boardSize: 21, symmetry: 'off', interfaceMode: 'creative'
     });
     snapshot.settings.brush.symmetry = 'off';
-    snapshot.settings.cycles.chiFlow = ['Harmony', 'Nova', 'Alexis'].map(name => clone(CHI_FLOW_PRESETS[name]));
+    const sources = ['Harmony', 'Ripples', 'Alexis'];
+    snapshot.settings.cycles.chiFlow = sources.map(name => clone(CHI_FLOW_PRESETS[name]));
     if (snapshot.identity) snapshot.identity.chiFlow = {
-        index: 0, sources: ['Harmony', 'Nova', 'Alexis'],
+        index: 0, sources,
         yoursRules: clone(snapshot.settings.cycles.chiFlow[0])
     };
 }

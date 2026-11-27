@@ -1,6 +1,6 @@
 import { focusSettingsHeading } from './dialog-focus.js';
 import { onLanguageChange } from './i18n.js';
-import { INITIAL_CRACKS_GROWTH, CRACKS_GROWTH_PRESETS, getCracksPresetId, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, validateCracksGrowth, validateCracksArea } from './cracks-settings.js';
+import { FIRST_WHISPER_ICON_PATH, INITIAL_CRACKS_GROWTH, CRACKS_GROWTH_PRESETS, getCracksPresetId, DEFAULT_CRACKS_MATERIAL, validateCracksMaterial, validateCracksGrowth, validateCracksArea } from './cracks-settings.js';
 const growthControls = [
     {field:'branchChance',id:'cracksBranchChance',key:'cracks_branch_chance',min:0,max:100,step:5,percent:true},
     {field:'branchInterval',id:'cracksBranchInterval',key:'cracks_branch_interval',min:1,max:40,step:1},
@@ -8,7 +8,7 @@ const growthControls = [
 ];
 // Symbol colors sampled from New-York Autumn and Autumn into Winter.
 const presetArt = {
-    'first-whisper': { ink:'#CD853F', path:'M20 36C18 27 20 17 25 9M20 27C12 26 10 21 9 17M21 21C29 21 33 17 35 12' },
+    'first-whisper': { ink:'#CD853F', path:FIRST_WHISPER_ICON_PATH },
     'quiet-flow': { ink:'#607D8B', path:'M7 18C15 7 25 29 37 16M7 29C15 18 25 40 37 27' },
     'crystal-paths': { ink:'#91A0A6', path:'M22 37V8M22 20 12 10M22 28 34 16M22 33 11 26M22 12 29 6' },
     'fibonacci-bloom': { ink:'#6B8E23', path:'M22 23C22 19 28 19 28 24C28 31 17 32 14 25C9 14 25 6 34 15C47 28 28 46 12 34C-2 23 9 6 20 5' },

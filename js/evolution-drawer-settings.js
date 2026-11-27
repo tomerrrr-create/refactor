@@ -24,8 +24,8 @@ const legacyPatternsPage = Object.freeze([...PATTERN_EVOLUTIONS.map(({ id }) => 
 // Physical left-to-right order, shared by first launch, factory profiles and Reset.
 export const DEFAULT_EVOLUTION_LAYOUT = Object.freeze([
     'sandpile', 'magnet', 'gameOfLife', 'brightnessEvo', 'islands',
-    'nudgeBrighter', 'gravitationalSort', null, 'ink', 'erosion',
-    'contour', 'dla', 'breathe', 'network', 'turing',
+    'nudgeBrighter', 'gravitationalSort', null, 'erosion', 'contour',
+    'ink', 'dla', 'breathe', 'network', 'turing',
     'cymatics', null, null, null, 'spiral',
     'crystal', 'octagonal', null, 'voronoi', 'fibonacci',
     'pinwheel-map', null, null, null, 'apollonian'

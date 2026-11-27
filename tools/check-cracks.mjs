@@ -19,7 +19,7 @@ const browser=await chromium.launch({headless:true,executablePath:process.env.CH
 
 try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844,lang:'he'},{width:320,height:568,lang:'ru'},{width:844,height:390,lang:'nl'}].filter(c=>!process.env.CRACKS_LANG||c.lang===process.env.CRACKS_LANG)){
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
- await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridOpeningChoice','false');},config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
  source=source.replace('      initializeApp();',`window.cracksTest={
@@ -58,6 +58,9 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  await openSettings();const dialog=page.locator('#cracksSettingsDialog'),strength=dialog.locator('#cracksMaterialStrength'),chance=dialog.locator('#cracksBranchChance'),interval=dialog.locator('#cracksBranchInterval'),curvature=dialog.locator('#cracksCurvature');
  async function setGrowth(values){for(const [input,value] of [[chance,values.branchChance],[interval,values.branchInterval],[curvature,values.curvature]]){await input.fill(String(value));}}
  const defaultGrowth={branchChance:55,branchInterval:8,curvature:130},customGrowth={branchChance:35,branchInterval:7,curvature:150};
+ const presetIcon=dialog.locator('[data-cracks-preset="first-whisper"] svg');
+ assert.equal(await button.locator('svg').getAttribute('viewBox'),await presetIcon.getAttribute('viewBox'));
+ assert.equal(await button.locator('.contour-cracks-icon').getAttribute('d'),await presetIcon.locator('path').getAttribute('d'));
  const presets=[['first-whisper',{branchChance:65,branchInterval:11,curvature:100}],['quiet-flow',{branchChance:40,branchInterval:22,curvature:100}],['crystal-paths',{branchChance:40,branchInterval:22,curvature:0}],['fibonacci-bloom',{branchChance:55,branchInterval:8,curvature:130}],['parsley',{branchChance:90,branchInterval:3,curvature:140}]];
  assert.equal(await dialog.locator('[data-cracks-preset]').count(),5);assert.equal(await dialog.locator('[data-cracks-preset][aria-pressed="true"]').getAttribute('data-cracks-preset'),'first-whisper');
  const presetBounds=await dialog.locator('[data-cracks-preset]').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
