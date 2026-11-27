@@ -1,4 +1,4 @@
-import { SIMULATION_DRAWER_COLORS, getDrawerColor, getThemeColorLabel, setDrawerColor } from './simulation-theme.js';
+import { SIMULATION_DRAWER_COLORS, getDrawerColor, getThemeColorLabel, resetDrawerColors, setDrawerColor } from './simulation-theme.js';
 import { focusSettingsHeading } from './dialog-focus.js';
 import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
@@ -212,7 +212,14 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         if(event.altKey&&event.key==='ArrowUp'&&canOpenMap()){event.preventDefault();open();}
     });
     for(const selector of ['[data-close]','[data-cancel]'])dialog.querySelector(selector).addEventListener('click',()=>dialog.close());
-    dialog.querySelector('[data-reset]').addEventListener('click',()=>{draft=[...DEFAULT_EVOLUTION_LAYOUT];selected=null;render();});
+    dialog.querySelector('[data-reset]').addEventListener('click',()=>{
+        if (!canEdit()) return;
+        draft = [...DEFAULT_EVOLUTION_LAYOUT];
+        selected = null;
+        resetDrawerColors();
+        controls.dataset.drawerColor = getDrawerColor(page);
+        render();
+    });
     dialog.querySelector('form').addEventListener('submit',event=>{
         event.preventDefault();if(!canEdit())return;
         if(onSave(validateEvolutionSlots(draft))!==false)dialog.close();

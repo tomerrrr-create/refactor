@@ -7,6 +7,8 @@ export function initializeOpeningChoice(onEvolve) {
     const toggle = document.getElementById('openingChoiceToggle');
     const gate = document.getElementById('openingChoiceGate');
     const dialog = document.getElementById('openingChoiceDialog');
+    const switchIcon = document.querySelector('#btnToggleSimMode > svg');
+    dialog.querySelector('.opening-choice-mark').append(switchIcon.cloneNode(true));
 
     toggle.checked = true;
     try { toggle.checked = localStorage.getItem(STORAGE_KEY) !== 'false'; } catch {}

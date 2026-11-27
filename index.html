@@ -40,14 +40,15 @@
 
   <button id="openingChoiceGate" type="button" aria-haspopup="dialog" aria-controls="openingChoiceDialog" aria-labelledby="openingCreationLabel openingEvolutionLabel" hidden></button>
   <dialog id="openingChoiceDialog" aria-labelledby="openingCreationLabel openingEvolutionLabel">
+    <div class="opening-choice-mark" aria-hidden="true"></div>
     <div class="opening-choice-options">
       <button type="button" data-opening-choice="create">
         <span class="opening-choice-icon" aria-hidden="true"><span class="glyph-special-reset"></span></span>
-        <span id="openingCreationLabel" lang="en">Creation</span>
+        <span id="openingCreationLabel" data-debug-text="opening_choice_creation">Creation</span>
       </button>
       <button type="button" data-opening-choice="evolve">
         <span class="opening-choice-icon" data-luminance-bird aria-hidden="true"></span>
-        <span id="openingEvolutionLabel" lang="en">Evolution</span>
+        <span id="openingEvolutionLabel" data-debug-text="opening_choice_evolution">Evolution</span>
       </button>
     </div>
   </dialog>
