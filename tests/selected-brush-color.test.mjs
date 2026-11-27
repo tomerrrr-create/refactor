@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { SORT_MODES, normalizeSortMethod, sortColorsArray } from '../js/colors.js';
 import { nextSortMethod } from '../js/sort-cycle-settings.js';
-import { createFibonacciState, runFibonacciGeneration } from '../js/simulations/fibonacci.js';
+import { createFibonacciState, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
+import { MAP_DEFAULTS } from '../js/simulations/fibonacci-maps.js';
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function excerpt(start, end) {
@@ -116,6 +117,42 @@ test('Go Dark and board-only restoration restart growth without replacing the se
         assert.equal(h.boardState[0].k, 2);
         h.goDark({ keepFibonacciMode: false });
         assert.deepEqual(h.fibonacciState, createFibonacciState(1));
+    }
+});
+
+test('artwork history restores Fibonacci growth with personal settings, while file loads use recorded settings', () => {
+    const h = harness();
+    const crystal = { growthSpeed: 50, tileSize: 3, crystalEdges: 75 };
+    const maps = Object.fromEntries(Object.entries(MAP_DEFAULTS).map(([mode, settings]) => [mode, { ...settings, growthSpeed: 125 }]));
+    Object.assign(h, { armedSimulation: 'fibonacci', fibonacciColorAdvance: 98,
+        fibonacciCrystalSettings: crystal, fibonacciMapSettings: maps, validateFibonacciState,
+        isExecutingMacroCommand: false, isMacroPlaying: false, evolutionTuning: {}, brightnessEvoMode: 'off', updateFibonacciButtonUI() {} });
+    vm.runInContext(excerpt('function restoreFibonacciState(', 'function updateFibonacciButtonUI('), h);
+    vm.runInContext(excerpt('function applyArtworkHistoryState(', 'function updateUndoRedoButtons('), h);
+    const base = { n: 1, activePaletteIndex: 0, currentSortMethod: 'luminance', separatorPx: 0 };
+    for (const mode of ['restart', 'branching', 'crystal', ...Object.keys(maps)]) {
+        const recorded = createFibonacciState(1, 2, mode, 92, 2);
+        if (mode === 'voronoi') recorded.map.seeds.push(0);
+        runFibonacciGeneration({ currentBoardState: h.boardState, currentPalette: h.C.PALETTES[0].colors }, recorded);
+        const snapshot = { ...base, fibonacciState: recorded, tiles: [{ k: 2, v: 2, isGold: false }] };
+        const original = structuredClone(recorded);
+
+        h.applyArtworkHistoryState(snapshot);
+        const expected = { ...original, colorAdvance: 98 };
+        if (mode === 'crystal') expected.crystalSettings = crystal;
+        if (recorded.map) expected.map = { ...original.map, settings: maps[mode] };
+        assert.deepEqual(validateFibonacciState(h.fibonacciState), expected);
+        assert.equal(h.boardState[0].k, 2);
+        assert.deepEqual(recorded, original);
+
+        h.applyState(snapshot);
+        assert.deepEqual(h.fibonacciState, original);
+        h.applyHistorySettings(snapshot);
+        assert.deepEqual(h.fibonacciState, original);
+        h.isExecutingMacroCommand = true;
+        h.applyArtworkHistoryState(snapshot);
+        assert.deepEqual(h.fibonacciState, original);
+        h.isExecutingMacroCommand = false;
     }
 });
 
