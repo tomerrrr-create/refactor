@@ -192,6 +192,15 @@ try {
         assert.equal(await openingMark.innerHTML(), await control.locator('svg').innerHTML());
         assert.equal(await openingMark.evaluate(el => el.getBoundingClientRect().width), 44);
         assert.equal(await openingMark.evaluate(el => getComputedStyle(el).transform), 'none');
+        const markStyle = await openingMark.evaluate(icon => {
+            const options = icon.closest('dialog').querySelector('.opening-choice-options');
+            return {
+                stroke: parseFloat(getComputedStyle(icon).strokeWidth),
+                gap: options.getBoundingClientRect().top - icon.getBoundingClientRect().bottom
+            };
+        });
+        assert.equal(markStyle.stroke, .95);
+        assert(markStyle.gap >= 19.9, 'the enlarged mark has breathing room above the board choices');
         assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
             await page.locator('#iconGsUp').innerHTML());
