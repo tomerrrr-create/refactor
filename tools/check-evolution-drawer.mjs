@@ -88,9 +88,21 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  async function checkBackdrop(index){
   const image=await backgroundImage();
   assert.match(image,drawerColors[index]);
-  const grid=await backdrop.evaluate(element=>getComputedStyle(element,'::before').backgroundImage);
-  assert.equal((grid.match(/repeating-linear-gradient/g)??[]).length,2);
-  assert.match(grid,/45deg.*28px.*29px/);
+  const texture=await backdrop.evaluate(element=>{
+   const style=getComputedStyle(element,'::before');
+   return {image:style.backgroundImage,mask:style.maskImage,color:style.backgroundColor};
+  });
+  if(index===2){
+   assert.equal(texture.mask,'none');
+   assert.equal((texture.image.match(/repeating-linear-gradient/g)??[]).length,2);
+   assert.match(texture.image,/45deg.*28px.*29px/);
+  }else{
+   const [filename,color]=index===0
+    ? ['drawer-life-contours.png','rgba(166, 198, 163, 0.05)']
+    : ['drawer-pulse-waves.png','rgba(154, 175, 215, 0.05)'];
+   assert(texture.mask.includes(filename));
+   assert.equal(texture.color,color);
+  }
  }
  const lip=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>getComputedStyle(e,'::before').borderBottomColor);
  const firstLip=await lip();

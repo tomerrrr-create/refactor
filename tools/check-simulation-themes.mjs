@@ -43,7 +43,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const backdrop=page.locator('#simModeBackground');
  const opacity=()=>backdrop.evaluate(e=>getComputedStyle(e).opacity);
  const gridOpacity=()=>backdrop.evaluate(e=>getComputedStyle(e,'::before').opacity);
- const gridImage=()=>backdrop.evaluate(e=>getComputedStyle(e,'::before').backgroundImage);
+ const texture=()=>backdrop.evaluate(e=>{
+  const style=getComputedStyle(e,'::before');
+  return {image:style.backgroundImage,mask:style.maskImage,color:style.backgroundColor};
+ });
  const borderColor=()=>backdrop.evaluate(e=>getComputedStyle(e).borderTopColor);
  const finishBorderFade=()=>backdrop.evaluate(e=>Promise.all(e.getAnimations().map(animation=>animation.finished)));
  const transparent='rgba(0, 0, 0, 0)';
@@ -78,7 +81,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const drawerBackdrop=()=>backdrop.evaluate(e=>getComputedStyle(e).backgroundImage);
  const initialBackdrop=await drawerBackdrop();
  assert.match(initialBackdrop,/rgb\(20, 41, 31\)/);
- assert.match(await gridImage(),/rgba\(166, 198, 163, 0\.05\)/);
+ assert.equal((await texture()).color,'rgba(166, 198, 163, 0.05)');
+ assert.match((await texture()).mask,/drawer-life-contours\.png/);
  assert(await keepDrawers.isChecked());
  await chooseColor(1,'gold');
  const goldBackdrop=await drawerBackdrop();
@@ -90,11 +94,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.match(await drawerBackdrop(),/rgb\(37, 36, 35\)/);
  const editedBackdrop=await drawerBackdrop();
  await tap('#evolutionDrawerDialog [data-close]');
- for(const expected of [/rgb\(41, 27, 56\)/,/rgb\(20, 41, 31\)/,/rgb\(37, 36, 35\)/]){
+ for(const [expected,mask] of [[/rgb\(41, 27, 56\)/,/drawer-pulse-waves\.png/],[/rgb\(20, 41, 31\)/,/^none$/],[/rgb\(37, 36, 35\)/,/drawer-life-contours\.png/]]){
   await tap('#btnEvolutionDrawerInternal');
   const image=await drawerBackdrop();
   assert.match(image,expected);
-  assert.doesNotMatch(await gridImage(),/rgba\(166, 198, 163, 0\.05\)/);
+  assert.match((await texture()).mask,mask);
  }
  await finishBorderFade();
  const editedBorder=await borderColor();
