@@ -2,7 +2,7 @@ import { growFibonacciCrystal, validateCrystalSettings } from './fibonacci-cryst
 import { MIN_PATTERN_GROWTH_SPEED } from './pattern-growth.js';
 import { createFibonacciMap, FIBONACCI_MAPS, growFibonacciMap, validateFibonacciMap } from './fibonacci-maps.js';
 
-export const FIBONACCI_MODES = Object.freeze(['restart', 'branching']);
+export const FIBONACCI_MODES = Object.freeze(['recursive', 'restart', 'branching']);
 const recordedModes = new Set([...FIBONACCI_MODES, 'continuous', 'crystal', ...FIBONACCI_MAPS]);
 export const DEFAULT_FIBONACCI_COLOR_ADVANCE = 95;
 export const FIBONACCI_COLOR_ADVANCE_RANGE = Object.freeze([90, 100, 1]);
@@ -27,6 +27,12 @@ const HANDOFF_COVERAGE = .05;
 const HANDOFF_FADE = 24;
 const BRANCH_DELAY = 4;
 const GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2;
+const RECURSIVE_BRANCH_SIDES = new Set([21, 34, 55]);
+const RECURSIVE_BRANCH_SIZES = [34, 21, 13];
+const MAX_GROWING_SPIRALS = 4;
+const MAX_SUBSPIRALS = 12;
+const MAX_BRANCH_OVERLAP = .12;
+const recursiveSchedules = [];
 // Two incoming and two outgoing spirals can overlap during a handoff.
 const plans = [];
 let colorGroups;
@@ -42,13 +48,14 @@ export function createFibonacciState(n, orientation = 0, mode = 'restart',
 
 const wrap = (coordinate, n) => (coordinate % n + n) % n;
 
-function addSquares(n, origin, orientation, addBatch) {
+function addSquares(n, origin, orientation, addBatch, finishSquare, maxSide) {
     let top = Math.floor(origin / n), bottom = top, left = origin % n, right = left;
     let lastCell = origin;
     if (n === 1) return { origin, orientation };
     for (let direction = orientation; ; direction = (direction + 1) % directions.length) {
         const [dr, dc] = directions[direction];
         const side = dr ? right - left + 1 : bottom - top + 1;
+        if (side > maxSide) return { origin: lastCell, orientation: direction };
         const edge = dr > 0 ? bottom : dr < 0 ? top : dc > 0 ? right : left;
         const end = edge + (dr || dc) * side;
         // Keep the Fibonacci bounds in unwrapped space. Limit both axes to
@@ -70,34 +77,108 @@ function addSquares(n, origin, orientation, addBatch) {
         if (dr < 0) top = end;
         if (dc > 0) right = end;
         if (dc < 0) left = end;
+        if (strips === side && width === side) finishSquare({ side, direction, top, bottom, left, right });
         if (bottom - top + 1 >= n && right - left + 1 >= n) {
             return { origin: lastCell, orientation: (direction + 1) % directions.length };
         }
     }
 }
 
-function getPlan(n, { orientation, origin }) {
-    const cached = plans.find(plan => plan.n === n && plan.orientation === orientation && plan.origin === origin);
+function getPlan(n, { orientation, origin }, maxSide = Infinity) {
+    const cached = maxSide === Infinity && plans.find(plan => plan.n === n && plan.orientation === orientation && plan.origin === origin);
     if (cached) return cached;
 
     const cells = [origin];
     const frameEnds = [0, 1];
     const stripEnds = [0, 1];
+    const squares = [];
     const nextRound = addSquares(n, origin, orientation, batch => {
         if (frameEnds.length > 2) frameEnds.push(cells.length, cells.length, cells.length);
         cells.push(...batch);
         frameEnds.push(cells.length);
         stripEnds.push(cells.length);
-    });
+    }, square => squares.push({ ...square, frame: frameEnds.length - 1 }), maxSide);
+    if (maxSide !== Infinity) return { cells, frameEnds, squares };
 
     const rank = new Int32Array(n * n);
     cells.forEach((cell, index) => { rank[cell] = index + 1; });
     const visibleFrame = frameEnds.findIndex(count => count >= cells.length * .01);
     const establishedFrame = frameEnds.findIndex(count => count >= cells.length * HANDOFF_COVERAGE);
-    const plan = { n, orientation, origin, cells, frameEnds, stripEnds, rank, nextRound, visibleFrame, establishedFrame };
+    const plan = { n, orientation, origin, cells, frameEnds, stripEnds, rank, nextRound, visibleFrame, establishedFrame, squares };
     if (plans.length === 4) plans.shift();
     plans.push(plan);
     return plan;
+}
+
+function outwardCorners({ direction, top, bottom, left, right }) {
+    const [dr, dc] = directions[direction];
+    if (dr) {
+        const row = dr > 0 ? bottom + 1 : top - 1;
+        return [[row, left - 1], [row, right + 1]];
+    }
+    const column = dc > 0 ? right + 1 : left - 1;
+    return [[top - 1, column], [bottom + 1, column]];
+}
+
+// A round's tree is a pure function of its board size, origin and orientation.
+// Checkpoints can retain just the root and frame, even when branches are active.
+export function getFibonacciBranchSchedule(n, { origin, orientation }) {
+    const cached = recursiveSchedules.find(schedule => schedule.n === n && schedule.origin === origin && schedule.orientation === orientation);
+    if (cached) return cached;
+    const primary = getPlan(n, { origin, orientation });
+    const end = primary.frameEnds.length - 1;
+    const occupied = new Uint8Array(n * n);
+    const branches = [];
+    const queue = [];
+    const enqueue = (plan, start, depth) => {
+        for (const square of plan.squares) {
+            if (RECURSIVE_BRANCH_SIDES.has(square.side)) queue.push({ square, frame: start + square.frame, plan, depth });
+        }
+        queue.sort((a, b) => a.frame - b.frame);
+    };
+    enqueue(primary, 0, 0);
+
+    while (queue.length && branches.length < MAX_SUBSPIRALS) {
+        const { square, frame, plan: parent, depth } = queue.shift();
+        if (branches.filter(branch => branch.end > frame).length >= MAX_GROWING_SPIRALS - 1) continue;
+        const nextRoot = depth && queue.find(event => event.depth === 0);
+        const parentCount = parent.frameEnds[square.frame];
+        const activeParent = new Set(parent.cells.slice(0, parentCount));
+        let chosen;
+        // Try both outer corners and turn the little spiral to fit the free space.
+        // A smaller Fibonacci square is preferable to overlapping another branch.
+        for (const maxSide of RECURSIVE_BRANCH_SIZES) {
+            if (chosen) break;
+            for (const [row, column] of outwardCorners(square)) {
+                if (chosen) break;
+                const childOrigin = wrap(row, n) * n + wrap(column, n);
+                for (const turn of [0, -1, 1, 2]) {
+                    const childOrientation = (square.direction + turn + directions.length) % directions.length;
+                    const plan = getPlan(n, { origin: childOrigin, orientation: childOrientation }, maxSide);
+                    const bounds = plan.squares.at(-1);
+                    if (bounds?.side !== maxSide || bounds.top < 0 || bounds.left < 0 || bounds.bottom >= n || bounds.right >= n) continue;
+                    const branchEnd = frame + plan.frameEnds.length - 1;
+                    if (branchEnd > end) continue;
+                    // Keep a growth slot for the root's next planned branch.
+                    if (nextRoot && branchEnd > nextRoot.frame &&
+                        branches.filter(branch => branch.end > nextRoot.frame).length >= MAX_GROWING_SPIRALS - 2) continue;
+                    const overlap = plan.cells.reduce((count, cell) => count + Number(occupied[cell] || activeParent.has(cell)), 0);
+                    if (overlap > plan.cells.length * MAX_BRANCH_OVERLAP) continue;
+                    chosen = { start: frame, end: branchEnd, origin: childOrigin, orientation: childOrientation, depth: depth + 1, plan };
+                    break;
+                }
+            }
+        }
+        if (!chosen) continue;
+        for (const cell of chosen.plan.cells) occupied[cell] = 1;
+        branches.push(chosen);
+        enqueue(chosen.plan, frame, chosen.depth);
+    }
+
+    const schedule = { n, origin, orientation, primary, branches };
+    if (recursiveSchedules.length === 2) recursiveSchedules.shift();
+    recursiveSchedules.push(schedule);
+    return schedule;
 }
 
 function validateOrigin(n, { origin, orientation }) {
@@ -142,7 +223,13 @@ function validateBranch(n, primary, branch) {
 
 export function setFibonacciMode(state, mode, layoutSeed = state.seed) {
     if (state.mode === mode) return;
-    if (state.mode === 'branching' && mode !== 'branching') {
+    if (state.mode === 'recursive' || mode === 'recursive') {
+        const plan = getPlan(state.n, state);
+        state.frame = Math.min(state.frame, plan.frameEnds.length - 1);
+        delete state.branch;
+        delete state.outgoing;
+        if (mode === 'recursive') state.version = FIBONACCI_VERSION;
+    } else if (state.mode === 'branching' && mode !== 'branching') {
         const plan = getPlan(state.n, state);
         state.frame = Math.min(state.frame, plan.frameEnds.length - 1);
         delete state.branch;
@@ -162,7 +249,7 @@ export function setFibonacciMode(state, mode, layoutSeed = state.seed) {
 
 export function validateFibonacciState(state) {
     if ((state?.version !== 7 && state?.version !== FIBONACCI_VERSION) || !Number.isSafeInteger(state.n) || state.n < 1 || state.n > 327 ||
-        !recordedModes.has(state.mode) ||
+        !recordedModes.has(state.mode) || (state.mode === 'recursive' && state.version !== FIBONACCI_VERSION) ||
         !Number.isSafeInteger(state.frame) || state.frame < 0 || state.frame > 4 * state.n ** 2 ||
         normalizeFibonacciColorAdvance(state.colorAdvance) === undefined ||
         state.seed !== (state.seed >>> 0) || state.generation !== (state.generation >>> 0)) {
@@ -250,6 +337,19 @@ function advanceColor(board, index, colorCount, groups) {
     }
 }
 
+function uniqueSpiralAdvance(board, colorCount, groups) {
+    if (branchingCells?.length !== board.length) branchingCells = new Uint8Array(board.length);
+    else branchingCells.fill(0);
+    return (plan, count) => {
+        for (let i = 0; i < count; i++) {
+            const cell = plan.cells[i];
+            if (branchingCells[cell]) continue;
+            branchingCells[cell] = 1;
+            advanceColor(board, cell, colorCount, groups);
+        }
+    };
+}
+
 function runBranchingGeneration(board, colorCount, groups, state, primary) {
     let secondary = state.branch && getPlan(state.n, state.branch);
     let timing = handoffTiming(state.version, primary, secondary);
@@ -264,16 +364,7 @@ function runBranchingGeneration(board, colorCount, groups, state, primary) {
     }
     state.frame++;
 
-    if (branchingCells?.length !== board.length) branchingCells = new Uint8Array(board.length);
-    else branchingCells.fill(0);
-    const advanceSpiral = (plan, count) => {
-        for (let i = 0; i < count; i++) {
-            const cell = plan.cells[i];
-            if (branchingCells[cell]) continue;
-            branchingCells[cell] = 1;
-            advanceColor(board, cell, colorCount, groups);
-        }
-    };
+    const advanceSpiral = uniqueSpiralAdvance(board, colorCount, groups);
 
     if (state.outgoing) {
         const { hold, handoffEnd } = timing;
@@ -300,6 +391,36 @@ function runBranchingGeneration(board, colorCount, groups, state, primary) {
     return board;
 }
 
+function runRecursiveGeneration(board, colorCount, groups, state) {
+    let { primary, branches } = getFibonacciBranchSchedule(state.n, state);
+    if (state.n > 1 && state.frame === primary.frameEnds.length - 1) {
+        state.outgoing = { origin: state.origin, orientation: state.orientation };
+        Object.assign(state, primary.nextRound, { frame: 0 });
+        ({ primary, branches } = getFibonacciBranchSchedule(state.n, state));
+    }
+    state.frame = Math.min(state.frame + 1, primary.frameEnds.length - 1);
+
+    const advance = uniqueSpiralAdvance(board, colorCount, groups);
+
+    advance(primary, primary.frameEnds[state.frame]);
+    for (const branch of branches) {
+        const frame = Math.min(state.frame - branch.start + 1, branch.plan.frameEnds.length - 1);
+        if (frame > 0) advance(branch.plan, branch.plan.frameEnds[frame]);
+    }
+    if (state.outgoing) {
+        const { hold, handoffEnd } = handoffTiming(state.version, primary);
+        if (state.frame >= handoffEnd) delete state.outgoing;
+        else {
+            const previous = getPlan(state.n, state.outgoing);
+            const strips = previous.stripEnds.length - 1;
+            const elapsed = Math.max(0, state.frame - hold);
+            const retired = elapsed ? Math.ceil(strips * elapsed / (handoffEnd - hold)) : 0;
+            advance(previous, previous.stripEnds[strips - retired]);
+        }
+    }
+    return board;
+}
+
 export function runFibonacciGeneration({ currentBoardState, currentPalette, growthPaletteSize = currentPalette.length }, state) {
     const colorCount = currentPalette.length;
     const groups = getColorAdvanceGroups(state);
@@ -312,6 +433,7 @@ export function runFibonacciGeneration({ currentBoardState, currentPalette, grow
         growFibonacciMap(state, index => advanceColor(currentBoardState, index, colorCount, groups), growthPaletteSize);
         return currentBoardState;
     }
+    if (state.mode === 'recursive') return runRecursiveGeneration(currentBoardState, colorCount, groups, state);
     let plan = getPlan(state.n, state);
     if (state.mode === 'branching' && state.n > 1) {
         return runBranchingGeneration(currentBoardState, colorCount, groups, state, plan);
