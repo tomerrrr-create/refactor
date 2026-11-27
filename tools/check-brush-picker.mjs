@@ -40,7 +40,7 @@ try{for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:844
  // The technician setting changes the existing XL slot immediately and survives reload.
  const editXl = async (next, previous) => {
   await p.evaluate(()=>brushTest.tech());
-  await p.locator('#btnConfigureDisplay').click();
+  await p.locator('#btnConfigureAbTest').click();
   const width = p.locator('#xlBrushWidth');
   assert.equal(await width.inputValue(), String(previous));
   await width.fill(String(next));await width.press('Tab');

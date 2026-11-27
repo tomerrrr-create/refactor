@@ -24,7 +24,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.allResetTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const state=()=>page.evaluate(()=>allResetTest.state()),params=()=>page.evaluate(()=>allResetTest.params()),tap=id=>page.locator('#'+id).evaluate(e=>e.click()),dialog=page.locator('#evolutionDrawerDialog');
- await page.evaluate(()=>allResetTest.tech());await page.locator('#btnConfigureFeatures').click();await page.locator('#rememberEvolutionModesToggle').check();await page.locator('#btnTechnicianCloseTop').click();
+ await page.evaluate(()=>allResetTest.tech());await page.locator('#btnConfigureAbTest').click();await page.locator('#rememberEvolutionModesToggle').check();await page.locator('#btnTechnicianCloseTop').click();
  async function prepare(){await page.evaluate(()=>allResetTest.setup());for(const [id] of modes){await tap(id);await tap(id);}await tap('btnWind');await tap('btnWind');}
  async function defaults(){const remembered=await page.evaluate(()=>allResetTest.rememberedModes());for(const [,sim,mode]of modes)assert.equal(remembered[sim],mode,sim);}
  function unchanged(before,after){for(const key of ['board','slots','page','sort','brush','symmetry','palette','wind','history'])assert.deepEqual(after[key],before[key],key);assert.equal(after.armed,before.armed);}

@@ -1793,7 +1793,7 @@ export function initializeModals(appContext) {
         initStatus.textContent = app.getText(persisted ? 'init_saved' : 'init_saved_session');
     });
     const startupForm = document.getElementById('startupSettingsForm');
-    const technicianSections = ['Display', 'Macro', 'Features', 'Init', 'Startup'].map(name => {
+    const technicianSections = ['Display', 'Macro', 'Features', 'AbTest', 'Init', 'Startup'].map(name => {
         const toggle = document.getElementById('btnConfigure' + name);
         return [toggle, document.getElementById(toggle.getAttribute('aria-controls'))];
     });
