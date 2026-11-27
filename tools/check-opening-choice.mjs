@@ -14,6 +14,7 @@ app = app.replace('      initializeApp();', `window.openingTest = {
         sort: currentSortMethod, paletteIndex: activePaletteIndex,
         brushSize, separator: separatorPx, settings: {...simulationInitSettings}
     }),
+    openTechnicians: () => modals.openTechnicianMenu(),
     initSnapshot: () => JSON.parse(artRecipeLog.find(line => line.includes(' INIT_STATE -> ')).split(' INIT_STATE -> ')[1]),
     customiseEvolution: () => {
         switchToPalette(C.PALETTE_GROUPS.find(group => group.id === 'extended').indexes[0]);
@@ -173,6 +174,29 @@ try {
             await waitForReload(() => tap(banner.locator('[data-update]')));
             assert.equal(await page.locator('html').getAttribute('data-build'), '5');
             assert(await gate.isVisible(), 'the standard banner reload still follows normal startup');
+            await choose('create');
+            await tap(continueButton);
+            await page.evaluate(() => openingTest.openTechnicians());
+            const technicianUpdate = page.locator('#btnTechnicianUpdate');
+            const technicianStatus = page.locator('#technicianUpdateStatus');
+            const artwork = await state();
+            await tap(technicianUpdate);
+            await page.waitForFunction(() => !document.getElementById('btnTechnicianUpdate').disabled);
+            assert.equal(await technicianStatus.textContent(), mobile ? 'הגרסה שלך עדכנית.' : 'You’re up to date.');
+            assert.deepEqual(await state(), artwork, 'checking from Technicians leaves the artwork in place when current');
+
+            await context.setOffline(true);
+            await tap(technicianUpdate);
+            await page.waitForFunction(() => !document.getElementById('btnTechnicianUpdate').disabled);
+            assert.equal(await technicianStatus.textContent(), mobile ? 'לא ניתן לבדוק או להתקין את העדכון.' : 'Couldn’t check or install the update.');
+            assert.deepEqual(await state(), artwork);
+            await context.setOffline(false);
+
+            deployment = 6;
+            await waitForReload(() => tap(technicianUpdate));
+            assert.equal(await page.locator('html').getAttribute('data-build'), '6');
+            assert(await gate.isVisible(), 'Technicians update returns to ordinary startup');
+            assert.equal(await page.evaluate(() => localStorage.getItem('colorGridInterfaceZoom')), '91');
             assert.deepEqual(errors, []);
             console.log(JSON.stringify({ mobile, updates: true }));
             await context.close();

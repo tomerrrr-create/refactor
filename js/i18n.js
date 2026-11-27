@@ -305,6 +305,9 @@ export const translations = {
 
   pwa_update_checking: { en: "Checking for updates…", he: "בודק אם יש עדכון…", ru: "Проверяем обновления…", nl: "Controleren op updates…" },
   pwa_update_unavailable: { en: "Couldn’t check or install the update. You can continue with Mine.", he: "לא ניתן לבדוק או להתקין את העדכון. אפשר להמשיך עם Mine.", ru: "Не удалось проверить или установить обновление. Можно продолжить с Mine.", nl: "Controleren of installeren is niet gelukt. Je kunt verder met Mine." },
+  pwa_update_save_first: { en: "Save your artwork before updating.", he: "יש לשמור את היצירה לפני העדכון.", ru: "Сохраните работу перед обновлением.", nl: "Sla je werk op voordat je bijwerkt." },
+  pwa_update_current: { en: "You’re up to date.", he: "הגרסה שלך עדכנית.", ru: "У вас последняя версия.", nl: "Je hebt de nieuwste versie." },
+  pwa_update_check_failed: { en: "Couldn’t check or install the update.", he: "לא ניתן לבדוק או להתקין את העדכון.", ru: "Не удалось проверить или установить обновление.", nl: "Controleren of installeren is niet gelukt." },
   pwa_update_ready: { en: "New version ready. Save your work before updating.", he: "גרסה חדשה מוכנה. יש לשמור את העבודה לפני העדכון.", ru: "Новая версия готова. Сохраните работу перед обновлением.", nl: "Nieuwe versie klaar. Sla je werk op voordat je bijwerkt." },
   pwa_update: { en: "Update", he: "עדכון", ru: "Обновить", nl: "Bijwerken" },
   startup_palette_picker_title: { en: "Startup palette", he: "פלטת פתיחה", ru: "Начальная палитра", nl: "Startpalet" },

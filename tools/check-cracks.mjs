@@ -58,7 +58,7 @@ try {for(const config of [{width:1280,height:900,lang:'en'},{width:390,height:84
  await openSettings();const dialog=page.locator('#cracksSettingsDialog'),strength=dialog.locator('#cracksMaterialStrength'),chance=dialog.locator('#cracksBranchChance'),interval=dialog.locator('#cracksBranchInterval'),curvature=dialog.locator('#cracksCurvature');
  async function setGrowth(values){for(const [input,value] of [[chance,values.branchChance],[interval,values.branchInterval],[curvature,values.curvature]]){await input.fill(String(value));}}
  const defaultGrowth={branchChance:55,branchInterval:8,curvature:130},customGrowth={branchChance:35,branchInterval:7,curvature:150};
- const presetIcon=dialog.locator('[data-cracks-preset="first-whisper"] svg');
+ const presetIcon=dialog.locator('[data-cracks-preset="crystal-paths"] svg');
  assert.equal(await button.locator('svg').getAttribute('viewBox'),await presetIcon.getAttribute('viewBox'));
  assert.equal(await button.locator('.contour-cracks-icon').getAttribute('d'),await presetIcon.locator('path').getAttribute('d'));
  const presets=[['first-whisper',{branchChance:65,branchInterval:11,curvature:100}],['quiet-flow',{branchChance:40,branchInterval:22,curvature:100}],['crystal-paths',{branchChance:40,branchInterval:22,curvature:0}],['fibonacci-bloom',{branchChance:55,branchInterval:8,curvature:130}],['parsley',{branchChance:90,branchInterval:3,curvature:140}]];
