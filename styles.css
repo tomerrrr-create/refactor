@@ -3113,7 +3113,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .opening-choice-icon svg { width: 29px; height: 29px; }
 .opening-choice-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 72px));
+  grid-template-columns: repeat(2, minmax(0, 88px));
   justify-content: center;
   gap: 10px;
   margin-top: 8px;
@@ -3137,7 +3137,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 #openingContinue { --opening-action-ink: #f5ce80; }
 #openingEclipse { --opening-action-ink: #c9d3df; }
-#openingUpdate { --opening-action-ink: #afc9bf; letter-spacing: .03em; }
 .opening-choice-action:focus-visible {
   outline: none;
   text-decoration: underline;
@@ -3149,7 +3148,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 @media (hover: hover) and (pointer: fine) {
   .opening-choice-action:hover { text-decoration: underline; }
 }
-:is(#openingEclipseError, #openingUpdateStatus) { margin: 4px 0; font-size: .8rem; }
+#openingEclipseError { margin: 4px 0; font-size: .8rem; }
 #openingResetVeil[open] {
   display: block;
   position: fixed;

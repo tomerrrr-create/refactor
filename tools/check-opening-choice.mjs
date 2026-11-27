@@ -78,7 +78,6 @@ try {
         const choice = page.locator('#openingChoiceDialog');
         const eclipse = page.locator('#openingEclipse');
         const continueButton = page.locator('#openingContinue');
-        const update = page.locator('#openingUpdate');
         const veil = page.locator('#openingResetVeil');
         const gate = page.locator('#openingChoiceGate');
         const control = page.locator('#btnToggleSimMode');
@@ -101,9 +100,8 @@ try {
         if (testUpdates) {
             const choose = async mode => {
                 await tap(gate);
-                assert(await update.isHidden());
                 await tap(choice.locator(`[data-opening-choice="${mode}"]`));
-                assert(await update.isEnabled());
+                assert.deepEqual(await choice.locator('.opening-choice-actions button').allTextContents().then(labels => labels.map(label => label.trim())), ['Origin', 'Mine']);
             };
             const waitForReload = async action => {
                 const navigating = page.waitForEvent('framenavigated', frame => frame === page.mainFrame());
@@ -112,67 +110,23 @@ try {
                 await page.waitForFunction(() => window.openingTest?.ready);
             };
             await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-            await choose('create');
-            await tap(update);
-            await choice.waitFor({ state: 'hidden' });
-            assert.equal(await page.locator('html').getAttribute('data-build'), '1');
-
-            await boot(true);
-            await choose('evolve');
-            await context.setOffline(true);
-            await tap(update);
-            await page.waitForFunction(() => !document.getElementById('openingUpdate').disabled);
-            assert(await page.locator('#openingUpdateStatus').isVisible());
-            assert(await continueButton.isEnabled());
-            assert.equal(await page.locator('html').getAttribute('data-build'), '1');
-            await context.setOffline(false);
-
-            deployment = 2;
-            breakInstall = true;
-            await tap(update);
-            await page.waitForFunction(() => !document.getElementById('openingUpdate').disabled);
-            assert(await continueButton.isEnabled(), 'incomplete deployment leaves Mine available');
-            assert.equal(await page.locator('html').getAttribute('data-build'), '1');
-            breakInstall = false;
-
-            deployment = 3;
             await page.evaluate(() => {
                 localStorage.setItem('colorGridInterfaceZoom', '91');
-                localStorage.setItem('colorGridSimulationDrawerColors', '["gold","gold","gold"]');
+                sessionStorage.setItem('colorGridOpeningUpdateResume', 'evolve');
             });
-            await waitForReload(() => tap(update));
-            assert.equal(await page.locator('html').getAttribute('data-build'), '3');
-            assert(await gate.isHidden(), 'update resumes directly');
-            const evolved = await state();
-            assert.equal(evolved.simulation, true);
-            assert.equal(evolved.selected, 0);
-            assert.equal(evolved.size, evolved.settings.boardSize);
-            assert(await page.evaluate(() =>
-                localStorage.getItem('colorGridInterfaceZoom') === '91' &&
-                localStorage.getItem('colorGridSimulationDrawerColors') === '["gold","gold","gold"]' &&
-                sessionStorage.getItem('colorGridOpeningUpdateResume') === null));
-
             await boot(true);
-            await choose('create');
-            deployment = 4;
+            assert(await gate.isHidden(), 'an update started in the previous release resumes directly');
+            assert.equal((await state()).simulation, true);
+            assert(await page.evaluate(() => sessionStorage.getItem('colorGridOpeningUpdateResume') === null));
+
             const discoverUpdate = () => page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).update());
             const banner = page.locator('.pwa-update');
+            deployment = 2;
             await discoverUpdate();
             await banner.waitFor({ state: 'visible' });
-            // A waiting worker can also be applied manually after its banner is dismissed.
-            await banner.locator('[data-dismiss]').evaluate(button => button.click());
-            assert(await banner.isHidden());
-            await waitForReload(() => tap(update));
-            assert.equal(await page.locator('html').getAttribute('data-build'), '4');
-            assert(await gate.isHidden());
-            assert.equal((await state()).simulation, false);
-
-            deployment = 5;
-            await discoverUpdate();
-            await banner.waitFor({ state: 'visible' });
-            assert.equal(await page.locator('html').getAttribute('data-build'), '4', 'background updates wait for acceptance');
+            assert.equal(await page.locator('html').getAttribute('data-build'), '1', 'background updates wait for acceptance');
             await waitForReload(() => tap(banner.locator('[data-update]')));
-            assert.equal(await page.locator('html').getAttribute('data-build'), '5');
+            assert.equal(await page.locator('html').getAttribute('data-build'), '2');
             assert(await gate.isVisible(), 'the standard banner reload still follows normal startup');
             await choose('create');
             await tap(continueButton);
@@ -192,9 +146,17 @@ try {
             assert.deepEqual(await state(), artwork);
             await context.setOffline(false);
 
-            deployment = 6;
+            deployment = 3;
+            breakInstall = true;
+            await tap(technicianUpdate);
+            await page.waitForFunction(() => !document.getElementById('btnTechnicianUpdate').disabled);
+            assert.equal(await page.locator('html').getAttribute('data-build'), '2', 'a partial release does not reload');
+            assert.deepEqual(await state(), artwork);
+            breakInstall = false;
+
+            deployment = 4;
             await waitForReload(() => tap(technicianUpdate));
-            assert.equal(await page.locator('html').getAttribute('data-build'), '6');
+            assert.equal(await page.locator('html').getAttribute('data-build'), '4');
             assert(await gate.isVisible(), 'Technicians update returns to ordinary startup');
             assert.equal(await page.evaluate(() => localStorage.getItem('colorGridInterfaceZoom')), '91');
             assert.deepEqual(errors, []);
@@ -243,12 +205,13 @@ try {
         assert(await continueButton.isVisible() && await continueButton.isEnabled());
         assert(await choice.getByRole('button', { name: 'Mine', exact: true }).isVisible());
         assert(await choice.getByRole('button', { name: 'Origin', exact: true }).isVisible());
+        assert.deepEqual(await actions.locator('button').allInnerTexts(), ['Origin', 'Mine']);
         const actionBounds = await actions.boundingBox();
-        const buttons = await Promise.all([eclipse.boundingBox(), continueButton.boundingBox(), update.boundingBox()]);
+        const buttons = await Promise.all([eclipse.boundingBox(), continueButton.boundingBox()]);
         const centers = buttons.map(({ x, width }) => x + width / 2);
         assert(buttons.every(({ width, height }) => width >= 44 && height >= 44));
-        assert(Math.abs((centers[0] + centers[2]) / 2 - (actionBounds.x + actionBounds.width / 2)) < 1);
-        assert(mobile ? centers[0] > centers[1] && centers[1] > centers[2] : centers[0] < centers[1] && centers[1] < centers[2], 'Origin, Mine and Update follow reading direction');
+        assert(Math.abs((centers[0] + centers[1]) / 2 - (actionBounds.x + actionBounds.width / 2)) < 1);
+        assert(mobile ? centers[0] > centers[1] : centers[0] < centers[1], 'Origin and Mine follow reading direction');
         assert(Math.abs(centers[1] - centers[0]) < 100, 'Mine and Origin form a compact, centered pair');
         assert.equal(await continueButton.evaluate(el => getComputedStyle(el).color), 'rgb(245, 206, 128)');
         assert.equal(await eclipse.evaluate(el => getComputedStyle(el).color), 'rgb(201, 211, 223)');
@@ -256,7 +219,7 @@ try {
             const style = getComputedStyle(item);
             return [style.borderTopWidth, style.backgroundImage, style.backgroundColor,
                 style.textShadow, style.animationName, style.transitionDuration];
-        })), Array.from({length: 4}, () => ['0px', 'none', transparent, 'none', 'none', '0s']));
+        })), Array.from({length: 3}, () => ['0px', 'none', transparent, 'none', 'none', '0s']));
         if (!mobile) {
             await continueButton.hover();
             assert.equal(await continueButton.evaluate(el => getComputedStyle(el).textDecorationLine), 'underline');
