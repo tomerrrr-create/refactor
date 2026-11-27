@@ -965,7 +965,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           dom.btnGap.setAttribute('aria-label', label);
           const isOff = isRelativeSeparatorMode ? level === 0 : separatorPx === 0;
           dom.btnGap.querySelector('svg').setAttribute('stroke', isOff ? '#424242' : '#fff');
-          dom.gapValue.style.color = isOff ? 'var(--playback-control-ink, #424242)' : '';
+          dom.gapValue.style.color = isOff ? '#424242' : '';
           dom.gapValue.hidden = isRelativeSeparatorMode && level === 0;
           dom.gapValue.textContent = isRelativeSeparatorMode
               ? ({ 5: 'L', 3: 'M', 1: 'S', 0: '' }[level])
@@ -6614,7 +6614,7 @@ applySortMethod,
         modals = initializeModals(contextForModals);
         initializeQuickStart();
         const armOpeningChoice = initializeOpeningChoice(initializeEvolutionBoard);
-        initializeSimulationTheme(dom.controlsContainer);
+        initializeSimulationTheme();
         
         activePaletteIndex = resolveStartupPaletteIndex(startupSettings.paletteName);
         n = startupSettings.boardSize;

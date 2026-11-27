@@ -7,7 +7,7 @@ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
 let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.windTest={
- setup:()=>{pauseLife();setWindMode(false);resetArmedState();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%paletteLen();t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);},
+ setup:()=>{pauseLife();setWindMode(false);resetArmedState();cycleMemory.clear();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%paletteLen();t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);},
  state:()=>({wind:windMode,mode:windSettings.mode,settings:windSettings,board:boardState.map(t=>({k:t.k,isGold:t.isGold})),history:history.length,playing:isLifePlaying,gen:currentGenerationCount,armed:armedSimulation,macro:isMacroPlaying,logs:[...artRecipeLog]}),
  recipe:async()=>await createArtRecipeFile().text(),
  replay:text=>{pauseLife();setWindMode(false);macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
@@ -20,7 +20,7 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox'],headless:true});
 try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  const ctx=await browser.newContext({viewport:{width:touch?390:1280,height:touch?844:900},isMobile:touch,hasTouch:touch,serviceWorkers:'block'});
- await ctx.addInitScript(lang=>localStorage.setItem('userLanguage',lang),lang);
+ await ctx.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridOpeningChoice','false');},lang);
  const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.windTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>windTest.setup());
  const state=()=>page.evaluate(()=>windTest.state()),tap=async selector=>touch?page.locator(selector).tap():page.locator(selector).click();
@@ -47,14 +47,12 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  assert(!(await state()).wind);assert(await page.locator('#btnColorPicker').isEnabled());await tap('#btnUndo');assert.deepEqual((await state()).board,before);await tap('#btnRedo');assert.deepEqual((await state()).board,after.board);
  const recipe=await page.evaluate(()=>windTest.recipe()),settings=await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1'));
  await page.evaluate(text=>windTest.replay(text),recipe);await page.waitForFunction(()=>!windTest.state().macro,{},{timeout:20000});assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1')),settings);assert.equal(await page.locator('#btnWind').getAttribute('aria-pressed'),'false');
- // Wind keeps its state colors while the playback hierarchy tints other controls.
+ // Wind keeps its state colors during standard playback.
  await page.evaluate(()=>{
   windTest.setup();windTest.restingTheme();
-  const toggle=document.getElementById('goldPlaybackHierarchyToggle');
-  toggle.checked=true;toggle.dispatchEvent(new Event('change'));
   windTest.live();
  });
- await page.waitForFunction(()=>getComputedStyle(document.getElementById('btnResizeUp')).color==='rgb(63, 81, 181)');
+ await page.waitForFunction(()=>windTest.state().playing);
  const windStroke=()=>page.locator('#btnWind svg').evaluate(e=>getComputedStyle(e).stroke);
  assert.equal(await windStroke(),'rgb(66, 66, 66)');
  const gen=(await state()).gen;

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
 const artifacts='/tmp/evolution-theme-check';await mkdir(artifacts,{recursive:true});
-const colors={blue:'rgb(63, 81, 181)',gold:'rgb(165, 139, 84)'};
+const pausedInk='rgb(165, 139, 84)';
 let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.themeTest={
  setup:()=>{pauseLife();isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();armSimulation('nudgeBrighter');},
@@ -22,6 +22,9 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   localStorage.setItem('userLanguage',lang);
   localStorage.setItem('colorGridOpeningChoice','false');
   localStorage.setItem('colorGridSimulationPlaybackTheme','teal');
+  localStorage.setItem('colorGridGoldPlaybackHierarchy','true');
+  localStorage.setItem('colorGridGoldTransitionSeconds','3.2');
+  localStorage.setItem('colorGridGoldExcludeSort','false');
   if(localStorage.getItem('colorGridExperimentalSimulationsV1')===null) {
    localStorage.setItem('colorGridExperimentalSimulationsV1','{"patterns":false}');
   }
@@ -89,18 +92,20 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap('#btnPlayPauseLife');
  await tech();
  if(await page.locator('#btnConfigureDisplay').getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
- await keepDrawers.uncheck();await tap('#individualDrawerColorsToggle');
+ await keepDrawers.uncheck();
+ assert(await keepDrawers.isVisible());
+ assert.equal(await page.locator('#individualDrawerColorsToggle,#goldPlaybackHierarchyToggle,#goldTransitionDuration,#goldExcludeSortToggle').count(),0);
  if(await page.locator('#btnConfigureFeatures').getAttribute('aria-expanded')==='false')await tap('#btnConfigureFeatures');
  await tap('#patternsExperimentToggle');
  assert.equal((await state()).patterns,false);
  await tap('#btnTechnicianCloseTop');await map();
- assert.equal(await swatches.count(),2);assert.equal(await swatches.first().isVisible(),false);
- assert.match(await drawerBackdrop(),/rgb\(42, 34, 19\)/);
+ assert.equal(await swatches.count(),2);assert(await swatches.first().isVisible());
+ assert.equal(await drawerBackdrop(),editedBackdrop);
  await tap('#evolutionDrawerDialog [data-close]');
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);assert.equal(await opacity(),'0');
  await tap('#btnPlayPauseLife');
  await boot(true);await page.evaluate(()=>themeTest.setup());
- assert((await state()).patterns);assert(await keepDrawers.isChecked());assert(await page.locator('#individualDrawerColorsToggle').isChecked());
+ assert((await state()).patterns);assert(await keepDrawers.isChecked());
  assert.equal(await drawerBackdrop(),editedBackdrop);
  await map();
  for(const [drawer,color] of newDrawerColors.entries()){
@@ -130,7 +135,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
  assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);
- assert.equal(await ink(),colors.gold);assert.equal(await opacity(),'1');
+ assert.equal(await ink(),pausedInk);assert.equal(await opacity(),'1');
  assert.equal(await drawerBackdrop(),initialBackdrop);
  // Reduced motion retains the same visibility states without transitions.
  await page.emulateMedia({reducedMotion:'reduce'});
@@ -145,113 +150,22 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.locator('#projectFileInput').setInputFiles({name:'old-appearance-settings.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{simulationTheme:'pink',simulationPlaybackTheme:'teal',simulationPreferences:{patternsVisible:false},brush:{size:5},startup:{boardSize:35}}}))});
  await page.waitForFunction(()=>themeTest.state().settings.brush.size===5);current=await state();assert(current.patterns);assert.equal(current.settings.startup.boardSize,35);assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');
 
- // Verify the shared progress and native hit targets while the controls are in motion.
- await page.evaluate(()=>{
-  const backdrop=document.getElementById('keepSimulationDrawersToggle');
-  backdrop.checked=false;backdrop.dispatchEvent(new Event('change'));
-  const toggle=document.getElementById('goldPlaybackHierarchyToggle');
-  toggle.checked=true;toggle.dispatchEvent(new Event('change'));
-  themeTest.setup();
- });
- const toolbar=page.locator('#controlsContainer');
- const visual=()=>page.evaluate(()=>{
-  const bar=document.getElementById('controlsContainer');
-  const read=id=>{const button=document.getElementById(id),style=getComputedStyle(button);return {
-   opacity:+style.opacity,color:style.color,visibility:style.visibility,inert:button.inert
-  };};
-  const save=read('btnSave'),toggle=read('btnToggleSimMode');
-  return {progress:+bar.style.getPropertyValue('--gold-playback-progress'),window:read('simModeBackground').opacity,
-   halo:+getComputedStyle(document.getElementById('btnNudgeBrighter'),'::before').opacity,
-   tools:read('btnResizeUp'),sort:read('btnCycleSort'),save,toggle,moving:bar.hasAttribute('data-gold-playback-moving'),
-   frameImage:getComputedStyle(document.getElementById('simModeBackground')).backgroundImage};
- });
- const waitForProgress=(min,max)=>page.waitForFunction(([min,max])=>{
-  const bar=document.getElementById('controlsContainer');
-  const progress=+bar.style.getPropertyValue('--gold-playback-progress');
-  return progress>=min&&progress<=max&&(min!==max||!bar.hasAttribute('data-gold-playback-moving'));
- },[min,max]);
- const paused=await visual();
- assert(await page.locator('#goldExcludeSortToggle').isChecked());
- assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'2');
+ // Old values for the removed experiment must leave the standard playback styling in place.
+ await page.evaluate(()=>themeTest.setup());
+ const toolColors=()=>page.locator('#btnResizeUp,#btnCycleSort').evaluateAll(buttons=>buttons.map(button=>getComputedStyle(button).color));
+ const idleColors=await toolColors();
  await tap('#btnPlayPauseLife');
- await waitForProgress(.14,.28);
- const leaving=await visual();
- assert(leaving.progress>0&&leaving.progress<.5);
- assert(Math.abs(leaving.window+leaving.halo-1)<.015,'frame and halo share their progress');
- assert(Math.abs(leaving.window+leaving.progress-1)<.01);
- assert.equal(leaving.frameImage,initialBackdrop);
- assert.notEqual(leaving.tools.color,paused.tools.color);
- assert.deepEqual(leaving.sort,paused.sort,'Sort is visually exempt by default during the transition');
- for(const name of ['save','toggle']){
-  assert(leaving[name].inert&&leaving[name].opacity>0&&leaving[name].opacity<1);
- }
- const oldDrawer=await toolbar.getAttribute('data-evolution-page');
- await tap('#btnEvolutionDrawerInternal');
- assert.notEqual(await toolbar.getAttribute('data-evolution-page'),oldDrawer);
- await tap('#btnEvolutionDrawerInternal');
- await tap('#btnEvolutionDrawerInternal');
- await waitForProgress(.57,.9);
- const reached=await visual();
- assert(reached.save.inert&&reached.save.visibility==='hidden');
+ assert((await state()).playing);
+ assert.equal(await page.locator('html').getAttribute('data-gold-playback-hierarchy'),null);
+ await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('#btnNudgeBrighter'),'::before').opacity)>.99);
+ assert.deepEqual(await toolColors(),idleColors);
+ assert.equal(await opacity(),'1');
+ assert(!(await page.locator('#btnSave').isVisible()));
+ assert(!(await page.locator('#btnToggleSimMode').isVisible()));
  await tap('#btnPlayPauseLife');
- const reversed=await visual();
- assert(reversed.progress>.4&&reversed.progress<1,'Pause reverses an in-flight transition from its current position');
- await waitForProgress(.16,.37);
- const returning=await visual();
- assert(returning.save.opacity>0&&returning.save.opacity<1&&!returning.save.inert);
- assert(Math.abs(returning.window+returning.halo-1)<.015);
- assert.equal(returning.frameImage,initialBackdrop);
- await waitForProgress(0,0);
- assert.deepEqual(await visual(),paused,'Pause settles back to the original visual state');
- await tech();
- const displaySettings=page.locator('#btnConfigureDisplay');
- if(await displaySettings.getAttribute('aria-expanded')==='false')await tap('#btnConfigureDisplay');
- const durationSlider=page.locator('#goldTransitionDuration');
- assert(await durationSlider.isVisible());
- const hierarchyBox=await page.locator('#goldPlaybackHierarchyToggle').boundingBox();
- const durationBox=await durationSlider.boundingBox();
- assert(durationBox.y>=hierarchyBox.y+hierarchyBox.height);
- await durationSlider.press('Home');
- assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridGoldTransitionSeconds')),'0.8');
- await tap('#goldExcludeSortToggle');
- assert(!(await page.locator('#goldExcludeSortToggle').isChecked()));
- await tap('#btnTechnicianCloseTop');
- await tap('#btnPlayPauseLife');
- await waitForProgress(.15,.4);
- const intermediate=await visual();
- assert.notEqual(intermediate.sort.color,paused.sort.color,'Sort joins the tint transition when opted in');
- await waitForProgress(1,1);
- const playing=await visual();
- assert.equal(playing.tools.color,colors.blue);
- assert.equal(playing.sort.color,colors.blue);
- assert.equal(playing.save.visibility,'hidden');
- assert.equal(playing.toggle.opacity,0);
- assert.equal(playing.window,0);
- assert.equal(playing.halo,1);
- await tap('#btnMagnetModes');
- assert.equal((await visual()).progress,1,'live handoff does not restart the transition');
- await tap('#btnPlayPauseLife');
- await waitForProgress(0,0);
- await page.emulateMedia({reducedMotion:'reduce'});
- await tap('#btnPlayPauseLife');
- assert.equal(await toolbar.getAttribute('data-gold-playback-motion'),null);
- assert.equal((await visual()).tools.color,colors.blue);
- assert.equal((await visual()).save.visibility,'hidden');
- await tap('#btnPlayPauseLife');
- await page.emulateMedia({reducedMotion:'no-preference'});
- await page.evaluate(()=>{
-  const toggle=document.getElementById('goldPlaybackHierarchyToggle');
-  toggle.checked=false;toggle.dispatchEvent(new Event('change'));
- });
- await tap('#btnPlayPauseLife');
- assert.equal(await toolbar.getAttribute('data-gold-playback-motion'),null);
- assert.equal((await visual()).tools.color,paused.tools.color);
- assert.equal((await visual()).sort.color,paused.sort.color);
- assert.equal((await visual()).save.visibility,'hidden');
- await tap('#btnPlayPauseLife');
+ assert(await page.locator('#btnSave').isVisible());
+ assert(await page.locator('#btnToggleSimMode').isVisible());
  await boot(true);
- assert.equal(await page.locator('#goldTransitionDuration').inputValue(),'0','transition duration survives reload');
- assert(!(await page.locator('#goldExcludeSortToggle').isChecked()),'Sort choice survives reload');
  assert(await keepDrawers.isChecked(),'drawer visibility resets on reload');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await ctx.close();
 }}finally{await browser.close();server.close();}
