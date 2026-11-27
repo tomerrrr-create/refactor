@@ -1,4 +1,5 @@
-import { getCurrentLang } from './i18n.js';
+import { getCurrentLang, getText } from './i18n.js';
+import { queueAppReset, readLastOpeningMode, rememberOpeningMode } from './app-reset.js';
 
 const STORAGE_KEY = 'colorGridOpeningChoice';
 
@@ -7,6 +8,9 @@ export function initializeOpeningChoice(onEvolve) {
     const toggle = document.getElementById('openingChoiceToggle');
     const gate = document.getElementById('openingChoiceGate');
     const dialog = document.getElementById('openingChoiceDialog');
+    const eclipse = document.getElementById('openingEclipse');
+    const resetError = document.getElementById('openingEclipseError');
+    const veil = document.getElementById('openingResetVeil');
     const switchIcon = document.querySelector('#btnToggleSimMode > svg');
     dialog.querySelector('.opening-choice-mark').append(switchIcon.cloneNode(true));
 
@@ -19,18 +23,40 @@ export function initializeOpeningChoice(onEvolve) {
     gate.addEventListener('click', () => {
         gate.hidden = true;
         dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
+        const resetLabel = getText('opening_reset_label');
+        eclipse.setAttribute('aria-label', resetLabel);
+        eclipse.title = resetLabel;
+        veil.setAttribute('aria-label', resetLabel);
+        eclipse.disabled = !readLastOpeningMode();
         dialog.showModal();
     }, { once: true });
 
-    function finish(evolve) {
+    function finish(mode) {
+        rememberOpeningMode(mode);
         app.inert = false;
         dialog.close();
-        if (evolve) onEvolve();
+        if (mode === 'evolve') onEvolve();
     }
 
-    dialog.querySelector('[data-opening-choice="create"]').addEventListener('click', () => finish(false));
-    dialog.querySelector('[data-opening-choice="evolve"]').addEventListener('click', () => finish(true));
+    dialog.querySelectorAll('[data-opening-choice]').forEach(button => {
+        button.addEventListener('click', () => finish(button.dataset.openingChoice));
+    });
     dialog.addEventListener('close', () => { app.inert = false; });
+    veil.addEventListener('cancel', event => event.preventDefault());
+    eclipse.addEventListener('click', async () => {
+        const mode = readLastOpeningMode();
+        if (!mode || veil.open) return;
+        resetError.hidden = true;
+        veil.showModal();
+        try {
+            await Promise.all(veil.getAnimations({ subtree: true }).map(animation => animation.finished));
+            queueAppReset(mode);
+            window.location.reload();
+        } catch {
+            veil.close();
+            resetError.hidden = false;
+        }
+    });
 
     return () => {
         if (!toggle.checked) return;

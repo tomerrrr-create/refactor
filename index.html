@@ -31,6 +31,7 @@
 
 
   <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app-reset.js"></script>
 </head>
 <body class="bg-black text-[#eaeaea] font-sans">
 
@@ -51,6 +52,18 @@
         <span id="openingEvolutionLabel" data-debug-text="opening_choice_evolution">Evolution</span>
       </button>
     </div>
+    <button id="openingEclipse" type="button" disabled aria-label="Reset all local app data" title="Reset all local app data">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+        <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-opacity=".42" stroke-width="1"/>
+        <path d="M18.6 7.5A8 8 0 0 1 8.2 19" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <p id="openingEclipseError" role="status" data-debug-text="opening_reset_error" hidden></p>
+  </dialog>
+  <dialog id="openingResetVeil">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round">
+      <path d="M12 20.5C10.4 19.4 3.1 14.4 3.1 9.4a4.6 4.6 0 0 1 8.9-1.6 4.6 4.6 0 0 1 8.9 1.6c0 5-7.3 10-8.9 11.1Z"/>
+    </svg>
   </dialog>
 
   <div id="appContainer" class="min-h-screen flex flex-col items-center justify-start p-6 pt-10 sm:pt-12">
