@@ -17,7 +17,7 @@ for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => s
 const server=createServer(async(req,res)=>{try{const f=new URL(req.url,'http://local').pathname.slice(1)||'index.html';res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':'text/html');res.end(f==='js/app.js'?source:await readFile(path.join(root,f)));}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
 try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:320,height:568},{lang:'nl',width:844,height:390}].filter(c=>!process.env.PRESET_LANG||c.lang===process.env.PRESET_LANG)){
- const context=await browser.newContext({viewport:{width:config.width,height:config.height},hasTouch:config.width<600,isMobile:config.width<600,serviceWorkers:'block'});await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ const context=await browser.newContext({viewport:{width:config.width,height:config.height},hasTouch:config.width<600,isMobile:config.width<600,serviceWorkers:'block'});await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridOpeningChoice','false');},config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.presetTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const state=()=>page.evaluate(()=>presetTest.state()),tap=b=>config.width<600?b.tap():b.click();
  async function swipe(button,dx,dy=0){
@@ -37,8 +37,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual(lifePresets,['Paint3','Paint','Naive','Paint2','Shuffle','Amoeba','LivingTexture',
   'Vibration','Coral','Space','Harmonic','Hive','Joelson','Charlie','Continuum'].map(name=>'btnGolPreset'+name));
  const chiPresets=await page.locator('#chiFlowSettingsModal button[id^="btnChiPreset"]').evaluateAll(nodes=>nodes.map(node=>node.id));
- assert.deepEqual(chiPresets,['Harmony','Topography','Electric','Nova','Fluent','Crystals',
-  'Ripples','Wildfire','Alexis','Zen'].map(name=>'btnChiPreset'+name));
+ assert.deepEqual(chiPresets,['Topography','Electric','Nova','Harmony','Zen','Wildfire',
+  'Ripples','Crystals','Alexis','Fluent'].map(name=>'btnChiPreset'+name));
  assert(await lifeModal.locator('#btnGolPresetPaint3.active').isVisible());
  await tap(page.locator('#btnGolSettingsCancel'));await lifeModal.waitFor({state:'hidden'});
  for(const [sim,key,id,modalId,saveId,cancelId,prefix] of [['gameOfLife','gol','btnGameOfLife','gameOfLifeSettingsModal','btnGolSettingsSave','btnGolSettingsCancel','btnGolPreset'],['sandpile','chi','btnSandpile','chiFlowSettingsModal','btnChiSettingsSave','btnChiSettingsCancel','btnChiPreset']]){
@@ -47,7 +47,12 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   async function open(){await swipe(button,0,-35);await modal.waitFor({state:'visible'});}
   async function close(id){await tap(page.locator('#'+id));await modal.waitFor({state:'hidden'});}
   const keyFor=id=>sim==='gameOfLife'?id:id.replace('btnChiPreset','');
-  async function setup(index=0){await page.evaluate(({sim,index})=>presetTest.setup(sim,index),{sim,index});if(await page.locator('#controlsContainer').getAttribute('data-evolution-page')==='1')await tap(page.locator('#btnEvolutionDrawerInternal'));}
+  async function setup(index=0){
+   await page.evaluate(({sim,index})=>presetTest.setup(sim,index),{sim,index});
+   const controls=page.locator('#controlsContainer'), selector=page.locator('#btnEvolutionDrawerInternal');
+   for(let step=0;step<2&&await controls.getAttribute('data-evolution-page')!=='0';step++)await tap(selector);
+   assert.equal(await controls.getAttribute('data-evolution-page'),'0');
+  }
   for(const index of [0,1,2])for(const direction of [1,-1]){
    await setup(index);const before=await state(),current=before[key].sources[index],at=order.findIndex(id=>keyFor(id)===current),target=order[(at+direction+order.length)%order.length];
    await swipe(button,direction*35);const swiped=await state();sameBoard(before,swiped);assert.equal(swiped[key].index,index);assert.equal(swiped[key].sources[index],keyFor(target));assert.deepEqual(swiped[key].yoursRules,before[key].yoursRules);
@@ -80,7 +85,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
    await setup(index);await open();await tap(page.locator('#'+target));await close(saveId);const saved=await state();
    assert.deepEqual(effective(saved),effective(swiped),'swipe equals preset+Save');assert.equal(saved.logs.at(-1).split(' -> ')[1],swipeLog,'same recording payload');
    for(let i=0;i<4;i++)await tap(button);assert.equal((await state())[key].index,index);assert.deepEqual((await state())[key].slots,swiped[key].slots,'tap cycle retains replacement');
-   await tap(page.locator('#btnGravitationalSort'));await tap(button);assert.equal((await state())[key].index,0);assert.deepEqual((await state())[key].slots,swiped[key].slots,'handoff retains all assigned presets');
+   await tap(page.locator('#btnGravitationalSort'));await tap(button);assert.equal((await state())[key].index,index,'handoff recalls the last slot');assert.deepEqual((await state())[key].slots,swiped[key].slots,'handoff retains all assigned presets');
   }
   // Wrap around and use a reversed DOM order as the single list for both paths.
   await setup();await open();await tap(page.locator('#'+order.at(-1)));await close(saveId);await swipe(button,35);assert.equal((await state())[key].sources[0],keyFor(order[0]));
