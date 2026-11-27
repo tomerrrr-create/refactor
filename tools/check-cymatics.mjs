@@ -43,9 +43,9 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   const theme=await import('/js/simulation-theme.js'),stroke=id=>getComputedStyle(document.querySelector('#'+id+' > svg')).stroke;
   for(const rest of ['blue','gold','teal']){
    theme.applySimulationTheme(rest);if(stroke('btnCymatics')!==stroke('btnSpiral'))throw Error('Cymatics resting theme mismatch: '+rest);
-   for(const playback of ['blue','gold','teal']){theme.applySimulationPlaybackTheme(playback);theme.setSimulationRunning(true);if(stroke('btnCymatics')!==stroke('btnSpiral'))throw Error('Cymatics playback theme mismatch: '+playback);theme.setSimulationRunning(false);}
+   theme.setSimulationRunning(true);if(stroke('btnCymatics')!==stroke('btnSpiral'))throw Error('Cymatics gold playback ink mismatch');theme.setSimulationRunning(false);
   }
-  theme.applySimulationTheme('blue');theme.applySimulationPlaybackTheme('gold');
+  theme.applySimulationTheme('blue');
  });
  await tap(button);
  assert.equal(await button.locator('svg:visible').evaluate(e=>getComputedStyle(e).strokeWidth),'2.5px');

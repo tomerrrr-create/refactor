@@ -19,7 +19,7 @@ function harness() {
     const noop = () => {};
     const context = vm.createContext({vorticesModeFor,restorePolygonFlowPhase,activeEvolutionControl:()=>null,DEFAULT_NETWORK_PREFERENCES,validateNetworkRules,validateOilRules,validateInkRules,DEFAULT_INK_PREFERENCES,
         validateContourActionRules, INITIAL_CYMATICS_RULES, validateCymaticsRules, createCymaticsFrequencies, rememberCymaticsFrequency,createCymaticsStrengths,rememberCymaticsStrength, INITIAL_CRACKS_GROWTH, validateEvolutionSlots, evolutionDrawer:null, evolutionSlots:[], gameOfLifeRules: {}, validateEvolutionTuning: value => value, islandsSession: null, armedSimulation: null,
-        applySimulationTheme: noop, applySimulationPlaybackTheme: noop,
+        applySimulationTheme: noop,
         normalizeSeparatorCycle: () => null, DEFAULT_SEPARATOR_CYCLE: [5, 3, 1, 0],
         updateGravitationalSortButtonUI: noop, updateSpiralButtonUI: noop,
         updateMagnetButtonUI: noop, updateDlaButtonUI: noop, updateErosionButtonUI: noop,

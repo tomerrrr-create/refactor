@@ -4,6 +4,9 @@ import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
 import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId, evolutionSlotOrder } from './evolution-drawer-settings.js';
 
+const DRAWER_NAMES = ['Life', 'Pulse', 'Geometry'];
+const DRAWER_NUMERALS = ['I', 'II', 'III'];
+
 export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,showPatterns=()=>false,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
@@ -17,10 +20,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     dialog.className='erosion-settings-dialog evolution-drawer-dialog';
     dialog.setAttribute('aria-labelledby','evolutionDrawerTitle');
     dialog.setAttribute('aria-describedby','drawerInstructions');
-    dialog.innerHTML=`<form><header class="drawer-header"><div class="drawer-title"><span class="drawer-mark" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h20M4 14h20M4 20h20"/><circle cx="9" cy="8" r="2" fill="currentColor"/><circle cx="19" cy="14" r="2" fill="currentColor"/><circle cx="12" cy="20" r="2" fill="currentColor"/></svg></span><h2 id="evolutionDrawerTitle"></h2></div><button type="button" data-close>×</button></header><p id="drawerInstructions"></p><div class="drawer-pages"></div><p class="drawer-selection" role="status" aria-live="polite"></p><div data-drawer-appearance></div><section class="drawer-cycle-actions"><button type="button" data-reset-cycles><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M20 7V3h-4M20 3a9 9 0 1 0 1 10"/></svg><span data-reset-cycles-label></span></button><p data-reset-cycles-status role="status" aria-live="polite"></p></section><footer class="drawer-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></footer></form>`;
-    const appearance=document.getElementById('evolutionAppearanceControls');
-    appearance.hidden=false;
-    dialog.querySelector('[data-drawer-appearance]').replaceWith(appearance);
+    dialog.innerHTML=`<form><header class="drawer-header"><div class="drawer-title"><span class="drawer-mark" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h20M4 14h20M4 20h20"/><circle cx="9" cy="8" r="2" fill="currentColor"/><circle cx="19" cy="14" r="2" fill="currentColor"/><circle cx="12" cy="20" r="2" fill="currentColor"/></svg></span><h2 id="evolutionDrawerTitle"></h2></div><div class="drawer-header-actions"><button type="button" data-reset-cycles></button><button type="button" data-close>×</button></div></header><p data-reset-cycles-status role="status" aria-live="polite"></p><p id="drawerInstructions"></p><div class="drawer-pages"></div><p class="drawer-selection" role="status" aria-live="polite"></p><footer class="drawer-actions"><button type="button" data-reset></button><button type="button" data-cancel></button><button type="submit" class="save-btn"></button></footer></form>`;
     document.body.append(dialog);
     const tilePalette=PALETTES.find(p=>p.originalName==='Autumn into Winter 264');
     const luminance=hex=>{const channels=hex.slice(1).match(/../g).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return .2126*channels[0]+.7152*channels[1]+.0722*channels[2];};
@@ -31,7 +31,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const displaySlots=()=>{const slots=slotsNow();return evolutionSlotOrder(slots,showPatterns()).map(i=>slots[i]);};
     const entry=id=>EVOLUTION_CATALOG.find(e=>e.id===evolutionControlId(id));
     const label=id=>getText(entry(id).key).split('\n')[0];
-    const pageLabel=index=>index===2?getText('drawer_patterns'):getText('drawer_page').replace('{n}',index+1);
+    const pageLabel=index=>DRAWER_NAMES[index];
     const navigateAllowed=()=>canNavigate();
     const canOpenMap=()=>navigateAllowed()&&(canEdit()||(showPatterns()&&isRunning()));
     function icon(id){
@@ -70,11 +70,11 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const active=getActive(),slots=displaySlots();
         const at=active?slots.indexOf(evolutionControlId(active)):-1;
         const otherPage=at>=0&&isVisible(evolutionControlId(active))&&Math.floor(at/EVOLUTION_PAGE_SIZE)!==page;
-        const text=getText('drawer_navigation').replace('{n}',page+1).replace('{total}',pageCount());
+        const text=getText('drawer_navigation').replace('{name}',pageLabel(page)).replace('{n}',page+1).replace('{total}',pageCount());
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);trigger.dataset.page=String(page);
         trigger.toggleAttribute('data-numbered-drawer',showPatterns());
-        symbol.querySelector('.drawer-page-number').textContent=String(page+1);
+        symbol.querySelector('.drawer-page-number').textContent=DRAWER_NUMERALS[page];
         trigger.title=getText('drawer_switch_tooltip');
         trigger.setAttribute('aria-label',[text,activeText,getText('drawer_open_hint'),getText('drawer_reset_modes_hold')].filter(Boolean).join(' — '));
         if(dialog.open){
@@ -125,9 +125,11 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         dialog.querySelector('#drawerInstructions').textContent=getText(editable?'drawer_instructions':'drawer_pause_to_edit');
         dialog.querySelector('[data-close]').setAttribute('aria-label',getText('saveModal_close'));
         dialog.querySelector('[data-reset]').textContent=getText('evolution_reset_default');
-        dialog.querySelector('[data-reset-cycles-label]').textContent=getText('drawer_reset_modes');
-        dialog.querySelector('[data-reset-cycles]').title=getText('drawer_reset_modes_hint');
-        dialog.querySelector('[data-reset-cycles]').disabled=!navigateAllowed()||typeof onResetCycles!=='function';
+        const reset=dialog.querySelector('[data-reset-cycles]');
+        reset.textContent=getText('drawer_reset');
+        reset.setAttribute('aria-label',getText('drawer_reset_modes'));
+        reset.title=getText('drawer_reset_modes_hint');
+        reset.disabled=!editable||!navigateAllowed()||typeof onResetCycles!=='function';
         dialog.querySelector('[data-cancel]').textContent=getText('gs_modal_cancel');
         dialog.querySelector('[type=submit]').textContent=getText('gs_modal_save_close');
         const pages=dialog.querySelector('.drawer-pages');pages.replaceChildren();
@@ -138,7 +140,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const colors=tilePalette.originalColors??tilePalette.colors;
         for(let drawer=0;drawer<pageCount();drawer++){
             const section=document.createElement('section'),heading=document.createElement('h3'),grid=document.createElement('div');
-            heading.id=`drawerPageTitle${drawer}`;heading.textContent=pageLabel(drawer);section.append(heading);
+            heading.id=`drawerPageTitle${drawer}`;heading.lang='en';heading.textContent=pageLabel(drawer);section.append(heading);
             grid.className='drawer-slots';grid.setAttribute('role','group');grid.setAttribute('aria-labelledby',heading.id);
             for(let local=0;local<EVOLUTION_PAGE_SIZE;local++){
                 const index=drawer*EVOLUTION_PAGE_SIZE+local,id=draft[order[index]],button=document.createElement('button');
@@ -147,7 +149,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
                     button.className='drawer-reserved-slot';button.disabled=true;button.dataset.page=String(drawer);
                     button.toggleAttribute('data-numbered-drawer',showPatterns());
                     const preview=symbol.cloneNode(true);
-                    preview.querySelector('.drawer-page-number').textContent=String(drawer+1);
+                    preview.querySelector('.drawer-page-number').textContent=DRAWER_NUMERALS[drawer];
                     button.append(preview);button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
                 }
                 if(id&&!isVisible(id)){

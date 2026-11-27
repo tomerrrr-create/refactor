@@ -9,9 +9,7 @@ const source = readFileSync(new URL('../js/simulation-theme.js', import.meta.url
 const themes = ['blue', 'gold', 'teal', 'moon-silver', 'ivory', 'dark-gray'];
 function harness(saved = {}, blocked = false) {
     const storage = new Map(Object.entries(saved)), attributes = new Set();
-    const buttons = () => themes.map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
-        setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(k, fn) { this.handlers[k] = fn; } }));
-    const playback = buttons(), hierarchy = {
+    const hierarchy = {
         checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; }
     };
     const pulse = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
@@ -32,17 +30,16 @@ function harness(saved = {}, blocked = false) {
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
         toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); },
         style: { setProperty: (name, value) => styles.set(name, value) } };
-    const select = () => playback;
     const controls = { goldPlaybackHierarchyToggle: hierarchy, glowPulse: pulse, glowPulseValue: pulseValue,
         goldTransitionDuration: transition, goldTransitionDurationValue: transitionValue,
         goldExcludeSortToggle: sortToggle, btnCycleSort: sortButton, keepSimulationDrawersToggle: keepDrawers, individualDrawerColorsToggle: individualDrawers };
     const context = vm.createContext({ document: { documentElement: root,
-        getElementById: id => controls[id] ?? { querySelectorAll: () => select(id) }, querySelectorAll: select },
+        getElementById: id => controls[id] },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
         getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
-    return { context, root, storage, playback, hierarchy, pulse, transition, sortToggle, sortButton, keepDrawers, individualDrawers, styles, run: code => vm.runInContext(code, context) };
+    return { context, root, storage, hierarchy, pulse, transition, sortToggle, sortButton, keepDrawers, individualDrawers, styles, run: code => vm.runInContext(code, context) };
 }
 
 test('drawer switches start on every load and colors survive independently', () => {
@@ -53,7 +50,7 @@ test('drawer switches start on every load and colors survive independently', () 
     assert(h.individualDrawers.checked);assert(h.root.hasAttribute('data-individual-drawer-colors'));
     h.individualDrawers.checked = false;h.individualDrawers.handlers.change();
     assert(!h.root.hasAttribute('data-individual-drawer-colors'));
-    assert.equal(h.run('drawerColors.join()'), 'blue,gold,burgundy');
+    assert.equal(h.run('drawerColors.join()'), 'pine-green,blue,burgundy');
     h.run("setDrawerColor(0, 'pine-green'); setDrawerColor(1, 'ink-violet'); setDrawerColor(2, 'warm-charcoal'); setDrawerColor(2, 'ivory'); setDrawerColor(3, 'blue')");
     assert.equal(h.run("['pine-green','ink-violet','warm-charcoal'].some(isSimulationTheme)"), false);
     const reopened = harness(Object.fromEntries(h.storage));reopened.run('initializeSimulationTheme()');
@@ -61,11 +58,11 @@ test('drawer switches start on every load and colors survive independently', () 
     assert(reopened.individualDrawers.checked);assert(reopened.root.hasAttribute('data-individual-drawer-colors'));
     assert.equal(reopened.run('drawerColors.join()'), 'pine-green,ink-violet,warm-charcoal');
     reopened.run('resetDrawerColors()');
-    assert.equal(reopened.run('drawerColors.join()'), 'blue,gold,burgundy');
-    assert.equal(reopened.storage.get('colorGridSimulationDrawerColors'), '["blue","gold","burgundy"]');
+    assert.equal(reopened.run('drawerColors.join()'), 'pine-green,blue,burgundy');
+    assert.equal(reopened.storage.get('colorGridSimulationDrawerColors'), '["pine-green","blue","burgundy"]');
     const invalid = harness({colorGridSimulationDrawerColors:'["gold","invalid",null]'});
     invalid.run('initializeSimulationTheme()');
-    assert.equal(invalid.run('drawerColors.join()'), 'gold,gold,burgundy');
+    assert.equal(invalid.run('drawerColors.join()'), 'gold,blue,burgundy');
     const blocked = harness({},true);blocked.run('initializeSimulationTheme()');assert(blocked.keepDrawers.checked);
 });
 
@@ -83,21 +80,18 @@ test('Glow Pulse defaults to 3.2 seconds and saves the selected duration', () =>
     reload.run('initializeSimulationTheme()');
     assert.equal(reload.styles.get('--simulation-halo-duration'), '0.6s');
 });
-test('all resting/playback color pairs restore the resting selection and never persist running state', () => {
-    for (const rest of themes) for (const playback of themes) {
-        const h = harness(); h.run('initializeSimulationTheme()');
-        h.run(`applySimulationTheme('${rest}'); applySimulationPlaybackTheme('${playback}')`);
+test('playback is gold even with a legacy device preference and restores the resting theme', () => {
+    for (const rest of themes) for (const legacy of themes) {
+        const h = harness({colorGridSimulationPlaybackTheme:legacy}); h.run('initializeSimulationTheme()');
+        h.run(`applySimulationTheme('${rest}')`);
         assert.equal(h.root.dataset.simulationEffectiveTheme, rest);
-        h.run('setSimulationRunning(true)');
-        assert.equal(h.root.dataset.simulationEffectiveTheme, playback);
-        assert.equal(h.root.dataset.simulationTheme, rest);
         const saved = [...h.storage];
+        h.run('setSimulationRunning(true)');
+        assert.equal(h.root.dataset.simulationEffectiveTheme, 'gold');
+        assert.equal(h.root.dataset.simulationTheme, rest);
         h.run('setSimulationRunning(false)');
         assert.equal(h.root.dataset.simulationEffectiveTheme, rest);
         assert.deepEqual([...h.storage], saved);
-        const reload = harness(Object.fromEntries(saved)); reload.run('initializeSimulationTheme()');
-        assert.equal(reload.root.dataset.simulationPlaybackTheme, playback);
-        assert.equal(reload.root.dataset.simulationEffectiveTheme, rest);
     }
 });
 
@@ -129,18 +123,12 @@ test('Sort is excluded by default and remembers an explicit choice independently
     assert.equal(reopened.sortToggle.checked, false);
     assert.equal(reopened.sortButton.excluded, false);
 });
-test('fresh/blocked storage defaults to gold at rest and while running; independent controls work', () => {
+test('fresh or blocked storage defaults to gold at rest and while running', () => {
     for (const blocked of [false, true]) {
         const h = harness({}, blocked); h.run('initializeSimulationTheme()');
         assert.equal(h.root.dataset.simulationTheme, 'gold');
-        assert.equal(h.root.dataset.simulationPlaybackTheme, 'gold');
-        h.run('setSimulationRunning(true)');
+        h.run('setSimulationRunning(true); applySimulationTheme("blue")');
         assert.equal(h.root.dataset.simulationEffectiveTheme, 'gold');
-        h.playback[2].handlers.click();
-        assert.equal(h.root.dataset.simulationEffectiveTheme, 'teal');
-        assert.equal(h.playback[2].attrs['aria-pressed'], 'true');
-        h.run("applySimulationTheme('blue')");
-        assert.equal(h.root.dataset.simulationEffectiveTheme, 'teal');
         h.run('setSimulationRunning(false)');
         assert.equal(h.root.dataset.simulationEffectiveTheme, 'blue');
     }
@@ -164,18 +152,15 @@ test('retired device choices fall back independently and replace only appearance
         const h = harness({ colorGridSimulationTheme: removed, colorGridSimulationPlaybackTheme: removed, untouched: 'keep' });
         h.run('initializeSimulationTheme()');
         assert.equal(h.root.dataset.simulationTheme, 'gold');
-        assert.equal(h.root.dataset.simulationPlaybackTheme, 'gold');
         assert.equal(h.storage.get('colorGridSimulationTheme'), 'gold');
-        assert.equal(h.storage.get('colorGridSimulationPlaybackTheme'), 'gold');
         assert.equal(h.storage.get('untouched'), 'keep');
     }
     const h = harness({colorGridSimulationTheme:'teal',colorGridSimulationPlaybackTheme:'pink'});
-    h.run('initializeSimulationTheme()');assert.equal(h.root.dataset.simulationTheme,'teal');assert.equal(h.root.dataset.simulationPlaybackTheme,'gold');
+    h.run('initializeSimulationTheme()');assert.equal(h.root.dataset.simulationTheme,'teal');
     for (const removed of ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue']) {
         const h = harness({ colorGridSimulationTheme: removed, colorGridSimulationPlaybackTheme: removed });
         h.run('initializeSimulationTheme()');
         assert.equal(h.storage.get('colorGridSimulationTheme'), 'blue');
-        assert.equal(h.storage.get('colorGridSimulationPlaybackTheme'), 'gold');
     }
 });
 

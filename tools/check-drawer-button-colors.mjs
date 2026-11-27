@@ -6,7 +6,7 @@ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../',import.meta.url)),rows=[];
 const artifacts='/tmp/drawer-button-colors';await (await import('node:fs/promises')).mkdir(artifacts,{recursive:true});
 let source=await readFile(root+'/js/app.js','utf8');source=source.replace('      initializeApp();',`window.buttonAudit={
- setup:(memory,theme)=>{pauseLife();cycleMemory.setEnabled(memory);cycleMemory.clear();resetArmedState();isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');applySimulationTheme(theme);applySimulationPlaybackTheme('gold');refreshCycleIcons();},
+ setup:(memory,theme)=>{pauseLife();cycleMemory.setEnabled(memory);cycleMemory.clear();resetArmedState();isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');applySimulationTheme(theme);refreshCycleIcons();},
  state:()=>({armed:armedSimulation,breathe:breatheEvoMode,dla:dlaMode,playing:isLifePlaying,memory:cycleMemory.enabled()}),
  };initializeApp().then(()=>buttonAudit.ready=true);`);
 for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');

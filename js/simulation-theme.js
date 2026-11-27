@@ -2,12 +2,12 @@ import { getCurrentLang, onLanguageChange } from './i18n.js';
 
 // Appearance preferences are independent of artwork and replay; profiles capture them.
 const STORAGE_KEY = 'colorGridSimulationTheme';
-const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
 const GOLD_SORT_EXEMPTION_STORAGE_KEY = 'colorGridGoldExcludeSort';
 const DRAWER_COLORS_STORAGE_KEY = 'colorGridSimulationDrawerColors';
-const DEFAULT_DRAWER_COLORS = Object.freeze(['blue', 'gold', 'burgundy']);
-export const SIMULATION_DRAWER_COLORS = Object.freeze([...DEFAULT_DRAWER_COLORS, 'pine-green', 'ink-violet', 'warm-charcoal']);
+const DEFAULT_DRAWER_COLORS = Object.freeze(['pine-green', 'blue', 'burgundy']);
+export const SIMULATION_PLAYBACK_THEME = 'gold';
+export const SIMULATION_DRAWER_COLORS = Object.freeze(['blue', 'gold', 'burgundy', 'pine-green', 'ink-violet', 'warm-charcoal']);
 let drawerColors = [...DEFAULT_DRAWER_COLORS];
 const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
 const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
@@ -40,19 +40,15 @@ export function getSimulationTheme() {
   return document.documentElement.dataset.simulationTheme || 'gold';
 }
 
-export function getSimulationPlaybackTheme() {
-  return document.documentElement.dataset.simulationPlaybackTheme || 'gold';
-}
-
 function updateEffectiveTheme() {
   const root = document.documentElement;
   const running = root.hasAttribute('data-simulation-running');
-  const theme = running ? getSimulationPlaybackTheme() : getSimulationTheme();
+  const theme = running ? SIMULATION_PLAYBACK_THEME : getSimulationTheme();
   root.dataset.simulationEffectiveTheme = theme;
   goldPlaybackTransition?.sync(running);
 }
 
-// Running state is transient; only the two chosen colors are saved.
+// Running state is transient.
 export function setSimulationRunning(running) {
   document.documentElement.toggleAttribute('data-simulation-running', Boolean(running));
   updateEffectiveTheme();
@@ -91,8 +87,7 @@ function createGoldPlaybackTransition(toolbar) {
   reducedMotion.addEventListener('change', updateEffectiveTheme);
   return {
     sync(nextRunning) {
-      const nextEnabled = root.hasAttribute('data-gold-playback-hierarchy') &&
-        getSimulationPlaybackTheme() === 'gold' && !reducedMotion.matches;
+      const nextEnabled = root.hasAttribute('data-gold-playback-hierarchy') && !reducedMotion.matches;
       if (enabled !== nextEnabled) {
         if (frame !== null) cancelAnimationFrame(frame);
         frame = null;
@@ -126,17 +121,6 @@ export function applySimulationTheme(value) {
   updateEffectiveTheme();
   try { localStorage.setItem(STORAGE_KEY, theme); return true; }
   catch { return false; /* Appearance still works for this session. */ }
-}
-
-export function applySimulationPlaybackTheme(value) {
-  const theme = isSimulationTheme(value) ? value : 'gold';
-  document.documentElement.dataset.simulationPlaybackTheme = theme;
-  for (const preview of document.querySelectorAll('#simulationPlaybackThemeSettings [data-theme]')) {
-    preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
-  }
-  updateEffectiveTheme();
-  try { localStorage.setItem(PLAYBACK_STORAGE_KEY, theme); return true; }
-  catch { return false; }
 }
 
 function initializeGoldPlaybackHierarchy() {
@@ -236,24 +220,7 @@ export function initializeSimulationTheme(toolbar) {
     duration => document.documentElement.style.setProperty('--simulation-halo-duration', `${duration}s`));
   initializeDurationSlider('goldTransitionDuration', GOLD_TRANSITION_STORAGE_KEY, GOLD_TRANSITION_SECONDS, DEFAULT_GOLD_TRANSITION_SECONDS,
     duration => { goldTransitionMs = duration * 1000; });
-  const playbackSection = document.getElementById('simulationPlaybackThemeSettings');
-  const playbackPreviews = playbackSection.querySelectorAll('[data-theme]');
   let saved;
   try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* Use the default gold appearance. */ }
   applySimulationTheme(saved);
-  let savedPlayback;
-  try { savedPlayback = localStorage.getItem(PLAYBACK_STORAGE_KEY); } catch {}
-  applySimulationPlaybackTheme(savedPlayback);
-  for (const preview of playbackPreviews) {
-    preview.addEventListener('click', () => applySimulationPlaybackTheme(preview.dataset.theme));
-  }
-  function translate() {
-    for (const preview of playbackPreviews) {
-      const label = getThemeColorLabel(preview.dataset.theme);
-      preview.setAttribute('aria-label', label);
-      preview.title = label;
-    }
-  }
-  onLanguageChange(translate);
-  translate();
 }

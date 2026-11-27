@@ -7,9 +7,9 @@ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
 let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.modeTest={
- setup(sim,creation=false){pauseLife();resetArmedState();n=13;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%7;t.isGold=false;});isSimModeActive=!creation;dom.controlsContainer.classList.toggle('sim-mode-active',!creation);dom.btnToggleSimMode.classList.toggle('active',!creation);dom.btnPlayPauseLife.classList.toggle('control-hidden',creation);updateSimulationUtilityControl();armSimulation(sim,{recordIslandsStart:false});artRecipeLog=[];historyRecipeCursor=0;},
+ setup(sim,creation=false){experimentalSimulations.set('patterns',false);evolutionDrawer.applyLayout();pauseLife();resetArmedState();n=13;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%7;t.isGold=false;});isSimModeActive=!creation;dom.controlsContainer.classList.toggle('sim-mode-active',!creation);dom.btnToggleSimMode.classList.toggle('active',!creation);dom.btnPlayPauseLife.classList.toggle('control-hidden',creation);updateSimulationUtilityControl();armSimulation(sim,{recordIslandsStart:false});artRecipeLog=[];historyRecipeCursor=0;},
  start:togglePlayPauseLife,pause:pauseLife,toggle:toggleSimMode,step:stepForward,
- wind:setWindMode, restingTheme:applySimulationTheme, playbackTheme:applySimulationPlaybackTheme,
+ wind:setWindMode, restingTheme:applySimulationTheme,
  state:()=>({playing:isLifePlaying,armed:armedSimulation,gen:currentGenerationCount,n,mode:isSimModeActive,loaded:isMacroLoaded,log:[...artRecipeLog]}),
  macro(text){if(isLifePlaying)pauseLife();macroQueue=parseMacroText(text);settingsProfiles.beginReplay();isMacroLoaded=true;currentMacroStep=0;playMacro();}
  };initializeApp().then(()=>modeTest.ready=true);`);
@@ -19,7 +19,7 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
 try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:375,height:667},{lang:'nl',width:1024,height:768}]){
  const context=await browser.newContext({viewport:{width:cfg.width,height:cfg.height},isMobile:cfg.width<600,hasTouch:cfg.width<600,serviceWorkers:'block'});
- await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),cfg.lang);
+ await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridOpeningChoice','false');},cfg.lang);
  await context.addInitScript(()=>localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({breathe:true})));
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(base);await page.waitForFunction(()=>window.modeTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const button=page.locator('#btnToggleSimMode'),state=()=>page.evaluate(()=>modeTest.state());
@@ -54,7 +54,7 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  });
  const awaitHalo=(id,opacity)=>page.waitForFunction(({id,opacity})=>
   Number(getComputedStyle(document.querySelector(id),'::before').opacity)===opacity,{id,opacity});
- await page.evaluate(()=>{modeTest.setup('gameOfLife');modeTest.restingTheme('gold');modeTest.playbackTheme('teal');modeTest.step();});
+ await page.evaluate(()=>{modeTest.setup('gameOfLife');modeTest.restingTheme('gold');modeTest.step();});
  assert.equal((await halo(life)).opacity,0,'arming and single step have no playback halo');
  const pausedDrawer=await drawerAppearance(),drawerBounds=await drawer.boundingBox();
  assert.equal(pausedDrawer.color,'rgb(187, 192, 198)');assert.equal(pausedDrawer.lipOpacity,1);assert.equal(pausedDrawer.animation,'none');
@@ -77,12 +77,11 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#btnEvolutionDrawerInternal .drawer-page-dot')).transform==='matrix(1, 0, 0, 1, 4, 0)');
  const secondDrawer=await drawerAppearance();
  assert.deepEqual(secondDrawer,{...pausedDrawer,position:'matrix(1, 0, 0, 1, 4, 0)',lipOpacity:0});
- assert.equal(await drawer.locator('.drawer-active-mark').evaluate(mark=>getComputedStyle(mark).backgroundColor),'rgb(104, 189, 181)');
+ assert.equal(await drawer.locator('.drawer-active-mark').evaluate(mark=>getComputedStyle(mark).backgroundColor),'rgb(118, 103, 65)');
  assert((await state()).playing);
  assert.equal((await state()).armed,'gameOfLife');
  await drawer.click();
  assert.equal(await drawer.getAttribute('data-page'),'0');
- await page.evaluate(()=>modeTest.playbackTheme('gold'));
  await page.locator(gravity).click();assert((await state()).playing);
  await awaitHalo(life,0);await awaitHalo(gravity,1);
  assert.equal((await drawerAppearance()).lipOpacity,0);
@@ -103,7 +102,6 @@ try{for(const cfg of [{lang:'en',width:1280,height:900},{lang:'he',width:390,hei
  await page.locator('#btnPlayPauseLife').click();await awaitHalo(breathe,0);
  await page.emulateMedia({reducedMotion:'no-preference'});
  await drawer.click();
- await page.evaluate(()=>modeTest.playbackTheme('gold'));
  for(const sim of ['nudgeBrighter','nudgeDarker','gameOfLife','brightnessEvo','gravitationalSort','erosion','dla','contour','cymatics','islands','turing','magnet','spiral','sandpile','breathe']){
   await page.evaluate(sim=>modeTest.setup(sim),sim);await restoredControls();const before=await rects();await page.evaluate(()=>modeTest.start());await hiddenControls();assert.deepEqual(await rects(),before,'grid geometry remains fixed during '+sim);
   const running=await state();await button.evaluate(e=>{e.click();e.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));e.dispatchEvent(new PointerEvent('pointerdown',{pointerId:77,button:0,bubbles:true,clientX:10,clientY:10}));e.dispatchEvent(new PointerEvent('pointerup',{pointerId:77,button:0,bubbles:true,clientX:10,clientY:50}));});await page.evaluate(()=>modeTest.toggle());
