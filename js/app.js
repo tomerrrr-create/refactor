@@ -509,7 +509,7 @@ currentSortMethod,
     }
 
 
-      function areStatesEqual(stateA, stateB) {
+      function areStatesEqual(stateA, stateB, { ignoreDlaPreferences = false } = {}) {
         if (!stateA || !stateB) return false;
         if (stateA.tornadoVersion !== stateB.tornadoVersion || stateA.tornadoFrame !== stateB.tornadoFrame) return false;
         if (stateA.polygonFlowPhase !== stateB.polygonFlowPhase) return false;
@@ -524,8 +524,12 @@ currentSortMethod,
         if (JSON.stringify(stateA.contourState?.material) !== JSON.stringify(stateB.contourState?.material)) return false;
         if (stateA.contourState?.rules?.lineColor !== stateB.contourState?.rules?.lineColor) return false;
         if (JSON.stringify(stateA.contourState?.cracksState?.rainbowTrail) !== JSON.stringify(stateB.contourState?.cracksState?.rainbowTrail)) return false;
-        if (JSON.stringify(stateA.evolutionTuning) !== JSON.stringify(stateB.evolutionTuning) ||
-            stateA.brightnessEvoMode !== stateB.brightnessEvoMode || stateA.breatheEvoMode !== stateB.breatheEvoMode || stateA.dlaMode !== stateB.dlaMode) return false;
+        if (ignoreDlaPreferences) {
+            const { dla: dlaA, ...tuningA } = stateA.evolutionTuning ?? {};
+            const { dla: dlaB, ...tuningB } = stateB.evolutionTuning ?? {};
+            if (JSON.stringify(tuningA) !== JSON.stringify(tuningB)) return false;
+        } else if (JSON.stringify(stateA.evolutionTuning) !== JSON.stringify(stateB.evolutionTuning) || stateA.dlaMode !== stateB.dlaMode) return false;
+        if (stateA.brightnessEvoMode !== stateB.brightnessEvoMode || stateA.breatheEvoMode !== stateB.breatheEvoMode) return false;
         if (stateA.n !== stateB.n || stateA.activePaletteIndex !== stateB.activePaletteIndex || stateA.separatorPx !== stateB.separatorPx || stateA.symmetryMode !== stateB.symmetryMode || stateA.selectedColor !== stateB.selectedColor || stateA.isRainbowModeActive !== stateB.isRainbowModeActive || stateA.tiles.length !== stateB.tiles.length) return false;
         for (let i = 0; i < stateA.tiles.length; i++) {
           if (stateA.tiles[i].k !== stateB.tiles[i].k || stateA.tiles[i].isGold !== stateB.tiles[i].isGold) return false;
@@ -533,8 +537,12 @@ currentSortMethod,
         return true;
       }
 
-      function applyState(state, { preserveCracksPreferences = false, preserveBrightnessPreferences = false, preserveCymaticsPreferences = false, preserveFibonacciPreferences = false } = {}) {
+      function applyState(state, { preserveCracksPreferences = false, preserveBrightnessPreferences = false, preserveCymaticsPreferences = false, preserveFibonacciPreferences = false, preserveDlaPreferences = false } = {}) {
         const brightnessPreferences = preserveBrightnessPreferences ? { rules:{...evolutionTuning.brightnessEvo}, mode:brightnessEvoMode } : null;
+        const dlaPreferences = preserveDlaPreferences ? {
+            tuning: { ...evolutionTuning.dla },
+            mode: armedSimulation === 'dla' && dlaMode !== 'off' ? dlaMode : (dlaRules.colorGenetics ? 'genetics' : 'no-genetics')
+        } : null;
         if (state.gravityRules) validateGravitySnapshot(state.gravityRules);
         if (state.contourState) {
             validateContourSnapshot(state.contourState);
@@ -555,9 +563,13 @@ currentSortMethod,
             if (['brightnessEvo', 'breathe', 'islands', 'dla'].includes(state.tuningSimulation) && armedSimulation !== state.tuningSimulation) {
                 armSimulation(state.tuningSimulation, { recordIslandsStart: false });
             }
-            restoreEvolutionTuningState(brightnessPreferences ? { ...state,
-                evolutionTuning:{...state.evolutionTuning,brightnessEvo:brightnessPreferences.rules},
-                brightnessEvoMode:brightnessPreferences.mode } : state);
+            restoreEvolutionTuningState({ ...state,
+                evolutionTuning: { ...state.evolutionTuning,
+                    ...(brightnessPreferences ? { brightnessEvo: brightnessPreferences.rules } : {}),
+                    ...(dlaPreferences ? { dla: dlaPreferences.tuning } : {}) },
+                brightnessEvoMode: brightnessPreferences?.mode ?? state.brightnessEvoMode,
+                dlaMode: dlaPreferences ? (armedSimulation === 'dla' ? dlaPreferences.mode : 'off') : state.dlaMode
+            }, { preserveDlaPreferences });
         }
         let paletteIdx = C.PALETTES.findIndex(p => p.originalName === state.paletteName);
         if (paletteIdx === -1) {
@@ -701,7 +713,8 @@ k: tileState.k,
             preserveCracksPreferences: preservePreferences,
             preserveBrightnessPreferences: preservePreferences,
             preserveCymaticsPreferences: preservePreferences,
-            preserveFibonacciPreferences: preservePreferences
+            preserveFibonacciPreferences: preservePreferences,
+            preserveDlaPreferences: preservePreferences
         });
       }
 
@@ -1696,7 +1709,9 @@ function pauseLife() {
 
           if (simulationStartState) {
               const simulationEndState = getCurrentState();
-              if (simulationHasBrushInput || !areStatesEqual(simulationStartState, simulationEndState)) {
+              if (simulationHasBrushInput || !areStatesEqual(simulationStartState, simulationEndState, {
+                  ignoreDlaPreferences: !isExecutingMacroCommand && !isMacroPlaying
+              })) {
                   pushHistory({ before: simulationStartState, after: simulationEndState });
               }
               simulationStartState = null; // Reset for the next session
@@ -2405,7 +2420,7 @@ if (simulationName === 'magnet') {
 
 
       
-      function restoreEvolutionTuningState(state) {
+      function restoreEvolutionTuningState(state, { preserveDlaPreferences = false } = {}) {
         if (!state.evolutionTuning) return;
         const previousBreatheMode = breatheEvoMode;
         const nextTuning = validateEvolutionTuning(state.evolutionTuning);
@@ -2414,7 +2429,7 @@ if (simulationName === 'magnet') {
         if (['off', 'solo', 'group', 'random-cell', 'random-color'].includes(state.breatheEvoMode)) breatheEvoMode = state.breatheEvoMode;
         if (['off', 'genetics', 'no-genetics'].includes(state.dlaMode)) {
             dlaMode = state.dlaMode;
-            if (dlaMode !== 'off') dlaRules.colorGenetics = dlaMode === 'genetics';
+            if (dlaMode !== 'off' && !preserveDlaPreferences) dlaRules.colorGenetics = dlaMode === 'genetics';
         }
         if (isLifePlaying && armedSimulation === 'breathe' && previousBreatheMode !== breatheEvoMode) {
             const cycleDuration = (2 * Math.PI) / 0.0015;
@@ -2446,9 +2461,8 @@ if (simulationName === 'magnet') {
             restoreEvolutionTuningState(state);
             window.logArtEvent('EVOLUTION_TUNING', JSON.stringify({ simulation, ...state }));
         };
-        // Brightness preferences are independent of artwork history, like Cracks.
-        // Other evolutions retain their existing history behavior.
-        if (isLifePlaying || simulation === 'brightnessEvo') apply();
+        // Brightness and DLA settings stay independent of artwork history.
+        if (isLifePlaying || simulation === 'brightnessEvo' || simulation === 'dla') apply();
         else performAction(apply);
         return true;
       }

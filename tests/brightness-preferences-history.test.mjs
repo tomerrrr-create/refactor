@@ -11,10 +11,11 @@ function harness(){
  });
  c.window={logArtEvent:(name,details)=>c.artRecipeLog.push({name,details:JSON.parse(details)})};
  c.getWorkspaceSettings=()=>({evolutionTuning:plain(c.evolutionTuning)});c.persistWorkspaceSettings=settings=>{c.stored=plain(settings);};
- c.getCurrentState=()=>({n:3,paletteName:'Fixture',activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,evolutionTuning:plain(c.evolutionTuning),brightnessEvoMode:c.brightnessEvoMode,breatheEvoMode:'group',dlaMode:'genetics',tuningSimulation:'brightnessEvo',tiles:plain(c.boardState)});
+ c.getCurrentState=()=>({n:3,paletteName:'Fixture',activePaletteIndex:0,currentSortMethod:'luminance',separatorPx:0,evolutionTuning:plain(c.evolutionTuning),brightnessEvoMode:c.brightnessEvoMode,breatheEvoMode:'group',dlaMode:c.dlaMode,tuningSimulation:c.armedSimulation,tiles:plain(c.boardState)});
  c.getHistorySettings=s=>s;c.armSimulation=sim=>{c.armedSimulation=sim;};
  c.performAction=fn=>{const before=c.getCurrentState();fn();c.history.push({id:c.history.length+1,before,after:c.getCurrentState()});};
  vm.runInContext(source.slice(source.indexOf('function restoreEvolutionTuningState('),source.indexOf('function getWorkspaceSettings(')),c);
+ vm.runInContext(source.slice(source.indexOf('function areStatesEqual('),source.indexOf('function applyState(')),c);
  vm.runInContext(source.slice(source.indexOf('function applyState('),source.indexOf('function pushHistory(')),c);
  vm.runInContext(source.slice(source.indexOf('function undo()'),source.indexOf('function updateUndoRedoButtons()')),c);
  return c;
@@ -22,6 +23,37 @@ function harness(){
 test('saving paused brightness preferences records the rule without creating drawing history',()=>{
  const c=harness();assert.equal(c.saveEvolutionTuning('brightnessEvo',{smoothing:.1,contrast:.2},'contrast'),true);
  assert.equal(c.history.length,0);assert.equal(c.evolutionTuning.brightnessEvo.smoothing,.1);assert.equal(c.brightnessEvoMode,'contrast');assert.equal(c.artRecipeLog.at(-1).name,'EVOLUTION_TUNING');assert.equal(c.stored.evolutionTuning.brightnessEvo.contrast,.2);
+});
+
+test('DLA settings save logs rules and preserves both artwork history and an existing redo',()=>{
+ const c=harness();c.armedSimulation='dla';
+ c.performAction(()=>{c.boardState[0].k=3;});c.undo();
+ const before=c.getCurrentState();
+ assert(c.saveEvolutionTuning('dla',{batchSize:350},'no-genetics'));
+ assert.equal(c.history.length,0);assert.equal(c.future.length,1);
+ assert(c.areStatesEqual(before,c.getCurrentState(),{ignoreDlaPreferences:true}));
+ assert.equal(c.artRecipeLog.at(-1).name,'EVOLUTION_TUNING');
+ assert.equal(c.artRecipeLog.at(-1).details.evolutionTuning.dla.batchSize,350);
+ assert.equal(c.stored.evolutionTuning.dla.batchSize,350);
+ c.redo();assert.equal(c.boardState[0].k,3);c.undo();assert.equal(c.boardState[0].k,2);
+ assert.equal(c.dlaMode,'no-genetics');assert.equal(c.dlaRules.colorGenetics,false);
+ assert.equal(c.evolutionTuning.dla.batchSize,350);
+ assert.equal(c.artRecipeLog.at(-1).details.settings.evolutionTuning.dla.batchSize,350);
+});
+
+test('DLA tuning survives history while another evolution is selected, but project and legacy playback use recorded values',()=>{
+ const c=harness(),otherEvolution=c.getCurrentState();c.armedSimulation='dla';
+ const dlaProject=c.getCurrentState();
+ c.saveEvolutionTuning('dla',{batchSize:350},'no-genetics');
+ c.applyArtworkHistoryState(otherEvolution);
+ assert.equal(c.armedSimulation,'brightnessEvo');assert.equal(c.dlaMode,'off');
+ assert.equal(c.evolutionTuning.dla.batchSize,350);assert.equal(c.dlaRules.colorGenetics,false);
+ c.applyArtworkHistoryState(dlaProject);
+ assert.equal(c.armedSimulation,'dla');assert.equal(c.dlaMode,'no-genetics');
+ c.applyState(dlaProject);assert.equal(c.evolutionTuning.dla.batchSize,100);assert.equal(c.dlaMode,'genetics');
+ c.saveEvolutionTuning('dla',{batchSize:350},'no-genetics');c.isExecutingMacroCommand=true;
+ c.applyArtworkHistoryState(dlaProject);
+ assert.equal(c.evolutionTuning.dla.batchSize,100);assert.equal(c.dlaMode,'genetics');
 });
 test('repeated drawing Undo and Redo retain current brightness values and mode, including storage and recipe checkpoints',()=>{
  const c=harness();for(const k of [3,4,5])c.performAction(()=>{c.boardState[0]={k,v:k,isGold:false};});

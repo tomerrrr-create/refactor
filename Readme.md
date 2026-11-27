@@ -117,7 +117,7 @@ Layouts use optional thirty-entry `evolutionSlots` settings preferences: each ca
 
 Undo/Redo retains up to **20 artwork actions**. A standalone brush gesture is one action. During playback, the first painted sample of each new gesture checkpoints the simulation immediately before that stroke, without pausing or resetting its generation counter. Undo pauses the run and returns to the latest brush boundary, preserving earlier generations; further Undo can remove earlier segments. Redo restores the saved result. Wind batches join the current running segment instead of adding overlapping snapshots. Pointer cancellation and unrelated controls finalize active gestures without adding a release tap.
 
-Artwork Undo/Redo retains current personal **Brightness, Cracks, Resonance, Fibonacci and Patterns** preferences; their settings saves are not ordinary drawing-history actions. Runtime artwork state still follows snapshots. Explicit project loads and macro commands use recorded values. Other evolution settings retain their own history behavior. Saving a settings dialog is distinct from **Save to profile** for persistence across openings.
+Artwork Undo/Redo retains current personal **Brightness, Cracks, Resonance, DLA, Fibonacci and Patterns** preferences; their settings saves are not ordinary drawing-history actions. Runtime artwork state still follows snapshots. Explicit project loads and macro commands use recorded values. Other evolution settings retain their own history behavior. Saving a settings dialog is distinct from **Save to profile** for persistence across openings.
 
 ### Presets, cycle membership and Yours
 
@@ -688,7 +688,7 @@ An artistic adaptation of the classic cellular automaton. Paint 3 is the default
 
 Random walkers move until they touch an existing crystal, then add a colored cell. Initialization and respawning use available board positions, rather than always launching from edges. Existing non-gold cells with index greater than zero are the only crystal seed. Entering on an empty board never paints a center seed; draw a nonzero seed to allow growth.
 
-The button cycles Genetics → No genetics:
+The button cycles Genetics → No genetics. Saving the settings dialog keeps the current particle-step count and Genetics choice outside artwork Undo/Redo. Project and recipe playback still use their recorded values:
 
 - Genetics averages valid neighboring crystal colors, finds the nearest palette entry and retains a successful-color fallback.
 - No genetics derives the entry from crystal size modulo palette length.

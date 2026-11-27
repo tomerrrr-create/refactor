@@ -126,7 +126,7 @@ test('artwork history restores Fibonacci growth with personal settings, while fi
     const maps = Object.fromEntries(Object.entries(MAP_DEFAULTS).map(([mode, settings]) => [mode, { ...settings, growthSpeed: 125 }]));
     Object.assign(h, { armedSimulation: 'fibonacci', fibonacciColorAdvance: 98,
         fibonacciCrystalSettings: crystal, fibonacciMapSettings: maps, validateFibonacciState,
-        isExecutingMacroCommand: false, isMacroPlaying: false, evolutionTuning: {}, brightnessEvoMode: 'off', updateFibonacciButtonUI() {} });
+        isExecutingMacroCommand: false, isMacroPlaying: false, evolutionTuning: {}, dlaRules: { colorGenetics: true }, brightnessEvoMode: 'off', updateFibonacciButtonUI() {} });
     vm.runInContext(excerpt('function restoreFibonacciState(', 'function updateFibonacciButtonUI('), h);
     vm.runInContext(excerpt('function applyArtworkHistoryState(', 'function updateUndoRedoButtons('), h);
     const base = { n: 1, activePaletteIndex: 0, currentSortMethod: 'luminance', separatorPx: 0 };
