@@ -43,21 +43,30 @@
   <dialog id="openingChoiceDialog" aria-labelledby="openingCreationLabel openingEvolutionLabel">
     <div class="opening-choice-mark" aria-hidden="true"></div>
     <div class="opening-choice-options">
-      <button type="button" data-opening-choice="create">
+      <button type="button" data-opening-choice="create" aria-pressed="false">
         <span class="opening-choice-icon" aria-hidden="true"><span class="glyph-special-reset"></span></span>
         <span id="openingCreationLabel" data-debug-text="opening_choice_creation">Creation</span>
       </button>
-      <button type="button" data-opening-choice="evolve">
+      <button type="button" data-opening-choice="evolve" aria-pressed="false">
         <span class="opening-choice-icon" data-luminance-bird aria-hidden="true"></span>
         <span id="openingEvolutionLabel" data-debug-text="opening_choice_evolution">Evolution</span>
       </button>
     </div>
-    <button id="openingEclipse" type="button" disabled aria-label="Reset all local app data" title="Reset all local app data">
-      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
-        <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-opacity=".42" stroke-width="1"/>
-        <path d="M18.6 7.5A8 8 0 0 1 8.2 19" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
-      </svg>
-    </button>
+    <div id="openingChoiceActions" class="opening-choice-actions" hidden>
+      <button id="openingContinue" class="opening-choice-action" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14m-6-6 6 6-6 6"/>
+        </svg>
+        <span data-debug-text="opening_choice_continue">Continue</span>
+      </button>
+      <button id="openingEclipse" class="opening-choice-action" type="button" aria-label="Reset all local app data" title="Reset all local app data">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+          <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-opacity=".42" stroke-width="1"/>
+          <path d="M18.6 7.5A8 8 0 0 1 8.2 19" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+        </svg>
+        <span data-debug-text="opening_choice_reset">Reset</span>
+      </button>
+    </div>
     <p id="openingEclipseError" role="status" data-debug-text="opening_reset_error" hidden></p>
   </dialog>
   <dialog id="openingResetVeil">

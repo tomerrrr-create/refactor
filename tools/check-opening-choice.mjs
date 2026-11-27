@@ -55,6 +55,7 @@ try {
         page.on('pageerror', error => errors.push(error.message));
         const choice = page.locator('#openingChoiceDialog');
         const eclipse = page.locator('#openingEclipse');
+        const continueButton = page.locator('#openingContinue');
         const veil = page.locator('#openingResetVeil');
         const gate = page.locator('#openingChoiceGate');
         const control = page.locator('#btnToggleSimMode');
@@ -81,7 +82,8 @@ try {
         assert.equal(await choice.getAttribute('dir'), mobile ? 'rtl' : 'ltr');
         const labels = mobile ? ['יצירה', 'אבולוציה'] : ['Creation', 'Evolution'];
         assert.deepEqual(await choice.locator('button[data-opening-choice]').allInnerTexts(), labels);
-        assert(await eclipse.isDisabled(), 'reset requires an explicit first choice');
+        assert(!(await eclipse.isVisible()), 'reset requires an explicit board choice');
+        assert(!(await continueButton.isVisible()));
         assert.equal(await choice.locator('.opening-choice-mark svg').innerHTML(), await control.locator('svg').innerHTML());
         assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
@@ -89,6 +91,10 @@ try {
         assert(await choice.locator('[data-opening-choice=create] .glyph-special-reset').isVisible());
         await page.screenshot({ path: '/tmp/fyi-start-choice-' + (mobile ? 'mobile' : 'desktop') + '.png', animations: 'disabled' });
         await tap(choice.locator('[data-opening-choice=create]'));
+        assert(await choice.isVisible(), 'selection keeps the modal open');
+        assert(await eclipse.isVisible(), 'reset can be used immediately after the first selection');
+        assert.equal(await choice.locator('[data-opening-choice=create]').getAttribute('aria-pressed'), 'true');
+        await tap(continueButton);
         await choice.waitFor({ state: 'hidden' });
         assert.deepEqual(await state(), initial, 'Create keeps the displayed board and its history');
         assert.equal(await gate.isVisible(), false);
@@ -121,24 +127,41 @@ try {
             assert.equal(await page.locator('#appContainer').evaluate(el => el.inert), false);
             assert.equal((await state()).simulation, mode === 'evolve');
             assert.equal((await state()).size, expectedSize);
-            assert(await page.evaluate(mode => localStorage.getItem('colorGridLastOpeningMode') === mode &&
+            assert(await page.evaluate(() =>
                 localStorage.getItem('colorGridInterfaceZoom') !== '70' &&
                 localStorage.getItem('colorGridSimulationDrawerColors') !== '["gold","gold","gold"]' &&
                 localStorage.getItem('colorGridProfileDraftsV1') !== '{"version":1}' &&
                 localStorage.getItem('userLanguage') === null &&
                 localStorage.getItem('foreign-storage') === 'keep' &&
-                sessionStorage.getItem('colorGridEclipseResume') === null, mode));
+                sessionStorage.getItem('colorGridEclipseResume') === null));
         };
 
         await boot(true);
         await tap(gate);
+        assert(!(await eclipse.isVisible()));
+        await tap(choice.locator('[data-opening-choice=create]'));
         await resetThroughEclipse('create', initial.size);
+
+        await boot(true);
+        await tap(gate);
+        await tap(choice.locator('[data-opening-choice=create]'));
+        await tap(choice.locator('[data-opening-choice=evolve]'));
+        assert(await choice.isVisible());
+        assert.equal(await choice.locator('[data-opening-choice=create]').getAttribute('aria-pressed'), 'false');
+        assert.equal(await choice.locator('[data-opening-choice=evolve]').getAttribute('aria-pressed'), 'true');
+        assert(!(await state()).simulation, 'Evolution waits for Continue or the eclipse');
+        await page.screenshot({ path: '/tmp/fyi-start-selected-' + (mobile ? 'mobile' : 'desktop') + '.png', animations: 'disabled' });
+        await resetThroughEclipse('evolve', 249);
+        const resetEvolved = await state();
+        assert.equal(resetEvolved.selected, resetEvolved.lastColor);
+        assert(resetEvolved.pixels.every(([color, value]) => color === 0 && value === 0));
 
         await boot(true);
         await tapAt(control);
         await choice.waitFor({ state: 'visible' });
         assert(!(await state()).simulation, 'the opening tap does not activate the toolbar control');
         await tap(choice.locator('[data-opening-choice=evolve]'));
+        await tap(continueButton);
         await page.waitForFunction(() => {
             const state = openingTest.state();
             return state.simulation && state.size === state.settings.boardSize;
@@ -151,14 +174,6 @@ try {
         assert(evolved.pixels.every(([color, value]) => color === 0 && value === 0));
         assert.equal(evolved.playing, false);
         assert.equal(await gate.isVisible(), false);
-
-        await boot(true);
-        await coords(8, 8);
-        await choice.waitFor({ state: 'visible' });
-        await resetThroughEclipse('evolve', evolved.size);
-        const resetEvolved = await state();
-        assert.equal(resetEvolved.selected, resetEvolved.lastColor);
-        assert(resetEvolved.pixels.every(([color, value]) => color === 0 && value === 0));
 
         await boot(true);
         await coords(8, 8);
