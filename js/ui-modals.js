@@ -10,7 +10,7 @@ import { createCracksSettingsDialog } from './cracks-settings-dialog.js';
 import { initializeBrushPicker } from './brush-picker.js';
 import { transitionPickerDialog, finishPickerDialogTransition } from './picker-dialog-transition.js';
 import { bindColorPageSwipe } from './color-page-swipe.js';
-import { brushSizeLabel } from './brush-footprint.js';
+import { brushSizeLabel, MIN_XL_BRUSH_WIDTH, MAX_XL_BRUSH_WIDTH } from './brush-footprint.js';
 import { initializeEvolutionTuningModals } from './evolution-tuning-modals.js';
 import { initializeSeparatorCycleModal } from './separator-cycle-modal.js';
 import { initializeErosionModal } from './erosion-modal.js';
@@ -1671,6 +1671,13 @@ export function initializeModals(appContext) {
         interfaceZoomValue.value = interfaceZoom.value + '%';
         app.setInterfaceZoom(Number(interfaceZoom.value));
     });
+    const xlBrushWidth = document.getElementById('xlBrushWidth');
+    xlBrushWidth.min = MIN_XL_BRUSH_WIDTH;
+    xlBrushWidth.max = MAX_XL_BRUSH_WIDTH;
+    xlBrushWidth.addEventListener('change', () => {
+        if (xlBrushWidth.validity.valid) app.setXlBrushWidth(xlBrushWidth.valueAsNumber);
+        xlBrushWidth.value = app.getXlBrushWidth();
+    });
     let technicianReturnFocus = app.dom.btnOpenDebug;
     const softBloomToggle = document.getElementById('softBloomToggle');
     const bloomIntensity = document.getElementById('softBloomIntensity');
@@ -1735,6 +1742,7 @@ export function initializeModals(appContext) {
         hideWorkspaceResetConfirmation();
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
+        xlBrushWidth.value = app.getXlBrushWidth();
         rememberModesToggle.checked = app.getRememberEvolutionModes();
         macroActivityToggle.checked = app.getMacroActivity();
         brushMotionToggle.checked = app.getBrushMotionRecording();

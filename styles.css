@@ -2172,6 +2172,20 @@ body.wind-mode :is(#btnSymmetry, #btnColorPickerSymmetry):disabled {
 .technician-settings-card > .technician-display-settings { margin: 12px 0 0; padding: 0; border: 0; background: none; }
 .technician-settings-card > .technician-option svg { width: 17px; height: 17px; }
 .technician-display-settings .technician-option { min-height: 56px; margin: 0; padding: 10px 0; gap: 10px; justify-content: center; border:0; border-bottom: 1px solid #b28b3630; border-radius:0; background:transparent; }
+.technician-display-settings .xl-brush-option { flex-direction: row; align-items: center; justify-content: space-between; }
+#technicianSettingsScroll .xl-brush-option .technician-effect-heading { min-width: 0; flex-shrink: 1; white-space: normal; }
+#xlBrushWidth {
+    width: 78px;
+    min-height: 44px;
+    padding-inline: 10px;
+    border: 1px solid #b28b3660;
+    border-radius: 8px;
+    background: #14140f;
+    color: #eee7d5;
+    font-size: 16px;
+    direction: ltr;
+}
+#xlBrushWidth:focus-visible { outline: 1px solid #e3c677; outline-offset: 2px; }
 .technician-display-settings .technician-option:last-child { border-bottom: 0; }
 .technician-display-settings .technician-option-heading { width: 100%; min-width: 0; gap: 8px; }
 #technicianSettingsScroll .technician-display-settings :is(.technician-effect-heading, .technician-option-heading bdi) { font-size: 13px; white-space: nowrap; }

@@ -152,12 +152,12 @@ test('brush swipes wrap all sizes, keep shape and palette, and replace stale fee
     const button = { innerHTML: '', textContent: '', title: '',
         classList: {add:c=>classes.add(c),remove:c=>classes.delete(c)},setAttribute:(k,v)=>attrs[k]=v };
     const h = vm.createContext({brushSize:1,brushShape:'ring',paletteBrushFeedbackTimer:null,
-        BRUSH_SIZES:[1,3,5,7,9,11,13,15,23],brushSizeLabel:n=>n===23?'XL':String(n),
+        BRUSH_SIZES:[1,3,5,7,9,11,13,15,23],brushSizeLabel:n=>n===23?'XL':String(n),getBrushWidth:n=>n===23?30:n,
         settingsProfiles:{scheduleCapture:()=>captures++},getText:k=>k,getPaletteDisplayName:p=>p.name,
         C:{PALETTES:[{name:'Journey',iconHTML:'<svg></svg>'}]},activePaletteIndex:0,dom:{btnPalette:button},
         clearTimeout:key=>timers.delete(key),setTimeout:(callback,delay)=>{timers.set(++id,{callback,delay});return id;}});
     vm.runInContext(excerpt('function updatePaletteHeader(', 'function updateSeparatorButtonUI('),h);
-    h.cyclePaletteBrushSize(-1);assert.equal(h.brushSize,23);assert.equal(button.textContent,'XL');
+    h.cyclePaletteBrushSize(-1);assert.equal(h.brushSize,23);assert.equal(button.textContent,'XL');assert.equal(button.title,'init_brush_size: 30');
     assert(classes.has('palette-brush-size-feedback'));assert.equal(timers.size,1);
     h.cyclePaletteBrushSize(1);assert.equal(h.brushSize,1);assert.equal(button.textContent,'1');assert.equal(timers.size,1);
     for(const expected of [3,5,7,9,11,13,15,23,1]){h.cyclePaletteBrushSize(1);assert.equal(h.brushSize,expected);}

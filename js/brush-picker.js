@@ -43,7 +43,8 @@ export function initializeBrushPicker(app) {
         }
         for (const button of sizes.children) {
             button.setAttribute('aria-pressed', String(Number(button.dataset.brushSize) === size));
-            button.setAttribute('aria-label', app.getText('brush_width').replace('{n}', button.dataset.brushSize));
+            const width = app.getBrushWidth(Number(button.dataset.brushSize));
+            button.setAttribute('aria-label', app.getText('brush_width').replace('{n}', width));
         }
 
     }

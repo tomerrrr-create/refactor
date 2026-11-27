@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BRUSH_SIZES, BRUSH_SHAPES, getBrushTiles, getBrushOffsets} from '../js/brush-footprint.js';
+import {BRUSH_SIZES, BRUSH_SHAPES, getBrushTiles, getBrushOffsets, loadXlBrushWidth, saveXlBrushWidth} from '../js/brush-footprint.js';
 import {defaultWorkspaceSettings, validateWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings} from '../js/workspace-settings.js';
 import {normalizeStartup} from '../js/startup-settings.js';
 import {validateSimInit, loadSimInit, persistSimInit, SIM_INIT_STORAGE_KEY} from '../js/sim-init-settings.js';
@@ -9,9 +9,25 @@ import {validateProfileSnapshot} from '../js/profile-state.js';
 test('nine supported sizes include XL and no accidental intermediate sizes', () => {
     assert.deepEqual(BRUSH_SIZES,[1,3,5,7,9,11,13,15,23]);
     for (const size of [0,2,17,19,22,'21',NaN]) {
-        assert.throws(() => getBrushOffsets(size),RangeError);
         assert(!validateSimInit({boardSize:249,brushSize:size}));
     }
+});
+test('custom XL widths persist independently of the size slots and use exact bounds', () => {
+    const values = new Map();
+    const storage = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
+    assert.equal(loadXlBrushWidth(storage), 23);
+    for (const width of [16, 27, 30, 327]) {
+        assert.equal(saveXlBrushWidth(width, storage), width);
+        assert.equal(loadXlBrushWidth(storage), width);
+        assert.equal(getBrushOffsets(width, 'square').length, width * width);
+        assert.equal(getBrushOffsets(width, 'line').length, width);
+        assert.deepEqual(getBrushTiles(0, 3, width, 'square'), [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    }
+    for (const width of [0, 2, 14, 16.5, 328, '30', NaN]) {
+        assert.throws(() => saveXlBrushWidth(width, storage), RangeError);
+        assert.throws(() => getBrushOffsets(width), RangeError);
+    }
+    assert.equal(loadXlBrushWidth(storage), 327);
 });
 test('default circle exactly preserves old footprints, order and edge clipping', () => {
     for (const n of [1,5,21,249]) for (const size of BRUSH_SIZES) for (const center of [0,Math.floor(n*n/2),n*n-1]) {
