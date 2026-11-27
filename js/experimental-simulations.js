@@ -7,26 +7,31 @@ export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
     {id:'spiral',button:'btnSpiral',key:'tooltip_spiral',defaultVisible:DEFAULT_GEOMETRIC_FLOW_VISIBLE},
     {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe',defaultVisible:false},
     {id:'fibonacci',button:'btnFibonacci',key:'help_fibonacci',defaultVisible:false},
-    {id:'patterns',key:'drawer_patterns',defaultVisible:false}
+    {id:'patterns',key:'drawer_patterns',defaultVisible:true,sessionOnly:true}
 ].map(Object.freeze));
 export const EXPERIMENTAL_SIMULATIONS_KEY='colorGridExperimentalSimulationsV1';
 export function createExperimentalSimulationFlags({storage}={}) {
     let preferences={};
     try {
         const value=JSON.parse((storage??globalThis.localStorage)?.getItem(EXPERIMENTAL_SIMULATIONS_KEY));
-        if(value&&typeof value==='object'&&!Array.isArray(value))preferences=value;
+        if(value&&typeof value==='object'&&!Array.isArray(value)){
+            preferences=value;
+            delete preferences.patterns;
+        }
     } catch { /* Use the feature defaults when storage is unavailable. */ }
     const visible=({id,defaultVisible})=>typeof preferences[id]==='boolean'?preferences[id]:defaultVisible;
-    const known=id=>EXPERIMENTAL_SIMULATIONS.some(item=>item.id===id);
     return {
         visible(id){
             const entry=EXPERIMENTAL_SIMULATIONS.find(item=>item.id===(isPatternEvolution(id)?'patterns':id));
             return entry?visible(entry):true;
         },
         set(id,value){
-            if(!known(id))throw Error('Unknown experimental simulation');
-            preferences=Object.fromEntries(EXPERIMENTAL_SIMULATIONS.map(item=>[item.id,item.id===id?value===true:visible(item)]));
-            try {(storage??globalThis.localStorage)?.setItem(EXPERIMENTAL_SIMULATIONS_KEY,JSON.stringify(preferences));}catch{}
+            const entry=EXPERIMENTAL_SIMULATIONS.find(item=>item.id===id);
+            if(!entry)throw Error('Unknown experimental simulation');
+            preferences[id]=value===true;
+            if(entry.sessionOnly)return;
+            const saved=Object.fromEntries(EXPERIMENTAL_SIMULATIONS.filter(item=>!item.sessionOnly).map(item=>[item.id,visible(item)]));
+            try {(storage??globalThis.localStorage)?.setItem(EXPERIMENTAL_SIMULATIONS_KEY,JSON.stringify(saved));}catch{}
         }
     };
 }

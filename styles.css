@@ -1934,18 +1934,21 @@ button, .ctrl {
 /* Drawer colors are tied to position. Backdrop visibility is independent of the icons. */
 #controlsContainer.sim-mode-active {
   --sim-drawer-ink: var(--sim-theme-gold);
+}
+:root[data-individual-drawer-colors] [data-drawer-color="blue"] {
   --sim-drawer-lip: var(--sim-theme-blue);
   --sim-drawer-diamond-ink: #9aafd713;
   --sim-drawer-frame: #334155;
   --sim-drawer-gradient: linear-gradient(135deg, #0f172a, #05070d);
 }
-#controlsContainer.sim-mode-active[data-evolution-page="1"] {
+:where(#controlsContainer.sim-mode-active),
+[data-drawer-color="gold"] {
   --sim-drawer-lip: var(--sim-theme-gold);
   --sim-drawer-diamond-ink: #dab77913;
   --sim-drawer-frame: #b28b3645;
   --sim-drawer-gradient: linear-gradient(135deg, #2a2213, #100d08);
 }
-#controlsContainer.sim-mode-active[data-evolution-page="2"] {
+:root[data-individual-drawer-colors] [data-drawer-color="burgundy"] {
   --sim-drawer-lip: #966374;
   --sim-drawer-diamond-ink: #d291a313;
   --sim-drawer-frame: #6f3a4a80;
@@ -2551,6 +2554,23 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   #evolutionDrawerDialog[data-patterns] { width:min(920px,calc(100vw - 24px)); }
   #evolutionDrawerDialog[data-patterns] .drawer-pages { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
+.drawer-color-options { display:flex; justify-content:center; gap:4px; margin-top:4px; }
+:root:not([data-individual-drawer-colors]) .drawer-color-options,
+#evolutionDrawerDialog[data-view-only] .drawer-color-options { display:none; }
+.drawer-color-options button {
+  width:44px; height:44px; display:grid; place-items:center; padding:0;
+  border:0; background:transparent; color:var(--sim-drawer-lip);
+}
+.drawer-color-options button::before {
+  content:""; width:28px; height:18px; border-radius:5px;
+  border:1px solid color-mix(in srgb,currentColor 76%,transparent);
+  background:linear-gradient(color-mix(in srgb,currentColor 27%,transparent),transparent),
+    repeating-linear-gradient(45deg,transparent 0 8px,var(--sim-drawer-diamond-ink) 8px 9px),
+    repeating-linear-gradient(-45deg,transparent 0 8px,var(--sim-drawer-diamond-ink) 8px 9px),
+    var(--sim-drawer-gradient);
+}
+.drawer-color-options button[aria-pressed="true"]::before { outline:1px solid #dabe81; outline-offset:2px; }
+.drawer-color-options button:focus-visible { outline:1px solid #f2da9e; outline-offset:-2px; border-radius:7px; }
 #evolutionDrawerDialog[dir="rtl"] .drawer-pages h3 { text-align:right; direction:rtl; }
 #drawerInstructions { color:#c3b99e; font-size:12px; line-height:1.6; margin:18px 0 0; }
 #evolutionDrawerDialog .drawer-selection { min-height:20px; color:#e3c677; text-align:center; font-size:12px; margin:18px 0 0; }
@@ -2565,7 +2585,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog h3 { font-size:13px; color:#d4c8aa; margin:20px 0 10px; font-weight:500; }
 #evolutionDrawerDialog .drawer-catalog { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); width:min(100%,272px); margin-inline:auto; gap:8px; }
 #evolutionDrawerDialog .drawer-catalog button { display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; aspect-ratio:1; padding:0; border:1px solid #b28b3645; border-radius:2px; background:#131711; color:#c3b99e; }
-#evolutionDrawerDialog button[aria-pressed="true"]:not(.simulation-theme-preview) { border-color:#d4b865; background:#b28b3624; color:#ffe7a0; }
+#evolutionDrawerDialog .drawer-slots button[aria-pressed="true"] { border-color:#d4b865; background:#b28b3624; color:#ffe7a0; }
 #evolutionDrawerDialog .drawer-icon { display:flex; justify-content:center; flex-shrink:0; width:24px; height:24px; font-size:16px; }
 #evolutionDrawerDialog .drawer-icon svg { width:24px !important; height:24px !important; }
 #evolutionDrawerDialog button { font-family:inherit; cursor:pointer; }

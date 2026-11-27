@@ -2478,7 +2478,6 @@ if (simulationName === 'magnet') {
                 geometricFlowVisible: experimentalSimulations.visible('spiral'),
                 breatheVisible: experimentalSimulations.visible('breathe'),
                 fibonacciVisible: experimentalSimulations.visible('fibonacci'),
-                patternsVisible: experimentalSimulations.visible('patterns'),
                 fibonacciColorAdvance,
                 fibonacciCrystal: { ...fibonacciCrystalSettings },
                 fibonacciMaps: structuredClone(fibonacciMapSettings),
@@ -2533,7 +2532,7 @@ if (simulationName === 'magnet') {
             const savedMap = preferences.fibonacciMaps[fibonacciState?.mode];
             if (savedMap) fibonacciState.map = { ...fibonacciState.map, settings: savedMap };
         }
-        for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible], ['fibonacci', preferences.fibonacciVisible], ['patterns', preferences.patternsVisible]]) {
+        for (const [id, visible] of [['spiral', preferences.geometricFlowVisible], ['breathe', preferences.breatheVisible], ['fibonacci', preferences.fibonacciVisible]]) {
             if (visible === undefined) continue;
             experimentalSimulations.set(id, visible);
             if (!visible) disarmHiddenExperiment(id);
@@ -6716,7 +6715,7 @@ updateBrightnessEvoButtonUI();
                 if(!enabled)disarmHiddenExperiment(id);
                 updateInkButtonUI();
                 evolutionDrawer?.applyLayout();
-                if (id === 'fibonacci' || id === 'patterns') {
+                if (id === 'fibonacci') {
                     persistWorkspaceSettings(getWorkspaceSettings());
                     settingsProfiles?.scheduleCapture();
                 }
