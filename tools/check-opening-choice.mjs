@@ -129,6 +129,25 @@ try {
         assert(Math.abs(centers[1] - centers[0]) < 100, 'Mine and Origin form a compact, centered pair');
         assert.equal(await continueButton.evaluate(el => getComputedStyle(el).color), 'rgb(245, 206, 128)');
         assert.equal(await eclipse.evaluate(el => getComputedStyle(el).color), 'rgb(201, 211, 223)');
+        assert.deepEqual(await actions.evaluate(el => [el, ...el.children].map(item => {
+            const style = getComputedStyle(item);
+            return [style.borderTopWidth, style.backgroundImage, style.backgroundColor,
+                style.textShadow, style.animationName, style.transitionDuration];
+        })), Array.from({length: 3}, () => ['0px', 'none', transparent, 'none', 'none', '0s']));
+        if (!mobile) {
+            await continueButton.hover();
+            assert.equal(await continueButton.evaluate(el => getComputedStyle(el).textDecorationLine), 'underline');
+            const bounds = await eclipse.boundingBox();
+            await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+            await page.mouse.down();
+            assert.equal(await eclipse.evaluate(el => getComputedStyle(el).color), 'rgb(255, 245, 223)');
+            await page.mouse.move(0, 0);
+            await page.mouse.up();
+            await choice.locator('[data-opening-choice=evolve]').focus();
+            await page.keyboard.press('Tab');
+            assert(await continueButton.evaluate(el => el.matches(':focus-visible')));
+            assert.equal(await continueButton.evaluate(el => getComputedStyle(el).textDecorationLine), 'underline');
+        }
         assert.equal(await choice.locator('[data-opening-choice=create]').getAttribute('aria-pressed'), 'true');
         assert.deepEqual((await cardStyles())[1], initialCards[1], 'only the clicked card receives the gold fill');
         await tap(continueButton);
