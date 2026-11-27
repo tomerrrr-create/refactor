@@ -3114,32 +3114,36 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   justify-content: center;
   gap: 10px;
   margin-top: 8px;
-  padding-block: 8px 3px;
-  border-top: 1px solid #9f83513d;
-  transition: opacity 280ms ease-out;
+  padding-block: 9px 3px;
 }
 .opening-choice-actions[inert] {
   visibility: hidden;
-  opacity: 0;
 }
 .opening-choice-action {
   min-height: 44px;
   padding: 4px;
-  border: 1px solid color-mix(in srgb, currentColor 34%, transparent);
-  border-radius: 7px;
-  background: linear-gradient(155deg, color-mix(in srgb, currentColor 10%, #171719), #191816 75%);
+  border: 0;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
   font-family: Eurostile, "Bank Gothic", "SFMono-Regular", Consolas, monospace;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: .12em;
-  text-shadow: 0 0 10px color-mix(in srgb, currentColor 38%, transparent);
-  transition: border-color 180ms ease-out;
+  color: var(--opening-action-ink);
+  text-underline-offset: .35em;
 }
-#openingContinue { color: #f5ce80; }
-#openingEclipse { color: #c9d3df; }
-.opening-choice-action:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
-@media (hover: hover) {
-  .opening-choice-action:hover { border-color: currentColor; }
+#openingContinue { --opening-action-ink: #f5ce80; }
+#openingEclipse { --opening-action-ink: #c9d3df; }
+.opening-choice-action:focus-visible {
+  outline: none;
+  text-decoration: underline;
+}
+.opening-choice-action:active {
+  color: #fff5df;
+  text-decoration: underline;
+}
+@media (hover: hover) and (pointer: fine) {
+  .opening-choice-action:hover { text-decoration: underline; }
 }
 #openingEclipseError { margin: 4px 0; font-size: .8rem; }
 #openingResetVeil[open] {
@@ -3167,6 +3171,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 @media (prefers-reduced-motion: reduce) {
   #openingChoiceDialog[open] { animation: none; }
-  .opening-choice-options button, .opening-choice-actions, .opening-choice-action { transition: none; }
+  .opening-choice-options button { transition: none; }
   #openingResetVeil[open] { animation: none; }
 }
