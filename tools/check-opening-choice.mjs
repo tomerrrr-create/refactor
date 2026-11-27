@@ -107,7 +107,10 @@ try {
         assert(await choice.evaluate(dialog => dialog === document.activeElement));
         assert.equal(await choice.locator('.glyph-special-reset').evaluate(dot =>
             getComputedStyle(dot).backgroundColor), initialCards[0][2]);
-        assert.equal(await choice.locator('.opening-choice-mark svg').innerHTML(), await control.locator('svg').innerHTML());
+        const openingMark = choice.locator('.opening-choice-mark svg');
+        assert.equal(await openingMark.innerHTML(), await control.locator('svg').innerHTML());
+        assert.equal(await openingMark.evaluate(el => el.getBoundingClientRect().width), 44);
+        assert.equal(await openingMark.evaluate(el => getComputedStyle(el).transform), 'none');
         assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
             await page.locator('#iconGsUp').innerHTML());
@@ -126,6 +129,7 @@ try {
         const centers = buttons.map(({ x, width }) => x + width / 2);
         assert(buttons.every(({ width, height }) => width >= 44 && height >= 44));
         assert(Math.abs((centers[0] + centers[1]) / 2 - (actionBounds.x + actionBounds.width / 2)) < 1);
+        assert(mobile ? centers[1] > centers[0] : centers[1] < centers[0], 'Origin precedes Mine in reading order');
         assert(Math.abs(centers[1] - centers[0]) < 100, 'Mine and Origin form a compact, centered pair');
         assert.equal(await continueButton.evaluate(el => getComputedStyle(el).color), 'rgb(245, 206, 128)');
         assert.equal(await eclipse.evaluate(el => getComputedStyle(el).color), 'rgb(201, 211, 223)');
@@ -144,6 +148,8 @@ try {
             await page.mouse.move(0, 0);
             await page.mouse.up();
             await choice.locator('[data-opening-choice=evolve]').focus();
+            await page.keyboard.press('Tab');
+            assert(await eclipse.evaluate(el => el.matches(':focus-visible')));
             await page.keyboard.press('Tab');
             assert(await continueButton.evaluate(el => el.matches(':focus-visible')));
             assert.equal(await continueButton.evaluate(el => getComputedStyle(el).textDecorationLine), 'underline');
