@@ -1043,16 +1043,18 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           });
       }
 
-      function fillRandom() {
+      function fillRandom({ animate = true } = {}) {
         const now = performance.now();
+        const colorCount = paletteLen();
         boardState.forEach(tile => {
-            tile.prevK = tile.k;
+            tile.prevK = animate ? tile.k : null;
             tile.animStart = now;
             tile.isGold = false;
-            tile.k = Math.floor(Math.random() * paletteLen());
+            tile.k = Math.floor(Math.random() * colorCount);
             tile.v = tile.k;
         });
-        startAnimationLoop();
+        if (animate) startAnimationLoop();
+        else renderToScreen(null);
       }
 
       function randomizeAll() {
@@ -2823,24 +2825,25 @@ function updateMacroPaletteButtonUI(paletteIndex) {
           setTimeout(() => { dom.longPressDisplay.innerHTML = ''; }, 250);
       }
       
-      function initializeEvolutionBoard() {
+      function initializeEvolutionBoard({ afterReset = false } = {}) {
         if (isLifePlaying) return;
-        if (!isSimModeActive) toggleSimMode();
-        return prepareBoardForSimMode();
+        if (!isSimModeActive) toggleSimMode({ immediate: afterReset });
+        return prepareBoardForSimMode({ afterReset });
       }
 
-      function prepareBoardForSimMode() {
-        return animateBoardTransition(() => {
+      function prepareBoardForSimMode({ afterReset = false } = {}) {
+        const prepare = () => {
             performAction(() => {
                 if (n !== simulationInitSettings.boardSize) _performResize(simulationInitSettings.boardSize);
                 separatorPx = 0; selectedRelativeSeparator = 0; separatorIsSnapshot = false;
                 applySeparator();
-                goDark();
+                if (afterReset) fillRandom({ animate: false });
+                else goDark();
                 // A new board starts a new fracture run, even at the same size.
                 cracksState = null;
                 cymaticsState = null; inkState = null; oilState = null; networkState = null;
                 const currentPalette = palette();
-                const colorChoice = simulationInitSettings.brushColor || 'last';
+                const colorChoice = afterReset ? 'first' : simulationInitSettings.brushColor || 'last';
                 selectedColorIndex = colorChoice === 'rainbow' ? -1 : colorChoice === 'first' ? 0 : colorChoice === 'lightest'
                     ? currentPalette.indexOf(sortColorsArray(currentPalette, 'luminance').at(-1)) : currentPalette.length - 1;
                 selectedColor = selectedColorIndex >= 0 ? currentPalette[selectedColorIndex] : null;
@@ -2862,7 +2865,8 @@ function updateMacroPaletteButtonUI(paletteIndex) {
                 historyRecipeCursor = 0;
                 logCurrentStateAsInit();
             });
-        });
+        };
+        return afterReset ? prepare() : animateBoardTransition(prepare);
       }
 
 
@@ -3032,11 +3036,9 @@ dom.btnLangToggle.textContent = getCurrentLang().toUpperCase();
           updateSimulationUtilityControl();
       }
 
-      function toggleSimMode() {
+      function toggleSimMode({ immediate = false } = {}) {
         if (isLifePlaying) return;
-        const duration = 500;
-        dom.controlsContainer.style.opacity = '0';
-        setTimeout(() => {
+        const apply = () => {
             // Playback may start while the panel transition is pending.
             if (isLifePlaying) { dom.controlsContainer.style.opacity = '1'; return; }
             isSimModeActive = !isSimModeActive;
@@ -3058,7 +3060,12 @@ const controlsToHide = [ dom.btnBrushMode, dom.btnResetBoard, dom.btnTutorial, d
             dom.btnPlayPauseLife.classList.toggle('control-hidden', !isSimModeActive);
             dom.btnToggleSimMode.classList.toggle('active', isSimModeActive);
             dom.controlsContainer.style.opacity = '1';
-        }, duration);
+        };
+        if (immediate) apply();
+        else {
+            dom.controlsContainer.style.opacity = '0';
+            setTimeout(apply, 500);
+        }
       }
       
       function resetArmedState() {
@@ -7004,7 +7011,7 @@ dom.btnWind.addEventListener('keydown', event => {
         window.addEventListener('contextmenu', e => e.preventDefault());
         
         if (resetOpeningMode) {
-            if (resetOpeningMode === 'evolve') await initializeEvolutionBoard();
+            if (resetOpeningMode === 'evolve') initializeEvolutionBoard({ afterReset: true });
             const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
             await splashScreen.animate([{ opacity: 1 }, { opacity: 0 }], {
                 duration: reducedMotion ? 0 : 540,
