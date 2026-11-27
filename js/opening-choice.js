@@ -1,5 +1,5 @@
 import { getCurrentLang, getText } from './i18n.js';
-import { queueAppReset, readLastOpeningMode, rememberOpeningMode } from './app-reset.js';
+import { queueAppReset } from './app-reset.js';
 
 const STORAGE_KEY = 'colorGridOpeningChoice';
 
@@ -9,10 +9,14 @@ export function initializeOpeningChoice(onEvolve) {
     const gate = document.getElementById('openingChoiceGate');
     const dialog = document.getElementById('openingChoiceDialog');
     const eclipse = document.getElementById('openingEclipse');
+    const actions = document.getElementById('openingChoiceActions');
+    const continueButton = document.getElementById('openingContinue');
+    const choices = dialog.querySelectorAll('[data-opening-choice]');
     const resetError = document.getElementById('openingEclipseError');
     const veil = document.getElementById('openingResetVeil');
     const switchIcon = document.querySelector('#btnToggleSimMode > svg');
     dialog.querySelector('.opening-choice-mark').append(switchIcon.cloneNode(true));
+    let selectedMode = null;
 
     toggle.checked = true;
     try { toggle.checked = localStorage.getItem(STORAGE_KEY) !== 'false'; } catch {}
@@ -27,24 +31,29 @@ export function initializeOpeningChoice(onEvolve) {
         eclipse.setAttribute('aria-label', resetLabel);
         eclipse.title = resetLabel;
         veil.setAttribute('aria-label', resetLabel);
-        eclipse.disabled = !readLastOpeningMode();
         dialog.showModal();
     }, { once: true });
 
     function finish(mode) {
-        rememberOpeningMode(mode);
         app.inert = false;
         dialog.close();
         if (mode === 'evolve') onEvolve();
     }
 
-    dialog.querySelectorAll('[data-opening-choice]').forEach(button => {
-        button.addEventListener('click', () => finish(button.dataset.openingChoice));
+    choices.forEach(button => {
+        button.addEventListener('click', () => {
+            selectedMode = button.dataset.openingChoice;
+            choices.forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
+            actions.hidden = false;
+        });
+    });
+    continueButton.addEventListener('click', () => {
+        if (selectedMode) finish(selectedMode);
     });
     dialog.addEventListener('close', () => { app.inert = false; });
     veil.addEventListener('cancel', event => event.preventDefault());
     eclipse.addEventListener('click', async () => {
-        const mode = readLastOpeningMode();
+        const mode = selectedMode;
         if (!mode || veil.open) return;
         resetError.hidden = true;
         veil.showModal();

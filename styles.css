@@ -3056,21 +3056,39 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 @media (hover: hover) {
   .opening-choice-options button:hover { border-color: #aa9052a0; background: #d5aa4816; }
 }
+.opening-choice-options button[aria-pressed="true"] {
+  border-color: #aa9052a0;
+  background: #d5aa481f;
+}
 .opening-choice-icon { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 5px; }
 .opening-choice-icon svg { width: 29px; height: 29px; }
-#openingEclipse {
+.opening-choice-actions {
   display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  margin: 2px auto 0;
-  border-radius: 50%;
-  color: #d7ab66;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #9f83513d;
+  animation: opening-choice-reveal 220ms ease-out both;
 }
-#openingEclipse:disabled { color: #756b5c; opacity: .55; }
-#openingEclipse:focus-visible { outline: 1px solid #c6a869; outline-offset: -4px; }
-#openingEclipse svg { width: 23px; height: 23px; }
-#openingEclipse:enabled svg {
+.opening-choice-actions[hidden] { display: none; }
+.opening-choice-action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #c0bcb4;
+  font-size: .875rem;
+}
+.opening-choice-action:focus-visible { outline: 1px solid #c6a869; outline-offset: -4px; }
+.opening-choice-action svg { width: 20px; height: 20px; flex: none; }
+#openingContinue { background: #d5aa4824; border-color: #9f835169; color: #f2d59e; }
+#openingChoiceDialog[dir="rtl"] #openingContinue svg { transform: scaleX(-1); }
+#openingEclipse svg {
   animation: opening-eclipse-glow 5.2s ease-in-out infinite;
 }
 #openingEclipseError { margin: 4px 0; font-size: .8rem; }
@@ -3117,9 +3135,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   to { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  #openingChoiceDialog[open] { animation: none; }
+  #openingChoiceDialog[open], .opening-choice-actions { animation: none; }
   .opening-choice-options button { transition: none; }
-  #openingEclipse:enabled svg, #openingResetVeil[open] { animation: none; }
+  #openingEclipse svg, #openingResetVeil[open] { animation: none; }
   #openingResetVeil svg { animation: opening-reset-still 320ms linear both; }
 }
 @keyframes opening-reset-still {
