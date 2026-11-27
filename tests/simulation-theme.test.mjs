@@ -5,13 +5,13 @@ import { readFileSync } from 'node:fs';
 import { defaultWorkspaceSettings, serializeWorkspaceSettings, deserializeWorkspaceSettings } from '../js/workspace-settings.js';
 import { validateProfileSnapshot } from '../js/profile-state.js';
 const source = readFileSync(new URL('../js/simulation-theme.js', import.meta.url), 'utf8')
-    .replace(/^import .*;\n/, '').replaceAll('export function ', 'function ');
+    .replace(/^import .*;\n/, '').replaceAll('export ', '');
 const themes = ['blue', 'gold', 'teal', 'moon-silver', 'ivory', 'dark-gray'];
 function harness(saved = {}, blocked = false) {
     const storage = new Map(Object.entries(saved)), attributes = new Set();
     const buttons = () => themes.map(theme => ({ dataset: { theme }, attrs: {}, handlers: {},
         setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(k, fn) { this.handlers[k] = fn; } }));
-    const rest = buttons(), playback = buttons(), hierarchy = {
+    const playback = buttons(), hierarchy = {
         checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; }
     };
     const pulse = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
@@ -20,6 +20,7 @@ function harness(saved = {}, blocked = false) {
     const transitionValue = {};
     const sortToggle = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
     const keepDrawers = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
+    const individualDrawers = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
     const sortButton = {
         excluded: false,
         toggleAttribute(name, value) {
@@ -31,26 +32,36 @@ function harness(saved = {}, blocked = false) {
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
         toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); },
         style: { setProperty: (name, value) => styles.set(name, value) } };
-    const select = selector => selector.includes('Playback') ? playback : rest;
+    const select = () => playback;
     const controls = { goldPlaybackHierarchyToggle: hierarchy, glowPulse: pulse, glowPulseValue: pulseValue,
         goldTransitionDuration: transition, goldTransitionDurationValue: transitionValue,
-        goldExcludeSortToggle: sortToggle, btnCycleSort: sortButton, keepSimulationDrawersToggle: keepDrawers };
+        goldExcludeSortToggle: sortToggle, btnCycleSort: sortButton, keepSimulationDrawersToggle: keepDrawers, individualDrawerColorsToggle: individualDrawers };
     const context = vm.createContext({ document: { documentElement: root,
         getElementById: id => controls[id] ?? { querySelectorAll: () => select(id) }, querySelectorAll: select },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
         getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
-    return { context, root, storage, rest, playback, hierarchy, pulse, transition, sortToggle, sortButton, keepDrawers, styles, run: code => vm.runInContext(code, context) };
+    return { context, root, storage, playback, hierarchy, pulse, transition, sortToggle, sortButton, keepDrawers, individualDrawers, styles, run: code => vm.runInContext(code, context) };
 }
 
-test('the drawer backdrop stays visible by default and the opt-out survives reopening', () => {
-    const h = harness();h.run('initializeSimulationTheme()');
+test('drawer switches start on every load and colors survive independently', () => {
+    const h = harness({ colorGridKeepSimulationDrawers: 'false' });h.run('initializeSimulationTheme()');
     assert(h.keepDrawers.checked);assert(h.root.hasAttribute('data-keep-simulation-drawers'));
     h.keepDrawers.checked = false;h.keepDrawers.handlers.change();
     assert(!h.root.hasAttribute('data-keep-simulation-drawers'));
+    assert(h.individualDrawers.checked);assert(h.root.hasAttribute('data-individual-drawer-colors'));
+    h.individualDrawers.checked = false;h.individualDrawers.handlers.change();
+    assert(!h.root.hasAttribute('data-individual-drawer-colors'));
+    assert.equal(h.run('drawerColors.join()'), 'blue,gold,burgundy');
+    h.run("setDrawerColor(0, 'burgundy'); setDrawerColor(1, 'burgundy'); setDrawerColor(2, 'ivory')");
     const reopened = harness(Object.fromEntries(h.storage));reopened.run('initializeSimulationTheme()');
-    assert(!reopened.keepDrawers.checked);assert(!reopened.root.hasAttribute('data-keep-simulation-drawers'));
+    assert(reopened.keepDrawers.checked);assert(reopened.root.hasAttribute('data-keep-simulation-drawers'));
+    assert(reopened.individualDrawers.checked);assert(reopened.root.hasAttribute('data-individual-drawer-colors'));
+    assert.equal(reopened.run('drawerColors.join()'), 'burgundy,burgundy,burgundy');
+    const invalid = harness({colorGridSimulationDrawerColors:'["gold","invalid",null]'});
+    invalid.run('initializeSimulationTheme()');
+    assert.equal(invalid.run('drawerColors.join()'), 'gold,gold,burgundy');
     const blocked = harness({},true);blocked.run('initializeSimulationTheme()');assert(blocked.keepDrawers.checked);
 });
 
@@ -124,10 +135,10 @@ test('fresh/blocked storage defaults to gold at rest and while running; independ
         h.playback[2].handlers.click();
         assert.equal(h.root.dataset.simulationEffectiveTheme, 'teal');
         assert.equal(h.playback[2].attrs['aria-pressed'], 'true');
-        h.rest[1].handlers.click();
+        h.run("applySimulationTheme('blue')");
         assert.equal(h.root.dataset.simulationEffectiveTheme, 'teal');
         h.run('setSimulationRunning(false)');
-        assert.equal(h.root.dataset.simulationEffectiveTheme, 'gold');
+        assert.equal(h.root.dataset.simulationEffectiveTheme, 'blue');
     }
 });
 test('both colors round-trip through settings and profiles; legacy playback uses gold', () => {

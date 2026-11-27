@@ -5,7 +5,9 @@ const STORAGE_KEY = 'colorGridSimulationTheme';
 const PLAYBACK_STORAGE_KEY = 'colorGridSimulationPlaybackTheme';
 const GOLD_HIERARCHY_STORAGE_KEY = 'colorGridGoldPlaybackHierarchy';
 const GOLD_SORT_EXEMPTION_STORAGE_KEY = 'colorGridGoldExcludeSort';
-const KEEP_DRAWERS_STORAGE_KEY = 'colorGridKeepSimulationDrawers';
+const DRAWER_COLORS_STORAGE_KEY = 'colorGridSimulationDrawerColors';
+export const SIMULATION_DRAWER_COLORS = Object.freeze(['blue', 'gold', 'burgundy']);
+let drawerColors = [...SIMULATION_DRAWER_COLORS];
 const GLOW_PULSE_STORAGE_KEY = 'colorGridGlowPulseSeconds';
 const GLOW_PULSE_SECONDS = [0.6, 1, 1.6, 2.4, 3.2, 4, 4.8];
 const DEFAULT_GLOW_PULSE_SECONDS = 3.2;
@@ -16,14 +18,14 @@ let goldTransitionMs = DEFAULT_GOLD_TRANSITION_SECONDS * 1000;
 let goldPlaybackTransition;
 const RETIRED_DARK_THEMES = ['graphite', 'graphite-edge', 'graphite-dust', 'deep-blue'];
 const LABELS = {
-  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', 'moon-silver': 'Moon Silver', ivory: 'Ivory', 'dark-gray': 'Dark Gray'},
-  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', 'moon-silver': 'כסף ירחי', ivory: 'שנהב', 'dark-gray': 'אפור כהה'},
-  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', 'moon-silver': 'Лунное серебро', ivory: 'Слоновая кость', 'dark-gray': 'Тёмно-серый'},
-  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', 'moon-silver': 'Maanzilver', ivory: 'Ivoor', 'dark-gray': 'Donkergrijs'}
+  en: {gold: 'Gold', blue: 'Blue', teal: 'Smoky turquoise', 'moon-silver': 'Moon Silver', ivory: 'Ivory', 'dark-gray': 'Dark Gray', burgundy: 'Burgundy'},
+  he: {gold: 'זהב', blue: 'כחול', teal: 'טורקיז מעושן', 'moon-silver': 'כסף ירחי', ivory: 'שנהב', 'dark-gray': 'אפור כהה', burgundy: 'בורדו'},
+  ru: {gold: 'Золото', blue: 'Синий', teal: 'Дымчатая бирюза', 'moon-silver': 'Лунное серебро', ivory: 'Слоновая кость', 'dark-gray': 'Тёмно-серый', burgundy: 'Бордовый'},
+  nl: {gold: 'Goud', blue: 'Blauw', teal: 'Gedempt turkoois', 'moon-silver': 'Maanzilver', ivory: 'Ivoor', 'dark-gray': 'Donkergrijs', burgundy: 'Bordeaux'}
 };
 
 export function isSimulationTheme(value) {
-  return typeof value === 'string' && Object.hasOwn(LABELS.en, value);
+  return typeof value === 'string' && value !== 'burgundy' && Object.hasOwn(LABELS.en, value);
 }
 
 export function getSimulationTheme() {
@@ -113,9 +115,6 @@ function createGoldPlaybackTransition(toolbar) {
 export function applySimulationTheme(value) {
   const theme = RETIRED_DARK_THEMES.includes(value) ? 'blue' : isSimulationTheme(value) ? value : 'gold';
   document.documentElement.dataset.simulationTheme = theme;
-  for (const preview of document.querySelectorAll('#simulationThemeSettings [data-theme]')) {
-    preview.setAttribute('aria-pressed', String(preview.dataset.theme === theme));
-  }
   updateEffectiveTheme();
   try { localStorage.setItem(STORAGE_KEY, theme); return true; }
   catch { return false; /* Appearance still works for this session. */ }
@@ -158,17 +157,26 @@ function initializeGoldSortExemption() {
   });
 }
 
-function initializeDrawerVisibility() {
-  const toggle = document.getElementById('keepSimulationDrawersToggle');
-  const root = document.documentElement;
+export function getDrawerColor(page) {
+  return drawerColors[page];
+}
+
+export function getThemeColorLabel(color) {
+  return (LABELS[getCurrentLang()] || LABELS.en)[color];
+}
+
+export function setDrawerColor(page, color) {
+  if (!Number.isInteger(page) || !SIMULATION_DRAWER_COLORS[page] || !SIMULATION_DRAWER_COLORS.includes(color)) return;
+  drawerColors[page] = color;
+  try { localStorage.setItem(DRAWER_COLORS_STORAGE_KEY, JSON.stringify(drawerColors)); } catch {}
+}
+
+function initializeSessionSwitch(id, attribute) {
+  const toggle = document.getElementById(id);
+  const apply = () => document.documentElement.toggleAttribute(attribute, toggle.checked);
   toggle.checked = true;
-  try { toggle.checked = localStorage.getItem(KEEP_DRAWERS_STORAGE_KEY) !== 'false'; } catch {}
-  const apply = () => root.toggleAttribute('data-keep-simulation-drawers', toggle.checked);
   apply();
-  toggle.addEventListener('change', () => {
-    apply();
-    try { localStorage.setItem(KEEP_DRAWERS_STORAGE_KEY, String(toggle.checked)); } catch {}
-  });
+  toggle.addEventListener('change', apply);
 }
 
 function initializeDurationSlider(sliderId, storageKey, durations, defaultDuration, apply) {
@@ -199,14 +207,18 @@ export function initializeSimulationTheme(toolbar) {
   if (toolbar) goldPlaybackTransition = createGoldPlaybackTransition(toolbar);
   initializeGoldPlaybackHierarchy();
   initializeGoldSortExemption();
-  initializeDrawerVisibility();
+  initializeSessionSwitch('keepSimulationDrawersToggle', 'data-keep-simulation-drawers');
+  initializeSessionSwitch('individualDrawerColorsToggle', 'data-individual-drawer-colors');
+  let savedDrawerColors;
+  try { savedDrawerColors = JSON.parse(localStorage.getItem(DRAWER_COLORS_STORAGE_KEY)); } catch {}
+  drawerColors = SIMULATION_DRAWER_COLORS.map((color, page) =>
+    Array.isArray(savedDrawerColors) && SIMULATION_DRAWER_COLORS.includes(savedDrawerColors[page]) ? savedDrawerColors[page] : color
+  );
   initializeDurationSlider('glowPulse', GLOW_PULSE_STORAGE_KEY, GLOW_PULSE_SECONDS, DEFAULT_GLOW_PULSE_SECONDS,
     duration => document.documentElement.style.setProperty('--simulation-halo-duration', `${duration}s`));
   initializeDurationSlider('goldTransitionDuration', GOLD_TRANSITION_STORAGE_KEY, GOLD_TRANSITION_SECONDS, DEFAULT_GOLD_TRANSITION_SECONDS,
     duration => { goldTransitionMs = duration * 1000; });
-  const section = document.getElementById('simulationThemeSettings');
   const playbackSection = document.getElementById('simulationPlaybackThemeSettings');
-  const previews = section.querySelectorAll('[data-theme]');
   const playbackPreviews = playbackSection.querySelectorAll('[data-theme]');
   let saved;
   try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* Use the default gold appearance. */ }
@@ -217,13 +229,9 @@ export function initializeSimulationTheme(toolbar) {
   for (const preview of playbackPreviews) {
     preview.addEventListener('click', () => applySimulationPlaybackTheme(preview.dataset.theme));
   }
-  for (const preview of previews) {
-    preview.addEventListener('click', () => applySimulationTheme(preview.dataset.theme));
-  }
   function translate() {
-    const labels = LABELS[getCurrentLang()] || LABELS.en;
-    for (const preview of [...previews, ...playbackPreviews]) {
-      const label = labels[preview.dataset.theme];
+    for (const preview of playbackPreviews) {
+      const label = getThemeColorLabel(preview.dataset.theme);
       preview.setAttribute('aria-label', label);
       preview.title = label;
     }

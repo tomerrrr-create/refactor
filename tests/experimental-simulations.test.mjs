@@ -25,12 +25,17 @@ test('invalid or unavailable storage is safe and retains session choices',()=>{
  const flags=createExperimentalSimulationFlags({storage:{getItem(){throw Error('blocked');},setItem(){throw Error('blocked');}}});
  flags.set('spiral',true);assert(flags.visible('spiral'));flags.set('spiral',false);assert(!flags.visible('spiral'));assert.throws(()=>flags.set('ink',false));
 });
-test('Patterns has one independent persisted flag for all five controls',()=>{
- const saved=new Map(),storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
+test('Patterns defaults on and its opt-out only affects the current session',()=>{
+ const saved=new Map([[EXPERIMENTAL_SIMULATIONS_KEY, JSON.stringify({patterns:false,breathe:true})]]);
+ const storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
  const ids=['crystal','pinwheel-map','octagonal','apollonian','voronoi'];
  const flags=createExperimentalSimulationFlags({storage});
+ assert(flags.visible('patterns')); assert(ids.every(id=>flags.visible(id)));
+ flags.set('patterns',false);
  assert(!flags.visible('patterns')); assert(ids.every(id=>!flags.visible(id)));
- flags.set('patterns',true);
+ flags.set('fibonacci',true);
+ assert(!Object.hasOwn(JSON.parse(saved.get(EXPERIMENTAL_SIMULATIONS_KEY)), 'patterns'));
  const restored=createExperimentalSimulationFlags({storage});
- assert(restored.visible('patterns')); assert(ids.every(id=>restored.visible(id))); assert(!restored.visible('fibonacci'));
+ assert(restored.visible('patterns')); assert(ids.every(id=>restored.visible(id)));
+ assert(restored.visible('breathe')); assert(restored.visible('fibonacci'));
 });

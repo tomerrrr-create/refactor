@@ -70,6 +70,8 @@ export const translations = {
   drawer_instructions: {"en":"Select an evolution, then its destination. Occupied places swap. Save to apply.","he":"בחרו סימולציה ואז מקום יעד. מקומות תפוסים מתחלפים. שמרו כדי להחיל.","ru":"Выберите эволюцию, затем место назначения. Занятые места меняются местами. Сохраните изменения.","nl":"Kies een evolutie en daarna de bestemming. Bezette plekken wisselen. Sla op om toe te passen."},
   drawer_page: {"en":"Drawer {n}","he":"מגרה {n}","ru":"Панель {n}","nl":"Lade {n}"},
   drawer_patterns: {en:'Patterns',he:'תצורות',ru:'Узоры',nl:'Patronen'},
+  drawer_color: {en:'{name} color',he:'צבע · {name}',ru:'Цвет · {name}',nl:'Kleur · {name}'},
+  individual_drawer_colors: {en:'Individual drawer colors',he:'צבע נפרד לכל מגירה',ru:'Отдельные цвета панелей',nl:'Eigen kleur per lade'},
   drawer_pause_to_edit: {en:'Pause the simulation to edit the map.',he:'השהו את הסימולציה כדי לערוך את המפה.',ru:'Приостановите симуляцию, чтобы изменить карту.',nl:'Pauzeer de simulatie om de kaart te bewerken.'},
   drawer_navigation: {"en":"Drawer {n} of {total}. Tap to switch.","he":"מגרה {n} מתוך {total}. לחצו למעבר.","ru":"Панель {n} из {total}. Нажмите для перехода.","nl":"Lade {n} van {total}. Tik om te wisselen."},
   drawer_switch_tooltip: {"en": "Switch simulation drawers", "he": "מעבר בין מגירות הסימולציות", "ru": "Переключить панели симуляций", "nl": "Wissel van simulatielade"},

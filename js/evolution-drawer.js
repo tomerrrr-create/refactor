@@ -1,3 +1,4 @@
+import { SIMULATION_DRAWER_COLORS, getDrawerColor, getThemeColorLabel, setDrawerColor } from './simulation-theme.js';
 import { focusSettingsHeading } from './dialog-focus.js';
 import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
@@ -62,6 +63,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
             button.style.setProperty('--evolution-column',3+local%5);
         }
         controls.dataset.evolutionPage=String(page);
+        controls.dataset.drawerColor=getDrawerColor(page);
         refresh();
     }
     function refresh(){
@@ -90,6 +92,30 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
                 if(ink)pageAnimations.push(ink.animate([{opacity:0},{opacity:1}],{duration:260,easing:'ease-in-out'}));
             }
         }
+    }
+    function renderDrawerColors(drawer, editable) {
+        const group = document.createElement('div');
+        group.className = 'drawer-color-options';
+        group.setAttribute('role', 'group');
+        group.setAttribute('aria-label', getText('drawer_color').replace('{name}', pageLabel(drawer)));
+        for (const color of SIMULATION_DRAWER_COLORS) {
+            const swatch = document.createElement('button');
+            const text = getThemeColorLabel(color);
+            swatch.type = 'button';
+            swatch.dataset.drawerColor = color;
+            swatch.setAttribute('aria-label', text);
+            swatch.title = text;
+            swatch.setAttribute('aria-pressed', String(getDrawerColor(drawer) === color));
+            swatch.disabled = !editable;
+            swatch.addEventListener('click', () => {
+                if (!canEdit()) return;
+                setDrawerColor(drawer, color);
+                if (drawer === page) controls.dataset.drawerColor = color;
+                for (const option of group.children) option.setAttribute('aria-pressed', String(option === swatch));
+            });
+            group.append(swatch);
+        }
+        return group;
     }
     function render(){
         const editable=canEdit();
@@ -147,7 +173,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
                 });
                 grid.append(button);
             }
-            section.append(grid);pages.append(section);
+            section.append(grid,renderDrawerColors(drawer,editable));pages.append(section);
         }
     }
     function open(){

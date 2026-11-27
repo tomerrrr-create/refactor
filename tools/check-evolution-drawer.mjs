@@ -16,6 +16,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');source=source.replace('      initializeApp();',`window.drawerTest={
  setup:()=>{pauseLife();resetArmedState();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=5+i%12;t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();},
  state:()=>({slots:[...evolutionSlots],board:boardState.map(t=>t.k),logs:[...artRecipeLog],history:history.length,armed:armedSimulation,playing:isLifePlaying,gen:currentGenerationCount,loaded:isMacroLoaded,macro:isMacroPlaying,settings:getWorkspaceSettings()}),
+ hidePatterns:()=>{experimentalSimulations.set('patterns',false);evolutionDrawer.applyLayout();},
  theme:applySimulationTheme,open:()=>evolutionDrawer.open(),arm:armSimulation,play:togglePlayPauseLife,pause:pauseLife,tech:()=>modals.openTechnicianMenu(),loadSettings:importWorkspaceSettings,recipe:async()=>await createArtRecipeFile().text(),macro:playMacro
  };initializeApp().then(()=>drawerTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -24,7 +25,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  if(config.width<600)await page.locator('#btnToggleSimMode').tap();else await page.locator('#btnToggleSimMode').click();
  await page.waitForFunction(()=>document.getElementById('controlsContainer').classList.contains('sim-mode-active'));await page.waitForTimeout(600);
  assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top||a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId)),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort','ink','erosion'],'fresh entry uses physical left-to-right order');
- await page.evaluate(()=>drawerTest.setup());
+ await page.evaluate(()=>{drawerTest.setup();drawerTest.hidePatterns();});
 
  const state=()=>page.evaluate(()=>drawerTest.state()),tap=target=>config.width<600?target.tap():target.click();
  const trigger=page.locator('#btnEvolutionDrawerInternal'),dialog=page.locator('#evolutionDrawerDialog'),container=page.locator('#controlsContainer');
@@ -52,7 +53,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await tap(dialog.locator('[type=submit]'));
   await page.waitForFunction(()=>document.getElementById('evolutionDrawerDialog').dataset.testClosed==='true');
  }
- async function reload(){await page.waitForTimeout(300);await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});}
+ async function reload(){await page.waitForTimeout(300);await page.reload();await page.waitForFunction(()=>window.drawerTest?.ready);await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();drawerTest.hidePatterns();});}
  let initial=await state();assert.deepEqual(initial.slots,DEFAULT_EVOLUTION_LAYOUT);
  const physicalRows=()=>page.locator('#controlsContainer [data-evolution-slot],#btnEvolutionDrawerInternal').evaluateAll(es=>[2,3].map(row=>es.filter(e=>e.getBoundingClientRect().width&&getComputedStyle(e).gridRowStart===String(row)).sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId||'navigation')));
  assert.deepEqual(await physicalRows(),[['sandpile','magnet','gameOfLife','brightnessEvo','islands'],['nudgeBrighter','gravitationalSort','navigation','ink','erosion']],'physical left-to-right order on the first drawer');
