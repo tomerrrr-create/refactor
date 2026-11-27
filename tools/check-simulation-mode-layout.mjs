@@ -127,14 +127,22 @@ try {
 
         await openEditor();
         assert.equal(await browserLayout(), null);
+        const familyPicker = editor.locator('#modeLayoutFamily');
         await move('pinwheel', 'spiral');
-        await row('pinwheel').locator('[data-order=up]').click();
-        await row('pinwheel').locator('[data-order=up]').click();
-        await family('gravitationalSort');
-        await move('center_x', 'spiral');
+        assert.equal(await familyPicker.inputValue(), 'gravitationalSort');
+        assert.equal(await row('pinwheel').count(), 0);
         await row('center_x').locator('input').uncheck();
+        await move('center_x', 'spiral');
+        assert.equal(await familyPicker.inputValue(), 'gravitationalSort');
+        assert.equal(await row('center_x').count(), 0);
         await family('ink');
         await move('circular', 'spiral');
+        assert.equal(await familyPicker.inputValue(), 'ink');
+        assert.equal(await row('circular').count(), 0);
+        await family('spiral');
+        await row('pinwheel').locator('[data-order=up]').click();
+        await row('pinwheel').locator('[data-order=up]').click();
+        assert(!(await row('center_x').locator('input').isChecked()));
         const downloading = page.waitForEvent('download');
         await editor.locator('[data-copy=export]').click();
         const download = await downloading;

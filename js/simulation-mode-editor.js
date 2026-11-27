@@ -89,11 +89,14 @@ export function createSimulationModeEditor({ getLayout, apply, canUse, getText, 
             }
             destination.addEventListener('change', () => {
                 const target = destination.value;
+                if (target === family) return;
+                const scrollTop = rows.scrollTop;
                 entries.splice(index, 1);
                 draft.families[target].push(entry);
-                familySelect.value = target;
                 renderRows();
-                rows.lastElementChild?.querySelector('select').focus();
+                rows.scrollTop = scrollTop;
+                const nextRow = rows.children[Math.min(index, entries.length - 1)];
+                (nextRow?.querySelector('select') ?? familySelect).focus({ preventScroll: true });
             });
             const membership = document.createElement('label');
             const checkbox = document.createElement('input');
