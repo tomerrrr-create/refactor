@@ -14,8 +14,9 @@ export function initializeOpeningChoice(onEvolve) {
     const choices = dialog.querySelectorAll('[data-opening-choice]');
     const resetError = document.getElementById('openingEclipseError');
     const veil = document.getElementById('openingResetVeil');
-    const switchIcon = document.querySelector('#btnToggleSimMode > svg');
-    dialog.querySelector('.opening-choice-mark').append(switchIcon.cloneNode(true));
+    const switchIcon = document.querySelector('#btnToggleSimMode > svg').cloneNode(true);
+    switchIcon.style.removeProperty('transform');
+    dialog.querySelector('.opening-choice-mark').append(switchIcon);
     const gravityIcon = document.getElementById('iconGsUp').cloneNode(true);
     gravityIcon.removeAttribute('id');
     dialog.querySelector('[data-opening-choice="evolve"] .opening-choice-icon').append(gravityIcon);

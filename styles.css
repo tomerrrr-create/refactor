@@ -3074,7 +3074,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   margin: 1px auto 4px;
   color: #8d7954;
 }
-.opening-choice-mark svg { width: 23px; height: 23px; }
+.opening-choice-mark svg { width: 44px; height: 44px; }
 .opening-choice-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
