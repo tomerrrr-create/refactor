@@ -2,11 +2,11 @@
 import { isPatternEvolution } from './evolution-drawer-settings.js';
 
 // Browser storage preserves the legacy preference and defaults for older profiles.
-export const DEFAULT_GEOMETRIC_FLOW_VISIBLE=false;
+export const DEFAULT_EXPERIMENT_VISIBILITY = Object.freeze({ spiral:true, breathe:true, fibonacci:true });
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
-    {id:'spiral',button:'btnSpiral',key:'tooltip_spiral',defaultVisible:DEFAULT_GEOMETRIC_FLOW_VISIBLE},
-    {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe',defaultVisible:false},
-    {id:'fibonacci',button:'btnFibonacci',key:'help_fibonacci',defaultVisible:false},
+    {id:'spiral',button:'btnSpiral',key:'tooltip_spiral',defaultVisible:DEFAULT_EXPERIMENT_VISIBILITY.spiral},
+    {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe',defaultVisible:DEFAULT_EXPERIMENT_VISIBILITY.breathe},
+    {id:'fibonacci',button:'btnFibonacci',key:'help_fibonacci',defaultVisible:DEFAULT_EXPERIMENT_VISIBILITY.fibonacci},
     {id:'patterns',key:'drawer_patterns',defaultVisible:true,sessionOnly:true}
 ].map(Object.freeze));
 export const EXPERIMENTAL_SIMULATIONS_KEY='colorGridExperimentalSimulationsV1';

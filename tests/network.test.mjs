@@ -47,5 +47,5 @@ test('branching and sorting change structure; growth zero and tiny protected boa
 });
 test('optional Network preferences and older layouts retain their previous assignments',()=>{
  const settings=defaultWorkspaceSettings();assert(!Object.hasOwn(settings.rules,'network'));settings.rules.network={growth:80,branching:90,persistence:30};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.network,settings.rules.network);
- for(const removed of [['network'],['network','oil'],['network','oil','ink']]){const old=DEFAULT_EVOLUTION_LAYOUT.slice(0,20).map(id=>removed.includes(id)?null:id),migrated=validateEvolutionSlots(old);for(let i=0;i<old.length;i++)if(old[i]!==null)assert.equal(migrated[i],old[i]);assert(migrated.includes('network'));}
+ for(const removed of [['network'],['network','oil'],['network','oil','ink']]){const old=DEFAULT_EVOLUTION_LAYOUT.slice(0,20).map(id=>removed.includes(id)?null:id);old[16]='fibonacci';const migrated=validateEvolutionSlots(old);for(let i=0;i<old.length;i++)if(old[i]!==null)assert.equal(migrated[i],old[i]);assert(migrated.includes('network'));}
 });

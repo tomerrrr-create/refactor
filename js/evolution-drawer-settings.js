@@ -20,14 +20,15 @@ export const DEFAULT_EVOLUTION_SLOTS = Object.freeze(EVOLUTION_CATALOG.slice(0,1
 export const EVOLUTION_PAGE_SIZE = 10;
 export const INTERNAL_NAV_SLOTS = Object.freeze([7,17,27]);
 const previousCatalog = EVOLUTION_CATALOG.filter(({ id }) => !isPatternEvolution(id));
-const defaultPatternsPage = Object.freeze([...PATTERN_EVOLUTIONS.map(({ id }) => id), null, null, null, null, null]);
+const legacyPatternsPage = Object.freeze([...PATTERN_EVOLUTIONS.map(({ id }) => id), null, null, null, null, null]);
 // Physical left-to-right order, shared by first launch, factory profiles and Reset.
 export const DEFAULT_EVOLUTION_LAYOUT = Object.freeze([
     'sandpile', 'magnet', 'gameOfLife', 'brightnessEvo', 'islands',
     'nudgeBrighter', 'gravitationalSort', null, 'ink', 'erosion',
-    'contour', 'dla', 'cymatics', 'network', 'turing',
-    'fibonacci', 'spiral', null, 'breathe', null,
-    ...defaultPatternsPage
+    'contour', 'dla', 'breathe', 'network', 'turing',
+    'cymatics', null, null, null, 'spiral',
+    'crystal', 'octagonal', null, 'apollonian', 'voronoi',
+    'pinwheel-map', null, null, null, 'fibonacci'
 ]);
 // Older ten/twenty-place preferences remain readable. Upgrade once: layouts
 // already reserving the two navigation places keep their exact assignments.
@@ -70,7 +71,7 @@ function addNetwork(slots) {
 }
 function addFibonacci(slots) {
     if (slots.includes('fibonacci')) return slots;
-    const preferred = DEFAULT_EVOLUTION_LAYOUT.indexOf('fibonacci');
+    const preferred = 15; // The legacy two-drawer layout's Fibonacci position.
     const target = slots[preferred] === null ? preferred : slots.findIndex((id, i) => id === null && !INTERNAL_NAV_SLOTS.includes(i));
     if (target < 0) throw new Error('No space for Fibonacci');
     slots[target] = 'fibonacci';
@@ -92,8 +93,8 @@ export function validateEvolutionSlots(value=DEFAULT_EVOLUTION_LAYOUT) {
         const assigned=slots.filter(id=>id!==null);
         if(new Set(assigned).size!==assigned.length||assigned.some(id=>!previousCatalog.some(e=>e.id===id)))throw new Error('Invalid evolution drawer slots');
         const missing=previousCatalog.filter(e=>!assigned.includes(e.id));
-        if(missing.length===0)return [...reserveNavigation(slots), ...defaultPatternsPage];
-        if(missing.every(e=>['nudgeBrighter','ink','network','fibonacci'].includes(e.id)))return [...addFibonacci(addNetwork(addInk(reserveNavigation(addNudge(slots))))), ...defaultPatternsPage];
+        if(missing.length===0)return [...reserveNavigation(slots), ...legacyPatternsPage];
+        if(missing.every(e=>['nudgeBrighter','ink','network','fibonacci'].includes(e.id)))return [...addFibonacci(addNetwork(addInk(reserveNavigation(addNudge(slots))))), ...legacyPatternsPage];
         throw new Error('Invalid evolution drawer slots');
     }
     if(value.length!==10||new Set(value).size!==10||value.some(id=>id!=='oil'&&!previousCatalog.some(e=>e.id===evolutionControlId(id))))throw new Error('Invalid evolution drawer slots');
@@ -102,7 +103,7 @@ export function validateEvolutionSlots(value=DEFAULT_EVOLUTION_LAYOUT) {
     const seen=new Set(['oil']),slots=value.map(id=>{id=evolutionControlId(id);if(seen.has(id))return null;seen.add(id);return id;});
     for(let index=0;index<slots.length;index++)if(slots[index]===null)slots[index]=previousCatalog.find(e=>!slots.includes(e.id)).id;
     const remaining=previousCatalog.filter(e=>!['nudgeBrighter','ink','network','fibonacci'].includes(e.id)&&!slots.includes(e.id)).map(e=>e.id);
-    return [...addFibonacci(addNetwork(addInk(reserveNavigation(addNudge([...slots,...remaining,...Array(10-remaining.length).fill(null)]))))), ...defaultPatternsPage];
+    return [...addFibonacci(addNetwork(addInk(reserveNavigation(addNudge([...slots,...remaining,...Array(10-remaining.length).fill(null)]))))), ...legacyPatternsPage];
 }
 
 // Keep controls moved to drawer three reachable when the feature is off.

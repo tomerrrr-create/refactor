@@ -17,6 +17,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  setup:()=>{pauseLife();resetArmedState();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=5+i%12;t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();},
  state:()=>({slots:[...evolutionSlots],board:boardState.map(t=>t.k),logs:[...artRecipeLog],history:history.length,armed:armedSimulation,playing:isLifePlaying,gen:currentGenerationCount,loaded:isMacroLoaded,macro:isMacroPlaying,settings:getWorkspaceSettings()}),
  hidePatterns:()=>{experimentalSimulations.set('patterns',false);evolutionDrawer.applyLayout();},
+ hideOptional:()=>{for(const name of ['spiral','breathe','fibonacci'])experimentalSimulations.set(name,false);evolutionDrawer.applyLayout();},
  theme:applySimulationTheme,open:()=>evolutionDrawer.open(),arm:armSimulation,play:togglePlayPauseLife,pause:pauseLife,tech:()=>modals.openTechnicianMenu(),loadSettings:importWorkspaceSettings,recipe:async()=>await createArtRecipeFile().text(),macro:playMacro
  };initializeApp().then(()=>drawerTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -25,7 +26,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  if(config.width<600)await page.locator('#btnToggleSimMode').tap();else await page.locator('#btnToggleSimMode').click();
  await page.waitForFunction(()=>document.getElementById('controlsContainer').classList.contains('sim-mode-active'));await page.waitForTimeout(600);
  assert.deepEqual(await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(es=>es.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top||a.getBoundingClientRect().left-b.getBoundingClientRect().left).map(e=>e.dataset.evolutionId)),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort','ink','erosion'],'fresh entry uses physical left-to-right order');
- await page.evaluate(()=>{drawerTest.setup();drawerTest.hidePatterns();});
+ const freshSwitch=page.locator('#btnEvolutionDrawerInternal');
+ for(const start of [10,20]){
+  if(config.width<600)await freshSwitch.tap();else await freshSwitch.click();
+  const shown=await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(buttons=>buttons.sort((a,b)=>a.dataset.evolutionSlot-b.dataset.evolutionSlot).map(e=>[Number(e.dataset.evolutionSlot),e.dataset.evolutionId]));
+  assert.deepEqual(shown,DEFAULT_EVOLUTION_LAYOUT.slice(start,start+10).flatMap((id,index)=>id?[[start+index,id]]:[]));
+ }
+ if(config.width<600)await freshSwitch.tap();else await freshSwitch.click();
+ await page.evaluate(()=>{drawerTest.setup();drawerTest.hidePatterns();drawerTest.hideOptional();});
 
  const state=()=>page.evaluate(()=>drawerTest.state()),tap=target=>config.width<600?target.tap():target.click();
  const trigger=page.locator('#btnEvolutionDrawerInternal'),dialog=page.locator('#evolutionDrawerDialog'),container=page.locator('#controlsContainer');
@@ -97,14 +105,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert((await dot.boundingBox()).x>firstDot.x,'the same dot moves to the other page');
  assert.equal(await dotColor(),'rgb(187, 192, 198)');
  await checkBackdrop(1);assert.notEqual(await lip(),firstLip);
- assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10,20).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
+ assert.deepEqual(await physicalRows(),[['contour','dla','network','turing'],['cymatics','navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10,20).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#spiralExperimentToggle').check();
  await page.locator('#breatheExperimentToggle').check();
  await page.locator('#fibonacciExperimentToggle').check();
  await tap(page.locator('#btnTechnicianCloseTop'));
- assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['fibonacci','spiral','navigation','breathe']]);
+ assert.deepEqual(await physicalRows(),[['contour','dla','breathe','network','turing'],['cymatics','fibonacci','navigation','spiral']]);
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#breatheExperimentToggle').uncheck();
@@ -129,8 +137,8 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await open();assert.equal(await dialog.locator('[data-drawer-slot]').count(),20);assert.equal(await dialog.locator('.drawer-reserved-slot:disabled .drawer-internal-symbol').count(),2);
  assert.equal(await dialog.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
  await move(0,13);await tap(dialog.locator('[data-cancel]'));assert.deepEqual((await state()).slots,initial.slots);await page.waitForFunction(()=>document.activeElement===document.getElementById('btnEvolutionDrawerInternal'));
- await open();await move(0,13);await move(2,19);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-editor.png'),animations:'disabled'});await save();
- let custom=moveEvolutionSlot(moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,0,13),2,19);
+ await open();await move(0,13);await move(2,18);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-editor.png'),animations:'disabled'});await save();
+ let custom=moveEvolutionSlot(moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,0,13),2,18);
  assert.deepEqual((await state()).slots,custom);unchanged(initial,await state());
  await reload();assert.deepEqual((await state()).slots,custom,'arrangement survives reopening');assert.equal(await container.getAttribute('data-evolution-page'),'0');
  await page.evaluate(()=>drawerTest.tech());assert.equal(await page.locator('[data-drawer-view]').count(),0);
@@ -159,7 +167,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   await page.waitForFunction(slots=>JSON.stringify(drawerTest.state().slots)===JSON.stringify(slots),expected);
   await reload();assert.deepEqual((await state()).slots,expected);await reload();assert.deepEqual((await state()).slots,expected,'migration does not repeat');
  }
- await open();await tap(dialog.locator('[data-reset]'));await save();await open();await move(2,19);await save();custom=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,2,19);
+ await open();await tap(dialog.locator('[data-reset]'));await save();await open();await move(2,18);await save();custom=moveEvolutionSlot(DEFAULT_EVOLUTION_LAYOUT,2,18);
  await tap(trigger);await tap(page.locator('#btnGameOfLife'));await tap(page.locator('#btnGameOfLife'));
  const selected=await state();assert.equal(selected.armed,'gameOfLife');const lifeClass=await page.locator('#btnGameOfLife').getAttribute('class');
  await tap(trigger);assert.equal(await trigger.getAttribute('data-parked-active'),'true');unchanged(selected,await state());
@@ -179,7 +187,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await reload();assert.deepEqual((await state()).slots,custom,'moving Nudge persists alongside all other controls');
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());await tap(trigger);assert((await state()).playing);await page.evaluate(()=>drawerTest.pause());
  await page.evaluate(()=>drawerTest.tech());await tap(page.locator('#btnConfigureFeatures'));
- await page.locator('#patternsExperimentToggle').check();await tap(page.locator('#btnTechnicianCloseTop'));
+ await page.locator('#patternsExperimentToggle').check();await page.locator('#fibonacciExperimentToggle').check();await tap(page.locator('#btnTechnicianCloseTop'));
  for(let i=0;i<3&&await pageIndex()!=='2';i++)await tap(trigger);
  assert.equal(await pageIndex(),'2');
  await checkBackdrop(2);

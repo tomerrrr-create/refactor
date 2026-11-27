@@ -8,8 +8,8 @@ const complete=slots=>{assert.deepEqual(ids(slots),EVOLUTION_CATALOG.map(e=>e.id
 test('permanent drawers reserve bottom center and retain the approved default order',()=>{
  assert.equal(DEFAULT_EVOLUTION_LAYOUT.length,30);
  assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(0,10),['sandpile','magnet','gameOfLife','brightnessEvo','islands','nudgeBrighter','gravitationalSort',null,'ink','erosion']);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10,20),['contour','dla','cymatics','network','turing','fibonacci','spiral',null,'breathe',null]);
- assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(20),['crystal','pinwheel-map','octagonal','apollonian','voronoi',null,null,null,null,null]);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(10,20),['contour','dla','breathe','network','turing','cymatics',null,null,null,'spiral']);
+ assert.deepEqual(DEFAULT_EVOLUTION_LAYOUT.slice(20),['crystal','octagonal',null,'apollonian','voronoi','pinwheel-map',null,null,null,'fibonacci']);
  complete(DEFAULT_EVOLUTION_LAYOUT);
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
  for(const lang of ['en','he','ru','nl'])assert(translations.drawer_navigation_slot[lang]);
@@ -23,10 +23,10 @@ test('legacy ten-place layouts migrate without losing controls or mutating the i
 test('arranging occupied and empty places preserves every simulation and protects navigation',()=>{
  const original=[...DEFAULT_EVOLUTION_LAYOUT],swap=moveEvolutionSlot(original,5,13);
  assert.equal(swap[5],'network');assert.equal(swap[13],'nudgeBrighter');
- const moved=moveEvolutionSlot(swap,13,19);assert.equal(moved[13],null);assert.equal(moved[19],'nudgeBrighter');complete(moved);
- assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,19,19),moved);
- assert.deepEqual(assignEvolutionSlot(original,19,'nudgeBrighter'),moveEvolutionSlot(original,5,19));
- for(const [from,to] of [[-1,0],[0,30],[.5,0],[19,0],[0,7],[0,17],[0,27],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
+ const moved=moveEvolutionSlot(swap,13,18);assert.equal(moved[13],null);assert.equal(moved[18],'nudgeBrighter');complete(moved);
+ assert.deepEqual(original,DEFAULT_EVOLUTION_LAYOUT);assert.deepEqual(moveEvolutionSlot(moved,18,18),moved);
+ assert.deepEqual(assignEvolutionSlot(original,18,'nudgeBrighter'),moveEvolutionSlot(original,5,18));
+ for(const [from,to] of [[-1,0],[0,30],[.5,0],[16,0],[0,7],[0,17],[0,27],[7,0]])assert.throws(()=>moveEvolutionSlot(original,from,to));
  for(const reserved of INTERNAL_NAV_SLOTS)assert.throws(()=>assignEvolutionSlot(original,reserved,'dla'));
 });
 test('drawer-three moves survive settings round-trips and hidden-page projection',()=>{

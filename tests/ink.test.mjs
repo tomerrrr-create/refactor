@@ -36,5 +36,5 @@ test('zero Flow, uniform boards, tiny boards and fully protected artwork remain 
 test('optional Ink preferences preserve the old V1 baseline and old drawer positions',()=>{
  const settings=defaultWorkspaceSettings();assert(!Object.hasOwn(settings.rules,'ink'));const text=serializeWorkspaceSettings(settings);assert.deepEqual(deserializeWorkspaceSettings(text),settings);
  settings.rules.ink={flow:80,swirl:20,viscosity:70};assert.deepEqual(deserializeWorkspaceSettings(serializeWorkspaceSettings(settings)).rules.ink,settings.rules.ink);
- const old=DEFAULT_EVOLUTION_LAYOUT.slice(0,20);old[8]=null;const migrated=validateEvolutionSlots(old);for(let i=0;i<old.length;i++)if(old[i]!==null)assert.equal(migrated[i],old[i]);assert.equal(migrated[8],'ink');assert.equal(old[8],null);
+ const old=DEFAULT_EVOLUTION_LAYOUT.slice(0,20);old[8]=null;old[16]='fibonacci';const migrated=validateEvolutionSlots(old);for(let i=0;i<old.length;i++)if(old[i]!==null)assert.equal(migrated[i],old[i]);assert.equal(migrated[8],'ink');assert.equal(old[8],null);
 });

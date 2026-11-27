@@ -12,7 +12,7 @@ const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
 try{for(const touch of [false,true]){
  const context=await browser.newContext({viewport:touch?{width:390,height:844}:{width:1280,height:900},hasTouch:touch,isMobile:touch,serviceWorkers:'block'});
- await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),touch?'he':'en');
+ await context.addInitScript(lang=>{localStorage.setItem('userLanguage',lang);localStorage.setItem('colorGridOpeningChoice','false');},touch?'he':'en');
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'js/app.js'),'utf8');
  source=source.replace('      initializeApp();',`window.flagsTest={
@@ -42,14 +42,14 @@ try{for(const touch of [false,true]){
  await boot(false);
  await page.locator('#btnEvolutionDrawerInternal').click();await page.waitForTimeout(300);
  const original=(await state()).slots;
- assert(!(await geometric.isVisible()),'Geometric Flow defaults hidden');
- assert(!(await breathe.isVisible()),'Breathe defaults hidden');
- assert.equal(await breathe.getAttribute('data-evolution-slot'),'18');
+ assert(await geometric.isVisible(),'Geometric Flow defaults visible');
+ assert(await breathe.isVisible(),'Breathe defaults visible');
+ assert.equal(await breathe.getAttribute('data-evolution-slot'),'12');
  assert(await network.isVisible(),'Living Network is always available');
  await page.evaluate(()=>flagsTest.map());
- assert.equal(await page.locator('[data-drawer-slot="16"].drawer-feature-hidden').count(),1);
+ assert.equal(await page.locator('[data-drawer-slot="19"][data-drawer-evolution=spiral]').count(),1);
  assert.equal(await page.locator('[data-drawer-evolution="network"]').count(),1);
- assert.equal(await page.locator('.drawer-feature-hidden').count(),3);
+ assert.equal(await page.locator('.drawer-feature-hidden').count(),0);
  assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
  assert.equal(await page.locator('#btnInk').getAttribute('data-evolution-feature-hidden'),null);
  await tech();assert.equal(await page.locator('#inkExperimentToggle, #oilExperimentToggle, #networkExperimentToggle, #btnOil').count(),0);
@@ -62,14 +62,14 @@ try{for(const touch of [false,true]){
  assert(!(await page.locator('#macroSettings').isVisible()));
  assert(await page.locator('#displaySettings #interfaceZoom').isVisible());
  await page.locator('#btnConfigureFeatures').click();
- assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
- assert(!(await page.locator('#breatheExperimentToggle').isChecked()));
- await toggle('breathe',true);await close();
+ assert(await page.locator('#spiralExperimentToggle').isChecked());
+ assert(await page.locator('#breatheExperimentToggle').isChecked());
+ await toggle('spiral',false);await close();
  assert(await breathe.isVisible());
  assert(!(await geometric.isVisible()));
  const breatheBox=await breathe.boundingBox(), switchBox=await page.locator('#btnEvolutionDrawerInternal').boundingBox();
- assert(breatheBox.x > switchBox.x);
- assert(Math.abs(breatheBox.y-switchBox.y)<1);
+ assert(Math.abs(breatheBox.x-switchBox.x)<1);
+ assert(breatheBox.y<switchBox.y);
  await breathe.click();
  assert.equal((await state()).armed,'breathe');
  await page.evaluate(()=>flagsTest.startBreathe());
@@ -80,14 +80,13 @@ try{for(const touch of [false,true]){
  assert.equal((await state()).armed,null);
  await tech();
  // A different profile keeps its own Geometric Flow visibility.
- await page.locator('[data-profile-choice="1"]').click();assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
- await toggle('spiral',true);
+ await page.locator('[data-profile-choice="1"]').click();assert(await page.locator('#spiralExperimentToggle').isChecked());
  await page.locator('[data-profile-choice="0"]').click();assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
  await toggle('spiral',true);
  await close();
  assert(await geometric.isVisible());
  assert.equal(await page.locator('#btnNetwork').getAttribute('data-evolution-slot'),'13');
- assert.equal(await geometric.getAttribute('data-evolution-slot'),'16');
+ assert.equal(await geometric.getAttribute('data-evolution-slot'),'19');
  assert.equal(await geometric.getAttribute('aria-label'),touch?'זרימה גאומטרית':'Geometric Flow');
  for(const icon of ['Radial','Down']){
   await geometric.click();assert.equal((await state()).armed,'spiral');assert(await page.locator('#iconSpiral'+icon).isVisible());
@@ -106,8 +105,8 @@ try{for(const touch of [false,true]){
  assert(await page.locator('#spiralExperimentToggle').isChecked());
  assert(await page.locator('#breatheExperimentToggle').isChecked());
  await page.evaluate(()=>flagsTest.reset());
- assert(!(await page.locator('#spiralExperimentToggle').isChecked()));
- assert(!(await page.locator('#breatheExperimentToggle').isChecked()));
+ assert(await page.locator('#spiralExperimentToggle').isChecked());
+ assert(await page.locator('#breatheExperimentToggle').isChecked());
  assert.equal(await page.locator('#networkExperimentToggle').count(),0);
  assert.deepEqual(errors,[]);console.log('PASS experimental visibility',JSON.stringify({touch,persistence:true,profiles:true,layout:true,replay:true}));await context.close();
 }}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
