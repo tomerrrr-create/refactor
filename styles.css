@@ -3041,7 +3041,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
-  color: #e9cca0;
+  color: #cbc4b5;
   font: inherit;
   font-weight: 500;
   text-align: center;
@@ -3052,15 +3052,12 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   outline-offset: -3px;
 }
 .opening-choice-options button:active { background: #d5aa481f; }
-@media (hover: hover) {
-  .opening-choice-options button:hover { border-color: #aa9052a0; background: #d5aa4816; }
-}
 .opening-choice-options button[aria-pressed="true"] {
   border-color: #f0d393;
   background: #d7b36e;
   color: #241a0d;
 }
-.opening-choice-options button[aria-pressed="true"] .glyph-special-reset { background-color: currentColor; }
+.opening-choice-options .glyph-special-reset { background-color: currentColor; }
 .opening-choice-icon { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 5px; }
 .opening-choice-icon svg { width: 29px; height: 29px; }
 .opening-choice-actions {
@@ -3079,13 +3076,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   padding: 4px;
   border: 1px solid transparent;
   border-radius: 10px;
+  background: transparent;
   color: #c0bcb4;
   transition: opacity 220ms ease-out;
 }
 .opening-choice-action:disabled { opacity: .42; }
 .opening-choice-action:focus-visible { outline: 1px solid #c6a869; outline-offset: -4px; }
 .opening-choice-action svg { width: 20px; height: 20px; flex: none; }
-#openingContinue { background: #d5aa4824; border-color: #9f835169; color: #f2d59e; }
+#openingContinue:enabled { color: #f2d59e; }
 #openingEclipse:enabled svg {
   animation: opening-eclipse-glow 5.2s ease-in-out infinite;
 }
