@@ -1,4 +1,3 @@
-import { focusSettingsHeading } from './dialog-focus.js';
 import { getCurrentLang } from './i18n.js';
 
 const STORAGE_KEY = 'colorGridOpeningChoice';
@@ -19,7 +18,6 @@ export function initializeOpeningChoice(onEvolve) {
         gate.hidden = true;
         dialog.dir = getCurrentLang() === 'he' ? 'rtl' : 'ltr';
         dialog.showModal();
-        focusSettingsHeading(dialog);
     }, { once: true });
 
     function finish(evolve) {

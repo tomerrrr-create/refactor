@@ -3094,9 +3094,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 #openingChoiceDialog {
   box-sizing: border-box;
-  width: min(420px, calc(100vw - 32px));
+  width: min(300px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
-  padding: clamp(14px, 4vw, 24px);
+  padding: 10px;
   border: 1px solid #9f83515e;
   border-radius: 18px;
   background: linear-gradient(155deg, #211e19, #121412 75%);
@@ -3108,27 +3108,23 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   animation: opening-choice-reveal 360ms cubic-bezier(.2,.7,.3,1) both;
 }
 #openingChoiceDialog::backdrop { background: #0009; }
-#openingChoiceTitle {
-  margin: 1px 0 17px;
-  font-size: 18px;
-  font-weight: 500;
-}
 .opening-choice-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
+  gap: 4px;
 }
 .opening-choice-options button {
   display: grid;
   align-content: center;
   justify-items: center;
-  min-height: 124px;
+  min-height: 88px;
   padding: 11px 6px;
-  border: 1px solid #aa90523b;
+  border: 1px solid transparent;
   border-radius: 12px;
-  background: #d5aa4808;
+  background: transparent;
   color: #e9cca0;
   font: inherit;
+  font-weight: 500;
   text-align: center;
   transition: background-color 180ms ease, border-color 180ms ease;
 }
@@ -3142,8 +3138,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 }
 .opening-choice-icon { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 5px; }
 .opening-choice-icon svg { width: 29px; height: 29px; }
-.opening-choice-name { font-size: 16px; font-weight: 500; }
-.opening-choice-note { margin-top: 3px; font-size: 11px; color: #c1b7a1; line-height: 1.35; }
 @keyframes opening-choice-reveal {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }

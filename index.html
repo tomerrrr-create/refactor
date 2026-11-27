@@ -38,19 +38,16 @@
     <h1 id="splashText" class="text-3xl" style="color: black; opacity: 0;"></h1>
   </div>
 
-  <button id="openingChoiceGate" type="button" aria-haspopup="dialog" aria-controls="openingChoiceDialog" data-debug-text="opening_choice_title" hidden></button>
-  <dialog id="openingChoiceDialog" aria-labelledby="openingChoiceTitle">
-    <h2 id="openingChoiceTitle" data-debug-text="opening_choice_title">How will you begin?</h2>
+  <button id="openingChoiceGate" type="button" aria-haspopup="dialog" aria-controls="openingChoiceDialog" aria-labelledby="openingCreationLabel openingEvolutionLabel" hidden></button>
+  <dialog id="openingChoiceDialog" aria-labelledby="openingCreationLabel openingEvolutionLabel">
     <div class="opening-choice-options">
-      <button type="button" data-opening-choice="create" aria-describedby="openingCreateNote">
+      <button type="button" data-opening-choice="create">
         <span class="opening-choice-icon" aria-hidden="true"><span class="glyph-special-reset"></span></span>
-        <span class="opening-choice-name" data-debug-text="opening_choice_create">Create</span>
-        <span id="openingCreateNote" class="opening-choice-note" data-debug-text="opening_choice_create_note">Continue with this board</span>
+        <span id="openingCreationLabel" lang="en">Creation</span>
       </button>
-      <button type="button" data-opening-choice="evolve" aria-describedby="openingEvolveNote">
+      <button type="button" data-opening-choice="evolve">
         <span class="opening-choice-icon" data-luminance-bird aria-hidden="true"></span>
-        <span class="opening-choice-name" data-debug-text="opening_choice_evolve">Evolve</span>
-        <span id="openingEvolveNote" class="opening-choice-note" data-debug-text="opening_choice_evolve_note">Start with a board for evolution</span>
+        <span id="openingEvolutionLabel" lang="en">Evolution</span>
       </button>
     </div>
   </dialog>
