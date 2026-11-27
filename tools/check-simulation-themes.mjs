@@ -76,6 +76,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const drawerBackdrop=()=>backdrop.evaluate(e=>getComputedStyle(e).backgroundImage);
  const initialBackdrop=await drawerBackdrop();
  assert.match(initialBackdrop,/rgb\(20, 41, 31\)/);
+ assert.match(initialBackdrop,/rgba\(166, 198, 163, 0\.05\)/);
  assert(await keepDrawers.isChecked());
  await chooseColor(1,'gold');
  const goldBackdrop=await drawerBackdrop();
@@ -88,7 +89,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const editedBackdrop=await drawerBackdrop();
  await tap('#evolutionDrawerDialog [data-close]');
  for(const expected of [/rgb\(41, 27, 56\)/,/rgb\(20, 41, 31\)/,/rgb\(37, 36, 35\)/]){
-  await tap('#btnEvolutionDrawerInternal');assert.match(await drawerBackdrop(),expected);
+  await tap('#btnEvolutionDrawerInternal');
+  const image=await drawerBackdrop();
+  assert.match(image,expected);
+  assert.doesNotMatch(image,/rgba\(166, 198, 163, 0\.05\)/);
  }
  await finishBorderFade();
  const editedBorder=await borderColor();
