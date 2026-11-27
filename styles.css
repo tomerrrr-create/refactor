@@ -3069,9 +3069,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid #9f83513d;
-  animation: opening-choice-reveal 220ms ease-out both;
 }
-.opening-choice-actions[hidden] { display: none; }
 .opening-choice-action {
   display: flex;
   justify-content: center;
@@ -3083,12 +3081,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   border-radius: 10px;
   color: #c0bcb4;
   font-size: .875rem;
+  transition: opacity 220ms ease-out;
 }
+.opening-choice-action:disabled { opacity: .42; }
 .opening-choice-action:focus-visible { outline: 1px solid #c6a869; outline-offset: -4px; }
 .opening-choice-action svg { width: 20px; height: 20px; flex: none; }
 #openingContinue { background: #d5aa4824; border-color: #9f835169; color: #f2d59e; }
 #openingChoiceDialog[dir="rtl"] #openingContinue svg { transform: scaleX(-1); }
-#openingEclipse svg {
+#openingEclipse:enabled svg {
   animation: opening-eclipse-glow 5.2s ease-in-out infinite;
 }
 #openingEclipseError { margin: 4px 0; font-size: .8rem; }
@@ -3135,9 +3135,9 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   to { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  #openingChoiceDialog[open], .opening-choice-actions { animation: none; }
-  .opening-choice-options button { transition: none; }
-  #openingEclipse svg, #openingResetVeil[open] { animation: none; }
+  #openingChoiceDialog[open] { animation: none; }
+  .opening-choice-options button, .opening-choice-action { transition: none; }
+  #openingEclipse:enabled svg, #openingResetVeil[open] { animation: none; }
   #openingResetVeil svg { animation: opening-reset-still 320ms linear both; }
 }
 @keyframes opening-reset-still {

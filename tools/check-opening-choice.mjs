@@ -82,17 +82,20 @@ try {
         assert.equal(await choice.getAttribute('dir'), mobile ? 'rtl' : 'ltr');
         const labels = mobile ? ['יצירה', 'אבולוציה'] : ['Creation', 'Evolution'];
         assert.deepEqual(await choice.locator('button[data-opening-choice]').allInnerTexts(), labels);
-        assert(!(await eclipse.isVisible()), 'reset requires an explicit board choice');
-        assert(!(await continueButton.isVisible()));
+        assert(await eclipse.isVisible() && await eclipse.isDisabled(), 'reset is visible and requires a board choice');
+        assert(await continueButton.isVisible() && await continueButton.isDisabled());
         assert.equal(await choice.locator('.opening-choice-mark svg').innerHTML(), await control.locator('svg').innerHTML());
         assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
             await page.locator('#btnContourColorLuminance svg').innerHTML());
         assert(await choice.locator('[data-opening-choice=create] .glyph-special-reset').isVisible());
         await page.screenshot({ path: '/tmp/fyi-start-choice-' + (mobile ? 'mobile' : 'desktop') + '.png', animations: 'disabled' });
+        const dialogHeight = await choice.evaluate(el => el.offsetHeight);
         await tap(choice.locator('[data-opening-choice=create]'));
         assert(await choice.isVisible(), 'selection keeps the modal open');
-        assert(await eclipse.isVisible(), 'reset can be used immediately after the first selection');
+        assert.equal(await choice.evaluate(el => el.offsetHeight), dialogHeight);
+        assert(await eclipse.isEnabled(), 'reset can be used immediately after the first selection');
+        assert(await continueButton.isEnabled());
         assert.equal(await choice.locator('[data-opening-choice=create]').getAttribute('aria-pressed'), 'true');
         await tap(continueButton);
         await choice.waitFor({ state: 'hidden' });
@@ -138,7 +141,7 @@ try {
 
         await boot(true);
         await tap(gate);
-        assert(!(await eclipse.isVisible()));
+        assert(await eclipse.isVisible() && await eclipse.isDisabled());
         await tap(choice.locator('[data-opening-choice=create]'));
         await resetThroughEclipse('create', initial.size);
 
