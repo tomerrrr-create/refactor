@@ -11,24 +11,41 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox']});
 try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:320,height:568},{lang:'nl',width:844,height:390}].filter(c=>!process.env.NUDGE_LANG||c.lang===process.env.NUDGE_LANG)){
  const context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:config.width<600,hasTouch:config.width<600,serviceWorkers:'block'});
- await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
+ await context.addInitScript(lang=>{
+  localStorage.setItem('userLanguage',lang);
+  localStorage.setItem('colorGridOpeningChoice','false');
+ },config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let source=await readFile(path.join(root,'dist/js/app.js'),'utf8');
  source=source.replace('      initializeApp();',`window.nudgeTest={
- setup:()=>{pauseLife();resetArmedState();n=9;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=5+i%4;t.isGold=i===0;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');evolutionSlots=validateEvolutionSlots(['nudgeDarker',...DEFAULT_EVOLUTION_SLOTS.slice(1)]);evolutionDrawer.applyLayout();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();},
+ setup:()=>{pauseLife();resetArmedState();cycleMemory.clear();n=9;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=5+i%4;t.isGold=i===0;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');evolutionSlots=validateEvolutionSlots(['nudgeDarker',...DEFAULT_EVOLUTION_SLOTS.slice(1)]);evolutionDrawer.applyLayout();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;nextHistoryActionId=1;logCurrentStateAsInit();},
  state:()=>({board:boardState.map(t=>t.k),armed:armedSimulation,playing:isLifePlaying,gen:currentGenerationCount,history:history.length,logs:[...artRecipeLog],loaded:isMacroLoaded,macro:isMacroPlaying}),
  record:()=>artRecipeLog.join(String.fromCharCode(10)),replay:text=>{pauseLife();macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},legacy:()=>executeMacroAction({eventName:'NUDGE',details:'Brighter | Sort: luminance'}),pause:pauseLife,
  open:()=>modals.openNudgeSettingsModal(),
+ palette:group=>switchToPalette(C.PALETTE_GROUPS.find(item=>item.id===group).indexes[0],{adapt:true}),
  };initializeApp().then(()=>nudgeTest.ready=true);`);
  for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
  await page.route(base+'/js/app.js',r=>r.fulfill({contentType:'text/javascript',body:source}));
  await page.goto(base);await page.waitForFunction(()=>nudgeTest.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await page.evaluate(()=>nudgeTest.setup());
  const state=()=>page.evaluate(()=>nudgeTest.state()),button=page.locator('#btnNudgeBrighter'),step=page.locator('#btnStepForward'),play=page.locator('#btnPlayPauseLife');
- // Fresh profile settings and the inverted speed slider agree on 35 ms.
+ const auto=page.locator('#nudgeAuto'),speed=page.locator('#nudgeSpeed'),closeSpeed=page.locator('#btnCloseNudgeSettings');
+ await page.evaluate(()=>nudgeTest.palette('classic'));
+ // Auto starts on and displays the effective interval while the manual slider is locked.
  await button.click();await page.evaluate(()=>nudgeTest.open());
- assert.equal(await page.locator('#nudgeSpeed').inputValue(),'165');
- assert.match(await page.locator('#nudgeSpeed').getAttribute('aria-valuetext'),/35/);
- await page.locator('#btnCloseNudgeSettings').click();await page.evaluate(()=>nudgeTest.setup());
+ assert(await auto.isChecked());assert(await speed.isDisabled());
+ assert.equal(await speed.inputValue(),'0');
+ assert.match(await speed.getAttribute('aria-valuetext'),/200/);
+ await auto.uncheck();assert.equal(await speed.inputValue(),'165');
+ await speed.fill('125');
+ await closeSpeed.click();
+ await page.reload();await page.waitForFunction(()=>nudgeTest.ready);
+ await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());nudgeTest.setup();nudgeTest.palette('classic');});
+ await button.click();await page.evaluate(()=>nudgeTest.open());
+ assert(!(await auto.isChecked()));assert(await speed.isEnabled());assert.equal(await speed.inputValue(),'125');
+ await auto.check();assert.equal(await speed.inputValue(),'0');
+ await auto.uncheck();assert.equal(await speed.inputValue(),'125');
+ await auto.check();await closeSpeed.click();
+ await page.evaluate(()=>nudgeTest.setup());
  // Repeated hover/cycle transitions must restore the original unarmed pixels.
  await page.mouse.move(0,0);await page.waitForTimeout(500);
  const cleanIcon=await button.screenshot({animations:'disabled'});
@@ -81,9 +98,16 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await button.click();assert.equal((await state()).armed,'nudgeDarker');assert.deepEqual((await state()).board,bright.board);assert.equal(await button.getAttribute('data-nudge-mode'),'darker');
  const r=await button.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y+r.height/2-35,{steps:5});await page.mouse.up();assert(await page.locator('#nudgeSettingsDialog').isVisible());await page.locator('#btnCloseNudgeSettings').click();
  await step.click();assert.deepEqual((await state()).board,initial.board);await button.click();assert.equal((await state()).armed,null);assert(await step.isDisabled());assert.equal(await button.getAttribute('data-nudge-mode'),'brighter');
- await button.click();await play.click();await page.waitForFunction(()=>nudgeTest.state().gen>=3);const running=await state();await button.click();assert.equal((await state()).armed,'nudgeDarker');assert((await state()).playing);assert((await state()).gen>=running.gen);assert.equal((await state()).history,running.history);await page.waitForTimeout(220);await play.click();
+ await button.click();await play.click();await page.waitForFunction(()=>nudgeTest.state().gen>=3);const running=await state();await button.click();assert.equal((await state()).armed,'nudgeDarker');assert((await state()).playing);assert((await state()).gen>=running.gen);assert.equal((await state()).history,running.history);
+ for(const [group,interval] of [['extended',100],['continuous',30]]){
+  await page.evaluate(group=>nudgeTest.palette(group),group);
+  assert((await state()).logs.some(line=>line.includes('NUDGE_SPEED')&&line.includes('"intervalMs":'+interval)));
+  const generation=(await state()).gen;
+  await page.waitForFunction(generation=>nudgeTest.state().gen>generation,generation);
+ }
+ await play.click();
  const result=await state(),recipe=await page.evaluate(()=>nudgeTest.record());assert(recipe.includes('Nudge Mode Changed'));assert(!recipe.includes(' NUDGE ->'));
- await page.evaluate(text=>nudgeTest.replay(text),recipe);await page.waitForFunction(()=>!nudgeTest.state().loaded&&!nudgeTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,result.board,'new direction cycle replays exactly');
+ await page.evaluate(text=>nudgeTest.replay(text),recipe);await page.waitForFunction(()=>!nudgeTest.state().loaded&&!nudgeTest.state().macro,null,{timeout:30000});assert.deepEqual((await state()).board,result.board,'direction and automatic palette speed changes replay exactly');
  const beforeLegacy=await state();await page.evaluate(()=>nudgeTest.legacy());assert.equal((await state()).board[1],beforeLegacy.board[1]+1,'legacy NUDGE still shifts immediately');
  assert.deepEqual(errors,[]);await page.screenshot({path:path.join(artifacts,config.lang+'.png')});console.log('PASS',JSON.stringify(config));await context.close();
 }}finally{await browser.close();server.close();}

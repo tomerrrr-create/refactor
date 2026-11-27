@@ -1,4 +1,5 @@
 import { validateEvolutionTuning } from '../js/evolution-tuning.js';
+import { automaticNudgeInterval, DEFAULT_NUDGE_INTERVAL, isNudgeInterval, loadNudgeSettings } from '../js/nudge-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -7,6 +8,7 @@ import { readFileSync } from 'node:fs';
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 function harness({direction = 'nudgeBrighter', stored = null, blockedStorage = false} = {}) {
     let now = 0;
+    let paletteSize = 97;
     const logs = [], storage = new Map([['colorGridNudge', stored]]);
     const context = vm.createContext({ evolutionTuning: validateEvolutionTuning(), validateEvolutionTuning,
         localStorage: {getItem:k=>{if(blockedStorage) throw Error('blocked');return storage.get(k);},
@@ -14,7 +16,8 @@ function harness({direction = 'nudgeBrighter', stored = null, blockedStorage = f
         performance: {now:()=>now}, window: {logArtEvent:(...args)=>logs.push(args)},
         isLifePlaying:true, isMacroPlaying:false, replayWindBatch:null,currentGenerationCount:0,
         armedSimulation:direction, C:{PALETTES:[{originalColors:Array(97)}]}, activePaletteIndex:0, n:2, boardState:[{k:2,v:2},{k:8,v:8,isGold:true}],
-        palette:()=>Array(97), norm:v=>(v+97)%97, startAnimationLoop:()=>{},
+        palette:()=>Array(paletteSize), paletteLen:()=>paletteSize, automaticNudgeInterval, DEFAULT_NUDGE_INTERVAL, isNudgeInterval,
+        norm:v=>(v+paletteSize)%paletteSize, startAnimationLoop:()=>{},
         gameOfLifeRules:{}, gravitationalSortRules:{}, erosionRules:{}, dlaState:null,
         dlaRules:{}, contourRules:{}, renderToScreen:()=>{}, requestAnimationFrame:()=>{},
         currentMacroStep:0, macroQueue:[], finishMacroPlayback:()=>{context.isMacroPlaying=false;context.isLifePlaying=false;}, stopMacro:()=>{context.isMacroPlaying=false;},
@@ -22,7 +25,8 @@ function harness({direction = 'nudgeBrighter', stored = null, blockedStorage = f
         Simulations:{runGameOfLifeGeneration:ctx=>ctx.currentBoardState},
         currentSortMethod:'luminance', console
     });
-    vm.runInContext(source.slice(source.indexOf('let nudgeIntervalMs'),source.indexOf('// --- Macro Replay System Variables')),context);
+    context.loadNudgeSettings = () => loadNudgeSettings(context.localStorage);
+    vm.runInContext(source.slice(source.indexOf('const savedNudgeSettings'),source.indexOf('// --- Macro Replay System Variables')),context);
     vm.runInContext(source.slice(source.indexOf('function applyNudgeLogic('),source.indexOf('      function nudgeColors(')),context);
     vm.runInContext(source.slice(source.indexOf('      function gameLoop('),source.indexOf('      function stepForward(')),context);
     vm.runInContext(source.slice(source.indexOf('function applyMacroRules('),source.indexOf('function executeMacroAction(')),context);
@@ -30,7 +34,7 @@ function harness({direction = 'nudgeBrighter', stored = null, blockedStorage = f
         if(action.eventName==='NUDGE_SPEED') context.applyNudgeTiming(action.details);
         if(action.eventName==='PAUSE') context.isLifePlaying=false;
     };
-    return {context, logs, storage,
+    return {context, logs, storage, setPaletteSize(size) { paletteSize = size; },
         frame(t){now=t;context.gameLoop();},
         timing:()=>JSON.parse(JSON.stringify(context.getNudgeTiming()))};
 }
@@ -69,7 +73,7 @@ test('preferences survive reload; malformed or blocked storage uses defaults',()
     assert.equal(harness({stored:'{"intervalMs":100}'}).timing().intervalMs,100);
     loaded.context.applyNudgeTiming('No specific rules mapping');assert.equal(loaded.timing().legacyFrames,true);
     for(const stored of ['{broken', 'null', '{"intervalMs":201,"unmarkedMode":"fast"}']){
-        assert.equal(harness({stored}).timing().intervalMs,35);
+        assert.equal(harness({stored}).timing().intervalMs,30);
     }
     const blocked=harness({blockedStorage:true});blocked.context.setNudgeInterval(200);
     assert.equal(blocked.timing().intervalMs,200);
@@ -81,7 +85,7 @@ test('versioned PLAY overrides local speed without changing stored preferences',
     assert.equal(h.context.currentGenerationCount,1);
     assert.equal(h.storage.get('colorGridNudge'),null);
     vm.runInContext('replayNudgeTiming = null',h.context);
-    assert.equal(h.timing().intervalMs,35);
+    assert.equal(h.timing().intervalMs,30);
 });
 test('unmarked recordings always use original slow frame counting',()=>{
     const old=harness();old.context.applyNudgeTiming('No specific rules mapping');
@@ -126,19 +130,39 @@ test('slider updates apply and log immediately but persist only when requested',
     assert.equal(h.logs.length,1);
     assert.equal(h.storage.get('colorGridNudge'),null);
     h.context.persistNudgeSettings();
-    assert.deepEqual(JSON.parse(h.storage.get('colorGridNudge')),{intervalMs:75});
+    assert.deepEqual(JSON.parse(h.storage.get('colorGridNudge')),{intervalMs:75,auto:false});
 });
 
 
-test('default is 35ms with immediate first shift and exact interval boundary',()=>{
+test('Auto uses the current palette with an immediate first shift and exact interval boundary',()=>{
     for(const [direction,expected] of [['nudgeBrighter',4],['nudgeDarker',0]]){
         const h=harness({direction});
-        assert.equal(h.timing().intervalMs,35);
-        h.frame(0);h.frame(16);h.frame(34);
+        h.setPaletteSize(23);
+        assert.equal(h.timing().intervalMs,200);
+        h.frame(0);h.frame(16);h.frame(199);
         assert.equal(h.context.currentGenerationCount,1);
-        h.frame(35);h.frame(36);h.frame(69);
+        h.setPaletteSize(64);assert.equal(h.timing().intervalMs,100);
+        h.frame(200);
+        h.setPaletteSize(264);assert.equal(h.timing().intervalMs,30);
+        h.frame(229);
         assert.equal(h.context.currentGenerationCount,2);
         assert.equal(h.context.boardState[0].k,expected);
         assert.equal(h.context.boardState[1].k,8);
     }
+});
+
+test('Auto preserves the last manual interval, including an explicit choice of 35 ms', () => {
+    const h = harness();
+    h.setPaletteSize(25);
+    h.context.setNudgeAuto(false);
+    assert.equal(h.timing().intervalMs, 35);
+    assert.equal(harness({ stored: h.storage.get('colorGridNudge') }).timing().intervalMs, 35);
+    h.context.setNudgeInterval(75);
+    h.context.setNudgeAuto(true);
+    assert.equal(h.timing().intervalMs, 200);
+    const reopened = harness({ stored: h.storage.get('colorGridNudge') });
+    assert.equal(reopened.timing().intervalMs, 30);
+    reopened.context.setNudgeAuto(false);
+    assert.equal(reopened.timing().intervalMs, 75);
+    assert.equal(harness({ stored: '{"intervalMs":35}' }).timing().intervalMs, 30);
 });

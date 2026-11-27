@@ -13,6 +13,7 @@ test('settings-only format omits defaults and restores complete preferences in a
     settings.cycles.gameOfLife[1] = { survival: [0, 8], birth: [4] };
     settings.rules.turing.feed = .029;
     settings.nudgeIntervalMs = 25;
+    settings.nudgeAuto = false;
     settings.smoothing.display = true;
     const text = serializeWorkspaceSettings(settings);
     assert.deepEqual(deserializeWorkspaceSettings('\uFEFF' + text.replaceAll('\n', '\r\n')), settings);
@@ -27,6 +28,7 @@ test('header distinguishes preferences from macro text and rejects unsupported o
     assert(isWorkspaceSettingsText('FYI_SETTINGS_V2\n{}'));
     for (const text of ['FYI_SETTINGS_V2\n{}', 'FYI_SETTINGS_V1\n{', 'FYI_SETTINGS_V1\n{"version":1,"settings":{"tiles":[]}}',
         'FYI_SETTINGS_V1\n{"version":1,"settings":{"nudgeIntervalMs":-1}}',
+        'FYI_SETTINGS_V1\n{"version":1,"settings":{"nudgeAuto":"true"}}',
         'FYI_SETTINGS_V1\n{"version":1,"settings":{"smoothing":{"display":"true"}}}']) {
         assert.throws(() => deserializeWorkspaceSettings(text));
     }

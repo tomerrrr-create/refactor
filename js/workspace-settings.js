@@ -143,7 +143,7 @@ function mergeKnown(defaults, overrides, path = '') {
                 ? (key === 'simulationTheme' ? 'blue' : 'gold') : clone(value);
             continue;
         }
-        if (path === '' && ['separatorCycle', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics', 'gameOfLifeDeadColor'].includes(key)) { result[key] = clone(value); continue; }
+        if (path === '' && ['separatorCycle', 'evolutionTuning', 'evolutionSelections', 'gameOfLifeGenetics', 'gameOfLifeDeadColor', 'nudgeAuto'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'simulationInit' && ['symmetry', 'brushColor'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'smoothing' && ['bloom', 'bloomIntensity'].includes(key)) { result[key] = clone(value); continue; }
         if (path === 'rules.magnet' && key === 'anchorColor') { result[key] = clone(value); continue; }
@@ -192,6 +192,7 @@ export function validateWorkspaceSettings(value) {
     if (Object.hasOwn(settings, 'evolutionTuning')) settings.evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
     const valid = equal(normalizeStartup(settings.startup), settings.startup) && validateSimInit(settings.simulationInit) &&
         equal(normalizeSortCycle(settings.sortCycle), settings.sortCycle) && integer(settings.nudgeIntervalMs, 0, 200) &&
+        (!Object.hasOwn(settings, 'nudgeAuto') || typeof settings.nudgeAuto === 'boolean') &&
         (!Object.hasOwn(settings, 'gameOfLifeGenetics') || ['rgb', 'palette-order'].includes(settings.gameOfLifeGenetics)) &&
         (!Object.hasOwn(settings, 'gameOfLifeDeadColor') || ['current','luminance'].includes(settings.gameOfLifeDeadColor)) &&
         (!Object.hasOwn(settings, 'separatorCycle') || Array.isArray(settings.separatorCycle) && equal(normalizeSeparatorCycle(settings.separatorCycle), settings.separatorCycle)) &&
