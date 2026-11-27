@@ -45,11 +45,17 @@ try {
             isMobile: mobile, hasTouch: mobile, serviceWorkers: 'block',
             reducedMotion: mobile ? 'reduce' : 'no-preference'
         });
-        await context.addInitScript(lang => localStorage.setItem('userLanguage', lang), mobile ? 'he' : 'en');
+        await context.addInitScript(lang => {
+            if (sessionStorage.getItem('testLanguageSet')) return;
+            localStorage.setItem('userLanguage', lang);
+            sessionStorage.setItem('testLanguageSet', 'true');
+        }, mobile ? 'he' : 'en');
         const page = await context.newPage();
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         const choice = page.locator('#openingChoiceDialog');
+        const eclipse = page.locator('#openingEclipse');
+        const veil = page.locator('#openingResetVeil');
         const gate = page.locator('#openingChoiceGate');
         const control = page.locator('#btnToggleSimMode');
         const tap = locator => mobile ? locator.tap() : locator.click();
@@ -74,7 +80,8 @@ try {
         assert.deepEqual(await state(), initial, 'the opening tap does not draw or log');
         assert.equal(await choice.getAttribute('dir'), mobile ? 'rtl' : 'ltr');
         const labels = mobile ? ['יצירה', 'אבולוציה'] : ['Creation', 'Evolution'];
-        assert.equal((await choice.textContent()).replace(/\s+/g, ' ').trim(), labels.join(' '));
+        assert.deepEqual(await choice.locator('button[data-opening-choice]').allInnerTexts(), labels);
+        assert(await eclipse.isDisabled(), 'reset requires an explicit first choice');
         assert.equal(await choice.locator('.opening-choice-mark svg').innerHTML(), await control.locator('svg').innerHTML());
         assert.equal(await choice.locator('.opening-choice-mark').getAttribute('aria-hidden'), 'true');
         assert.equal(await choice.locator('[data-opening-choice=evolve] svg').innerHTML(),
@@ -87,6 +94,45 @@ try {
         assert.equal(await gate.isVisible(), false);
         await tapAt(page.locator('#boardCanvas'));
         assert.notDeepEqual((await state()).pixels, initial.pixels, 'the next tap can draw normally');
+
+        const resetThroughEclipse = async (mode, expectedSize) => {
+            await page.evaluate(() => {
+                localStorage.setItem('colorGridSimulationDrawerColors', '["gold","gold","gold"]');
+                localStorage.setItem('colorGridInterfaceZoom', '70');
+                localStorage.setItem('colorGridProfileDraftsV1', '{"version":1}');
+                localStorage.setItem('foreign-storage', 'keep');
+            });
+            assert(await eclipse.isEnabled());
+            const navigation = page.waitForEvent('framenavigated', frame => frame === page.mainFrame());
+            await tap(eclipse);
+            await veil.waitFor({ state: 'visible' });
+            assert.equal(await veil.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(0, 0, 0)');
+            assert.equal(await veil.locator('svg').evaluate(el => getComputedStyle(el).animationName),
+                mobile ? 'opening-reset-still' : 'opening-reset-heart');
+            if (!mobile) {
+                await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('#openingResetVeil svg')).opacity) >= .8);
+                await page.screenshot({ path: '/tmp/fyi-start-eclipse-heart.png', animations: 'allow' });
+            }
+            await navigation;
+            await page.waitForFunction(() => window.openingTest?.ready);
+            assert.equal(await gate.isVisible(), false, 'a reset skips the menu');
+            assert.equal(await choice.isVisible(), false);
+            assert.equal(await page.locator('#splashScreen').count(), 0);
+            assert.equal(await page.locator('#appContainer').evaluate(el => el.inert), false);
+            assert.equal((await state()).simulation, mode === 'evolve');
+            assert.equal((await state()).size, expectedSize);
+            assert(await page.evaluate(mode => localStorage.getItem('colorGridLastOpeningMode') === mode &&
+                localStorage.getItem('colorGridInterfaceZoom') !== '70' &&
+                localStorage.getItem('colorGridSimulationDrawerColors') !== '["gold","gold","gold"]' &&
+                localStorage.getItem('colorGridProfileDraftsV1') !== '{"version":1}' &&
+                localStorage.getItem('userLanguage') === null &&
+                localStorage.getItem('foreign-storage') === 'keep' &&
+                sessionStorage.getItem('colorGridEclipseResume') === null, mode));
+        };
+
+        await boot(true);
+        await tap(gate);
+        await resetThroughEclipse('create', initial.size);
 
         await boot(true);
         await tapAt(control);
@@ -105,6 +151,14 @@ try {
         assert(evolved.pixels.every(([color, value]) => color === 0 && value === 0));
         assert.equal(evolved.playing, false);
         assert.equal(await gate.isVisible(), false);
+
+        await boot(true);
+        await coords(8, 8);
+        await choice.waitFor({ state: 'visible' });
+        await resetThroughEclipse('evolve', evolved.size);
+        const resetEvolved = await state();
+        assert.equal(resetEvolved.selected, resetEvolved.lastColor);
+        assert(resetEvolved.pixels.every(([color, value]) => color === 0 && value === 0));
 
         await boot(true);
         await coords(8, 8);

@@ -37,6 +37,7 @@ import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, c
 import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, SIMULATION_PLAYBACK_THEME, setSimulationRunning } from './simulation-theme.js';
 import { initializeOpeningChoice } from './opening-choice.js';
+import { resetOpeningMode } from './app-reset.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
 import { createIslandsSession, restoreIslandsSession, runIslandsGeneration, restoreIslandsBoard, ISLANDS_OIL_RULES } from './simulations/islands.js';
@@ -2825,11 +2826,11 @@ function updateMacroPaletteButtonUI(paletteIndex) {
       function initializeEvolutionBoard() {
         if (isLifePlaying) return;
         if (!isSimModeActive) toggleSimMode();
-        prepareBoardForSimMode();
+        return prepareBoardForSimMode();
       }
 
       function prepareBoardForSimMode() {
-        animateBoardTransition(() => {
+        return animateBoardTransition(() => {
             performAction(() => {
                 if (n !== simulationInitSettings.boardSize) _performResize(simulationInitSettings.boardSize);
                 separatorPx = 0; selectedRelativeSeparator = 0; separatorIsSnapshot = false;
@@ -6323,6 +6324,11 @@ else if (action.eventName === 'Invert Colors') {
         // ------------------------------------------
 
         const splashScreen = document.getElementById('splashScreen'), splashText = document.getElementById('splashText');
+        const resetApp = resetOpeningMode ? document.getElementById('appContainer') : null;
+        if (resetApp) {
+            resetApp.inert = true;
+            splashScreen.style.zIndex = '1200';
+        }
         initializeLanguage();
         onLanguageChange(updateAllUIText);
         macroActivity = createMacroActivity({ board: dom.board, getText, getLang: getCurrentLang,
@@ -6648,7 +6654,7 @@ applySortMethod,
         applySeparator();
         updateUndoRedoButtons();
         setBrushMode(startupSettings.brushMode !== 'copy', startupSettings.brushMode === 'continuous');
-        if (startupSettings.interfaceMode === 'simulation') toggleSimMode();
+        if (!resetOpeningMode && startupSettings.interfaceMode === 'simulation') toggleSimMode();
         updateSymmetryUI();
 updateBrightnessEvoButtonUI();
         updateBreatheEvoButtonUI(); // Add this
@@ -6997,6 +7003,19 @@ dom.btnWind.addEventListener('keydown', event => {
         window.addEventListener('resize', updateLayout);
         window.addEventListener('contextmenu', e => e.preventDefault());
         
+        if (resetOpeningMode) {
+            if (resetOpeningMode === 'evolve') await initializeEvolutionBoard();
+            const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            await splashScreen.animate([{ opacity: 1 }, { opacity: 0 }], {
+                duration: reducedMotion ? 0 : 540,
+                easing: 'ease-in-out',
+                fill: 'forwards'
+            }).finished;
+            splashScreen.remove();
+            resetApp.inert = false;
+            return;
+        }
+
         splashText.style.animation = 'fadeInText 2.5s linear forwards';
         dom.btnPalette.classList.add('splash-palette-reveal');
         await new Promise(r => setTimeout(r, 5000));

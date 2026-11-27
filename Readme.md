@@ -25,6 +25,8 @@ This is the complete guide to the application's current interactions, defaults, 
 
 After the opening animation, the first tap or click opens **Creation / Evolution**, with localized labels beneath the Evolution control symbol. Creation continues with the displayed board. Evolution runs the same initialization as holding Go Dark or the Evolution control, including the active profile’s Init preferences. Escape closes the choice and continues with the displayed board. Technicians → Features → **Create / Evolve on startup** is on by default. Turn it off to return to direct interaction after the opening animation. The setting is saved in this browser.
 
+The eclipse below the two choices becomes available on a later opening once the user has chosen a board. It clears the app’s local settings and profile drafts, then opens the last chosen board with fresh defaults. A gold heartbeat on black bridges the reset and the direct return to the board. Reduced-motion mode uses a brief, still heart.
+
 The brush cycles **Paint → Continuous → Copy**. The white filled triangle indicates Continuous mode, which fills gaps between successive pointer positions; the gold filled triangle indicates ordinary Paint without automatic completion. Copy retains its black triangle with a white outline. These indicator colors do not select the paint color. The factory default remains Continuous, so a fresh default session starts with a white triangle. Color, footprint size, shape and symmetry still apply. Continuous strokes connect samples within a gesture; leaving the canvas breaks the segment. Copy mode copies a dragged source tile onto the destination footprint.
 
 The brush picker offers **Circle, Square, Diamond, Ring and a horizontal Line**, in sizes **1, 3, 5, 7, 9, 11, 13, 15 and XL (23 cells)**. Older XL=21 preferences migrate to 23. Footprints clip at board edges. With no selected color, tapping advances a tile's palette entry or removes its protected gold flag; painting a drag uses its source color. Rainbow chooses random palette entries while painting.
@@ -894,7 +896,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 
 | Area | Examples |
 | --- | --- |
-| First interaction, Create / Evolve, long-hold equivalence and the startup switch | `tools/check-opening-choice.mjs` |
+| First interaction, Create / Evolve, long-hold equivalence, eclipse reset and the startup switch | `tools/check-opening-choice.mjs` |
 | Browser-local compact color-picker experiment: full palettes, pointer preview/drag/cancel, keyboard, Rainbow, paging restoration, reload and profile independence | `tools/check-compact-color-picker.mjs` |
 | Opening-palette history policy: raw/resolved Undo/Redo, legacy checkpoints, real palette switches and playback lifecycle | `tools/check-macro-palette-context.mjs` (optional `PALETTE_RECIPE` runs the reported full-file regression) |
 | Real file import, opening-palette catalogue, drawing Undo, explicit changes and file replacement on desktop/English and touch/Hebrew | `tools/check-macro-palette-ui.mjs` |

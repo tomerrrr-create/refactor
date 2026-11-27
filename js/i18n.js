@@ -67,6 +67,8 @@ export const translations = {
   drawer_instructions: {"en":"Select an evolution, then its destination. Occupied places swap. Save to apply.","he":"בחרו סימולציה ואז מקום יעד. מקומות תפוסים מתחלפים. שמרו כדי להחיל.","ru":"Выберите эволюцию, затем место назначения. Занятые места меняются местами. Сохраните изменения.","nl":"Kies een evolutie en daarna de bestemming. Bezette plekken wisselen. Sla op om toe te passen."},
   opening_choice_creation: {en:'Creation',he:'יצירה',ru:'Создание',nl:'Creatie'},
   opening_choice_evolution: {en:'Evolution',he:'אבולוציה',ru:'Эволюция',nl:'Evolutie'},
+  opening_reset_label: {en:'Reset all local app data',he:'איפוס כל הנתונים המקומיים של האפליקציה',ru:'Сбросить все локальные данные приложения',nl:'Alle lokale appgegevens wissen'},
+  opening_reset_error: {en:'Reset is unavailable in this browser.',he:'האיפוס אינו זמין בדפדפן הזה.',ru:'Сброс недоступен в этом браузере.',nl:'Wissen is niet beschikbaar in deze browser.'},
   opening_choice_setting: {en:'Create / Evolve on startup',he:'יצירה / אבולוציה בפתיחה',ru:'Создание / эволюция при запуске',nl:'Maken / evolueren bij het openen'},
   drawer_patterns: {en:'Patterns',he:'תצורות',ru:'Узоры',nl:'Patronen'},
   drawer_color: {en:'{name} color',he:'צבע · {name}',ru:'Цвет · {name}',nl:'Kleur · {name}'},
