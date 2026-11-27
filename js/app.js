@@ -35,7 +35,7 @@ import { createWindSettingsDialog, loadWindSettings, saveWindSettings, selectWin
 import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
-import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, getSimulationPlaybackTheme, applySimulationPlaybackTheme, setSimulationRunning } from './simulation-theme.js';
+import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, SIMULATION_PLAYBACK_THEME, setSimulationRunning } from './simulation-theme.js';
 import { initializeOpeningChoice } from './opening-choice.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
@@ -2490,7 +2490,7 @@ if (simulationName === 'magnet') {
             ...(contourActionRules.sensitivity === contourRules.sensitivity && contourActionRules.lineColor === 'darkest' ? {} : { contourAction: { ...contourActionRules } }),
             startup: { ...startupSettings }, simulationInit: { ...simulationInitSettings },
             simulationTheme: getSimulationTheme(),
-            simulationPlaybackTheme: getSimulationPlaybackTheme(),
+            simulationPlaybackTheme: SIMULATION_PLAYBACK_THEME,
             sortCycle: [...sortCycleMethods], nudgeIntervalMs,
             ...(gameOfLifeRules.genetics === 'palette-order' ? { gameOfLifeGenetics: 'palette-order' } : {}),
             ...(gameOfLifeRules.deadColor === 'luminance' ? { gameOfLifeDeadColor: 'luminance' } : {}),
@@ -2554,7 +2554,6 @@ if (simulationName === 'magnet') {
         evolutionTuning = validateEvolutionTuning(settings.evolutionTuning);
         if (islandsSession) islandsSession.activity = evolutionTuning.islands.activity;
         if (settings.simulationTheme) applySimulationTheme(settings.simulationTheme);
-        applySimulationPlaybackTheme(settings.simulationPlaybackTheme);
         separatorCycle = normalizeSeparatorCycle(settings.separatorCycle) ?? [...DEFAULT_SEPARATOR_CYCLE];
         gravitationalSortRules = { ...settings.rules.gravity };
         if (vorticesModeFor('gravitationalSort', gravitationalSortRules.direction)) gravitationalSortRules.direction = 'up';

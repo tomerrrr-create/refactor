@@ -926,7 +926,7 @@ body {
 /* --- END: MODIFIED STYLE FOR "ARMED" SIMULATION BUTTON --- */
 
 /* Gold playback keeps the active evolution bright without dimming or disabling
-   available controls. Other playback themes retain their existing colors. */
+   available controls. */
 :root[data-simulation-running][data-simulation-effective-theme="gold"] .sim-mode-active :is(
   #btnGameOfLife, #btnMagnetModes, #btnBrightnessEvo, #btnShowBreatheMenu,
   #btnIslands, #btnGravitationalSort, #btnErosion, #btnDla, #btnContour,
@@ -2028,28 +2028,6 @@ button, .ctrl {
   .sim-mode-active .ctrl[data-evolution-id]::before { animation: none; transition: none; }
 }
 
-.simulation-theme-option .technician-option-heading { flex-wrap: nowrap; gap: 8px; }
-.simulation-theme-option .technician-effect-heading { white-space: nowrap; }
-.simulation-theme-previews { display: flex; flex-wrap: nowrap; max-width: 100%; gap: 0; direction: ltr; flex-shrink: 0; margin-inline-start: auto; }
-.simulation-theme-preview {
-  position: relative; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 10px;
-  border: 0; border-radius: 50%; flex: 0 0 44px;
-  color: var(--preview-color); background: transparent; cursor: pointer;
-  transition: box-shadow .2s, border-color .2s;
-}
-.simulation-theme-preview[data-theme="teal"] { --preview-color: #93ddd3; --preview-background: #152c2a; }
-.simulation-theme-preview[data-theme="gold"] { --preview-color: #f0d28d; --preview-background: #302513; }
-.simulation-theme-preview[data-theme="blue"] { --preview-color: #a2b7ff; --preview-background: #182449; }
-.simulation-theme-preview[data-theme="moon-silver"] { --preview-color: var(--sim-theme-moon-silver); --preview-background: #242c39; }
-.simulation-theme-preview[data-theme="ivory"] { --preview-color: var(--sim-theme-ivory); --preview-background: #312c23; }
-.simulation-theme-preview[data-theme="dark-gray"] { --preview-color: #a1a5a9; --preview-background: #1a1b1e; }
-.simulation-theme-preview::before { content: ''; position: absolute; inset: 5px; border: 1px solid color-mix(in srgb, var(--preview-color) 58%, transparent); border-radius: 50%; background: var(--preview-background); transition: border-color .2s, box-shadow .2s; }
-.simulation-theme-preview svg { position: relative; width: 18px; height: 18px; pointer-events: none; }
-.simulation-theme-preview[aria-pressed="true"]::before { border-color: var(--preview-color); box-shadow: 0 0 0 2px var(--preview-color); }
-.simulation-theme-preview:focus-visible { outline: 2px solid var(--gold); outline-offset: -1px; }
-@media (hover: hover) { .simulation-theme-preview:hover::before { border-color:var(--preview-color); } }
-@media (prefers-reduced-motion: reduce) { .simulation-theme-preview::before { transition:none; } }
-
 /* Evolution tuning uses the same bronze dialog and gold controls as erosion. */
 .evolution-tuning-dialog { width: min(440px, calc(100vw - 32px)); }
 .tuning-heading-icon { display:flex; justify-content:center; height:32px; margin-bottom:12px; color:var(--gold); }
@@ -2567,7 +2545,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 #evolutionDrawerDialog { width:min(640px,calc(100vw - 24px)); padding:18px; }
 #controlsContainer.sim-mode-active [data-evolution-page-hidden] { display:none !important; }
 #evolutionDrawerDialog .drawer-pages { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; direction:ltr; }
-#evolutionDrawerDialog[data-view-only] :is(.drawer-actions,.drawer-appearance,.drawer-cycle-actions,.drawer-selection) { display:none; }
+#evolutionDrawerDialog[data-view-only] :is(.drawer-actions,[data-reset-cycles],[data-reset-cycles-status],.drawer-selection) { display:none; }
 @media(min-width:880px) {
   #evolutionDrawerDialog[data-patterns] { width:min(920px,calc(100vw - 24px)); }
   #evolutionDrawerDialog[data-patterns] .drawer-pages { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -2746,19 +2724,6 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 @media(max-width:480px) { #controlsContainer.sim-mode-active .evolution-drawer-internal { width:44px; height:44px; } }
 #evolutionDrawerDialog .drawer-reserved-slot { color:#abb0ac; background:#9ca3af09; border:1px dashed #abb0ac40; cursor:default; }
 
-/* Compact appearance controls belong to Evolution map, with original listeners. */
-#evolutionDrawerDialog .drawer-appearance { display:grid; gap:0; margin-top:12px; padding-top:8px; border-top:1px solid #b28b3630; }
-#evolutionDrawerDialog .simulation-theme-option { min-width:0; margin:0; padding:0; }
-#evolutionDrawerDialog .simulation-theme-option .technician-option-heading { width:100%; min-height:44px; gap:8px; }
-#evolutionDrawerDialog .drawer-appearance .technician-effect-heading { min-width:0; color:#b7b4a8; }
-#evolutionDrawerDialog .drawer-appearance bdi { font-family:inherit; font-size:12px; line-height:1.4; font-weight:400; color:#b7b4a8; }
-#evolutionDrawerDialog .drawer-appearance .technician-badge { display:none; }
-#evolutionDrawerDialog .drawer-appearance .simulation-theme-preview svg { width:18px; height:18px; }
-@media (max-width:480px) {
-  #evolutionDrawerDialog .simulation-theme-option .technician-option-heading { flex-direction:column; align-items:stretch; gap:2px; padding-block:4px; }
-  #evolutionDrawerDialog .simulation-theme-previews { display:grid; grid-template-columns:repeat(3, minmax(44px,1fr)); justify-items:center; width:100%; }
-}
-
 /* Luminance uses the same bird as the sort control. */
 .gol-dead-color::before { content: none; }
 .gol-dead-color, #btnContourColorLuminance { color: #fff; }
@@ -2785,11 +2750,14 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
 .technician-display-settings .remember-modes-option { display:flex; flex-direction:row; justify-content:space-between; text-align:start; }
 .technician-display-settings .remember-modes-option span { min-width:0; }
 
-#evolutionDrawerDialog .drawer-cycle-actions { margin-top:14px; padding-top:14px; border-top:1px solid #b28b362c; }
-#evolutionDrawerDialog [data-reset-cycles] { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:44px; padding:8px 12px; border:1px solid #b28b3659; border-radius:8px; background:#b28b3612; color:#e3c677; font:inherit; font-size:12px; cursor:pointer; }
-#evolutionDrawerDialog [data-reset-cycles] svg { flex:0 0 18px; width:18px; height:18px; }
-#evolutionDrawerDialog [data-reset-cycles]:focus-visible { outline:2px solid #ffe7a0; outline-offset:3px; }
-#evolutionDrawerDialog [data-reset-cycles-status] { min-height:16px; margin:6px 0 0; color:#b7b4a8; font-size:12px; text-align:center; }
+#evolutionDrawerDialog .drawer-header-actions { display:flex; align-items:center; gap:6px; }
+#evolutionDrawerDialog [data-reset-cycles] {
+  min-height:44px; padding:0 10px; border:0; border-radius:7px;
+  background:transparent; color:#e3c677; font:inherit; font-size:12px; cursor:pointer;
+}
+#evolutionDrawerDialog [data-reset-cycles]:focus-visible { outline:2px solid #ffe7a0; outline-offset:-2px; }
+#evolutionDrawerDialog [data-reset-cycles-status] { margin:6px 0 0; color:#b7b4a8; font-size:12px; }
+#evolutionDrawerDialog [data-reset-cycles-status]:empty { margin:0; }
 
 /* Session-only compact color-picker experiment. */
 #colorPickerModal.compact-colors #colorPickerSwatches {

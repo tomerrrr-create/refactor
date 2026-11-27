@@ -74,7 +74,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const dotColor=()=>dot.evaluate(e=>getComputedStyle(e).backgroundColor);
  const backdrop=page.locator('#simModeBackground');
  const backgroundImage=()=>backdrop.evaluate(element=>getComputedStyle(element).backgroundImage);
- const drawerColors=[/rgb\(15, 23, 42\)/,/rgb\(42, 34, 19\)/,/rgb\(44, 20, 29\)/];
+ const drawerColors=[/rgb\(20, 41, 31\)/,/rgb\(15, 23, 42\)/,/rgb\(44, 20, 29\)/];
  async function checkBackdrop(index){
   const image=await backgroundImage();
   assert.match(image,drawerColors[index]);
@@ -82,11 +82,11 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
   assert.match(image,/45deg.*28px.*29px/);
  }
  const lip=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>getComputedStyle(e,'::before').borderBottomColor);
- const blueLip=await lip();
+ const firstLip=await lip();
  for(const theme of ['blue','teal','gold']){
   await page.evaluate(theme=>drawerTest.theme(theme),theme);
   assert.equal(await dotColor(),'rgb(187, 192, 198)');
-  assert.equal(await lip(),blueLip);
+  assert.equal(await lip(),firstLip);
   await checkBackdrop(0);
   assert.equal(await page.locator('#btnMagnetModes > svg:visible').first().evaluate(e=>getComputedStyle(e).stroke),'rgb(165, 139, 84)');
  }
@@ -96,7 +96,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);await page.waitForTimeout(300);
  assert((await dot.boundingBox()).x>firstDot.x,'the same dot moves to the other page');
  assert.equal(await dotColor(),'rgb(187, 192, 198)');
- await checkBackdrop(1);assert.notEqual(await lip(),blueLip);
+ await checkBackdrop(1);assert.notEqual(await lip(),firstLip);
  assert.deepEqual(await physicalRows(),[['contour','dla','cymatics','network','turing'],['navigation']],'physical left-to-right order on the second drawer');assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(10,20).filter(id=>id&&!['spiral','breathe','fibonacci'].includes(id)));assert.deepEqual(await trigger.boundingBox(),position);assert.deepEqual(await page.locator('#simModeBackground').boundingBox(),frame);unchanged(initial,await state());
  await page.evaluate(()=>drawerTest.tech());
  await tap(page.locator('#btnConfigureFeatures'));
@@ -137,7 +137,15 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  for(const index of [1,2]){await tap(page.locator('[data-profile-choice="'+index+'"]'));assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT,'every untouched factory profile starts with the new layout');}
  await tap(page.locator('[data-profile-choice="0"]'));assert.deepEqual((await state()).slots,custom,'each profile retains its own arrangement');
  await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
- await open();await tap(dialog.locator('[data-reset]'));await page.keyboard.press('Escape');assert.deepEqual((await state()).slots,custom);
+ await open();
+ const beforeCycleReset=await state();
+ const cycleReset=dialog.locator('.drawer-header [data-reset-cycles]');
+ assert((await cycleReset.textContent()).trim());
+ await tap(cycleReset);
+ assert((await dialog.locator('[data-reset-cycles-status]').textContent()).trim());
+ assert.deepEqual((await state()).slots,beforeCycleReset.slots);
+ assert.deepEqual((await state()).board,beforeCycleReset.board);
+ await tap(dialog.locator('[data-reset]'));await page.keyboard.press('Escape');assert.deepEqual((await state()).slots,custom);
  await open();await tap(dialog.locator('[data-reset]'));await save();assert.deepEqual((await state()).slots,DEFAULT_EVOLUTION_LAYOUT);
  if(config.lang==='en'){
   await trigger.focus();await page.keyboard.press('Alt+ArrowUp');await dialog.waitFor({state:'visible'});await page.keyboard.press('Escape');

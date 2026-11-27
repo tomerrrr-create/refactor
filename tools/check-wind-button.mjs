@@ -11,7 +11,7 @@ source=source.replace('      initializeApp();',`window.windTest={
  state:()=>({wind:windMode,mode:windSettings.mode,settings:windSettings,board:boardState.map(t=>({k:t.k,isGold:t.isGold})),history:history.length,playing:isLifePlaying,gen:currentGenerationCount,armed:armedSimulation,macro:isMacroPlaying,logs:[...artRecipeLog]}),
  recipe:async()=>await createArtRecipeFile().text(),
  replay:text=>{pauseLife();setWindMode(false);macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
- playbackThemes:()=>{applySimulationTheme('blue');applySimulationPlaybackTheme('gold');},
+ restingTheme:()=>applySimulationTheme('blue'),
  live:()=>{armSimulation('nudgeBrighter');togglePlayPauseLife();},pause:pauseLife
  };initializeApp().then(()=>windTest.ready=true);`);
 for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -49,7 +49,7 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  await page.evaluate(text=>windTest.replay(text),recipe);await page.waitForFunction(()=>!windTest.state().macro,{},{timeout:20000});assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1')),settings);assert.equal(await page.locator('#btnWind').getAttribute('aria-pressed'),'false');
  // Wind keeps its state colors while the playback hierarchy tints other controls.
  await page.evaluate(()=>{
-  windTest.setup();windTest.playbackThemes();
+  windTest.setup();windTest.restingTheme();
   const toggle=document.getElementById('goldPlaybackHierarchyToggle');
   toggle.checked=true;toggle.dispatchEvent(new Event('change'));
   windTest.live();

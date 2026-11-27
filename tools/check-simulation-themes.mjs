@@ -6,10 +6,7 @@ import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
 const artifacts='/tmp/evolution-theme-check';await mkdir(artifacts,{recursive:true});
-const colors={
- blue:'rgb(63, 81, 181)', gold:'rgb(165, 139, 84)', teal:'rgb(104, 189, 181)',
- 'moon-silver':'rgb(182, 195, 212)', ivory:'rgb(231, 216, 181)', 'dark-gray':'rgb(123, 126, 130)'
-};
+const colors={blue:'rgb(63, 81, 181)',gold:'rgb(165, 139, 84)'};
 let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.themeTest={
  setup:()=>{pauseLife();isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');dom.btnPlayPauseLife.classList.remove('control-hidden');updateSimulationUtilityControl();armSimulation('nudgeBrighter');},
@@ -24,6 +21,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await ctx.addInitScript(lang=>{
   localStorage.setItem('userLanguage',lang);
   localStorage.setItem('colorGridOpeningChoice','false');
+  localStorage.setItem('colorGridSimulationPlaybackTheme','teal');
   if(localStorage.getItem('colorGridExperimentalSimulationsV1')===null) {
    localStorage.setItem('colorGridExperimentalSimulationsV1','{"patterns":false}');
   }
@@ -46,18 +44,16 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(await page.locator('#technicianDialog #simulationThemeSettings,#technicianDialog #simulationPlaybackThemeSettings').count(),0);
  await tap('#btnTechnicianCloseTop');await map();
  assert.equal(await page.locator('#simulationThemeSettings').count(),0);
- assert.equal(await page.locator('#evolutionDrawerDialog .drawer-appearance #simulationPlaybackThemeSettings').count(),1);
- assert.equal(await page.locator('[id=simulationPlaybackThemeSettings]').count(),1);
+ assert.equal(await page.locator('#simulationPlaybackThemeSettings').count(),0);
  const bounds=await page.locator('#evolutionDrawerDialog').boundingBox();assert(bounds.x>=0&&bounds.x+bounds.width<=config.width+1);
  assert.equal(await page.locator('#evolutionDrawerDialog').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
- const choices=await page.locator('.drawer-appearance [data-theme]').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect(),p=getComputedStyle(e,'::before');return {width:r.width,height:r.height,sample:parseFloat(p.width),visibility:getComputedStyle(e).opacity};}));
- assert(choices.every(r=>r.width>=43&&r.height>=43&&Math.abs(r.sample-34)<.1&&r.visibility==='1'),'clear swatches retain comfortable targets');
- await page.locator('.drawer-appearance').scrollIntoViewIfNeeded();await page.screenshot({path:artifacts+'/'+config.lang+'-themes-in-map.png'});
+ assert(await page.locator('.drawer-header [data-reset-cycles]').isVisible());
+ await page.screenshot({path:artifacts+'/'+config.lang+'-themes-in-map.png'});
 
- assert.deepEqual(await page.locator('#simulationPlaybackThemeSettings [data-theme]').evaluateAll(es=>es.map(e=>e.dataset.theme)),Object.keys(colors));
  const swatches=page.locator('.drawer-color-options');
- const defaultDrawerColors=['blue','gold','burgundy'];
- const newDrawerColors=['pine-green','ink-violet','warm-charcoal'];
+ const defaultDrawerColors=['pine-green','blue','burgundy'];
+ const availableDrawerColors=['blue','gold','burgundy','pine-green','ink-violet','warm-charcoal'];
+ const newDrawerColors=['warm-charcoal','ink-violet','pine-green'];
  const drawerTargets=await swatches.getByRole('button').evaluateAll(buttons=>buttons.map(button=>{
   const {width,height}=button.getBoundingClientRect();return {width,height};
  }));
@@ -66,14 +62,14 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert(fresh.patterns);
  assert.equal(await swatches.count(),3);
  for(const [drawer,color] of defaultDrawerColors.entries()){
-  assert.deepEqual(await swatches.nth(drawer).locator('button').evaluateAll(es=>es.map(e=>e.dataset.drawerColor)),[...defaultDrawerColors,...newDrawerColors]);
+  assert.deepEqual(await swatches.nth(drawer).locator('button').evaluateAll(es=>es.map(e=>e.dataset.drawerColor)),availableDrawerColors);
   assert.equal(await swatches.nth(drawer).locator('[aria-pressed=true]').getAttribute('data-drawer-color'),color);
  }
  const chooseColor=async(drawer,color)=>tap('.drawer-pages section:nth-child('+drawer+') [data-drawer-color='+color+']');
  const keepDrawers=page.locator('#keepSimulationDrawersToggle');
  const drawerBackdrop=()=>backdrop.evaluate(e=>getComputedStyle(e).backgroundImage);
  const initialBackdrop=await drawerBackdrop();
- assert.match(initialBackdrop,/rgb\(15, 23, 42\)/);
+ assert.match(initialBackdrop,/rgb\(20, 41, 31\)/);
  assert(await keepDrawers.isChecked());
  await chooseColor(1,'gold');
  const goldBackdrop=await drawerBackdrop();
@@ -82,10 +78,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.match(await drawerBackdrop(),/rgb\(37, 36, 35\)/);
  assert.notEqual(await drawerBackdrop(),goldBackdrop);
  for (const [drawer,color] of newDrawerColors.entries()) await chooseColor(drawer+1,color);
- assert.match(await drawerBackdrop(),/rgb\(20, 41, 31\)/);
+ assert.match(await drawerBackdrop(),/rgb\(37, 36, 35\)/);
  const editedBackdrop=await drawerBackdrop();
  await tap('#evolutionDrawerDialog [data-close]');
- for(const expected of [/rgb\(41, 27, 56\)/,/rgb\(37, 36, 35\)/,/rgb\(20, 41, 31\)/]){
+ for(const expected of [/rgb\(41, 27, 56\)/,/rgb\(20, 41, 31\)/,/rgb\(37, 36, 35\)/]){
   await tap('#btnEvolutionDrawerInternal');assert.match(await drawerBackdrop(),expected);
  }
  await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
@@ -123,27 +119,30 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await keepDrawers.uncheck();await tap('#btnTechnicianCloseTop');await map();
  assert.equal(await page.locator('#simModeBackground .sim-theme-layer').count(),0);
  const rest=fresh.settings.simulationTheme;
- for(const playback of Object.keys(colors)){
-  const before=await state();await tap('#simulationPlaybackThemeSettings [data-theme='+playback+']');
-  const selected=await state();assert.deepEqual(selected.board,before.board);assert.equal(selected.history,before.history);assert.equal(selected.settings.simulationTheme,rest);assert.equal(selected.settings.simulationPlaybackTheme,playback);
-  await tap('#evolutionDrawerDialog [data-close]');const frame=await backdrop.boundingBox(),buttonBounds=await page.locator('#btnNudgeBrighter').boundingBox();assert.equal(await opacity(),'1');assert((await backdrop.evaluate(e=>getComputedStyle(e).transitionProperty)).includes('opacity'));await page.screenshot({path:artifacts+'/'+config.lang+'-'+rest+'-paused.png'});await tap('#btnPlayPauseLife');assert((await state()).playing);assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),playback);await page.waitForTimeout(450);
-  assert.equal(await ink(),'rgb(118, 103, 65)');assert.equal(await opacity(),'0');assert.deepEqual(await backdrop.boundingBox(),frame);assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);await page.screenshot({path:artifacts+'/'+config.lang+'-'+playback+'-running.png'});
-  await tap('#btnPlayPauseLife');assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);await page.waitForTimeout(450);
-  assert.equal(await ink(),colors.gold);assert.equal(await opacity(),'1');assert.deepEqual(await backdrop.boundingBox(),frame);
-  assert.equal(await drawerBackdrop(),initialBackdrop);
-  await map();
- }
+ await tap('#evolutionDrawerDialog [data-close]');
+ const frame=await backdrop.boundingBox(),buttonBounds=await page.locator('#btnNudgeBrighter').boundingBox();
+ assert.equal(await opacity(),'1');
+ await tap('#btnPlayPauseLife');assert((await state()).playing);
+ assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),'gold');
+ await page.waitForTimeout(450);
+ assert.equal(await ink(),'rgb(118, 103, 65)');assert.equal(await opacity(),'0');
+ assert.deepEqual(await backdrop.boundingBox(),frame);
+ assert.deepEqual(await page.locator('#btnNudgeBrighter').boundingBox(),buttonBounds);
+ await tap('#btnPlayPauseLife');await page.waitForTimeout(450);
+ assert.equal(await page.locator('html').getAttribute('data-simulation-effective-theme'),rest);
+ assert.equal(await ink(),colors.gold);assert.equal(await opacity(),'1');
+ assert.equal(await drawerBackdrop(),initialBackdrop);
  // Reduced motion retains the same visibility states without transitions.
- await tap('#evolutionDrawerDialog [data-close]');await page.emulateMedia({reducedMotion:'reduce'});
+ await page.emulateMedia({reducedMotion:'reduce'});
  assert.equal(await opacity(),'1');assert.equal(await backdrop.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
  await tap('#btnPlayPauseLife');assert.equal(await opacity(),'0');await tap('#btnPlayPauseLife');assert.equal(await opacity(),'1');
  await page.emulateMedia({reducedMotion:'no-preference'});
- await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,rest);assert.equal(current.settings.simulationPlaybackTheme,'dark-gray');
+ await page.waitForTimeout(350);await boot(true);let current=await state();assert.equal(current.settings.simulationTheme,rest);assert.equal(current.settings.simulationPlaybackTheme,'gold');
  // Saved legacy profiles normalize only the retired appearance fields.
- await page.evaluate(()=>{const key='colorGridProfileDraftsV1',saved=JSON.parse(localStorage.getItem(key));for(const p of saved.profiles)for(const kind of ['saved','draft']){p[kind].settings.simulationTheme='deep-blue';p[kind].settings.simulationPlaybackTheme='deep-blue';p[kind].settings.brush.size=7;p[kind].settings.startup.boardSize=27;p[kind].settings.startup.brushSize=7;}localStorage.setItem(key,JSON.stringify(saved));localStorage.setItem('colorGridSimulationTheme','deep-blue');localStorage.setItem('colorGridSimulationPlaybackTheme','deep-blue');});
+ await page.evaluate(()=>{const key='colorGridProfileDraftsV1',saved=JSON.parse(localStorage.getItem(key));for(const p of saved.profiles)for(const kind of ['saved','draft']){p[kind].settings.simulationTheme='deep-blue';p[kind].settings.simulationPlaybackTheme='blue';p[kind].settings.brush.size=7;p[kind].settings.startup.boardSize=27;p[kind].settings.startup.brushSize=7;}localStorage.setItem(key,JSON.stringify(saved));localStorage.setItem('colorGridSimulationTheme','deep-blue');localStorage.setItem('colorGridSimulationPlaybackTheme','deep-blue');});
  await boot(true);current=await state();assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');assert.equal(current.settings.brush.size,7);assert.equal(current.settings.startup.boardSize,27);
  // Import an actual old settings TXT without losing unrelated settings.
- await page.locator('#projectFileInput').setInputFiles({name:'old-appearance-settings.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{simulationTheme:'pink',simulationPlaybackTheme:'ice',simulationPreferences:{patternsVisible:false},brush:{size:5},startup:{boardSize:35}}}))});
+ await page.locator('#projectFileInput').setInputFiles({name:'old-appearance-settings.txt',mimeType:'text/plain',buffer:Buffer.from('FYI_SETTINGS_V1\n'+JSON.stringify({version:1,settings:{simulationTheme:'pink',simulationPlaybackTheme:'teal',simulationPreferences:{patternsVisible:false},brush:{size:5},startup:{boardSize:35}}}))});
  await page.waitForFunction(()=>themeTest.state().settings.brush.size===5);current=await state();assert(current.patterns);assert.equal(current.settings.startup.boardSize,35);assert.equal(current.settings.simulationTheme,'blue');assert.equal(current.settings.simulationPlaybackTheme,'gold');
 
  // Verify the shared progress and native hit targets while the controls are in motion.
