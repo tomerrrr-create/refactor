@@ -2067,6 +2067,30 @@ button, .ctrl {
 .tuning-field output { display:block; text-align:center; margin:10px 0; color:#e3c677; font-size:21px; font-variant-numeric:tabular-nums; direction:ltr; }
 .tuning-field input { display:block; width:100%; margin:0; direction:ltr; accent-color:#e3c677; }
 .tuning-field p { margin:10px 0 0; text-align:center; color:#aaa99e; font-size:12px; line-height:1.6; }
+.evolution-tuning-dialog[data-compact-pattern] h2 { margin-bottom:14px; }
+.evolution-tuning-dialog[data-compact-pattern] .tuning-modes { margin-bottom:14px; }
+.evolution-tuning-dialog[data-compact-pattern] .tuning-field:not([hidden]) {
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  align-items:center;
+  gap:4px 12px;
+  margin:12px 0;
+}
+.evolution-tuning-dialog[data-compact-pattern] .tuning-field output { margin:0; font-size:16px; }
+.evolution-tuning-dialog[data-compact-pattern] .tuning-field input { grid-column:1 / -1; min-height:26px; }
+.evolution-tuning-dialog[data-compact-pattern] .init-settings-actions {
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  margin-top:14px;
+  padding-top:12px;
+}
+@media (max-width:360px), (max-height:600px) {
+  .evolution-tuning-dialog[data-compact-pattern] { padding:16px; }
+  .evolution-tuning-dialog[data-compact-pattern] .tuning-heading-icon { margin-bottom:6px; }
+  .evolution-tuning-dialog[data-compact-pattern] h2,
+  .evolution-tuning-dialog[data-compact-pattern] .tuning-modes { margin-bottom:10px; }
+  .evolution-tuning-dialog[data-compact-pattern] .tuning-field:not([hidden]) { margin:5px 0; }
+}
 .evolution-tuning-dialog .init-settings-actions { flex-wrap:wrap; gap:8px; }
 .evolution-tuning-dialog button:focus-visible, .evolution-tuning-dialog input:focus-visible { outline:2px solid #e3c677; outline-offset:4px; }
 

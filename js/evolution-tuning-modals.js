@@ -77,6 +77,8 @@ export function initializeEvolutionTuningModals(app) {
         function render() {
             dialog.dir = app.getCurrentLang() === 'he' ? 'rtl' : 'ltr';
             const modeDefaults = definition.modeDefaults?.[mode];
+            const compact = Boolean(modeDefaults);
+            dialog.toggleAttribute('data-compact-pattern', compact);
             dialog.querySelector('h2').textContent = app.getText(modeDefaults ? 'tuning_' + mode + '_title' : definition.title);
             dialog.querySelector('[data-close]').setAttribute('aria-label', app.getText('saveModal_close'));
             dialog.querySelector('[data-reset]').textContent = app.getText('evolution_reset_default');
@@ -102,7 +104,12 @@ export function initializeEvolutionTuningModals(app) {
             for (const [field, { row, label, note, input, output }] of fields) {
                 row.hidden = Boolean(definition.modeDefaults && field !== 'colorAdvance' && !Object.hasOwn(modeDefaults ?? {}, field));
                 label.textContent = app.getText('tuning_' + field);
-                note.textContent = app.getText('tuning_' + field + '_note');
+                note.hidden = compact;
+                if (compact) input.removeAttribute('aria-describedby');
+                else {
+                    note.textContent = app.getText('tuning_' + field + '_note');
+                    input.setAttribute('aria-describedby', note.id);
+                }
                 if (!draft || row.hidden) continue;
                 input.value = draft[field];
                 output.value = format(field, draft[field], app.getText);
@@ -130,7 +137,6 @@ export function initializeEvolutionTuningModals(app) {
             const [min, max, step] = (definition.limits ?? EVOLUTION_TUNING_LIMITS[simulation])[field];
             const input = row.querySelector('input');
             Object.assign(input, { min, max, step });
-            input.setAttribute('aria-describedby', `${id}Note`);
             const nodes = { row, input, label: row.querySelector('label'), output: row.querySelector('output'), note: row.querySelector('p') };
             fields.set(field, nodes);
             input.addEventListener('input', () => { if (draft) { draft[field] = Number(input.value); render(); } });
