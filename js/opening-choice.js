@@ -2,6 +2,17 @@ import { getCurrentLang, getText } from './i18n.js';
 import { queueAppReset } from './app-reset.js';
 
 const STORAGE_KEY = 'colorGridOpeningChoice';
+const UPDATE_RESUME_KEY = 'colorGridOpeningUpdateResume';
+
+export function takeOpeningUpdateMode() {
+    try {
+        const mode = sessionStorage.getItem(UPDATE_RESUME_KEY);
+        sessionStorage.removeItem(UPDATE_RESUME_KEY);
+        return mode === 'create' || mode === 'evolve' ? mode : null;
+    } catch {
+        return null;
+    }
+}
 
 export function initializeOpeningChoice(onEvolve) {
     const app = document.getElementById('appContainer');
@@ -12,6 +23,8 @@ export function initializeOpeningChoice(onEvolve) {
     const continueButton = document.getElementById('openingContinue');
     const actions = dialog.querySelector('.opening-choice-actions');
     const choices = dialog.querySelectorAll('[data-opening-choice]');
+    const update = document.getElementById('openingUpdate');
+    const updateStatus = document.getElementById('openingUpdateStatus');
     const resetError = document.getElementById('openingEclipseError');
     const veil = document.getElementById('openingResetVeil');
     const switchIcon = document.querySelector('#btnToggleSimMode > svg').cloneNode(true);
@@ -21,6 +34,7 @@ export function initializeOpeningChoice(onEvolve) {
     gravityIcon.removeAttribute('id');
     dialog.querySelector('[data-opening-choice="evolve"] .opening-choice-icon').append(gravityIcon);
     let selectedMode = null;
+    let updating = false;
 
     toggle.checked = true;
     try { toggle.checked = localStorage.getItem(STORAGE_KEY) !== 'false'; } catch {}
@@ -48,11 +62,36 @@ export function initializeOpeningChoice(onEvolve) {
             choices.forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
             continueButton.disabled = false;
             eclipse.disabled = false;
+            update.disabled = false;
             actions.inert = false;
         });
     });
     continueButton.addEventListener('click', () => {
         if (selectedMode) finish(selectedMode);
+    });
+    const updateControls = [...choices, continueButton, eclipse, update];
+    dialog.addEventListener('cancel', event => { if (updating) event.preventDefault(); });
+    update.addEventListener('click', async () => {
+        const mode = selectedMode;
+        if (!mode || updating) return;
+        updating = true;
+        updateControls.forEach(button => { button.disabled = true; });
+        updateStatus.textContent = getText('pwa_update_checking');
+        updateStatus.hidden = false;
+        try {
+            const { applyLatestVersion } = await import('./pwa.js');
+            if (await applyLatestVersion(() => sessionStorage.setItem(UPDATE_RESUME_KEY, mode))) {
+                window.location.reload();
+            } else {
+                finish(mode);
+            }
+        } catch {
+            takeOpeningUpdateMode();
+            updateStatus.textContent = getText('pwa_update_unavailable');
+            updating = false;
+            updateControls.forEach(button => { button.disabled = false; });
+            update.focus({ preventScroll: true });
+        }
     });
     dialog.addEventListener('close', () => { app.inert = false; });
     veil.addEventListener('cancel', event => event.preventDefault());

@@ -38,7 +38,7 @@ import { createWindPainter, applyWindCell } from './wind-paint.js';
 import { recordWindWave, isWindCommand, validateWindCommand, prepareWindMacro, createWindReplay } from './wind-recording.js';
 import { DEFAULT_EVOLUTION_TUNING, INITIAL_EVOLUTION_TUNING, validateEvolutionTuning } from './evolution-tuning.js';
 import { initializeSimulationTheme, getSimulationTheme, applySimulationTheme, SIMULATION_PLAYBACK_THEME, setSimulationRunning } from './simulation-theme.js';
-import { initializeOpeningChoice } from './opening-choice.js';
+import { initializeOpeningChoice, takeOpeningUpdateMode } from './opening-choice.js';
 import { resetOpeningMode } from './app-reset.js';
 import { initializeQuickStart } from './quick-start.js';
 import { prepareDisplayCanvas } from './display-canvas.js';
@@ -6371,9 +6371,10 @@ else if (action.eventName === 'Invert Colors') {
         // ------------------------------------------
 
         const splashScreen = document.getElementById('splashScreen'), splashText = document.getElementById('splashText');
-        const resetApp = resetOpeningMode ? document.getElementById('appContainer') : null;
-        if (resetApp) {
-            resetApp.inert = true;
+        const openingResumeMode = resetOpeningMode || takeOpeningUpdateMode();
+        const resumedApp = openingResumeMode ? document.getElementById('appContainer') : null;
+        if (resumedApp) {
+            resumedApp.inert = true;
             splashScreen.style.zIndex = '1200';
         }
         dom.btnContour.querySelector('.contour-cracks-icon').setAttribute('d', FIRST_WHISPER_ICON_PATH);
@@ -7058,8 +7059,8 @@ dom.btnWind.addEventListener('keydown', event => {
         window.addEventListener('resize', updateLayout);
         window.addEventListener('contextmenu', e => e.preventDefault());
         
-        if (resetOpeningMode) {
-            if (resetOpeningMode === 'evolve') initializeEvolutionBoard({ fromOpening: true, immediate: true });
+        if (openingResumeMode) {
+            if (openingResumeMode === 'evolve') initializeEvolutionBoard({ fromOpening: true, immediate: true });
             const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
             await splashScreen.animate([{ opacity: 1 }, { opacity: 0 }], {
                 duration: reducedMotion ? 0 : 540,
@@ -7067,7 +7068,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 fill: 'forwards'
             }).finished;
             splashScreen.remove();
-            resetApp.inert = false;
+            resumedApp.inert = false;
             return;
         }
 
