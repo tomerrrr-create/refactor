@@ -153,6 +153,10 @@ Hold either Go Dark or the evolution-entry control for **600 ms** to enter the s
 
 Nudge's **Auto** timing is enabled for first use and factory profile Reset. It uses 200 ms between shifts for palettes up to 25 colors, 100 ms for 26–80 colors, and 30 ms for 81 or more. Switching palettes updates the interval during Play, and recipes record the resulting timing changes. Turning off Auto restores the last manual interval (35 ms initially). The manual slider covers 0–200 ms, where zero means one shift per available frame. The Auto selection and last manual interval survive reopening. Older V1 settings files that omit timing retain their 100 ms compatibility fallback, and existing recipes retain their recorded timing.
 
+**Simulation Mode Layout** in Technicians edits the mode assignments for Gravitational Sort, Geometric Flow and Circular Modes. Select a family, then use the destination selector and up/down arrows to move and order its modes. Clear **In cycle** to keep a mode available through its family's swipe-up settings without including it in regular taps. In a custom layout, those settings list the assigned modes in the same order and offer the selected mode's tuning when it has any.
+
+**Try on the board** applies the draft and saves it in this browser across reloads. **Reset to defaults** restores the factory assignment, order and cycle membership in the draft. **Export** downloads the current draft as JSON. **Import** restores the entire draft from a layout file, which takes effect after applying. Existing layouts and macro recipes retain their underlying engine and rule identifiers, so changing a mode's family leaves a recording's behavior intact.
+
 ### Brightness, Breathe, Islands and DLA settings
 
 Swipe/drag up on the **selected** evolution while paused or running. The gold swipe glow appears only when opening is available. Save commits the draft; Cancel, Escape and outside dismissal discard it. Reset restores application defaults in the draft and retains the selected mode. Tuning is included in supported project snapshots and settings exports; Save to profile retains session tuning on reopening. Opening or saving does not start playback. Live changes are recorded at their generation without restarting the run; Brightness preferences are retained across artwork Undo/Redo as described above.
@@ -943,6 +947,7 @@ Browser scripts require Playwright and Chromium, support `PLAYWRIGHT_MODULE` / `
 | Cracks/Contours separation, independent settings and legacy recordings | `tools/check-contour-separation.mjs` |
 | Brightness history and mid-run macros | `tools/check-brightness-undo.mjs`, `tools/check-midrun-macro.mjs`, `tools/check-nudge-cycle.mjs`, `tools/check-nudge-legacy.mjs` |
 | Circular modes: eight-mode cycle, source settings, saved map preferences, live handoffs and replay | `tools/check-vortices-cycle.mjs` |
+| Technician mode layout: moving, reordering, parked modes, persisted import/export, and recipe replay | `tools/check-simulation-mode-layout.mjs` |
 | Color Vortices/Oil presets: all five choices, manual/custom matching, Cancel/Reset/Save, unchanged artwork and live macro replay in desktop/touch | `tools/check-fluid-presets.mjs` (`FLUID_PRESETS_LAYOUT_ONLY=1` skips live playback) |
 | Living network: native painting/sort, settings drafts, checkpoint/history, mixed and resize recipes, profiles and touch | `tools/check-network.mjs` (`NETWORK_VISUAL_ONLY=1` / `NETWORK_SETTINGS_ONLY=1` / `NETWORK_BACKGROUND_ONLY=1` / `NETWORK_SPATIAL_ONLY=1`) |
 | Oil: conservative droplets, native painting, settings, history, mixed/resize recipes and profile reload | `tools/check-oil.mjs` |
