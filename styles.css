@@ -1985,13 +1985,23 @@ button, .ctrl {
   isolation: isolate;
   border-color: var(--sim-drawer-frame);
   box-shadow: 0 4px 20px #0006;
-  background:
-    repeating-linear-gradient(45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px),
-    repeating-linear-gradient(-45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px),
-    var(--sim-drawer-gradient);
+  background: var(--sim-drawer-gradient);
   transition: border-color 400ms ease-in-out;
 }
+#controlsContainer.sim-mode-active #simModeBackground::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px),
+    repeating-linear-gradient(-45deg, transparent 0 28px, var(--sim-drawer-diamond-ink) 28px 29px);
+  opacity: 1;
+  transition: opacity 400ms ease-in-out;
+}
 :root[data-simulation-running]:not([data-keep-simulation-drawer-border]) #controlsContainer.sim-mode-active #simModeBackground { border-color: transparent; }
+:root[data-simulation-running]:not([data-keep-simulation-drawer-border]) #controlsContainer.sim-mode-active #simModeBackground::before { opacity: 0; }
 :where(:root[data-simulation-running]) #controlsContainer.sim-mode-active { --sim-drawer-ink: var(--sim-gold-muted); }
 #controlsContainer.sim-mode-active > [data-evolution-id] { --sim-color: var(--sim-drawer-ink); }
 :root[data-simulation-theme="blue"] { --sim-rest-color: var(--sim-theme-blue); }
@@ -2031,7 +2041,8 @@ button, .ctrl {
 
 @media (prefers-reduced-motion: reduce) {
   :root,
-  #controlsContainer.sim-mode-active #simModeBackground { transition: none; }
+  #controlsContainer.sim-mode-active #simModeBackground,
+  #controlsContainer.sim-mode-active #simModeBackground::before { transition: none; }
   .sim-mode-active .ctrl[data-evolution-id]::before { animation: none; transition: none; }
 }
 
