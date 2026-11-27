@@ -67,7 +67,7 @@ import { loadEvolutionCycle, persistEvolutionCycle, normalizeEvolutionCycle, nor
 import { bindPickerGestures } from './picker-gestures.js';
 import { createEvolutionExplanation } from './evolution-explanation.js';
 import { capturePaletteGroupBoard, showPaletteGroupTransition } from './palette-group-transition.js';
-import { SORT_MODES, normalizeSortMethod, adjustBrightness, hexToRgb, lerp, sortColorsArray } from './colors.js';
+import { SORT_MODES, normalizeSortMethod, adjustBrightness, hexToRgb, lerp, sortColorsArray, firstLuminanceIndex } from './colors.js';
 import { getText, setCurrentLang, initializeLanguage, getCurrentLang, getAvailableLangs, translations, onLanguageChange } from './i18n.js';
 import * as C from './constants.js';
 import * as Simulations from './simulations.js';
@@ -6932,8 +6932,11 @@ bindPickerGestures(dom.btnColorPicker, {
     canOpen: () => !(isLifePlaying && armedSimulation === 'breathe'),
     onHold: () => {
         if (windMode || (isLifePlaying && armedSimulation === 'breathe')) return;
-        selectedColorIndex = 0;
-        selectedColor = palette()[0];
+        const colors = palette();
+        selectedColorIndex = luminanceAnchorPreference.enabled()
+            ? firstLuminanceIndex(colors, C.PALETTES[activePaletteIndex].originalColors)
+            : 0;
+        selectedColor = colors[selectedColorIndex];
         isRainbowModeActive = false;
         updateGlowEffect(); updateColorPickerButtonUI();
     },
