@@ -7103,6 +7103,7 @@ dom.btnWind.addEventListener('keydown', event => {
             onSwipeSide: goDarkAction,
             onSwipeDown: goDarkAction,
             onOpen: () => modals.openTechnicianMenu(dom.btnToggleSimMode),
+            upwardSwipeDistance: () => 16,
             onHold: initializeEvolutionBoard,
             canInteract: () => !isBreathing && !isLifePlaying, beforeStart: hideLongPressDisplay,
             holdMs: C.LONG_PRESS_SHOW_MS

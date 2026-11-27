@@ -22,7 +22,6 @@ app = app.replace('      initializeApp();', `window.modeLayoutTest = {
     state:()=>({mode:modeLayout ? activeLayoutMode() : activeVorticesMode() ?? (armedSimulation === 'gravitationalSort' ? gsMode : spiralMode), engine:armedSimulation,control:activeEvolutionControl(),playing:isLifePlaying,
         gen:currentGenerationCount,project:getCurrentState(),
         settings:getWorkspaceSettings(),logs:[...artRecipeLog],loaded:isMacroLoaded,animated:isAnimating}),
-    openTech:()=>modals.openTechnicianMenu(),
     enterCreation:()=>{if (isSimModeActive) toggleSimMode({immediate:true});}
 }; initializeApp().then(()=>modeLayoutTest.ready=true);`);
 for (const ms of [5000,1500,2000]) app=app.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -56,14 +55,14 @@ try {
         // Native touch exercises drawer controls. Click dialog actions after the CDP swipe ends.
         const state=()=>page.evaluate(()=>modeLayoutTest.state());
         const hub='#btnInk', nav='#btnEvolutionDrawerInternal', play='#btnPlayPauseLife';
-        async function swipeUp(id) {
+        async function swipeUp(id, distance = 40) {
             const r=await page.locator(id).boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
             if (!touch) {
-                await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y-38,{steps:5});await page.mouse.up();
+                await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y-distance,{steps:5});await page.mouse.up();
             } else {
                 const cdp=await context.newCDPSession(page);
                 await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
-                for (let i=1;i<=5;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-8*i}]});
+                for (let i=1;i<=5;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-distance*i/5}]});
                 await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();
             }
         }
@@ -79,7 +78,8 @@ try {
             assert.fail('Missing drawer control: ' + id);
         };
         const openEditor = async () => {
-            await page.evaluate(() => modeLayoutTest.openTech());
+            await swipeUp('#btnToggleSimMode', touch ? 18 : 40);
+            await page.locator('#technicianDialog').waitFor({state:'visible'});
             await tap('#btnSimulationModeEditor');
             await editor.waitFor({state:'visible'});
             const box = await editor.boundingBox();

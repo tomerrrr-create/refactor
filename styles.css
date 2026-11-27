@@ -1404,7 +1404,7 @@ button, .ctrl {
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 8px #d5aa4840;
 }
-#btnPalette, #btnColorPicker, #btnWind, #btnCycleSort, #btnResizeUp, #btnResizeDown,
+#btnPalette, #btnColorPicker, #btnWind, #btnCycleSort, #btnResizeUp, #btnResizeDown, #btnToggleSimMode,
 #btnCymatics, #btnGameOfLife, #btnGravitationalSort, #btnContour, #btnSpiral,
 #btnMagnetModes, #btnSandpile, #btnTuring, #btnNudgeBrighter, #btnNudgeDarker {
   touch-action: none !important;
