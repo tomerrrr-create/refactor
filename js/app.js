@@ -965,7 +965,7 @@ function renderBoard(targetCtx, width, height, timestamp = performance.now(), sm
           dom.btnGap.setAttribute('aria-label', label);
           const isOff = isRelativeSeparatorMode ? level === 0 : separatorPx === 0;
           dom.btnGap.querySelector('svg').setAttribute('stroke', isOff ? '#424242' : '#fff');
-          dom.gapValue.style.color = isOff ? 'var(--playback-control-ink, #424242)' : '';
+          dom.gapValue.style.color = isOff ? '#424242' : '';
           dom.gapValue.hidden = isRelativeSeparatorMode && level === 0;
           dom.gapValue.textContent = isRelativeSeparatorMode
               ? ({ 5: 'L', 3: 'M', 1: 'S', 0: '' }[level])
@@ -2575,11 +2575,11 @@ if (simulationName === 'magnet') {
         cymaticsRules=validateCymaticsRules(settings.rules.cymatics??INITIAL_CYMATICS_RULES);
         if(settings.rules.cymatics===undefined){
             cymaticsFrequencies=createCymaticsFrequencies(undefined,settings.cymaticsFrequencies);
-            cymaticsRules={...cymaticsRules,frequency:cymaticsFrequencies.heart};
+            cymaticsRules={...cymaticsRules,frequency:cymaticsFrequencies.interference};
         }else cymaticsFrequencies=rememberCymaticsFrequency(settings.cymaticsFrequencies,cymaticsRules);
         if(settings.rules.cymatics===undefined){
             cymaticsStrengths=createCymaticsStrengths(undefined,settings.cymaticsStrengths);
-            cymaticsRules={...cymaticsRules,strength:cymaticsStrengths.heart};
+            cymaticsRules={...cymaticsRules,strength:cymaticsStrengths.interference};
         }else cymaticsStrengths=rememberCymaticsStrength(settings.cymaticsStrengths,cymaticsRules);
         if(typeof updateCymaticsButtonUI==='function')updateCymaticsButtonUI();
     if(typeof updateInkButtonUI==='function')updateInkButtonUI();
@@ -6614,7 +6614,7 @@ applySortMethod,
         modals = initializeModals(contextForModals);
         initializeQuickStart();
         const armOpeningChoice = initializeOpeningChoice(initializeEvolutionBoard);
-        initializeSimulationTheme(dom.controlsContainer);
+        initializeSimulationTheme();
         
         activePaletteIndex = resolveStartupPaletteIndex(startupSettings.paletteName);
         n = startupSettings.boardSize;

@@ -5,15 +5,15 @@ import { PALETTES } from './data/palettes.js';
 import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId, evolutionSlotOrder } from './evolution-drawer-settings.js';
 
 const DRAWER_NAMES = ['Life', 'Pulse', 'Geometry'];
-const DRAWER_NUMERALS = ['I', 'II', 'III'];
 
 export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,showPatterns=()=>false,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
     trigger.id='btnEvolutionDrawerInternal';trigger.type='button';trigger.className='evolution-drawer-internal';
     trigger.setAttribute('aria-controls','evolutionDrawerDialog');
     trigger.setAttribute('aria-keyshortcuts','Alt+ArrowUp');
-    trigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><span class="drawer-page-dot"></span><span class="drawer-page-number"></span><span class="drawer-active-mark"></span></span>';
+    trigger.innerHTML='<span class="drawer-internal-symbol" aria-hidden="true"><span class="drawer-page-dot"></span><span class="drawer-page-name" lang="en"><span class="drawer-page-full-name"></span><span class="drawer-page-short-name">Geo</span></span><span class="drawer-active-mark"></span></span>';
     const symbol=trigger.firstElementChild;
+    const currentName=symbol.querySelector('.drawer-page-full-name');
     controls.append(trigger);
     const dialog=document.createElement('dialog');
     dialog.id='evolutionDrawerDialog';
@@ -73,8 +73,8 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         const text=getText('drawer_navigation').replace('{name}',pageLabel(page)).replace('{n}',page+1).replace('{total}',pageCount());
         const activeText=otherPage?getText(isRunning()?'drawer_running_elsewhere':'drawer_selected_elsewhere').replace('{name}',label(active)).replace('{n}',Math.floor(at/EVOLUTION_PAGE_SIZE)+1):'';
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);trigger.dataset.page=String(page);
-        trigger.toggleAttribute('data-numbered-drawer',showPatterns());
-        symbol.querySelector('.drawer-page-number').textContent=DRAWER_NUMERALS[page];
+        trigger.toggleAttribute('data-named-drawer',showPatterns());
+        currentName.textContent=pageLabel(page);
         trigger.title=getText('drawer_switch_tooltip');
         trigger.setAttribute('aria-label',[text,activeText,getText('drawer_open_hint'),getText('drawer_reset_modes_hold')].filter(Boolean).join(' — '));
         if(dialog.open){
@@ -147,9 +147,9 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
                 button.type='button';button.dataset.drawerSlot=String(index);
                 if(INTERNAL_NAV_SLOTS.includes(index)){
                     button.className='drawer-reserved-slot';button.disabled=true;button.dataset.page=String(drawer);
-                    button.toggleAttribute('data-numbered-drawer',showPatterns());
+                    button.toggleAttribute('data-named-drawer',showPatterns());
                     const preview=symbol.cloneNode(true);
-                    preview.querySelector('.drawer-page-number').textContent=DRAWER_NUMERALS[drawer];
+                    preview.querySelector('.drawer-page-full-name').textContent=pageLabel(drawer);
                     button.append(preview);button.setAttribute('aria-label',getText('drawer_navigation_slot'));grid.append(button);continue;
                 }
                 if(id&&!isVisible(id)){

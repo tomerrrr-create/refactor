@@ -159,7 +159,7 @@ try {
         }
         await tap('#btnGravitationalSort');assert.equal((await state()).control,null);
         await tap(nav);await tap('#btnCymatics');
-        assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,CYMATICS_RESONANCE_MAPS.heart);
+        assert.equal((await state()).project.cymaticsState.rules.resonanceVersion,CYMATICS_RESONANCE_MAPS.interference);
         await swipeUp('#btnCymatics');await menu.waitFor({state:'visible'});
         await page.waitForTimeout(350);
         assert.deepEqual(await visibleMaps(),['clouds','diagonal','grid','heart','interference']);

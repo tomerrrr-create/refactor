@@ -66,8 +66,8 @@ test('each app opening starts with Fibonacci despite saved growth; explicit prof
 });
 
 test('new map defaults preserve saved frequency tables even when old default rules were omitted',()=>{
- const h=harness(),settings=defaultWorkspaceSettings();h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,123);assert.equal(h.cymaticsFrequencies.grid,20000);assert.equal(h.cymaticsFrequencies.circular,20000);assert.equal(h.cymaticsFrequencies.clouds,20000);
- settings.cymaticsFrequencies={interference:11831,circular:5000,diagonal:4000,grid:6000};h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,123);assert.equal(h.cymaticsFrequencies.interference,11831);assert.equal(h.cymaticsFrequencies.circular,5000);
+ const h=harness(),settings=defaultWorkspaceSettings();h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,20000);assert.equal(h.cymaticsFrequencies.grid,20000);assert.equal(h.cymaticsFrequencies.circular,20000);assert.equal(h.cymaticsFrequencies.clouds,20000);
+ settings.cymaticsFrequencies={interference:11831,circular:5000,diagonal:4000,grid:6000};h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,11831);assert.equal(h.cymaticsFrequencies.interference,11831);assert.equal(h.cymaticsFrequencies.circular,5000);
  settings.rules.cymatics={pattern:'petals',strength:60,mode:'resonance',frequency:440,resonanceVersion:4};delete settings.cymaticsFrequencies;h.applyWorkspacePreferences(settings);assert.equal(h.cymaticsRules.frequency,440);assert.deepEqual(JSON.parse(JSON.stringify(h.cymaticsFrequencies)),{heart:123,diagonal:440,grid:440,circular:440,interference:440,clouds:440,cosmic:440});
 });
 
@@ -75,7 +75,7 @@ test('map strengths survive profile loading, including omitted flat defaults and
  const h=harness(),settings=defaultWorkspaceSettings();h.applyWorkspacePreferences(settings);
  assert.equal(h.cymaticsRules.strength,35);assert(Object.values(h.cymaticsStrengths).every(value=>value===35));
  settings.cymaticsStrengths={interference:65,circular:25};h.applyWorkspacePreferences(settings);
- assert.equal(h.cymaticsRules.strength,35);assert.equal(h.cymaticsStrengths.interference,65);assert.equal(h.cymaticsStrengths.circular,25);
+ assert.equal(h.cymaticsRules.strength,65);assert.equal(h.cymaticsStrengths.interference,65);assert.equal(h.cymaticsStrengths.circular,25);
  settings.rules.cymatics={...INITIAL_CYMATICS_RULES,strength:80,resonanceVersion:3};h.applyWorkspacePreferences(settings);
  assert.equal(h.cymaticsStrengths.circular,80);assert.equal(h.cymaticsStrengths.interference,65);
  delete settings.cymaticsStrengths;h.applyWorkspacePreferences(settings);

@@ -9,53 +9,33 @@ const source = readFileSync(new URL('../js/simulation-theme.js', import.meta.url
 const themes = ['blue', 'gold', 'teal', 'moon-silver', 'ivory', 'dark-gray'];
 function harness(saved = {}, blocked = false) {
     const storage = new Map(Object.entries(saved)), attributes = new Set();
-    const hierarchy = {
-        checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; }
-    };
     const pulse = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
     const pulseValue = {};
-    const transition = { handlers: {}, setAttribute() {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
-    const transitionValue = {};
-    const sortToggle = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
     const keepDrawers = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
-    const individualDrawers = { checked: false, handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } };
-    const sortButton = {
-        excluded: false,
-        toggleAttribute(name, value) {
-            assert.equal(name, 'data-gold-hierarchy-exempt');
-            this.excluded = value;
-        }
-    };
     const styles = new Map();
     const root = { dataset: {}, hasAttribute: k => attributes.has(k),
         toggleAttribute(k, enabled) { if (enabled) attributes.add(k); else attributes.delete(k); },
         style: { setProperty: (name, value) => styles.set(name, value) } };
-    const controls = { goldPlaybackHierarchyToggle: hierarchy, glowPulse: pulse, glowPulseValue: pulseValue,
-        goldTransitionDuration: transition, goldTransitionDurationValue: transitionValue,
-        goldExcludeSortToggle: sortToggle, btnCycleSort: sortButton, keepSimulationDrawersToggle: keepDrawers, individualDrawerColorsToggle: individualDrawers };
+    const controls = { glowPulse: pulse, glowPulseValue: pulseValue, keepSimulationDrawersToggle: keepDrawers };
     const context = vm.createContext({ document: { documentElement: root,
         getElementById: id => controls[id] },
         localStorage: { getItem(k) { if (blocked) throw Error(); return storage.get(k); },
             setItem(k, v) { if (blocked) throw Error(); storage.set(k, v); } },
         getCurrentLang: () => 'he', onLanguageChange() {} });
     vm.runInContext(source, context);
-    return { context, root, storage, hierarchy, pulse, transition, sortToggle, sortButton, keepDrawers, individualDrawers, styles, run: code => vm.runInContext(code, context) };
+    return { context, root, storage, pulse, keepDrawers, styles, run: code => vm.runInContext(code, context) };
 }
 
-test('drawer switches start on every load and colors survive independently', () => {
+test('drawer backdrop starts on every load and colors survive independently', () => {
     const h = harness({ colorGridKeepSimulationDrawers: 'false' });h.run('initializeSimulationTheme()');
     assert(h.keepDrawers.checked);assert(h.root.hasAttribute('data-keep-simulation-drawers'));
     h.keepDrawers.checked = false;h.keepDrawers.handlers.change();
     assert(!h.root.hasAttribute('data-keep-simulation-drawers'));
-    assert(h.individualDrawers.checked);assert(h.root.hasAttribute('data-individual-drawer-colors'));
-    h.individualDrawers.checked = false;h.individualDrawers.handlers.change();
-    assert(!h.root.hasAttribute('data-individual-drawer-colors'));
     assert.equal(h.run('drawerColors.join()'), 'pine-green,blue,burgundy');
     h.run("setDrawerColor(0, 'pine-green'); setDrawerColor(1, 'ink-violet'); setDrawerColor(2, 'warm-charcoal'); setDrawerColor(2, 'ivory'); setDrawerColor(3, 'blue')");
     assert.equal(h.run("['pine-green','ink-violet','warm-charcoal'].some(isSimulationTheme)"), false);
     const reopened = harness(Object.fromEntries(h.storage));reopened.run('initializeSimulationTheme()');
     assert(reopened.keepDrawers.checked);assert(reopened.root.hasAttribute('data-keep-simulation-drawers'));
-    assert(reopened.individualDrawers.checked);assert(reopened.root.hasAttribute('data-individual-drawer-colors'));
     assert.equal(reopened.run('drawerColors.join()'), 'pine-green,ink-violet,warm-charcoal');
     reopened.run('resetDrawerColors()');
     assert.equal(reopened.run('drawerColors.join()'), 'pine-green,blue,burgundy');
@@ -95,34 +75,6 @@ test('playback is gold even with a legacy device preference and restores the res
     }
 });
 
-test('Gold transition duration defaults to 1.6 seconds and persists independently of the pulse', () => {
-    const h = harness();
-    h.run('initializeSimulationTheme()');
-    assert.equal(h.run('goldTransitionMs'), 1600);
-    assert.equal(h.transition.max, 4);
-    h.transition.value = '4';
-    h.transition.handlers.input();
-    assert.equal(h.run('goldTransitionMs'), 3200);
-    const reload = harness(Object.fromEntries(h.storage));
-    reload.run('initializeSimulationTheme()');
-    assert.equal(reload.run('goldTransitionMs'), 3200);
-    assert.equal(reload.styles.get('--simulation-halo-duration'), '3.2s');
-});
-
-test('Sort is excluded by default and remembers an explicit choice independently of the hierarchy', () => {
-    const h = harness();
-    h.run('initializeSimulationTheme()');
-    assert.equal(h.hierarchy.checked, false);
-    assert.equal(h.sortToggle.checked, true);
-    assert.equal(h.sortButton.excluded, true);
-    h.sortToggle.checked = false;
-    h.sortToggle.handlers.change();
-    assert.equal(h.sortButton.excluded, false);
-    const reopened = harness(Object.fromEntries(h.storage));
-    reopened.run('initializeSimulationTheme()');
-    assert.equal(reopened.sortToggle.checked, false);
-    assert.equal(reopened.sortButton.excluded, false);
-});
 test('fresh or blocked storage defaults to gold at rest and while running', () => {
     for (const blocked of [false, true]) {
         const h = harness({}, blocked); h.run('initializeSimulationTheme()');
@@ -176,21 +128,4 @@ test('old settings and profiles retain other choices while retired appearances n
         }
     }
     assert.throws(()=>serializeWorkspaceSettings({...defaultWorkspaceSettings(),simulationTheme:'red'}));
-});
-
-
-test('Gold playback hierarchy defaults off and preserves explicit choices across openings', () => {
-    const h = harness();
-    h.run('initializeSimulationTheme()');
-    assert.equal(h.hierarchy.checked, false);
-    assert.equal(h.root.hasAttribute('data-gold-playback-hierarchy'), false);
-    for (const enabled of [true, false]) {
-        h.hierarchy.checked = enabled;
-        h.hierarchy.handlers.change();
-        assert.equal(h.root.hasAttribute('data-gold-playback-hierarchy'), enabled);
-        const reload = harness(Object.fromEntries(h.storage));
-        reload.run('initializeSimulationTheme()');
-        assert.equal(reload.hierarchy.checked, enabled);
-        assert.equal(reload.root.hasAttribute('data-gold-playback-hierarchy'), enabled);
-    }
 });
