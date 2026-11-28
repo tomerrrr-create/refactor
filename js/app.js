@@ -3414,7 +3414,7 @@ function commitWindPainting(reason = 'complete') {
 function setWindMode(enabled) {
     if (enabled === windMode || (enabled && (isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || pointerState.id !== null))) return;
     if (enabled) {
-        windSettings = selectWindMode(windSettings, (typeof cycleMemory!=='undefined'?cycleMemory.entry('wind'):undefined)??'ripple');
+        windSettings = selectWindMode(windSettings, getWindEntryMode());
         if(typeof cycleMemory!=='undefined')cycleMemory.enterCycle('wind');
         saveWindSettings(windSettings);
     } else {
@@ -3428,6 +3428,9 @@ function setWindMode(enabled) {
     dom.btnSymmetry.disabled = enabled;
     document.body.classList.toggle('wind-mode', enabled);
     updateColorPickerButtonUI();
+}
+function getWindEntryMode() {
+    return (typeof cycleMemory !== 'undefined' ? cycleMemory.entry('wind') : undefined) ?? 'ripple';
 }
 function cycleWindEffect() {
     if (!windMode) { setWindMode(true); return; }
@@ -3799,7 +3802,7 @@ function updateWindButtonUI() {
         dom.btnWind.classList.toggle('wind-active', windMode);
         dom.btnWind.setAttribute('aria-pressed', String(windMode));
         dom.btnWind.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp');
-        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : 'ripple'));
+        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : getWindEntryMode()));
         dom.btnWind.dataset.windMode = windMode ? windSettings.mode : 'off';
         const title = getText('tooltip_wind_cycle');
         dom.btnWind.title = title;
