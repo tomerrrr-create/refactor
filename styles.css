@@ -2083,6 +2083,7 @@ button, .ctrl {
 }
 .evolution-tuning-dialog[data-compact-pattern] .tuning-field output { margin:0; font-size:16px; }
 .evolution-tuning-dialog[data-compact-pattern] .tuning-field > input { grid-column:1 / -1; min-height:26px; }
+.evolution-tuning-dialog[data-compact-pattern] .tuning-field > p:not([hidden]) { grid-column:1 / -1; margin:0; }
 .tuning-growth-controls, .tuning-growth-controls .tuning-growth-auto { display:flex; align-items:center; gap:7px; }
 .tuning-growth-controls { gap:12px; }
 .tuning-growth-auto { min-height:32px; color:#d2c5ab; cursor:pointer; }

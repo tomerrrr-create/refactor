@@ -1,7 +1,7 @@
 import {createLuminanceAnchorPreference} from './luminance-anchor-preference.js';
 import {MAGNET_CYCLE,isCombinedMagnetMode} from './magnet-modes.js';
 import {createExperimentalSimulationFlags,initializeExperimentalSimulationControls} from './experimental-simulations.js';
-import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,isFibonacciColorAdvance,normalizeFibonacciColorAdvance,createFibonacciState,setFibonacciMode,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
+import {FIBONACCI_MODES,DEFAULT_FIBONACCI_COLOR_ADVANCE,DEFAULT_RECURSIVE_SPIRAL_SETTINGS,validateRecursiveSpiralSettings,applyRecursiveSpiralSettings,isFibonacciColorAdvance,normalizeFibonacciColorAdvance,createFibonacciState,setFibonacciMode,validateFibonacciState,runFibonacciGeneration} from './simulations/fibonacci.js';
 import {CLASSIC_CRYSTAL_SETTINGS,DEFAULT_CRYSTAL_PREFERENCES,validateCrystalSettings} from './simulations/fibonacci-crystal.js';
 import { DEFAULT_MAP_PREFERENCES, seedFibonacciMap, validateMapSettings } from './simulations/fibonacci-maps.js';
 import { restorePatternGrowthPreference } from './simulations/pattern-growth.js';
@@ -98,6 +98,7 @@ import { loadStartup, persistStartup, normalizeStartup, fitStartupSeparator, res
       let resonanceCycle=loadResonanceCycle();
       let oilState=null,oilRules={...INITIAL_OIL_RULES},replayOilRules=null;
       let fibonacciState = null, fibonacciColorAdvance = DEFAULT_FIBONACCI_COLOR_ADVANCE;
+      let fibonacciRecursiveSettings = DEFAULT_RECURSIVE_SPIRAL_SETTINGS;
       let fibonacciCrystalSettings = DEFAULT_CRYSTAL_PREFERENCES;
       let fibonacciMapSettings = { ...DEFAULT_MAP_PREFERENCES };
       let networkState=null,networkRules={...DEFAULT_NETWORK_PREFERENCES},replayNetworkRules=null,networkSettingsUI=null;
@@ -2613,6 +2614,7 @@ if (simulationName === 'magnet') {
                 breatheVisible: experimentalSimulations.visible('breathe'),
                 fibonacciVisible: experimentalSimulations.visible('fibonacci'),
                 fibonacciColorAdvance,
+                fibonacciRecursive: { ...fibonacciRecursiveSettings },
                 fibonacciCrystal: { ...fibonacciCrystalSettings },
                 fibonacciMaps: structuredClone(fibonacciMapSettings),
                 rememberSimulationModes: cycleMemory.enabled()
@@ -2656,6 +2658,12 @@ if (simulationName === 'magnet') {
         if (preferences.fibonacciColorAdvance !== undefined) {
             fibonacciColorAdvance = preferences.fibonacciColorAdvance;
             if (fibonacciState) fibonacciState.colorAdvance = fibonacciColorAdvance;
+        }
+        if (preferences.fibonacciRecursive) {
+            fibonacciRecursiveSettings = preferences.fibonacciRecursive;
+            if (fibonacciState?.mode === 'recursive' && !isMacroPlaying && !isExecutingMacroCommand) {
+                applyRecursiveSpiralSettings(fibonacciState, fibonacciRecursiveSettings);
+            }
         }
         if (preferences.fibonacciCrystal) {
             fibonacciCrystalSettings = restorePatternGrowthPreference(preferences.fibonacciCrystal, DEFAULT_CRYSTAL_PREFERENCES);
@@ -4092,6 +4100,11 @@ function cycleChiFlowMode() {
 function resetFibonacciRuntime(previous = fibonacciState, mode = previous?.mode ?? FIBONACCI_MODES[0]) {
     fibonacciState = createFibonacciState(n, previous?.orientation, mode,
         previous?.colorAdvance ?? fibonacciColorAdvance, previous?.seed, previous?.version);
+    if (mode === 'recursive') {
+        const settings = previous?.recursiveSettings ??
+            (previous?.mode === 'recursive' || isMacroPlaying || isExecutingMacroCommand ? undefined : fibonacciRecursiveSettings);
+        if (settings) fibonacciState.recursiveSettings = settings;
+    }
     if (mode === 'crystal') {
         const settings = previous ? previous.crystalSettings : fibonacciCrystalSettings;
         if (settings) fibonacciState.crystalSettings = settings;
@@ -4132,7 +4145,8 @@ function restoreFibonacciState(state) {
 
 function applyFibonacciPreferences(state) {
     state.colorAdvance = fibonacciColorAdvance;
-    if (state.mode === 'crystal') state.crystalSettings = fibonacciCrystalSettings;
+    if (state.mode === 'recursive') applyRecursiveSpiralSettings(state, fibonacciRecursiveSettings);
+    else if (state.mode === 'crystal') state.crystalSettings = fibonacciCrystalSettings;
     else if (state.map) state.map = { ...state.map, settings: fibonacciMapSettings[state.mode] };
 }
 
@@ -4161,6 +4175,7 @@ function selectFibonacciMode(mode) {
     const layoutSeed = changed && mode === 'apollonian' && !isExecutingMacroCommand
         ? Math.floor(Math.random() * 2 ** 32) : state.seed;
     setFibonacciMode(state, mode, layoutSeed);
+    if (changed && mode === 'recursive') applyRecursiveSpiralSettings(state, fibonacciRecursiveSettings);
     if (changed && state.map) state.map.settings = fibonacciMapSettings[mode];
     updateFibonacciButtonUI();
 }
@@ -4170,7 +4185,12 @@ function saveFibonacciSettings(draft) {
     if (armedSimulation !== 'fibonacci' || !experimentalSimulations.visible(activeEvolutionControl()) ||
         isMacroLoaded || isMacroPlaying || isExecutingMacroCommand || !isFibonacciColorAdvance(colorAdvance)) return false;
     const state = getFibonacciState();
-    if (state.mode === 'crystal') {
+    if (state.mode === 'recursive') {
+        let settings;
+        try { settings = validateRecursiveSpiralSettings(draft); } catch { return false; }
+        fibonacciRecursiveSettings = settings;
+        applyRecursiveSpiralSettings(state, settings);
+    } else if (state.mode === 'crystal') {
         let crystalSettings;
         try { crystalSettings = validateCrystalSettings(draft); } catch { return false; }
         fibonacciCrystalSettings = crystalSettings;
@@ -6710,8 +6730,10 @@ else if (action.eventName === 'Invert Colors') {
             },
             getEvolutionTuning: () => ({ ...structuredClone(evolutionTuning), fibonacci: {
                 colorAdvance: normalizeFibonacciColorAdvance(fibonacciState?.colorAdvance) ?? fibonacciColorAdvance,
-                ...(fibonacciState?.map?.settings ??
-                    (fibonacciState?.mode === 'crystal' ? fibonacciState.crystalSettings ?? CLASSIC_CRYSTAL_SETTINGS : fibonacciCrystalSettings))
+                ...(fibonacciState?.mode === 'recursive'
+                    ? fibonacciState.recursiveSettings ?? fibonacciRecursiveSettings
+                    : fibonacciState?.map?.settings ??
+                        (fibonacciState?.mode === 'crystal' ? fibonacciState.crystalSettings ?? CLASSIC_CRYSTAL_SETTINGS : fibonacciCrystalSettings))
             } }),
             getEvolutionTuningMode: simulation => ({ brightnessEvo: brightnessEvoMode, breathe: breatheEvoMode, dla: dlaMode, fibonacci: fibonacciState?.mode })[simulation],
             getTuningPaletteSize: paletteLen,

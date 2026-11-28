@@ -6,6 +6,7 @@ import { createIslandsSession, restoreIslandsSession, runIslandsGeneration } fro
 import { runBrightnessEvolution, runContrastGeneration } from '../js/simulations/brightness.js';
 import { getBreatheBrightnessFactor, createRandomBreatheSession } from '../js/simulations/breathe.js';
 import { runDlaGeneration } from '../js/simulations/dla.js';
+import { DEFAULT_RECURSIVE_SPIRAL_SETTINGS } from '../js/simulations/fibonacci.js';
 import { factoryProfileSnapshot, validateProfileSnapshot } from '../js/profile-state.js';
 
 const board = () => [0, 4, 8, 2].map(k => ({ k, v: k, isGold: false }));
@@ -96,4 +97,18 @@ test('old and new macro rule formats restore resolved values instead of inheriti
     play('brightnessEvo','{"mode":"contrast","tuning":{"smoothing":0.8,"contrast":0.6}}');assert.equal(c.evolutionTuning.brightnessEvo.contrast,.6);
     play('breathe','{"mode":"random-cell","tuning":{"speed":2,"depth":0.5}}');assert.equal(c.evolutionTuning.breathe.depth,.5);
     play('dla','{"mode":"no-genetics","tuning":{"batchSize":500}}');assert.equal(c.evolutionTuning.dla.batchSize,500);
+});
+
+
+test('recursive spiral settings round trip through profiles and settings TXT', () => {
+    const settings = defaultWorkspaceSettings();
+    const recursive = { branchStart: 0, branchLimit: 6, backgroundPace: 1 };
+    settings.simulationPreferences = { fibonacciRecursive: recursive };
+    const roundTrip = deserializeWorkspaceSettings(serializeWorkspaceSettings(settings));
+    assert.deepEqual(roundTrip.simulationPreferences.fibonacciRecursive, recursive);
+    assert.deepEqual(validateProfileSnapshot({ settings }).settings.simulationPreferences.fibonacciRecursive, recursive);
+    assert.deepEqual(factoryProfileSnapshot(0).settings.simulationPreferences.fibonacciRecursive, DEFAULT_RECURSIVE_SPIRAL_SETTINGS);
+    assert.throws(() => serializeWorkspaceSettings({
+        ...settings, simulationPreferences: { fibonacciRecursive: { ...recursive, branchLimit: 7 } }
+    }), /recursive spiral setting/);
 });

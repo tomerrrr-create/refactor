@@ -1,7 +1,7 @@
 import { focusSettingsHeading } from './dialog-focus.js';
 import { INITIAL_EVOLUTION_TUNING, EVOLUTION_TUNING_LIMITS } from './evolution-tuning.js';
 import { onLanguageChange } from './i18n.js';
-import { DEFAULT_FIBONACCI_COLOR_ADVANCE, FIBONACCI_COLOR_ADVANCE_RANGE } from './simulations/fibonacci.js';
+import { DEFAULT_FIBONACCI_COLOR_ADVANCE, FIBONACCI_COLOR_ADVANCE_RANGE, DEFAULT_RECURSIVE_SPIRAL_SETTINGS, RECURSIVE_SPIRAL_LIMITS, RECURSIVE_BRANCH_STARTS } from './simulations/fibonacci.js';
 import { CLASSIC_CRYSTAL_SETTINGS, CRYSTAL_LIMITS, DEFAULT_CRYSTAL_PREFERENCES, DEFAULT_CRYSTAL_SETTINGS } from './simulations/fibonacci-crystal.js';
 import { DEFAULT_MAP_PREFERENCES, MAP_LIMITS } from './simulations/fibonacci-maps.js';
 import { MIN_PATTERN_GROWTH_SPEED, resolvePatternGrowthSpeed } from './simulations/pattern-growth.js';
@@ -12,10 +12,10 @@ const definitions = {
     breathe: { title: 'tuning_breathe_title', button: 'btnShowBreatheMenu',
         modes: ['solo', 'group', 'random-cell', 'random-color'], fields: ['speed', 'depth'] },
     fibonacci: { title: 'tuning_fibonacci_title', button: 'btnFibonacci',
-        fields: ['colorAdvance', 'growthSpeed', 'tileSize', 'circleMinimum', 'seedDensity', 'crystalEdges'],
-        modeDefaults: { crystal: DEFAULT_CRYSTAL_PREFERENCES, ...DEFAULT_MAP_PREFERENCES },
+        fields: ['colorAdvance', 'branchStart', 'branchLimit', 'backgroundPace', 'growthSpeed', 'tileSize', 'circleMinimum', 'seedDensity', 'crystalEdges'],
+        modeDefaults: { recursive: DEFAULT_RECURSIVE_SPIRAL_SETTINGS, crystal: DEFAULT_CRYSTAL_PREFERENCES, ...DEFAULT_MAP_PREFERENCES },
         defaults: { colorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE },
-        limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE, ...CRYSTAL_LIMITS, ...MAP_LIMITS } },
+        limits: { colorAdvance: FIBONACCI_COLOR_ADVANCE_RANGE, ...RECURSIVE_SPIRAL_LIMITS, ...CRYSTAL_LIMITS, ...MAP_LIMITS } },
     islands: { title: 'tuning_islands_title', button: 'btnIslands', fields: ['activity'] },
     dla: { title: 'dla_modal_title', button: 'btnDla', modes: ['genetics', 'no-genetics'], fields: ['batchSize'] }
 };
@@ -28,7 +28,9 @@ const crystalPresets = {
 };
 const percentage = value => `${Math.round(value * 100)}%`;
 function format(field, value, getText) {
-    if (field === 'batchSize') return String(value);
+    if (field === 'batchSize' || field === 'branchLimit') return String(value);
+    if (field === 'branchStart') return String(RECURSIVE_BRANCH_STARTS[value]);
+    if (field === 'backgroundPace') return percentage(value / 3);
     if (field === 'tileSize' || field === 'circleMinimum') return getText('tuning_tileSize_' + value);
     if (field === 'seedDensity') return getText('tuning_seedDensity_' + value);
     if (['colorAdvance', 'growthSpeed', 'crystalEdges'].includes(field)) return `${value}%`;
@@ -104,14 +106,15 @@ export function initializeEvolutionTuningModals(app) {
             }
             for (const [field, { row, label, note, input, output, autoToggle, autoText }] of fields) {
                 row.hidden = Boolean(definition.modeDefaults && field !== 'colorAdvance' && !Object.hasOwn(modeDefaults ?? {}, field));
+                if (row.hidden) continue;
                 label.textContent = app.getText('tuning_' + field);
-                note.hidden = compact;
-                if (compact) input.removeAttribute('aria-describedby');
+                note.hidden = compact && field !== 'branchStart';
+                if (note.hidden) input.removeAttribute('aria-describedby');
                 else {
                     note.textContent = app.getText('tuning_' + field + '_note');
                     input.setAttribute('aria-describedby', note.id);
                 }
-                if (!draft || row.hidden) continue;
+                if (!draft) continue;
                 let value = draft[field];
                 if (autoToggle) {
                     const automatic = draft.growthSpeedAuto === true;

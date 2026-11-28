@@ -26,7 +26,7 @@ import { MAGNET_ANCHOR_LIMITS, DEFAULT_MAGNET_ANCHOR_PREFERENCE } from './magnet
 import { normalizeWindSettings } from './wind-settings.js';
 import { DEFAULT_EXPERIMENT_VISIBILITY } from './experimental-simulations.js';
 import { DEFAULT_REMEMBER_SIMULATION_MODES } from './evolution-mode-memory.js';
-import { DEFAULT_FIBONACCI_COLOR_ADVANCE, normalizeFibonacciColorAdvance } from './simulations/fibonacci.js';
+import { DEFAULT_FIBONACCI_COLOR_ADVANCE, normalizeFibonacciColorAdvance, DEFAULT_RECURSIVE_SPIRAL_SETTINGS, validateRecursiveSpiralSettings } from './simulations/fibonacci.js';
 import { DEFAULT_CRYSTAL_PREFERENCES, validateCrystalSettings } from './simulations/fibonacci-crystal.js';
 import { FIBONACCI_MAPS, DEFAULT_MAP_PREFERENCES, validateMapSettings } from './simulations/fibonacci-maps.js';
 
@@ -38,6 +38,7 @@ export function defaultSimulationPreferences() {
         geometricFlowVisible: DEFAULT_EXPERIMENT_VISIBILITY.spiral, breatheVisible: DEFAULT_EXPERIMENT_VISIBILITY.breathe,
         fibonacciVisible: DEFAULT_EXPERIMENT_VISIBILITY.fibonacci,
         fibonacciColorAdvance: DEFAULT_FIBONACCI_COLOR_ADVANCE, fibonacciCrystal: { ...DEFAULT_CRYSTAL_PREFERENCES },
+        fibonacciRecursive: { ...DEFAULT_RECURSIVE_SPIRAL_SETTINGS },
         rememberSimulationModes: DEFAULT_REMEMBER_SIMULATION_MODES, fibonacciMaps: structuredClone(DEFAULT_MAP_PREFERENCES)
     };
 }
@@ -74,6 +75,9 @@ function validateSimulationPreferences(value) {
         const colorAdvance = normalizeFibonacciColorAdvance(value.fibonacciColorAdvance);
         if (colorAdvance === undefined) throw new Error('Invalid Fibonacci color advance');
         result.fibonacciColorAdvance = colorAdvance;
+    }
+    if (Object.hasOwn(value, 'fibonacciRecursive')) {
+        result.fibonacciRecursive = validateRecursiveSpiralSettings(value.fibonacciRecursive);
     }
     if (Object.hasOwn(value, 'fibonacciCrystal')) {
         result.fibonacciCrystal = validateCrystalSettings(value.fibonacciCrystal);
