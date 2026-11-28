@@ -2767,6 +2767,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   width:48px; height:14px; border:0; background:transparent; box-shadow:none;
 }
 .evolution-drawer-internal[data-named-drawer] { container:drawer-navigation / inline-size; }
+.evolution-drawer-internal[data-named-drawer] > .drawer-internal-symbol { translate:0 5px; }
 .evolution-drawer-internal[data-shorten-geometry] .drawer-page-name { --drawer-short-label:inline; --drawer-full-label:none; }
 [data-named-drawer] > .drawer-internal-symbol::before { display:none; }
 [data-named-drawer] .drawer-page-dot { display:none; }
