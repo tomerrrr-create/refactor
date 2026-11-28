@@ -21,9 +21,9 @@ test('drawer name preferences persist independently and fall back per drawer', (
         setItem: (_key, value) => { saved = value; }
     };
     assert.deepEqual(loadDrawerNames(storage), ['Life', 'Pulse', 'Geometry']);
-    persistDrawerNames(['Nature', 'Space', 'Form'], storage);
-    assert.deepEqual(loadDrawerNames(storage), ['Nature', 'Space', 'Form']);
-    saved = '["Nature","Form"]';
+    persistDrawerNames(['Nature', '2', 'III'], storage);
+    assert.deepEqual(loadDrawerNames(storage), ['Nature', '2', 'III']);
+    saved = '["Nature","Flow","Shape"]';
     assert.deepEqual(loadDrawerNames(storage), ['Nature', 'Pulse', 'Geometry']);
     saved = '{';
     assert.deepEqual(loadDrawerNames(storage), ['Life', 'Pulse', 'Geometry']);

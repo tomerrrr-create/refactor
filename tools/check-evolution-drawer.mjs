@@ -317,7 +317,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.evaluate(()=>drawerTest.macro());
  await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});
  assert.deepEqual((await state()).board,recordedPattern.board,'the macro replays every recorded palette and Auto generation');
- const chosenNames=['Nature','Space','Pattern'];
+ const chosenNames=['1','II','III'];
  async function openDrawerNames(){
   await page.evaluate(()=>drawerTest.tech());
   await tap(page.locator('#btnConfigureDisplay'));
@@ -327,6 +327,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  }
  if(config.width<600)await page.setViewportSize({width:320,height:config.height});
  const options=await openDrawerNames();
+ const groups=options.getByRole('group');
+ assert.deepEqual(await groups.nth(0).getByRole('button').allTextContents(),['Life','Nature','1','I']);
+ assert.deepEqual(await groups.nth(1).getByRole('button').allTextContents(),['Pulse','Space','2','II']);
+ assert.deepEqual(await groups.nth(2).getByRole('button').allTextContents(),['Geometry','3','III','Pattern']);
  assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),['Life','Pulse','Geometry']);
  for(const label of chosenNames)await tap(options.getByRole('button',{name:label,exact:true}));
  assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),chosenNames);
