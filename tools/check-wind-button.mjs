@@ -12,6 +12,7 @@ source=source.replace('      initializeApp();',`window.windTest={
  recipe:async()=>await createArtRecipeFile().text(),
  replay:text=>{pauseLife();setWindMode(false);macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
  restingTheme:()=>applySimulationTheme('blue'),
+ remember:value=>{cycleMemory.setEnabled(value);refreshCycleIcons();},
  live:()=>{armSimulation('nudgeBrighter');togglePlayPauseLife();},pause:pauseLife
  };initializeApp().then(()=>windTest.ready=true);`);
 for(const ms of [5000,1500,2000])source=source.replace('await new Promise(r => setTimeout(r, '+ms+'));','');
@@ -49,6 +50,9 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
   assert.equal(await wind.evaluate(e=>e.getAnimations().filter(a=>a.effect.getKeyframes().some(f=>'boxShadow' in f)).length),0);
  }
  assert.equal(new Set(activeIcons.values()).size,3);
+ assert.match(activeIcons.get('ripple'),/<rect /);
+ assert.match(activeIcons.get('paint'),/<ellipse /);
+ assert.match(activeIcons.get('displace'),/<circle /);
  assert.equal(inactiveIcon,activeIcons.get('ripple'));
  await tap('#btnWind');await swipe('#btnWind',-35);await page.locator('#windSettingsDialog').waitFor({state:'visible'});
  for(const [mode,icon] of activeIcons) {
@@ -56,6 +60,32 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  }
  await tap('#windSettingsDialog [data-cancel]');assert.equal(await page.evaluate(()=>document.activeElement.id),'btnWind');assert.equal((await state()).mode,'ripple');
  await page.locator('#btnWind').focus();await page.keyboard.press('Alt+ArrowUp');await page.locator('#windSettingsDialog').waitFor({state:'visible'});await page.keyboard.press('Escape');assert((await state()).wind);
+ // A swipe remembers the mode and previews it in gray before re-entry.
+ for(const mode of ['paint','displace']){
+  await tap('#btnWind');
+  assert.equal((await state()).mode,mode);
+  await swipe('#btnWind',35);
+  assert.equal(await wind.getAttribute('data-wind-mode'),'off');
+  assert.equal(await toolbarIcon(),activeIcons.get(mode));
+  assert.equal(await wind.evaluate(el=>getComputedStyle(el).color),'rgb(66, 66, 66)');
+  await tap('#btnWind');
+  assert.equal((await state()).mode,mode);
+  assert.equal(await toolbarIcon(),activeIcons.get(mode));
+ }
+ await tap('#btnWind');
+ assert.equal(await toolbarIcon(),inactiveIcon);
+ await tap('#btnWind');
+ assert.equal((await state()).mode,'ripple');
+
+ await page.evaluate(()=>windTest.remember(false));
+ await tap('#btnWind');
+ assert.equal((await state()).mode,'paint');
+ await swipe('#btnWind',35);
+ assert.equal(await toolbarIcon(),inactiveIcon);
+ await tap('#btnWind');
+ assert.equal((await state()).mode,'ripple');
+ await page.evaluate(()=>windTest.remember(true));
+
  // Saving settings changes only the current mode and survives an Off/on cycle.
  await swipe('#btnWind',-35);await page.locator('#windSettingsDialog').waitFor({state:'visible'});
  await page.locator('#wind_speed').fill('1.25');await page.locator('#wind_speed').dispatchEvent('input');await tap('#windSettingsDialog [type=submit]');assert.equal((await state()).settings.speed,1.25);
