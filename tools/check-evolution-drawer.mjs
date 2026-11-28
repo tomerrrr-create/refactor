@@ -229,18 +229,18 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  }
  await page.screenshot({path:path.join(artifacts,config.lang+'-patterns-burgundy.png'),animations:'disabled'});
  const name=trigger.locator('.drawer-page-name');
- assert.equal(await name.innerText(),'Geometry');
+ assert.equal(await name.innerText(),'III');
  if(config.width<600){
   await page.setViewportSize({width:320,height:config.height});
-  assert.equal(await name.innerText(),'Geo');
-  assert.match(await trigger.getAttribute('aria-label'),/Geometry/);
+  assert.equal(await name.innerText(),'III');
+  assert.match(await trigger.getAttribute('aria-label'),/III/);
   assert(await name.evaluate(e=>e.offsetWidth<=e.parentElement.clientWidth));
   await page.setViewportSize({width:config.width,height:config.height});
-  assert.equal(await name.innerText(),'Geometry');
+  assert.equal(await name.innerText(),'III');
  }
  const labelStyle=()=>trigger.locator('.drawer-internal-symbol').evaluate(e=>{
   const style=getComputedStyle(e),glyph=getComputedStyle(e.querySelector('.drawer-page-name'));
-  return {border:style.borderTopWidth,background:style.backgroundColor,lip:getComputedStyle(e,'::before').display,ink:glyph.color,font:glyph.fontFamily};
+  return {border:style.borderTopWidth,background:style.backgroundColor,lip:getComputedStyle(e,'::before').display,ink:glyph.color,font:glyph.fontFamily,offset:style.translate};
  });
  const labelAtRest=await labelStyle();
  assert.equal(labelAtRest.border,'0px');
@@ -248,6 +248,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(labelAtRest.lip,'none');
  assert.equal(labelAtRest.ink,'rgb(187, 192, 198)');
  assert.match(labelAtRest.font,/Georgia/);
+ assert.equal(labelAtRest.offset,'0px 10px');
 
  const beforeSwipes = await state();
  for (const [dx, expectedPage] of [[-36,'0'],[-36,'1'],[-36,'2'],[36,'1'],[36,'0'],[36,'2']]) {
@@ -259,15 +260,15 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(20).filter(Boolean));
  for(const drawer of ['2','0','1']){
   assert.equal(await pageIndex(),drawer);
-  const label=['Life','Pulse','Geometry'][Number(drawer)];
+  const label=['I','II','III'][Number(drawer)];
   assert.equal(await name.innerText(),label);
   assert(await trigger.locator('.drawer-page-name').evaluate(e=>e.offsetWidth<e.parentElement.clientWidth));
   assert.deepEqual(await trigger.boundingBox(),position);
   await swipe(trigger,3,-18);await dialog.waitFor({state:'visible'});
   assert.equal(await pageIndex(),drawer,'short upward swipe opens the map without navigating');
   assert.equal(await dialog.locator('.drawer-slots').count(),3);
-  assert.deepEqual(await dialog.locator('.drawer-reserved-slot .drawer-page-full-name').allTextContents(),['Life','Pulse','Geometry']);
-  assert.deepEqual(await dialog.locator('.drawer-pages h3').allTextContents(),['Life','Pulse','Geometry']);
+  assert.deepEqual(await dialog.locator('.drawer-reserved-slot .drawer-page-full-name').allTextContents(),['I','II','III']);
+  assert.deepEqual(await dialog.locator('.drawer-pages h3').allTextContents(),['I','II','III']);
   await tap(dialog.locator('[data-cancel]'));await tap(trigger);
   await checkBackdrop((Number(drawer)+1)%3);
  }
@@ -330,27 +331,27 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.evaluate(()=>drawerTest.macro());
  await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});
  assert.deepEqual((await state()).board,recordedPattern.board,'the macro replays every recorded palette and Auto generation');
- const chosenNames=['1','II','III'];
+ const chosenNames=['Nature','2','Geometry'];
  async function openDrawerNames(){
   await page.evaluate(()=>drawerTest.tech());
-  await tap(page.locator('#btnConfigureDisplay'));
-  const options=page.locator('#technicianDrawerNames');
+  await tap(page.locator('#btnConfigureAbTest'));
+  const options=page.locator('#abTestSettings #technicianDrawerNames');
   await options.waitFor({state:'visible'});
   return options;
  }
  if(config.width<600)await page.setViewportSize({width:320,height:config.height});
  const options=await openDrawerNames();
  const groups=options.getByRole('group');
- assert.deepEqual(await groups.nth(0).getByRole('button').allTextContents(),['Life','Nature','1','I']);
- assert.deepEqual(await groups.nth(1).getByRole('button').allTextContents(),['Pulse','Space','2','II']);
- assert.deepEqual(await groups.nth(2).getByRole('button').allTextContents(),['Geometry','3','III','Pattern']);
- assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),['Life','Pulse','Geometry']);
+ assert.deepEqual(await groups.nth(0).getByRole('button').allTextContents(),['I','1','Life','Nature']);
+ assert.deepEqual(await groups.nth(1).getByRole('button').allTextContents(),['II','2','Pulse','Space']);
+ assert.deepEqual(await groups.nth(2).getByRole('button').allTextContents(),['III','3','Geometry','Pattern']);
+ assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),['I','II','III']);
  for(const label of chosenNames)await tap(options.getByRole('button',{name:label,exact:true}));
  assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),chosenNames);
  await tap(page.locator('#btnTechnicianCloseTop'));
  for(let count=0;count<3;count++){
   const drawer=Number(await pageIndex());
-  assert.equal(await name.innerText(),chosenNames[drawer]);
+  assert.equal(await name.innerText(),config.width<600 && drawer===2 ? 'Geo' : chosenNames[drawer]);
   assert.match(await trigger.getAttribute('aria-label'),new RegExp(chosenNames[drawer]));
   assert(await name.evaluate(e=>e.offsetWidth<=e.parentElement.clientWidth));
   await tap(trigger);

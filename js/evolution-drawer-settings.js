@@ -19,9 +19,9 @@ export const EVOLUTION_CATALOG = Object.freeze([
 export const DEFAULT_EVOLUTION_SLOTS = Object.freeze(EVOLUTION_CATALOG.slice(0,10).map(e=>e.id));
 export const EVOLUTION_PAGE_SIZE = 10;
 export const DRAWER_NAME_OPTIONS = Object.freeze([
-    Object.freeze(['Life', 'Nature', '1', 'I']),
-    Object.freeze(['Pulse', 'Space', '2', 'II']),
-    Object.freeze(['Geometry', '3', 'III', 'Pattern'])
+    Object.freeze(['I', '1', 'Life', 'Nature']),
+    Object.freeze(['II', '2', 'Pulse', 'Space']),
+    Object.freeze(['III', '3', 'Geometry', 'Pattern'])
 ]);
 const DRAWER_NAMES_KEY = 'colorGridEvolutionDrawerNamesV1';
 
