@@ -20,13 +20,15 @@ test('drawer name preferences persist independently and fall back per drawer', (
         getItem: () => saved,
         setItem: (_key, value) => { saved = value; }
     };
-    assert.deepEqual(loadDrawerNames(storage), ['Life', 'Pulse', 'Geometry']);
+    assert.deepEqual(loadDrawerNames(storage), ['I', 'II', 'III']);
     persistDrawerNames(['Nature', '2', 'III'], storage);
     assert.deepEqual(loadDrawerNames(storage), ['Nature', '2', 'III']);
-    saved = '["Nature","Flow","Shape"]';
-    assert.deepEqual(loadDrawerNames(storage), ['Nature', 'Pulse', 'Geometry']);
-    saved = '{';
+    persistDrawerNames(['Life', 'Pulse', 'Geometry'], storage);
     assert.deepEqual(loadDrawerNames(storage), ['Life', 'Pulse', 'Geometry']);
+    saved = '["Nature","Flow","Shape"]';
+    assert.deepEqual(loadDrawerNames(storage), ['Nature', 'II', 'III']);
+    saved = '{';
+    assert.deepEqual(loadDrawerNames(storage), ['I', 'II', 'III']);
 });
 
 test('legacy ten-place layouts migrate without losing controls or mutating the input',()=>{
