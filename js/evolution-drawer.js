@@ -2,9 +2,7 @@ import { SIMULATION_DRAWER_COLORS, getDrawerColor, getThemeColorLabel, resetDraw
 import { focusSettingsHeading } from './dialog-focus.js';
 import { bindPickerGestures } from './picker-gestures.js';
 import { PALETTES } from './data/palettes.js';
-import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId, evolutionSlotOrder } from './evolution-drawer-settings.js';
-
-const DRAWER_NAMES = ['Life', 'Pulse', 'Geometry'];
+import { EVOLUTION_CATALOG, DEFAULT_EVOLUTION_LAYOUT, INTERNAL_NAV_SLOTS, EVOLUTION_PAGE_SIZE, validateEvolutionSlots, moveEvolutionSlot, evolutionControlId, evolutionSlotOrder, DRAWER_NAME_OPTIONS, loadDrawerNames, persistDrawerNames } from './evolution-drawer-settings.js';
 
 export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,canNavigate,canEdit,isVisible=()=>true,showPatterns=()=>false,onSave,onResetCycles,getText,getLang,onLanguageChange}) {
     const trigger=document.createElement('button');
@@ -31,7 +29,15 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const displaySlots=()=>{const slots=slotsNow();return evolutionSlotOrder(slots,showPatterns()).map(i=>slots[i]);};
     const entry=id=>EVOLUTION_CATALOG.find(e=>e.id===evolutionControlId(id));
     const label=id=>getText(entry(id).key).split('\n')[0];
-    const pageLabel=index=>DRAWER_NAMES[index];
+    const drawerNames=loadDrawerNames();
+    const pageLabel=index=>drawerNames[index];
+    function setDrawerName(index,name){
+        if(!DRAWER_NAME_OPTIONS[index]?.includes(name)||pageLabel(index)===name)return;
+        drawerNames[index]=name;
+        persistDrawerNames(drawerNames);
+        refresh();
+        if(dialog.open)render();
+    }
     const navigateAllowed=()=>canNavigate();
     const canOpenMap=()=>navigateAllowed()&&(canEdit()||(showPatterns()&&isRunning()));
     function icon(id){
@@ -75,6 +81,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
         trigger.disabled=!navigateAllowed();trigger.dataset.parkedActive=String(otherPage);trigger.dataset.page=String(page);
         trigger.toggleAttribute('data-named-drawer',showPatterns());
         currentName.textContent=pageLabel(page);
+        trigger.toggleAttribute('data-shorten-geometry',pageLabel(page)==='Geometry');
         trigger.title=getText('drawer_switch_tooltip');
         trigger.setAttribute('aria-label',[text,activeText,getText('drawer_open_hint'),getText('drawer_reset_modes_hold')].filter(Boolean).join(' — '));
         if(dialog.open){
@@ -232,5 +239,5 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-simulation-running']});
     observer.observe(controls,{attributes:true,subtree:true,attributeFilter:['class']});
     onLanguageChange(()=>{refresh();if(dialog.open)render();});
-    applyLayout();return {applyLayout,refresh,open,dialog,trigger,swipePage};
+    applyLayout();return {applyLayout,refresh,open,dialog,trigger,swipePage,getDrawerName:pageLabel,setDrawerName};
 }

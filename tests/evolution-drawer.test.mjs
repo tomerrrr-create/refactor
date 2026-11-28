@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,INTERNAL_NAV_SLOTS,validateEvolutionSlots,assignEvolutionSlot,moveEvolutionSlot,evolutionSlotOrder} from '../js/evolution-drawer-settings.js';
+import {EVOLUTION_CATALOG,DEFAULT_EVOLUTION_SLOTS,DEFAULT_EVOLUTION_LAYOUT,INTERNAL_NAV_SLOTS,loadDrawerNames,persistDrawerNames,validateEvolutionSlots,assignEvolutionSlot,moveEvolutionSlot,evolutionSlotOrder} from '../js/evolution-drawer-settings.js';
 import {defaultWorkspaceSettings,serializeWorkspaceSettings,deserializeWorkspaceSettings,validateWorkspaceSettings} from '../js/workspace-settings.js';
 import {translations} from '../js/i18n.js';
 const ids=slots=>slots.filter(id=>id!==null).sort();
@@ -14,6 +14,21 @@ test('permanent drawers reserve bottom center and retain the approved default or
  for(const e of EVOLUTION_CATALOG)for(const lang of ['en','he','ru','nl'])assert(translations[e.key]?.[lang]);
  for(const lang of ['en','he','ru','nl'])assert(translations.drawer_navigation_slot[lang]);
 });
+test('drawer name preferences persist independently and fall back per drawer', () => {
+    let saved = null;
+    const storage = {
+        getItem: () => saved,
+        setItem: (_key, value) => { saved = value; }
+    };
+    assert.deepEqual(loadDrawerNames(storage), ['Life', 'Pulse', 'Geometry']);
+    persistDrawerNames(['Nature', 'Space', 'Form'], storage);
+    assert.deepEqual(loadDrawerNames(storage), ['Nature', 'Space', 'Form']);
+    saved = '["Nature","Form"]';
+    assert.deepEqual(loadDrawerNames(storage), ['Nature', 'Pulse', 'Geometry']);
+    saved = '{';
+    assert.deepEqual(loadDrawerNames(storage), ['Life', 'Pulse', 'Geometry']);
+});
+
 test('legacy ten-place layouts migrate without losing controls or mutating the input',()=>{
  const legacy=['cymatics',...DEFAULT_EVOLUTION_SLOTS.slice(1)],before=[...legacy],migrated=validateEvolutionSlots(legacy);
  assert.deepEqual(migrated.slice(0,5),legacy.slice(0,5));assert.deepEqual(migrated.slice(5,10),['magnet','gravitationalSort',null,'sandpile','erosion']);

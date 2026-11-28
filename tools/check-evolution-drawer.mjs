@@ -317,5 +317,37 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.evaluate(()=>drawerTest.macro());
  await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});
  assert.deepEqual((await state()).board,recordedPattern.board,'the macro replays every recorded palette and Auto generation');
+ const chosenNames=['Nature','Space','Pattern'];
+ async function openDrawerNames(){
+  await page.evaluate(()=>drawerTest.tech());
+  await tap(page.locator('#btnConfigureDisplay'));
+  const options=page.locator('#technicianDrawerNames');
+  await options.waitFor({state:'visible'});
+  return options;
+ }
+ if(config.width<600)await page.setViewportSize({width:320,height:config.height});
+ const options=await openDrawerNames();
+ assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),['Life','Pulse','Geometry']);
+ for(const label of chosenNames)await tap(options.getByRole('button',{name:label,exact:true}));
+ assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),chosenNames);
+ await tap(page.locator('#btnTechnicianCloseTop'));
+ for(let count=0;count<3;count++){
+  const drawer=Number(await pageIndex());
+  assert.equal(await name.innerText(),chosenNames[drawer]);
+  assert.match(await trigger.getAttribute('aria-label'),new RegExp(chosenNames[drawer]));
+  assert(await name.evaluate(e=>e.offsetWidth<=e.parentElement.clientWidth));
+  await tap(trigger);
+ }
+ await page.evaluate(()=>drawerTest.open());
+ assert.deepEqual(await dialog.locator('.drawer-pages h3').allTextContents(),chosenNames);
+ assert.deepEqual(await dialog.locator('.drawer-reserved-slot .drawer-page-full-name').allTextContents(),chosenNames);
+ await tap(dialog.locator('[data-cancel]'));
+ const slotsBeforeReload=(await state()).slots;
+ await page.reload();
+ await page.waitForFunction(()=>window.drawerTest?.ready);
+ await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});
+ assert.deepEqual((await state()).slots,slotsBeforeReload);
+ const restored=await openDrawerNames();
+ assert.deepEqual(await restored.locator('[aria-pressed="true"]').allTextContents(),chosenNames);
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}

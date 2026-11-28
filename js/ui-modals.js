@@ -22,6 +22,7 @@ import { GAME_OF_LIFE_PRESETS, CHI_FLOW_PRESETS } from './constants.js';
 import { RANDOM_STARTUP_PALETTE } from './startup-settings.js';
 import { RELATIVE_SEPARATOR_LEVELS, relativeSeparatorLevel } from './relative-separators.js';
 import { DEFAULT_SIM_INIT } from './sim-init-settings.js';
+import { DRAWER_NAME_OPTIONS } from './evolution-drawer-settings.js';
 import { DEFAULT_SORT_CYCLE, moveSortMethod } from './sort-cycle-settings.js';
 // js/ui-modals.js
 
@@ -1754,6 +1755,42 @@ export function initializeModals(appContext) {
         }
         technicianUpdate.disabled = false;
     });
+    const drawerNamesControl = document.getElementById('technicianDrawerNames');
+    const drawerNameButtons = DRAWER_NAME_OPTIONS.map((options, index) => {
+        const fieldset = document.createElement('fieldset');
+        const legend = document.createElement('legend');
+        const label = document.createElement('span');
+        label.dataset.debugText = 'technician_drawer';
+        label.textContent = app.getText('technician_drawer');
+        legend.append(label, ` ${index + 1}`);
+        const choices = document.createElement('div');
+        choices.className = 'drawer-name-options';
+        choices.lang = 'en';
+        const buttons = options.map(name => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = name;
+            button.addEventListener('click', () => {
+                app.setDrawerName(index, name);
+                refreshDrawerNameChoices();
+            });
+            choices.append(button);
+            return button;
+        });
+        fieldset.append(legend, choices);
+        drawerNamesControl.append(fieldset);
+        return buttons;
+    });
+
+    function refreshDrawerNameChoices() {
+        drawerNameButtons.forEach((buttons, index) => {
+            const activeName = app.getDrawerName(index);
+            for (const button of buttons) {
+                button.setAttribute('aria-pressed', String(button.textContent === activeName));
+            }
+        });
+    }
+
     function openTechnicianMenu(trigger = app.dom.btnOpenDebug) {
         technicianReturnFocus = trigger;
         if (!technicianUpdate.disabled) technicianUpdateStatus.textContent = '';
@@ -1763,6 +1800,7 @@ export function initializeModals(appContext) {
         workspaceResetStatus.textContent = '';
         delete workspaceResetStatus.dataset.debugText;
         xlBrushWidth.value = app.getXlBrushWidth();
+        refreshDrawerNameChoices();
         rememberModesToggle.checked = app.getRememberEvolutionModes();
         macroActivityToggle.checked = app.getMacroActivity();
         brushMotionToggle.checked = app.getBrushMotionRecording();
