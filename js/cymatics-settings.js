@@ -2,7 +2,7 @@ export const CURRENT_RESONANCE_VERSION=2;
 export const CYMATICS_RESONANCE_MAPS=Object.freeze({heart:7,diagonal:1,grid:2,circular:3,interference:4,clouds:5,cosmic:6});
 export const CENTERED_HEART_FIELD_VERSION = 3;
 // New application/reset defaults are separate from legacy recording fallbacks.
-export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({heart:123,diagonal:11831,grid:20000,circular:20000,interference:20000,clouds:20000,cosmic:800});
+export const INITIAL_CYMATICS_FREQUENCIES=Object.freeze({heart:123,diagonal:11831,grid:20000,circular:20000,interference:11000,clouds:20000,cosmic:800});
 export const INITIAL_CYMATICS_RULES = Object.freeze({strength:35,mode:'resonance',frequency:INITIAL_CYMATICS_FREQUENCIES.interference,resonanceVersion:CYMATICS_RESONANCE_MAPS.interference,phaseMotion:true});
 export const DEFAULT_CYMATICS_RULES=INITIAL_CYMATICS_RULES;
 const isEmpathyMap = version => version === CYMATICS_RESONANCE_MAPS.circular || version === CYMATICS_RESONANCE_MAPS.cosmic;

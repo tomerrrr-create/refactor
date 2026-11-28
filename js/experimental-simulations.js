@@ -2,7 +2,7 @@
 import { isPatternEvolution } from './evolution-drawer-settings.js';
 
 // Browser storage preserves the legacy preference and defaults for older profiles.
-export const DEFAULT_EXPERIMENT_VISIBILITY = Object.freeze({ spiral:true, breathe:true, fibonacci:true });
+export const DEFAULT_EXPERIMENT_VISIBILITY = Object.freeze({ spiral:true, breathe:false, fibonacci:true });
 export const EXPERIMENTAL_SIMULATIONS = Object.freeze([
     {id:'spiral',button:'btnSpiral',key:'tooltip_spiral',defaultVisible:DEFAULT_EXPERIMENT_VISIBILITY.spiral},
     {id:'breathe',button:'btnShowBreatheMenu',key:'tooltip_breathe',defaultVisible:DEFAULT_EXPERIMENT_VISIBILITY.breathe},

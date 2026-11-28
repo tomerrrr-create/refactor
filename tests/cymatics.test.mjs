@@ -209,7 +209,7 @@ test('fixed resonance maps retain their pre-motion byte signatures',async()=>{
 });
 
 test('Resonance defaults to 35 percent and retired preferences migrate without accepting retired recordings',()=>{
- assert.deepEqual(INITIAL_CYMATICS_RULES,{strength:35,mode:'resonance',frequency:20000,resonanceVersion:4,phaseMotion:true});
+ assert.deepEqual(INITIAL_CYMATICS_RULES,{strength:35,mode:'resonance',frequency:11000,resonanceVersion:4,phaseMotion:true});
  assert.deepEqual(validateCymaticsRules(),INITIAL_CYMATICS_RULES);
  const defaults=defaultWorkspaceSettings();defaults.rules.cymatics={...INITIAL_CYMATICS_RULES};
  assert.equal(deserializeWorkspaceSettings(serializeWorkspaceSettings(defaults)).rules.cymatics,undefined);
@@ -300,8 +300,8 @@ test('saving draft frequencies and restoring history/projects/macros do not disc
 });
 
 test('fresh per-map defaults are independent and do not replace explicit legacy frequencies',()=>{
- assert.deepEqual(createCymaticsFrequencies(),{heart:123,diagonal:11831,grid:20000,circular:20000,interference:20000,clouds:20000,cosmic:800});
- const circle=selectCymaticsMap(INITIAL_CYMATICS_RULES,3,createCymaticsFrequencies());assert.equal(circle.rules.frequency,20000);assert.equal(selectCymaticsMap(circle.rules,4,circle.frequencies).rules.frequency,20000);
+ assert.deepEqual(createCymaticsFrequencies(),{heart:123,diagonal:11831,grid:20000,circular:20000,interference:11000,clouds:20000,cosmic:800});
+ const circle=selectCymaticsMap(INITIAL_CYMATICS_RULES,3,createCymaticsFrequencies());assert.equal(circle.rules.frequency,20000);assert.equal(selectCymaticsMap(circle.rules,4,circle.frequencies).rules.frequency,11000);
  const old={pattern:'petals',strength:60,mode:'resonance',frequency:11831,resonanceVersion:4,phaseMotion:true};assert.deepEqual(createCymaticsFrequencies(old),{heart:123,diagonal:11831,grid:11831,circular:11831,interference:11831,clouds:11831,cosmic:11831});
  assert.equal(validateCymaticsSnapshot({cymaticsVersion:1,rules:old,state:createCymaticsState(41)}).rules.frequency,11831);
 });
