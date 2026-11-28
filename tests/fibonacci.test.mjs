@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { createFibonacciState, getFibonacciBranchSchedule, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
+import { createFibonacciState, getFibonacciBranchSchedule, applyRecursiveSpiralSettings, DEFAULT_RECURSIVE_SPIRAL_SETTINGS, setFibonacciMode, runFibonacciGeneration, validateFibonacciState } from '../js/simulations/fibonacci.js';
 import { CLASSIC_CRYSTAL_SETTINGS, DEFAULT_CRYSTAL_PREFERENCES, DEFAULT_CRYSTAL_SETTINGS, growFibonacciCrystal } from '../js/simulations/fibonacci-crystal.js';
 import { DEFAULT_MAP_PREFERENCES, FIBONACCI_MAPS, seedFibonacciMap } from '../js/simulations/fibonacci-maps.js';
 import { restorePatternGrowthPreference } from '../js/simulations/pattern-growth.js';
@@ -138,6 +138,37 @@ test('recursive growth advances overlaps once and resumes from checkpoints throu
     setFibonacciMode(sim.state, 'restart');
     assert.equal(sim.state.filledAt, undefined);
     assert.equal(validateFibonacciState(sim.state).version, 8);
+});
+
+test('recursive tuning applies geometry before branching and keeps an established round stable', () => {
+    const sim = simulate(249, 0, 'recursive');
+    const early = { branchStart: 0, branchLimit: 5, backgroundPace: 1 };
+    const late = { branchStart: 2, branchLimit: 2, backgroundPace: 3 };
+    applyRecursiveSpiralSettings(sim.state, early);
+    const active = getFibonacciBranchSchedule(249, sim.state);
+    const firstSquare = active.primary.squares.find(square => square.side === 13);
+    assert.equal(active.branches[0].start, firstSquare.frame);
+    assert.equal(active.branchLimit, 5);
+    while (sim.state.frame < firstSquare.frame) sim.step();
+    applyRecursiveSpiralSettings(sim.state, late);
+    assert.equal(getFibonacciBranchSchedule(249, sim.state), active);
+    assert.deepEqual(sim.state.roundBranching, early);
+    assert.deepEqual(sim.state.recursiveSettings, late);
+    const checkpoint = validateFibonacciState(JSON.parse(JSON.stringify(sim.state)));
+    assert.deepEqual(checkpoint, sim.state);
+
+    while (sim.state.frame < active.primary.frameEnds.length - 1) sim.step();
+    const oldColors = sim.currentBoardState.map(cell => cell.k);
+    for (let index = 0; index < 27; index++) sim.step();
+    assert.equal(sim.state.roundBranching, undefined);
+    const next = getFibonacciBranchSchedule(249, sim.state);
+    assert.equal(next.branchLimit, 2);
+    assert.equal(next.branchStart, 2);
+    assert(sim.currentBoardState.every((cell, index) => cell.k === oldColors[index] + 27));
+    setFibonacciMode(sim.state, 'restart');
+    assert.equal(sim.state.recursiveSettings, undefined);
+    assert.equal(sim.state.roundBranching, undefined);
+    assert.equal(getFibonacciBranchSchedule(249, sim.state).branchLimit, DEFAULT_RECURSIVE_SPIRAL_SETTINGS.branchLimit);
 });
 
 test('version 8 recursive recordings retain the original strip handoff', () => {
