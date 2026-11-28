@@ -5,18 +5,23 @@ export const WIND_MODE_SEQUENCE = Object.freeze(['ripple', 'paint', 'displace'])
 export function nextWindEffect(mode) {
     return WIND_MODE_SEQUENCE[(WIND_MODE_SEQUENCE.indexOf(mode) + 1) % WIND_MODE_SEQUENCE.length];
 }
-// Use the actual breathing symbols, keeping geometry and stroke widths identical.
+const WIND_ICON_SHAPES = Object.freeze({
+    ripple: `<circle cx="7.1" cy="12" r="1.07" fill="currentColor" stroke="none"/>
+        <path d="M4 16.1C7.7 15.9 8.8 17.8 12.1 16.1c3.1-1.6 3.45-6.4 7.75-7.6"/>`,
+    paint: `<ellipse cx="12" cy="12" rx="9" ry="5.4"/>
+        <ellipse cx="12" cy="12" rx="5" ry="2.65"/>`,
+    displace: `<path d="M12 3.8c-3.2 2.6-3.2 5.55-.7 8.2s2.5 5.6-.7 8.2"/>
+        <rect x="4.2" y="13.3" width="2.55" height="2.55" rx=".5" fill="currentColor" stroke="none"/>
+        <rect x="16.6" y="8.1" width="2.55" height="2.55" rx=".5" fill="currentColor" stroke="none"/>`
+});
+
 export function createWindModeIcon(mode) {
-    const sourceId = mode === 'ripple' ? 'iconBreatheSolo' : mode === 'paint' ? 'iconBreatheRandomColor' : null;
-    if (sourceId) {
-        const icon = document.getElementById(sourceId).cloneNode(true);
-        icon.removeAttribute('id'); icon.style.display = 'block';
-        icon.setAttribute('aria-hidden', 'true');
-        return icon;
-    }
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    for (const [key, value] of Object.entries({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) icon.setAttribute(key, value);
-    icon.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="12" cy="12" r="5.5"/>';
+    for (const [name, value] of Object.entries({
+        viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+        'stroke-width': '1.38', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true'
+    })) icon.setAttribute(name, value);
+    icon.innerHTML = WIND_ICON_SHAPES[mode];
     return icon;
 }
 const WIND_MODES = ['displace', 'paint', 'ripple'];
