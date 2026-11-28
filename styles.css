@@ -2751,6 +2751,7 @@ button.palette-current-summary:focus-visible { outline: 2px solid #d5aa48; outli
   background:#141619; box-shadow:inset 0 1px 3px #000c, inset 0 -1px #ffffff12;
   direction:ltr; pointer-events:none; transition:border-color 150ms ease;
 }
+.evolution-drawer-internal > .drawer-internal-symbol { translate:0 10px; }
 .drawer-internal-symbol::before {
   content:''; position:absolute; inset:-1px; border-radius:inherit;
   border-bottom:1px solid color-mix(in srgb,var(--sim-drawer-lip, var(--sim-rest-color)) 58%,#373a3e);
