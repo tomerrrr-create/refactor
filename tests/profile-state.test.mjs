@@ -212,7 +212,7 @@ test('factory reset restores the selected profile independently of personal save
     for (const index of [0, 1, 2]) {
         const preferences = factoryProfileSnapshot(index).settings.simulationPreferences;
         assert.equal(preferences.geometricFlowVisible, true);
-        assert.equal(preferences.breatheVisible, true);
+        assert.equal(preferences.breatheVisible, false);
         assert.equal(preferences.fibonacciVisible, true);
         assert.equal(preferences.rememberSimulationModes, true);
     }

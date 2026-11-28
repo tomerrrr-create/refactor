@@ -20,7 +20,7 @@ const cases=[['gravitationalSort','btnGravitationalSort','up'],['spiral','btnSpi
 await mkdir('/tmp/evolution-hold-reset',{recursive:true});
 try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,height:844},{lang:'ru',width:375,height:667},{lang:'nl',width:1024,height:768}].filter(c=>!process.env.HOLD_LANG||process.env.HOLD_LANG===c.lang)){
  const touch=config.width<600,context=await browser.newContext({viewport:{width:config.width,height:config.height},isMobile:touch,hasTouch:touch,serviceWorkers:'block',reducedMotion:config.lang==='he'?'reduce':'no-preference'});
- await context.addInitScript(()=>localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({spiral:true})));
+ await context.addInitScript(()=>localStorage.setItem('colorGridExperimentalSimulationsV1',JSON.stringify({spiral:true,breathe:true})));
  await context.addInitScript(lang=>localStorage.setItem('userLanguage',lang),config.lang);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.holdTest?.ready);await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));
  const state=()=>page.evaluate(()=>holdTest.state()),params=()=>page.evaluate(()=>holdTest.params()),setup=()=>page.evaluate(()=>holdTest.setup()),tap=id=>page.locator('#'+id).evaluate(e=>e.click()),reset=sim=>page.evaluate(sim=>holdTest.resetMode(sim),sim);

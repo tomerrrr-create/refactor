@@ -35,7 +35,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  for(const start of [10,20]){
   if(config.width<600)await freshSwitch.tap();else await freshSwitch.click();
   const shown=await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(buttons=>buttons.sort((a,b)=>a.dataset.evolutionSlot-b.dataset.evolutionSlot).map(e=>[Number(e.dataset.evolutionSlot),e.dataset.evolutionId]));
-  assert.deepEqual(shown,DEFAULT_EVOLUTION_LAYOUT.slice(start,start+10).flatMap((id,index)=>id?[[start+index,id]]:[]));
+  assert.deepEqual(shown,DEFAULT_EVOLUTION_LAYOUT.slice(start,start+10).flatMap((id,index)=>id&&id!=='breathe'?[[start+index,id]]:[]));
  }
  if(config.width<600)await freshSwitch.tap();else await freshSwitch.click();
  await page.evaluate(()=>{drawerTest.setup();drawerTest.hidePatterns();drawerTest.hideOptional();});
@@ -211,6 +211,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const nudge=page.locator('#btnNudgeBrighter');assert(await nudge.isVisible());assert.equal(await nudge.getAttribute('data-evolution-slot'),String(custom.indexOf('nudgeBrighter')));assert.equal(await nudge.getAttribute('data-nudge-mode'),'darker');
  const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter'),nudgeTo=nudgeFrom<10?16:1;await open();await move(nudgeFrom,nudgeTo);await save();custom=moveEvolutionSlot(custom,nudgeFrom,nudgeTo);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
  await reload();assert.deepEqual((await state()).slots,custom,'moving Nudge persists alongside all other controls');
+ await page.evaluate(()=>drawerTest.tech());
+ await tap(page.locator('#btnConfigureFeatures'));
+ await page.locator('#breatheExperimentToggle').check();
+ await tap(page.locator('#btnTechnicianCloseTop'));
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());await tap(trigger);assert((await state()).playing);await page.evaluate(()=>drawerTest.pause());
  await page.evaluate(()=>drawerTest.tech());await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#patternsExperimentToggle').check();await page.locator('#fibonacciExperimentToggle').check();await tap(page.locator('#btnTechnicianCloseTop'));
