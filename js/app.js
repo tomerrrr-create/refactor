@@ -3172,13 +3172,8 @@ gsMode = 'off';
 function applyActionToTiles(indices, actionFn) {
         if (pointerState.id !== null && !pointerState.liveCheckpoint && isLifePlaying && simulationStartState &&
             indices.some(index => boardState[index])) {
-            const checkpoint = JSON.stringify({ version: 1, simulation: armedSimulation,
-                generation: currentGenerationCount,
-                elapsed: armedSimulation === 'breathe' ? Math.max(0, performance.now() - breatheStartTime) : 0 });
-            window.logArtEvent('BRUSH_CHECKPOINT', checkpoint);
-            checkpointLiveSimulation();
+            recordLiveInputCheckpoint();
             pointerState.liveCheckpoint = true;
-            window.logArtEvent('BRUSH_CONTINUE', checkpoint);
         }
         let changed = false;
         const now = performance.now();
@@ -3301,8 +3296,8 @@ function commitWindPainting(reason = 'complete') {
         windBatch = null;
     }
     const after = getCurrentState();
-    // A concurrent run owns the whole combined action. A second overlapping
-    // history snapshot would restore simulation generations twice on undo.
+    // During playback the live-input checkpoint already opened this segment.
+    // Pause or the next live input closes it as one history entry.
     if (!isLifePlaying || !simulationStartState) pushHistory({ before, after });
     hasPerformedInitialAutofill = true;
 }
@@ -3369,7 +3364,13 @@ function initializeWindMode() {
     windPainter = createWindPainter({
         settings: () => windSettings,
         context: index => ({ n, paletteLength: paletteLen(), base: selectedColorIndex >= 0 ? selectedColorIndex : boardState[index]?.k || 0 }),
-        onStart: () => { windBefore = getCurrentState(); },
+        onStart: () => {
+            windBefore = getCurrentState();
+            if (isLifePlaying && simulationStartState) {
+                recordLiveInputCheckpoint(windBefore, 'wind');
+                simulationHasBrushInput = true;
+            }
+        },
         onWave: recordLiveWindWave,
         paint: (index, rank, wave) => applyWindCell(boardState, index, rank, wave, performance.now()),
         onFrame: startAnimationLoop,
@@ -3379,11 +3380,23 @@ function initializeWindMode() {
 
 const pointerState = { id: null, downIndex: -1, downX: 0, downY: 0, longPressTimer: null, suppressClick: false, isDragging: false, dragSourceIndex: null, lastPaintedIndex: -1, lineAnchorIndex: -1, lineRestartPending: false, beforeState: null, changes: null, liveRecording: false, pausedMotion: false, motionStarted: false, liveCheckpoint: false };
 
-// One full snapshot per live stroke, shared across adjacent history segments.
-// Never pause/restart the engine or reset its generation counter here.
-function checkpointLiveSimulation() {
+// Reuse the recorded brush boundary for live Wind, so Undo/Redo keeps the
+// generations before the input and replay resumes at the same generation.
+function recordLiveInputCheckpoint(boundary, tool = 'brush') {
+    const checkpoint = JSON.stringify({
+        version: 1, simulation: armedSimulation, generation: currentGenerationCount,
+        elapsed: armedSimulation === 'breathe' ? Math.max(0, performance.now() - breatheStartTime) : 0,
+        ...(tool === 'wind' ? { tool } : {})
+    });
+    window.logArtEvent('BRUSH_CHECKPOINT', checkpoint);
+    checkpointLiveSimulation(boundary);
+    window.logArtEvent('BRUSH_CONTINUE', checkpoint);
+}
+
+// Share one snapshot across the adjacent history segments without pausing.
+function checkpointLiveSimulation(boundary) {
     if (!isLifePlaying || !simulationStartState) return;
-    const boundary = getCurrentState();
+    boundary ??= getCurrentState();
     // Even a visually stable run owns its PLAY and elapsed generations. Keep
     // that lead-in outside the stroke so Undo never leaves an orphan GEN wait.
     pushHistory({ before: simulationStartState, after: boundary });
@@ -6325,7 +6338,11 @@ else if (action.eventName === 'Invert Colors') {
             checkpointLiveSimulation();
         }
         else if (action.eventName === 'BRUSH_CONTINUE') {
-            if (!action.orphanedSimulation) resumeBrushCheckpoint(JSON.parse(action.details));
+            if (!action.orphanedSimulation) {
+                const record = JSON.parse(action.details);
+                resumeBrushCheckpoint(record);
+                if (record.tool === 'wind' && isLifePlaying && simulationStartState) simulationHasBrushInput = true;
+            }
         }
         else if (action.eventName === 'BRUSH_START') {
             replayBrushBefore = getCurrentState();
