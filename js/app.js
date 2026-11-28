@@ -3694,7 +3694,7 @@ function updateWindButtonUI() {
         dom.btnWind.classList.toggle('wind-active', windMode);
         dom.btnWind.setAttribute('aria-pressed', String(windMode));
         dom.btnWind.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp');
-        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : (typeof cycleMemory!=='undefined'?cycleMemory.entry('wind'):undefined)??'ripple'));
+        dom.btnWind.replaceChildren(createWindModeIcon(windMode ? windSettings.mode : 'ripple'));
         dom.btnWind.dataset.windMode = windMode ? windSettings.mode : 'off';
         const title = getText('tooltip_wind_cycle');
         dom.btnWind.title = title;

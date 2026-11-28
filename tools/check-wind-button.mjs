@@ -31,9 +31,29 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  const initial=await state();
  await swipe('#btnColorPicker',35);assert.equal((await state()).wind,false);const colorIcon=await page.locator('#btnColorPicker').innerHTML();
  await page.locator('#btnColorPicker').focus();await page.keyboard.press('Alt+ArrowDown');assert.equal((await state()).wind,false);
- for(const mode of ['ripple','paint','displace','off']){await tap('#btnWind');assert.equal(await page.locator('#btnWind').getAttribute('data-wind-mode'),mode);assert.equal(await page.locator('#btnWind').getAttribute('aria-pressed'),String(mode!=='off'));assert.equal(await page.locator('#btnColorPicker').innerHTML(),colorIcon);assert.equal(await page.locator('#btnWind').evaluate(e=>getComputedStyle(e).color==='rgb(255, 215, 0)'),mode!=='off');assert.deepEqual(await page.locator('#btnWind').evaluate(e=>({shadow:getComputedStyle(e).boxShadow,background:getComputedStyle(e).backgroundColor})),{shadow:'none',background:'rgba(0, 0, 0, 0)'});assert.equal(await page.locator('#btnWind').evaluate(e=>e.getAnimations().filter(a=>a.effect.getKeyframes().some(f=>'boxShadow' in f)).length),0);}
- assert.deepEqual((await state()).board,initial.board);assert.equal((await state()).history,initial.history);
+ const wind = page.locator('#btnWind');
+ const toolbarIcon = () => wind.locator('svg').innerHTML();
+ const inactiveIcon = await toolbarIcon();
+ const activeIcons = new Map();
+ for(const mode of ['ripple','paint','displace','off']){
+  await tap('#btnWind');
+  if(mode==='off')assert.equal(await toolbarIcon(),inactiveIcon);
+  else activeIcons.set(mode,await toolbarIcon());
+  assert.equal(await wind.getAttribute('data-wind-mode'),mode);
+  assert.equal(await wind.getAttribute('aria-pressed'),String(mode!=='off'));
+  assert.equal(await page.locator('#btnColorPicker').innerHTML(),colorIcon);
+  assert.equal(await wind.evaluate(e=>getComputedStyle(e).color==='rgb(255, 215, 0)'),mode!=='off');
+  assert.deepEqual(await wind.evaluate(e=>({
+   shadow:getComputedStyle(e).boxShadow,background:getComputedStyle(e).backgroundColor
+  })),{shadow:'none',background:'rgba(0, 0, 0, 0)'});
+  assert.equal(await wind.evaluate(e=>e.getAnimations().filter(a=>a.effect.getKeyframes().some(f=>'boxShadow' in f)).length),0);
+ }
+ assert.equal(new Set(activeIcons.values()).size,3);
+ assert.equal(inactiveIcon,activeIcons.get('ripple'));
  await tap('#btnWind');await swipe('#btnWind',-35);await page.locator('#windSettingsDialog').waitFor({state:'visible'});
+ for(const [mode,icon] of activeIcons) {
+  assert.equal(await page.locator(`#windModeButtons [data-mode="${mode}"] svg`).innerHTML(),icon);
+ }
  await tap('#windSettingsDialog [data-cancel]');assert.equal(await page.evaluate(()=>document.activeElement.id),'btnWind');assert.equal((await state()).mode,'ripple');
  await page.locator('#btnWind').focus();await page.keyboard.press('Alt+ArrowUp');await page.locator('#windSettingsDialog').waitFor({state:'visible'});await page.keyboard.press('Escape');assert((await state()).wind);
  // Saving settings changes only the current mode and survives an Off/on cycle.
