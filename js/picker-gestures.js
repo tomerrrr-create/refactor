@@ -2,7 +2,7 @@
 // swipes open the same picker; ordinary desktop clicks retain their action.
 export function bindPickerGestures(button, {
     onTap, onOpen, onSwipeDown, onSwipeSide, onHold, onExtendedHold, canInteract, canOpen = () => true, canSwipeSide = () => true, canSwipeDown = () => true,
-    onSwipeFallback, canStart = () => true, upwardSwipeDistance,
+    onSwipeSideFallback, canStart = () => true, upwardSwipeDistance,
     beforeStart = () => {}, onEnd = () => {}, holdMs = 600, extendedHoldMs = holdMs * 2
 }) {
     const TAP_SLOP = 8, SWIPE_DISTANCE = 24, VERTICAL_RATIO = 1.25;
@@ -79,7 +79,8 @@ export function bindPickerGestures(button, {
     button.addEventListener('pointerup', event => {
         if (!active || active.id !== event.pointerId) return;
         updatePosition(event);
-        const state = active, up = swipeReady(state), horizontal = sidewaysReady(state);
+        const state = active, horizontal = sidewaysReady(state);
+        const direction = state.currentX > state.x ? 1 : -1;
         const open = canOpenOnSwipe(state);
         const down = onSwipeDown && canSwipeDown() && swipeReady(state, 1);
         const side = onSwipeSide && horizontal && canSwipeSide();
@@ -95,8 +96,8 @@ export function bindPickerGestures(button, {
         if (button.disabled || !canInteract()) return;
         if (open) onOpen();
         else if (down) onSwipeDown();
-        else if (side) onSwipeSide(state.currentX > state.x ? 1 : -1);
-        else if (onSwipeFallback && (up || horizontal)) onSwipeFallback();
+        else if (side) onSwipeSide(direction);
+        else if (horizontal && onSwipeSideFallback) onSwipeSideFallback(direction);
         else if (state.touch && tap) onTap?.();
     });
     button.addEventListener('click', event => {

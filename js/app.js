@@ -7077,7 +7077,7 @@ dom.btnWind.addEventListener('keydown', event => {
                 onTap: () => handleEvolutionTap(simulation, onTap), onOpen,
                 onSwipeSide: ['gameOfLife','sandpile'].includes(simulation) ? direction => modals.browseEvolutionPreset(simulation,direction) : undefined,
                 canSwipeSide: () => contextForModals.canBrowseEvolutionPreset(simulation) && !evolutionExplanation.isOpen(),
-                onSwipeFallback: evolutionDrawer.swipePage,
+                onSwipeSideFallback: evolutionDrawer.swipePage,
                 onHold: () => resetEvolutionCycle(simulation),
                 onExtendedHold: () => evolutionExplanation.show(button, isNudgeSimulation(simulation) && isNudgeSimulation() ? armedSimulation : simulation),
                 canInteract: () => !isBreathing && experimentalSimulations.visible(simulation),
