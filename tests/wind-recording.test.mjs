@@ -93,6 +93,48 @@ test('history parser removes undone Wind commands and restores drag duration on 
  const legacy=parse(init+'\n'+line('DRAW_STROKE',[{i:0,k:2}]));assert.equal(legacy.at(-1).eventName,'DRAW_STROKE');
 });
 
+test('live Wind undo keeps the earlier batch and generations, and redo resumes the later batch', () => {
+ const parse = parser();
+ const events = [init];
+ let cursor = 0;
+ const add = (name, details, generation = null) => {
+  const time = `12:00:${String(events.length).padStart(2, '0')}.000`;
+  const tag = generation === null ? '' : ` [GEN:${generation}]`;
+  events.push(`[${time}]${tag} ${name} -> ${typeof details === 'string' ? details : JSON.stringify(details)}`);
+ };
+ const commit = id => {
+  add('HISTORY_ACTION', { recipeVersion: 2, id, from: cursor, to: events.length });
+  cursor = events.length;
+ };
+ const boundary = generation => ({ version: 1, tool: 'wind', simulation: 'nudgeBrighter', generation, elapsed: 0 });
+ const edit = { recipeVersion: 2, id: 3, settings: { n: 31, activePaletteIndex: 0, separatorPx: 0, currentSortMethod: 'luminance' } };
+ add('PLAY', 'Armed: nudgeBrighter | Sort: luminance | Rules: No specific rules mapping');
+ add('BRUSH_CHECKPOINT', boundary(8), 8);
+ commit(1);
+ add('BRUSH_CONTINUE', boundary(8), 8);
+ add('WIND_WAVE', record('first'), 8);
+ add('WIND_END', end('first', 500, 'stop'), 10);
+ add('BRUSH_CHECKPOINT', boundary(14), 14);
+ commit(2);
+ add('BRUSH_CONTINUE', boundary(14), 14);
+ add('WIND_WAVE', record('second'), 14);
+ add('WIND_END', end('second', 600, 'stop'), 18);
+ add('PAUSE', '---', 19);
+ commit(3);
+
+ add('UNDO', edit);
+ let actions = parse(events.join('\n'));
+ const waves = () => actions.filter(action => action.eventName === 'WIND_WAVE').map(action => JSON.parse(action.details).batch);
+ assert.deepEqual(waves(), ['first']);
+ assert.equal(actions.find(action => action.eventName === 'PAUSE').targetGen, 14);
+ add('REDO', edit);
+ actions = parse(events.join('\n'));
+ assert.deepEqual(waves(), ['first', 'second']);
+ const continuation = actions.filter(action => action.eventName === 'BRUSH_CONTINUE').at(-1);
+ assert.equal(continuation.isGenBased, false);
+ assert.deepEqual(JSON.parse(continuation.details), boundary(14));
+});
+
 test('scheduler uses batch clock for drag events and waits for generation before first wave',()=>{
  let time=1000,timer;const executed=[];
  const c=vm.createContext({performance:{now:()=>time},replayWindBatch:null,replayWindClocks:new Map([[1,1000]]),macroStartTime:0,isMacroPlaying:true,

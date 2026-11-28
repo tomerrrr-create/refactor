@@ -139,10 +139,12 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await tap(trigger);await page.screenshot({path:path.join(artifacts,config.lang+'-permanent-drawer.png'),animations:'disabled'});
  const pageIndex=()=>container.getAttribute('data-evolution-page');
  await swipe(page.locator('#btnMagnetModes'),0,36);assert.equal(await pageIndex(),'0','downward swipe stays put');
- await swipe(page.locator('#btnMagnetModes'),36,0);assert.equal(await pageIndex(),'1','horizontal drag from an inactive simulation');
- await drag(frame.x+10,frame.y+10,0,-36);assert.equal(await pageIndex(),'0','upward drag from an empty slot');
- await swipe(page.locator('#btnMagnetModes'),0,-36);assert.equal(await pageIndex(),'1','upward drag without available settings');
- await swipe(trigger,-36,0);assert.equal(await pageIndex(),'0');
+ await drag(frame.x+10,frame.y+10,0,-36);assert.equal(await pageIndex(),'0','upward drag from an empty slot stays put');
+ await swipe(page.locator('#btnMagnetModes'),0,-36);assert.equal(await pageIndex(),'0','upward drag without available settings stays put');
+ await swipe(page.locator('#btnMagnetModes'),36,0);assert.equal(await pageIndex(),'1','rightward drag from an inactive simulation');
+ await drag(frame.x+10,frame.y+10,-36,0);assert.equal(await pageIndex(),'0','leftward drag from the drawer background');
+ await swipe(trigger,-36,0);assert.equal(await pageIndex(),'1');
+ await swipe(trigger,36,0);assert.equal(await pageIndex(),'0');
  unchanged(initial,await state());
  const life=page.locator('#btnGameOfLife'),lifeSettings=page.locator('#gameOfLifeSettingsModal');
  await tap(life);const presetBefore=(await state()).logs;
@@ -246,6 +248,13 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(labelAtRest.lip,'none');
  assert.equal(labelAtRest.ink,'rgb(187, 192, 198)');
  assert.match(labelAtRest.font,/Georgia/);
+
+ const beforeSwipes = await state();
+ for (const [dx, expectedPage] of [[-36,'0'],[-36,'1'],[-36,'2'],[36,'1'],[36,'0'],[36,'2']]) {
+  await swipe(trigger,dx,0);
+  assert.equal(await pageIndex(),expectedPage,'three drawers wrap in the physical swipe direction');
+ }
+ unchanged(beforeSwipes,await state());
 
  assert.deepEqual(await visible(),DEFAULT_EVOLUTION_LAYOUT.slice(20).filter(Boolean));
  for(const drawer of ['2','0','1']){

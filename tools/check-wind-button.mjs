@@ -9,6 +9,8 @@ let source=await readFile(root+'js/app.js','utf8');
 source=source.replace('      initializeApp();',`window.windTest={
  setup:()=>{pauseLife();setWindMode(false);resetArmedState();cycleMemory.clear();n=21;initializeBoardAndCanvas(true);boardState.forEach((t,i)=>{t.k=t.v=i%paletteLen();t.isGold=false;});isSimModeActive=true;dom.controlsContainer.classList.add('sim-mode-active');updateSimulationUtilityControl();history=[];future=[];artRecipeLog=[];historyRecipeCursor=0;logCurrentStateAsInit();renderToScreen(null);},
  state:()=>({wind:windMode,mode:windSettings.mode,settings:windSettings,board:boardState.map(t=>({k:t.k,isGold:t.isGold})),history:history.length,playing:isLifePlaying,gen:currentGenerationCount,armed:armedSimulation,macro:isMacroPlaying,logs:[...artRecipeLog]}),
+ windBoundary:()=>windBefore?.tiles.map(tile=>tile.k)??null,
+ redoBoard:()=>future.at(-1)?.after?.tiles.map(tile=>tile.k)??null,
  recipe:async()=>await createArtRecipeFile().text(),
  replay:text=>{pauseLife();setWindMode(false);macroQueue=parseMacroText(text);currentMacroStep=0;pendingMacroPalette=null;isMacroLoaded=true;playMacro();},
  restingTheme:()=>applySimulationTheme('blue'),
@@ -97,6 +99,38 @@ try{for(const lang of ['en','he','ru','nl'])for(const touch of [false,true]){
  assert(!(await state()).wind);assert(await page.locator('#btnColorPicker').isEnabled());await tap('#btnUndo');assert.deepEqual((await state()).board,before);await tap('#btnRedo');assert.deepEqual((await state()).board,after.board);
  const recipe=await page.evaluate(()=>windTest.recipe()),settings=await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1'));
  await page.evaluate(text=>windTest.replay(text),recipe);await page.waitForFunction(()=>!windTest.state().macro,{},{timeout:20000});assert.equal(await page.evaluate(()=>localStorage.getItem('colorGridWindSettingsV1')),settings);assert.equal(await page.locator('#btnWind').getAttribute('aria-pressed'),'false');
+ // Each separate live Wind batch gets the same Undo boundary as a brush stroke.
+ await page.evaluate(()=>{windTest.setup();windTest.live();});
+ await page.waitForFunction(()=>windTest.state().gen>=3);
+ await tap('#btnWind');await tap('#btnWind');
+ const windTap=async(x,y)=>{
+  const bounds=await page.locator('#boardCanvas').boundingBox();
+  const point=[bounds.x+bounds.width*x,bounds.y+bounds.height*y];
+  if(touch)await page.touchscreen.tap(...point);else await page.mouse.click(...point);
+ };
+ await windTap(.28,.37);
+ const firstBoundary=await page.evaluate(()=>windTest.windBoundary());
+ assert(firstBoundary);
+ await page.waitForTimeout(150);
+ await windTap(.28,.37); // Stop the first wave.
+ await page.waitForFunction(()=>windTest.state().logs.some(line=>line.includes('WIND_END')));
+ await windTap(.67,.59);
+ const secondBoundary=await page.evaluate(()=>windTest.windBoundary());
+ assert(secondBoundary);
+ assert.notDeepEqual(secondBoundary,firstBoundary);
+ await page.waitForTimeout(150);
+ await tap('#btnUndo');
+ const undoneSecond=await state();
+ assert.equal(undoneSecond.playing,false);
+ assert.deepEqual(undoneSecond.board.map(tile=>tile.k),secondBoundary);
+ const redoBoard=await page.evaluate(()=>windTest.redoBoard());
+ await tap('#btnUndo');
+ assert.deepEqual((await state()).board.map(tile=>tile.k),firstBoundary);
+ await tap('#btnRedo');
+ assert.deepEqual((await state()).board.map(tile=>tile.k),secondBoundary);
+ await tap('#btnRedo');
+ assert.deepEqual((await state()).board.map(tile=>tile.k),redoBoard);
+
  // Wind keeps its state colors during standard playback.
  await page.evaluate(()=>{
   windTest.setup();windTest.restingTheme();
