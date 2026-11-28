@@ -248,7 +248,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  assert.equal(labelAtRest.lip,'none');
  assert.equal(labelAtRest.ink,'rgb(187, 192, 198)');
  assert.match(labelAtRest.font,/Georgia/);
- assert.equal(labelAtRest.offset,'0px 10px');
+ assert.equal(labelAtRest.offset,'0px 5px');
 
  const beforeSwipes = await state();
  for (const [dx, expectedPage] of [[-36,'0'],[-36,'1'],[-36,'2'],[36,'1'],[36,'0'],[36,'2']]) {
