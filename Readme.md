@@ -170,7 +170,7 @@ Swipe/drag up on the **selected** evolution while paused or running. The gold sw
 | Islands | Copy attempts per generation | 1–50% of the board cell count | 5% |
 | DLA | Particle steps per generation | 10–1,000 | 100 |
 
-Brightness, Breathe and DLA also allow selection among their modes. Islands cycles Classic → Oil on water → Off while paused and alternates its active modes while running. The unchanged leaf marks Classic; a water-drop icon marks Oil. Swipe up on Classic for activity and on Oil for presets, tension, buoyancy and mobility. Increasing Classic activity or DLA steps increases computational work as well as potential movement. See [Islands](#13-islands) for the copying rule and versioned replay state.
+Brightness, Breathe and DLA also allow selection among their modes. Islands cycles Classic → Oil on water → Off while paused and alternates its active modes while running. The original leaf at 90% scale marks Classic; a water-drop icon marks Oil. Swipe up on Classic for activity and on Oil for presets, tension, buoyancy and mobility. Increasing Classic activity or DLA steps increases computational work as well as potential movement. See [Islands](#13-islands) for the copying rule and versioned replay state.
 
 Brightness opening and Reset smoothing is 10%. Existing profile preferences without an explicit smoothing value migrate to 10%; explicitly saved values remain intact. Old imported settings and recipes use the original tuning values when absent (50% smoothing). Brightness/Breathe recipes retain mode and tuning; old `Mode:` records remain readable. Breathe's random rhythms and DLA's randomness are not made deterministic by recording tuning. This is an optional extension of the V1 settings format; compatibility defaults remain intact.
 
@@ -721,7 +721,7 @@ Timing preferences use `colorGridNudge`; use Save to profile to retain session t
 
 **File:** `js/simulations/islands.js`
 
-Islands has two human cycle positions: **Classic → Oil on water → Off** while paused, alternating Classic/Oil while running. Classic's original leaf, neighbor-copy engine, gold protection, PRNG and activity controls remain unchanged. It chooses a random cell and cardinal neighbor, skips edges without wrapping, and attempts `max(1, floor(cellCount × activity))` copies per generation (default 5%, range 1–50%).
+Islands has two human cycle positions: **Classic → Oil on water → Off** while paused, alternating Classic/Oil while running. Classic uses the original leaf at 90% scale and retains its neighbor-copy engine, gold protection, PRNG and activity controls. It chooses a random cell and cardinal neighbor, skips edges without wrapping, and attempts `max(1, floor(cellCount × activity))` copies per generation (default 5%, range 1–50%).
 
 The second position uses the same `runOilGeneration` engine and the existing Oil settings dialog. Swipe up on the drop to edit presets or individual values, including during playback. The default is Balanced with 80% tension, 20% buoyancy and 70% mobility. Classic activity is independent.
 
