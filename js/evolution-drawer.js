@@ -89,15 +89,20 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
             else if(dialog.hasAttribute('data-view-only')===canEdit())render();
         }
     }
-    function nextPage(){
-        if(!navigateAllowed())return;
-        page=(page+1)%pageCount();applyLayout();
-        pageAnimations.forEach(animation=>animation.cancel());pageAnimations=[];
-        if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
-            for(const button of controls.querySelectorAll('[data-evolution-slot]:not([data-evolution-page-hidden],[data-evolution-feature-hidden])')){
-                const ink=[...button.children].find(child=>getComputedStyle(child).display!=='none');
-                if(ink)pageAnimations.push(ink.animate([{opacity:0},{opacity:1}],{duration:260,easing:'ease-in-out'}));
-            }
+    function changePage(step, slide = false) {
+        if (!navigateAllowed()) return;
+        const count = pageCount();
+        page = (page + step + count) % count;
+        applyLayout();
+        pageAnimations.forEach(animation => animation.cancel());
+        pageAnimations = [];
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const keyframes = slide
+            ? [{ opacity: 0, translate: `${step * 10}px 0` }, { opacity: 1, translate: '0px 0' }]
+            : [{ opacity: 0 }, { opacity: 1 }];
+        for (const button of controls.querySelectorAll('[data-evolution-slot]:not([data-evolution-page-hidden],[data-evolution-feature-hidden])')) {
+            const ink = [...button.children].find(child => getComputedStyle(child).display !== 'none');
+            if (ink) pageAnimations.push(ink.animate(keyframes, { duration: 260, easing: 'ease-in-out' }));
         }
     }
     function renderDrawerColors(drawer, editable) {
@@ -200,9 +205,9 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
     const canSwipePage = () => navigateAllowed() && !document.querySelector(
         'dialog[open], .modal-visible, .evolution-explanation.is-visible'
     );
-    const swipePage = () => { if (canSwipePage()) nextPage(); };
-    bindPickerGestures(trigger,{onTap:nextPage,onOpen:open,onHold:resetCycles,canInteract:navigateAllowed,canOpen:canOpenMap,
-        upwardSwipeDistance:()=>showPatterns()?14:undefined,onSwipeFallback:swipePage});
+    const swipePage = direction => { if (canSwipePage()) changePage(-direction, true); };
+    bindPickerGestures(trigger,{onTap:()=>changePage(1),onOpen:open,onHold:resetCycles,canInteract:navigateAllowed,canOpen:canOpenMap,
+        upwardSwipeDistance:()=>showPatterns()?14:undefined,onSwipeSideFallback:swipePage});
 
     // Empty slots and gutters may hit the backdrop or the grid itself.
     const backdrop = controls.querySelector('#simModeBackground');
@@ -214,7 +219,7 @@ export function createEvolutionDrawer({controls,getSlots,getActive,isRunning,can
             return event.clientX >= left && event.clientX < right &&
                 event.clientY >= top && event.clientY < bottom;
         },
-        onSwipeFallback: swipePage
+        onSwipeSideFallback: swipePage
     });
     dialog.querySelector('[data-reset-cycles]').addEventListener('click',resetCycles);
     trigger.addEventListener('keydown',event=>{
