@@ -6,13 +6,13 @@ export function nextWindEffect(mode) {
     return WIND_MODE_SEQUENCE[(WIND_MODE_SEQUENCE.indexOf(mode) + 1) % WIND_MODE_SEQUENCE.length];
 }
 const WIND_ICON_SHAPES = Object.freeze({
-    ripple: `<circle cx="7.1" cy="12" r="1.07" fill="currentColor" stroke="none"/>
-        <path d="M4 16.1C7.7 15.9 8.8 17.8 12.1 16.1c3.1-1.6 3.45-6.4 7.75-7.6"/>`,
+    ripple: `<path d="M12 3.8c-3.2 2.6-3.2 5.55-.7 8.2s2.5 5.6-.7 8.2"/>
+        <rect x="4.2" y="13.3" width="2.55" height="2.55" rx=".5" fill="currentColor" stroke="none"/>
+        <rect x="16.6" y="8.1" width="2.55" height="2.55" rx=".5" fill="currentColor" stroke="none"/>`,
     paint: `<ellipse cx="12" cy="12" rx="9" ry="5.4"/>
         <ellipse cx="12" cy="12" rx="5" ry="2.65"/>`,
-    displace: `<path d="M12 3.8c-3.2 2.6-3.2 5.55-.7 8.2s2.5 5.6-.7 8.2"/>
-        <rect x="4.2" y="13.3" width="2.55" height="2.55" rx=".5" fill="currentColor" stroke="none"/>
-        <rect x="16.6" y="8.1" width="2.55" height="2.55" rx=".5" fill="currentColor" stroke="none"/>`
+    displace: `<circle cx="7.1" cy="12" r="1.07" fill="currentColor" stroke="none"/>
+        <path d="M4 16.1C7.7 15.9 8.8 17.8 12.1 16.1c3.1-1.6 3.45-6.4 7.75-7.6"/>`
 });
 
 export function createWindModeIcon(mode) {
