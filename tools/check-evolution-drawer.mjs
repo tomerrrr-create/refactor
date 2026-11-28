@@ -35,7 +35,7 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  for(const start of [10,20]){
   if(config.width<600)await freshSwitch.tap();else await freshSwitch.click();
   const shown=await page.locator('#controlsContainer [data-evolution-slot]:visible').evaluateAll(buttons=>buttons.sort((a,b)=>a.dataset.evolutionSlot-b.dataset.evolutionSlot).map(e=>[Number(e.dataset.evolutionSlot),e.dataset.evolutionId]));
-  assert.deepEqual(shown,DEFAULT_EVOLUTION_LAYOUT.slice(start,start+10).flatMap((id,index)=>id?[[start+index,id]]:[]));
+  assert.deepEqual(shown,DEFAULT_EVOLUTION_LAYOUT.slice(start,start+10).flatMap((id,index)=>id&&id!=='breathe'?[[start+index,id]]:[]));
  }
  if(config.width<600)await freshSwitch.tap();else await freshSwitch.click();
  await page.evaluate(()=>{drawerTest.setup();drawerTest.hidePatterns();drawerTest.hideOptional();});
@@ -211,6 +211,10 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  const nudge=page.locator('#btnNudgeBrighter');assert(await nudge.isVisible());assert.equal(await nudge.getAttribute('data-evolution-slot'),String(custom.indexOf('nudgeBrighter')));assert.equal(await nudge.getAttribute('data-nudge-mode'),'darker');
  const nudgeBefore=await state(),nudgeFrom=custom.indexOf('nudgeBrighter'),nudgeTo=nudgeFrom<10?16:1;await open();await move(nudgeFrom,nudgeTo);await save();custom=moveEvolutionSlot(custom,nudgeFrom,nudgeTo);unchanged(nudgeBefore,await state());assert.equal(await trigger.getAttribute('data-parked-active'),'true');await tap(trigger);assert(await nudge.isVisible());
  await reload();assert.deepEqual((await state()).slots,custom,'moving Nudge persists alongside all other controls');
+ await page.evaluate(()=>drawerTest.tech());
+ await tap(page.locator('#btnConfigureFeatures'));
+ await page.locator('#breatheExperimentToggle').check();
+ await tap(page.locator('#btnTechnicianCloseTop'));
  await page.evaluate(()=>{drawerTest.arm('breathe');drawerTest.play();});assert(await trigger.isEnabled());await tap(trigger);assert((await state()).playing);await page.evaluate(()=>drawerTest.pause());
  await page.evaluate(()=>drawerTest.tech());await tap(page.locator('#btnConfigureFeatures'));
  await page.locator('#patternsExperimentToggle').check();await page.locator('#fibonacciExperimentToggle').check();await tap(page.locator('#btnTechnicianCloseTop'));
@@ -317,5 +321,41 @@ try{for(const config of [{lang:'en',width:1280,height:900},{lang:'he',width:390,
  await page.evaluate(()=>drawerTest.macro());
  await page.waitForFunction(()=>!drawerTest.state().loaded&&!drawerTest.state().macro,null,{timeout:30000});
  assert.deepEqual((await state()).board,recordedPattern.board,'the macro replays every recorded palette and Auto generation');
+ const chosenNames=['1','II','III'];
+ async function openDrawerNames(){
+  await page.evaluate(()=>drawerTest.tech());
+  await tap(page.locator('#btnConfigureDisplay'));
+  const options=page.locator('#technicianDrawerNames');
+  await options.waitFor({state:'visible'});
+  return options;
+ }
+ if(config.width<600)await page.setViewportSize({width:320,height:config.height});
+ const options=await openDrawerNames();
+ const groups=options.getByRole('group');
+ assert.deepEqual(await groups.nth(0).getByRole('button').allTextContents(),['Life','Nature','1','I']);
+ assert.deepEqual(await groups.nth(1).getByRole('button').allTextContents(),['Pulse','Space','2','II']);
+ assert.deepEqual(await groups.nth(2).getByRole('button').allTextContents(),['Geometry','3','III','Pattern']);
+ assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),['Life','Pulse','Geometry']);
+ for(const label of chosenNames)await tap(options.getByRole('button',{name:label,exact:true}));
+ assert.deepEqual(await options.locator('[aria-pressed="true"]').allTextContents(),chosenNames);
+ await tap(page.locator('#btnTechnicianCloseTop'));
+ for(let count=0;count<3;count++){
+  const drawer=Number(await pageIndex());
+  assert.equal(await name.innerText(),chosenNames[drawer]);
+  assert.match(await trigger.getAttribute('aria-label'),new RegExp(chosenNames[drawer]));
+  assert(await name.evaluate(e=>e.offsetWidth<=e.parentElement.clientWidth));
+  await tap(trigger);
+ }
+ await page.evaluate(()=>drawerTest.open());
+ assert.deepEqual(await dialog.locator('.drawer-pages h3').allTextContents(),chosenNames);
+ assert.deepEqual(await dialog.locator('.drawer-reserved-slot .drawer-page-full-name').allTextContents(),chosenNames);
+ await tap(dialog.locator('[data-cancel]'));
+ const slotsBeforeReload=(await state()).slots;
+ await page.reload();
+ await page.waitForFunction(()=>window.drawerTest?.ready);
+ await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());drawerTest.setup();});
+ assert.deepEqual((await state()).slots,slotsBeforeReload);
+ const restored=await openDrawerNames();
+ assert.deepEqual(await restored.locator('[aria-pressed="true"]').allTextContents(),chosenNames);
  assert.deepEqual(errors,[]);console.log(JSON.stringify({config,passed:true}));await context.close();
 }}finally{await browser.close();server.close();}

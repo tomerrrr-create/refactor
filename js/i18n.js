@@ -14,6 +14,8 @@ export const translations = {
   magnet_method_field_magnet:{en:'Combined Regular',he:'רגיל משולב',ru:'Обычный с общим полем',nl:'Gewoon gecombineerd'},
   magnet_method_field_cosmic_magnet:{en:'Combined Cosmic',he:'קוסמי משולב',ru:'Космический с общим полем',nl:'Kosmisch gecombineerd'},
   technician_group_display: {en:"Display",he:"תצוגה",ru:"Отображение",nl:"Weergave"},
+  technician_drawer_names: {en:"Drawer names",he:"שמות המגירות",ru:"Названия панелей",nl:"Ladenamen"},
+  technician_drawer: {en:"Drawer",he:"מגירה",ru:"Панель",nl:"Lade"},
   glow_pulse: {en:"Glow Pulse",he:"פעימת ההילה",ru:"Пульсация ореола",nl:"Gloedpuls"},
   keep_simulation_drawers: {en:'Keep Drawer Border and Grid During Playback',he:'השארת מסגרת המגירה והרשת בזמן ניגון',ru:'Сохранять рамку и сетку панели при воспроизведении',nl:'Rand en raster van de lade behouden tijdens afspelen'},
   technician_group_macro: {en:"Macro",he:"מאקרו",ru:"Макрос",nl:"Macro"},

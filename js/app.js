@@ -6561,6 +6561,8 @@ else if (action.eventName === 'Invert Colors') {
             getBrush: () => ({ size: brushSize, shape: brushShape }),
             getBrushWidth,
             getXlBrushWidth: () => xlBrushWidth,
+            getDrawerName: index => evolutionDrawer.getDrawerName(index),
+            setDrawerName: (index, name) => evolutionDrawer.setDrawerName(index, name),
             setXlBrushWidth: width => { xlBrushWidth = saveXlBrushWidth(width); },
             setBrush: ({ size, shape }) => {
                 if (!BRUSH_SIZES.includes(size) || !BRUSH_SHAPES.includes(shape)) throw new RangeError('Invalid brush');

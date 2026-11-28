@@ -43,13 +43,14 @@ try{for(const touch of [false,true]){
  await page.locator('#btnEvolutionDrawerInternal').click();await page.waitForTimeout(300);
  const original=(await state()).slots;
  assert(await geometric.isVisible(),'Geometric Flow defaults visible');
- assert(await breathe.isVisible(),'Breathe defaults visible');
+ assert(!(await breathe.isVisible()),'Breathe defaults hidden');
  assert.equal(await breathe.getAttribute('data-evolution-slot'),'12');
  assert(await network.isVisible(),'Living Network is always available');
  await page.evaluate(()=>flagsTest.map());
  assert.equal(await page.locator('[data-drawer-slot="19"][data-drawer-evolution=spiral]').count(),1);
  assert.equal(await page.locator('[data-drawer-evolution="network"]').count(),1);
- assert.equal(await page.locator('.drawer-feature-hidden').count(),0);
+ assert.equal(await page.locator('.drawer-feature-hidden').count(),1);
+ assert.equal(await page.locator('[data-drawer-slot="12"].drawer-feature-hidden').count(),1);
  assert.equal(await page.locator('[data-drawer-evolution="ink"]').count(),1);await close();
  assert.equal(await page.locator('#btnInk').getAttribute('data-evolution-feature-hidden'),null);
  await tech();assert.equal(await page.locator('#inkExperimentToggle, #oilExperimentToggle, #networkExperimentToggle, #btnOil').count(),0);
@@ -69,7 +70,8 @@ try{for(const touch of [false,true]){
  ]);
  await page.locator('#btnConfigureFeatures').click();
  assert(await page.locator('#spiralExperimentToggle').isChecked());
- assert(await page.locator('#breatheExperimentToggle').isChecked());
+ assert(!(await page.locator('#breatheExperimentToggle').isChecked()));
+ await toggle('breathe',true);
  await toggle('spiral',false);await close();
  assert(await breathe.isVisible());
  assert(!(await geometric.isVisible()));
@@ -112,7 +114,7 @@ try{for(const touch of [false,true]){
  assert(await page.locator('#breatheExperimentToggle').isChecked());
  await page.evaluate(()=>flagsTest.reset());
  assert(await page.locator('#spiralExperimentToggle').isChecked());
- assert(await page.locator('#breatheExperimentToggle').isChecked());
+ assert(!(await page.locator('#breatheExperimentToggle').isChecked()));
  assert.equal(await page.locator('#networkExperimentToggle').count(),0);
  assert.deepEqual(errors,[]);console.log('PASS experimental visibility',JSON.stringify({touch,persistence:true,profiles:true,layout:true,replay:true}));await context.close();
 }}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

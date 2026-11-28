@@ -18,6 +18,30 @@ export const EVOLUTION_CATALOG = Object.freeze([
 // Historical first-page order, retained for compatibility with ten-slot files.
 export const DEFAULT_EVOLUTION_SLOTS = Object.freeze(EVOLUTION_CATALOG.slice(0,10).map(e=>e.id));
 export const EVOLUTION_PAGE_SIZE = 10;
+export const DRAWER_NAME_OPTIONS = Object.freeze([
+    Object.freeze(['Life', 'Nature', '1', 'I']),
+    Object.freeze(['Pulse', 'Space', '2', 'II']),
+    Object.freeze(['Geometry', '3', 'III', 'Pattern'])
+]);
+const DRAWER_NAMES_KEY = 'colorGridEvolutionDrawerNamesV1';
+
+export function loadDrawerNames(storage) {
+    let saved;
+    try {
+        saved = JSON.parse((storage ?? localStorage).getItem(DRAWER_NAMES_KEY));
+    } catch {}
+    return DRAWER_NAME_OPTIONS.map((options, index) => {
+        const name = Array.isArray(saved) ? saved[index] : undefined;
+        return options.includes(name) ? name : options[0];
+    });
+}
+
+export function persistDrawerNames(names, storage) {
+    try {
+        (storage ?? localStorage).setItem(DRAWER_NAMES_KEY, JSON.stringify(names));
+    } catch {}
+}
+
 export const INTERNAL_NAV_SLOTS = Object.freeze([7,17,27]);
 const previousCatalog = EVOLUTION_CATALOG.filter(({ id }) => !isPatternEvolution(id));
 const legacyPatternsPage = Object.freeze([...PATTERN_EVOLUTIONS.map(({ id }) => id), null, null, null, null, null]);
