@@ -1687,7 +1687,8 @@ button, .ctrl {
 @media (hover: hover) and (pointer: fine) { .cycle-slot-button:hover, .cycle-reset-dot:hover { background: #d5aa4814; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .cycle-slot-button { transition: none; } }
 
-.technician-reset-section { margin-top: 8px; padding-top: 18px; border-top: 1px solid #b28b362b; text-align: center; }
+.technician-primary-actions { display: grid; gap: 12px; margin-block-end: 22px; }
+.technician-reset-section { text-align: center; }
 .technician-reset-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 9px 18px; border: 1px solid #b28b3659; border-radius: 999px; background: radial-gradient(ellipse at center, #b28b3619, #090a09); color: #d5aa48; font: inherit; font-size: 13px; cursor: pointer; transition: box-shadow .3s ease, color .3s ease; }
 .technician-reset-button svg { width: 23px; height: 23px; }
 .technician-reset-button:hover { color: #ffe7a0; box-shadow: 0 0 20px #b28b3626; }
